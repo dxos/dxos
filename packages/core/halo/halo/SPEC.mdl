@@ -65,14 +65,17 @@ module Space
     # Schemas / types
     State: 'inactive' | 'closed' | 'ready'
     Access: 'pull' | 'read' | 'edit' | 'admin'
+    MembershipPolicy: 'invite' | 'locked'
+    EdgeReplication: 'disabled' | 'enabled'
     Member: Schema.Struct                # { did?; role: Access; online }.
     Info: Schema.Struct                  # { id: SpaceId; name?; state }.
     Archive: { filename; contents }      # export / import payload.
 
     # Verbs (Effects requiring Service)
     list / changes / get                 # enumerate + resolve spaces.
-    create: (options?) => Effect
+    create: (options?) => Effect         # options: { name?; tags?; membershipPolicy? }.
     waitReady: (id) => Effect            # resolve once the space is ready.
+    setEdgeReplication: (id, setting) => Effect  # toggle EDGE replication.
     members / memberChanges              # membership snapshot + reactive stream.
     updateMemberRole: (id, subject, role) => Effect  # Keyhive delegation.
     removeMember: (id, subject) => Effect            # Keyhive revocation.

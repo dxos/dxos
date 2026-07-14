@@ -13,7 +13,8 @@ import { type Space as ClientSpace, SpaceState } from '@dxos/client/echo';
 import { Space as HaloSpace, SpaceError } from '@dxos/halo';
 import { IdentityDid, type SpaceId } from '@dxos/keys';
 import { SpaceArchive, type SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { SpaceMember as HaloSpaceMember, MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { fromAccess, isOnline, makeFlow, streamFromObservable, toAccess, toShareOptions } from './util';
 
@@ -49,6 +50,12 @@ const toMembers = (members: readonly SpaceMember[]): HaloSpace.Member[] =>
       },
     ];
   });
+
+const toMembershipPolicy = (policy: HaloSpace.MembershipPolicy): MembershipPolicy =>
+  policy === 'locked' ? MembershipPolicy.LOCKED : MembershipPolicy.INVITE;
+
+const toEdgeReplicationSetting = (setting: HaloSpace.EdgeReplication): EdgeReplicationSetting =>
+  setting === 'enabled' ? EdgeReplicationSetting.ENABLED : EdgeReplicationSetting.DISABLED;
 
 const resolveSpace = (client: Client, id: SpaceId): ClientSpace => {
   const space = client.spaces.get(id);
@@ -90,8 +97,18 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
 
   create: (options) =>
     Effect.tryPromise({
-      try: async () =>
-        toSpaceInfo(await client.spaces.create(options?.name !== undefined ? { name: options.name } : {})),
+      try: async () => {
+        const createOptions: { tags?: string[]; membershipPolicy?: MembershipPolicy } = {};
+        if (options?.tags !== undefined) {
+          createOptions.tags = [...options.tags];
+        }
+        if (options?.membershipPolicy !== undefined) {
+          createOptions.membershipPolicy = toMembershipPolicy(options.membershipPolicy);
+        }
+        return toSpaceInfo(
+          await client.spaces.create(options?.name !== undefined ? { name: options.name } : {}, createOptions),
+        );
+      },
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
@@ -99,6 +116,14 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
     Effect.tryPromise({
       try: async () => {
         await resolveSpace(client, id).waitUntilReady();
+      },
+      catch: (error) => new SpaceError({ context: { error } }),
+    }),
+
+  setEdgeReplication: (id, setting) =>
+    Effect.tryPromise({
+      try: async () => {
+        await resolveSpace(client, id).internal.setEdgeReplicationPreference(toEdgeReplicationSetting(setting));
       },
       catch: (error) => new SpaceError({ context: { error } }),
     }),

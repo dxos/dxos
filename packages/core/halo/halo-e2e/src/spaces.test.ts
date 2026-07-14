@@ -50,6 +50,27 @@ describe('Spaces', () => {
   );
 
   it.effect(
+    'creates a space with tags and a membership policy',
+    Effect.fn(function* ({ expect }) {
+      const info = yield* Space.create({ name: 'locked', tags: ['team'], membershipPolicy: 'locked' });
+      yield* Space.waitReady(info.id);
+      expect(SpaceId.isValid(info.id)).toBe(true);
+    }, Effect.provide(makeClientLayer())),
+  );
+
+  it.effect(
+    'toggles edge replication',
+    Effect.fn(function* ({ expect }) {
+      const info = yield* Space.create({ name: 'replicated' });
+      yield* Space.waitReady(info.id);
+      // The preference is persisted locally; EDGE connectivity is not required for the call.
+      yield* Space.setEdgeReplication(info.id, 'enabled');
+      yield* Space.setEdgeReplication(info.id, 'disabled');
+      expect(SpaceId.isValid(info.id)).toBe(true);
+    }, Effect.provide(makeClientLayer())),
+  );
+
+  it.effect(
     'get returns none for an unknown space',
     Effect.fn(function* ({ expect }) {
       const resolved = yield* Space.get(SpaceId.random());

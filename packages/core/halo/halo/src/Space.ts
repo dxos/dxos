@@ -31,6 +31,20 @@ export const State = Schema.Literal('inactive', 'closed', 'ready');
 export type State = typeof State.Type;
 
 /**
+ * Who may join a space. Replaces the legacy `MembershipPolicy` protobuf enum: `invite` admits
+ * members via invitation only; `locked` admits no new members.
+ */
+export const MembershipPolicy = Schema.Literal('invite', 'locked');
+export type MembershipPolicy = typeof MembershipPolicy.Type;
+
+/**
+ * Whether a space replicates through EDGE. Replaces the legacy `EdgeReplicationSetting` protobuf
+ * enum.
+ */
+export const EdgeReplication = Schema.Literal('disabled', 'enabled');
+export type EdgeReplication = typeof EdgeReplication.Type;
+
+/**
  * A space membership entry. Membership (HALO) only — liveness/presence is a separate concern
  * (see API_AUDIT.md §3.6).
  */
@@ -64,6 +78,10 @@ export type Archive = {
 
 export type CreateOptions = {
   readonly name?: string;
+  /** Tags applied to the new space. */
+  readonly tags?: readonly string[];
+  /** Who may join the space (defaults to `invite`). */
+  readonly membershipPolicy?: MembershipPolicy;
 };
 
 /**
@@ -83,6 +101,8 @@ export class Service extends Context.Tag('@dxos/halo/Space')<
     readonly create: (options?: CreateOptions) => Effect.Effect<Info, SpaceError>;
     /** Resolve once the space has reached the `ready` state. */
     readonly waitReady: (id: SpaceId) => Effect.Effect<void, SpaceError>;
+    /** Enable or disable EDGE replication for a space. */
+    readonly setEdgeReplication: (id: SpaceId, setting: EdgeReplication) => Effect.Effect<void, SpaceError>;
     /** Members of a space. */
     readonly members: (id: SpaceId) => Effect.Effect<readonly Member[], SpaceError>;
     /** Reactive stream of a space's membership. */
@@ -121,6 +141,10 @@ export const create = (options?: CreateOptions): Effect.Effect<Info, SpaceError,
 /** Resolve once the space is ready (requires {@link Service}). */
 export const waitReady = (id: SpaceId): Effect.Effect<void, SpaceError, Service> =>
   Effect.flatMap(Service, (service) => service.waitReady(id));
+
+/** Enable or disable EDGE replication for a space (requires {@link Service}). */
+export const setEdgeReplication = (id: SpaceId, setting: EdgeReplication): Effect.Effect<void, SpaceError, Service> =>
+  Effect.flatMap(Service, (service) => service.setEdgeReplication(id, setting));
 
 /** Members of a space (requires {@link Service}). */
 export const members = (id: SpaceId): Effect.Effect<readonly Member[], SpaceError, Service> =>

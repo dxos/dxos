@@ -19,31 +19,37 @@ composition root drops in wherever a plugin already holds a `Client`. That is
 enough to migrate imperative call sites (operation handlers, CLI commands,
 managers, import scripts).
 
-It is **not** enough to migrate the codebase wholesale, for four reasons:
+It is **not** enough to migrate the codebase wholesale. Four gaps remain, each
+with an agreed disposition:
 
-1. **No React binding layer ships yet (largest blocker).** There are ~368 uses
-   of `useIdentity` / `useDevices` / `useCredentials` / `useSpaces` / `useSpace`
-   / `useMembers` / `useSpaceInvitations` across 163 files. The services expose
-   `Effect`/`Stream` verbs, not hooks. Until a `@dxos/react-halo` (or
-   equivalent) layer bridges `changes` / `memberChanges` / `deviceChanges`
-   streams to React state, component code stays on `@dxos/react-client`.
-2. **ECHO database access is a separate track by design.** `Space.Info` is a
+1. **React bindings — reuse the existing layer.** There are ~368 uses of
+   `useIdentity` / `useDevices` / `useCredentials` / `useSpaces` / `useSpace` /
+   `useMembers` / `useSpaceInvitations` across 163 files. Rather than ship a new
+   binding package, `@dxos/react-client`'s existing hooks will be reimplemented
+   on top of the HALO services (bridging the `changes` / `memberChanges` /
+   `deviceChanges` streams to React state) so component call sites are unchanged.
+   Until that rewrite lands, component code stays on `@dxos/react-client`.
+2. **ECHO database access — a separate track, by design.** `Space.Info` is a
    plain snapshot, not a live proxy — it has no `.db`, `.crud`, `.properties`,
    or `.internal`. The heavy `space.db.*` / `space.internal.*` usage is ECHO,
    not HALO, and belongs on the `@dxos/echo` `Database` service keyed by
-   `SpaceId`. See API_AUDIT.md §3.6.
-3. **Some verbs are deferred (not defined yet).** Credentials
+   `SpaceId`. This is not folded into HALO. See API_AUDIT.md §3.6.
+3. **Deferred verbs — planned, not yet defined.** Credentials
    (`halo.queryCredentials` / `writeCredentials`), recovery-credential
-   _creation_, EDGE `createEdgeIdentity` / attestation, and device _update_ have
-   no service verb. Consumers of those stay on the client.
-4. **Space create/lifecycle gaps.** `Space.create` takes `{ name? }` only — no
-   `tags`, `membershipPolicy`, `setEdgeReplicationPreference`, `migrate`, or
-   `postMessage`/`listen`. `State` is the consumer-relevant subset
-   (`inactive` / `closed` / `ready`), not the full `SpaceState` enum.
+   _creation_ (`createRecoveryCredential` / `requestRecoveryChallenge`), EDGE
+   `createEdgeIdentity` / attestation, and device _update_ will be added as
+   `Identity`-service verbs in a follow-up. Consumers of those stay on the
+   client until then.
+4. **Space create/lifecycle gaps — mostly closed.** `Space.create` now accepts
+   `{ name?, tags?, membershipPolicy? }`, and EDGE replication is toggled with
+   `Space.setEdgeReplication(id, setting)`. `migrate` is intentionally left out.
+   `State` remains the consumer-relevant subset (`inactive` / `closed` /
+   `ready`), not the full `SpaceState` enum.
 
-So: migrate imperative HALO call sites now; leave React components, ECHO access,
-and the deferred/gap APIs on `@dxos/client` until the corresponding layer or
-verb exists. The rest of this doc covers the cases that _can_ move.
+So: migrate imperative HALO call sites now; leave React components and ECHO
+access on `@dxos/client` until the binding rewrite and the ECHO `Database`
+service land, and the deferred verbs (§3) until they are defined. The rest of
+this doc covers the cases that _can_ move.
 
 ## Composition root
 
@@ -154,14 +160,18 @@ properties, use `@dxos/echo` keyed by `Space.Info.id`; do not expect a proxy.
 
 ```ts
 // Before
-const space = await client.spaces.create({ name: 'Project' });
+const space = await client.spaces.create({ name: 'Project' }, { tags: ['team'], membershipPolicy });
+await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
 // After
-const info = yield * Space.create({ name: 'Project' });
+const info = yield * Space.create({ name: 'Project', tags: ['team'], membershipPolicy: 'invite' });
+yield * Space.setEdgeReplication(info.id, 'enabled');
 ```
 
-**Gap:** `tags`, `membershipPolicy`, `setEdgeReplicationPreference`, `migrate`
-are not modeled. Call sites needing them stay on the client.
+`membershipPolicy` is `'invite' | 'locked'` and `setEdgeReplication` takes
+`'disabled' | 'enabled'` (the adapter maps the legacy protobuf enums). **Gap:**
+`migrate` is intentionally not modeled — call sites needing it stay on the
+client.
 
 ### Spaces — wait ready
 
@@ -257,12 +267,12 @@ const flows = yield * Invitation.active({ spaceId }); // or { device: true }
 
 ## What stays on `@dxos/client` (for now)
 
-| Area                                                                                                               | Reason                                    | Unblocks when                                                     |
-| ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------- |
-| `useIdentity` / `useDevices` / `useSpaces` / `useSpace` / `useMembers` / `useSpaceInvitations` (~368 uses)         | Services are Effect/Stream, not hooks     | a React binding layer bridges the `changes` streams               |
-| `space.db` / `space.crud` / `space.properties` / `space.internal`                                                  | ECHO, not HALO                            | migrate to the `@dxos/echo` `Database` service keyed by `SpaceId` |
-| `halo.queryCredentials` / `writeCredentials`; recovery-credential _creation_                                       | no verb defined                           | credential verbs added                                            |
-| `createEdgeIdentity` / EDGE attestation                                                                            | no verb defined                           | EDGE verbs added                                                  |
-| device _update_                                                                                                    | no verb defined                           | `Identity` device-update verb added                               |
-| `Space.create` with `tags` / `membershipPolicy`; `setEdgeReplicationPreference`; `migrate`; `postMessage`/`listen` | not modeled on `Space.create` / `Service` | those options/verbs added                                         |
-| full `SpaceState` enum                                                                                             | `Space.State` is the consumer subset      | (by design)                                                       |
+| Area                                                                                                       | Reason                                | Unblocks when                                                       |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------- |
+| `useIdentity` / `useDevices` / `useSpaces` / `useSpace` / `useMembers` / `useSpaceInvitations` (~368 uses) | Services are Effect/Stream, not hooks | `@dxos/react-client` hooks are reimplemented over the HALO services |
+| `space.db` / `space.crud` / `space.properties` / `space.internal.*` (except edge replication)              | ECHO, not HALO                        | migrate to the `@dxos/echo` `Database` service keyed by `SpaceId`   |
+| `halo.queryCredentials` / `writeCredentials`; recovery-credential _creation_                               | deferred verb                         | credential + recovery verbs added to `Identity`                     |
+| `createEdgeIdentity` / EDGE attestation                                                                    | deferred verb                         | EDGE verbs added to `Identity`                                      |
+| device _update_                                                                                            | deferred verb                         | `Identity` device-update verb added                                 |
+| `space.internal.migrate`                                                                                   | intentionally out of scope            | (revisit if needed)                                                 |
+| full `SpaceState` enum                                                                                     | `Space.State` is the consumer subset  | (by design)                                                         |
