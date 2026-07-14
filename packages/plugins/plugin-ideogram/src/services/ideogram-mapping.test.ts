@@ -48,6 +48,30 @@ describe('ideogram mapping', () => {
       isImageSafe: true,
     });
   });
+
+  test('coerces null fields to undefined (Ideogram returns null, Generation schema is not nullable)', ({ expect }) => {
+    const variants = mapIdeogramResponse(
+      {
+        created: null,
+        request_id: null,
+        data: [{ url: 'https://img/1.png', prompt: null, resolution: null, seed: null, is_image_safe: null }],
+      },
+      { model: 'V_2' },
+    );
+
+    const generation = variants[0].generation!;
+    // No null anywhere — else Variant.make (which validates the Generation schema) throws a ParseError.
+    expect(generation.requestId).toBeUndefined();
+    expect(generation.createdAt).toBeUndefined();
+    expect(generation.prompt).toBeUndefined();
+    expect(generation.seed).toBeUndefined();
+    for (const value of Object.values(generation)) {
+      expect(value).not.toBeNull();
+    }
+    for (const value of Object.values(generation.parameters ?? {})) {
+      expect(value).not.toBeNull();
+    }
+  });
 });
 
 describe('generateWithIdeogram', () => {

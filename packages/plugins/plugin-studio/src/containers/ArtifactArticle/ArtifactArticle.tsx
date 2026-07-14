@@ -199,8 +199,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
+      <Panel.Toolbar>
+        {/* TODO(burdon): Use toolbar idiom. */}
+        <Toolbar.Root classNames='dx-document'>
           <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
             {t('all.tab.label')}
           </Button>
@@ -213,7 +214,13 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               {index + 1}
             </Button>
           ))}
-          <div role='none' className='grow' />
+          <IconButton
+            icon='ph--upload-simple--regular'
+            label={t('upload.label')}
+            disabled={!upload.enabled}
+            onClick={() => upload.open()}
+          />
+          <Toolbar.Separator />
           {providers.length > 0 && (
             <Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
               <Select.TriggerButton placeholder={t('generator.placeholder')} />
@@ -230,13 +237,8 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               </Select.Portal>
             </Select.Root>
           )}
-          <IconButton
-            icon='ph--upload-simple--regular'
-            label={t('upload.label')}
-            disabled={!upload.enabled}
-            onClick={() => upload.open()}
-          />
           {showConnect && connectorData ? (
+            // TODO(burdon): Inject via capability.
             <Surface.Surface type={ConnectorAuth} data={connectorData} limit={1} />
           ) : (
             <IconButton
@@ -253,12 +255,13 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[auto_1fr] p-2 gap-2'>
-        <div role='none' className='flex flex-col gap-2 shrink-0'>
+        <div role='none' className='grid grid-rows-[6lh_1fr] gap-2 shrink-0 dx-document'>
           <PromptEditor
             id={`${artifactId}/prompt`}
             text={promptText}
             placeholder={t('prompt.placeholder')}
-            classNames='border border-separator rounded p-2 max-bs-32 overflow-auto'
+            compact
+            classNames='border border-separator rounded p-2'
           />
           {provider && (
             <Surface.Surface

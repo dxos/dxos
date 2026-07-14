@@ -6,20 +6,24 @@ import { type GenerationService } from '@dxos/plugin-studio/types';
 
 import { type IdeogramRequestConfig } from './ideogram-request';
 
+// The Ideogram API returns JSON `null` (not absent) for fields it has no value for — e.g.
+// `request_id: null`. The Generation schema's optional fields are `T | undefined` (not nullable), so
+// every field mapped onto a Variant must be coerced `null → undefined` (see the mapper below).
+
 /** One `data[]` entry in an Ideogram `/generate` response. */
 export type IdeogramImageData = {
   url?: string | null;
-  prompt?: string;
-  resolution?: string;
-  seed?: number;
-  is_image_safe?: boolean;
-  style_type?: string;
+  prompt?: string | null;
+  resolution?: string | null;
+  seed?: number | null;
+  is_image_safe?: boolean | null;
+  style_type?: string | null;
 };
 
 /** Shape of the Ideogram `/generate` JSON response (subset). */
 export type IdeogramGenerateResponse = {
-  created?: string;
-  request_id?: string;
+  created?: string | null;
+  request_id?: string | null;
   data?: IdeogramImageData[];
 };
 
@@ -43,14 +47,15 @@ export const mapIdeogramResponse = (
       generation: {
         provider: 'ideogram',
         model: config?.model ?? 'V_2',
-        prompt: entry.prompt,
-        seed: entry.seed,
-        requestId: response.request_id,
-        createdAt: response.created,
+        // Coerce null → undefined: the Generation schema's optional fields are not nullable.
+        prompt: entry.prompt ?? undefined,
+        seed: entry.seed ?? undefined,
+        requestId: response.request_id ?? undefined,
+        createdAt: response.created ?? undefined,
         parameters: {
-          resolution: entry.resolution,
-          styleType: entry.style_type,
-          isImageSafe: entry.is_image_safe,
+          resolution: entry.resolution ?? undefined,
+          styleType: entry.style_type ?? undefined,
+          isImageSafe: entry.is_image_safe ?? undefined,
         },
       },
     }));
