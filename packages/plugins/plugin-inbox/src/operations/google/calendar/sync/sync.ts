@@ -59,7 +59,7 @@ type CalendarPageEffect =
   | ReturnType<typeof GoogleCalendar.listEventsByUpdated>;
 
 /** Streams Google Calendar events: initial sync windows by start time, incremental by `updatedMin`. */
-export const calendarSource = (
+export const getEvents = (
   calendarId: string,
   cursorKey: number,
   opts: { syncBackDays: number; syncForwardDays: number; pageSize: number; searchFilter?: string },
@@ -91,6 +91,7 @@ export const calendarSource = (
       if (state.done) {
         return Option.none();
       }
+
       const { items = [], nextPageToken } = yield* fetchPage(Option.getOrUndefined(state.pageToken));
       return Option.some([
         Chunk.fromIterable(items),

@@ -124,7 +124,7 @@ describe('Pipeline.run overflow', () => {
     'abort',
     Effect.fnUntraced(function* ({ expect }) {
       const controller = new AbortController();
-      const { sink, items } = captureSink<number>();
+      const { sink } = captureSink<number>();
       const pipeline = yield* Effect.fork(
         Stream.fromIterable(Array.from({ length: 100 }, (_, index) => index)).pipe(
           Stage.map('id', (n) => Effect.succeed(n)),

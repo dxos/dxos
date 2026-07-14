@@ -14,7 +14,7 @@ import { Calendar, InboxOperation } from '../../../../types';
 /**
  * Find-or-create the local Calendar materialized for this remote calendar id.
  * Idempotent within a space — keyed by `Obj.Meta.keys` matching
- * `{ source: 'google.com', id }`.
+ * `{ source: 'com.google', id }`.
  */
 const findOrCreateCalendar = (remoteId: string, name: string) =>
   Effect.gen(function* () {

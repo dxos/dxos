@@ -12,10 +12,10 @@ import * as InboxResolver from '@dxos/extractor-lib';
 
 import { GoogleCredentials, GoogleMailApi } from '../../../../services';
 import { InboxOperation } from '../../../../types';
-import { type RunGmailSyncConfig, runGmailSync } from './sync';
+import { type SyncGmailProps, syncGmail } from './sync';
 
 const handler = InboxOperation.GoogleMailSync.pipe(
-  Operation.withHandler((props: RunGmailSyncConfig) =>
+  Operation.withHandler((props: SyncGmailProps) =>
     Effect.gen(function* () {
       const { binding: bindingRef } = props;
       const bindingObj = bindingRef.target;
@@ -24,7 +24,7 @@ const handler = InboxOperation.GoogleMailSync.pipe(
       }
 
       const connectionRef = Ref.make(Relation.getSource(bindingObj));
-      return yield* runGmailSync(props).pipe(
+      return yield* syncGmail(props).pipe(
         Effect.provide(
           Layer.mergeAll(
             GoogleMailApi.Live.pipe(

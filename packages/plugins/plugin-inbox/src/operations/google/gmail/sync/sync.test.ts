@@ -17,7 +17,7 @@ import { GMAIL_SOURCE } from '../../../../constants';
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
 import { inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
 import { Mailbox } from '../../../../types';
-import { createSyncProgressKey, runGmailSync } from './sync';
+import { createSyncProgressKey, syncGmail } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -64,7 +64,7 @@ describe('runGmailSync against a mock Gmail API', () => {
 
     const { result, feedMessages } = await EffectEx.runPromise(
       Effect.gen(function* () {
-        const result = yield* runGmailSync({ binding: Ref.make(binding), after });
+        const result = yield* syncGmail({ binding: Ref.make(binding), after });
         const feedMessages = yield* Effect.promise(() => queryFeedMessages(db, mailbox));
         return { result, feedMessages };
       }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
@@ -100,7 +100,7 @@ describe('runGmailSync against a mock Gmail API', () => {
 
     // Re-running is a no-op: dedup + cursor prevent duplicate work.
     const rerun = await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(binding), after }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+      syncGmail({ binding: Ref.make(binding), after }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
     );
     expect(rerun.newMessages).toBe(0);
     const afterRerun = await queryFeedMessages(db, mailbox);
@@ -129,7 +129,7 @@ describe('runGmailSync against a mock Gmail API', () => {
     });
 
     await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(binding), after }).pipe(
+      syncGmail({ binding: Ref.make(binding), after }).pipe(
         Effect.provide(inboxSyncTestServices(db, dataset, { progressRegistry: progress })),
       ),
     );
@@ -186,14 +186,14 @@ describe('runGmailSync against a mock Gmail API', () => {
 
     // 1) Initial: no cursor → backward from today down to the horizon (after). Only `mid` is available.
     const r1 = await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(binding), after: day(14) }).pipe(Effect.provide(inboxSyncTestServices(db, mid))),
+      syncGmail({ binding: Ref.make(binding), after: day(14) }).pipe(Effect.provide(inboxSyncTestServices(db, mid))),
     );
     expect(r1.newMessages).toBe(mid.messages.length);
     expect(cursorKey()).toBe(maxKey(mid)); // cursor set to the newest synced.
 
     // 2) Incremental: cursor present → forward from the cursor. A newer band has arrived; only it syncs.
     const r2 = await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(binding), after: day(14) }).pipe(
+      syncGmail({ binding: Ref.make(binding), after: day(14) }).pipe(
         Effect.provide(inboxSyncTestServices(db, union(mid, recent))),
       ),
     );
@@ -203,7 +203,7 @@ describe('runGmailSync against a mock Gmail API', () => {
     // 3) Backfill: explicit backward over an older window (below the cursor). Fills gaps; cursor unchanged.
     const cursorBeforeBackfill = cursorKey();
     const r3 = await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(binding), direction: 'backward', before: day(14), after: day(30) }).pipe(
+      syncGmail({ binding: Ref.make(binding), direction: 'backward', before: day(14), after: day(30) }).pipe(
         Effect.provide(inboxSyncTestServices(db, union(mid, recent, older))),
       ),
     );
@@ -248,7 +248,7 @@ describe('runGmailSync against a mock Gmail API', () => {
 
     const { db, mailbox, binding } = await seedMailboxBinding(builder);
     await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(binding), after }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+      syncGmail({ binding: Ref.make(binding), after }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
     );
 
     const feedMessages = await queryFeedMessages(db, mailbox);
@@ -286,7 +286,7 @@ describe('runGmailSync against a mock Gmail API', () => {
     // No cursor → backward (initial sync): Gmail's native newest-first order should be preserved.
     const backward = await seedMailboxBinding(builder);
     await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(backward.binding), after }).pipe(
+      syncGmail({ binding: Ref.make(backward.binding), after }).pipe(
         Effect.provide(inboxSyncTestServices(backward.db, dataset)),
       ),
     );
@@ -297,7 +297,7 @@ describe('runGmailSync against a mock Gmail API', () => {
     // chunk-level walk direction.
     const forward = await seedMailboxBinding(builder);
     await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
+      syncGmail({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
         Effect.provide(inboxSyncTestServices(forward.db, dataset)),
       ),
     );
@@ -320,7 +320,7 @@ describe('runGmailSync against a mock Gmail API', () => {
     // globally consistent across pages — asserted here as a regression guard alongside forward.
     const backward = await seedMailboxBinding(builder);
     await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(backward.binding), after }).pipe(
+      syncGmail({ binding: Ref.make(backward.binding), after }).pipe(
         Effect.provide(inboxSyncTestServices(backward.db, dataset)),
       ),
     );
@@ -332,7 +332,7 @@ describe('runGmailSync against a mock Gmail API', () => {
     // just within each page.
     const forward = await seedMailboxBinding(builder);
     await EffectEx.runPromise(
-      runGmailSync({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
+      syncGmail({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
         Effect.provide(inboxSyncTestServices(forward.db, dataset)),
       ),
     );

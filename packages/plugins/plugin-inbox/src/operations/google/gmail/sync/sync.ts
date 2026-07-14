@@ -31,27 +31,15 @@ import { onArrivalExtractors, readBindingOptions } from '../../../../util';
 import { parseFromHeader } from '../../../util';
 import { type AttachmentMetadata, type DecodedMessage, decodeBody, mapToMessage } from '../mapper';
 
-type DateChunk = {
-  readonly start: Date;
-  readonly end: Date;
-};
-
-type DateRangeConfig = {
-  /** Inclusive-ish lower bound (oldest) of the range to sync. */
-  readonly start: Date;
-  /** Exclusive upper bound (newest) of the range to sync. */
-  readonly end: Date;
-  readonly chunkDays: number;
-  /** `forward` walks oldest→newest windows (incremental resume); `backward` walks newest→oldest (initial/backfill). */
-  readonly direction: Cursor.Direction;
-};
-
+// TODO(burdon): Reconcile with other config types.
 const STREAMING_CONFIG = {
   dateChunkDays: 7,
   messageFetchConcurrency: 5,
   maxResults: 500,
   /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
   pageSize: 10,
+  // TODO(burdon): Not yet wired up.
+  maxPages: 1,
 } as const;
 
 /**
@@ -61,7 +49,7 @@ const STREAMING_CONFIG = {
  */
 export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
 
-export type RunGmailSyncConfig = {
+export type SyncGmailProps = {
   binding: Ref.Ref<SyncBinding.SyncBinding>;
   userId?: string;
   /**
@@ -73,8 +61,6 @@ export type RunGmailSyncConfig = {
   after?: string | number;
   /** Upper (newest) bound of the range — unix ms or yyyy-MM-dd. Defaults to today. Backfill passes the oldest-synced date here to cap a backward walk. */
   before?: string | number;
-  /** Batch size. */
-  batchSize?: number;
   /**
    * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
    * sync, newest-first from today); a cursor → `forward` (incremental, from the cursor). Pass
@@ -91,15 +77,14 @@ export type RunGmailSyncConfig = {
  * so the module's emitted `.d.ts` can name it without the compiler expanding unnameable cross-package
  * types (TS2883); the deployed operation stays portable via `Operation.opaqueHandler`.
  */
-export const runGmailSync = ({
+export const syncGmail = ({
   binding: bindingRef,
   userId = 'me',
   label = 'all',
   after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
   before,
-  batchSize,
   direction,
-}: RunGmailSyncConfig): Effect.Effect<
+}: SyncGmailProps): Effect.Effect<
   { newMessages: number },
   GoogleMailApiError | EntityNotFoundError,
   GoogleMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
@@ -214,7 +199,6 @@ export const runGmailSync = ({
       registry.register(createSyncProgressKey(mailbox), {
         label: mailbox.name ?? 'Mailbox',
         onCancel: () => {
-          console.log('cancelled');
           controller.abort();
         },
       }),
@@ -264,6 +248,7 @@ export const runGmailSync = ({
         coverage,
         attachments: attachmentCount,
       };
+
       statsCompartments.forEach((compartment) => compartment.set(snapshot));
     };
 
@@ -292,10 +277,11 @@ export const runGmailSync = ({
         attachmentCount += mapped.attachments?.length ?? 0;
         publishStats();
 
-        // TODO(burdon): Apply batch to pages not messages?
-        if (batchSize && processed > batchSize) {
-          controller.abort();
-        }
+        // TODO(burdon): Apply batch to pages not messages? Move out of here.
+        // TODO(burdon): Need to propagate signal to trigger.
+        // if (batchSize && processed > batchSize) {
+        //   controller.abort();
+        // }
 
         return mapped;
       }),
@@ -304,7 +290,7 @@ export const runGmailSync = ({
     //
     // Start pipeline
     //
-    yield* gmailSource({
+    yield* fetchMessages({
       userId,
       label,
       direction: resolvedDirection,
@@ -329,12 +315,11 @@ export const runGmailSync = ({
       //   (docs/superpowers/specs/2026-07-04-mail-sync-performance-exploration.md) quantifies it.
       // EmailStage.htmlToMarkdown,
       mapToMessageStage,
-      // TODO(burdon): Move this to the end of the pipeline?
-      collectStats,
       EmailStage.processAttachments(),
       onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
+      collectStats,
       EmailCommit.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
@@ -385,10 +370,18 @@ export const runGmailSync = ({
     };
   }).pipe(Effect.withSpan('gmail-sync'));
 
+/** Gmail-specific decode stage: base64-decode the body; drop messages with no body. */
+const decodeBodyStage: Stage.Stage<GoogleMail.Message, DecodedMessage, never, never> = Stage.map(
+  'decode-body',
+  (message: GoogleMail.Message) => Effect.sync(() => decodeBody(message) ?? undefined),
+);
+
+/**
+ * Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
+ * a foreign key). Returns a `gmailLabelId -> Tag uri` map used to index messages by tag.
+ */
 // TODO(wittjosiah): Migrate this label→Tag sync onto a pipeline too (source: labels; sink:
 //   find-or-create Tag), rather than the imperative loop below.
-// Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
-// a foreign key). Returns a `gmailLabelId -> Tag uri` map used to index messages by tag.
 const syncLabels = Effect.fn('gmail-sync.labels')(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const api = yield* GoogleMailApi;
   const { labels } = yield* api.listLabels(userId);
@@ -406,23 +399,9 @@ const syncLabels = Effect.fn('gmail-sync.labels')(function* (mailbox: Mailbox.Ma
   return labelMap;
 });
 
-/** Gmail-specific decode stage: base64-decode the body; drop messages with no body. */
-const decodeBodyStage: Stage.Stage<GoogleMail.Message, DecodedMessage, never, never> = Stage.map(
-  'decode-body',
-  (message: GoogleMail.Message) => Effect.sync(() => decodeBody(message) ?? undefined),
-);
-
-/**
- * Normalizes RFC 4648 §5 base64url (Gmail's attachment/body encoding) to standard base64 with
- * padding. The browser `Buffer` polyfill (`@dxos/node-std`, used when this pipeline runs client-side)
- * does not implement the `'base64url'` encoding name that Node's own `Buffer` accepts — decoding via
- * `Buffer.from(data, 'base64url')` throws `Unknown encoding` there, so normalize and use `'base64'`.
- */
-const base64UrlToBase64 = (data: string): string => {
-  const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
-  const padding = base64.length % 4 === 0 ? '' : '='.repeat(4 - (base64.length % 4));
-  return base64 + padding;
-};
+//
+// Attachments
+//
 
 /**
  * Downloads each attachment's bytes via `GoogleMailApi.getAttachment`, decoding the base64url `data`
@@ -461,10 +440,27 @@ const fetchAttachments = (
         ),
       { concurrency: STREAMING_CONFIG.messageFetchConcurrency },
     );
+
     return fetched.filter((attachment): attachment is EmailStage.Attachment => attachment !== undefined);
   });
 
-type GmailSourceConfig = {
+/**
+ * Normalizes RFC 4648 §5 base64url (Gmail's attachment/body encoding) to standard base64 with
+ * padding. The browser `Buffer` polyfill (`@dxos/node-std`, used when this pipeline runs client-side)
+ * does not implement the `'base64url'` encoding name that Node's own `Buffer` accepts — decoding via
+ * `Buffer.from(data, 'base64url')` throws `Unknown encoding` there, so normalize and use `'base64'`.
+ */
+const base64UrlToBase64 = (data: string): string => {
+  const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = base64.length % 4 === 0 ? '' : '='.repeat(4 - (base64.length % 4));
+  return base64 + padding;
+};
+
+//
+// Fetch messages
+//
+
+type FetchMessagesProps = {
   readonly userId: string;
   readonly label: string;
   readonly direction: Cursor.Direction;
@@ -485,13 +481,12 @@ type GmailSourceConfig = {
  * window are emitted; both cover the same range (see `fetchMessagesForDateRange`'s within-chunk
  * ordering).
  */
-// TODO(burdon): Rename.
-const gmailSource = (config: GmailSourceConfig) =>
+const fetchMessages = (config: FetchMessagesProps) =>
   // Resolve the API service once, then build the stream (id fetch → per-message fetch) against it.
   Stream.unwrap(
     Effect.gen(function* () {
       const api = yield* GoogleMailApi;
-      const rangeConfig: DateRangeConfig = {
+      const rangeConfig: DateRange = {
         start: config.start,
         end: config.end,
         chunkDays: STREAMING_CONFIG.dateChunkDays,
@@ -500,21 +495,9 @@ const gmailSource = (config: GmailSourceConfig) =>
 
       const messageIds = Function.pipe(
         generateDateRanges(rangeConfig),
-        Stream.flatMap(
-          (dateChunk) =>
-            fetchMessagesForDateRange(
-              api,
-              config.userId,
-              config.label,
-              dateChunk,
-              config.direction,
-              config.searchFilter,
-              config.onEnumerated,
-            ),
-          {
-            concurrency: 1,
-          },
-        ),
+        Stream.flatMap((dateChunk) => fetchMessagesForDateRange(api, dateChunk, config), {
+          concurrency: 1,
+        }),
       );
 
       return messageIds.pipe(
@@ -524,55 +507,19 @@ const gmailSource = (config: GmailSourceConfig) =>
               Effect.withSpan('gmail-sync.fetch.message'),
               Effect.tap(() => Effect.sync(() => config.onRetrieved?.())),
             ),
-          { concurrency: STREAMING_CONFIG.messageFetchConcurrency },
+          {
+            concurrency: STREAMING_CONFIG.messageFetchConcurrency,
+          },
         ),
       );
     }),
   );
 
-/**
- * Emits contiguous `chunkDays`-wide date windows spanning [start, end). `forward` yields them
- * oldest-first; `backward` yields them newest-first. Windows are contiguous (day-granular `after:`/
- * `before:` is exclusive at the upper bound), so every day in the range is covered exactly once.
- */
-const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =>
-  Stream.unfoldChunkEffect(config.direction === 'forward' ? config.start : config.end, (position) =>
-    Effect.gen(function* () {
-      if (config.direction === 'forward') {
-        if (position >= config.end) {
-          return Option.none();
-        }
-        const chunkEnd = addDays(position, config.chunkDays);
-        const end = chunkEnd > config.end ? config.end : chunkEnd;
-        const chunk: DateChunk = { start: position, end };
-        log('processing date chunk', {
-          start: format(chunk.start, 'yyyy-MM-dd'),
-          end: format(chunk.end, 'yyyy-MM-dd'),
-        });
-        return Option.some([Chunk.of(chunk), end]);
-      }
-      if (position <= config.start) {
-        return Option.none();
-      }
-      const chunkStart = subDays(position, config.chunkDays);
-      const start = chunkStart < config.start ? config.start : chunkStart;
-      const chunk: DateChunk = { start, end: position };
-      log('processing date chunk', { start: format(chunk.start, 'yyyy-MM-dd'), end: format(chunk.end, 'yyyy-MM-dd') });
-      return Option.some([Chunk.of(chunk), start]);
-    }),
-  );
-
-const fetchMessagesForDateRange = (
-  api: GoogleMailApiService,
-  userId: string,
-  label: string,
-  dateChunk: DateChunk,
-  direction: Cursor.Direction,
-  searchFilter?: string,
-  onEnumerated?: (count: number) => void,
-) =>
+const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChunk, config: FetchMessagesProps) =>
   Stream.unwrap(
     Effect.gen(function* () {
+      const { userId, label, direction, searchFilter, onEnumerated } = config;
+
       // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
       // any other value restricts to that Gmail label.
       const folderScope =
@@ -605,9 +552,64 @@ const fetchMessagesForDateRange = (
       // messages commit first; a `forward` walk (incremental resume) wants oldest-first across the
       // whole chunk, matching the chunk-level walk direction (see `generateDateRanges`).
       const orderedMessageIds = direction === 'forward' ? messageIds.slice().reverse() : messageIds;
+
       // Report this chunk's exact count now (before any full-message fetch) so the meter's retrieval
       // total leads the per-message advance.
       onEnumerated?.(orderedMessageIds.length);
       return Stream.fromIterable(orderedMessageIds);
+    }),
+  );
+
+//
+// Date range utilities
+//
+
+type DateChunk = {
+  readonly start: Date;
+  readonly end: Date;
+};
+
+type DateRange = {
+  /** Inclusive-ish lower bound (oldest) of the range to sync. */
+  readonly start: Date;
+  /** Exclusive upper bound (newest) of the range to sync. */
+  readonly end: Date;
+  readonly chunkDays: number;
+  /** `forward` walks oldest→newest windows (incremental resume); `backward` walks newest→oldest (initial/backfill). */
+  readonly direction: Cursor.Direction;
+};
+
+/**
+ * Emits contiguous `chunkDays`-wide date windows spanning [start, end). `forward` yields them
+ * oldest-first; `backward` yields them newest-first. Windows are contiguous (day-granular `after:`/
+ * `before:` is exclusive at the upper bound), so every day in the range is covered exactly once.
+ */
+const generateDateRanges = (config: DateRange): Stream.Stream<DateChunk> =>
+  Stream.unfoldChunkEffect(config.direction === 'forward' ? config.start : config.end, (position) =>
+    Effect.gen(function* () {
+      if (config.direction === 'forward') {
+        if (position >= config.end) {
+          return Option.none();
+        }
+
+        const chunkEnd = addDays(position, config.chunkDays);
+        const end = chunkEnd > config.end ? config.end : chunkEnd;
+        const chunk: DateChunk = { start: position, end };
+        log('processing date chunk', {
+          start: format(chunk.start, 'yyyy-MM-dd'),
+          end: format(chunk.end, 'yyyy-MM-dd'),
+        });
+        return Option.some([Chunk.of(chunk), end]);
+      }
+
+      if (position <= config.start) {
+        return Option.none();
+      }
+
+      const chunkStart = subDays(position, config.chunkDays);
+      const start = chunkStart < config.start ? config.start : chunkStart;
+      const chunk: DateChunk = { start, end: position };
+      log('processing date chunk', { start: format(chunk.start, 'yyyy-MM-dd'), end: format(chunk.end, 'yyyy-MM-dd') });
+      return Option.some([Chunk.of(chunk), start]);
     }),
   );

@@ -163,9 +163,10 @@ export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArti
   const dismiss = useCallback(
     (suggestion: Suggestion) =>
       Obj.update(mailbox, (mailbox) => {
-        const index = (mailbox.topicSuggestions ?? []).findIndex((entry) => entry.label === suggestion.label);
-        if (index >= 0) {
-          mailbox.topicSuggestions!.splice(index, 1);
+        const topicSuggestions = mailbox.topicSuggestions;
+        const index = topicSuggestions?.findIndex((entry) => entry.label === suggestion.label) ?? -1;
+        if (topicSuggestions && index >= 0) {
+          topicSuggestions.splice(index, 1);
         }
       }),
     [mailbox],

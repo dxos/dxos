@@ -18,7 +18,7 @@ import { GoogleCalendar } from '../../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
 import { GoogleCredentials } from '../../../../services';
 import { Calendar, InboxOperation } from '../../../../types';
-import { calendarSource, makeRecurringDedupStage, mapEventStage } from './sync';
+import { getEvents, makeRecurringDedupStage, mapEventStage } from './sync';
 
 const COMMIT_PAGE_SIZE = 10;
 
@@ -71,7 +71,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.GoogleCalendarSync> =
           log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
           const stats: SyncBinding.Stats = { newMessages: 0 };
-          yield* calendarSource(calendarId, cursorKey, {
+          yield* getEvents(calendarId, cursorKey, {
             syncBackDays: syncBack,
             syncForwardDays: syncForward,
             pageSize: defaults.pageSize,
