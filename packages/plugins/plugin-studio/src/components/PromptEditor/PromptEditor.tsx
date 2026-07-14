@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import { useThemeContext } from '@dxos/react-ui';
+import { ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import {
@@ -18,7 +18,7 @@ import {
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-export type PromptEditorProps = {
+export type PromptEditorProps = ThemedClassName<{
   /** Stable editor/document id (used for collaboration + selection state). */
   id: string;
   /** The live prompt Text object (edits persist to its content). Ignored when `readonly`. */
@@ -29,8 +29,7 @@ export type PromptEditorProps = {
   compact?: boolean;
   /** Show a static, non-editable prompt (`value`) rather than the live `text`. */
   readonly?: boolean;
-  classNames?: string;
-};
+}>;
 
 /**
  * Editable view of an Artifact's prompt, live-bound to the Instructions `text` object. Mirrors
@@ -38,7 +37,7 @@ export type PromptEditorProps = {
  * React prop, keeping the container's prop graph free of non-serializable editor state. When
  * `readonly`, it shows a static `value` (a produced variant's recorded prompt) with no persistence.
  */
-export const PromptEditor = ({ id, text, value, placeholder, compact, readonly, classNames }: PromptEditorProps) => {
+export const PromptEditor = ({ classNames, id, text, value, placeholder, compact, readonly }: PromptEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     const theme = createThemeExtensions({ themeMode, slots: compact ? compactSlots : documentSlots });
@@ -56,8 +55,8 @@ export const PromptEditor = ({ id, text, value, placeholder, compact, readonly, 
     return {
       initialValue: text.content ?? '',
       extensions: [
-        createBasicExtensions({ lineWrapping: true, placeholder }),
         theme,
+        createBasicExtensions({ lineWrapping: true, placeholder }),
         createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
         createMarkdownExtensions(),
       ],

@@ -75,7 +75,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         url: variant.url,
         content: variant.content,
         contentType: variant.contentType,
-        label: variant.name ?? variant.generation?.prompt ?? undefined,
+        label: variant.name,
       })),
     [variants],
   );
@@ -303,60 +303,66 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
-        <div className='grid grid-rows-[6lh_1fr] py-2 gap-2 dx-document'>
-          <PromptEditor
-            classNames='border border-separator rounded-sm p-2'
-            id={selectedVariant ? `${artifactId}/variant/${selectedVariant.id}/prompt` : `${artifactId}/prompt`}
-            text={composing ? promptText : undefined}
-            value={composing ? undefined : selectedGeneration?.prompt}
-            readonly={!composing}
-            placeholder={t('prompt.placeholder')}
-            compact
-          />
-          <div className='flex flex-col'>
-            {/* A produced (frozen) variant can be designated the artifact's cover default. */}
-            <div className='flex flex-col gap-1'>
-              <div className='h-6'>
-                {selectedVariant && !selectedVariant.jobId && (
-                  <Input.Root>
-                    <div className='flex items-center gap-2'>
-                      <Input.Checkbox
-                        checked={isCover}
-                        onCheckedChange={(checked) => handleCoverChange(checked === true)}
-                      />
-                      <Input.Label>{t('cover.label')}</Input.Label>
-                    </div>
-                  </Input.Root>
-                )}
-              </div>
-              {/* Artifact-level name (independent of the selected variant). */}
-              <Input.Root>
-                <Input.TextInput
-                  placeholder={t('name.placeholder')}
-                  value={artifactSnapshot?.name ?? ''}
-                  onChange={handleNameChange}
-                />
-              </Input.Root>
+        <div className='grid grid-rows-[4rem_6lh_1fr] py-2 gap-2 dx-document overflow-hidden'>
+          {/* A produced (frozen) variant can be designated the artifact's cover default. */}
+          <div className='flex flex-col gap-1'>
+            {/* Artifact-level name (independent of the selected variant). */}
+            <Input.Root>
+              <Input.TextInput
+                placeholder={t('name.placeholder')}
+                value={artifactSnapshot?.name ?? ''}
+                onChange={handleNameChange}
+              />
+            </Input.Root>
+            <div className='h-6 flex justify-end'>
+              {selectedVariant && !selectedVariant.jobId && (
+                <Input.Root>
+                  <div className='flex items-center gap-2'>
+                    <Input.Checkbox
+                      checked={isCover}
+                      onCheckedChange={(checked) => handleCoverChange(checked === true)}
+                    />
+                    <Input.Label>{t('cover.label')}</Input.Label>
+                  </div>
+                </Input.Root>
+              )}
             </div>
+          </div>
 
-            {/* Schema-driven request-config form (from the generator's requestSchema). Composing
+          <div>
+            {/* <Input.Root>
+              <Input.Label>{t('prompt.label')}</Input.Label>
+            </Input.Root> */}
+            <PromptEditor
+              classNames='border border-separator rounded-sm _p-2'
+              id={selectedVariant ? `${artifactId}/variant/${selectedVariant.id}/prompt` : `${artifactId}/prompt`}
+              text={composing ? promptText : undefined}
+              value={composing ? undefined : selectedGeneration?.prompt}
+              readonly={!composing}
+              placeholder={t('prompt.placeholder')}
+              compact
+            />
+          </div>
+
+          {/* Schema-driven request-config form (from the generator's requestSchema). Composing
                 edits the draft; a produced variant is shown read-only (all fields, empties kept). */}
-            {provider && (
-              <Form.Root
-                key={composing ? 'draft' : selectedVariant?.id}
-                schema={provider.requestSchema}
-                values={composing ? draftConfig : (selectedVariant?.config ?? {})}
-                readonly={!composing}
-                keepEmptyReadonly={!composing}
-                autoSave={composing}
-                onValuesChanged={composing ? handleConfigChange : undefined}
-              >
+          {provider && (
+            <Form.Root
+              key={composing ? 'draft' : selectedVariant?.id}
+              schema={provider.requestSchema}
+              values={composing ? draftConfig : (selectedVariant?.config ?? {})}
+              readonly={!composing}
+              keepEmptyReadonly={!composing}
+              autoSave={composing}
+              onValuesChanged={composing ? handleConfigChange : undefined}
+            >
+              <Form.Viewport scroll>
                 <Form.Content>
                   <Form.FieldSet />
                 </Form.Content>
-              </Form.Root>
-            )}
-          </div>
+              </Form.Viewport>
+            </Form.Root>
+          )}
         </div>
         <div className='dx-container border-t border-subdued-separator'>
           {selected === 'all' ? (
