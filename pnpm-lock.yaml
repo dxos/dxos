@@ -3601,6 +3601,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@dxos/vite-plugin-icons':
+        specifier: workspace:*
+        version: link:../../../tools/vite-plugin-icons
       '@dxos/vite-plugin-log':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-log

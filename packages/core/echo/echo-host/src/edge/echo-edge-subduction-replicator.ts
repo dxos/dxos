@@ -699,7 +699,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         remoteId: this._remotePeerId,
       });
     } else {
-      log.verbose('sending...', { type: wire.type, frameCount, remoteId: this._remotePeerId });
+      log.trace('sending...', { type: wire.type, frameCount, remoteId: this._remotePeerId });
     }
 
     const encoded = cbor.encode(wire);

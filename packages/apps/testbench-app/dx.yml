@@ -6,12 +6,13 @@ runtime:
       dataStore: 1
     edgeFeatures:
       signaling: true
-      echoReplicator: true
+      echoReplicator: false
+      subductionReplicator: true
       feedReplicator: true
       agents: true
     disableP2pReplication: true
     log:
-      filter: 'echo-edge-replicator:debug,info'
+      filter: 'echo-edge-subduction-replicator:debug'
   services:
     # signaling:
     #   - server: wss://kube.dxos.org/.well-known/dx/signal

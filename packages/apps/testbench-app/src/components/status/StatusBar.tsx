@@ -51,9 +51,7 @@ export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) 
       <Button variant='ghost'>
         <NetworkIndicator />
       </Button>
-      <Button variant='ghost'>
-        <ErrorIndicator />
-      </Button>
+      <ErrorIndicator />
     </div>
   );
 };

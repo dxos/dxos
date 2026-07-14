@@ -20,6 +20,7 @@ import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
+import { SyncStatePanel } from './SyncStatePanel';
 import { StatusBar } from './status';
 
 export const Main = () => {
@@ -227,6 +228,7 @@ export const Main = () => {
           )}
         </div>
       </div>
+      <SyncStatePanel space={space} />
       {showDevTools && (
         <div className='flex flex-col w-[120rem] h-full bg-white dark:bg-black'>
           <Suspense fallback={<></>}>

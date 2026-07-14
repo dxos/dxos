@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 // TODO(wittjosiah): Restore observability for testbench.
 // import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider } from '@dxos/react-client';
-import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { type ThemeMode, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { Expando } from '@dxos/schema';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -68,7 +68,9 @@ const App = () => {
   const themeMode = useThemeWatcher();
   return (
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations} noCache>
-      <RouterProvider router={router} />
+      <Tooltip.Provider>
+        <RouterProvider router={router} />
+      </Tooltip.Provider>
     </ThemeProvider>
   );
 };

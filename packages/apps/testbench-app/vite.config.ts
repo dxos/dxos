@@ -13,11 +13,16 @@ import { UserConfig } from 'vitest/config';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
+import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
+
+const rootDir = searchForWorkspaceRoot(process.cwd());
+const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
@@ -145,6 +150,26 @@ export default defineConfig(
         ConfigPlugin({
           root: dirname,
           env: ['DX_VAULT'],
+        }),
+        IconsPlugin({
+          // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
+          // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+          symbolPattern:
+            '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+          assetPath: (iconSet, name, variant) => {
+            switch (iconSet) {
+              case 'dx':
+                return `${dxosIcons}/${name}.svg`;
+              default:
+                return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+            }
+          },
+          spriteFile: 'icons.svg',
+          contentPaths: [
+            path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+            path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+            path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
+          ],
         }),
         ThemePlugin({}),
         WasmPlugin(),
