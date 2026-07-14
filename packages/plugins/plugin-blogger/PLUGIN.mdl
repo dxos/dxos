@@ -31,10 +31,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ### Existing types used by this plugin
 
-| Type                 | Source                     | Notes                                                                 |
+| Type                 | Source                      | Notes                                                                 |
 | -------------------- | --------------------------- | ---------------------------------------------------------------------- |
-| `Markdown.Document`  | `@dxos/plugin-markdown`    | Backs `instructions`, `outline`, and every `Draft.content`.           |
-| `Connection`         | `@dxos/plugin-connector`   | Provider-neutral credential handle passed to every `PublisherService` call. |
+| `Markdown.Document`  | `@dxos/plugin-markdown`     | Backs `instructions`, `outline`, and every `Draft.content`.           |
+| `Connection`         | `@dxos/plugin-connector`    | Provider-neutral credential handle passed to every `PublisherService` call. |
 
 ## Types
 
@@ -318,10 +318,10 @@ op UnpublishDraft
 ## Features
 
 ```mdl
-feat F-1: Publications Root
+feat F-1: Publications Section
 
-  req F-1.1: A global top-level "Publications" branch node is contributed on the app-graph root, sourced from the personal space's Publication objects.
-  req F-1.2: "+ Publication" on the Publications root invokes op:AddPublication targeting the personal space's database.
+  req F-1.1: A "Publications" section is contributed under each space's content group (mirroring plugin-studio's Studio section), listing that space's Publication objects as branch nodes.
+  req F-1.2: "+ Publication" on the Publications section invokes op:AddPublication targeting that space's database.
   req F-1.3: Each Publication node expands to its Post children, with a "+ Post" action invoking op:AddPost.
 ```
 
@@ -441,11 +441,12 @@ test T-8: UnpublishDraft no-ops when never linked
 
 ## Design Notes
 
-- **Navtree sourcing (deferred).** The Publications root sources its children
-  from the personal space only (`AppSpace.getPersonalSpace`), not an
-  all-spaces aggregation. The graph-builder connector isolates this as a
-  single seam (`getPublications`) so the choice can be widened later without
-  touching the rest of the shape.
+- **Navtree hub (per space).** The Publications section is contributed per
+  space under the `content` group (`AppNodeMatcher.whenNavTreeGroup`), mirroring
+  plugin-studio's Studio section — so each space shows its own Publications, and
+  the section is always present as the create hub. A custom Publication node
+  type scopes the "+ Post" action so it never attaches to Publication objects
+  listed under the space's Database section.
 - **Connection selection (deferred).** component:PostArticle resolves the
   first contributed service:PublisherService and the first Connection in the
   space whose linked AccessToken's `source` matches it — there is no

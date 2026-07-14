@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
@@ -17,103 +17,86 @@ import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
 import { Blogger } from '#types';
 
-/** Stable id of the top-level "Publications" branch node. */
-const PUBLICATIONS_ID = 'blogger-publications';
+/** Stable navtree segment of the "Publications" section. */
+const PUBLICATIONS_SEGMENT = 'publications';
 
-/** Node type of the top-level "Publications" branch node. */
-const PUBLICATIONS_NODE_TYPE = `${meta.profile.key}/publications`;
-
-/**
- * Node type of a Publication node under the Publications root. A custom type (rather than the ECHO
- * typename) scopes the posts connector to these nodes, so it never bleeds onto Publication objects
- * that also appear under a space's Database section.
- */
-const PUBLICATION_NODE_TYPE = `${meta.profile.key}/publication`;
+/** Node type of the "Publications" section under a space's content group. */
+const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;
 
 /**
- * Sources the Publication objects surfaced under the global Publications root. Isolated here as the
- * single seam so it can later be widened from the personal space to all spaces without touching the
- * graph-builder shape.
+ * Node type of a Publication branch node under the Publications section. A custom type (rather than
+ * the ECHO typename) scopes the post actions to these nodes, so they never bleed onto Publication
+ * objects that also appear under a space's Database section.
  */
-const getPublications = (
-  client: Parameters<typeof AppSpace.getPersonalSpace>[0],
-  get: Atom.Context,
-): Blogger.Publication[] => {
-  const space = AppSpace.getPersonalSpace(client);
-  if (!space) {
-    return [];
-  }
+const PUBLICATION_NODE_TYPE = `${meta.profile.key}.publication`;
 
-  return get(space.db.query(Filter.type(Blogger.Publication)).atom);
-};
-
-/** Builds a branch node for a single Publication; children (Posts) are attached by the posts connector. */
-const makePublicationNode = (
-  publication: Blogger.Publication,
-  get: Atom.Context,
-): Node.NodeArg<Blogger.Publication> => {
-  const snapshot = get(Obj.atom(publication));
-  return Node.make({
-    id: publication.id,
-    type: PUBLICATION_NODE_TYPE,
-    data: publication,
-    properties: {
-      label: snapshot.name || ['object-name.placeholder', { ns: Type.getTypename(Blogger.Publication) }],
-      icon: 'ph--books--regular',
-      iconHue: 'amber',
-      role: 'branch',
-      selectable: true,
-    },
-  });
-};
-
+/**
+ * Contributes the Publications navtree hub, mirroring plugin-studio's Studio section: a "Publications"
+ * section under each space's `content` group (always present, so it is the create hub), with a branch
+ * node per Publication whose children are that Publication's Posts.
+ */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
     const extensions = yield* Effect.all([
-      // Global top-level "Publications" branch node with its Publication children inline.
+      // "Publications" section under each space's content group.
       GraphBuilder.createExtension({
-        id: `${meta.profile.key}/root`,
-        match: NodeMatcher.whenRoot,
-        connector: (_node, get) => {
-          // Tolerate the Client capability's absence during teardown (e.g. story plugin-manager swaps).
-          const [client] = capabilities.getAll(ClientCapabilities.Client);
-          if (!client) {
-            return Effect.succeed([]);
-          }
-
-          const publications = getPublications(client, get);
-          return Effect.succeed([
-            Node.make({
-              id: PUBLICATIONS_ID,
-              type: PUBLICATIONS_NODE_TYPE,
-              properties: {
-                label: ['publications.label', { ns: meta.profile.key }],
-                icon: 'ph--pen-nib--regular',
-                iconHue: 'amber',
-                role: 'branch',
-                position: 500,
-                testId: 'bloggerPlugin.publications',
-              },
-              nodes: publications.map((publication) => makePublicationNode(publication, get)),
+        id: 'publicationsSection',
+        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+        connector: (space) =>
+          Effect.succeed([
+            AppNode.makeSection({
+              id: PUBLICATIONS_SEGMENT,
+              type: PUBLICATIONS_SECTION_TYPE,
+              label: ['publications.label', { ns: meta.profile.key }],
+              icon: 'ph--books--regular',
+              iconHue: 'amber',
+              space,
+              position: 400,
             }),
-          ]);
-        },
+          ]),
       }),
 
-      // "+ Publication" action on the Publications root; files the new publication in the personal space.
+      // A branch node per Publication under the section, each with its Posts as children, plus the
+      // "+ Publication" action on the section.
       GraphBuilder.createExtension({
-        id: `${meta.profile.key}/root-actions`,
-        match: NodeMatcher.whenNodeType(PUBLICATIONS_NODE_TYPE),
-        actions: () => {
-          const [client] = capabilities.getAll(ClientCapabilities.Client);
-          const space = client ? AppSpace.getPersonalSpace(client) : undefined;
-          if (!space) {
-            return Effect.succeed([]);
-          }
+        id: 'publicationNodes',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === PUBLICATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+        },
+        connector: (space, get) => {
+          const publications = get(space.db.query(Filter.type(Blogger.Publication)).atom);
+          return Effect.succeed(
+            publications.map((publication) => {
+              const snapshot = get(Obj.atom(publication));
+              const posts = (snapshot.posts ?? [])
+                .map((ref) => {
+                  // Subscribe to the ref so the node re-runs once the target loads.
+                  get(Obj.atom(ref));
+                  return ref.target;
+                })
+                .filter(isNonNullable);
 
-          return Effect.succeed([
+              return Node.make({
+                id: publication.id,
+                type: PUBLICATION_NODE_TYPE,
+                data: publication,
+                properties: {
+                  label: snapshot.name || ['object-name.placeholder', { ns: Type.getTypename(Blogger.Publication) }],
+                  icon: 'ph--books--regular',
+                  iconHue: 'amber',
+                  role: 'branch',
+                  space,
+                },
+                nodes: posts
+                  .map((post) => AppNode.makeObject({ get, db: space.db, object: post }))
+                  .filter(isNonNullable),
+              });
+            }),
+          );
+        },
+        actions: (space) =>
+          Effect.succeed([
             Node.makeAction({
               id: 'add-publication',
               data: () => Operation.invoke(BloggerOperation.AddPublication, { target: space.db }),
@@ -123,38 +106,13 @@ export default Capability.makeModule(
                 disposition: 'list-item-primary',
               },
             }),
-          ]);
-        },
+          ]),
       }),
 
-      // Post children of each Publication node, plus a "+ Post" action.
+      // "+ Post" action on each Publication node.
       GraphBuilder.createExtension({
-        id: `${meta.profile.key}/posts`,
+        id: 'publicationActions',
         match: NodeMatcher.whenNodeType(PUBLICATION_NODE_TYPE),
-        connector: (node, get) => {
-          if (!Obj.instanceOf(Blogger.Publication, node.data)) {
-            return Effect.succeed([]);
-          }
-
-          const publication = node.data;
-          const db = Obj.getDatabase(publication);
-          if (!db) {
-            return Effect.succeed([]);
-          }
-
-          const snapshot = get(Obj.atom(publication));
-          const posts = (snapshot.posts ?? [])
-            .map((ref) => {
-              // Subscribe to the ref so the connector re-runs once the target loads.
-              get(Obj.atom(ref));
-              return ref.target;
-            })
-            .filter(isNonNullable);
-
-          return Effect.succeed(
-            posts.map((post) => AppNode.makeObject({ get, db, object: post })).filter(isNonNullable),
-          );
-        },
         actions: (node) => {
           if (!Obj.instanceOf(Blogger.Publication, node.data)) {
             return Effect.succeed([]);
@@ -169,8 +127,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             Node.makeAction({
               id: 'add-post',
-              data: () =>
-                Operation.invoke(BloggerOperation.AddPost, { publication: Ref.make(publication), target: db }),
+              data: () => Operation.invoke(BloggerOperation.AddPost, { publication: Ref.make(publication), target: db }),
               properties: {
                 label: ['add-object.label', { ns: Type.getTypename(Blogger.Post) }],
                 icon: 'ph--plus--regular',
