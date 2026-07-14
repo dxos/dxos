@@ -17,6 +17,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
 import { AccessToken, Cursor } from '@dxos/types';
 
+import { type TestConnectionStatus } from '#hooks';
 import { translations } from '#translations';
 import { Connection, SyncBinding } from '#types';
 
@@ -33,7 +34,17 @@ const OptionsSchema = Schema.Struct({
   ),
 });
 
-const DefaultStory = ({ optionsSchema }: { optionsSchema?: Schema.Schema<any, any> }) => {
+const DefaultStory = ({
+  optionsSchema,
+  testStatus = 'valid',
+  testError,
+  canReauthenticate = true,
+}: {
+  optionsSchema?: Schema.Schema<any, any>;
+  testStatus?: TestConnectionStatus;
+  testError?: string;
+  canReauthenticate?: boolean;
+}) => {
   const [space] = useSpaces();
   const [connection] = useQuery(space?.db, Filter.type(Connection.Connection));
   const bindings = useQuery(
@@ -63,8 +74,14 @@ const DefaultStory = ({ optionsSchema }: { optionsSchema?: Schema.Schema<any, an
       syncing={false}
       loadingTargets={false}
       syncTargetsAvailable
+      testStatus={testStatus}
+      testError={testError}
+      canReauthenticate={canReauthenticate}
+      reauthenticating={false}
       onSync={() => {}}
       onChangeTargets={() => {}}
+      onReauthenticate={() => {}}
+      onTestConnection={() => {}}
       onDelete={() => {}}
       onRemoveBinding={handleRemoveBinding}
     />
@@ -161,5 +178,21 @@ export const Default: Story = {
 export const WithoutOptions: Story = {
   args: {
     optionsSchema: undefined,
+  },
+};
+
+export const CredentialExpired: Story = {
+  args: {
+    optionsSchema: OptionsSchema,
+    testStatus: 'invalid',
+    testError: 'Trello rejected the credential. Reauthenticate to continue syncing.',
+    canReauthenticate: true,
+  },
+};
+
+export const Checking: Story = {
+  args: {
+    optionsSchema: OptionsSchema,
+    testStatus: 'testing',
   },
 };
