@@ -6,10 +6,33 @@
 
 import * as Schema from 'effect/Schema';
 
+import { type CapabilityManager } from '@dxos/app-framework';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
 
+import * as StudioCapabilities from './StudioCapabilities';
 import * as Variant from './Variant';
+
+/**
+ * Resolve the connector(s) whose credential this artifact's provider needs, from the artifact's
+ * `kind` via the registered {@link StudioCapabilities.GenerationService} providers. The explicit
+ * return type keeps the {@link Artifact} reference (below) out of the annotation's inferred type,
+ * which would otherwise make the class recursively reference itself.
+ */
+const resolveArtifactConnectorIds = (
+  object: Obj.Unknown,
+  capabilities: CapabilityManager.CapabilityManager,
+): readonly string[] => {
+  if (!Obj.instanceOf(Artifact, object)) {
+    return [];
+  }
+  const provider = capabilities
+    .getAll(StudioCapabilities.GenerationService)
+    .flat()
+    .find((service) => service.kind === object.kind);
+  return provider?.connectorId ? [provider.connectorId] : [];
+};
 
 /**
  * A media-agnostic unit of creative work: a set of produced {@link Variant}s. `kind` is an open
@@ -33,6 +56,9 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--paint-brush--regular', hue: 'purple' }),
+    // Offer "Connect" when the artifact's provider needs a credential. The connectorId is resolved
+    // per-instance from the artifact's `kind` via the registered `GenerationService` providers.
+    ConnectorAuthAnnotation.set({ connectorIds: resolveArtifactConnectorIds }),
   ),
 ) {}
 

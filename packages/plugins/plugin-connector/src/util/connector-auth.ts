@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppNode } from '@dxos/app-toolkit';
 import { Database, type Key, type Obj, type Ref, Relation } from '@dxos/echo';
-import { Node } from '@dxos/plugin-graph';
+import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { ConnectorCoordinator, type ConnectorEntry } from '../types';

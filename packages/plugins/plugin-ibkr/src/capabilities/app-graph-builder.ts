@@ -10,11 +10,9 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Connection, Connector, connectorAuthActions } from '@dxos/plugin-connector';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 
-import { IBKR_CONNECTOR_ID } from '../constants';
 import { meta } from '../meta';
 import { Ibkr } from '../types';
 
@@ -54,36 +52,8 @@ export default Capability.makeModule(
       },
     });
 
-    const connectorAuthExtension = yield* GraphBuilder.createExtension({
-      id: 'portfolioConnectorAuth',
-      match: (node) => (Ibkr.isPortfolio(node.data) ? Option.some(node.data) : Option.none()),
-      // A `connector:` (not `actions:`) extension, so `connectorAuthActions`' group node keeps its
-      // type — see the doc comment on `AppNode.makeToolbarActionGroup`.
-      relation: Node.actionRelation(),
-      connector: (portfolio, get) => {
-        const db = Obj.getDatabase(portfolio);
-        if (!db) {
-          return Effect.succeed([]);
-        }
-        const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
-        const connected = allConnections.some((connection) => connection.connectorId === IBKR_CONNECTOR_ID);
-        if (connected) {
-          // Connected: the article's own "Sync" button covers this action.
-          return Effect.succeed([]);
-        }
-        return Effect.gen(function* () {
-          const allConnectors = (yield* Capability.Service).getAll(Connector).flat();
-          return connectorAuthActions({
-            connectorIds: [IBKR_CONNECTOR_ID],
-            db,
-            spaceId: db.spaceId,
-            allConnectors,
-            allConnections,
-          });
-        });
-      },
-    });
-
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension, connectorAuthExtension]);
+    // Connect is contributed by the connector plugin (via the Portfolio type's `ConnectorAuthAnnotation`);
+    // the article inlines its own "Sync" action.
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension]);
   }),
 );

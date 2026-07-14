@@ -8,12 +8,11 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Filter, Obj } from '@dxos/echo';
-import { Connection, Connector, connectorAuthActions } from '@dxos/plugin-connector';
+import { Filter } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { Artifact, StudioCapabilities } from '#types';
+import { Artifact } from '#types';
 
 import {
   ARTIFACTS_NODE_DATA,
@@ -83,43 +82,6 @@ export default Capability.makeModule(
             }),
           ]);
         },
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'artifactConnectorAuth',
-        match: (node) => (Obj.instanceOf(Artifact.Artifact, node.data) ? Option.some(node.data) : Option.none()),
-        // A `connector:` (not `actions:`) extension, so `connectorAuthActions`' group node keeps its
-        // type — see the doc comment on `AppNode.makeToolbarActionGroup`.
-        relation: Node.actionRelation(),
-        connector: (artifact, get) =>
-          Effect.gen(function* () {
-            const db = Obj.getDatabase(artifact);
-            if (!db) {
-              return [];
-            }
-
-            const services = (yield* Capability.Service).getAll(StudioCapabilities.GenerationService);
-            const provider = services.find((candidate) => candidate.kind === artifact.kind);
-            if (!provider?.connectorId) {
-              return [];
-            }
-
-            const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
-            const connected = allConnections.some((connection) => connection.connectorId === provider.connectorId);
-            if (connected) {
-              // Connected: the article's own "Generate" button covers this action.
-              return [];
-            }
-
-            const allConnectors = (yield* Capability.Service).getAll(Connector).flat();
-            return connectorAuthActions({
-              connectorIds: [provider.connectorId],
-              db,
-              spaceId: db.spaceId,
-              allConnectors,
-              allConnections,
-            });
-          }),
       }),
     ]);
 
