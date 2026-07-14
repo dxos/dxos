@@ -7,18 +7,17 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppSpace } from '@dxos/app-toolkit';
-import { type Space } from '@dxos/client/echo';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
-import { Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
+import { Feed, Tag } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
-import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import { Mailbox } from '@dxos/plugin-inbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -55,71 +54,6 @@ const TYPES = [
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
 const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
 
-/**
- * Watches for the personal space's mailbox and (once it exists) wires an idempotent Gmail sync
- * trigger — see {@link wireSyncTrigger}. Installed from the ClientPlugin initializer for routine
- * stories so the sync runs on the story's schedule.
- */
-const installSyncTrigger = (space: Space) => {
-  let wired = false;
-  space.db.query(Filter.type(Mailbox.Mailbox)).subscribe(
-    (query) => {
-      const mailbox = query.results[0];
-      if (!mailbox || wired) {
-        return;
-      }
-      wired = true;
-      wireSyncTrigger(space, mailbox);
-    },
-    { fire: true },
-  );
-};
-
-/**
- * Creates a manual trigger wired to {@link InboxOperation.GoogleMailSync} once the mailbox's sync
- * binding appears. Idempotent — skips when a {@link MailboxTriggerRelation} already links the mailbox
- * to a trigger (persists across reloads).
- */
-const wireSyncTrigger = (space: Space, mailbox: Mailbox.Mailbox) => {
-  let hasTrigger = false;
-  let creating = false;
-
-  space.db.query(Query.select(Filter.id(mailbox.id)).sourceOf(MailboxTriggerRelation)).subscribe(
-    (query) => {
-      hasTrigger = query.results.length > 0;
-    },
-    { fire: true },
-  );
-
-  space.db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding)).subscribe(
-    (query) => {
-      const binding = query.results.find(SyncBinding.instanceOf);
-      if (!binding || hasTrigger || creating) {
-        return;
-      }
-
-      creating = true;
-      const trigger = space.db.add(
-        Trigger.make({
-          [Obj.Parent]: mailbox,
-          enabled: true,
-          runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
-          spec: Trigger.specDirect(),
-          input: { binding: Ref.make(binding) },
-        }),
-      );
-      space.db.add(
-        Relation.make(MailboxTriggerRelation, {
-          [Relation.Source]: mailbox,
-          [Relation.Target]: trigger,
-        }),
-      );
-      void space.db.flush();
-    },
-    { fire: true },
-  );
-};
-
 type DecoratorOptions = {
   trigger?: boolean;
 };
@@ -136,25 +70,13 @@ const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
         ...CLIENT_SERVICES,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            // TODO(burdon): This is messy.
-            let space: Space | undefined;
-            if (!client.halo.identity.get()) {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(Mailbox.make());
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
-              space = personalSpace;
-            } else {
-              const space = AppSpace.getPersonalSpace(client);
-              if (space) {
-                yield* Effect.promise(() => space.waitUntilReady());
-              }
+            if (client.halo.identity.get()) {
+              return;
             }
 
-            // Auto-create the Gmail sync trigger for routine stories: watch for the mailbox's sync
-            // binding and idempotently wire a `GoogleMailSync` trigger.
-            if (space && trigger) {
-              installSyncTrigger(space);
-            }
+            const { personalSpace } = yield* initializeIdentity(client);
+            personalSpace.db.add(Mailbox.make());
+            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
           }),
       }),
       SpacePlugin({}),
