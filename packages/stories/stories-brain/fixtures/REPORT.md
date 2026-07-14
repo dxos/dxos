@@ -176,3 +176,37 @@ already fast; **all** LLM cost lives in batchable enrichment (summarize / facts 
   normalize subjects (drop trailing hashes/ids) before tokenizing so near-identical automated mail
   collapses to one topic instead of ~11.
 - `packages/core/compute/pipeline-email/src/types/Topic.ts` · `.../corpus/digest.ts`
+
+## 6. Active Topics experiment (2026-07-13)
+
+Spec: `agents/superpowers/specs/2026-07-13-active-topics-experiment-design.md`. Over the private
+fixture (495 msgs, `ACTIVE_TOP=8`, owner `rich@braneframe.com`/`rich@dxos.org`): cluster → deterministic
+activity score → LLM confidence → active/suggested split → populate (status/facts/tasks/drafts).
+
+**Shakedown fixes (found by running):** (1) recency was measured vs wall-clock but the fixture is a
+historical snapshot → anchor "now" to the corpus's latest message; (2) `buildThreads` now accepts
+multiple owner aliases so replies from either address count as "from the owner".
+
+**Run 1 (no automated down-weight):** the active list was dominated by automated action-notices —
+Grafana deletion, 1Password sign-in alert, DigitalOcean cert renewal — all high-confidence (deadlines)
+but no-reply (drafts skipped). Only 2/8 active topics had drafts. Pure receipts were correctly buried
+in suggestions (anthropic receipts at 33%, 68 threads collapsed to one topic).
+
+**Intervention — automated/no-reply down-weight (×0.35):** a topic whose every non-owner sender is a
+no-reply/role address is down-weighted so relationship topics rank above notices.
+
+**Run 2 (with down-weight):** active list flipped to real person/team topics — product discussions,
+an interview, an event tomorrow, overdue invoices, consulting payments — **5/8 now carry drafts**. The
+automated notices dropped out of active ("been client down" → 35% suggested). Clear win.
+
+**Remaining (next iterations, not blockers):**
+
+- Labels are keyword-salad ("crabnebula inv ltd", "ama hsc tokenizing") — add a cheap LLM label pass
+  for active topics.
+- Facts occasionally empty (e.g. "eric interview ries") — fact extraction misses short person threads.
+- `personEmails` isn't wired (no contacts loaded) so the person-linked signal is off; wiring contacts
+  would sharpen ranking further.
+- The activity model still leans on `awaiting-mine`, which fires for every unanswered inbound thread;
+  contact-linkage + open-item signals should carry more weight once contacts are wired.
+
+Reports: `fixtures/local/results/active-topics/{index.md,<topic>.md,active-topics.json}` (git-ignored).

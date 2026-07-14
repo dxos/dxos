@@ -8,7 +8,6 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { valueEncoding } from '@dxos/echo-host';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
@@ -21,6 +20,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
+import { valueEncoding } from '../pipeline';
 import { EdgeFeedReplicator } from './edge-feed-replicator';
 
 describe('EdgeFeedReplicator', () => {

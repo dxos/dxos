@@ -2,16 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Rpc from '@effect/rpc/Rpc';
-import * as RpcClient from '@effect/rpc/RpcClient';
+import type * as EffectRpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcSchema from '@effect/rpc/RpcSchema';
-import * as RpcServer from '@effect/rpc/RpcServer';
 import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Runtime from 'effect/Runtime';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
@@ -33,16 +30,32 @@ import {
   QueryService,
   SpacesService,
   SystemService,
+  WorkerService,
 } from '@dxos/protocols/rpc';
-import { type RpcPort, layerProtocolRpcPortServer, makeProtocolRpcPortClient } from '@dxos/rpc';
+import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { DEFAULT_CLIENT_CHANNEL } from './config';
+import * as Rpc from './Rpc';
 import { type ClientServices } from './service';
+
+export type MessagePortLike = MessagePort;
+
+/**
+ * Transport a {@link ClientServicesRpc} can run over: the native Worker-platform {@link MessagePort}
+ * (shared-worker app port) or a byte {@link RpcPort} for legacy protobuf bridges (iframe shell,
+ * devtools extension).
+ */
+export type ClientServicesTransport = MessagePortLike | RpcPort;
 
 /**
  * All client service RPCs served over a single connection.
  * Rpc tags are prefixed with the {@link ClientServices} key (e.g. `DataService.subscribe`).
+ *
+ * {@link WorkerService} (the tab→worker control channel: `start`/`stop`) is merged in here rather
+ * than served over a second port: it runs in the same tab→worker direction as the service RPCs, so
+ * it multiplexes over the same app {@link MessagePort}. Only the reverse-direction `BridgeService`
+ * (worker→tab) needs its own port.
  */
 export class ClientServicesRpcs extends RpcGroup.make().merge(
   SystemService.Rpcs,
@@ -58,6 +71,7 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   ContactsService.Rpcs,
   EdgeAgentService.Rpcs,
   DevtoolsHost.Rpcs,
+  WorkerService.Rpcs,
 ) {}
 
 type ClientServicesRpcUnion = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
@@ -81,6 +95,8 @@ export type ClientServicesHandlers = {
   ContactsService: ContactsService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
+  // Provided per-session by the worker session (drives readiness/origin/lock), not by the host.
+  WorkerService: WorkerService.Handlers;
 };
 
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
@@ -116,7 +132,7 @@ const resolveServiceMethod = (
 //
 
 export type ClientRpcServerParams = {
-  port: RpcPort;
+  port: MessagePortLike;
   /**
    * Resolved per call so the served set follows the host lifecycle (services host open/close).
    */
@@ -128,35 +144,32 @@ export type ClientRpcServerParams = {
 };
 
 /**
- * Serves {@link ClientServices} implementations over an {@link RpcPort} via effect-rpc.
+ * Serves {@link ClientServices} implementations over a {@link MessagePort} via effect-rpc.
  */
 export class ClientRpcServer {
   readonly #params: ClientRpcServerParams;
-  #runtime?: ManagedRuntime.ManagedRuntime<never, never>;
+  #server?: ReturnType<typeof Rpc.serve>;
 
   constructor(params: ClientRpcServerParams) {
     this.#params = params;
   }
 
   async open(): Promise<void> {
-    if (this.#runtime) {
+    if (this.#server) {
       return;
     }
 
-    const serverLayer = RpcServer.layer(ClientServicesRpcs, { disableTracing: true, concurrency: 'unbounded' }).pipe(
-      Layer.provide(makeClientServicesHandlers(this.#params)),
-      Layer.provide(layerProtocolRpcPortServer(this.#params.port)),
-    );
-
-    this.#runtime = ManagedRuntime.make(serverLayer);
-    // Force the layer to build so the server is listening once open resolves.
-    await this.#runtime.runPromise(Effect.void);
+    this.#server = Rpc.serve(this.#params.port, ClientServicesRpcs, makeClientServicesHandlers(this.#params), {
+      disableTracing: true,
+      concurrency: 'unbounded',
+    });
+    await this.#server.open();
   }
 
   async close(): Promise<void> {
-    const runtime = this.#runtime;
-    this.#runtime = undefined;
-    await runtime?.dispose();
+    const server = this.#server;
+    this.#server = undefined;
+    await server?.close();
   }
 }
 
@@ -168,18 +181,26 @@ export type ServeClientServicesOverIFrameOptions = {
 };
 
 /**
- * Serves {@link ClientServices} to a child iframe (e.g. the shell) over effect-rpc and opens the
- * connection. Kept here — alongside {@link ClientRpcServer} — so the {@link RpcPort} binding is
- * resolved in this package's type universe; `@dxos/client` loads the `sharedworker` lib globals,
- * under which the cross-package `RpcPort` identity does not hold.
+ * Serves {@link ClientServices} to a child iframe (e.g. the shell) over the effect-rpc byte protocol
+ * and opens the connection. The iframe uses a byte {@link RpcPort} transport (not a `MessagePort`),
+ * matching the shell's {@link ClientServicesProxy} consumer, so this serves over
+ * {@link layerProtocolRpcPortServer} rather than the Worker-runner protocol used by
+ * {@link ClientRpcServer}. Kept here — alongside the rpc definitions — so the `RpcPort` binding is
+ * resolved in this package's type universe rather than in `@dxos/client`, whose merged-with-`main`
+ * build resolves `ClientRpcServer.port` as a `MessagePort`.
  */
 export const serveClientServicesOverIFrame = async ({
   iframe,
   origin,
   channel = DEFAULT_CLIENT_CHANNEL,
   services,
-}: ServeClientServicesOverIFrameOptions): Promise<ClientRpcServer> => {
-  const server = new ClientRpcServer({ port: createIFramePort({ channel, iframe, origin }), services });
+}: ServeClientServicesOverIFrameOptions): Promise<Rpc.GroupServer> => {
+  const server = Rpc.serveOverProtocol(
+    layerProtocolRpcPortServer(createIFramePort({ channel, iframe, origin })),
+    ClientServicesRpcs,
+    makeClientServicesHandlers({ services }),
+    { disableTracing: true, concurrency: 'unbounded' },
+  );
   await server.open();
   return server;
 };
@@ -191,7 +212,7 @@ export const serveClientServicesOverIFrame = async ({
 export const makeClientServicesHandlers = ({
   services,
   onRequest,
-}: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<Rpc.ToHandler<ClientServicesRpcUnion>> => {
+}: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>> => {
   const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toError }) : Effect.void;
 
   const handlers: Record<string, (payload: unknown) => unknown> = {};
@@ -250,23 +271,22 @@ export interface ClientServicesRpc
     FeedService.Client,
     ContactsService.Client,
     EdgeAgentService.Client,
-    DevtoolsHost.Client {}
+    DevtoolsHost.Client,
+    WorkerService.Client {}
 
 /**
- * Builds the effect-native {@link ClientServicesRpc} over an {@link RpcPort}.
+ * Builds the effect-native {@link ClientServicesRpc} over a {@link MessagePort}.
  * The returned scope owns the connection; closing it releases the transport.
  */
-export const makeClientServicesRpc = (port: RpcPort): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
-  Effect.gen(function* () {
-    // Build the protocol in the ambient scope so the transport lives until the caller closes it.
-    const protocol = yield* makeProtocolRpcPortClient(port);
-    const client = yield* RpcClient.make(ClientServicesRpcs, { disableTracing: true }).pipe(
-      Effect.provideService(RpcClient.Protocol, protocol),
-    );
-    // The merged client is structurally the per-service intersection; the giant mapped type is
-    // narrowed to the cheaper {@link ClientServicesRpc} to keep the type-checker fast.
-    return client as unknown as ClientServicesRpc;
-  });
+export const makeClientServicesRpc = (
+  port: ClientServicesTransport,
+): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
+  // An RpcPort (byte transport) carries the legacy iframe/devtools bridges; a MessagePort uses the
+  // native Worker-platform protocol.
+  ('send' in port
+    ? Rpc.makeClientOverProtocol(layerProtocolRpcPortClient(port), ClientServicesRpcs, { disableTracing: true })
+    : Rpc.makeClient(port, ClientServicesRpcs, { disableTracing: true })
+  ).pipe(Effect.map((client) => client as ClientServicesRpc));
 
 /**
  * Builds an in-process {@link ClientServicesRpc} backed directly by host {@link ClientServicesHandlers}
@@ -359,7 +379,7 @@ export const makeRpcFromServices = (services: () => Partial<ClientServices>): Cl
  * Adapts a protobuf service stream to an effect stream.
  * Unbounded buffering matches the push semantics of the source stream.
  */
-const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, Error> =>
+export const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, Error> =>
   Stream.asyncScoped<T, Error>(
     (emit) =>
       Effect.acquireRelease(Effect.try({ try: open, catch: toError }), (stream) =>
@@ -381,7 +401,7 @@ const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, Error> =
  * Adapts an effect stream to a protobuf service stream.
  * Consumer close interrupts the underlying rpc subscription.
  */
-const streamToPbStream = <T>(runtime: Runtime.Runtime<never>, stream: Stream.Stream<T, unknown>): PbStream<T> =>
+export const streamToPbStream = <T>(runtime: Runtime.Runtime<never>, stream: Stream.Stream<T, unknown>): PbStream<T> =>
   new PbStream<T>(({ ready, next, close }) => {
     const fiber = stream.pipe(
       Stream.onStart(Effect.sync(ready)),

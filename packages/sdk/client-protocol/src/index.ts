@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from './bridge-rpc';
 export * from './config';
+export * as Rpc from './Rpc';
 export type * from './echo';
 export type * from './halo';
 export * from './invitations';

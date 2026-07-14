@@ -50,7 +50,12 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
   ['IdentityService.queryIdentity'](): EffectStream.Stream<QueryIdentityResponse, Error> {
     return EffectStream.async<QueryIdentityResponse, Error>((emit) => {
-      const emitNext = () => void emit.single({ identity: this._getIdentity() });
+      // Omit `identity` entirely when absent: an explicit `undefined` would still drive the optional
+      // protobuf codec, which dereferences the missing message and throws.
+      const emitNext = () => {
+        const identity = this._getIdentity();
+        void emit.single(identity ? { identity } : {});
+      };
 
       emitNext();
       const unsubscribe = this._identityManager.stateUpdate.on(emitNext);

@@ -47,3 +47,8 @@ export const MAILBOX_TOPICS_TYPE = `${meta.profile.key}.topics`;
 
 /** Sentinel `data` value for the topics folder graph node (non-null, mirrors the drafts node). */
 export const MAILBOX_TOPICS_NODE_DATA = `${meta.profile.key}.topics-folder` as const;
+
+export const MAILBOX_SUBSCRIPTIONS_TYPE = `${meta.profile.key}.subscriptions`;
+
+/** Sentinel `data` value for the subscriptions folder graph node (mirrors the topics node). */
+export const MAILBOX_SUBSCRIPTIONS_NODE_DATA = `${meta.profile.key}.subscriptions-folder` as const;

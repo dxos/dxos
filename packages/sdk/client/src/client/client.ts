@@ -7,10 +7,10 @@ import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
-  type ClientRpcServer,
   type ClientServicesProvider,
   type Echo,
   type Halo,
+  type Rpc,
   SpaceProperties,
   STATUS_TIMEOUT,
   makeHandlersFromRpc,
@@ -117,7 +117,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
-  private _shellClientServer?: ClientRpcServer;
+  private _shellClientServer?: Rpc.GroupServer;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
   private _edgeIdentitySubscription?: { unsubscribe: () => void };
@@ -600,8 +600,8 @@ export class Client {
       // Re-serve the client services to the shell iframe over effect-rpc, matching the shell's
       // `ClientServicesProxy` consumer. Handlers are derived from the already-open effect-native
       // `rpc` surface so calls forward straight to the underlying provider (worker or host). The
-      // server is constructed inside `@dxos/client-protocol` so the `RpcPort` binding resolves there
-      // rather than in this package's `sharedworker`-lib type universe.
+      // server (and its byte `RpcPort` binding) is constructed inside `@dxos/client-protocol`, which
+      // resolves the iframe transport types in one consistent universe.
       const shellServicesHandlers = makeHandlersFromRpc(this._services.rpc);
       this._shellClientServer = await serveClientServicesOverIFrame({
         iframe: shellIframe,
