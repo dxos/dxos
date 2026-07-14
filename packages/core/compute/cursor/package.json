@@ -1,0 +1,43 @@
+{
+  "name": "@dxos/cursor",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Durable progress cursor and credential primitives for source-driven pipelines (external sync and feed-to-feed).",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
+    "@dxos/schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  }
+}

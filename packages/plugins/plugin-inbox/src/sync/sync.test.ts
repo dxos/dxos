@@ -8,15 +8,16 @@ import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Blob, Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/cursor';
+import { Blob, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { captureSink } from '@dxos/pipeline/testing';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, Cursor, DraftMessage, Message, Organization, Person } from '@dxos/types';
+import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
 import { seedMailboxBinding } from '../testing/sync-fixture';
@@ -76,7 +77,6 @@ describe('sync pipeline harness', () => {
         AccessToken.AccessToken,
         Connection.Connection,
         Cursor.Cursor,
-        SyncBinding.SyncBinding,
         Blob.Blob,
       ],
     });
@@ -85,7 +85,7 @@ describe('sync pipeline harness', () => {
     const accessToken = db.add(AccessToken.make({ source: 'test.mail', token: 'token' }));
     const connection = db.add(Connection.make({ connectorId: 'test', accessToken: Ref.make(accessToken) }));
     // The binding's target is unused by the pipeline; the feed stands in as a convenient local root.
-    const binding = db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: feed }));
+    const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(feed) }));
     await db.flush({ indexes: true });
     return { db, feed, tagIndex, binding };
   };
@@ -106,22 +106,22 @@ describe('sync pipeline harness', () => {
   );
 
   // Faults after `n` units reach it, simulating a crash mid-run.
-  const faultAfter = (n: number): Stage.Stage<SyncBinding.CommitUnit, SyncBinding.CommitUnit, Error, never> => {
+  const faultAfter = (n: number): Stage.Stage<Cursor.CommitUnit, Cursor.CommitUnit, Error, never> => {
     let count = 0;
-    return Stage.map('fault', (unit: SyncBinding.CommitUnit) => {
+    return Stage.map('fault', (unit: Cursor.CommitUnit) => {
       count += 1;
       return count > n ? Effect.fail(new Error('injected fault')) : Effect.succeed(unit);
     });
   };
 
   const drain = (
-    options: SyncBinding.LayerOptions & {
+    options: Cursor.LayerOptions & {
       db: Database.Database;
-      fault?: Stage.Stage<SyncBinding.CommitUnit, SyncBinding.CommitUnit, Error>;
+      fault?: Stage.Stage<Cursor.CommitUnit, Cursor.CommitUnit, Error>;
     },
   ) => {
     const mapped = Stream.fromIterable(RAWS).pipe(
-      SyncBinding.dedupStage<Raw>(
+      Cursor.dedupStage<Raw>(
         'dedup',
         (raw) => raw.id,
         (raw) => raw.key,
@@ -133,13 +133,13 @@ describe('sync pipeline harness', () => {
     const withFault = options.fault ? mapped.pipe(options.fault) : mapped;
     return withFault.pipe(
       Stream.grouped(2),
-      Pipeline.run({ sink: SyncBinding.commit }),
-      Effect.provide(SyncBinding.layer(options)),
+      Pipeline.run({ sink: Cursor.commit }),
+      Effect.provide(Cursor.layer(options)),
       Effect.provide(Database.layer(options.db)),
     );
   };
 
-  const cursorOf = (binding: SyncBinding.SyncBinding): string | undefined => binding.cursor.target?.value;
+  const cursorOf = (binding: Cursor.Cursor): string | undefined => binding.value;
 
   const feedForeignIds = async (db: Database.Database, feed: Feed.Feed): Promise<string[]> => {
     const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
@@ -152,10 +152,10 @@ describe('sync pipeline harness', () => {
 
   test('recovers from a mid-run fault without duplicating messages or contacts', async ({ expect }) => {
     const { db, feed, tagIndex, binding } = await setup();
-    const base = { db, binding, feed, tagIndex, foreignKeySource: TEST_SOURCE };
+    const base = { db, cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE };
 
     // Run 1: fault after the first page (m1, m2) commits.
-    const stats1: SyncBinding.Stats = { newMessages: 0 };
+    const stats1: Cursor.Stats = { newMessages: 0 };
     const exit = await EffectEx.runPromise(
       Effect.exit(drain({ ...base, cursorKey: 0, stats: stats1, fault: faultAfter(2) })),
     );
@@ -167,7 +167,7 @@ describe('sync pipeline harness', () => {
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(1);
 
     // Run 2: recovery — resumes from the cursor, no fault. No duplicates.
-    const stats2: SyncBinding.Stats = { newMessages: 0 };
+    const stats2: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(drain({ ...base, cursorKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
 
     expect(stats2.newMessages).toBe(3);
@@ -181,16 +181,16 @@ describe('sync pipeline harness', () => {
   test('commit batches identical commit effects (by identity) into one call per page', async ({ expect }) => {
     const { db, feed, tagIndex, binding } = await setup();
 
-    const calls: (readonly SyncBinding.CommitUnit[])[] = [];
+    const calls: (readonly Cursor.CommitUnit[])[] = [];
     // A single stable reference reused across every unit in a run (the shape a per-run commit effect
     // attaches) — so `commit` must invoke it once per page with every unit that attached it, not once
     // per unit.
-    const commitEffect: SyncBinding.CommitEffect = (units) =>
+    const commitEffect: Cursor.CommitEffect = (units) =>
       Effect.sync(() => {
         calls.push(units);
       });
 
-    const makeUnit = (raw: Raw): SyncBinding.CommitUnit => ({
+    const makeUnit = (raw: Raw): Cursor.CommitUnit => ({
       message: Obj.make(Message.Message, {
         [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
         created: new Date(raw.key).toISOString(),
@@ -203,11 +203,11 @@ describe('sync pipeline harness', () => {
       commitEffects: [commitEffect],
     });
 
-    const stats: SyncBinding.Stats = { newMessages: 0 };
+    const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
-      SyncBinding.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
+      Cursor.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
         Effect.provide(
-          SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
+          Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
         ),
         Effect.provide(Database.layer(db)),
       ),
@@ -219,13 +219,13 @@ describe('sync pipeline harness', () => {
 
   test('re-running a completed sync is a no-op', async ({ expect }) => {
     const { db, feed, tagIndex, binding } = await setup();
-    const base = { db, binding, feed, tagIndex, foreignKeySource: TEST_SOURCE };
+    const base = { db, cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE };
 
-    const stats1: SyncBinding.Stats = { newMessages: 0 };
+    const stats1: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(drain({ ...base, cursorKey: 0, stats: stats1 }));
     expect(stats1.newMessages).toBe(RAWS.length);
 
-    const stats2: SyncBinding.Stats = { newMessages: 0 };
+    const stats2: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(drain({ ...base, cursorKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
     expect(stats2.newMessages).toBe(0);
     expect((await feedForeignIds(db, feed)).length).toBe(RAWS.length);
@@ -281,7 +281,7 @@ describe('sync pipeline harness', () => {
         })),
     );
 
-    const stats: SyncBinding.Stats = { newMessages: 0 };
+    const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
       Stream.fromIterable(raws).pipe(
         mapAttachmentStage,
@@ -289,9 +289,9 @@ describe('sync pipeline harness', () => {
         EmailStage.extractContacts(),
         EmailCommit.toCommitUnit(),
         Stream.grouped(2),
-        Pipeline.run({ sink: SyncBinding.commit }),
+        Pipeline.run({ sink: Cursor.commit }),
         Effect.provide(
-          SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
+          Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
         ),
         Effect.provide(Database.layer(db)),
       ),
@@ -358,7 +358,7 @@ describe('sync pipeline harness', () => {
         })),
     );
 
-    const stats: SyncBinding.Stats = { newMessages: 0 };
+    const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
       Stream.fromIterable([raw]).pipe(
         mapAttachmentStage,
@@ -368,9 +368,9 @@ describe('sync pipeline harness', () => {
         EmailStage.processAttachments(),
         EmailCommit.toCommitUnit(),
         Stream.grouped(2),
-        Pipeline.run({ sink: SyncBinding.commit }),
+        Pipeline.run({ sink: Cursor.commit }),
         Effect.provide(
-          SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
+          Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
         ),
         Effect.provide(Database.layer(db)),
       ),
@@ -446,7 +446,7 @@ describe('reconcileDrafts stage', () => {
   const runReconcile = (
     db: Database.Database,
     mailbox: Mailbox.Mailbox,
-    binding: SyncBinding.SyncBinding,
+    binding: Cursor.Cursor,
     synced: readonly EmailStage.Mapped[],
   ) =>
     EffectEx.runPromise(
@@ -454,14 +454,14 @@ describe('reconcileDrafts stage', () => {
         const feed = yield* Database.load(mailbox.feed);
         const tagIndex = yield* Database.load(mailbox.tags);
         const draftPool = yield* EmailStage.queryDraftPool(mailbox);
-        const stats: SyncBinding.Stats = { newMessages: 0 };
+        const stats: Cursor.Stats = { newMessages: 0 };
         yield* Stream.fromIterable(synced).pipe(
           EmailStage.reconcileDrafts(draftPool),
           EmailCommit.toCommitUnit(),
           Stream.grouped(2),
-          Pipeline.run({ sink: SyncBinding.commit }),
+          Pipeline.run({ sink: Cursor.commit }),
           Effect.provide(
-            SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey: 0, stats }),
+            Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey: 0, stats }),
           ),
         );
       }).pipe(Effect.provide(Database.layer(db))),

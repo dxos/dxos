@@ -12,10 +12,9 @@ import { CalendarForeignKeyWrongTypeError } from '../../../errors';
 import { Calendar, InboxOperation } from '../../../types';
 
 /**
- * Eagerly materializes a local Calendar for a selected remote Google calendar so a
- * {@link SyncBinding} can be created (relations require both endpoints to exist).
- * Find-or-create keyed on the calendar's foreign key, so re-running for the same
- * remote calendar returns the existing Calendar (with its name refreshed).
+ * Eagerly materializes a local Calendar for a selected remote Google calendar so the sync cursor's
+ * target exists before the cursor is created. Find-or-create keyed on the calendar's foreign key, so
+ * re-running for the same remote calendar returns the existing Calendar (with its name refreshed).
  */
 const handler: Operation.WithHandler<typeof InboxOperation.MaterializeCalendarTarget> =
   InboxOperation.MaterializeCalendarTarget.pipe(

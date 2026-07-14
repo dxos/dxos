@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/cursor';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
-import { AccessToken, Cursor, Organization, Person, Project, Task } from '@dxos/types';
+import { Connection } from '@dxos/plugin-connector';
+import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
 import { GitHubApi } from '../services';
@@ -45,9 +46,9 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
   });
 
   /**
-   * Builds a `SyncBinding` relation (source = Connection, target = a Project
-   * standing in for the repo's local root) plus seeds the binding's snapshots
-   * as if a previous pull had run.
+   * Builds an external-sync `Cursor` (spec.source = Connection's access token,
+   * spec.target = a Project standing in for the repo's local root) plus seeds
+   * the binding's snapshots as if a previous pull had run.
    */
   const setup = async (snapshots: Record<string, unknown>) => {
     const { db, graph } = await builder.createDatabase();
@@ -55,7 +56,6 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       AccessToken.AccessToken,
       Connection.Connection,
       Cursor.Cursor,
-      SyncBinding.SyncBinding,
       Organization.Organization,
       Person.Person,
       Project.Project,
@@ -72,15 +72,18 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
         description: repo().description ?? undefined,
       }),
     );
-    const binding = db.add(
-      SyncBinding.make({
-        [Relation.Source]: connection,
-        [Relation.Target]: project,
+    const created = db.add(
+      Cursor.makeExternal({
+        source: connection.accessToken,
+        target: Ref.make(project),
         remoteId: String(repo().id),
         snapshots,
       }),
     );
-    return { db, binding, project };
+    if (!Cursor.isExternal(created)) {
+      throw new Error('expected external-sync cursor');
+    }
+    return { db, binding: created, project };
   };
 
   test('locally-edited issue title PATCHes only diverged fields', async ({ expect }) => {
@@ -115,7 +118,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     expect(updateIssueNumber).toBe(42);
     expect(updateIssueInput).toEqual({ title: 'Edited locally' });
     // Snapshot refreshed on the binding.
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['5678']?.title).toBe('Edited locally');
     void localTask;
   });
@@ -265,7 +268,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     // Snapshot status stays at the previous remote-pulled value so the
     // divergence warning keeps firing each sync until either the user
     // reverts locally or GitHub catches up.
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['5678']?.status).toBe('todo');
   });
 

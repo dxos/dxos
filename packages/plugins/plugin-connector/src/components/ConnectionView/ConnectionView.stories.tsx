@@ -5,21 +5,22 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/cursor';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Cursor } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Connection, SyncBinding } from '#types';
+import { Connection } from '#types';
 
+import { CursorsQuery, isCursorForConnection } from '../../util';
 import { ConnectionView } from './ConnectionView';
 
 // Sample per-binding options schema (real connectors contribute their own via `connector.optionsSchema`).
@@ -36,14 +37,16 @@ const OptionsSchema = Schema.Struct({
 const DefaultStory = ({ optionsSchema }: { optionsSchema?: Schema.Schema<any, any> }) => {
   const [space] = useSpaces();
   const [connection] = useQuery(space?.db, Filter.type(Connection.Connection));
-  const bindings = useQuery(
-    space?.db,
-    connection
-      ? Query.select(Filter.id(connection.id)).sourceOf(SyncBinding.SyncBinding)
-      : Query.select(Filter.nothing()),
+  const allCursors = useQuery(space?.db, CursorsQuery);
+  const bindings = useMemo(
+    () =>
+      connection
+        ? allCursors.filter((cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, connection))
+        : [],
+    [allCursors, connection],
   );
 
-  const handleRemoveBinding = useCallback((binding: SyncBinding.SyncBinding) => {
+  const handleRemoveBinding = useCallback((binding: Cursor.ExternalCursor) => {
     Obj.getDatabase(binding)?.remove(binding);
   }, []);
 
@@ -82,7 +85,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Connection.Connection, Cursor.Cursor, SyncBinding.SyncBinding, Expando.Expando],
+          types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -99,39 +102,43 @@ const meta = {
                 }),
               );
 
-              // A live binding carrying options + a recent sync timestamp (on its cursor).
+              // A live binding carrying options + a recent sync timestamp.
               const roadmap = space.db.add(Obj.make(Expando.Expando, { name: 'Product Roadmap' }));
-              space.db.add(
-                SyncBinding.make({
-                  [Relation.Source]: connection,
-                  [Relation.Target]: roadmap,
+              const roadmapCursor = space.db.add(
+                Cursor.makeExternal({
+                  source: connection.accessToken,
+                  target: Ref.make(roadmap),
                   remoteId: 'board-1',
-                  name: 'Product Roadmap',
+                  label: 'Product Roadmap',
                   options: { includeArchived: true, label: 'roadmap' },
-                  cursor: { lastRunAt: new Date().toISOString() },
                 }),
               );
+              Obj.update(roadmapCursor, (cursor) => {
+                cursor.lastRunAt = new Date().toISOString();
+              });
 
-              // A live binding that has never synced and recorded an error (on its cursor).
+              // A live binding that has never synced and recorded an error.
               const engineering = space.db.add(Obj.make(Expando.Expando, { name: 'Engineering' }));
-              space.db.add(
-                SyncBinding.make({
-                  [Relation.Source]: connection,
-                  [Relation.Target]: engineering,
+              const engineeringCursor = space.db.add(
+                Cursor.makeExternal({
+                  source: connection.accessToken,
+                  target: Ref.make(engineering),
                   remoteId: 'board-2',
-                  name: 'Engineering',
-                  cursor: { lastError: 'Rate limited by remote service.' },
+                  label: 'Engineering',
                 }),
               );
+              Obj.update(engineeringCursor, (cursor) => {
+                cursor.lastError = 'Rate limited by remote service.';
+              });
 
               // An orphaned binding whose target object was deleted elsewhere.
               const orphaned = space.db.add(Obj.make(Expando.Expando, { name: 'Deleted Board' }));
               space.db.add(
-                SyncBinding.make({
-                  [Relation.Source]: connection,
-                  [Relation.Target]: orphaned,
+                Cursor.makeExternal({
+                  source: connection.accessToken,
+                  target: Ref.make(orphaned),
                   remoteId: 'board-3',
-                  name: 'Deleted Board',
+                  label: 'Deleted Board',
                 }),
               );
               space.db.remove(orphaned);

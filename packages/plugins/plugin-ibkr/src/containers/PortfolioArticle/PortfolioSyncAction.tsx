@@ -25,7 +25,7 @@ export type PortfolioSyncActionProps = {
 
 /**
  * Toolbar action mirroring the Gmail mailbox connect/sync switch. IBKR has no
- * `SyncBinding`, so the connection is detected space-wide by `connectorId`: when
+ * `Cursor`, so the connection is detected space-wide by `connectorId`: when
  * none exists we render the connector's auth Surface (a "Connect Interactive
  * Brokers" button); once connected we render a Sync `IconButton` that invokes
  * {@link SyncPortfolioReport} for the Portfolio's space, then {@link SyncLots} from the latest

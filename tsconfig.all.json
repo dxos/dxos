@@ -106,6 +106,9 @@
       "path": "packages/common/crypto/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/cursor/tsconfig.json"
+    },
+    {
       "path": "packages/common/debug/tsconfig.json"
     },
     {

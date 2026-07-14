@@ -10,12 +10,13 @@ import * as Layer from 'effect/Layer';
 import { Capability, CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Credential, Operation } from '@dxos/compute';
-import { Blob, Database, Ref, Relation, Tag } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/cursor';
+import { Blob, Database, Ref, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
 import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
@@ -25,7 +26,7 @@ import { Mailbox } from '../types';
 // with a mailbox binding, plus the ambient services `runGmailSync`/`runJmapSync` require. Not exported
 // from `@dxos/plugin-inbox/testing` — it pulls app-framework/compute, so it stays a local test helper.
 
-/** The ECHO types the sync writes: messages, contacts, tags, tag index, binding + cursor. */
+/** The ECHO types the sync writes: messages, contacts, tags, tag index, connection + cursor. */
 export const SYNC_TEST_TYPES = [
   Message.Message,
   Person.Person,
@@ -36,11 +37,10 @@ export const SYNC_TEST_TYPES = [
   AccessToken.AccessToken,
   Connection.Connection,
   Cursor.Cursor,
-  SyncBinding.SyncBinding,
   Blob.Blob,
 ];
 
-/** Seeds a mailbox binding (Connection → Mailbox) with its feed, tag index, and cursor. */
+/** Seeds a mailbox binding (external-sync cursor authenticated by a Connection's access token → Mailbox). */
 export const seedMailboxBinding = async (
   builder: EchoTestBuilder,
   {
@@ -53,7 +53,7 @@ export const seedMailboxBinding = async (
   const mailbox = db.add(Mailbox.make({ name: 'Test' }));
   const accessToken = db.add(AccessToken.make({ source, token }));
   const connection = db.add(Connection.make({ connectorId, accessToken: Ref.make(accessToken) }));
-  const binding = db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: mailbox }));
+  const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }));
   await db.flush({ indexes: true });
   return { db, mailbox, connection, binding };
 };

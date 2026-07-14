@@ -6,14 +6,12 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
-
-const { mergeField, readSnapshot, snapshotField, writeSnapshot } = ConnectorSync;
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Organization, Person, Project, Task } from '@dxos/types';
+import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -22,14 +20,16 @@ import { formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
 import { GitHubOperation } from '../types';
 
+const { mergeField, snapshotField } = ConnectorSync;
+
 //
 // Direction: bidirectional (pull-then-push) for projects and tasks.
 //
 // Each sync pass syncs one binding (one repo). It first pulls every reachable
 // Organization, Person, Project, and Task from GitHub into ECHO, then walks the
 // local mirrors and pushes any field that diverged from the snapshot taken at
-// the end of the previous pull. Snapshots live on the `SyncBinding` relation's
-// `.snapshots[<github id>]` (where ids are the GitHub-issued numeric ids,
+// the end of the previous pull. Snapshots live on the `Cursor` object's
+// `spec.snapshots[<github id>]` (where ids are the GitHub-issued numeric ids,
 // stringified for stable foreign-key matching).
 //
 // Mapped fields per object:
@@ -62,13 +62,13 @@ import { GitHubOperation } from '../types';
 const ISSUE_CONCURRENCY = 4;
 
 //
-// Snapshot field shapes (stored on `SyncBinding.snapshots`)
+// Snapshot field shapes (stored on Cursor's `spec.snapshots`)
 //
 
 /**
  * Snapshot shapes. Fields are required (not `?`) because every snapshot is
- * written in one shot via {@link writeSnapshot} after a pull; absence-of-
- * snapshot is modeled by `readSnapshot` returning `undefined`. `name` on a
+ * written in one shot via {@link writeCursorSnapshot} after a pull; absence-of-
+ * snapshot is modeled by `readCursorSnapshot` returning `undefined`. `name` on a
  * Project is recorded but not pushed — see {@link GitHubApi.updateRepo}.
  */
 type ProjectSnapshot = {
@@ -98,6 +98,32 @@ const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
     const results = yield* Database.query(Query.select(Filter.foreignKeys(type as never, [fkFor(id)]))).run;
     return results.length > 0 ? (results[0] as T) : undefined;
   });
+
+//
+// Cursor snapshot accessors
+//
+// `ConnectorSync.readSnapshot`/`writeSnapshot` operate on a relation's
+// top-level `.snapshots` field; `Cursor` is a flat object whose snapshots live
+// one level down at `spec.snapshots`, so this plugin keeps its own thin
+// accessors rather than reusing those helpers. `mergeField`/`snapshotField`
+// (generic over the snapshot value, not the container) are still reused as-is.
+//
+
+/** Reads `binding.spec.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
+const readCursorSnapshot = <T extends object>(binding: Cursor.ExternalCursor, foreignId: string): T | undefined => {
+  const snapshots = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
+  return snapshots[foreignId] as T | undefined;
+};
+
+/** Writes `binding.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map for structural sharing. */
+const writeCursorSnapshot = (binding: Cursor.ExternalCursor, foreignId: string, snapshot: object): void => {
+  Obj.update(binding, (binding) => {
+    if (binding.spec.kind === 'external') {
+      const existing = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
+      binding.spec.snapshots = { ...existing, [foreignId]: snapshot };
+    }
+  });
+};
 
 //
 // Field mappers (GitHub ↔ DXOS)
@@ -208,7 +234,7 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
  * {@link GitHubApi.updateRepo}.
  */
 const upsertProject = Effect.fn('upsertProject')(function* (
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   repo: GitHubApi.GitHubRepo,
 ) {
   const remoteFields: Required<ProjectSnapshot> = {
@@ -219,7 +245,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
   const existing = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
 
   if (existing) {
-    const snapshot = readSnapshot<ProjectSnapshot>(binding, fid);
+    const snapshot = readCursorSnapshot<ProjectSnapshot>(binding, fid);
     const nameResult = mergeField<string | undefined>(
       existing.name,
       remoteFields.name,
@@ -242,7 +268,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
         }
       });
     }
-    writeSnapshot(binding, fid, remoteFields);
+    writeCursorSnapshot(binding, fid, remoteFields);
     return existing;
   }
 
@@ -252,7 +278,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
     description: repo.description ?? undefined,
   });
   const persisted = yield* Database.add(created);
-  writeSnapshot(binding, fid, remoteFields);
+  writeCursorSnapshot(binding, fid, remoteFields);
   return persisted;
 });
 
@@ -262,7 +288,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
  * Non-mapped fields (`Task.priority`, `Task.estimate`, etc.) are preserved.
  */
 const upsertTask = Effect.fn('upsertTask')(function* (
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   issue: GitHubApi.GitHubIssue,
   assignedPerson: Person.Person | undefined,
   project: Project.Project,
@@ -276,7 +302,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
 
   if (existing) {
-    const snapshot = readSnapshot<TaskSnapshot>(binding, fid);
+    const snapshot = readCursorSnapshot<TaskSnapshot>(binding, fid);
     // Task.title is required (non-optional) so the merge produces a string.
     const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshotField(snapshot, 'title'));
     const descriptionResult = mergeField<string | undefined>(
@@ -314,7 +340,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
         existing.project = Ref.make(project);
       }
     });
-    writeSnapshot(binding, fid, remoteFields);
+    writeCursorSnapshot(binding, fid, remoteFields);
     return { task: existing, created: false };
   }
 
@@ -327,7 +353,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     project: Ref.make(project),
   });
   const persisted = yield* Database.add(created);
-  writeSnapshot(binding, fid, remoteFields);
+  writeCursorSnapshot(binding, fid, remoteFields);
   return { task: persisted, created: true };
 });
 
@@ -362,7 +388,7 @@ export type GitHubPushResult = {
  * this module decoupled from the HTTP error hierarchy of `GitHubApi`.
  */
 export const pushRepoUpdates: <E, R>(
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   repo: GitHubApi.GitHubRepo,
   remoteIssuesById: ReadonlyMap<string, GitHubApi.GitHubIssue>,
   push: {
@@ -386,7 +412,7 @@ export const pushRepoUpdates: <E, R>(
       const fid = String(repo.id);
       const local = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
       if (local && !Obj.isDeleted(local)) {
-        const snapshot = readSnapshot<ProjectSnapshot>(binding, fid);
+        const snapshot = readCursorSnapshot<ProjectSnapshot>(binding, fid);
         if (snapshot) {
           const localName = local.name ?? '';
           const localDescription = local.description ?? '';
@@ -407,7 +433,7 @@ export const pushRepoUpdates: <E, R>(
           }
           if (diverged) {
             yield* push.updateRepo(repo.owner.login, repo.name, input);
-            writeSnapshot(binding, fid, {
+            writeCursorSnapshot(binding, fid, {
               ...snapshot,
               description: localDescription,
             });
@@ -423,7 +449,7 @@ export const pushRepoUpdates: <E, R>(
       if (!local || Obj.isDeleted(local)) {
         continue;
       }
-      const snapshot = readSnapshot<TaskSnapshot>(binding, id);
+      const snapshot = readCursorSnapshot<TaskSnapshot>(binding, id);
       if (!snapshot) {
         continue;
       }
@@ -484,7 +510,7 @@ export const pushRepoUpdates: <E, R>(
       // for PRs we keep the snapshot's previous status, so the warning above
       // keeps firing until either the user reverts locally or the PR's state
       // changes on GitHub and a pull catches up.
-      writeSnapshot(binding, id, {
+      writeCursorSnapshot(binding, id, {
         ...snapshot,
         title: localTitle,
         description: localDescription,
@@ -509,25 +535,27 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
         //   the OperationInvoker has a `databaseResolver`. Until then we derive the
         //   db from the binding's endpoints (which the caller preloads).
         const binding = yield* Database.load(bindingRef);
-        const cursor = yield* Database.load(binding.cursor);
-        const project = Relation.getTarget(binding);
-        const db = Relation.getDatabase(binding) ?? Obj.getDatabase(project);
+        if (!Cursor.isExternal(binding)) {
+          return yield* Effect.dieMessage('GitHub sync requires an external-sync cursor.');
+        }
+
+        const project = yield* Database.load(binding.spec.target);
+        const db = Obj.getDatabase(binding) ?? Obj.getDatabase(project);
         if (!db) {
           return yield* Effect.dieMessage('Binding ref must be preloaded by caller (no database derivable).');
         }
 
-        const connection = Relation.getSource(binding);
-
         // The repo's foreign id: prefer the binding's `remoteId`, falling back
         // to the GitHub foreign key on the target object.
-        const remoteId = binding.remoteId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
+        const remoteId =
+          binding.spec.remoteId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
 
         const bindingId = binding.id;
 
         const outcome = yield* Effect.either(
           Effect.gen(function* () {
             if (remoteId === undefined) {
-              return yield* Effect.dieMessage('SyncBinding has no remoteId and the target has no GitHub foreign key.');
+              return yield* Effect.dieMessage('Cursor has no remoteId and the target has no GitHub foreign key.');
             }
 
             // Fetch all repos visible to the token once so the binding can
@@ -542,7 +570,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
               return yield* Effect.dieMessage('Repository not accessible to connection token');
             }
 
-            const options = (binding.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
+            const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
 
             // Upsert the local Project for this repo (three-way merge).
             yield* upsertProject(binding, remoteRepo);
@@ -648,13 +676,13 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             };
           }).pipe(
             Effect.provide(Database.layer(db)),
-            Effect.provide(GitHubApi.GitHubCredentials.fromConnection(Ref.make(connection))),
+            Effect.provide(GitHubApi.GitHubCredentials.fromAccessToken(binding.spec.source)),
           ),
         );
 
-        // Write sync state onto the binding's cursor.
+        // Write sync state onto the binding.
         if (outcome._tag === 'Right') {
-          Cursor.advance(cursor);
+          Cursor.advance(binding);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-success.${bindingId}`,
@@ -665,7 +693,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
           return { pulled: outcome.right.pulled };
         } else {
           const message = formatGitHubSyncFailure(outcome.left);
-          Cursor.recordError(cursor, message);
+          Cursor.recordError(binding, message);
           log.warn('github sync: binding failed', { error: outcome.left });
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {

@@ -14,18 +14,15 @@ import * as Stream from 'effect/Stream';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
-// Connection is referenced in the inferred type of this module's default export via
-// InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { ContentBlock, Cursor, Person } from '@dxos/types';
+import { ContentBlock, Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
@@ -90,7 +87,7 @@ export const runGmailSync = ({
   before,
   direction,
 }: {
-  binding: Ref.Ref<SyncBinding.SyncBinding>;
+  binding: Ref.Ref<Cursor.Cursor>;
   userId?: string;
   label?: string;
   /** Lower (oldest) bound of the range to sync — unix ms or yyyy-MM-dd. Defaults to 30 days ago. */
@@ -110,8 +107,11 @@ export const runGmailSync = ({
 > =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
-    const mailbox = Relation.getTarget(binding);
-    // The integration mechanism only ever binds Mailboxes for Gmail.
+    // The integration mechanism only ever creates external-sync cursors for Gmail.
+    if (!Cursor.isExternal(binding)) {
+      return { newMessages: 0 };
+    }
+    const mailbox = yield* Database.load(binding.spec.target);
     if (!Mailbox.instanceOf(mailbox)) {
       return { newMessages: 0 };
     }
@@ -121,8 +121,7 @@ export const runGmailSync = ({
     }
 
     const targetOptions = readBindingOptions(binding);
-    const cursor = yield* Database.load(binding.cursor);
-    const cursorKey = Cursor.parseKey(cursor.value);
+    const cursorKey = Cursor.parseKey(binding.value);
 
     // Range + direction (shared resolver, so JMAP and future providers behave identically): no cursor →
     // backward initial from today to the horizon; cursor → forward incremental; `direction: backward` +
@@ -193,8 +192,8 @@ export const runGmailSync = ({
       );
 
     // fetch → dedup → decode → map → extract-contacts → (optional) on-arrival extractors →
-    // record-threads → commit each page. The SyncBinding layer advances the binding cursor per page.
-    const stats: SyncBinding.Stats = { newMessages: 0 };
+    // record-threads → commit each page. The Cursor layer advances the binding per page.
+    const stats: Cursor.Stats = { newMessages: 0 };
 
     // Coarse sync telemetry (message/thread/sender counts + body-part coverage) written to the
     // transient stats store, keyed by mailbox, so a surface (plugin-debug) can display it live. The
@@ -295,7 +294,7 @@ export const runGmailSync = ({
       searchFilter: targetOptions.filter,
     }).pipe(
       cancelStage,
-      SyncBinding.dedupStage<GoogleMail.Message>(
+      Cursor.dedupStage<GoogleMail.Message>(
         'dedup',
         (message) => message.id,
         (message) => Number.parseInt(message.internalDate),
@@ -315,10 +314,10 @@ export const runGmailSync = ({
       EmailStage.reconcileDrafts(draftPool),
       EmailCommit.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
-      Pipeline.run({ sink: SyncBinding.commit }),
+      Pipeline.run({ sink: Cursor.commit }),
       Effect.provide(
-        SyncBinding.layer({
-          binding,
+        Cursor.layer({
+          cursor: binding,
           feed,
           tagIndex,
           foreignKeySource: GMAIL_SOURCE,
@@ -337,7 +336,7 @@ export const runGmailSync = ({
     );
 
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
-    // run's writes (per-page commits no longer flush — see `SyncBinding.commit`).
+    // run's writes (per-page commits no longer flush — see `Cursor.commit`).
     yield* Database.flush({ indexes: true });
 
     // Final publish so the committed `newMessages` count (advanced per page by the commit sink) is
@@ -364,16 +363,16 @@ export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(({ binding: bindingRef, userId, label, after, before, direction }) =>
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;
-      if (!bindingObj || !Obj.getDatabase(bindingObj)) {
+      if (!bindingObj || !Obj.getDatabase(bindingObj) || !Cursor.isExternal(bindingObj)) {
         return { newMessages: 0 };
       }
-      const connectionRef = Ref.make(Relation.getSource(bindingObj));
+      const accessTokenRef = bindingObj.spec.source;
 
       return yield* runGmailSync({ binding: bindingRef, userId, label, after, before, direction }).pipe(
         Effect.provide(
           Layer.mergeAll(
             GoogleMailApi.Live.pipe(
-              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromConnection(connectionRef))),
+              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromAccessToken(accessTokenRef))),
             ),
             InboxResolver.Live,
           ),

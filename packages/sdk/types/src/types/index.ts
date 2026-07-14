@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AccessToken from './AccessToken';
 import * as Account from './Account';
 import * as Actor from './Actor';
 import * as AnchoredTo from './AnchoredTo';
 import * as Channel from './Channel';
 import * as ContentBlock from './ContentBlock';
-import * as Cursor from './Cursor';
 import * as DraftMessage from './DraftMessage';
 import * as Employer from './Employer';
 import * as Event from './Event';
@@ -39,7 +37,6 @@ export {
   //
   // Common object types
   //
-  AccessToken,
   Account,
   //
   // Common structs
@@ -51,7 +48,6 @@ export {
   AnchoredTo,
   Channel,
   ContentBlock,
-  Cursor,
   DraftMessage,
   Employer,
   Event,

@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { Cursor } from '@dxos/cursor';
 import { DXN, Ref } from '@dxos/echo';
 import {
   // eslint-disable-next-line unused-imports/no-unused-imports
@@ -15,7 +16,6 @@ import {
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
@@ -26,7 +26,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  * Discovery only — list GitHub repositories the connection's token can see.
  * Returns one descriptor per repo across all the user's orgs (and personal
  * account). Read-only: NEVER materializes local objects — materialization is
- * handled by the connector's `materializeTarget` when a `SyncBinding` is created.
+ * handled by the connector's `materializeTarget` when a `Cursor` is created.
  *
  * Orgs and their members are NOT presented as sync targets — they are
  * auto-synced as part of the sync of any repo they own.
@@ -44,9 +44,8 @@ export const GetGitHubRepositories = Operation.make({
 
 /**
  * Find-or-create the empty local root Project for a selected GitHub repo so a
- * {@link SyncBinding} relation can be created eagerly (relations require both
- * endpoints to exist). Keyed by the repo's GitHub foreign id (`remoteTarget.id`),
- * so it is idempotent across re-selection.
+ * {@link Cursor} can reference it as its `spec.target`. Keyed by the repo's
+ * GitHub foreign id (`remoteTarget.id`), so it is idempotent across re-selection.
  */
 export const MaterializeGitHubTarget = Operation.make({
   meta: {
@@ -74,12 +73,12 @@ export const SyncOptions = Schema.Struct({
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
 /**
- * Reconcile GitHub data for one {@link SyncBinding} (one repo).
+ * Reconcile GitHub data for one {@link Cursor} (one repo).
  *
  * Pull-then-push for the bound repo: auto-upsert its owning org + members,
  * three-way merge the repo as a Project and its issues/PRs as Tasks (respecting
  * `maxDaysBack` if set), then push diverged Project/Task fields back to GitHub.
- * Sync state (`lastSyncAt`/`lastError`/`snapshots`) is written onto the binding.
+ * Sync state (`lastRunAt`/`lastError`/`spec.snapshots`) is written onto the binding.
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {
@@ -89,7 +88,7 @@ export const SyncGitHubRepositories = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({

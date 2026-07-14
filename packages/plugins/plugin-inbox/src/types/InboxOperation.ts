@@ -9,15 +9,15 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
+import { Cursor } from '@dxos/cursor';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FactStore, FeedCursors } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf';
 import {
   Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
@@ -150,7 +150,7 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
     userId: Schema.String.pipe(Schema.optional),
@@ -188,10 +188,9 @@ export const GoogleMailSync = Operation.make({
 }).pipe(Operation.visible);
 
 /**
- * Eagerly materializes the local Mailbox bound to a Gmail connection so a
- * {@link SyncBinding} can be created (relations require both endpoints to exist).
- * Gmail is a single-target connector with no remote selection, so a fresh Mailbox
- * is always created; the connection's `accessToken.account` seeds the default name.
+ * Eagerly materializes the local Mailbox bound to a Gmail connection so the sync cursor's target
+ * exists before the cursor is created. Gmail is a single-target connector with no remote selection,
+ * so a fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
  */
 export const MaterializeGmailTarget = Operation.make({
   meta: {
@@ -212,7 +211,7 @@ export const JmapSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
     after: Schema.Union(Schema.Number, Schema.String).pipe(
@@ -245,10 +244,10 @@ export const JmapSync = Operation.make({
 }).pipe(Operation.visible);
 
 /**
- * Eagerly materializes the local Mailbox bound to a JMAP connection so a {@link SyncBinding} can be
- * created. JMAP is a single-target connector (the account inbox), so a fresh Mailbox is always
- * created; the connection's `accessToken.account` seeds the default name. Mirrors
- * {@link MaterializeGmailTarget}.
+ * Eagerly materializes the local Mailbox bound to a JMAP connection so the sync cursor's target
+ * exists before the cursor is created. JMAP is a single-target connector (the account inbox), so a
+ * fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
+ * Mirrors {@link MaterializeGmailTarget}.
  */
 export const MaterializeJmapTarget = Operation.make({
   meta: {
@@ -290,7 +289,7 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
     }),
     googleCalendarId: Schema.optional(Schema.String),
@@ -305,9 +304,9 @@ export const GoogleCalendarSync = Operation.make({
 }).pipe(Operation.visible);
 
 /**
- * Eagerly materializes the local Calendar for a selected remote Google calendar so a
- * {@link SyncBinding} can be created. Find-or-create keyed on the calendar's foreign key,
- * so re-running for the same remote calendar returns the existing Calendar.
+ * Eagerly materializes the local Calendar for a selected remote Google calendar so the sync
+ * cursor's target exists before the cursor is created. Find-or-create keyed on the calendar's
+ * foreign key, so re-running for the same remote calendar returns the existing Calendar.
  */
 export const MaterializeCalendarTarget = Operation.make({
   meta: {
@@ -440,7 +439,7 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose remoteId is the contact group to sync.',
     }),
     pageSize: Schema.optional(Schema.Number),
@@ -460,7 +459,7 @@ export const SyncContacts = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Void,
 });
@@ -647,7 +646,7 @@ export const AnalyzeMailbox = Operation.make({
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore, FeedCursors],
+  services: [AiService.AiService, Database.Service, FactStore],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
       description: 'Mailbox whose feed messages are analyzed.',

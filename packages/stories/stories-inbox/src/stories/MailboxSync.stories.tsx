@@ -11,9 +11,10 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
+import { AccessToken, Cursor } from '@dxos/cursor';
 import { Feed, Tag } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -29,7 +30,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
-import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Person } from '@dxos/types';
 
 import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin, SyncTriggerRunner } from '../testing';
 
@@ -44,7 +45,6 @@ const SYNC_STORY_TYPES = [
   Operation.PersistentOperation,
   Organization.Organization,
   Person.Person,
-  SyncBinding.SyncBinding,
   Tag.Tag,
   TagIndex.TagIndex,
   Trigger.Trigger,

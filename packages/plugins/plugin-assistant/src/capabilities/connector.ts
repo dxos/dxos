@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { AccessToken } from '@dxos/cursor';
 import { Obj, Ref } from '@dxos/echo';
 import { Connection, Connector, type CredentialForm } from '@dxos/plugin-connector';
-import { AccessToken } from '@dxos/types';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE } from '../constants';
 

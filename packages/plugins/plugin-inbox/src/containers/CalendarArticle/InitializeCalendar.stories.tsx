@@ -10,6 +10,7 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AccessToken } from '@dxos/cursor';
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -19,7 +20,6 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
-import { AccessToken } from '@dxos/types';
 
 import { Calendar } from '#types';
 

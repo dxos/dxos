@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Provider } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { Cursor } from '@dxos/cursor';
 import { Filter, Ref } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
@@ -89,13 +90,18 @@ export const ControlsModule = ({ space }: ModuleProps) => {
     window.location.reload();
   }, [client]);
 
-  const handleResetCursor = useCallback(() => {
-    if (!registry || !feed) {
+  const handleResetCursor = useCallback(async () => {
+    if (!feed) {
       return;
     }
 
-    registry.feedCursorsFor(space.id).reset(feed.id);
-  }, [registry, space.id, feed]);
+    const feedRef = Ref.make(feed);
+    const cursors = await space.db.query(Filter.type(Cursor.Cursor)).run();
+    const existing = cursors.find((cursor) => cursor.spec.kind === 'feed' && cursor.spec.source.uri === feedRef.uri);
+    if (existing) {
+      space.db.remove(existing);
+    }
+  }, [space, feed]);
 
   const handleResetFactStore = useCallback(() => {
     if (!registry) {

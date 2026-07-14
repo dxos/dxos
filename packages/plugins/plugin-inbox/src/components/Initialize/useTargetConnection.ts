@@ -2,39 +2,48 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Connection, Connector, SyncBinding } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/cursor';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { Connection, Connector, CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
 
 /**
- * Find the {@link Connection} bound to the given `target` object via a
- * {@link SyncBinding} relation (the binding's source is the connection that
- * authenticates sync for that target). Returns the first matching connection
- * (or `undefined` if the target is not yet bound).
+ * Find the {@link Connection} bound to the given `target` object via an external-sync
+ * {@link Cursor} (the cursor's `spec.source` access token authenticates sync for that target).
+ * Returns the first matching connection (or `undefined` if the target is not yet bound).
  *
- * Uses ECHO's structural reverse-ref index (`targetOf`) — the relation is keyed
- * by its target endpoint — rather than scanning.
+ * The cursor no longer relates to `Connection` directly (that coupling was removed), so this scans
+ * every cursor in the space, finds the one targeting `target`, then matches its access token against
+ * every `Connection` — fuzzy if a token is ever shared across connections.
  */
 export const useTargetConnection = <T extends Obj.Any>(
   target: T | undefined,
 ): { connection: Connection.Connection | undefined } => {
   const db = target ? Obj.getDatabase(target) : undefined;
-  const connections = useQuery(
-    db,
-    target
-      ? Query.select(Filter.id(target.id)).targetOf(SyncBinding.SyncBinding).source()
-      : Query.select(Filter.nothing()),
-  );
-  const connection = connections.find(Connection.instanceOf);
+  const cursors = useQuery(db, CursorsQuery);
+  const connections = useQuery(db, Filter.type(Connection.Connection));
+  const connection = useMemo(() => {
+    if (!target) {
+      return undefined;
+    }
+    const cursor = cursors.find(
+      (candidate): candidate is Cursor.ExternalCursor =>
+        Cursor.isExternal(candidate) && isCursorForTarget(candidate, target),
+    );
+    if (!cursor) {
+      return undefined;
+    }
+    return connections.find((candidate) => candidate.accessToken.uri === cursor.spec.source.uri);
+  }, [target, cursors, connections]);
   return { connection };
 };
 
 /**
- * Build a `sync` callback for `target`: resolves its {@link SyncBinding} and the `sync` operation of
+ * Build a `sync` callback for `target`: resolves its external-sync cursor and the `sync` operation of
  * the bound connection's {@link Connector} entry, then invokes that op with a `{ binding }` payload —
  * so the action works for any connector that contributes a `sync` op, with no per-provider branching.
  * Tracks an in-flight `syncing` flag for the empty-state UI.
@@ -57,8 +66,8 @@ export const useTargetSync = <T extends Obj.Any>(
     ? connectors.find((connector) => connector.id === connection.connectorId)?.sync
     : undefined;
   const db = Obj.getDatabase(target);
-  const bindings = useQuery(db, Query.select(Filter.id(target.id)).targetOf(SyncBinding.SyncBinding));
-  const binding = bindings.find(SyncBinding.instanceOf);
+  const cursors = useQuery(db, CursorsQuery);
+  const binding = cursors.find((candidate) => isCursorForTarget(candidate, target));
   const { invokePromise } = useOperationInvoker();
   const [syncing, setSyncing] = useState(false);
 

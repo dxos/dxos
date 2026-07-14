@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Credential } from '@dxos/compute';
+import { type AccessToken } from '@dxos/cursor';
 import { Database, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
@@ -25,10 +26,10 @@ const makeService = (cachedToken: string | undefined): Context.Tag.Service<Googl
 /**
  * Service for accessing Google API credentials.
  *
- * Token sourcing follows the Trello pattern: the `Connection` owns the
- * `AccessToken`, and sync ops compose `fromConnection(ref)` once at the
- * operation boundary. Falls back to database credentials when no Connection
- * is in scope (legacy / agent paths).
+ * Token sourcing: an operation invoked with a `Connection` composes `fromConnection(ref)`; one
+ * invoked with an external-sync cursor composes `fromAccessToken(cursor.spec.source)` directly (the
+ * cursor no longer relates to `Connection`). Falls back to database credentials when neither is in
+ * scope (legacy / agent paths).
  */
 export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   GoogleCredentials,
@@ -37,10 +38,21 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
     get: () => Effect.Effect<string, never, Credential.CredentialsService>;
   }
 >() {
-  /**
-   * Creates a credentials layer from a Connection ref. Loads the
-   * connection's `accessToken` and returns its `token` value.
-   */
+  /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token` value. */
+  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+    Layer.effect(
+      GoogleCredentials,
+      Effect.gen(function* () {
+        const accessToken = yield* Database.load(accessTokenRef);
+        if (accessToken?.token) {
+          log('using access token', { source: accessToken.source, account: accessToken.account });
+          return makeService(accessToken.token);
+        }
+        return makeService(undefined);
+      }),
+    );
+
+  /** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       GoogleCredentials,

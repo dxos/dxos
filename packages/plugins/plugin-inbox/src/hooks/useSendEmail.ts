@@ -7,9 +7,10 @@ import { useCallback } from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { Operation, ServiceResolver } from '@dxos/compute';
-import { Database, Filter, Obj, Ref, Relation, Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { findConnectionForAccessToken } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
@@ -58,8 +59,12 @@ export const useSendEmail = (message: Message.Message): NonNullable<EditMessageP
           if (!binding) {
             return undefined;
           }
-          const connection = Ref.make(Relation.getSource(binding));
-          const { connectorId } = yield* Database.load(connection);
+          const connectionObj = yield* findConnectionForAccessToken(db, binding.spec.source);
+          if (!connectionObj) {
+            return undefined;
+          }
+          const connection = Ref.make(connectionObj);
+          const { connectorId } = connectionObj;
           // `spaceId` scopes the spawned send process so its space-affinity credentials service
           // (CredentialsService) materializes.
           const invokeOptions = {

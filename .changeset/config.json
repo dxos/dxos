@@ -45,6 +45,7 @@
       "@dxos/credentials",
       "@dxos/crx-protocol",
       "@dxos/crypto",
+      "@dxos/cursor",
       "@dxos/debug",
       "@dxos/deus",
       "@dxos/devtools",

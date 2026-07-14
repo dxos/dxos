@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import { useEffect, useRef } from 'react';
 
 import { Operation, Trigger } from '@dxos/compute';
+import { Cursor } from '@dxos/cursor';
 import { DXN, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { SyncBinding } from '@dxos/plugin-connector';
+import { CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 
@@ -31,11 +32,13 @@ export class MailboxTriggerRelation extends Type.makeRelation<MailboxTriggerRela
 export const SyncTriggerRunner = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const bindings = useQuery(
-    space?.db,
-    mailbox ? Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding) : Query.select(Filter.nothing()),
-  );
-  const binding = bindings.find(SyncBinding.instanceOf);
+  const cursors = useQuery(space?.db, CursorsQuery);
+  const binding = mailbox
+    ? cursors.find(
+        (candidate): candidate is Cursor.ExternalCursor =>
+          Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
+      )
+    : undefined;
   const linkedTriggers = useQuery(
     space?.db,
     mailbox ? Query.select(Filter.id(mailbox.id)).sourceOf(MailboxTriggerRelation) : Query.select(Filter.nothing()),

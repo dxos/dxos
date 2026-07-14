@@ -33,6 +33,7 @@ import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
+import { AccessToken } from '@dxos/cursor';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -49,7 +50,6 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
-import { AccessToken } from '@dxos/types';
 
 import { moduleSurfaces } from './modules';
 import { initClientFromSpaceSnapshot } from './snapshot';

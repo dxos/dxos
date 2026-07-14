@@ -12,15 +12,12 @@ import * as Stream from 'effect/Stream';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-// Connection is referenced in the inferred type of this module's default export via
-// InboxOperation.GoogleContactsSync's schema; the import lets TypeScript name it in .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Person } from '@dxos/types';
+import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
@@ -66,7 +63,7 @@ const connectionsSource = () =>
   );
 
 /** Pipeline stage: map a Google contact to an upsert unit — Person props + the `updateTime` cursor key. */
-const mapPersonStage: Stage.Stage<GooglePeople.Person, SyncBinding.UpsertUnit<MappedPerson>, never, never> = Stage.map(
+const mapPersonStage: Stage.Stage<GooglePeople.Person, Cursor.UpsertUnit<MappedPerson>, never, never> = Stage.map(
   'map-person',
   (remote: GooglePeople.Person) =>
     Effect.succeed({
@@ -131,15 +128,18 @@ export default InboxOperation.GoogleContactsSync.pipe(
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;
       const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-      if (!bindingObj || !db) {
+      if (!bindingObj || !db || !Cursor.isExternal(bindingObj)) {
         return { upserted: 0 };
       }
 
-      const connectionRef = Ref.make(Relation.getSource(bindingObj));
+      const accessTokenRef = bindingObj.spec.source;
 
       return yield* Effect.gen(function* () {
         const binding = yield* Database.load(bindingRef);
-        const groupResourceName = binding.remoteId;
+        if (!Cursor.isExternal(binding)) {
+          return { upserted: 0 };
+        }
+        const groupResourceName = binding.spec.remoteId;
         if (!groupResourceName) {
           return { upserted: 0 };
         }
@@ -148,8 +148,7 @@ export default InboxOperation.GoogleContactsSync.pipe(
         // The group membership is the set of resource names to keep; the source streams all
         // connections (paginated) and we filter to the group.
         const memberNames = new Set(yield* fetchGroupMembers(groupResourceName));
-        const cursor = yield* Database.load(binding.cursor);
-        const cursorKey = Cursor.parseKey(cursor.value);
+        const cursorKey = Cursor.parseKey(binding.value);
 
         // Pipeline: stream connections → filter to group members → map → upsert into the space. It's a
         // DB target (no feed); the upsert sink is idempotent via the foreign key and advances the
@@ -160,13 +159,15 @@ export default InboxOperation.GoogleContactsSync.pipe(
         // member each run (idempotent).
         // TODO(wittjosiah): Skip unchanged contacts (dedup by updateTime) once we also detect group
         //   membership changes, so newly-added-but-unmodified contacts still sync.
-        const stats: SyncBinding.Stats = { newMessages: 0 };
+        const stats: Cursor.Stats = { newMessages: 0 };
         yield* connectionsSource().pipe(
           Stage.filter('group-member', (person: GooglePeople.Person) => memberNames.has(person.resourceName)),
           mapPersonStage,
           Stream.grouped(COMMIT_PAGE_SIZE),
-          Pipeline.run({ sink: SyncBinding.upsertCommit(upsertPerson) }),
-          Effect.provide(SyncBinding.layer({ binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, cursorKey, stats })),
+          Pipeline.run({ sink: Cursor.upsertCommit(upsertPerson) }),
+          Effect.provide(
+            Cursor.layer({ cursor: binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, cursorKey, stats }),
+          ),
         );
 
         log('contact group sync complete', {
@@ -177,7 +178,7 @@ export default InboxOperation.GoogleContactsSync.pipe(
         return { upserted: stats.newMessages };
       }).pipe(
         Effect.provide(
-          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
+          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromAccessToken(accessTokenRef)),
         ),
       );
     }),

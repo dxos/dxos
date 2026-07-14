@@ -4,11 +4,11 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
+import { AccessToken } from '@dxos/cursor';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Settings as SettingsType } from '#types';

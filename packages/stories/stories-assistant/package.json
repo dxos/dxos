@@ -25,6 +25,7 @@
     "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/cursor": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",

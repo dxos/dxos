@@ -15,6 +15,7 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
+import { type AccessToken } from '@dxos/cursor';
 import { Database, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/plugin-connector';
 
@@ -122,11 +123,27 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  * explicit parameter, so callers compose a single
  * `Effect.provide(GitHubApi.GitHubCredentials.fromConnection(ref))` at the
  * operation boundary.
+ *
+ * Token sourcing: an operation invoked with a `Connection` composes
+ * `fromConnection(ref)`; one invoked with an external-sync cursor composes
+ * `fromAccessToken(cursor.spec.source)` directly (the cursor no longer relates
+ * to `Connection`).
  */
 export class GitHubCredentials extends Context.Tag('@dxos/plugin-github/GitHubCredentials')<
   GitHubCredentials,
   GitHubCredentialsValue
 >() {
+  /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
+  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+    Layer.effect(
+      GitHubCredentials,
+      Effect.gen(function* () {
+        const accessToken = yield* Database.load(accessTokenRef);
+        return { token: accessToken.token };
+      }),
+    );
+
+  /** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       GitHubCredentials,

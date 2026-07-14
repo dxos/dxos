@@ -40,6 +40,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/cursor"
+    },
+    {
       "path": "../../core/compute/functions"
     },
     {
@@ -62,9 +65,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"

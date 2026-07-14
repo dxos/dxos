@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/cursor';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Cursor } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';
@@ -34,14 +34,7 @@ describe('reconcileBoardCards (pull)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([
-      AccessToken.AccessToken,
-      Connection.Connection,
-      Cursor.Cursor,
-      SyncBinding.SyncBinding,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -52,15 +45,25 @@ describe('reconcileBoardCards (pull)', () => {
     return { db, connection };
   };
 
-  /** Adds a Kanban and a `SyncBinding` linking `connection` to it; returns the binding. */
-  const makeBinding = (db: any, connection: Connection.Connection, kanban: Kanban.Kanban, boardId = 'board1') =>
-    db.add(
-      SyncBinding.make({
-        [Relation.Source]: connection,
-        [Relation.Target]: kanban,
+  /** Adds a Kanban and an external-sync `Cursor` linking `connection` to it; returns the binding. */
+  const makeBinding = (
+    db: any,
+    connection: Connection.Connection,
+    kanban: Kanban.Kanban,
+    boardId = 'board1',
+  ): Cursor.ExternalCursor => {
+    const binding = db.add(
+      Cursor.makeExternal({
+        source: connection.accessToken,
+        target: Ref.make(kanban),
         remoteId: boardId,
       }),
     );
+    if (!Cursor.isExternal(binding)) {
+      throw new Error('expected external cursor');
+    }
+    return binding;
+  };
 
   const makeKanban = (db: any) =>
     db.add(
@@ -119,7 +122,7 @@ describe('reconcileBoardCards (pull)', () => {
     expect(result.removed).toBe(0);
 
     // Card snapshots seeded.
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots.card1?.name).toBe('Task A');
     expect(snapshots.card1?.listName).toBe('To Do');
     expect(snapshots.card2?.name).toBe('Task B');
@@ -341,14 +344,7 @@ describe('pushBoardCards (push)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([
-      AccessToken.AccessToken,
-      Connection.Connection,
-      Cursor.Cursor,
-      SyncBinding.SyncBinding,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -359,15 +355,25 @@ describe('pushBoardCards (push)', () => {
     return { db, connection };
   };
 
-  /** Adds a `SyncBinding` linking `connection` to `kanban`; returns the binding. */
-  const makeBinding = (db: any, connection: Connection.Connection, kanban: Kanban.Kanban, boardId = 'board1') =>
-    db.add(
-      SyncBinding.make({
-        [Relation.Source]: connection,
-        [Relation.Target]: kanban,
+  /** Adds an external-sync `Cursor` linking `connection` to `kanban`; returns the binding. */
+  const makeBinding = (
+    db: any,
+    connection: Connection.Connection,
+    kanban: Kanban.Kanban,
+    boardId = 'board1',
+  ): Cursor.ExternalCursor => {
+    const binding = db.add(
+      Cursor.makeExternal({
+        source: connection.accessToken,
+        target: Ref.make(kanban),
         remoteId: boardId,
       }),
     );
+    if (!Cursor.isExternal(binding)) {
+      throw new Error('expected external cursor');
+    }
+    return binding;
+  };
 
   test('creates locally-created cards remotely + writes back foreign key + seeds snapshot', async ({ expect }) => {
     const { db, connection } = await setup();
@@ -405,7 +411,7 @@ describe('pushBoardCards (push)', () => {
     const fk = Obj.getMeta(localCard).keys.find((k) => k.source === TRELLO_SOURCE);
     expect(fk?.id).toBe('remote-new');
     // Snapshot seeded for the newly-created card.
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['remote-new']?.name).toBe('New local');
   });
 
@@ -430,8 +436,11 @@ describe('pushBoardCards (push)', () => {
     const binding = makeBinding(db, connection, kanban);
 
     // Seed a snapshot so we can detect a local divergence on `description` only.
-    Relation.update(binding, (binding) => {
-      binding.snapshots = {
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind !== 'external') {
+        return;
+      }
+      binding.spec.snapshots = {
         card1: { name: 'Task A', description: 'orig', listName: 'To Do' },
       };
     });
@@ -452,7 +461,7 @@ describe('pushBoardCards (push)', () => {
     expect(result.updated).toBe(1);
     expect(updatePayload).toEqual({ desc: 'edited locally' });
     // Snapshot refreshed with the pushed value so a subsequent push is a no-op.
-    const snapshots = (binding.snapshots ?? {}) as Record<string, any>;
+    const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots.card1?.description).toBe('edited locally');
   });
 
@@ -476,8 +485,11 @@ describe('pushBoardCards (push)', () => {
     );
     const binding = makeBinding(db, connection, kanban);
 
-    Relation.update(binding, (binding) => {
-      binding.snapshots = {
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind !== 'external') {
+        return;
+      }
+      binding.spec.snapshots = {
         card1: { name: 'Pulled', description: '', listName: 'To Do' },
       };
     });

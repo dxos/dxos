@@ -8,12 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import type { Operation } from '@dxos/compute';
+import { AccessToken, Cursor } from '@dxos/cursor';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import type { OAuthProvider } from '@dxos/protocols';
-import type { AccessToken } from '@dxos/types';
 
 import * as Connection from './Connection';
-import * as SyncBinding from './SyncBinding';
 
 /** Descriptor for one remote target returned by discovery operations. */
 export const RemoteTarget = Schema.Struct({
@@ -60,9 +59,9 @@ export const MaterializeTargetOutput = Schema.Struct({
 });
 export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof MaterializeTargetOutput> {}
 
-/** Minimum input for provider {@link ConnectorEntry.sync} operations: one binding to reconcile. */
+/** Minimum input for provider {@link ConnectorEntry.sync} operations: one cursor to reconcile. */
 export type SyncInput = {
-  binding: Ref.Ref<SyncBinding.SyncBinding>;
+  binding: Ref.Ref<Cursor.Cursor>;
 };
 
 /**

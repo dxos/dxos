@@ -94,7 +94,7 @@ describe('runGmailSync against a mock Gmail API', () => {
     expect(tags.length).toBe(dataset.labels.length);
 
     // Cursor advanced to the last synced key.
-    const cursorValue = binding.cursor.target?.value;
+    const cursorValue = binding.value;
     expect(cursorValue).toBeDefined();
     expect(Number.parseInt(cursorValue!, 10)).toBeGreaterThan(0);
 
@@ -174,7 +174,7 @@ describe('runGmailSync against a mock Gmail API', () => {
       Math.max(...dataset.messages.map((message) => Number(message.internalDate)));
 
     const { db, mailbox, binding } = await seedMailboxBinding(builder);
-    const cursorKey = () => Number.parseInt(binding.cursor.target?.value ?? '0', 10);
+    const cursorKey = () => Number.parseInt(binding.value ?? '0', 10);
     const feedIds = async () => {
       const messages = await queryFeedMessages(db, mailbox);
       return messages.flatMap((message) =>

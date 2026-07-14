@@ -5,13 +5,14 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
-import { type Database, Filter, type Obj, type Ref, Relation } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { type Database, Filter, type Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry, SyncBinding } from '#types';
+import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';
 
 export type ConnectorAuthButtonProps = {
   /**
@@ -32,8 +33,8 @@ export type ConnectorAuthButtonProps = {
 
 /**
  * Inline connect dropdown. Always a dropdown menu: existing {@link Connection} objects for any of the
- * given connectors are listed first (each creates a {@link SyncBinding} inline when selected), then —
- * after a divider — a "Connect X" entry per connector starts the usual auth flow via the long-lived
+ * given connectors are listed first (each creates a {@link Cursor} inline when selected), then — after
+ * a divider — a "Connect X" entry per connector starts the usual auth flow via the long-lived
  * {@link ConnectorCoordinator} (which builds the AccessToken + Connection stubs, runs OAuth or the
  * credential form, and persists on success). Used by callers (inbox / calendar) that detect a missing
  * connection mid-flow.
@@ -82,7 +83,7 @@ export const ConnectorAuthButton = ({ connectorIds, db, existingTarget }: Connec
       if (!target) {
         return;
       }
-      db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: target }));
+      db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }));
     },
     [db, existingTarget],
   );

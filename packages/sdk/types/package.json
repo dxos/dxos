@@ -32,6 +32,7 @@
   ],
   "dependencies": {
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/cursor": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -43,7 +44,6 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
-    "@dxos/pipeline": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

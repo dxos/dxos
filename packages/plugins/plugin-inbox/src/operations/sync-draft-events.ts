@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { findConnectionForAccessToken } from '@dxos/plugin-connector';
 import { Event } from '@dxos/types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
@@ -30,7 +31,11 @@ export default InboxOperation.SyncDraftEvents.pipe(
       if (!binding) {
         return { synced: 0 };
       }
-      const connectionRef = Ref.make(Relation.getSource(binding));
+      const connection = yield* findConnectionForAccessToken(db, binding.spec.source);
+      if (!connection) {
+        return { synced: 0 };
+      }
+      const connectionRef = Ref.make(connection);
       const bindingRef = Ref.make(binding);
 
       const candidates = yield* Effect.promise(() => db.query(Filter.type(Event.Event)).run());

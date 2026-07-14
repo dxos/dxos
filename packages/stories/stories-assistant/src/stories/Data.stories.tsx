@@ -7,6 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { DatabaseSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, Trigger } from '@dxos/compute';
+import { AccessToken } from '@dxos/cursor';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { CrmSkill } from '@dxos/plugin-crm';
@@ -15,7 +16,7 @@ import { InboxSkill, Mailbox } from '@dxos/plugin-inbox';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
 import { Routine } from '@dxos/plugin-routine';
 import { ViewModel } from '@dxos/schema';
-import { AccessToken, Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
+import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import {

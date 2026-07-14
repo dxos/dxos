@@ -7,11 +7,11 @@ import React, { useMemo } from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AccessToken } from '@dxos/cursor';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { AccessToken } from '@dxos/types';
 
 import { translations } from '#translations';
 

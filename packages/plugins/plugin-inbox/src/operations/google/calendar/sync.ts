@@ -11,15 +11,12 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref as EchoRef, Obj, Relation } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { Database, Obj } from '@dxos/echo';
 import { type Resolver } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-// Connection is referenced in the inferred type of this module's default export via
-// InboxOperation.GoogleCalendarSync's schema; the import lets TypeScript name it in .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
@@ -45,16 +42,19 @@ export default InboxOperation.GoogleCalendarSync.pipe(
       Effect.gen(function* () {
         const bindingObj = bindingRef.target;
         const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-        if (!bindingObj || !db) {
+        if (!bindingObj || !db || !Cursor.isExternal(bindingObj)) {
           return { newEvents: 0 };
         }
 
-        const connectionRef = EchoRef.make(Relation.getSource(bindingObj));
+        const accessTokenRef = bindingObj.spec.source;
         const defaults = { googleCalendarId, syncBackDays, syncForwardDays, pageSize };
 
         return yield* Effect.gen(function* () {
           const binding = yield* Database.load(bindingRef);
-          const calendar = Relation.getTarget(binding);
+          if (!Cursor.isExternal(binding)) {
+            return { newEvents: 0 };
+          }
+          const calendar = yield* Database.load(binding.spec.target);
           if (!Calendar.instanceOf(calendar)) {
             // The integration mechanism only ever binds Calendars for Google Calendar.
             return { newEvents: 0 };
@@ -62,8 +62,8 @@ export default InboxOperation.GoogleCalendarSync.pipe(
 
           const feed = yield* Database.load(calendar.feed);
           const fk = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE);
-          const calendarId = fk?.id ?? binding.remoteId ?? defaults.googleCalendarId;
-          const optRecord = binding.options ?? {};
+          const calendarId = fk?.id ?? binding.spec.remoteId ?? defaults.googleCalendarId;
+          const optRecord = binding.spec.options ?? {};
           const syncBack = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : defaults.syncBackDays;
           const syncForward =
             typeof optRecord.syncForwardDays === 'number' ? optRecord.syncForwardDays : defaults.syncForwardDays;
@@ -72,19 +72,18 @@ export default InboxOperation.GoogleCalendarSync.pipe(
           // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A
           // missing cursor means initial sync (window by start time); otherwise incremental
           // (by `updatedMin`).
-          const cursor = yield* Database.load(binding.cursor);
-          const cursorKey = typeof cursor.value === 'string' ? Date.parse(cursor.value) : 0;
+          const cursorKey = typeof binding.value === 'string' ? Date.parse(binding.value) : 0;
           const isInitialSync = cursorKey === 0;
           log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
-          const stats: SyncBinding.Stats = { newMessages: 0 };
+          const stats: Cursor.Stats = { newMessages: 0 };
           yield* calendarSource(calendarId, cursorKey, {
             syncBackDays: syncBack,
             syncForwardDays: syncForward,
             pageSize: defaults.pageSize,
             searchFilter,
           }).pipe(
-            SyncBinding.dedupStage<GoogleCalendar.Event>(
+            Cursor.dedupStage<GoogleCalendar.Event>(
               'dedup',
               (event) => event.id,
               (event) => (event.updated ? Date.parse(event.updated) : 0),
@@ -92,10 +91,10 @@ export default InboxOperation.GoogleCalendarSync.pipe(
             makeRecurringDedupStage(isInitialSync),
             mapEventStage,
             Stream.grouped(COMMIT_PAGE_SIZE),
-            Pipeline.run({ sink: SyncBinding.commit }),
+            Pipeline.run({ sink: Cursor.commit }),
             Effect.provide(
-              SyncBinding.layer({
-                binding,
+              Cursor.layer({
+                cursor: binding,
                 feed,
                 foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
                 cursorKey,
@@ -107,7 +106,7 @@ export default InboxOperation.GoogleCalendarSync.pipe(
           );
 
           // Flush indexes once at the end of the run (per-page commits no longer flush — see
-          // `SyncBinding.commit`) so cross-run dedup / resolution observe this run's writes.
+          // `Cursor.commit`) so cross-run dedup / resolution observe this run's writes.
           yield* Database.flush({ indexes: true });
 
           log('calendar sync complete', { newEvents: stats.newMessages, isInitialSync });
@@ -117,7 +116,7 @@ export default InboxOperation.GoogleCalendarSync.pipe(
             Layer.mergeAll(
               FetchHttpClient.layer,
               InboxResolver.Live,
-              GoogleCredentials.fromConnection(connectionRef),
+              GoogleCredentials.fromAccessToken(accessTokenRef),
               Database.layer(db),
             ),
           ),
@@ -129,7 +128,7 @@ export default InboxOperation.GoogleCalendarSync.pipe(
 
 /** Maps a Google event to a commit unit (event → feed). Resolves attendees via `Resolver`; drops
  * cancelled/start-less events (mapEvent returns null). Events carry no tags or extracted objects. */
-const mapEventStage: Stage.Stage<GoogleCalendar.Event, SyncBinding.CommitUnit, never, Resolver> = Stage.map(
+const mapEventStage: Stage.Stage<GoogleCalendar.Event, Cursor.CommitUnit, never, Resolver> = Stage.map(
   'map-event',
   (event: GoogleCalendar.Event) =>
     mapEvent(event).pipe(

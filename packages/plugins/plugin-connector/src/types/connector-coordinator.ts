@@ -72,13 +72,13 @@ export type ConnectorCoordinator = {
    */
   finalizeRedirectFlow: (input: { accessTokenId: string; accessToken: string }) => Effect.Effect<void, Error>;
   /**
-   * Reconcile a connection's {@link SyncBinding} relations against the chosen
-   * remote targets: materialize + bind newly-selected targets (binding the
-   * first to `existingTarget` when supplied), remove deselected bindings. Owns
-   * the connector-registry lookup + `materializeTarget` call, so it lives on the
+   * Reconcile a connection's sync cursors against the chosen remote targets:
+   * materialize + bind newly-selected targets (binding the first to
+   * `existingTarget` when supplied), remove deselected cursors. Owns the
+   * connector-registry lookup + `materializeTarget` call, so it lives on the
    * coordinator rather than as a standalone operation.
    */
-  setSyncBindings: (input: {
+  setCursors: (input: {
     db: Database.Database;
     connection: Ref.Ref<Connection.Connection>;
     selected: ReadonlyArray<{ remoteId: string; name?: string }>;

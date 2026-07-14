@@ -18,9 +18,10 @@ import { DraftMessage, Message, Person } from '@dxos/types';
 
 /**
  * Reusable, generic email-processing pipeline stages. The stage that turns a {@link Mapped} item
- * into a plugin-connector `SyncBinding.CommitUnit` (`toCommitUnit`) lives in `@dxos/plugin-inbox`
- * instead, since it depends on `SyncBinding` — a type that lives above this low-level package.
- * Provider-specific decode/map stages stay in each sync op.
+ * into a `Cursor.CommitUnit` (`toCommitUnit`) lives in `@dxos/plugin-inbox` instead, since it
+ * requires `Cursor.Service` (feed + tag index for the specific sync run), whereas these stages stay
+ * pure `Mapped` → `Mapped` with no service requirements. Provider-specific decode/map stages stay in
+ * each sync op.
  */
 
 /** An item carrying a body string that may contain HTML. */
@@ -39,7 +40,7 @@ export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, 
  * each is Mapped → Mapped, so they compose in any order, simply recording what they found
  * (`message.attachments`, `contact`) rather than each building its own deferred write.
  * `plugin-inbox`'s `EmailCommit.toCommitUnit` is the stage that turns those into a
- * `SyncBinding.CommitUnit`'s `commitEffects`, and must run last.
+ * `Cursor.CommitUnit`'s `commitEffects`, and must run last.
  */
 export type Mapped = {
   readonly message: Message.Message;

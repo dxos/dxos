@@ -41,8 +41,8 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * materialization, and sync operations plus the token-created hook to the
  * `'linear.app'` source.
  *
- * Sync targets are Linear teams; each is bound by one `SyncBinding` whose
- * target is the team's local root Project. Per-binding `SyncOptions.maxDaysBack`
+ * Sync targets are Linear teams; each is bound by one external-sync `Cursor` whose
+ * `spec.target` is the team's local root Project. Per-binding `SyncOptions.maxDaysBack`
  * caps how far back issues are pulled by `Issue.updatedAt`.
  *
  * Scopes:

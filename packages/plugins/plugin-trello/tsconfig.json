@@ -37,6 +37,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/cursor"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -53,9 +56,6 @@
     },
     {
       "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../plugin-connector"

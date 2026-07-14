@@ -7,26 +7,25 @@
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 
+import { Cursor } from '@dxos/cursor';
 import { type FactUnit } from '@dxos/pipeline-email';
 import { FactStore } from '@dxos/pipeline-rdf';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Cursor } from '@dxos/types';
 
 /**
  * `Pipeline.run` sink for the cursored fact pipeline. Persists a page of {@link FactUnit} facts to
- * the {@link FactStore} and advances the {@link SyncBinding} cursor to the page's max key in the
- * same step — page-atomic, mirroring `SyncBinding.upsertCommit`. Use after `Stream.grouped(pageSize)`
- * (which also emits the trailing partial page). Facts are extracted upstream (extract-only) and only
- * persisted here, so there is no double write.
+ * the {@link FactStore} and advances the {@link Cursor} to the page's max key in the same step —
+ * page-atomic, mirroring `Cursor.upsertCommit`. Use after `Stream.grouped(pageSize)` (which also
+ * emits the trailing partial page). Facts are extracted upstream (extract-only) and only persisted
+ * here, so there is no double write.
  */
-export const factsCommit = (page: Chunk.Chunk<FactUnit>): Effect.Effect<void, never, SyncBinding.Service | FactStore> =>
+export const factsCommit = (page: Chunk.Chunk<FactUnit>): Effect.Effect<void, never, Cursor.Service | FactStore> =>
   Effect.gen(function* () {
     const units = Chunk.toReadonlyArray(page);
     if (units.length === 0) {
       return;
     }
     const store = yield* FactStore;
-    const state = yield* SyncBinding.Service;
+    const state = yield* Cursor.Service;
     const facts = units.flatMap((unit) => unit.facts);
     if (facts.length > 0) {
       // A fact-store write failure is fatal to the run (not a recoverable per-page error).

@@ -7,15 +7,14 @@ import * as Effect from 'effect/Effect';
 
 import { ConnectorSync, LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 
-const { mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } = ConnectorSync;
+const { mergeDeep, mergeField, snapshotField } = ConnectorSync;
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
-import { Cursor } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -64,7 +63,30 @@ type BoardSnapshot = {
 };
 
 // Per-field three-way merge primitives are shared with other integration plugins
-// (Linear, GitHub) and live in `@dxos/app-toolkit`.
+// (Linear, GitHub) and live in `@dxos/app-toolkit`. `readSnapshot`/`writeSnapshot` are NOT shared —
+// app-toolkit's versions are typed against a relation-shaped `.snapshots` field, but a Trello binding
+// is now a flat `Cursor.ExternalCursor` whose snapshots live one level down at `spec.snapshots`. These
+// local equivalents read/write that field directly.
+
+/** Reads `binding.spec.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
+const readSnapshot = <T extends object>(binding: Cursor.ExternalCursor, foreignId: string): T | undefined => {
+  const snapshots = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
+  return snapshots[foreignId] as T | undefined;
+};
+
+/**
+ * Writes `binding.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map so the assignment is
+ * safe under ECHO's structural-sharing semantics.
+ */
+const writeSnapshot = (binding: Cursor.ExternalCursor, foreignId: string, snapshot: object): void => {
+  Obj.update(binding, (binding) => {
+    if (binding.spec.kind !== 'external') {
+      return;
+    }
+    const existing = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
+    binding.spec.snapshots = { ...existing, [foreignId]: snapshot };
+  });
+};
 
 /**
  * Pull reconciler with snapshot-driven three-way merge.
@@ -73,7 +95,7 @@ type BoardSnapshot = {
  *  - Per-field three-way merge over `(local, remote, snapshot)`. Local edits to
  *    fields the remote hasn't changed are preserved; remote edits to fields the
  *    user hasn't touched flow through; on both-changed the policy is remote-wins.
- *  - After the merge, refresh `binding.snapshots[card.id]` to the values
+ *  - After the merge, refresh `binding.spec.snapshots[card.id]` to the values
  *    currently on the remote — so the next sync's three-way merge starts from
  *    Trello's current state.
  *
@@ -90,7 +112,7 @@ type BoardSnapshot = {
  * (board-level push is currently TODO; see notes below).
  */
 export const reconcileBoardCards: (
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   kanban: Kanban.Kanban,
   remoteBoard: TrelloBoard,
   remoteCards: ReadonlyArray<TrelloCard>,
@@ -320,7 +342,7 @@ export type PushResult = {
  * What gets pushed:
  *  - Cards WITHOUT a Trello foreign key — locally created, never seen by Trello. POST.
  *  - Cards WITH a foreign key whose local field values differ from
- *    `binding.snapshots[foreignId]` — i.e. the user edited a field that wasn't
+ *    `binding.spec.snapshots[foreignId]` — i.e. the user edited a field that wasn't
  *    written by the most recent pull. PUT only the diverged fields.
  *
  * Tombstones (`Obj.isDeleted(target)`) are NEVER pushed: pull soft-deletes the
@@ -329,7 +351,7 @@ export type PushResult = {
  * pushed values so subsequent passes see no divergence.
  */
 export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   kanban: Kanban.Kanban,
   lists: ReadonlyArray<TrelloList>,
   push: {
@@ -513,12 +535,14 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
 
       const toastIdSuffix = EID.getEntityId(EID.tryParse(binding.uri)!) ?? 'unknown';
 
-      // Resolve the binding and its connection up-front so credentials can be
-      // provided from the connection ref. `Database.load` is requirement-free
-      // (the ref carries its own db), so this runs outside the layered body.
+      // Resolve the binding up-front so credentials can be provided from its access
+      // token directly. `Database.load` is requirement-free (the ref carries its own
+      // db), so this runs outside the layered body.
       const bound = yield* Database.load(binding);
-      const cursor = yield* Database.load(bound.cursor);
-      const connection = Relation.getSource(bound);
+      if (!Cursor.isExternal(bound)) {
+        // The integration mechanism only ever creates external-sync cursors for Trello.
+        return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
+      }
 
       // Wrap the body in `Effect.either` so we can emit a toast on either path
       // before returning. The toast distinguishes "the sync ran" from "the sync
@@ -526,7 +550,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
       // `lastError` on the binding carries the diagnostic detail.
       const outcome = yield* Effect.either(
         Effect.gen(function* () {
-          const kanban = Relation.getTarget(bound);
+          const kanban = yield* Database.load(bound.spec.target);
 
           if (!Obj.instanceOf(Kanban.Kanban, kanban) || !Kanban.isKanbanItems(kanban)) {
             // The integration mechanism only ever binds items-variant Kanbans for Trello.
@@ -535,7 +559,8 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
 
           // Resolve the remote board id: prefer the binding's `remoteId`, fall
           // back to the Kanban's foreign-key meta (set by `materializeTarget`).
-          const boardId = bound.remoteId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
+          const boardId =
+            bound.spec.remoteId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
           if (boardId === undefined) {
             return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
           }
@@ -567,23 +592,23 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
               }).pipe(Effect.map(() => undefined)),
           });
 
-          // Stamp success on the binding's cursor.
-          Cursor.advance(cursor);
+          // Stamp success on the binding.
+          Cursor.advance(bound);
 
           return {
             pulled: reconcileResult,
             pushed: pushResult,
           };
         }).pipe(
-          // A failure mid-sync writes `lastError` on the cursor then re-raises,
+          // A failure mid-sync writes `lastError` on the binding then re-raises,
           // so the toast path still surfaces the crash.
           Effect.tapError((error) =>
             Effect.sync(() => {
-              Cursor.recordError(cursor, formatTrelloSyncFailure(error));
+              Cursor.recordError(bound, formatTrelloSyncFailure(error));
             }),
           ),
           Effect.provide(Database.layer(db)),
-          Effect.provide(TrelloApi.TrelloCredentials.fromConnection(Ref.make(connection))),
+          Effect.provide(TrelloApi.TrelloCredentials.fromAccessToken(bound.spec.source)),
         ),
       );
 

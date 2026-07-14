@@ -68,6 +68,9 @@
       "path": "../../core/compute/conductor"
     },
     {
+      "path": "../../core/compute/cursor"
+    },
+    {
       "path": "../../core/compute/functions"
     },
     {

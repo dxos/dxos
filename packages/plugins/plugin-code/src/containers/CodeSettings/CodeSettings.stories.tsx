@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { AccessToken } from '@dxos/cursor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { AccessToken } from '@dxos/types';
 
 import { translations } from '#translations';
 import { type Settings } from '#types';

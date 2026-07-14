@@ -25,7 +25,7 @@ export type InitializeActionProps<T extends Obj.Any> = {
 
 /**
  * Toolbar action for the "initialize / connect this thing" empty state.
- * When a `Connection` is bound to `target` (via a `SyncBinding`) we render an
+ * When a `Connection` is bound to `target` (via an external-sync cursor) we render an
  * `IconButton` that runs the bound connector's `sync` op (resolved by
  * {@link useTargetSync}); otherwise we render the `ConnectorAuth` Surface (if
  * registered) so the user can connect a connector.

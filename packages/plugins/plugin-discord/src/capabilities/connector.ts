@@ -8,10 +8,10 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { AccessToken } from '@dxos/cursor';
 import { Obj, Ref } from '@dxos/echo';
 import { Connection, Connector, type CredentialForm, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
-import { AccessToken } from '@dxos/types';
 
 import {
   DISCORD_BOT_LABEL,

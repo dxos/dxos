@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
@@ -17,7 +17,8 @@ import { osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { ConnectorCoordinator, type RemoteTarget } from '#types';
 
-import { type Connection, SyncBinding } from '../../types';
+import { type Connection } from '../../types';
+import { CursorsQuery, isCursorForConnection } from '../../util';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;
@@ -28,7 +29,7 @@ export type SyncTargetsDialogProps = {
 
 /**
  * Dialog body for picking which remote targets are synced into a {@link Connection}.
- * On submit it reconciles the connection's {@link SyncBinding} relations through
+ * On submit it reconciles the connection's external-sync cursors through
  * the {@link ConnectorCoordinator}.
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
@@ -37,16 +38,16 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   const manager = usePluginManager();
 
   const db = Obj.getDatabase(connection);
-  const bindings = useQuery(db, Query.select(Filter.id(connection.id)).sourceOf(SyncBinding.SyncBinding));
+  const allCursors = useQuery(db, CursorsQuery);
   const initiallySelected = useMemo(() => {
     const ids = new Set<string>();
-    for (const binding of bindings) {
-      if (binding.remoteId) {
-        ids.add(binding.remoteId);
+    for (const cursor of allCursors) {
+      if (isCursorForConnection(cursor, connection) && cursor.spec.remoteId) {
+        ids.add(cursor.spec.remoteId);
       }
     }
     return ids;
-  }, [bindings]);
+  }, [allCursors, connection]);
 
   const [selected, setSelected] = useState<Set<string>>(() => new Set(initiallySelected));
   const [submitting, setSubmitting] = useState(false);
@@ -85,7 +86,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         .map((target) => ({ remoteId: target.id, name: target.name }));
       const coordinator = manager.capabilities.get(ConnectorCoordinator);
       await EffectEx.runAndForwardErrors(
-        coordinator.setSyncBindings({
+        coordinator.setCursors({
           db,
           connection: Ref.make(connection),
           selected: chosen,

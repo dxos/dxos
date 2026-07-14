@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AccessToken } from '@dxos/cursor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { AccessToken } from '@dxos/types';
 
 export const SKILL_KEY = 'org.dxos.skill.sandbox';
 

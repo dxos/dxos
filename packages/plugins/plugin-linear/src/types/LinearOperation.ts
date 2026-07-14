@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { Cursor } from '@dxos/cursor';
 import { DXN, Ref } from '@dxos/echo';
 import {
   // eslint-disable-next-line unused-imports/no-unused-imports
@@ -15,7 +16,6 @@ import {
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
@@ -40,8 +40,8 @@ export const GetLinearTeams = Operation.make({
 });
 
 /**
- * Find-or-create the empty local root Project for a Linear team so a
- * {@link SyncBinding} relation can be created eagerly. Idempotent: keyed by the
+ * Find-or-create the empty local root Project for a Linear team so an
+ * external-sync {@link Cursor.Cursor} can be created eagerly. Idempotent: keyed by the
  * team's `LINEAR_SOURCE` foreign id (`remoteTarget.id`), it returns the existing
  * Project when one already carries that key. The team's projects and issues are
  * pulled under it on sync; here we only stamp the foreign key + a display name.
@@ -71,13 +71,13 @@ export const SyncOptions = Schema.Struct({
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
 /**
- * Reconcile Linear data for one {@link SyncBinding}'s team target.
+ * Reconcile Linear data for one team target bound by an external-sync {@link Cursor.Cursor}.
  *
- * The binding's source is the {@link Connection} that authenticates the sync;
- * its target is the team's local root Project; its `remoteId` is the Linear
+ * The binding's `spec.source` is the {@link Connection}'s access token that authenticates the sync;
+ * its `spec.target` is the team's local root Project; its `spec.remoteId` is the Linear
  * team UUID. Bidirectional (pull-then-push): upsert the team's projects as
  * Project objects, upsert issues as Tasks (respecting `maxDaysBack` if set),
- * push diverged local edits back, then record `lastSyncAt`/`lastError` and
+ * push diverged local edits back, then record `lastRunAt`/`lastError` and
  * per-id snapshots on the binding. Comments are intentionally skipped in v1
  * (see sync.ts).
  */
@@ -89,7 +89,7 @@ export const SyncLinearTeams = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({

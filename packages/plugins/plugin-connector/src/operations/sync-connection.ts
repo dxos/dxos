@@ -6,9 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { Database, Obj, Ref } from '@dxos/echo';
 
-import { Connector, ConnectorOperation, SyncBinding } from '../types';
+import { Connector, ConnectorOperation } from '../types';
+import { CursorsQuery, isCursorForConnection } from '../util';
 
 const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> = ConnectorOperation.SyncConnection.pipe(
   Operation.withHandler(
@@ -26,22 +28,20 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
         return { synced: 0 };
       }
 
-      const bindings = yield* Database.query(
-        Query.select(Filter.id(connection.id)).sourceOf(SyncBinding.SyncBinding),
-      ).run.pipe(
+      const cursors = yield* Database.query(CursorsQuery).run.pipe(
         Effect.provide(Database.layer(db)),
-        Effect.map((results) => [...results]),
-        Effect.orElseSucceed(() => [] as SyncBinding.SyncBinding[]),
+        Effect.map((results) => results.filter((cursor) => isCursorForConnection(cursor, connection))),
+        Effect.orElseSucceed(() => [] as Cursor.Cursor[]),
       );
 
       const sync = connector.sync;
       const spaceId = db.spaceId;
       yield* Effect.all(
-        bindings.map((binding) => Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId })),
+        cursors.map((cursor) => Operation.invoke(sync, { binding: Ref.make(cursor) }, { spaceId })),
         { concurrency: 'unbounded' },
       );
 
-      return { synced: bindings.length };
+      return { synced: cursors.length };
     }),
   ),
 );

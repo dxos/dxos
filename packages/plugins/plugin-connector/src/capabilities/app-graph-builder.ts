@@ -9,7 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -18,32 +19,32 @@ import { meta } from '#meta';
 import { Connector } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import { Connection, ConnectorOperation, SyncBinding } from '../types';
+import { Connection, ConnectorOperation } from '../types';
+import { CursorsQuery, isCursorForConnection, isCursorForTarget } from '../util';
 
 /**
- * Resolve the {@link SyncBinding} relations sourced by a connection. Used by the
- * per-connection `delete` action to enumerate the bindings to remove alongside
- * the connection.
+ * Resolve the external-sync cursors authenticated by a connection's access token. Used by the
+ * per-connection `delete` action to enumerate the cursors to remove alongside the connection.
  */
-const queryConnectionBindings = (connection: Connection.Connection): Effect.Effect<SyncBinding.SyncBinding[]> => {
+const queryConnectionBindings = (connection: Connection.Connection): Effect.Effect<Cursor.Cursor[]> => {
   const db = Obj.getDatabase(connection);
   if (!db) {
     return Effect.succeed([]);
   }
-  return Database.query(Query.select(Filter.id(connection.id)).sourceOf(SyncBinding.SyncBinding)).run.pipe(
+  return Database.query(CursorsQuery).run.pipe(
     Effect.provide(Database.layer(db)),
-    Effect.map((bindings) => [...bindings]),
+    Effect.map((cursors) => cursors.filter((cursor) => isCursorForConnection(cursor, connection))),
     Effect.orElseSucceed(() => []),
   );
 };
 
 /**
- * Reactive matcher: matches an ECHO object that has a {@link SyncBinding} targeting
- * it and returns that binding. Read through the atom context so the match
- * re-evaluates when bindings are created or removed. The first binding is chosen
- * when multiple target one object; the companion receives it as its article subject.
+ * Reactive matcher: matches an ECHO object that has an external-sync {@link Cursor} targeting it and
+ * returns that cursor. Read through the atom context so the match re-evaluates when cursors are
+ * created or removed. The first cursor is chosen when multiple target one object; the companion
+ * receives it as its article subject.
  */
-const whenObjectSyncBinding: NodeMatcher.NodeMatcher<SyncBinding.SyncBinding> = (node, get) => {
+const whenObjectHasCursor: NodeMatcher.NodeMatcher<Cursor.Cursor> = (node, get) => {
   if (!Obj.isObject(node.data)) {
     return Option.none();
   }
@@ -51,9 +52,9 @@ const whenObjectSyncBinding: NodeMatcher.NodeMatcher<SyncBinding.SyncBinding> = 
   if (!db) {
     return Option.none();
   }
-  const bindings = get(db.query(Query.select(Filter.id(node.data.id)).targetOf(SyncBinding.SyncBinding)).atom);
-  const binding = bindings.find(SyncBinding.instanceOf);
-  return binding ? Option.some(binding) : Option.none();
+  const cursors = get(db.query(CursorsQuery).atom);
+  const cursor = cursors.find((candidate) => isCursorForTarget(candidate, node.data));
+  return cursor ? Option.some(cursor) : Option.none();
 };
 
 export default Capability.makeModule(
@@ -89,13 +90,13 @@ export default Capability.makeModule(
             actions.push(
               Node.makeAction({
                 id: `${meta.profile.key}.delete-connection.${connection.id}`,
-                // Remove the connection along with its bindings (relations are
-                // removed explicitly; deleting the connection does not cascade).
+                // Remove the connection along with its cursors (deleting the connection does not
+                // cascade to cursors that merely reference its access token).
                 data: () =>
                   Effect.gen(function* () {
-                    const bindings = yield* queryConnectionBindings(connection);
+                    const cursors = yield* queryConnectionBindings(connection);
                     yield* Operation.invoke(SpaceOperation.RemoveObjects, {
-                      objects: [connection, ...bindings],
+                      objects: [connection, ...cursors],
                     });
                   }),
                 properties: {
@@ -134,18 +135,18 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Companion panel: visible on any ECHO object that has a SyncBinding targeting it.
-      // Reactively appears and disappears as bindings are created or removed.
+      // Companion panel: visible on any ECHO object that has an external-sync cursor targeting it.
+      // Reactively appears and disappears as cursors are created or removed.
       GraphBuilder.createExtension({
         id: 'connectorCompanion',
-        match: whenObjectSyncBinding,
-        connector: (binding) =>
+        match: whenObjectHasCursor,
+        connector: (cursor) =>
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('connector'),
               label: ['connection-companion.label', { ns: meta.profile.key }],
               icon: 'ph--plugs-connected--regular',
-              data: binding,
+              data: cursor,
             }),
           ]),
       }),

@@ -6,26 +6,26 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Cursor } from '@dxos/cursor';
 import { Blob, Database, Feed, Obj } from '@dxos/echo';
 import { Stage } from '@dxos/pipeline';
 import { type EmailStage } from '@dxos/pipeline-email';
-import { SyncBinding } from '@dxos/plugin-connector';
 
 /**
  * Terminal stage converting a run's {@link EmailStage.Mapped} item into the
- * {@link SyncBinding.CommitUnit} the commit sink consumes. The one place that turns what upstream
+ * {@link Cursor.CommitUnit} the commit sink consumes. The one place that turns what upstream
  * stages recorded into deferred writes: `message.attachments` (populated by
  * `EmailStage.processAttachments`) becomes a feed-append commit effect for the referenced blobs, and
  * `mapped.contact` (from `EmailStage.extractContacts`) becomes a `db.add` commit effect. Every other
  * email stage is Mapped → Mapped and composes in any order; this is the one stage that must run
- * last, and the one stage coupled to `SyncBinding` — the generic stages live in
+ * last, and the one stage coupled to the sync run-machinery — the generic stages live in
  * `@dxos/pipeline-email` instead.
  */
-export const toCommitUnit = (): Stage.Stage<EmailStage.Mapped, SyncBinding.CommitUnit, never, SyncBinding.Service> =>
+export const toCommitUnit = (): Stage.Stage<EmailStage.Mapped, Cursor.CommitUnit, never, Cursor.Service> =>
   Stage.map('to-commit-unit', (mapped: EmailStage.Mapped) =>
     Effect.gen(function* () {
-      const { feed } = yield* SyncBinding.Service;
-      const commitEffects: SyncBinding.CommitEffect[] = [];
+      const { feed } = yield* Cursor.Service;
+      const commitEffects: Cursor.CommitEffect[] = [];
 
       // Each attachment's ref is inlined (its blob isn't attached to a database yet), so `.target`
       // resolves it synchronously without a Mapped.attachmentBlobs field to carry it separately.

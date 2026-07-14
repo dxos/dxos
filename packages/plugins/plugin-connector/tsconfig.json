@@ -52,6 +52,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/cursor"
+    },
+    {
       "path": "../../core/compute/functions-runtime"
     },
     {
@@ -92,9 +95,6 @@
     },
     {
       "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"

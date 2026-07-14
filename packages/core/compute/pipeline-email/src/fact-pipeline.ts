@@ -6,10 +6,11 @@ import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
+import { Cursor } from '@dxos/cursor';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { FactStore, type FeedCursorsApi } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import {
@@ -66,24 +67,26 @@ export const EmailFactPipeline = {
 
 /**
  * Runs the cursored fact pipeline over a feed: dedup → extract facts → commit each page to the
- * {@link FactStore} while advancing the feed's cursor. Extraction is injected (`extract`) so the
- * pipeline is unit-testable with a deterministic stub — no `AiService` required. Feed-generic (the
- * mailbox `AnalyzeMailbox` operation is a thin wrapper that resolves a Mailbox to its feed).
+ * {@link FactStore} while advancing `cursor`. Extraction is injected (`extract`) so the pipeline is
+ * unit-testable with a deterministic stub — no `AiService` required. Feed-generic (the mailbox
+ * `AnalyzeMailbox` operation is a thin wrapper that resolves a Mailbox to its feed and its persisted
+ * `Cursor`).
  *
- * Dedup is by the feed's high-water cursor (a coarse `key < cursorKey` skip) plus the set of message
- * sources already in the store (the precise idempotency backstop). Both the store and the cursor are
- * in-memory and share a session lifetime, so no store-emptiness gate is needed.
+ * Dedup is by `cursor`'s high-water key (a coarse `key < cursorKey` skip) plus the set of message
+ * sources already in the store (the precise idempotency backstop) — the store doesn't share `cursor`'s
+ * persistence lifetime (it's still in-memory per space), so the source-dedup backstop still matters
+ * even though the cursor itself is now durable.
  */
 export const runFactPipeline = (options: {
   readonly feed: Feed.Feed;
-  readonly cursors: FeedCursorsApi;
+  readonly cursor: Cursor.Cursor;
   readonly extract: FactExtractor;
   readonly pageSize: number;
   /** In-flight parallelism for the per-message extraction stage (defaults to 1 = serial). */
   readonly concurrency?: number;
 }): Effect.Effect<{ processed: number; facts: number }, never, FactStore | Database.Service> =>
   Effect.gen(function* () {
-    const { feed, cursors, extract, pageSize, concurrency = 1 } = options;
+    const { feed, cursor, extract, pageSize, concurrency = 1 } = options;
     const store = yield* FactStore;
 
     // Sources (== `messageSource`) already indexed — the precise skip; the cursor is only a coarse
@@ -95,7 +98,7 @@ export const runFactPipeline = (options: {
     // NOTE(workaround): the cursor key is `message.created` (epoch-ms) because ECHO's native feed
     // cursor is unimplemented (`Feed.cursor` is stubbed). Replace with the native queue sequence when
     // available.
-    let cursorKey = cursors.get(feed.id);
+    let cursorKey = Cursor.parseKey(cursor.value);
 
     let processed = 0;
     let facts = 0;
@@ -138,7 +141,7 @@ export const runFactPipeline = (options: {
             processed += units.length;
             facts += pageFacts.length;
             cursorKey = Math.max(cursorKey, ...units.map((unit) => unit.key));
-            cursors.advance(feed.id, cursorKey);
+            Cursor.advance(cursor, Cursor.formatKey(cursorKey));
 
             // Terminal progress log (one line per committed page): the only live signal between
             // pipeline start and done, so a long run's advance is observable rather than silent.

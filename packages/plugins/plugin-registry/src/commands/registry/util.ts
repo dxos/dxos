@@ -12,9 +12,9 @@ import * as Schema from 'effect/Schema';
 
 import { AppSpace } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
+import { AccessToken } from '@dxos/cursor';
 import { Filter } from '@dxos/echo';
 import { ALL_NSIDS, NSID } from '@dxos/protocols';
-import { AccessToken } from '@dxos/types';
 
 export { ALL_NSIDS, NSID };
 

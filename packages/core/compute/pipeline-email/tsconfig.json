@@ -32,6 +32,9 @@
       "path": "../ai"
     },
     {
+      "path": "../cursor"
+    },
+    {
       "path": "../extractor-lib"
     },
     {

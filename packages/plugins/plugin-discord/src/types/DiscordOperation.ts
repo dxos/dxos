@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Cursor } from '@dxos/cursor';
 import { DXN, Ref } from '@dxos/echo';
 import {
   Connection,
@@ -16,7 +17,6 @@ import {
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
@@ -45,9 +45,9 @@ export const GetDiscordChannels = Operation.make({
 
 /**
  * Find-or-create the empty local feed-backed `Channel` for a selected Discord
- * channel so a {@link SyncBinding} relation can be created eagerly (relations
- * require both endpoints to exist). Keyed by the Discord channel id foreign
- * key, so it is idempotent across re-selection.
+ * channel so a {@link Cursor.Cursor} can reference it as its sync target.
+ * Keyed by the Discord channel id foreign key, so it is idempotent across
+ * re-selection.
  */
 export const MaterializeDiscordTarget = Operation.make({
   meta: {
@@ -61,22 +61,22 @@ export const MaterializeDiscordTarget = Operation.make({
 });
 
 /**
- * Pull-only sync of the single Discord channel bound by a {@link SyncBinding}.
+ * Pull-only sync of the single Discord channel bound by a {@link Cursor.Cursor}.
  *
- * Loads the binding, asks Discord for messages newer than `binding.cursor`,
+ * Loads the binding, asks Discord for messages newer than `binding.value`,
  * maps each into a `@dxos/types` `Message`, and appends them to the bound
- * Channel's feed. Updates the binding's `cursor`/`lastSyncAt`/`lastError`.
+ * Channel's feed. Updates the binding's `value`/`lastRunAt`/`lastError`.
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {
     key: makeKey('syncDiscordChannel'),
     name: 'Sync Discord Channel',
-    description: 'Reconcile messages for the Discord channel bound by a SyncBinding.',
+    description: 'Reconcile messages for the Discord channel bound by a Cursor.',
     icon: 'ph--arrows-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({

@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Filter, type Obj, type Ref, Relation } from '@dxos/echo';
+import { Cursor } from '@dxos/cursor';
+import { type Database, Filter, type Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -12,7 +13,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
 
-import { Connection, SyncBinding } from '../../types';
+import { Connection } from '../../types';
 import { ConnectorAuthButton } from '../ConnectorAuthButton';
 
 export type ConnectorPickerProps = {
@@ -22,7 +23,7 @@ export type ConnectorPickerProps = {
   /**
    * Existing local object to bind to a chosen connection (e.g. an empty
    * Mailbox the user is viewing). Selecting an existing connection creates a
-   * {@link SyncBinding} from that connection to this target.
+   * {@link Cursor} from that connection to this target.
    */
   existingTarget?: Ref.Ref<Obj.Unknown>;
 };
@@ -30,7 +31,7 @@ export type ConnectorPickerProps = {
 /**
  * Lets the user reuse an existing {@link Connection} for a given connector — or
  * start a new auth flow. Reuse binds the picked connection to `existingTarget`
- * by creating a {@link SyncBinding} inline; "New connection…" defers to
+ * by creating a {@link Cursor} inline; "New connection…" defers to
  * {@link ConnectorAuthButton}.
  */
 export const ConnectorPicker = ({ connectorId, db, existingTarget }: ConnectorPickerProps) => {
@@ -52,12 +53,7 @@ export const ConnectorPicker = ({ connectorId, db, existingTarget }: ConnectorPi
       if (!target) {
         return;
       }
-      db.add(
-        SyncBinding.make({
-          [Relation.Source]: connection,
-          [Relation.Target]: target,
-        }),
-      );
+      db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }));
     },
     [db, existingTarget],
   );
