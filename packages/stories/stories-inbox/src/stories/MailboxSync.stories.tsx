@@ -138,17 +138,16 @@ const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
           Effect.gen(function* () {
             // TODO(burdon): This is messy.
             let space: Space | undefined;
-            if (client.halo.identity.get()) {
-              const existing = AppSpace.getPersonalSpace(client);
-              if (existing) {
-                yield* Effect.promise(() => existing.waitUntilReady());
-              }
-              space = existing;
-            } else {
+            if (!client.halo.identity.get()) {
               const { personalSpace } = yield* initializeIdentity(client);
-              space = personalSpace;
               personalSpace.db.add(Mailbox.make());
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              space = personalSpace;
+            } else {
+              const space = AppSpace.getPersonalSpace(client);
+              if (space) {
+                yield* Effect.promise(() => space.waitUntilReady());
+              }
             }
 
             // Auto-create the Gmail sync trigger for routine stories: watch for the mailbox's sync
