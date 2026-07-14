@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Filter, type Obj } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, DropdownMenu, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { ArtifactCard } from '#components';
@@ -36,8 +36,9 @@ export type ArtifactsArticleProps = {
 
 /**
  * Browse/create hub for all Artifacts in a space, bound to the virtual "Artifacts" navtree node. The
- * toolbar's kind selector sets the kind of the next created Artifact; Create makes one and opens it.
- * Clicking a card opens that Artifact's ArtifactArticle.
+ * toolbar's split button creates an Artifact and opens it — the primary action uses the last-chosen
+ * kind; the dropdown picks the kind (image/video). Clicking a card opens that Artifact's
+ * ArtifactArticle.
  */
 export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -51,13 +52,17 @@ export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
     [invokePromise],
   );
 
-  const handleCreate = useCallback(async () => {
-    if (!space?.db) {
-      return;
-    }
-    const artifact = space.db.add(Artifact.make({ kind }));
-    await open(artifact);
-  }, [space, kind, open]);
+  const handleCreate = useCallback(
+    async (nextKind: Kind) => {
+      if (!space?.db) {
+        return;
+      }
+      setKind(nextKind);
+      const artifact = space.db.add(Artifact.make({ kind: nextKind }));
+      await open(artifact);
+    },
+    [space, open],
+  );
 
   const handleSelect = useCallback(
     (id: string, _event: MouseEvent) => {
@@ -73,23 +78,40 @@ export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Select.Root value={kind} onValueChange={(value) => setKind(value === 'video' ? 'video' : 'image')}>
-            <Select.TriggerButton placeholder={t('kind.placeholder')} />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  <Select.Option value='image'>{t('kind.image.label')}</Select.Option>
-                  <Select.Option value='video'>{t('kind.video.label')}</Select.Option>
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-          <IconButton
-            icon='ph--plus--regular'
-            label={t('create.label')}
-            disabled={!space?.db}
-            onClick={() => void handleCreate()}
-          />
+          {/* Split button: primary action creates the last-chosen kind; the dropdown picks the kind. */}
+          <ButtonGroup>
+            <IconButton
+              icon='ph--plus--regular'
+              label={t('create.label')}
+              disabled={!space?.db}
+              onClick={() => void handleCreate(kind)}
+            />
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <IconButton
+                  iconOnly
+                  icon='ph--caret-down--regular'
+                  label={t('kind.placeholder')}
+                  disabled={!space?.db}
+                />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content align='end'>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item onClick={() => void handleCreate('image')}>
+                      <Icon icon={kind === 'image' ? 'ph--check--regular' : 'ph--image--regular'} size={4} />
+                      <span className='grow'>{t('kind.image.label')}</span>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item onClick={() => void handleCreate('video')}>
+                      <Icon icon={kind === 'video' ? 'ph--check--regular' : 'ph--video-camera--regular'} size={4} />
+                      <span className='grow'>{t('kind.video.label')}</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </ButtonGroup>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>

@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, DropdownMenu, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, IconButton, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 
@@ -28,10 +28,10 @@ type Selected = 'all' | number;
 
 /**
  * Media-agnostic article surface for an {@link Artifact}: a Toolbar with per-variant tabs (plus an
- * "All" gallery tab) and a Connect/Generate action — the Generate button opens a menu of the kind's
- * generators and picking one generates. Below: the editable prompt, the kind-specific request form (a
- * schema-driven {@link GenerateForm} surface, overridable per kind), and the selected variant
- * (rendered via the {@link VariantRenderer} surface for its contentType) or the gallery.
+ * "All" gallery tab), a generator selector + Connect/Generate action, and an overflow menu (Delete);
+ * the editable prompt; the kind-specific request form (a schema-driven {@link GenerateForm} surface,
+ * overridable per kind); and the selected variant (rendered via the {@link VariantRenderer} surface
+ * for its contentType) or the gallery.
  */
 export const ArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -104,12 +104,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
 
   // Connector-managed credential: show the "Connect" button until the provider's connection exists.
   const connections = useQuery(db, Filter.type(Connection.Connection));
-  const isConnected = useCallback(
-    (candidate: { connectorId?: string }) =>
-      !candidate.connectorId || connections.some((connection) => connection.connectorId === candidate.connectorId),
-    [connections],
-  );
-  const connected = provider ? isConnected(provider) : true;
+  const connected = provider?.connectorId
+    ? connections.some((connection) => connection.connectorId === provider.connectorId)
+    : true;
   const connectorData = useMemo(
     () => (provider?.connectorId ? { connectorIds: [provider.connectorId] } : undefined),
     [provider?.connectorId],
@@ -130,35 +127,32 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     [artifact],
   );
 
-  const handleGenerate = useCallback(
-    async (providerId?: string) => {
-      if (!db) {
-        return;
-      }
-      setGenerating(true);
-      try {
-        await invokePromise(
-          StudioOperation.Generate,
-          { artifact: Ref.make(artifact), provider: providerId ?? provider?.id },
-          { spaceId: db.spaceId },
-        );
-        setSelected('all');
-      } catch (error) {
-        log.catch(error);
-        void invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}/generate-error`,
-          icon: 'ph--warning--regular',
-          duration: 5_000,
-          title: ['generate-error.title', { ns: meta.profile.key }],
-          description: error instanceof Error ? error.message : String(error),
-          closeLabel: ['close.label', { ns: meta.profile.key }],
-        });
-      } finally {
-        setGenerating(false);
-      }
-    },
-    [invokePromise, artifact, db, provider?.id],
-  );
+  const handleGenerate = useCallback(async () => {
+    if (!db) {
+      return;
+    }
+    setGenerating(true);
+    try {
+      await invokePromise(
+        StudioOperation.Generate,
+        { artifact: Ref.make(artifact), provider: provider?.id },
+        { spaceId: db.spaceId },
+      );
+      setSelected('all');
+    } catch (error) {
+      log.catch(error);
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `${meta.profile.key}/generate-error`,
+        icon: 'ph--warning--regular',
+        duration: 5_000,
+        title: ['generate-error.title', { ns: meta.profile.key }],
+        description: error instanceof Error ? error.message : String(error),
+        closeLabel: ['close.label', { ns: meta.profile.key }],
+      });
+    } finally {
+      setGenerating(false);
+    }
+  }, [invokePromise, artifact, db, provider?.id]);
 
   // Resume an in-flight asynchronous generation (persisted jobId) on mount so a long provider poll
   // survives navigation/remount. The generate op detects the stored jobId and polls (no re-enqueue).
@@ -173,18 +167,6 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
       resumingRef.current = false;
     });
   }, [db, inFlightJobId, generating, handleGenerate]);
-
-  // Picking a generator from the menu persists it and generates immediately; if it needs a
-  // credential we only select it (the toolbar then surfaces the Connect action for that provider).
-  const handleSelectGenerator = useCallback(
-    (candidate: { id: string; connectorId?: string }) => {
-      handleGeneratorChange(candidate.id);
-      if (isConnected(candidate)) {
-        void handleGenerate(candidate.id);
-      }
-    },
-    [handleGeneratorChange, isConnected, handleGenerate],
-  );
 
   // Undo-aware removal (trashes the object, removing it from any collection + closing its plank).
   const handleDelete = useCallback(() => {
@@ -211,38 +193,36 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             </Button>
           ))}
           <Toolbar.Separator />
+          {providers.length > 0 && (
+            <Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
+              <Select.TriggerButton placeholder={t('generator.placeholder')} />
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {providers.map((candidate) => (
+                      <Select.Option key={candidate.id} value={candidate.id}>
+                        {candidate.label}
+                      </Select.Option>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+          )}
           {showConnect && connectorData ? (
             // TODO(burdon): Inject via capability.
             <Surface.Surface type={ConnectorAuth} data={connectorData} limit={1} />
           ) : (
-            // A single Generate button opens a menu of the kind's generators; picking one generates.
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  variant='primary'
-                  icon={generating ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
-                  iconClassNames={generating ? 'animate-spin' : undefined}
-                  label={generating ? t('generating.label') : t('generate.label')}
-                  disabled={!db || providers.length === 0 || !hasAttention || generating}
-                />
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content align='end'>
-                  <DropdownMenu.Viewport>
-                    {providers.map((candidate) => (
-                      <DropdownMenu.Item key={candidate.id} onClick={() => handleSelectGenerator(candidate)}>
-                        <Icon
-                          icon={provider?.id === candidate.id ? 'ph--check--regular' : 'ph--sparkle--regular'}
-                          size={4}
-                        />
-                        <span className='grow'>{candidate.label}</span>
-                      </DropdownMenu.Item>
-                    ))}
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
+            <IconButton
+              variant='primary'
+              icon={generating ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
+              iconClassNames={generating ? 'animate-spin' : undefined}
+              label={generating ? t('generating.label') : t('generate.label')}
+              disabled={!db || !provider || !hasAttention || generating}
+              onClick={() => {
+                void handleGenerate();
+              }}
+            />
           )}
           <div role='none' className='grow' />
           {/* Overflow menu at the end of the toolbar (object-level actions). */}
