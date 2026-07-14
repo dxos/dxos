@@ -2,13 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import { describe, it, test } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 
 import * as Pipeline from './Pipeline';
 import * as Stage from './Stage';
@@ -115,4 +119,44 @@ describe('Pipeline.run overflow', () => {
     expect(runs.length).toBeLessThan(4);
     expect(runs.at(-1)).toBe(4);
   });
+
+  it.live(
+    'abort',
+    Effect.fnUntraced(function* ({ expect }) {
+      const controller = new AbortController();
+      const { sink, items } = captureSink<number>();
+      const pipeline = yield* Effect.fork(
+        Stream.fromIterable(Array.from({ length: 100 }, (_, index) => index)).pipe(
+          Stage.map('id', (n) => Effect.succeed(n)),
+          Stage.map('sleep', (n) => Effect.sleep('10 millis').pipe(Effect.as(n)), {
+            overflow: 'suspend',
+            bufferSize: 4,
+          }),
+          // Stage.map('log', (n) =>
+          //   Effect.sync(() => {
+          //     console.log('item', n);
+          //     return n;
+          //   }),
+          // ),
+          Pipeline.run({ sink, overflow: 'suspend', bufferSize: 4 }),
+          Pipeline.abortWith(controller.signal),
+          Effect.withSpan('pipeline'),
+          Effect.exit,
+        ),
+      );
+
+      const aborter = yield* Effect.fork(
+        Effect.gen(function* () {
+          yield* Effect.sleep('500 millis');
+          console.log('aborting');
+          controller.abort();
+        }),
+      );
+
+      yield* Fiber.join(aborter);
+      const result = yield* Fiber.join(pipeline);
+      invariant(Exit.isFailure(result), 'pipeline should fail');
+      invariant(Cause.isInterrupted(result.cause), 'pipeline should be interrupted');
+    }),
+  );
 });

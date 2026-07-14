@@ -214,10 +214,14 @@ export const runGmailSync = ({
     const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
       registry.register(createSyncProgressKey(mailbox), {
         label: mailbox.name ?? 'Mailbox',
-        onCancel: () => controller.abort(),
+        onCancel: () => {
+          console.log('cancelled');
+          controller.abort();
+        },
       }),
     );
     const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+
     // Accumulate the exact retrieval total as each date chunk's id list is enumerated (known before any
     // full-message fetch), revising the meter's total so it renders a determinate bar even without a
     // time estimate. Chunks enumerate serially and always before their ids reach the fetch stage, so
@@ -228,17 +232,12 @@ export const runGmailSync = ({
       progressMonitors.forEach((monitor) => monitor.total(totalToRetrieve));
     };
 
-    // Drops every message once cancelled (returning undefined removes it — see `decodeBodyStage`), so
-    // the pipeline skips all remaining fetch/decode/commit work and completes promptly.
-    const cancelStage: Stage.Stage<GoogleMail.Message, GoogleMail.Message, never, never> = Stage.map(
-      'cancel',
-      (message: GoogleMail.Message) => Effect.sync(() => (controller.signal.aborted ? undefined : message)),
-    );
     const startedAt = new Date().toISOString();
     const startMs = Date.now();
     const threads = new Set<string>();
     const senders = new Set<string>();
     const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
+
     let processed = 0;
     let attachmentCount = 0;
     let finishedAt: string | undefined;
@@ -266,6 +265,7 @@ export const runGmailSync = ({
       };
       statsCompartments.forEach((compartment) => compartment.set(snapshot));
     };
+
     // Pass-through stage: accumulates telemetry as each mapped message flows by, publishing a fresh
     // snapshot so a subscribed surface ticks up live during the sync.
     const collectStats = Stage.map('collect-stats', (mapped: EmailStage.Mapped) =>
@@ -290,10 +290,19 @@ export const runGmailSync = ({
         }
         attachmentCount += mapped.attachments?.length ?? 0;
         publishStats();
+
+        console.log('processed', processed);
+        if (processed > 10) {
+          controller.abort();
+        }
+
         return mapped;
       }),
     );
 
+    //
+    // Start pipeline
+    //
     yield* gmailSource({
       userId,
       label,
@@ -306,7 +315,6 @@ export const runGmailSync = ({
       // happen downstream of the source, so counting there would leave the bar short of 100%.
       onRetrieved: () => advanceProgress(1),
     }).pipe(
-      cancelStage,
       SyncBinding.dedupStage<GoogleMail.Message>(
         'dedup',
         (message) => message.id,
@@ -320,6 +328,7 @@ export const runGmailSync = ({
       //   (docs/superpowers/specs/2026-07-04-mail-sync-performance-exploration.md) quantifies it.
       // EmailStage.htmlToMarkdown,
       mapToMessageStage,
+      // TODO(burdon): Move this to the end of the pipeline.
       collectStats,
       EmailStage.processAttachments(),
       onArrivalExtractors(mailbox),
@@ -338,6 +347,7 @@ export const runGmailSync = ({
           stats,
         }),
       ),
+      Pipeline.abortWith(controller.signal),
       Effect.tapError((error) =>
         Effect.sync(() => {
           // Log the raw error for debugging; the meter shows only a short reason (the full exception —
@@ -368,8 +378,10 @@ export const runGmailSync = ({
       monitor.remove();
     });
 
-    log('gmail sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
-    return { newMessages: stats.newMessages };
+    log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
+    return {
+      newMessages: stats.newMessages,
+    };
   }).pipe(Effect.withSpan('gmail-sync'));
 
 export default InboxOperation.GoogleMailSync.pipe(
