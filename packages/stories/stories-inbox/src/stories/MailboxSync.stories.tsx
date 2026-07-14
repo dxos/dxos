@@ -58,7 +58,7 @@ const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
 /**
  * Watches for the personal space's mailbox and (once it exists) wires an idempotent Gmail sync
  * trigger — see {@link wireSyncTrigger}. Installed from the ClientPlugin initializer for routine
- * stories (moved here from the former `SyncTriggerRunner` component).
+ * stories so the sync runs on the story's schedule.
  */
 const installSyncTrigger = (space: Space) => {
   let wired = false;
@@ -145,15 +145,14 @@ const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
               }
               space = existing;
             } else {
-              const result = yield* initializeIdentity(client);
-              space = result.personalSpace;
-              space.db.add(Mailbox.make());
-              yield* Effect.promise(() => space!.db.flush({ indexes: true }));
+              const { personalSpace } = yield* initializeIdentity(client);
+              space = personalSpace;
+              personalSpace.db.add(Mailbox.make());
+              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }
 
-            // Auto-create the Gmail sync trigger for routine stories (moved here from the
-            // `SyncTriggerRunner` component): watch for the mailbox's sync binding and idempotently
-            // wire a `GoogleMailSync` trigger.
+            // Auto-create the Gmail sync trigger for routine stories: watch for the mailbox's sync
+            // binding and idempotently wire a `GoogleMailSync` trigger.
             if (space && trigger) {
               installSyncTrigger(space);
             }
