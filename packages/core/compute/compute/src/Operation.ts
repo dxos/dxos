@@ -475,6 +475,30 @@ export const NotifyOptionsAnnotation = Annotation.make({
 });
 
 /**
+ * A serializable reference to an operation invocation — the target operation's key plus its input.
+ * Describes a deferred/late-bound invocation that must survive a serialization boundary (e.g. riding
+ * on a process-failure error, or persisted) where a live {@link Definition} cannot. Resolve the key
+ * with `OperationHandlerSet.getHandlerByKey` and hand the result to the invoker. Carries no functions,
+ * so `input` must itself be serializable.
+ */
+export interface SerializedInvocation {
+  /** Target operation key as a URI (a DXN, e.g. `dxn:org.dxos.plugin.deck.operation.open`). */
+  readonly operation: URI.URI;
+  /** Input passed to the operation; must be serializable. */
+  readonly input?: unknown;
+}
+
+/**
+ * Builds a {@link SerializedInvocation} from a live {@link Definition} and its input — the serializable
+ * counterpart to a direct `invoke`, for describing an invocation that must cross a serialization
+ * boundary (e.g. a deferred toast action). Resolve it later with `OperationHandlerSet.getHandlerByKey`.
+ */
+export const prepare = <I, O>(operation: Definition<I, O>, input: I): SerializedInvocation => ({
+  operation: operation.meta.key,
+  input,
+});
+
+/**
  * Options for operation invocation.
  */
 export interface InvokeOptions {
