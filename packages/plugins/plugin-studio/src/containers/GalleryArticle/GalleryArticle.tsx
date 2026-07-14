@@ -117,7 +117,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
           />
           <IconButton
             icon='ph--trash--regular'
-            label={t('delete-variant.label')}
+            label={t('delete.label')}
             disabled={selectedIds.size === 0}
             onClick={handleDelete}
           />

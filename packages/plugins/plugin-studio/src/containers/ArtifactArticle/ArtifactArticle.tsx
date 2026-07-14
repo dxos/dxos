@@ -190,6 +190,28 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] });
   }, [invokePromise, artifact]);
 
+  // Remove the selected variant: detach it from the artifact (clearing the cover if it was it) and
+  // delete the owned object, then fall back to the gallery.
+  const handleDeleteVariant = useCallback(() => {
+    if (!db || typeof selected !== 'number') {
+      return;
+    }
+    const ref = variantRefs[selected];
+    const target = ref?.target;
+    if (!target) {
+      return;
+    }
+    Obj.update(artifact, (artifact) => {
+      artifact.variants = (artifact.variants ?? []).filter((variant) => variant.target?.id !== target.id);
+      if (artifact.cover?.target?.id === target.id) {
+        artifact.cover = undefined;
+      }
+    });
+    db.remove(target);
+    setSelected('all');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [db, selected, artifact]);
+
   const busy = generating || pendingIndex >= 0;
   // The form is read-only when inspecting a produced variant, or while a generation is in flight.
   const formReadonly = !composing || busy;
@@ -279,6 +301,12 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             <DropdownMenu.Portal>
               <DropdownMenu.Content align='end'>
                 <DropdownMenu.Viewport>
+                  {selectedVariant && (
+                    <DropdownMenu.Item onClick={handleDeleteVariant}>
+                      <Icon icon='ph--trash--regular' size={4} />
+                      <span className='grow'>{t('delete-variant.label')}</span>
+                    </DropdownMenu.Item>
+                  )}
                   <DropdownMenu.Item onClick={handleDelete}>
                     <Icon icon='ph--trash--regular' size={4} />
                     <span className='grow'>{t('delete.label')}</span>

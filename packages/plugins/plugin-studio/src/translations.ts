@@ -51,7 +51,7 @@ export const translations = [
         'empty.message': 'No variants yet.',
         'more.label': 'More',
         'delete.label': 'Delete artifact',
-        'delete-variant.label': 'Delete',
+        'delete-variant.label': 'Delete variant',
         'center.label': 'Center',
         'zoom.label': 'Toggle zoom',
         'studio-section.label': 'Studio',
