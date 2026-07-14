@@ -28,9 +28,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/types"
-    },
-    {
       "path": "../../echo/echo"
     },
     {
