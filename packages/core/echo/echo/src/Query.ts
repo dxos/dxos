@@ -294,13 +294,13 @@ export type Any = Query<any>;
 export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
 class QueryClass implements Any {
-  private static 'variance': Any['~Query'] = {} as Any['~Query'];
+  private static 'variance': Any[QueryTypeId] = {} as Any[QueryTypeId];
 
-  'constructor'(public readonly ast: QueryAST.Query) {}
+  constructor(public readonly ast: QueryAST.Query) {}
 
-  '~Query' = QueryClass.variance;
+  [QueryTypeId] = QueryClass.variance;
 
-  'select'(filter: Filter.Any | Filter.Props<any>): Any {
+  select(filter: Filter.Any | Filter.Props<any>): Any {
     if (Filter.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -316,7 +316,7 @@ class QueryClass implements Any {
     }
   }
 
-  'reference'(key: string): Any {
+  reference(key: string): Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -324,7 +324,7 @@ class QueryClass implements Any {
     });
   }
 
-  'referencedBy'(target?: Type$.AnyEntity | URI.URI, key?: string): Any {
+  referencedBy(target?: Type$.AnyEntity | URI.URI, key?: string): Any {
     const uri = target !== undefined ? internal.getTypeURIFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
@@ -334,7 +334,7 @@ class QueryClass implements Any {
     });
   }
 
-  'sourceOf'(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
+  sourceOf(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -343,7 +343,7 @@ class QueryClass implements Any {
     });
   }
 
-  'targetOf'(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
+  targetOf(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -352,7 +352,7 @@ class QueryClass implements Any {
     });
   }
 
-  'source'(): Any {
+  source(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -360,7 +360,7 @@ class QueryClass implements Any {
     });
   }
 
-  'target'(): Any {
+  target(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -368,7 +368,7 @@ class QueryClass implements Any {
     });
   }
 
-  'parent'(): Any {
+  parent(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -376,7 +376,7 @@ class QueryClass implements Any {
     });
   }
 
-  'children'(): Any {
+  children(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -384,7 +384,7 @@ class QueryClass implements Any {
     });
   }
 
-  'orderBy'(...order: Order.Any[]): Any {
+  orderBy(...order: Order.Any[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -392,7 +392,7 @@ class QueryClass implements Any {
     });
   }
 
-  'aggregate'(aggregates: Record<string, Aggregate.Any>): Any {
+  aggregate(aggregates: Record<string, Aggregate.Any>): Any {
     return new QueryClass({
       type: 'aggregate',
       query: this.ast,
@@ -400,7 +400,7 @@ class QueryClass implements Any {
     });
   }
 
-  'limit'(limit: number): Any {
+  limit(limit: number): Any {
     return new QueryClass({
       type: 'limit',
       query: this.ast,
@@ -408,7 +408,7 @@ class QueryClass implements Any {
     });
   }
 
-  'skip'(skip: number): Any {
+  skip(skip: number): Any {
     return new QueryClass({
       type: 'skip',
       query: this.ast,
@@ -416,7 +416,7 @@ class QueryClass implements Any {
     });
   }
 
-  'from'(
+  from(
     ...args:
       | [
           (
@@ -555,7 +555,7 @@ class QueryClass implements Any {
     });
   }
 
-  'options'(options: QueryAST.QueryOptions): Any {
+  options(options: QueryAST.QueryOptions): Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,
@@ -563,7 +563,7 @@ class QueryClass implements Any {
     });
   }
 
-  'debugLabel'(label: string): Any {
+  debugLabel(label: string): Any {
     if (this.ast.type === 'options') {
       return new QueryClass({
         type: 'options',
@@ -580,7 +580,7 @@ class QueryClass implements Any {
 }
 
 export const is = (value: unknown): value is Any => {
-  return typeof value === 'object' && value !== null && '~Query' in value;
+  return typeof value === 'object' && value !== null && QueryTypeId in value;
 };
 
 /** Construct a query from an ast. */

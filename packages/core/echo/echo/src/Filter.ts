@@ -28,7 +28,7 @@ export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   readonly [FilterTypeId]: { value: Types.Covariant<T> };
 
-  'ast': QueryAST.Filter;
+  ast: QueryAST.Filter;
 }
 
 export type Props<T> = {
@@ -41,15 +41,15 @@ export type Any = Filter<any>;
 export type Type<F extends Any> = F extends Filter<infer T> ? T : never;
 
 class FilterClass implements Any {
-  private static 'variance': Any['~Filter'] = {} as Any['~Filter'];
+  private static 'variance': Any[FilterTypeId] = {} as Any[FilterTypeId];
 
-  'constructor'(public readonly ast: QueryAST.Filter) {}
+  constructor(public readonly ast: QueryAST.Filter) {}
 
-  '~Filter' = FilterClass.variance;
+  [FilterTypeId] = FilterClass.variance;
 }
 
 export const is = (value: unknown): value is Any => {
-  return typeof value === 'object' && value !== null && '~Filter' in value;
+  return typeof value === 'object' && value !== null && FilterTypeId in value;
 };
 
 /** Construct a filter from an ast. */

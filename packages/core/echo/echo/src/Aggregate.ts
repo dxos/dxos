@@ -49,15 +49,15 @@ export type AggregationResult<A extends Record<string, Any>> = EffectTypes.Simpl
 >;
 
 class AggregateClass<T, V> implements Aggregate<T, V> {
-  private static 'variance': Aggregate<any, any>['~Aggregate'] = {} as Aggregate<any, any>['~Aggregate'];
+  private static 'variance': Aggregate<any, any>[AggregateTypeId] = {} as Aggregate<any, any>[AggregateTypeId];
 
-  static 'is'(value: unknown): value is Any {
-    return typeof value === 'object' && value !== null && '~Aggregate' in value;
+  static is(value: unknown): value is Any {
+    return typeof value === 'object' && value !== null && AggregateTypeId in value;
   }
 
-  'constructor'(public readonly spec: Spec) {}
+  constructor(public readonly spec: Spec) {}
 
-  '~Aggregate' = AggregateClass.variance as Aggregate<T, V>['~Aggregate'];
+  [AggregateTypeId] = AggregateClass.variance as Aggregate<T, V>[AggregateTypeId];
 }
 
 /**

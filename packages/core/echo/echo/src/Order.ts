@@ -18,15 +18,15 @@ export interface Order<T> {
 export type Any = Order<any>;
 
 class OrderClass implements Order<any> {
-  private static 'variance': Order<any>['~Order'] = {} as Order<any>['~Order'];
+  private static 'variance': Order<any>[OrderTypeId] = {} as Order<any>[OrderTypeId];
 
-  static 'is'(value: unknown): value is Any {
-    return typeof value === 'object' && value !== null && '~Order' in value;
+  static is(value: unknown): value is Any {
+    return typeof value === 'object' && value !== null && OrderTypeId in value;
   }
 
-  'constructor'(public readonly ast: QueryAST.Order) {}
+  constructor(public readonly ast: QueryAST.Order) {}
 
-  '~Order' = OrderClass.variance;
+  [OrderTypeId] = OrderClass.variance;
 }
 
 /**
