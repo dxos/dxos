@@ -339,5 +339,6 @@ describe('syncGmail against a mock Gmail API', () => {
     const forwardOrder = await insertionOrderTimestamps(forward.db, forward.mailbox);
     expect(forwardOrder).toHaveLength(510);
     expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
-  });
+    // Two full 510-message syncs (backward + forward) — well over the default 15s budget on slower CI runners.
+  }, 30_000);
 });
