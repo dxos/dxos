@@ -11,6 +11,9 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/markdown"
+    },
+    {
       "path": "../../../common/node-std"
     },
     {

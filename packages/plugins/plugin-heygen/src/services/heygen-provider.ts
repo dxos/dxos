@@ -14,7 +14,7 @@ import {
   type ProviderCallOptions,
   ProviderFailureError,
   UnsupportedKindError,
-} from './GenerationProvider';
+} from './heygen-provider-types';
 
 const V3_BASE_URL = 'https://api.heygen.com/v3';
 
@@ -182,9 +182,15 @@ export class HeyGenProvider implements GenerationProvider {
         throw new ProviderFailureError(`HeyGen status failed: ${response.status} ${await readErrorBody(response)}`);
       }
 
-      // Field-name coalesce: v2 used `video_url`, v3 may use `url`.
+      // Field-name coalesce: v2 used `video_url`, v3 may use `url`. The error is an object
+      // (`{ code, detail, message }`) or a string depending on the API version.
       const body = (await response.json()) as {
-        data?: { status?: string; url?: string; video_url?: string; error?: { message?: string } };
+        data?: {
+          status?: string;
+          url?: string;
+          video_url?: string;
+          error?: string | { code?: string | number; message?: string; detail?: string };
+        };
       };
       const status = body.data?.status;
       const url = body.data?.url ?? body.data?.video_url;
@@ -192,7 +198,13 @@ export class HeyGenProvider implements GenerationProvider {
         return url;
       }
       if (status === 'failed') {
-        throw new ProviderFailureError(body.data?.error?.message ?? 'HeyGen job failed.');
+        const error = body.data?.error;
+        const detail =
+          typeof error === 'string'
+            ? error
+            : [error?.code, error?.message ?? error?.detail].filter(Boolean).join(': ') ||
+              (error && JSON.stringify(error));
+        throw new ProviderFailureError(detail ? `HeyGen job failed: ${detail}` : 'HeyGen job failed (no detail).');
       }
 
       await new Promise<void>((resolve, reject) => {

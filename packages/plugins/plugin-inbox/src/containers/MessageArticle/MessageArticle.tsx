@@ -14,12 +14,12 @@ import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
-import { type Message as MessageType } from '@dxos/types';
+import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import { EditMessage, Message, type MessageHeaderProps, type ViewMode } from '#components';
 import { useActorContact, useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
-import { DraftMessage, InboxOperation, Mailbox } from '#types';
+import { InboxOperation, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { createDraftMessage } from '../../util';

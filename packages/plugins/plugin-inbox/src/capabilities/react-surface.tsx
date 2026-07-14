@@ -12,7 +12,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Topic } from '@dxos/pipeline-email';
 import { getParentId, useNode } from '@dxos/plugin-graph';
-import { Event, Message, Organization, Person } from '@dxos/types';
+import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
@@ -32,7 +32,7 @@ import {
   TopicArticle,
   TopicsArticle,
 } from '#containers';
-import { Calendar, DraftMessage, Mailbox } from '#types';
+import { Calendar, Mailbox } from '#types';
 
 import {
   MAILBOX_DRAFTS_NODE_DATA,

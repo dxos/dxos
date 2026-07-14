@@ -18,12 +18,11 @@ import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connec
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
-import { Event, Message } from '@dxos/types';
+import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
-import { Calendar, DraftMessage, Mailbox } from '#types';
+import { Calendar, InboxOperation, Mailbox } from '#types';
 
 import {
   MAILBOX_DRAFTS_NODE_DATA,
