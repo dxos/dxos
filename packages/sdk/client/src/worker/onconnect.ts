@@ -2,7 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
+import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
+import * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
@@ -19,6 +24,11 @@ import { mountDevtoolsHooks } from '../devtools';
 import { STORAGE_LOCK_KEY } from '../lock-key';
 
 TRACE_PROCESSOR.setInstanceTag('shared-worker');
+
+// A single MessagePort multiplexes every request by id, so allow effectively-unbounded concurrent
+// requests over the one worker rather than the pool default of 1 (which lets one open stream block
+// every other call).
+const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
 
 let releaseLock: () => void;
 const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
@@ -109,9 +119,18 @@ export const onconnect = async (event: MessageEvent<any>) => {
   );
 
   const workerRuntime = await workerRuntimePromise;
+  // Adapt this legacy SharedWorker path's raw ports to the effect-rpc protocol layers WorkerRuntime
+  // now consumes: the worker serves the client services on the app port and is the BridgeService
+  // client on the system port (mirrors the worker-framework session protocol construction).
   await workerRuntime.createSession({
-    systemPort: systemChannel.port2,
-    appPort: appChannel.port2,
+    appProtocol: RpcServer.layerProtocolWorkerRunner.pipe(
+      Layer.provide(BrowserWorkerRunner.layerMessagePort(appChannel.port2)),
+      Layer.orDie,
+    ),
+    systemProtocol: RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
+      Layer.provide(BrowserWorker.layerPlatform(() => systemChannel.port2)),
+      Layer.orDie,
+    ),
   });
 };
 

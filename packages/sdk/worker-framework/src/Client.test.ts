@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, onTestFinished, test } from 'vitest';
-
 import * as Effect from 'effect/Effect';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout } from '@dxos/async';
 
+import * as Client from './Client';
 import * as Worker from './Worker';
 import * as WorkerProtocol from './WorkerProtocol';
-import * as Client from './Client';
 
 /**
  * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request

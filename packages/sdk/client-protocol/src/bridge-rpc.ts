@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import type * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
@@ -69,11 +71,27 @@ export const serveBridgeService = (port: MessagePort, service: BridgeServiceRpc)
  */
 export const makeBridgeServiceClient = async (
   port: MessagePort,
+): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> =>
+  bridgeServiceClientFromEffect((scope) => Rpc.makeClient(port, BridgeService.Rpcs).pipe(Scope.extend(scope)));
+
+/**
+ * Builds a proto-shaped {@link BridgeServiceRpc} over a pre-built {@link RpcClient.Protocol} layer
+ * (e.g. the worker→client protocol handed to a worker-framework session via effect context) rather
+ * than a raw {@link MessagePort}.
+ */
+export const makeBridgeServiceClientOverProtocol = async (
+  protocol: Layer.Layer<RpcClient.Protocol>,
+): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> =>
+  bridgeServiceClientFromEffect((scope) =>
+    Rpc.makeClientOverProtocol(protocol, BridgeService.Rpcs).pipe(Scope.extend(scope)),
+  );
+
+/** Adapts an effect-rpc {@link BridgeService.Client} (built by the caller) to the proto-shaped surface. */
+const bridgeServiceClientFromEffect = async (
+  makeClient: (scope: Scope.Scope) => Effect.Effect<unknown, never, never>,
 ): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> => {
   const scope = Effect.runSync(Scope.make());
-  const client = (await EffectEx.runPromise(
-    Rpc.makeClient(port, BridgeService.Rpcs).pipe(Scope.extend(scope)),
-  )) as BridgeService.Client;
+  const client = (await EffectEx.runPromise(makeClient(scope))) as BridgeService.Client;
 
   const bridge = client.BridgeService;
   const bridgeService: BridgeServiceRpc = {

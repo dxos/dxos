@@ -17,7 +17,7 @@ import * as Coordinator from '@dxos/worker-framework/Coordinator';
 
 import * as Rpc from '../internal/rpc';
 import { COUNTER_LEADER_LOCK_KEY } from './counter-constants';
-import { CounterRpcs, type TimingStatsSnapshot } from './counter-service';
+import { CounterClientRpcs, CounterRpcs, type TimingStatsSnapshot } from './counter-service';
 
 export type CounterRpc = {
   increment: () => Effect.Effect<number>;
@@ -66,16 +66,28 @@ export class CounterConnection extends Resource {
             }),
         }),
       leaderLockKey: COUNTER_LEADER_LOCK_KEY,
-      onConnect: async ({ clientToWorker, leaderId, isOwner }) => {
+      onConnect: async ({ clientToWorker, workerToClient, leaderId, isOwner }) => {
         invariant(this.#scope, 'counter rpc scope not initialized');
         this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner };
         this.sessionChanged.emit(this.#sessionInfo);
+
+        // The framework provisions both directions per session. Serve the (empty) worker→client
+        // channel so the worker's worker→client protocol handshake completes; open it before the
+        // client so the worker's session protocols finish building and can dispatch our requests.
+        const clientServer = Rpc.serve(
+          workerToClient,
+          CounterClientRpcs,
+          CounterClientRpcs.toLayer(Effect.succeed({})),
+        );
+        await clientServer.open();
+
         this.#rpc = (await EffectEx.runPromise(
           Rpc.makeClient(clientToWorker, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.extend(this.#scope)),
         )) as CounterRpc;
         return {
           close: async () => {
             this.#rpc = undefined;
+            await clientServer.close();
           },
         };
       },

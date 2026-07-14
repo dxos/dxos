@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
 
 import { Trigger } from '@dxos/async';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import * as WorkerProtocol from './WorkerProtocol';
@@ -146,7 +147,7 @@ export const run = ({
         case 'init': {
           owningClientId = message.ownerClientId ?? message.clientId;
           log('worker init with config', { keys: Object.keys(message.config ?? {}) });
-          runtime = await Effect.runPromise(
+          runtime = await EffectEx.runPromise(
             createRuntime({ config: message.config, requestShutdown }).pipe(Effect.scoped),
           );
           log('dedicated-worker: runtime ready, posting ready');
@@ -159,6 +160,14 @@ export const run = ({
         case 'start-session': {
           if (tabsProcessed.has(message.clientId)) {
             log('ignoring duplicate client', { clientId: message.clientId });
+            break;
+          }
+          // Validate the runtime before mutating any session state: a `start-session` can race an
+          // in-flight `init` (whose handler awaits `createRuntime` before setting `runtime`). Marking
+          // the client processed or posting ports here would hand out a session nobody serves and
+          // permanently wedge the client (future retries hit "ignoring duplicate client").
+          if (!runtime) {
+            log.error('start-session before init; runtime not initialized', { clientId: message.clientId });
             break;
           }
           tabsProcessed.add(message.clientId);
@@ -178,10 +187,6 @@ export const run = ({
             [clientToWorkerChannel.port1, workerToClientChannel.port1],
           );
 
-          if (!runtime) {
-            log.error('start-session before init; runtime not initialized', { clientId: message.clientId });
-            break;
-          }
           log('dedicated-worker: creating session (waiting for handshake)', { clientId: message.clientId });
           const sessionEffect = runtime
             .createSession({
@@ -189,9 +194,7 @@ export const run = ({
               isOwner: message.clientId === owningClientId,
             })
             .pipe(
-              Effect.provide(
-                sessionProtocols(clientToWorkerChannel.port2, workerToClientChannel.port2),
-              ),
+              Effect.provide(sessionProtocols(clientToWorkerChannel.port2, workerToClientChannel.port2)),
               Effect.ensuring(
                 Effect.sync(() => {
                   log('dedicated-worker: session closed', { clientId: message.clientId });
@@ -199,8 +202,9 @@ export const run = ({
                 }),
               ),
             );
-          await Effect.runPromise(sessionEffect.pipe(Effect.scoped));
-          log('dedicated-worker: session created', { clientId: message.clientId });
+          // The session effect runs for the session's lifetime (createSession blocks until the
+          // session ends), so cleanup is handled by `Effect.ensuring` above rather than a log here.
+          await EffectEx.runPromise(sessionEffect.pipe(Effect.scoped));
           break;
         }
 
