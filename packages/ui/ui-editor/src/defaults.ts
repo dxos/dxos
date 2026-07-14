@@ -37,7 +37,7 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
 
 export const compactSlots: ThemeExtensionsOptions['slots'] = {
   content: {
-    className: 'mx-0!',
+    className: 'mx-2!',
   },
 };
 

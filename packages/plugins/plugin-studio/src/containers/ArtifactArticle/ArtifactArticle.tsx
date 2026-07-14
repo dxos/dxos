@@ -16,9 +16,8 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Button, DropdownMenu, Icon, IconButton, Input, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { type Text } from '@dxos/schema';
 
-import { PromptEditor, VariantGallery } from '#components';
+import { VariantGallery } from '#components';
 import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
 import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
@@ -80,27 +79,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     [variants],
   );
 
-  // Load the live prompt Text object (edits persist to its content); shown editable while composing.
   const artifactId = artifact.id;
-  const [promptText, setPromptText] = useState<Text.Text>();
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const instructions = await artifact.instructions.load();
-        const text = await instructions.text.load();
-        if (!cancelled) {
-          setPromptText(text);
-        }
-      } catch (error) {
-        log.catch(error);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artifactId]);
 
   // In-memory draft variant (never added to the db): the editable compose surface. Reset when the
   // generator changes so it seeds from the new provider's default config.
@@ -209,7 +188,6 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   }, [invokePromise, artifact]);
 
   const busy = generating || pendingIndex >= 0;
-  const selectedGeneration = selectedVariant?.generation;
 
   // Whether the selected variant is the artifact's cover; toggling designates (or clears) it.
   const isCover = !!selectedVariant && artifactSnapshot?.cover?.target?.id === selectedVariant.id;
@@ -303,9 +281,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
-        <div className='grid grid-rows-[4rem_6lh_1fr] py-2 gap-2 dx-document overflow-hidden'>
+        <div className='grid grid-rows-[auto_1fr] gap-2 dx-document overflow-hidden'>
           {/* A produced (frozen) variant can be designated the artifact's cover default. */}
-          <div className='flex flex-col gap-1'>
+          <div className='flex flex-col gap-1 p-2'>
             {/* Artifact-level name (independent of the selected variant). */}
             <Input.Root>
               <Input.TextInput
@@ -329,23 +307,8 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             </div>
           </div>
 
-          <div>
-            {/* <Input.Root>
-              <Input.Label>{t('prompt.label')}</Input.Label>
-            </Input.Root> */}
-            <PromptEditor
-              classNames='border border-separator rounded-sm _p-2'
-              id={selectedVariant ? `${artifactId}/variant/${selectedVariant.id}/prompt` : `${artifactId}/prompt`}
-              text={composing ? promptText : undefined}
-              value={composing ? undefined : selectedGeneration?.prompt}
-              readonly={!composing}
-              placeholder={t('prompt.placeholder')}
-              compact
-            />
-          </div>
-
-          {/* Schema-driven request-config form (from the generator's requestSchema). Composing
-                edits the draft; a produced variant is shown read-only (all fields, empties kept). */}
+          {/* Schema-driven request-config form (prompt + kind-specific knobs, from the generator's
+              requestSchema). Composing edits the draft; a produced variant is read-only. */}
           {provider && (
             <Form.Root
               key={composing ? 'draft' : selectedVariant?.id}

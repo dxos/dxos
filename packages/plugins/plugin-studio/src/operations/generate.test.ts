@@ -9,13 +9,11 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Instructions } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { configuredCredentialsLayer } from '@dxos/functions';
-import { Text } from '@dxos/schema';
 
 import { Artifact, type GenerationService, StudioCapabilities, Variant } from '../types';
 import generateHandler from './generate';
@@ -86,7 +84,7 @@ describe('generate', () => {
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({
-      types: [Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
+      types: [Artifact.Artifact, Variant.Variant],
     }));
   });
 
@@ -94,7 +92,7 @@ describe('generate', () => {
     await builder.close();
   });
 
-  const addArtifact = (prompt: string, kind = 'image'): Artifact.Artifact => db.add(Artifact.make({ kind, prompt }));
+  const addArtifact = (kind = 'image'): Artifact.Artifact => db.add(Artifact.make({ kind }));
 
   const run = (
     artifact: Artifact.Artifact,
@@ -122,10 +120,11 @@ describe('generate', () => {
     );
 
   test('appends a Variant per result (keyless mock), seeding cover + generation', async ({ expect }) => {
-    const artifact = addArtifact('A serene mountain lake at dawn.');
+    const artifact = addArtifact();
     await db.flush();
 
     const result = await run(artifact, {
+      config: { prompt: 'A serene mountain lake at dawn.' },
       services: [
         mockService([
           { url: 'https://example.com/a.png', generation: { provider: 'mock', seed: 1 } },
@@ -151,11 +150,12 @@ describe('generate', () => {
   });
 
   test('resolves the provider by kind and passes the prompt in the request', async ({ expect }) => {
-    const artifact = addArtifact('A neon city.', 'video');
+    const artifact = addArtifact('video');
     await db.flush();
 
     const calls: { request: GenerationService.GenerationRequest; apiKey?: string }[] = [];
     const result = await run(artifact, {
+      config: { prompt: 'A neon city.' },
       services: [
         mockService([], { kind: 'image', id: 'image-mock' }),
         mockService([{ url: 'https://example.com/v.mp4' }], { kind: 'video', id: 'video-mock', calls }),
@@ -167,7 +167,7 @@ describe('generate', () => {
   });
 
   test('resolves the provider API key from the Connector-managed credential', async ({ expect }) => {
-    const artifact = addArtifact('A neon city.');
+    const artifact = addArtifact();
     await db.flush();
 
     const calls: { request: GenerationService.GenerationRequest; apiKey?: string }[] = [];
@@ -180,7 +180,7 @@ describe('generate', () => {
   });
 
   test('fails when no generation service is registered for the kind', async ({ expect }) => {
-    const artifact = addArtifact('Anything.');
+    const artifact = addArtifact();
     await db.flush();
     await expect(run(artifact, { services: [mockService([], { kind: 'video' })] })).rejects.toThrow(
       /No generation service/,
@@ -188,7 +188,7 @@ describe('generate', () => {
   });
 
   test('async provider: enqueues, creates a pending variant, then fills it in', async ({ expect }) => {
-    const artifact = addArtifact('A dancing avatar.', 'video');
+    const artifact = addArtifact('video');
     await db.flush();
 
     const calls: { op: 'enqueue' | 'awaitResult'; jobId?: string }[] = [];
@@ -208,7 +208,7 @@ describe('generate', () => {
   });
 
   test('async provider: resumes a pending variant (awaitResult only, no re-enqueue)', async ({ expect }) => {
-    const artifact = addArtifact('A dancing avatar.', 'video');
+    const artifact = addArtifact('video');
     // Simulate an in-flight pending variant owned by the artifact.
     const pending = db.add(Variant.make({ jobId: 'job-123', config: {} }));
     Obj.setParent(pending, artifact);
@@ -232,7 +232,7 @@ describe('generate', () => {
   });
 
   test('async provider: clears the pending jobId when awaitResult fails (no resume loop)', async ({ expect }) => {
-    const artifact = addArtifact('A dancing avatar.', 'video');
+    const artifact = addArtifact('video');
     await db.flush();
 
     const failing: GenerationService.GenerationService = {

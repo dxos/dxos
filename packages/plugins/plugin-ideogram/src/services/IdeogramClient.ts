@@ -22,7 +22,7 @@ const toRequestBody = (request: GenerationService.GenerationRequest) => {
   const config = decodeIdeogramConfig(request);
   return {
     image_request: {
-      prompt: request.prompt,
+      prompt: config.prompt ?? '',
       ...(config.aspectRatio ? { aspect_ratio: config.aspectRatio } : {}),
       ...(config.model ? { model: config.model } : {}),
       ...(config.negativePrompt ? { negative_prompt: config.negativePrompt } : {}),

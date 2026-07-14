@@ -6,25 +6,22 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Instructions } from '@dxos/compute';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as Variant from './Variant';
 
 /**
- * A media-agnostic unit of creative work: a prompt paired with the outputs produced from it. `kind`
- * is an open discriminator (`'image' | 'video' | …`) selecting rendering + provider — new media add
- * behavior (a renderer, a provider), never columns. The prompt body lives in `instructions.text`
- * (a `Ref<Text>` owned by the {@link Instructions} object).
+ * A media-agnostic unit of creative work: a set of produced {@link Variant}s. `kind` is an open
+ * discriminator (`'image' | 'video' | …`) selecting rendering + provider — new media add behavior (a
+ * renderer, a provider), never columns. The prompt + request knobs live per-variant in `Variant.config`
+ * (the generator's `requestSchema`), composed via an in-memory draft variant in the article.
  */
 export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.artifact', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     /** Open discriminator: 'image' | 'video' | … (no enum). Selects renderer + provider. */
     kind: Schema.String,
-    /** The prompt (rich text; @dxos/compute Instructions). */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false)),
     /** Chosen GenerationService id for this kind (passed to op:generate as `provider`). */
     generator: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
     /** Owned interchangeable alternatives of the primary output; each records its own generation. */
@@ -39,22 +36,6 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
   ),
 ) {}
 
-/**
- * Creates an Artifact with an owned {@link Instructions} object (holding the prompt), parented so it
- * cascade-deletes and deep-clones with the artifact. `kind` defaults to `'image'`.
- */
-export const make = ({
-  name,
-  kind = 'image',
-  prompt,
-}: { name?: string; kind?: string; prompt?: string } = {}): Artifact => {
-  const instructions = Instructions.make({ name, text: prompt ?? '' });
-  const artifact = Obj.make(Artifact, {
-    name,
-    kind,
-    instructions: Ref.make(instructions),
-    variants: [],
-  });
-  Obj.setParent(instructions, artifact);
-  return artifact;
-};
+/** Creates an Artifact. `kind` defaults to `'image'`. */
+export const make = ({ name, kind = 'image' }: { name?: string; kind?: string } = {}): Artifact =>
+  Obj.make(Artifact, { name, kind, variants: [] });

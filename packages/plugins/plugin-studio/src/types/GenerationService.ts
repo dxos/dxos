@@ -15,17 +15,16 @@ import * as Generation from './Generation';
  * Provider-agnostic, per-`kind` generation contract shared by plugin-studio and provider
  * implementations (e.g. plugin-ideogram). These are NOT ECHO objects — they are plain Effect
  * schemas / interfaces passed across the {@link StudioCapabilities.GenerationService} capability
- * boundary. The kind-specific request config is described by each provider's `requestSchema` and
- * validated by the provider itself; studio only merges the prompt in and renders the form.
+ * boundary. The kind-specific request config — including the prompt — is described by each provider's
+ * `requestSchema` and validated by the provider itself; studio just renders the form.
  */
 
 /**
- * The request passed to a provider's `generate`. `prompt` (from the artifact's Instructions) and
- * `count` are always present; all other keys come from the artifact's `config` and are described by
- * the provider's `requestSchema`.
+ * The request passed to a provider's `generate`. Every key (including the `prompt`) comes from the
+ * variant's `config` and is described by the provider's `requestSchema`; `count` is added by the
+ * generate op.
  */
 export interface GenerationRequest {
-  readonly prompt: string;
   readonly count?: number;
   readonly [key: string]: unknown;
 }

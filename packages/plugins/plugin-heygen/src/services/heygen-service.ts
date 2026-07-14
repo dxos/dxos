@@ -5,6 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 
+import { Format } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import { type GenerationService } from '@dxos/plugin-studio/types';
 
@@ -12,11 +13,13 @@ import { HEYGEN_CONNECTOR_ID, HEYGEN_ID, HEYGEN_SOURCE } from '../constants';
 import { HeyGenProvider } from './HeyGenProvider';
 
 /**
- * The HeyGen-specific request config (the `kind: 'video'` provider's `requestSchema`). HeyGen
- * requires an avatar and a voice; studio renders these as a form (a provider-supplied picker surface
- * may override it — see roadmap). The prompt (script) comes from the artifact's Instructions.
+ * The HeyGen-specific request config (the `kind: 'video'` provider's `requestSchema`): the `prompt`
+ * (script) plus the avatar and voice ids. Studio renders these as a schema-driven form.
  */
 export const HeyGenRequestConfig = Schema.Struct({
+  prompt: Schema.optional(
+    Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text), Schema.annotations({ title: 'Prompt' })),
+  ),
   avatarId: Schema.optional(Schema.String.annotations({ title: 'Avatar', description: 'HeyGen avatar id.' })),
   voiceId: Schema.optional(Schema.String.annotations({ title: 'Voice', description: 'HeyGen voice id.' })),
 });
@@ -52,7 +55,7 @@ export const makeHeyGenGenerationService = (): GenerationService.GenerationServi
     enqueue: (request, { apiKey, signal }) => {
       const config = decodeConfig(request);
       return provider.enqueue(
-        { type: 'video', prompt: request.prompt, avatarId: config.avatarId, voiceId: config.voiceId },
+        { type: 'video', prompt: config.prompt ?? '', avatarId: config.avatarId, voiceId: config.voiceId },
         { apiKey: apiKeyString(apiKey), signal },
       );
     },

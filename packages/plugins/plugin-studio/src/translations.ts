@@ -52,7 +52,6 @@ export const translations = [
         'more.label': 'More',
         'delete.label': 'Delete artifact',
         'delete-variant.label': 'Delete',
-        'prompt.placeholder': 'Describe what to generate…',
         'center.label': 'Center',
         'zoom.label': 'Toggle zoom',
         'studio-section.label': 'Studio',

@@ -38,13 +38,11 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
         return yield* Effect.fail(new GenerationService.NoGenerationServiceError({ kind: artifactObj.kind, provider }));
       }
 
-      const instructions = yield* Database.load(artifactObj.instructions);
-      const text = yield* Database.load(instructions.text);
-      const prompt = text.content ?? '';
-
       // Resuming an async job reuses the pending variant's stored config/name; otherwise the draft.
       const resumeVariant = variantRef ? yield* Database.load(variantRef) : undefined;
       const config = resumeVariant?.config ?? inputConfig;
+      // The prompt is now a config field (rendered by the schema-driven form).
+      const prompt = typeof config?.prompt === 'string' ? config.prompt : '';
       // Variant label: the supplied name, else a short prefix of the prompt.
       const name = resumeVariant?.name ?? inputName ?? (prompt ? prompt.slice(0, 80) : undefined);
 
@@ -59,11 +57,10 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
         apiKey = Redacted.make(credential.apiKey);
       }
 
-      // The request is the prompt merged with the kind-specific config; the provider validates it
-      // against its own requestSchema.
+      // The request is the kind-specific config (which includes the prompt); the provider validates
+      // it against its own requestSchema.
       const request: GenerationService.GenerationRequest = {
         ...(config ?? {}),
-        prompt,
         ...(count !== undefined ? { count } : {}),
       };
 
