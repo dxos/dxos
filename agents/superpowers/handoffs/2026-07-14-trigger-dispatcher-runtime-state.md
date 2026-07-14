@@ -11,7 +11,7 @@ Rework the local `TriggerDispatcher` runtime so that:
 1. **One runtime-state map for all triggers.** Combine the two per-trigger maps
    (`_scheduledTriggers`, cron-only, and `_cooldownUntil`, all kinds) into a single
    `Map<triggerId, RuntimeTriggerState>` covering **every** trigger kind, not just cron/timer.
-   The entry must capture *when/whether the trigger should run again* — next cron execution,
+   The entry must capture _when/whether the trigger should run again_ — next cron execution,
    failure cooldown, and a pending **retry** (from `RunAgainError`).
 2. **`RunAgainError` retry queue.** When an operation calls `Operation.runAgain()`, the trigger
    must be re-invoked. Retried triggers go to the **end of the invocation queue** (fair ordering)
@@ -27,7 +27,7 @@ Original request (verbatim):
 
 > update trigger dispatcher to support this functionality
 >
-> combine _scheduledTriggers + _cooldownUntil into one map for the runtime trigger state for all
+> combine \_scheduledTriggers + \_cooldownUntil into one map for the runtime trigger state for all
 > triggers, not only cron. it should include where the trigger should be retried. the retried
 > triggers should be placed at the end of the queue of incocations (respecting concurency) also
 > impl this todo trigger-dispatcher.ts:308
@@ -40,17 +40,20 @@ Original request (verbatim):
 
 ```ts
 describe('Retry', () => {
-  it.effect.only('should if trigger returns RunAgainError', Effect.fnUntraced(function* ({ expect }) {
-    const dispatcher = yield* TriggerDispatcher;
-    const op = yield* registerOperation(RetryOp);
-    const trigger = Trigger.make({ runnable: Ref.make(op), enabled: true, spec: Trigger.specDirect() });
-    yield* Database.add(trigger);
-    const result = yield* dispatcher.invokeTrigger({ trigger, event: {} });
+  it.effect.only(
+    'should if trigger returns RunAgainError',
+    Effect.fnUntraced(function* ({ expect }) {
+      const dispatcher = yield* TriggerDispatcher;
+      const op = yield* registerOperation(RetryOp);
+      const trigger = Trigger.make({ runnable: Ref.make(op), enabled: true, spec: Trigger.specDirect() });
+      yield* Database.add(trigger);
+      const result = yield* dispatcher.invokeTrigger({ trigger, event: {} });
 
-    yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
-    const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(Effect.flatten);
-    expect(counter.count).toBe(3);
-  }, Effect.provide(TestLayer())));
+      yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
+      const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(Effect.flatten);
+      expect(counter.count).toBe(3);
+    }, Effect.provide(TestLayer())),
+  );
 });
 ```
 
@@ -58,12 +61,12 @@ describe('Retry', () => {
 increments a persisted `RetryCounter` and calls `Operation.runAgain()` while `count < 3`,
 otherwise returns success. Expected run sequence:
 
-| Run | entry point | count before | action |
-|-----|-------------|--------------|--------|
-| 1 | `invokeTrigger` | 0 | ++ → 1, `runAgain()` |
-| 2 | retry drain | 1 | ++ → 2, `runAgain()` |
-| 3 | retry drain | 2 | ++ → 3, `runAgain()` |
-| 4 | retry drain | 3 | `count >= 3` → success, no re-enqueue |
+| Run | entry point     | count before | action                                |
+| --- | --------------- | ------------ | ------------------------------------- |
+| 1   | `invokeTrigger` | 0            | ++ → 1, `runAgain()`                  |
+| 2   | retry drain     | 1            | ++ → 2, `runAgain()`                  |
+| 3   | retry drain     | 2            | ++ → 3, `runAgain()`                  |
+| 4   | retry drain     | 3            | `count >= 3` → success, no re-enqueue |
 
 Final `counter.count === 3` (4 runs, last succeeds).
 
@@ -171,7 +174,7 @@ private _runtimeState = new Map<string, RuntimeTriggerState>();
 
 - Extend `TriggerDispatcherState` (109) to surface per-trigger runtime status derived from
   `_runtimeState` — e.g. add a `triggers: Array<{ triggerId, nextExecution?, cooldownUntil?,
-  retryPending?, lastResult? }>` field (resolve the existing rework TODO at 111). Update the
+retryPending?, lastResult? }>` field (resolve the existing rework TODO at 111). Update the
   `registry.update(this._state, Struct.evolve({...}))` sites (247, 288, 324, 347, 401) to keep the
   new field in sync, and initialize it in the `Atom.make` default (201–205).
 - Keep `MAX_TRACKED_INVOCATIONS` / `MAX_TRACKED_ERRORS` semantics.
