@@ -36,6 +36,111 @@ categorization) but fall below on synthetic tasks (thread/topic summaries, draft
       Headline: **H0 inverted** — open weights strongest on _drafts_ (gemma-12b/qwen3-30b clear the
       bar), weakest on _labeling_; faithfulness universally high; gpt-oss-20b best all-rounder.
 
+## Next experiment: Active Topics (overnight)
+
+Spec: `agents/superpowers/specs/2026-07-13-active-topics-experiment-design.md`. Build fully-populated
+topic structures from the private fixture + a confidence-ranked active/suggested split, for morning
+human review. Harness-only (informs the product `Topic` schema). Prereqs: Ollama + `.env` (opus/haiku).
+
+### Tasks
+
+- [x] **`ActiveTopic` type + assembly (pure, tested)** — `harness/internal/active-topics.ts`:
+      `ActiveTopic`/`SuggestedTopic`/`ScoredCandidate` + `assembleActiveTopic` / `toSuggestedTopic` /
+      `populatedChecklist` / `topicSlug`. Unit-tested.
+- [x] **`activityScore` (deterministic, tested)** — recency (exp decay) + `awaiting-mine` + person-linked + open-item count, weighted → `[0,1]`. Unit-tested (recent+awaiting+person+items → ~1; stale/org → <0.05).
+- [x] **Confidence combine + split (pure, tested)** — `combineConfidence` (w·llm + (1−w)·activity, clamped) + `classifyTopics` (≥ threshold, capped at top, highest-first). Unit-tested.
+- [x] **Action-items → `Outline`** — `renderTasksMarkdown` (nested `- [ ]`) + `makeTasksOutline`
+      (`Outline.make`); `@dxos/plugin-outliner` workspace dep added. Render unit-tested. 10/10 node tests green.
+- [x] **Populate stage** — `pipelines/active-topics.ts` `makeActiveTopicsDeps`: model-backed
+      confidence/status/tasks (via `generateText` + policy), facts (`extractDocFacts` per message,
+      rendered), drafts (`draftReply` per thread, skips bulk). Build-verified (runs under models).
+- [x] **Reports + JSON writer** — `internal/active-topics-report.ts` `renderIndex` / `renderTopicReport`
+      / `serializeActiveTopics` / `writeActiveTopicsReports`. Renderers unit-tested.
+- [x] **`active-topics.mjs` driver + `stories-brain:active-topics` moon task** — non-interactive; env
+      `ACTIVE_N` / `ACTIVE_TOP` / `ACTIVE_THRESHOLD` / `MODEL_POLICY`. Runs `active-topics.bench.test.ts`
+      (guarded by `fixtureExists()` → CI skips; 13 unit tests + skip verified).
+- [x] **Shakedown (smoke, LIMIT=15)** — found + fixed: wall-clock recency (fixture is historical →
+      anchor "now" to the corpus's latest message) and multi-alias owner support in `buildThreads`
+      (`string | string[]` + test). Smoke: 2 active + 6 suggested, status/facts/tasks populated; drafts
+      correctly skipped for automated senders (e.g. `noreply@safesendreturns.com`).
+- [x] **RUN full** (`ACTIVE_TOP=8`, both aliases, all 495) — done (run1 + run2). Findings in
+      `fixtures/REPORT.md §6`. Run1: active list dominated by automated notices; run2 (post-intervention):
+      real person/team topics, 5/8 with drafts.
+- [x] **Intervention: automated/no-reply down-weight** — `activityScore` down-weights (×0.35) topics whose
+      every non-owner sender is a no-reply/role address (`isAutomatedAddress` + `computeClusterSignals.automated`).
+      Re-ran; clear win (REPORT §6). 16 unit tests.
+- [ ] **Active Topics v2 (next iteration)** — LLM labels (replace keyword-salad); wire `personEmails`
+      (contacts) so the person signal fires; fact extraction on short person threads. See ROADMAP C2.
+
+## ⚠️ CI BLOCKER (PR #12178) — decide in the morning
+
+`assistant-e2e:test` is red — 5 tests (`crm-mailbox`/`database`/`markdown`) fail with **"No memoized
+conversation found for the given prompt."** Root cause: `Mailbox.topicSuggestions` (Phase B) is
+serialized into the agents' JSON-schema prompt, invalidating the committed `*.conversations.json`
+fixtures. Surfaced now because a `pipeline-email` edit pulled `assistant-e2e` into the affected set.
+`FormInputAnnotation.set(false)` does NOT drop a field from the serialized schema (no annotation
+shortcut). Two resolutions (NOT done autonomously — ~18 MB paid, non-deterministic fixture rewrite in
+another package):
+
+1. Regenerate: `ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test` → commit the updated
+   `crm-mailbox`/`database`/`markdown` `.conversations.json`. (`regenerate-memoized-llm` skill; needs
+   `DX_ANTHROPIC_API_KEY`.)
+2. Move topic suggestions off the `Mailbox` schema (separate object — one of the original design forks)
+   so the Mailbox schema stops changing and no regen is needed.
+
+Diagnosis posted as a PR comment. Everything else on the PR is green/verified.
+
+## Triage v3 + live framework (2026-07-13 pivot)
+
+Feedback: auto "active topics" still surfaces marketing/bulk; pivot to manual curation + triage.
+Only invoices (crabnebula, kirk) matter → action tags, not topics. `unsubscribe` is a deterministic
+bulk tell.
+
+- [x] **Deterministic unsubscribe ⇒ bulk** — `classifyBulk` returns bulk when a `List-Unsubscribe`
+      header (real mail) or an unsubscribe link in the body (fixture) is present, outranking action
+      subjects. `tagMessage` passes `properties.listUnsubscribe` + body. 14 tests. (`70820f4b`)
+- [x] **Subscription helpers** — `Mailbox.deriveSubscriptions` + `parseUnsubscribe` (one-click http +
+      mailto), 10 tests. (`ad9d2543`)
+- [x] **`UnsubscribeSender` operation** — skip-sender filter + RFC 8058 one-click POST (best-effort;
+      mailto-only → filter only). (`2222f4ce`)
+- [x] **Subscriptions view** — `SubscriptionsArticle` (bulk senders + checkboxes → Remove), folder node
+      (peer of Topics) + surface + translations. Build-verified; live verification via the framework
+      below (feed can't be seeded headlessly). (`d799497a`)
+- [ ] **Priority 1 — manual topics + management + task tracking** — `CreateTopicFromMessage` seeds;
+      build out topic management + task tracking surfaces. (Auto active-topics ranking deprioritized.)
+- [~] **Priority 2 — live-space test framework (extend the CLI)** — decided: extend `@dxos/cli`
+  (already has ClientService + `spaceLayer`→Database.Service + registered inbox types). Shipped
+  (`ad52e31`): `dx identity join <invitation>` (headless device join via `client.halo.join`) +
+  `dx mailbox subscriptions` (spaceLayer + mailbox feed → `deriveSubscriptions` over live data).
+  Build-verified; RUNTIME needs the user to device-join + run. NEXT: more `dx mailbox` subcommands
+  (topics/tag/active-topics over live data), then promote to the edge service (same substrate).
+
+## Roadmap, CRM spec & parallel-experiment plan (asks 2026-07-13)
+
+**Direction:** the north star is an **AI-assisted, Topic-anchored CRM** — analyze personal/team email,
+discover Topics, and drive custom workflows off them. The Active Topics experiment is the first probe.
+These deliverables come AFTER the full experiment run + review.
+
+### Tasks
+
+- [x] **`ROADMAP.md`** (`packages/stories/stories-brain/ROADMAP.md`) — done. Part A technique survey
+      (N3/EYE reasoning, GraphRAG-vs-vectorRAG, KG hallucination eval/GraphEval, relationship-intelligence
+      CRM) with cited web research; Part B the FactStore question + 5 concrete validation experiments
+      (B1 fact-vs-thread QA is the decisive test, B3 N3 rules, B4 faithfulness gate, B5 facts-as-memory);
+      Part C the parallelizable experiment roadmap; Part D near-term follow-ups.
+- [x] **CRM product spec** (`agents/superpowers/specs/2026-07-13-crm-workflow-design.md`) — drafted:
+      vision (Topic as the organizing primitive), 7-layer architecture, the 7 features + 6 proposed
+      additions (workflow engine, triage/two-tier, relationship graph, provenance layer, team mode,
+      digest), tests per feature, cross-cutting eval/model-routing/FactStore, open questions. For morning refinement.
+- [x] **Experimental roadmap for parallel agents** — `ROADMAP.md` Part C: 8 self-contained briefs
+      (C1 FactStore validation, C2 Active Topics v2, C3 N3 workflow rules, C4 contact entity-resolution,
+      C5 task extraction, C6 draft re-score, C7 research agent, C8 two-tier latency) with parallelization
+      notes (C1/C4/C5/C6/C8 independent today). Refineable in the morning.
+- [x] **Track everything here** — kept current.
+
+Follow-ups (deferred): automated judge scoring; held-out incoming-mail contextualization; promote the
+validated `ActiveTopic` fields into the product `Topic`.
+
 ## Next — model routing & sender-type triage (from REPORT §5)
 
 **Direction:** triage by sender type first, spend LLM effort only where it pays off. Sync is 100%
@@ -153,6 +258,105 @@ query to the mailbox via the AnchoredTo relation; confirm the relation direction
       sync state (cursor / seen-message set) independent of the connection lifecycle, and the sync
       operation must dedup so re-syncing never creates duplicates. (plugin-inbox Gmail sync + cursor.)
 
+## Next phase: Topics quality + triage v2 (from live review 2026-07-12)
+
+**Direction:** first pass shipped Topics but quality/utility is low — most mail is _bulk_ (receipts,
+login notices) that needs no action, and topics get created for senders with no relationship. Tighten
+triage, make topics opt-in suggestions rather than eager objects, and finish the master/detail UI.
+
+### Tagging & triage
+
+- [x] **`bulk` tag for no-action mail** — `pipeline-email/stages/tag.ts`: `classifyBulk` (pure —
+      subject + sender local part; `'action'` for invoices/payment-requests wins over any bulk signal,
+      so they're never bulk) + `applyBulkTag` (adds `bulk` the model missed, strips it from action
+      mail). `tagMessage` folds the deterministic gate over the LLM tags; `TagResult` gains `bulk`.
+      Prompt updated. 13 tests in `tag.test.ts` (incl. the user's examples). Build clean.
+- [x] **Only topic Person senders** — `runTopicsPipeline` gains a `keepTopic?(draft)` predicate
+      (applied to fresh clusters before summarization); `analyze-topics.ts` queries `Person` records,
+      builds a lowercased email set, and keeps a topic only when a participant matches (bulk/org-only
+      threads dropped). Tagging is unaffected. Test in `topics-pipeline.test.ts`; both packages build.
+
+### Topic suggestions (opt-in)
+
+- [x] **Lightweight topic suggestions on Mailbox** → shipped as **Phase B** in the Topics UX v2 plan
+      below (spec `agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`).
+- [x] **Message → "Create Topic" menu** → shipped as **Phase C** in the Topics UX v2 plan below
+      (single-thread seed in v1).
+
+### UI
+
+- [x] **Fix "Ignore sender" menu item** — root cause: `DraftsArticle` (and any consumer not handling
+      `ignore-sender`) still rendered the item, so it no-oped there. `MessageStack` now gates the item
+      behind an `enableIgnoreSender` prop (default off); only `MailboxArticle` — which handles the
+      action and DOES add the `messageFilters` filter (verified) — sets it. Added a `ph--prohibit`
+      icon. `Card.Menu` / `TileMenuItem` / `ToolbarMenuItem` gained an optional `icon` field.
+- [x] **Delete option on topic card** — `TopicsArticle` `TopicTile` gains a `Card.Menu` "Delete topic"
+      item (`ph--trash` icon) → `space.db.remove(topic)`. New `topics.delete.label` translation. Verified
+      by a storybook play test (`Topics.stories.tsx` — seeds two topics, deletes one, asserts removal).
+      FOLLOW-UP: also remove the `AnchoredTo` relation when deleting (currently orphaned).
+- [x] **`TopicArticle` + master/detail** → shipped as **Phase A** in the Topics UX v2 plan below.
+
+## Topics UX v2 — implementation plan
+
+> Spec: `agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`. Build order **A → B → C**; each
+> phase is a separate commit, build/lint/fmt clean with its storybook play test green. TDD where a pure
+> unit exists. Single-file test runs: `pnpm --filter <pkg> exec vitest run --project=node <file>`;
+> storybook: `pnpm --filter @dxos/stories-inbox exec vitest run --project=storybook <file>`.
+
+### Phase 0 — shared model (prereq for A/B)
+
+- [x] **Extract `TopicProps`** — done in `pipeline-email/src/types/Topic.ts`; `Topic` extends it.
+      `deriveThreadId`/`normalizeSubject` now exported from the package index too. Tests green.
+- [x] **Add `Mailbox.topicSuggestions`** — `Schema.optional(Schema.Array(TopicProps))` added; builds green.
+
+### Phase A — `TopicArticle` master/detail
+
+- [x] **`resolveTopicThreads` helper (pure, tested)** — `TopicArticle/resolve-threads.ts`: groups
+      messages by `deriveThreadId`, returns only the topic's referenced threads in order, omits threads
+      with no messages. 2 unit tests green. (Wired into the live feed = the follow-up below.)
+- [x] **`TopicArticle` container** — `TopicArticle/TopicArticle.tsx`: renders the topic's stored fields
+      (summary, keyword chips via `Row.Tags`, participants, questions/tasks/thread-subject list
+      sections). Self-contained (no cross-object resolution in v1).
+- [x] **react-surface + master→detail wiring** — added `AppSurface.object(Article, Topic)` → `TopicArticle`;
+      `TopicsArticle` card current-change calls `useShowItem` with `linkedSegment('topic')` (companion in
+      simple mode; deck-peer path is a follow-up).
+- [x] **Storybook play test** — `Topics.stories.tsx` `Detail` + `DetailTest`: renders `TopicArticle` for a
+      seeded topic and asserts summary, keyword chip, participants, question, task. 4/4 storybook tests green.
+- [x] **Commit** `feat(inbox): TopicArticle master/detail`.
+- [ ] **FOLLOW-UP (A)**: wire `resolveTopicThreads` to live feed messages + click a thread → open it in
+      the mailbox; add a deck-peer topic path so multi-mode opens a plank. Needs the running deck to verify.
+
+### Phase B — topic suggestions
+
+- [x] **Suggestion classify/order (pure, tested)** — `analyze/suggestions.ts` `orderSuggestions`:
+      drops bulk-majority clusters (`isBulkCluster`), flags person-linked (`isPersonLinked`), sorts
+      person-first (stable), dedups by label vs existing. 3 unit tests.
+- [x] **`AnalyzeTopics` writes suggestions** — pipeline now returns `topicDrafts` (not materialized);
+      the operation computes bulk-thread ids from this run's tags + person emails, calls `orderSuggestions`,
+      appends to `mailbox.topicSuggestions` (deduped vs existing Topics + suggestions). `keepTopic` hard
+      gate dropped. Output schema `{ tagged, suggestions }`. Builds green.
+- [x] **`TopicsArticle` "Suggested" section** — `SuggestionCard` (Accept/Dismiss menu) above the topics;
+      Accept → `Obj.make(Topic, …)` + `AnchoredTo` + splice; Dismiss → splice. New translations
+      `topics.suggested.title` / `accept` / `dismiss`.
+- [x] **Storybook play test** — `Topics.stories.tsx` `SuggestionsTest`: Accept one (→ Topic, suggestion
+      gone), Dismiss the other (section gone). 5/5 storybook tests green.
+- [x] **Commit** `feat(inbox): opt-in topic suggestions`.
+
+### Phase C — Create Topic from message
+
+- [x] **`enableCreateTopic` gate + menu item** — `MessageStack.tsx`: prop + "Create Topic" tile menu
+      item (`ph--stack`) emitting `create-topic`; `MailboxArticle` sets the prop and handles it
+      (invokes the op with `{ spaceId }`, then opens the topic via `useShowItem`).
+- [x] **`CreateTopicFromMessage` operation** — `analyze/create-topic-from-message.ts`: gathers the
+      message's thread (siblings by `deriveThreadId`), `clusterThreads` → one draft, LLM `summary`
+      (`resolveModel('summarize-topic')`), persists `Topic` + `AnchoredTo`, returns `{ topicId }`.
+      Registered in the handler set; output schema `{ topicId }`. FACT EXTRACTION deferred (follow-up).
+- [x] **Storybook play test** — `CreateTopic.stories.tsx` (mock `AiService`): click "Create Topic" →
+      operation runs → a Topic card appears. Caught + fixed a missing `{ spaceId }` on the invoke.
+- [x] **Commit** `feat(inbox): create topic from message`.
+- [ ] **FOLLOW-UP (C)**: run fact extraction on the thread's messages inside the operation (reuse the
+      fact stage) once the product fact pipeline is wired.
+
 ### Follow-ups (landed)
 
 - [x] **Questions + tasks per topic** — `Topic` gains `questions` / `tasks`; `clusterThreads` rolls
@@ -231,6 +435,22 @@ query to the mailbox via the AnchoredTo relation; confirm the relation direction
       `pipelines/` + core); `.test.ts` files stay in `src/test/`.
 - [x] `defs.ts` — single source of truth for all env knobs/defaults (`SUBJECT`, models, `LIMIT`,
       fixture/result paths, `SAMPLES`, `SKILL_MODES`, …); every test + harness module reads from it.
+
+## Story UI follow-ups
+
+- [ ] **Convert `Facts.stories.tsx` + `Pipeline.stories.tsx` to the `ModuleContainer` pattern**
+      (the TODO in `Facts.stories.tsx:247`). Analysis done — both are single-controller stories, not
+      independent-surface layouts: every panel funnels through one crawl/pipeline controller
+      (`facts`/`context`/`options`/stats/handlers + the Effect store). Only Pipeline's Objects list is
+      space-native (`useQuery`). Faithful conversion needs: (1) brain module infra (`Module` tokens +
+      `moduleSurfaces` + `StoryModulesPlugin`, mirroring inbox/assistant), (2) a story-scoped React
+      Context carrying the controller that surfaces read (Pipeline's Objects stays a real space
+      surface), (3) relax `@dxos/story-modules` `ModuleContainer`'s `if (!space)` gate so it renders
+      space-lessly for Facts (which has no client/space) — keep `ModuleProps.space` REQUIRED (making it
+      optional ripples to all 31 inbox+assistant modules that access `space.db`). Facts still needs the
+      plugin-manager decorator (`corePlugins` + `StorybookPlugin` + `StoryModulesPlugin`), just no
+      client/space. Runtime paths aren't headlessly verifiable (crawler needs a Discord token;
+      pipelines need edge AI creds) — verify build/lint + story render.
 
 ## Done
 

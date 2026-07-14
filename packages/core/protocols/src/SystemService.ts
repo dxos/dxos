@@ -96,7 +96,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   /**
-   * Get platform Information
+   * Get platform Information.
    */
   Rpc.make('getPlatform', {
     success: protoMessage('dxos.client.services.Platform'),

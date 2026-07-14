@@ -29,27 +29,23 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/ui-theme": "workspace:*"
-  },
-  "devDependencies": {
-    "@dxos/keys": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "vite": "catalog:"
-  },
-  "peerDependencies": {
-    "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "publishConfig": {
     "access": "public"

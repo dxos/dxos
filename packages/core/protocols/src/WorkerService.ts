@@ -15,12 +15,14 @@ import { serviceError } from './service-rpc.ts';
 
 export const StartRequest = Schema.Struct({
   origin: Schema.String,
-  /** Key for the resource lock used to determine when the client tab is closing. */
+  /** Key for the iframe resource lock used to determine when the service is closing. */
   lockKey: Schema.optional(Schema.String),
 });
 export interface StartRequest extends Schema.Schema.Type<typeof StartRequest> {}
 
 /**
+ * Iframe-to-worker RPCs.
+ *
  * Effect RPC definitions for the iframe/tab -> worker control channel (`dxos.iframe.WorkerService`).
  * Runs natively over the system {@link MessagePort}, replacing the legacy protobuf peer.
  */

@@ -18,21 +18,29 @@ import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connec
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
-import { Event, Message } from '@dxos/types';
+import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
-import { Calendar, DraftMessage, Mailbox } from '#types';
+import { Calendar, InboxOperation, Mailbox } from '#types';
 
 import {
   MAILBOX_DRAFTS_NODE_DATA,
   MAILBOX_DRAFTS_TYPE,
+  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+  MAILBOX_SUBSCRIPTIONS_TYPE,
   MAILBOX_TOPICS_NODE_DATA,
   MAILBOX_TOPICS_TYPE,
   MAILBOXES_SECTION_TYPE,
 } from '../constants';
-import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId, getTopicsId } from '../paths';
+import {
+  getCalendarsPath,
+  getDraftsId,
+  getMailboxesPath,
+  getMailboxesSectionId,
+  getSubscriptionsId,
+  getTopicsId,
+} from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -207,6 +215,17 @@ export default Capability.makeModule(
                     properties: {
                       label: ['topics.label', { ns: meta.profile.key }],
                       icon: 'ph--stack--regular',
+                      iconHue: 'rose',
+                      mailbox,
+                    },
+                  }),
+                  Node.make({
+                    id: getSubscriptionsId(),
+                    type: MAILBOX_SUBSCRIPTIONS_TYPE,
+                    data: MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+                    properties: {
+                      label: ['subscriptions.label', { ns: meta.profile.key }],
+                      icon: 'ph--envelope-simple--regular',
                       iconHue: 'rose',
                       mailbox,
                     },

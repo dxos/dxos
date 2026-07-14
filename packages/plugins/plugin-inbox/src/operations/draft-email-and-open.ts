@@ -8,9 +8,10 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
+import { DraftMessage } from '@dxos/types';
 
 import { getMailboxMessagePath } from '../paths';
-import { DraftMessage, InboxOperation } from '../types';
+import { InboxOperation } from '../types';
 import { createDraftMessage } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(

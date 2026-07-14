@@ -12,6 +12,8 @@ import { protoMessage, serviceError } from './service-rpc.ts';
  * Effect RPC definitions for the WebRTC transport bridge (`dxos.mesh.bridge.BridgeService`).
  * The tab exposes this to the worker over the system {@link MessagePort}; the worker consumes it to
  * proxy RTC connections through the tab's network stack. Payloads reuse the shared mesh proto types.
+ *
+ * Broker connections between processes and peers.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('open', {

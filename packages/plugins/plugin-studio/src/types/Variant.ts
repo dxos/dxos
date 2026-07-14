@@ -20,6 +20,8 @@ import * as Generation from './Generation';
  */
 export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.variant', '0.1.0'))(
   Schema.Struct({
+    /** Human label for the variant (defaults from the prompt). */
+    name: Schema.optional(Schema.String),
     /** Mime type — selects the VariantRenderer surface (e.g. image/png, video/mp4). */
     contentType: Schema.optional(Schema.String),
     /** The asset object (File bytes, Text, …). Generic so any medium can be attached. */
@@ -31,10 +33,17 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
         Schema.annotations({ title: 'URL', description: 'Ephemeral provider URL.' }),
       ),
     ),
+    /** The request config that produced this variant (validated against the provider's requestSchema). */
+    config: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
     /** Generation provenance (absent ⇒ uploaded/external). */
     generation: Schema.optional(Generation.Generation),
+    /**
+     * In-flight generation job id for an asynchronous provider (set at enqueue, cleared once the
+     * result is filled in). A variant carries its own job so a long poll resumes across remount.
+     */
+    jobId: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
   }).pipe(
-    LabelAnnotation.set(['contentType']),
+    LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--image--regular', hue: 'purple' }),
     // Owned child of an Artifact — hidden from the navtree and object picker (mirrors Instructions).
     Annotation.HiddenAnnotation.set(true),

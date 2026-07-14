@@ -11,13 +11,6 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  type IMetadataStore,
-  IMetadataStoreService,
-  type SpaceManager,
-  SpaceManagerService,
-  type SwarmIdentity,
-} from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -40,6 +33,8 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
+import { type IMetadataStore, IMetadataStoreService } from '../metadata';
+import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space';
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
 

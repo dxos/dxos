@@ -67,6 +67,7 @@ export const SignPresentationRequest = Schema.Struct({
 });
 export interface SignPresentationRequest extends Schema.Schema.Type<typeof SignPresentationRequest> {}
 
+// TODO(wittjosiah): Align pluralization with other services.
 /**
  * Effect RPC definitions for `dxos.client.services.IdentityService`.
  * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.

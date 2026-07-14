@@ -70,6 +70,7 @@ export const Event = Schema.Struct({
   data: Schema.Unknown, // Type-specific payload;
 });
 export type Event = Schema.Schema.Type<typeof Event>;
+
 /**
  * Checks if an event is of a given type.
  */
@@ -132,6 +133,7 @@ export const Meta = Schema.Struct({
   runtimeName: Schema.optional(RuntimeName),
 });
 export type Meta = Schema.Schema.Type<typeof Meta>;
+
 /**
  * Checks if a runtime is an edge runtime.
  */
@@ -145,17 +147,18 @@ export const isEdgeRuntime = (name: RuntimeName): boolean =>
  */
 export const MessageData = Schema.Struct({
   meta: Meta,
-
   isEphemeral: Schema.Boolean,
   events: Schema.Array(Event),
 });
 export type MessageData = Schema.Schema.Type<typeof MessageData>;
+
 export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.traceMessage', '0.1.0'))(
   MessageData.pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
     Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
+
 /**
  * Flattened representation of a signle event in a trace message.
  * Events are stored in batched messages for efficiency, but flat representation is more convenient for consumption.
