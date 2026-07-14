@@ -25,15 +25,15 @@ are also re-exported at the root.
 
 Defines ECHO types (the runtime schema entity + TypeScript type in one class).
 
-| Export | Purpose |
-| --- | --- |
-| `Type.makeObject<Self>(dxn, opts?)(schema)` | Declare an object type. |
-| `Type.makeRelation<Self>(dxn)({ source, target })(schema)` | Declare a relation type. |
-| `Type.makeObjectFromJsonSchema` / `makeRelationFromJsonSchema` | Build a type from JSON Schema. |
-| `Type.AnyObj` / `AnyRelation` / `AnyType` / `AnyEntity` | Wildcard schema bounds. |
-| `Type.InstanceType<typeof X>` | Instance type of a schema (or use the class name directly). |
-| `Type.getURI` / `getTypename` / `getVersion` / `getMeta` | Introspect a schema. |
-| `Type.isObject` / `isRelation` / `isType` / `isMutable` | Predicates. |
+| Export                                                         | Purpose                                                     |
+| -------------------------------------------------------------- | ----------------------------------------------------------- |
+| `Type.makeObject<Self>(dxn, opts?)(schema)`                    | Declare an object type.                                     |
+| `Type.makeRelation<Self>(dxn)({ source, target })(schema)`     | Declare a relation type.                                    |
+| `Type.makeObjectFromJsonSchema` / `makeRelationFromJsonSchema` | Build a type from JSON Schema.                              |
+| `Type.AnyObj` / `AnyRelation` / `AnyType` / `AnyEntity`        | Wildcard schema bounds.                                     |
+| `Type.InstanceType<typeof X>`                                  | Instance type of a schema (or use the class name directly). |
+| `Type.getURI` / `getTypename` / `getVersion` / `getMeta`       | Introspect a schema.                                        |
+| `Type.isObject` / `isRelation` / `isType` / `isMutable`        | Predicates.                                                 |
 
 Prefer the class form for named, reusable types:
 
@@ -47,40 +47,40 @@ export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.p
 
 The runtime data API for objects (works on objects in or out of a database).
 
-| Export | Purpose |
-| --- | --- |
-| `Obj.make(Type, props)` | Create an instance. |
-| `Obj.Unknown` / `Obj.Any` | Untyped object schema / type. |
-| `Obj.MakeProps<typeof T>` | Props type for `make`. |
-| `Obj.isObject` / `instanceOf(Type, obj)` / `isDeleted` | Predicates. |
-| `Obj.getSchema` / `getDXN` / `getTypename` / `getTypeURI` / `getMeta` | Introspect an instance. |
-| `Obj.getSnapshot` / `snapshotOf` / `clone` | Snapshot / copy. |
-| `Obj.getValue` / `setValue` / `update` | Path-based read/write & mutation. |
-| `Obj.subscribe` | React to changes on a live object. |
-| `Obj.toJSON` / `fromJSON` | Serialization. |
-| `Obj.Meta` / `Obj.ID` | Symbols / accessors for reserved fields. |
+| Export                                                                | Purpose                                  |
+| --------------------------------------------------------------------- | ---------------------------------------- |
+| `Obj.make(Type, props)`                                               | Create an instance.                      |
+| `Obj.Unknown` / `Obj.Any`                                             | Untyped object schema / type.            |
+| `Obj.MakeProps<typeof T>`                                             | Props type for `make`.                   |
+| `Obj.isObject` / `instanceOf(Type, obj)` / `isDeleted`                | Predicates.                              |
+| `Obj.getSchema` / `getDXN` / `getTypename` / `getTypeURI` / `getMeta` | Introspect an instance.                  |
+| `Obj.getSnapshot` / `snapshotOf` / `clone`                            | Snapshot / copy.                         |
+| `Obj.getValue` / `setValue` / `update`                                | Path-based read/write & mutation.        |
+| `Obj.subscribe`                                                       | React to changes on a live object.       |
+| `Obj.toJSON` / `fromJSON`                                             | Serialization.                           |
+| `Obj.Meta` / `Obj.ID`                                                 | Symbols / accessors for reserved fields. |
 
 ### `Relation` — relation instances
 
 Relations extend `Obj` with typed `source`/`target` endpoints.
 
-| Export | Purpose |
-| --- | --- |
-| `Relation.make(Type, props)` | Create a relation. |
-| `Relation.Source` / `Relation.Target` (symbols) | Reserved endpoint keys. |
-| `Relation.getSource` / `getTarget` / `getSourceURI` / `getTargetURI` | Read endpoints. |
-| `Relation.isRelation` / `instanceOf` | Predicates. |
-| `Relation.Unknown` | Untyped relation. |
+| Export                                                               | Purpose                 |
+| -------------------------------------------------------------------- | ----------------------- |
+| `Relation.make(Type, props)`                                         | Create a relation.      |
+| `Relation.Source` / `Relation.Target` (symbols)                      | Reserved endpoint keys. |
+| `Relation.getSource` / `getTarget` / `getSourceURI` / `getTargetURI` | Read endpoints.         |
+| `Relation.isRelation` / `instanceOf`                                 | Predicates.             |
+| `Relation.Unknown`                                                   | Untyped relation.       |
 
 ### `Ref` — references between entities
 
-| Export | Purpose |
-| --- | --- |
-| `Ref.Ref(Schema)` | Schema for a typed reference field. |
-| `Ref.Array(Schema)` | Schema for an array of refs. |
-| `Ref.make(obj)` / `Ref.fromURI(dxn)` | Construct a ref. |
-| `Ref.isRef` / `hasEntityId` / `isRefType` | Predicates. |
-| `Ref.Target<R>` / `Ref.Resolver` | Target type / resolution interface. |
+| Export                                    | Purpose                             |
+| ----------------------------------------- | ----------------------------------- |
+| `Ref.Ref(Schema)`                         | Schema for a typed reference field. |
+| `Ref.Array(Schema)`                       | Schema for an array of refs.        |
+| `Ref.make(obj)` / `Ref.fromURI(dxn)`      | Construct a ref.                    |
+| `Ref.isRef` / `hasEntityId` / `isRefType` | Predicates.                         |
+| `Ref.Target<R>` / `Ref.Resolver`          | Target type / resolution interface. |
 
 ### `Entity` — shared object/relation base
 
@@ -129,15 +129,15 @@ The value returned by `db.query(...)`: `.run()` (one-shot) and `.subscribe(...)`
 The imperative `Database` interface (`add`, `remove`, `query`, `getObjectById`,
 `makeRef`, `flush`, `graph`, `schemaRegistry`) plus the Effect surface:
 
-| Export | Purpose |
-| --- | --- |
-| `Database.Service` | `Context.Tag` — `yield* Database.Service` → `{ db }`. |
-| `Database.layer(db)` / `notAvailable` / `makeService` | Provide or stub the service. |
-| `Database.query` / `runQuery` | Query within the service. |
-| `Database.schemaQuery` / `runSchemaQuery` | Schema-registry queries. |
-| `Database.add` / `remove` / `flush` | Mutations & persistence. |
-| `Database.resolve` / `load` | Resolve a `DXN`/`Ref`; `load` doesn't need the service. |
-| `Database.spaceId` / `isDatabase` | Introspection / predicate. |
+| Export                                                | Purpose                                                 |
+| ----------------------------------------------------- | ------------------------------------------------------- |
+| `Database.Service`                                    | `Context.Tag` — `yield* Database.Service` → `{ db }`.   |
+| `Database.layer(db)` / `notAvailable` / `makeService` | Provide or stub the service.                            |
+| `Database.query` / `runQuery`                         | Query within the service.                               |
+| `Database.schemaQuery` / `runSchemaQuery`             | Schema-registry queries.                                |
+| `Database.add` / `remove` / `flush`                   | Mutations & persistence.                                |
+| `Database.resolve` / `load`                           | Resolve a `DXN`/`Ref`; `load` doesn't need the service. |
+| `Database.spaceId` / `isDatabase`                     | Introspection / predicate.                              |
 
 ```ts
 const program = Effect.gen(function* () {
@@ -202,13 +202,13 @@ Identifier types re-exported for convenience: `EntityId`, `SpaceId`, `EID`,
 
 ## Built-in types
 
-| Module | Type |
-| --- | --- |
-| `Collection` | `Collection` object (named list of refs); `make`, `isCollection`. |
-| `Dataset` | `Dataset` type; `isDataset`. |
-| `Feed` | Append-only `Feed` object; `append`, `query`, `sync`, cursors, retention. |
-| `Tag` | `Tag` object + list helpers (`findOrCreate`, `sortTags`, …). |
-| `View` | `View` / `Projection` over data with field schema helpers. |
+| Module       | Type                                                                      |
+| ------------ | ------------------------------------------------------------------------- |
+| `Collection` | `Collection` object (named list of refs); `make`, `isCollection`.         |
+| `Dataset`    | `Dataset` type; `isDataset`.                                              |
+| `Feed`       | Append-only `Feed` object; `append`, `query`, `sync`, cursors, retention. |
+| `Tag`        | `Tag` object + list helpers (`findOrCreate`, `sortTags`, …).              |
+| `View`       | `View` / `Projection` over data with field schema helpers.                |
 
 ---
 
