@@ -4,6 +4,10 @@
 
 // @import-as-namespace
 
+import type { Atom } from '@effect-atom/atom';
+import * as Context from 'effect/Context';
+import type * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
@@ -12,6 +16,7 @@ import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 
 import * as Runnable from './Runnable';
+import type * as TriggerEvent from './TriggerEvent';
 
 /**
  * Type discriminator for TriggerType.
@@ -232,3 +237,83 @@ export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, 
  * Checks if a trigger having this spec can be manually invoked (a `direct` or `timer` trigger).
  */
 export const isManuallyInvokable = (spec?: Spec): boolean => spec?.kind === 'direct' || spec?.kind === 'timer';
+
+/**
+ * Runtime state of a trigger.
+ */
+export interface State {
+  /**
+   * Reference to the trigger object.
+   */
+  readonly trigger: Ref.Ref<Trigger>;
+
+  /**
+   * Where is this trigger running.
+   */
+  readonly environment: 'edge' | 'local';
+
+  /**
+   * Next scheduled cron execution. Set only for `timer` triggers.
+   */
+  readonly nextExecution?: Date;
+
+  /**
+   * Time until which scheduled invocations of this trigger are skipped after a genuine failure.
+   * Applies to all trigger kinds. Manual {@link TriggerDispatcher.invokeTrigger} calls bypass it.
+   */
+  readonly cooldownUntil?: Date;
+
+  /**
+   * Pending re-invocation requested via {@link Operation.runAgain} ({@link RunAgainError}).
+   * Retries are drained at the tail of the invocation queue, ordered by `enqueuedAt`.
+   */
+  readonly retry?: {
+    /**
+     * Event to replay on the retry. Re-running is assumed safe with the same input.
+     */
+    readonly event: TriggerEvent.TriggerEvent;
+
+    /**
+     * Monotonic sequence number used to order pending retries FIFO at the tail of the queue.
+     */
+    readonly enqueuedAt: number;
+  };
+
+  /**
+   * Result of the most recent invocation of this trigger.
+   */
+  readonly lastResult: Exit.Exit<unknown> | null;
+}
+
+export interface InvokerOptions {
+  trigger: Trigger;
+  event: TriggerEvent.TriggerEvent;
+}
+
+/**
+ * Service for monitoring trigger dispatcher state.
+ */
+export interface Monitor {
+  /**
+   * Triggers actively registered in the dispatcher.
+   * Could contain entries for both local and edge triggers, but only the edge ones are actually running.
+   */
+  readonly triggers: Atom.Atom<readonly State[]>;
+
+  readonly localDispatcherEnabled: boolean;
+
+  /**
+   * Invoke a trigger.
+   * Available only for direct and timer triggers.
+   * Invocation respects the trigger's concurrency limit.
+   */
+  readonly invokeTrigger: (options: InvokerOptions) => Effect.Effect<void>;
+}
+
+/**
+ * Service for monitoring trigger executions.
+ */
+export class TriggerMonitorService extends Context.Tag('@dxos/functions/TriggerMonitorService')<
+  TriggerMonitorService,
+  Monitor
+>() {}
