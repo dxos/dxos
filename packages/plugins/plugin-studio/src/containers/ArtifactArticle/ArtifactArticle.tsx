@@ -11,6 +11,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, DropdownMenu, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -185,6 +186,11 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     [handleGeneratorChange, isConnected, handleGenerate],
   );
 
+  // Undo-aware removal (trashes the object, removing it from any collection + closing its plank).
+  const handleDelete = useCallback(() => {
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] });
+  }, [invokePromise, artifact]);
+
   const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
 
   return (
@@ -238,6 +244,24 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
           )}
+          <div role='none' className='grow' />
+          {/* Overflow menu at the end of the toolbar (object-level actions). */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <IconButton variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label={t('more.label')} />
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content align='end'>
+                <DropdownMenu.Viewport>
+                  <DropdownMenu.Item onClick={handleDelete}>
+                    <Icon icon='ph--trash--regular' size={4} />
+                    <span className='grow'>{t('delete.label')}</span>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[auto_1fr] p-2 gap-2'>
