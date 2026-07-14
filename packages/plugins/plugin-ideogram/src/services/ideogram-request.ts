@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * The Ideogram-specific request config (the `kind: 'image'` provider's `requestSchema`). Includes the
@@ -14,7 +15,7 @@ export const IdeogramRequestConfig = Schema.Struct({
   prompt: Schema.optional(
     Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text), Schema.annotations({ title: 'Prompt' })),
   ),
-  model: Schema.optional(Schema.String.annotations({ title: 'Model' })),
+  model: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false)).annotations({ title: 'Model' })),
   aspectRatio: Schema.optional(Schema.String.annotations({ title: 'Aspect ratio' })),
   negativePrompt: Schema.optional(Schema.String.annotations({ title: 'Negative prompt' })),
   styleType: Schema.optional(Schema.String.annotations({ title: 'Style' })),
