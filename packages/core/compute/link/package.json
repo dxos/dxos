@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/cursor",
+  "name": "@dxos/link",
   "version": "0.10.0",
   "private": true,
   "description": "Durable progress cursor and credential primitives for source-driven pipelines (external sync and feed-to-feed).",

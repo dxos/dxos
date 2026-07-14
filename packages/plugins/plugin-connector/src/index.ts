@@ -6,4 +6,4 @@ export { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES } from 
 export { ConnectionTestError } from './errors';
 export * from './meta';
 export * from './types';
-export { CursorsQuery, findConnectionForAccessToken, isCursorForConnection, isCursorForTarget } from './util';
+export { findConnectionForAccessToken, isCursorForConnection, isCursorForTarget } from './util';

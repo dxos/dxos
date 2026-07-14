@@ -8,10 +8,10 @@ import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { AccessToken, Cursor } from '@dxos/cursor';
 import { Blob, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { AccessToken, Cursor } from '@dxos/link';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { captureSink } from '@dxos/pipeline/testing';

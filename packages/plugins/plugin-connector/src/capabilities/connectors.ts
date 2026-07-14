@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { AccessToken } from '@dxos/cursor';
 import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
+import { AccessToken } from '@dxos/link';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { Connection, Connector, type ConnectorEntry, type CredentialForm } from '#types';

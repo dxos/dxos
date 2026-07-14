@@ -10,12 +10,12 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Connection, ConnectorOperation, CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
@@ -575,7 +575,7 @@ export default Capability.makeModule(
           // and runs its `sync` op — no provider-specific branching here. The cursor no longer relates
           // to Connection directly, so the Connection is found by matching access tokens (reactive
           // queries; loading synchronously isn't reliable here).
-          const cursors = get(db.query(CursorsQuery).atom);
+          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
           const cursor = cursors.find(
             (candidate): candidate is Cursor.ExternalCursor =>
               Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
@@ -663,7 +663,7 @@ export default Capability.makeModule(
           }
           // The sync action appears only when an external-sync cursor targets this calendar; the
           // cursor's `spec.source` access token authenticates the sync.
-          const cursors = get(db.query(CursorsQuery).atom);
+          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
           const binding = cursors.find(
             (candidate): candidate is Cursor.ExternalCursor =>
               Cursor.isExternal(candidate) && isCursorForTarget(candidate, calendar),

@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { AccessToken } from '@dxos/cursor';
 import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { AccessToken } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { TagIndex } from '@dxos/schema';

@@ -8,16 +8,16 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
-import { AccessToken, Cursor } from '@dxos/cursor';
-import { Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { AccessToken, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
 import { Connection, type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '../types';
-import { CursorsQuery, isCursorForConnection } from './cursor-queries';
+import { isCursorForConnection } from './cursor-queries';
 import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors';
 
 describe('reconcileCursors', () => {
@@ -92,7 +92,7 @@ describe('reconcileCursors', () => {
     );
 
   const queryCursors = (db: Database.Database, connection: Connection.Connection) =>
-    Database.query(CursorsQuery).run.pipe(
+    Database.query(Filter.type(Cursor.Cursor)).run.pipe(
       Effect.provide(Database.layer(db)),
       Effect.map((cursors) => cursors.filter((cursor) => isCursorForConnection(cursor, connection))),
       EffectEx.runAndForwardErrors,

@@ -4,8 +4,8 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AccessToken, Cursor } from '@dxos/cursor';
 import { Feed } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 import { ClientEvents } from '@dxos/plugin-client';
 
 import {

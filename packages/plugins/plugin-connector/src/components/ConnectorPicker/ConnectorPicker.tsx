@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Cursor } from '@dxos/cursor';
 import { type Database, Filter, type Obj, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';

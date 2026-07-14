@@ -15,8 +15,8 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { type AccessToken } from '@dxos/cursor';
 import { Database, type Ref } from '@dxos/echo';
+import { type AccessToken } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector';
 
 import { GITHUB_API_BASE } from '../constants';

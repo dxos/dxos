@@ -6,9 +6,9 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { Connection, ConnectorOperation, CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/link';
+import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
 
 /**
@@ -24,7 +24,7 @@ export const useTargetConnection = <T extends Obj.Any>(
   target: T | undefined,
 ): { connection: Connection.Connection | undefined } => {
   const db = target ? Obj.getDatabase(target) : undefined;
-  const cursors = useQuery(db, CursorsQuery);
+  const cursors = useQuery(db, Filter.type(Cursor.Cursor));
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connection = useMemo(() => {
     if (!target) {

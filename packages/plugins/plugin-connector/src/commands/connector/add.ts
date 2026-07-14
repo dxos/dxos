@@ -12,8 +12,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { AccessToken } from '@dxos/cursor';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 
 import { Connection } from '../../types';
 import { performOAuthFlow } from './oauth';

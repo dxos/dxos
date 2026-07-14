@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 
 import { type Connection, type ConnectorEntry } from '../types';
-import { CursorsQuery, isCursorForConnection } from './cursor-queries';
+import { isCursorForConnection } from './cursor-queries';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
@@ -47,7 +47,7 @@ export const reconcileCursors = ({
   existingTarget,
 }: ReconcileCursorsInput) =>
   Effect.gen(function* () {
-    const existingCursors = (yield* Database.query(CursorsQuery).run).filter(
+    const existingCursors = (yield* Database.query(Filter.type(Cursor.Cursor)).run).filter(
       (cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, connection),
     );
     const existingByRemote = new Map<string, Cursor.ExternalCursor>();

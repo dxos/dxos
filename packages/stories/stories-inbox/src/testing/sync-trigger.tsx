@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 import { useEffect, useRef } from 'react';
 
 import { Operation, Trigger } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { DXN, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/link';
+import { isCursorForTarget } from '@dxos/plugin-connector';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 
@@ -32,7 +32,7 @@ export class MailboxTriggerRelation extends Type.makeRelation<MailboxTriggerRela
 export const SyncTriggerRunner = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const cursors = useQuery(space?.db, CursorsQuery);
+  const cursors = useQuery(space?.db, Filter.type(Cursor.Cursor));
   const binding = mailbox
     ? cursors.find(
         (candidate): candidate is Cursor.ExternalCursor =>

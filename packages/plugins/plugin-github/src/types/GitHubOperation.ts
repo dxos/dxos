@@ -7,8 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { DXN, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import {
   // eslint-disable-next-line unused-imports/no-unused-imports
   type Connection,

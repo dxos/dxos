@@ -56,9 +56,6 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/cursor"
-    },
-    {
       "path": "../../core/compute/functions"
     },
     {
@@ -66,6 +63,9 @@
     },
     {
       "path": "../../core/compute/functions-simulator-cloudflare"
+    },
+    {
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"

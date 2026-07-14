@@ -9,9 +9,9 @@ import { ConnectorSync, LayoutOperation, SyncDatabaseMissingError } from '@dxos/
 
 const { mergeDeep, mergeField, snapshotField } = ConnectorSync;
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';

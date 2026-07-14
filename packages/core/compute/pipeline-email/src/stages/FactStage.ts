@@ -5,7 +5,7 @@
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 
-import { Cursor } from '@dxos/cursor';
+import { Cursor } from '@dxos/link';
 import { FactStore } from '@dxos/pipeline-rdf';
 
 import { type FactUnit } from './extract-facts-commit';

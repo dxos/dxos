@@ -294,7 +294,7 @@ export type CommitUnit = {
 export type CommitEffect = (units: readonly CommitUnit[]) => Effect.Effect<void, never, Database.Service>;
 
 /** Effect Requirements tag carrying the per-run {@link State}. */
-export class Service extends Context.Tag('@dxos/cursor/Cursor')<Service, State>() {}
+export class Service extends Context.Tag('@dxos/link/Cursor')<Service, State>() {}
 
 /**
  * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor` to the

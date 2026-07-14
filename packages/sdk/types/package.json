@@ -32,10 +32,10 @@
   ],
   "dependencies": {
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/cursor": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/schema": "workspace:*",

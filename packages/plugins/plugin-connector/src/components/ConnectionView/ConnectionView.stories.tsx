@@ -9,8 +9,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AccessToken, Cursor } from '@dxos/cursor';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -21,7 +21,7 @@ import { type TestConnectionStatus } from '#hooks';
 import { translations } from '#translations';
 import { Connection } from '#types';
 
-import { CursorsQuery, isCursorForConnection } from '../../util';
+import { isCursorForConnection } from '../../util';
 import { ConnectionView } from './ConnectionView';
 
 // Sample per-binding options schema (real connectors contribute their own via `connector.optionsSchema`).
@@ -48,7 +48,7 @@ const DefaultStory = ({
 }) => {
   const [space] = useSpaces();
   const [connection] = useQuery(space?.db, Filter.type(Connection.Connection));
-  const allCursors = useQuery(space?.db, CursorsQuery);
+  const allCursors = useQuery(space?.db, Filter.type(Cursor.Cursor));
   const bindings = useMemo(
     () =>
       connection

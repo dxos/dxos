@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { AccessToken } from '@dxos/cursor';
+import { AccessToken } from '@dxos/link';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';

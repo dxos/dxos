@@ -6,8 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Cursor } from '@dxos/cursor';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
@@ -15,7 +15,7 @@ import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
 
 import { type Connection } from '../../types';
-import { CursorsQuery, isCursorForConnection } from '../../util';
+import { isCursorForConnection } from '../../util';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;
 
@@ -31,7 +31,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   const [accessToken] = useObject(subject.accessToken);
   const connector = useConnector(connection?.connectorId);
   const db = Obj.getDatabase(subject);
-  const allCursors = useQuery(db, CursorsQuery);
+  const allCursors = useQuery(db, Filter.type(Cursor.Cursor));
   const bindings = useMemo(
     () => allCursors.filter((cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, subject)),
     [allCursors, subject],

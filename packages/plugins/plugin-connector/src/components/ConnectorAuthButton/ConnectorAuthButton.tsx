@@ -5,9 +5,9 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
-import { Cursor } from '@dxos/cursor';
 import { type Database, Filter, type Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 

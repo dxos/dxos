@@ -9,8 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -20,7 +20,7 @@ import { Connector } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
 import { Connection, ConnectorOperation } from '../types';
-import { CursorsQuery, isCursorForConnection, isCursorForTarget } from '../util';
+import { isCursorForConnection, isCursorForTarget } from '../util';
 
 /**
  * Resolve the external-sync cursors authenticated by a connection's access token. Used by the
@@ -31,7 +31,7 @@ const queryConnectionBindings = (connection: Connection.Connection): Effect.Effe
   if (!db) {
     return Effect.succeed([]);
   }
-  return Database.query(CursorsQuery).run.pipe(
+  return Database.query(Filter.type(Cursor.Cursor)).run.pipe(
     Effect.provide(Database.layer(db)),
     Effect.map((cursors) => cursors.filter((cursor) => isCursorForConnection(cursor, connection))),
     Effect.orElseSucceed(() => []),
@@ -52,7 +52,7 @@ const whenObjectHasCursor: NodeMatcher.NodeMatcher<Cursor.Cursor> = (node, get) 
   if (!db) {
     return Option.none();
   }
-  const cursors = get(db.query(CursorsQuery).atom);
+  const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
   const cursor = cursors.find((candidate) => isCursorForTarget(candidate, node.data));
   return cursor ? Option.some(cursor) : Option.none();
 };

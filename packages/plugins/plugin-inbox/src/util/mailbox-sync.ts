@@ -19,8 +19,8 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { type Cursor } from '@dxos/cursor';
 import { Obj } from '@dxos/echo';
+import { type Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';

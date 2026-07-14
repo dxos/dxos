@@ -31,9 +31,9 @@
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
-    "@dxos/cursor": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/markdown": "workspace:*",
     "@dxos/node-std": "workspace:*",

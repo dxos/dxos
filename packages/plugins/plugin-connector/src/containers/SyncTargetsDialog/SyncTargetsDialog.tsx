@@ -6,8 +6,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -18,7 +19,7 @@ import { meta } from '#meta';
 import { ConnectorCoordinator, type RemoteTarget } from '#types';
 
 import { type Connection } from '../../types';
-import { CursorsQuery, isCursorForConnection } from '../../util';
+import { isCursorForConnection } from '../../util';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;
@@ -38,7 +39,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   const manager = usePluginManager();
 
   const db = Obj.getDatabase(connection);
-  const allCursors = useQuery(db, CursorsQuery);
+  const allCursors = useQuery(db, Filter.type(Cursor.Cursor));
   const initiallySelected = useMemo(() => {
     const ids = new Set<string>();
     for (const cursor of allCursors) {

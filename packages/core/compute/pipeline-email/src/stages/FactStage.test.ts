@@ -6,10 +6,10 @@ import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Cursor } from '@dxos/cursor';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { FactStore, type RDF } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 

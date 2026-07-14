@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Cursor } from '@dxos/cursor';
 import { Type } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';

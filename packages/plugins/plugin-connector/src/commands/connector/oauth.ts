@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { OAUTH_TIMEOUT_MS, openBrowser, startOAuthCallbackServer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { type AccessToken } from '@dxos/cursor';
 import { Database } from '@dxos/echo';
 import { createEdgeClient } from '@dxos/functions-runtime/edge';
+import { type AccessToken } from '@dxos/link';
 import { type OAuthFlowResult } from '@dxos/protocols';
 
 import {

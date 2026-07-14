@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Cursor } from '@dxos/cursor';
 import { Database, type Feed, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';

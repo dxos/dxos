@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import { Cursor } from '@dxos/cursor';
 import { Obj } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 
 /**
  * Three-way merge primitives shared by connector sync handlers (Trello, Linear,
@@ -16,7 +16,7 @@ import { Obj } from '@dxos/echo';
  *
  * The merge primitives are pure; the snapshot accessors operate on a
  * {@link Cursor.ExternalCursor} directly — `Cursor` is an infrastructure type in
- * the lower `@dxos/cursor` package (no dependency on app-toolkit), so there is
+ * the lower `@dxos/link` package (no dependency on app-toolkit), so there is
  * no import cycle to work around here.
  */
 

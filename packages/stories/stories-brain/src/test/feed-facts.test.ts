@@ -7,10 +7,10 @@ import { describe, test } from 'vitest';
 
 import { AiService, Provider } from '@dxos/ai';
 import { OllamaAiServiceLayer } from '@dxos/ai/testing';
-import { Cursor } from '@dxos/cursor';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';

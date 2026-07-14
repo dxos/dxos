@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Cursor } from '@dxos/cursor';
 import { Filter } from '@dxos/echo';
-import { CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/link';
+import { isCursorForTarget } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
 import { type ModuleProps } from '@dxos/story-modules';
@@ -16,7 +16,7 @@ import { type ModuleProps } from '@dxos/story-modules';
 /** The connection bound to the mailbox (once connected). */
 export const ConnectorModule = ({ space, attendableId }: ModuleProps) => {
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
-  const cursors = useQuery(space.db, CursorsQuery);
+  const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
   const binding = mailbox
     ? cursors.find(
         (candidate): candidate is Cursor.ExternalCursor =>

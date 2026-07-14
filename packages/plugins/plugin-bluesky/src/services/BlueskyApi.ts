@@ -21,8 +21,8 @@ import * as Schema from 'effect/Schema';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
-import { type AccessToken } from '@dxos/cursor';
 import { Database, Obj, type Ref } from '@dxos/echo';
+import { type AccessToken } from '@dxos/link';
 import { type Connection } from '@dxos/plugin-connector';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';

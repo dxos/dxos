@@ -40,13 +40,13 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/cursor"
-    },
-    {
       "path": "../../core/compute/extractor"
     },
     {
       "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/compute/pipeline-email"

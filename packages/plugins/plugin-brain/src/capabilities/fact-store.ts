@@ -15,7 +15,7 @@ import { BrainCapabilities } from '#types';
 /**
  * Per-space in-memory registry: the shared {@link FactStore}, used as both the operation-injected
  * service and the surface-read store. Per-feed processing progress no longer lives here — it's a
- * persisted `Cursor` (`@dxos/cursor`), found/created directly by the operation that drives the fact
+ * persisted `Cursor` (`@dxos/link`), found/created directly by the operation that drives the fact
  * pipeline (e.g. `AnalyzeMailbox`), so it survives a reload independently of this in-memory store.
  */
 export type FactStoreRegistry = {

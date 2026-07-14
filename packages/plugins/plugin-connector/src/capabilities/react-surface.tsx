@@ -8,8 +8,8 @@ import React, { type ComponentProps, useMemo } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Cursor } from '@dxos/cursor';
 import { SchemaEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import { ConnectorAuthButton } from '#components';

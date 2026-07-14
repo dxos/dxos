@@ -9,10 +9,10 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 

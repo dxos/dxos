@@ -4,8 +4,8 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { AccessToken, Cursor } from '@dxos/cursor';
 import { Feed } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';

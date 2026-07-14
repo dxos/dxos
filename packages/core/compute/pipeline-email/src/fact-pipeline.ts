@@ -6,8 +6,8 @@ import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { Cursor } from '@dxos/cursor';
 import { Database, Feed, Filter } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { FactStore } from '@dxos/pipeline-rdf';

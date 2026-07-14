@@ -22,7 +22,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/cursor"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"

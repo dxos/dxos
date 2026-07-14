@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Connection, CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/link';
+import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { type Mailbox } from '@dxos/plugin-inbox';
 import { Message } from '@dxos/types';
 
@@ -76,7 +77,7 @@ export const replaceFeed = async (
  * in the Connect menu across reconnects.
  */
 export const resetMailbox = async (mailbox: Mailbox.Mailbox, db: Database.Database): Promise<void> => {
-  const cursors = await db.query(CursorsQuery).run();
+  const cursors = await db.query(Filter.type(Cursor.Cursor)).run();
   cursors.filter((cursor) => isCursorForTarget(cursor, mailbox)).forEach((cursor) => db.remove(cursor));
 
   const connections = await db.query(Filter.type(Connection.Connection)).run();

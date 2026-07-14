@@ -12,9 +12,9 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { AccessToken } from '@dxos/cursor';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { AccessToken } from '@dxos/link';
 
 import { Connection } from '../../types';
 import { printConnectionRemoved } from './util';

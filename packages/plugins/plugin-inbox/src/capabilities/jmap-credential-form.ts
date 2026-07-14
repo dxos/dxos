@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AccessToken } from '@dxos/cursor';
 import { Obj, Ref } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 import { Connection, type CredentialForm } from '@dxos/plugin-connector';
 
 import { Jmap } from '../apis';

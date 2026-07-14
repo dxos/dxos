@@ -6,8 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type AccessToken } from '@dxos/cursor';
 import { Database, type Ref } from '@dxos/echo';
+import { type AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
 

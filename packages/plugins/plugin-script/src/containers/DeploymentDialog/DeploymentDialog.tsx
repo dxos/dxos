@@ -6,7 +6,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type AccessToken } from '@dxos/cursor';
+import { type AccessToken } from '@dxos/link';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 

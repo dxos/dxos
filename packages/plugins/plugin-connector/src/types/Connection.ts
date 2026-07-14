@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AccessToken } from '@dxos/cursor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
+import { AccessToken } from '@dxos/link';
 
 /**
  * A reusable authenticated connection to an external service: a stored
@@ -16,7 +16,7 @@ import { LabelAnnotation } from '@dxos/echo/Annotation';
  *
  * The connection is the durable, user-facing handle; the credential it holds is
  * an internal primitive (shared across subsystems), and the things it syncs are
- * external-sync `Cursor` objects (`@dxos/cursor`) whose `spec.source` is this
+ * external-sync `Cursor` objects (`@dxos/link`) whose `spec.source` is this
  * connection's access token — matched by token, not by a direct relation, since
  * `Cursor` is an infrastructure type with no dependency on `Connection`. One
  * connector backs many connections (e.g. several Gmail accounts); one connection

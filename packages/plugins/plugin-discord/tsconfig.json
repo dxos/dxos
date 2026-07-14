@@ -49,7 +49,7 @@
       "path": "../../core/compute/crawler"
     },
     {
-      "path": "../../core/compute/cursor"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/compute/pipeline"

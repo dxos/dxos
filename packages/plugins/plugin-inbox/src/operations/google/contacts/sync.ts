@@ -12,9 +12,9 @@ import * as Stream from 'effect/Stream';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Person } from '@dxos/types';

@@ -11,10 +11,10 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { Database, Obj } from '@dxos/echo';
 import { type Resolver } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 

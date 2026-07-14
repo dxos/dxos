@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { AccessToken } from '@dxos/cursor';
 import { DXN, Ref, Type } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 
 import { meta } from '#meta';
 

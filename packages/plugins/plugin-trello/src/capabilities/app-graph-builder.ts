@@ -8,9 +8,9 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
-import { Obj, Ref } from '@dxos/echo';
-import { CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
+import { isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Kanban } from '@dxos/plugin-kanban';
 
@@ -48,7 +48,7 @@ export default Capability.makeModule(
           // that binding. `Cursor` has no reverse-ref index on `spec.target`, so
           // this scans every cursor in the space and filters (mirrors
           // `@dxos/plugin-connector`'s own cursor lookups).
-          const cursors = get(db.query(CursorsQuery).atom);
+          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
           const binding = cursors.find(
             (candidate): candidate is Cursor.ExternalCursor =>
               Cursor.isExternal(candidate) && isCursorForTarget(candidate, kanban),

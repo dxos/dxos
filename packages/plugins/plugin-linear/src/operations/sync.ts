@@ -9,9 +9,9 @@ import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
 
 const { mergeField, snapshotField } = ConnectorSync;
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Project, Task } from '@dxos/types';
 

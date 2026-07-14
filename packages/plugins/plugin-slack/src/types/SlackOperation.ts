@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Cursor } from '@dxos/cursor';
 import { DXN, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { Connection, MaterializeTargetInput, MaterializeTargetOutput } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';

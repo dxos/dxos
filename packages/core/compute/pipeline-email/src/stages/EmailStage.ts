@@ -7,9 +7,9 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { Cursor } from '@dxos/cursor';
 import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { type ContactLookup, buildContactFromActor, buildContactLookup } from '@dxos/extractor-lib';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import { Stage } from '@dxos/pipeline';

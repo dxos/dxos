@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Cursor } from '@dxos/cursor';
 import { Obj } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

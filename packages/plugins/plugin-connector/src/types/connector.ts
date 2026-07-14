@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import type { Client } from '@dxos/client';
 import type { Operation } from '@dxos/compute';
-import { AccessToken, Cursor } from '@dxos/cursor';
 import { type Database, Obj, Ref } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
 
 import { type ConnectionTestError } from '../errors';

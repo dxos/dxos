@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { type Migration } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-// `Cursor` (@dxos/cursor) bumped 0.1.0 → 0.2.0 to become a flat object with no migration path, so
+// `Cursor` (@dxos/link) bumped 0.1.0 → 0.2.0 to become a flat object with no migration path, so
 // existing cursors are abandoned rather than migrated.
 export const migrations: Migration.ObjectMigration[] = [];
 

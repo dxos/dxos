@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Cursor } from '@dxos/cursor';
-import { Database, type Obj } from '@dxos/echo';
-import { CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
+import { Database, Filter, type Obj } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
+import { isCursorForTarget } from '@dxos/plugin-connector';
 
 /**
  * Finds the external-sync {@link Cursor} whose target is the given object (mailbox, calendar, …).
@@ -19,7 +19,7 @@ import { CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';
  */
 export const findBindingForTarget = (target: Obj.Unknown) =>
   Effect.gen(function* () {
-    const cursors = yield* Database.query(CursorsQuery).run;
+    const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
     return cursors.find(
       (cursor): cursor is Cursor.ExternalCursor => Cursor.isExternal(cursor) && isCursorForTarget(cursor, target),
     );
