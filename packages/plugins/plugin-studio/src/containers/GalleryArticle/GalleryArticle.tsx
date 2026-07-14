@@ -27,13 +27,13 @@ type TileData = {
 };
 
 const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
-  const src = useArtifactCoverSource(data?.artifact);
+  const { src, contentType } = useArtifactCoverSource(data?.artifact);
   if (!data) {
     return null;
   }
   return (
     <div className='relative'>
-      <GalleryImage src={src} alt={data.artifact.name} />
+      <GalleryImage src={src} contentType={contentType} alt={data.artifact.name} />
       {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
     </div>
   );
@@ -117,7 +117,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
           />
           <IconButton
             icon='ph--trash--regular'
-            label={t('delete-variant.label')}
+            label={t('delete.label')}
             disabled={selectedIds.size === 0}
             onClick={handleDelete}
           />

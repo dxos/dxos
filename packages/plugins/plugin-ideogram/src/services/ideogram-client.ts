@@ -7,22 +7,16 @@ import * as Redacted from 'effect/Redacted';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import { GenerationService } from '@dxos/plugin-studio/types';
 
-import {
-  IDEOGRAM_CONNECTOR_ID,
-  IDEOGRAM_GENERATE_URL,
-  IDEOGRAM_ID,
-  IDEOGRAM_SOURCE,
-  IDEOGRAM_TIMEOUT_MS,
-} from '../constants';
+import { IDEOGRAM_GENERATE_URL, IDEOGRAM_SOURCE, IDEOGRAM_TIMEOUT_MS } from '../constants';
 import { type IdeogramGenerateResponse, mapIdeogramResponse } from './ideogram-mapping';
-import { IdeogramRequestConfig, decodeIdeogramConfig } from './ideogram-request';
+import { decodeIdeogramConfig } from './ideogram-request';
 
 /** Builds the Ideogram `/generate` request body (fields nested under `image_request`). */
 const toRequestBody = (request: GenerationService.GenerationRequest) => {
   const config = decodeIdeogramConfig(request);
   return {
     image_request: {
-      prompt: request.prompt,
+      prompt: config.prompt ?? '',
       ...(config.aspectRatio ? { aspect_ratio: config.aspectRatio } : {}),
       ...(config.model ? { model: config.model } : {}),
       ...(config.negativePrompt ? { negative_prompt: config.negativePrompt } : {}),
@@ -79,16 +73,3 @@ export const generateWithIdeogram = async (
   }
   return { variants: mapIdeogramResponse(json, decodeIdeogramConfig(request)) };
 };
-
-/** The Ideogram `kind: 'image'` {@link GenerationService.GenerationService}. */
-export const makeIdeogramGenerationService = (): GenerationService.GenerationService => ({
-  kind: 'image',
-  id: IDEOGRAM_ID,
-  label: 'Ideogram',
-  contentType: 'image/png',
-  source: IDEOGRAM_SOURCE,
-  connectorId: IDEOGRAM_CONNECTOR_ID,
-  requestSchema: IdeogramRequestConfig,
-  defaultRequest: { model: 'V_2' },
-  generate: (request, { apiKey }) => generateWithIdeogram(request, apiKey),
-});

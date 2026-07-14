@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import * as Schema from 'effect/Schema';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -11,28 +12,29 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, IconButton, Input, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type Text } from '@dxos/schema';
-import { type File } from '@dxos/types';
+import { Form } from '@dxos/react-ui-form';
 
-import { PromptEditor, VariantGallery } from '#components';
+import { VariantGallery } from '#components';
 import { meta } from '#meta';
-import { GenerateForm, VariantRenderer } from '#surfaces';
+import { VariantRenderer } from '#surfaces';
 import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
-
-import { useFileUpload } from '../../hooks';
 
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
 
-type Selected = 'all' | number;
+/** `'all'` gallery, `'draft'` compose tab, or the index of a produced (frozen) variant. */
+type Selected = 'all' | 'draft' | number;
 
 /**
- * Media-agnostic article surface for an {@link Artifact}: a Toolbar with per-variant tabs (plus an
- * "All" gallery tab), Upload + Connect/Generate actions, the editable prompt, the kind-specific
- * request form (a schema-driven {@link GenerateForm} surface, overridable per kind), and the selected
- * variant (rendered via the {@link VariantRenderer} surface for its contentType) or the gallery.
+ * Media-agnostic article surface for an {@link Artifact}. The toolbar has an "All" gallery tab, a
+ * "Draft" compose tab, and a tab per produced {@link Variant}, plus a generator selector +
+ * Connect/Generate action and an overflow menu (Delete). The properties panel (prompt + kind-specific
+ * request form) binds to the current selection: the editable in-memory draft variant for
+ * "Draft"/"All", or the selected produced variant read-only (frozen once generated). Generating
+ * consumes the draft to append a new frozen variant; the draft persists for the next compose.
  */
 export const ArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -42,15 +44,28 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
 
   const db = Obj.getDatabase(artifact);
 
-  // Resolve the provider for the artifact's kind (first registered, matching by kind).
+  // Providers for the artifact's kind; a Generator selector lets the user pick among them.
   const services = useCapabilities(StudioCapabilities.GenerationService);
-  const provider = useMemo(
-    () => services.find((candidate) => candidate.kind === artifact.kind),
+  const providers = useMemo(
+    () => services.filter((candidate) => candidate.kind === artifact.kind),
     [services, artifact.kind],
   );
 
-  // Reactive view of the artifact's variants + config.
+  // Reactive view of the artifact's variants.
   const [artifactSnapshot] = useObject(artifact);
+
+  // The chosen generator (persisted on the artifact) drives the request form, connect button, and op.
+  const provider = useMemo(
+    () => providers.find((candidate) => candidate.id === artifactSnapshot?.generator) ?? providers[0],
+    [providers, artifactSnapshot?.generator],
+  );
+  const handleGeneratorChange = useCallback(
+    (id: string) =>
+      Obj.update(artifact, (artifact) => {
+        artifact.generator = id;
+      }),
+    [artifact],
+  );
   const variantRefs = artifactSnapshot?.variants ?? [];
   const variants = useObjects(variantRefs);
   const galleryItems = useMemo(
@@ -60,35 +75,29 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         url: variant.url,
         content: variant.content,
         contentType: variant.contentType,
-        label: variant.generation?.prompt ?? undefined,
+        label: variant.name ?? variant.generation?.prompt,
       })),
     [variants],
   );
 
-  // Load the live prompt Text object (edits persist to its content).
   const artifactId = artifact.id;
-  const [promptText, setPromptText] = useState<Text.Text>();
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const instructions = await artifact.instructions.load();
-        const text = await instructions.text.load();
-        if (!cancelled) {
-          setPromptText(text);
-        }
-      } catch (error) {
-        log.catch(error);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+
+  // In-memory draft variant (never added to the db): the editable compose surface. Reset when the
+  // generator changes so it seeds from the new provider's default config.
+  const draft = useMemo(
+    () => Variant.make({ config: { ...(provider?.defaultRequest ?? {}) } }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artifactId]);
+    [artifactId, provider?.id],
+  );
+  // Observe the draft so edits (via the form) re-render for the Generate-enabled check.
+  const [draftSnapshot] = useObject(draft);
 
   const [selected, setSelected] = useState<Selected>('all');
   const [generating, setGenerating] = useState(false);
+
+  const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
+  // "All" and "Draft" compose against the editable draft; a numbered tab inspects a frozen variant.
+  const composing = !selectedVariant;
 
   // Connector-managed credential: show the "Connect" button until the provider's connection exists.
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -101,28 +110,43 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   );
   const showConnect = !!connectorData && !connected && isSurfaceAvailable({ type: ConnectorAuth, data: connectorData });
 
-  // The kind-specific request config (validated against the provider's requestSchema).
-  const configValue = useMemo<Record<string, unknown>>(
-    () => ({ ...(provider?.defaultRequest ?? {}), ...(artifactSnapshot?.config ?? {}) }),
-    [provider?.defaultRequest, artifactSnapshot?.config],
+  // The draft's request config (provider defaults overlaid with the draft's edits).
+  const draftConfig = useMemo<Record<string, unknown>>(
+    () => ({ ...(provider?.defaultRequest ?? {}), ...(draft.config ?? {}) }),
+    [provider?.defaultRequest, draft],
   );
   const handleConfigChange = useCallback(
     (next: Record<string, unknown>) => {
+      Obj.update(draft, (draft) => {
+        draft.config = next;
+      });
+    },
+    [draft],
+  );
+  const handleNameChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const next = event.target.value;
       Obj.update(artifact, (artifact) => {
-        artifact.config = next;
+        artifact.name = next.length > 0 ? next : undefined;
       });
     },
     [artifact],
   );
 
+  // Generation consumes the draft (its config + prompt) and appends a new frozen variant.
   const handleGenerate = useCallback(async () => {
     if (!db) {
       return;
     }
+    const producedIndex = variants.length;
     setGenerating(true);
     try {
-      await invokePromise(StudioOperation.Generate, { artifact: Ref.make(artifact) }, { spaceId: db.spaceId });
-      setSelected('all');
+      await invokePromise(
+        StudioOperation.Generate,
+        { artifact: Ref.make(artifact), provider: provider?.id, name: draft.name, config: draft.config },
+        { spaceId: db.spaceId },
+      );
+      setSelected(producedIndex);
     } catch (error) {
       log.catch(error);
       void invokePromise(LayoutOperation.AddToast, {
@@ -136,134 +160,249 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     } finally {
       setGenerating(false);
     }
-  }, [invokePromise, artifact, db]);
+  }, [invokePromise, artifact, db, provider?.id, draft, variants.length]);
 
-  // Resume an in-flight asynchronous generation (persisted jobId) on mount so a long provider poll
-  // survives navigation/remount. The generate op detects the stored jobId and polls (no re-enqueue).
+  // A produced variant with a persisted jobId is an in-flight async job; resume awaiting it on mount
+  // so a long provider poll survives navigation/remount (the op polls without re-enqueueing).
+  const pendingIndex = useMemo(() => variants.findIndex((variant) => !!variant.jobId), [variants]);
+  const pendingId = pendingIndex >= 0 ? variants[pendingIndex]?.id : undefined;
   const resumingRef = useRef(false);
-  const inFlightJobId = artifactSnapshot?.jobId;
   useEffect(() => {
-    if (!db || !inFlightJobId || generating || resumingRef.current) {
+    const pendingRef = pendingIndex >= 0 ? variantRefs[pendingIndex] : undefined;
+    if (!db || !pendingRef || generating || resumingRef.current) {
       return;
     }
     resumingRef.current = true;
-    void handleGenerate().finally(() => {
-      resumingRef.current = false;
-    });
-  }, [db, inFlightJobId, generating, handleGenerate]);
+    void invokePromise(
+      StudioOperation.Generate,
+      { artifact: Ref.make(artifact), provider: provider?.id, variant: pendingRef },
+      { spaceId: db.spaceId },
+    )
+      .catch((error) => log.catch(error))
+      .finally(() => {
+        resumingRef.current = false;
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [db, pendingId, generating, invokePromise, artifact, provider?.id]);
 
-  // Uploaded files become content-backed Variant objects owned by the artifact.
-  const handleUpload = useCallback(
-    (uploaded: File.File, source: globalThis.File) => {
-      if (!db) {
+  // Undo-aware removal (trashes the object, removing it from any collection + closing its plank).
+  const handleDelete = useCallback(() => {
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] });
+  }, [invokePromise, artifact]);
+
+  // Remove the selected variant: detach it from the artifact (clearing the cover if it was it) and
+  // delete the owned object, then fall back to the gallery.
+  const handleDeleteVariant = useCallback(() => {
+    if (!db || typeof selected !== 'number') {
+      return;
+    }
+    const ref = variantRefs[selected];
+    const target = ref?.target;
+    if (!target) {
+      return;
+    }
+    Obj.update(artifact, (artifact) => {
+      artifact.variants = (artifact.variants ?? []).filter((variant) => variant.target?.id !== target.id);
+      if (artifact.cover?.target?.id === target.id) {
+        artifact.cover = undefined;
+      }
+    });
+    db.remove(target);
+    setSelected('all');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [db, selected, artifact]);
+
+  const busy = generating || pendingIndex >= 0;
+  // The form is read-only when inspecting a produced variant, or while a generation is in flight.
+  const formReadonly = !composing || busy;
+  // Generation is enabled only when the draft satisfies the provider's request schema (required
+  // fields present, e.g. a non-empty prompt + any provider-required values).
+  const canGenerate =
+    !!provider &&
+    Schema.is(provider.requestSchema)({ ...(provider.defaultRequest ?? {}), ...(draftSnapshot?.config ?? {}) });
+
+  // Whether the selected variant is the artifact's cover; toggling designates (or clears) it.
+  const isCover = !!selectedVariant && artifactSnapshot?.cover?.target?.id === selectedVariant.id;
+  const handleCoverChange = useCallback(
+    (checked: boolean) => {
+      if (typeof selected !== 'number') {
         return;
       }
-      const variant = Variant.make({ content: Ref.make(uploaded), contentType: source.type || undefined });
-      Obj.setParent(variant, artifact);
-      db.add(variant);
+      const ref = variantRefs[selected];
       Obj.update(artifact, (artifact) => {
-        artifact.variants = [...(artifact.variants ?? []), Ref.make(variant)];
-        if (!artifact.cover) {
-          artifact.cover = Ref.make(variant);
-        }
+        artifact.cover = checked ? ref : undefined;
       });
-      setSelected('all');
     },
-    [db, artifact],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [artifact, selected],
   );
-  const upload = useFileUpload({
-    subject: artifact,
-    accept: 'image/*,video/*',
-    multiple: true,
-    onUpload: handleUpload,
-  });
-
-  const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
+      <Panel.Toolbar>
+        {/* TODO(burdon): Use toolbar idiom. */}
+        <Toolbar.Root classNames='dx-document'>
           <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
             {t('all.tab.label')}
           </Button>
+          <IconButton
+            iconOnly
+            icon='ph--pencil-simple--regular'
+            label={t('draft.label')}
+            variant={selected === 'draft' ? 'primary' : 'ghost'}
+            onClick={() => setSelected('draft')}
+          />
           {variants.map((variant, index) => (
             <Button
               key={variant.id}
               variant={selected === index ? 'primary' : 'ghost'}
               onClick={() => setSelected(index)}
             >
-              {index + 1}
+              {variant.jobId ? <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' /> : index + 1}
             </Button>
           ))}
-          <div role='none' className='grow' />
-          <IconButton
-            icon='ph--upload-simple--regular'
-            label={t('upload.label')}
-            disabled={!upload.enabled}
-            onClick={() => upload.open()}
-          />
+          <Toolbar.Separator />
+          {providers.length > 0 && (
+            <Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
+              <Select.TriggerButton placeholder={t('generator.placeholder')} />
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {providers.map((candidate) => (
+                      <Select.Option key={candidate.id} value={candidate.id}>
+                        {candidate.label}
+                      </Select.Option>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+          )}
           {showConnect && connectorData ? (
+            // TODO(burdon): Inject via capability.
             <Surface.Surface type={ConnectorAuth} data={connectorData} limit={1} />
           ) : (
             <IconButton
               variant='primary'
-              icon={generating ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
-              iconClassNames={generating ? 'animate-spin' : undefined}
-              label={generating ? t('generating.label') : t('generate.label')}
-              disabled={!db || !provider || !hasAttention || generating}
+              icon={busy ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
+              iconClassNames={busy ? 'animate-spin' : undefined}
+              label={busy ? t('generating.label') : t('generate.label')}
+              disabled={!db || !provider || !hasAttention || busy || !composing || !canGenerate}
               onClick={() => {
                 void handleGenerate();
               }}
             />
           )}
+          {/* Overflow menu at the end of the toolbar (object-level actions). */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <IconButton variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label={t('more.label')} />
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content align='end'>
+                <DropdownMenu.Viewport>
+                  {selectedVariant && (
+                    <DropdownMenu.Item onClick={handleDeleteVariant}>
+                      <Icon icon='ph--trash--regular' size={4} />
+                      <span className='grow'>{t('delete-variant.label')}</span>
+                    </DropdownMenu.Item>
+                  )}
+                  <DropdownMenu.Item onClick={handleDelete}>
+                    <Icon icon='ph--trash--regular' size={4} />
+                    <span className='grow'>{t('delete.label')}</span>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-[auto_1fr] p-2 gap-2'>
-        <div role='none' className='flex flex-col gap-2 shrink-0'>
-          <PromptEditor
-            id={`${artifactId}/prompt`}
-            text={promptText}
-            placeholder={t('prompt.placeholder')}
-            classNames='border border-separator rounded p-2 max-bs-32 overflow-auto'
-          />
+      <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
+        <div className='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
+          {/* A produced (frozen) variant can be designated the artifact's cover default. */}
+          <div className='flex flex-col gap-1 pt-3 px-2'>
+            {/* Artifact-level name (independent of the selected variant). */}
+            <Input.Root>
+              <Input.TextInput
+                placeholder={t('name.placeholder')}
+                value={artifactSnapshot?.name ?? ''}
+                onChange={handleNameChange}
+              />
+            </Input.Root>
+            <div className='h-6 flex justify-end'>
+              {selectedVariant && !selectedVariant.jobId && (
+                <Input.Root>
+                  <div className='flex items-center gap-2'>
+                    <Input.Checkbox
+                      checked={isCover}
+                      onCheckedChange={(checked) => handleCoverChange(checked === true)}
+                    />
+                    <Input.Label>{t('cover.label')}</Input.Label>
+                  </div>
+                </Input.Root>
+              )}
+            </div>
+          </div>
+
+          {/* Schema-driven request-config form (prompt + kind-specific knobs, from the generator's
+              requestSchema). Composing edits the draft; a produced variant is read-only. */}
           {provider && (
-            <Surface.Surface
-              type={GenerateForm}
-              data={{
-                kind: artifact.kind,
-                schema: provider.requestSchema,
-                value: configValue,
-                onChange: handleConfigChange,
-              }}
-              limit={1}
-            />
+            <Form.Root
+              key={composing ? 'draft' : selectedVariant?.id}
+              schema={provider.requestSchema}
+              values={composing ? draftConfig : (selectedVariant?.config ?? {})}
+              fieldMap={provider.fieldMap}
+              readonly={formReadonly}
+              hideEmpty={!formReadonly}
+              autoSave={!formReadonly}
+              onValuesChanged={formReadonly ? undefined : handleConfigChange}
+            >
+              <Form.Viewport scroll>
+                <Form.Content>
+                  <Form.FieldSet />
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
           )}
         </div>
-        <div role='none' className='grow min-bs-0 overflow-auto'>
+        <div className='dx-container border-t border-subdued-separator'>
           {selected === 'all' ? (
-            <VariantGallery variants={galleryItems} emptyMessage={t('empty.message')} />
-          ) : selectedVariant ? (
-            <Surface.Surface
-              type={VariantRenderer}
-              data={{
-                variant: {
-                  contentType: selectedVariant.contentType,
-                  url: selectedVariant.url,
-                  content: selectedVariant.content,
-                  generation: selectedVariant.generation,
-                },
-                contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
+            <VariantGallery
+              variants={galleryItems}
+              emptyMessage={t('empty.message')}
+              onSelect={(id) => {
+                const index = variants.findIndex((variant) => variant.id === id);
+                if (index >= 0) {
+                  setSelected(index);
+                }
               }}
-              limit={1}
             />
           ) : (
-            <div role='status' className='flex items-center justify-center bs-full text-subdued'>
-              {t('empty.message')}
-            </div>
+            selectedVariant &&
+            (selectedVariant.jobId ? (
+              <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+                {t('generating.label')}
+              </div>
+            ) : (
+              <div className='dx-expander p-2'>
+                <Surface.Surface
+                  type={VariantRenderer}
+                  data={{
+                    variant: {
+                      contentType: selectedVariant.contentType,
+                      url: selectedVariant.url,
+                      content: selectedVariant.content,
+                      generation: selectedVariant.generation,
+                    },
+                    contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
+                  }}
+                  limit={1}
+                />
+              </div>
+            ))
           )}
         </div>
-        {upload.input}
       </Panel.Content>
     </Panel.Root>
   );
