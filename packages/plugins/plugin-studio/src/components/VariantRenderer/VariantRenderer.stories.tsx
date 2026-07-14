@@ -44,9 +44,8 @@ export const Image: Story = {
 };
 
 export const Video: Story = {
-  // VideoVariant fills a sized, relative container (see its docs).
   render: () => (
-    <div className='relative is-96 aspect-video'>
+    <div className='is-96'>
       <VideoVariant variant={videoVariant} />
     </div>
   ),

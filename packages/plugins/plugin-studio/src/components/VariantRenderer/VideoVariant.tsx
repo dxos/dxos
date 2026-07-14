@@ -4,6 +4,8 @@
 
 import React from 'react';
 
+import { MediaPlayer } from '@dxos/react-ui';
+
 import { type VariantContent } from '#surfaces';
 
 import { useVariantSource } from '../../hooks';
@@ -13,18 +15,18 @@ export type VideoVariantProps = {
 };
 
 /**
- * Default `VariantRenderer` for `video/*`: a `<video controls>` resolved from the variant's
- * url/content. Positioned `absolute inset-0` to fill its (positioned) container with
- * `object-contain`, so its box is fixed by the container rather than the video's intrinsic
- * dimensions — switching variants no longer flashes the element at its default small size before
- * metadata loads. The caller must provide a sized, `relative` container.
+ * Default `VariantRenderer` for `video/*`: the react-ui {@link MediaPlayer} resolved from the
+ * variant's url/content. `MediaPlayer` reserves a width-derived `aspect-video` box, so switching
+ * variants no longer flashes the element at its intrinsic size before metadata loads. `kind='video'`
+ * forces native playback even for extensionless `blob:`/`data:` sources (materialized content).
  */
 export const VideoVariant = ({ variant }: VideoVariantProps) => {
   const src = useVariantSource(variant);
   if (!src) {
     return null;
   }
-  return <video src={src} controls preload='metadata' className='absolute inset-0 is-full bs-full object-contain' />;
+
+  return <MediaPlayer src={src} kind='video' fit='contain' alt={variant.generation?.prompt} classNames='mli-auto' />;
 };
 
 VideoVariant.displayName = 'VideoVariant';

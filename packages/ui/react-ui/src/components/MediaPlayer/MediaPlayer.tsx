@@ -105,7 +105,8 @@ export const MediaPlayer = ({
   fit = 'cover',
 }: MediaPlayerProps) => {
   const fitClass = FIT_CLASS[fit];
-  if (isEmbedUrl(src)) {
+  // An explicit `kind` forces native playback even for extensionless URLs (e.g. `blob:`/`data:`).
+  if (kind || isEmbedUrl(src)) {
     const resolved = kind ?? detectMediaKind(src) ?? 'video';
     if (resolved === 'audio') {
       return (
