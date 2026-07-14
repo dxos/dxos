@@ -5,7 +5,6 @@
 export * from './SyncOptions';
 
 export * as Calendar from './Calendar';
-export * as DraftMessage from './DraftMessage';
 export * as ExtractedFrom from './ExtractedFrom';
 export * as InboxCapabilities from './InboxCapabilities';
 export * as InboxEvents from './InboxEvents';

@@ -9,7 +9,6 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { type FactUnit } from '@dxos/pipeline-email';
 import { FactStore, type RDF } from '@dxos/pipeline-rdf';
 import { SyncBinding } from '@dxos/plugin-connector';
 import { Cursor } from '@dxos/types';
@@ -56,7 +55,7 @@ describe('FactCommit.factsCommit', () => {
 
   test('persists a page of facts and advances the cursor to the page max key', async ({ expect }) => {
     const { db, cursor, binding } = await setup();
-    const page: Chunk.Chunk<FactUnit> = Chunk.fromIterable([
+    const page = Chunk.fromIterable([
       { facts: [makeFact('fact-1')], foreignId: 'm1', key: 100 },
       { facts: [makeFact('fact-2')], foreignId: 'm2', key: 200 },
     ]);
