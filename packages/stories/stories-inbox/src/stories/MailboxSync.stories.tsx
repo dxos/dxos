@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppSpace } from '@dxos/app-toolkit';
@@ -173,13 +173,20 @@ const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
   })),
 ];
 
-const LAYOUT = [[Module.Mailbox], [Module.Message], [Module.Connector, Module.Archive, Module.Stats]];
-
-const DefaultStory = () => <ModuleContainer layout={LAYOUT} compact />;
+const DefaultStory = () => (
+  <ModuleContainer
+    layout={[
+      [Module.Mailbox, Module.Message],
+      [Module.Archive, Module.Stats],
+      [Module.Connector, Module.Triggers],
+    ]}
+    compact
+  />
+);
 
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
-  component: DefaultStory as FC,
+  component: DefaultStory,
   decorators: createDecorators(),
   parameters: {
     layout: 'fullscreen',
