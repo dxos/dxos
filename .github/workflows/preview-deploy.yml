@@ -14,6 +14,8 @@ permissions:
   contents: read
   pull-requests: write
   actions: read
+  deployments: write
+  statuses: write
 
 jobs:
   deploy:
@@ -43,9 +45,43 @@ jobs:
             echo "Invalid head SHA: $HEAD_SHA" >&2
             exit 1
           fi
+          BRANCH_ALIAS="pr-$PR_NUMBER"
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
-          echo "branch_alias=pr-$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "branch_alias=$BRANCH_ALIAS" >> $GITHUB_OUTPUT
+          echo "environment_name=composer-preview-pr-$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "environment_url=https://$BRANCH_ALIAS.composer-app.pages.dev" >> $GITHUB_OUTPUT
+
+      # Create a GitHub Deployment against the PR head SHA. This is what makes
+      # the deployment appear on the PR (Deployments sidebar / "View deployment"
+      # button) — the built-in `environment:` job key would attach to the base
+      # branch SHA because this workflow is triggered via workflow_run.
+      - name: Create GitHub Deployment
+        id: deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: '${{ steps.meta.outputs.head_sha }}',
+              environment: '${{ steps.meta.outputs.environment_name }}',
+              description: 'Composer preview for PR #${{ steps.meta.outputs.pr_number }}',
+              auto_merge: false,
+              required_contexts: [],
+              transient_environment: true,
+              production_environment: false,
+            });
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: data.id,
+              state: 'in_progress',
+              environment: '${{ steps.meta.outputs.environment_name }}',
+              environment_url: '${{ steps.meta.outputs.environment_url }}',
+              log_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            core.setOutput('deployment_id', data.id);
 
       - name: Install wrangler
         run: npm install --global wrangler@3
@@ -62,7 +98,36 @@ jobs:
             | tee deploy.log
           URL=$(grep -Eo 'https://[a-z0-9-]+\.composer-app\.pages\.dev' deploy.log | head -n1)
           echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "alias=https://${{ steps.meta.outputs.branch_alias }}.composer-app.pages.dev" >> $GITHUB_OUTPUT
+          echo "alias=${{ steps.meta.outputs.environment_url }}" >> $GITHUB_OUTPUT
+
+      - name: Update Deployment status (success)
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.deployment_id }},
+              state: 'success',
+              environment: '${{ steps.meta.outputs.environment_name }}',
+              environment_url: '${{ steps.meta.outputs.environment_url }}',
+              log_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+      - name: Update Deployment status (failure)
+        if: failure() && steps.deployment.outputs.deployment_id != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.deployment_id }},
+              state: 'failure',
+              environment: '${{ steps.meta.outputs.environment_name }}',
+              log_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
 
       - name: Comment preview URL on PR
         uses: marocchino/sticky-pull-request-comment@v2
