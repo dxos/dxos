@@ -13,10 +13,10 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Message, Person } from '@dxos/types';
 
-import { GMAIL_SOURCE } from '../../../constants';
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { inboxSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
-import { Mailbox } from '../../../types';
+import { GMAIL_SOURCE } from '../../../../constants';
+import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
+import { inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
+import { Mailbox } from '../../../../types';
 import { createSyncProgressKey, runGmailSync } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */

@@ -50,7 +50,6 @@ const handler = InboxOperation.UnsubscribeSender.pipe(
       return { filtered: true, unsubscribed };
     }),
   ),
-  // Erase the inferred handler type so the default export is portably nameable in the emitted .d.ts.
   Operation.opaqueHandler,
 );
 

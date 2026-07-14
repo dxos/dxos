@@ -10,9 +10,9 @@ import { Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { OtelHarness } from '../../../testing/otel-harness';
-import { inboxSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
+import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
+import { OtelHarness } from '../../../../testing/otel-harness';
+import { inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
 import { runGmailSync } from './sync';
 
 // Benchmarks the sync stack across dataset sizes to surface O(n²) growth (e.g. per-message

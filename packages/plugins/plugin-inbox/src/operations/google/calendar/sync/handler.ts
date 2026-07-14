@@ -3,29 +3,22 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { addDays } from 'date-fns';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Operation } from '@dxos/compute';
 import { Database, Ref as EchoRef, Obj, Relation } from '@dxos/echo';
-import { type Resolver } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
-import { Pipeline, Stage } from '@dxos/pipeline';
-// Connection is referenced in the inferred type of this module's default export via
-// InboxOperation.GoogleCalendarSync's schema; the import lets TypeScript name it in .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Pipeline } from '@dxos/pipeline';
+import { SyncBinding } from '@dxos/plugin-connector';
 
-import { GoogleCalendar } from '../../../apis';
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { GoogleCredentials } from '../../../services';
-import { Calendar, InboxOperation } from '../../../types';
-import { mapEvent } from './mapper';
+import { GoogleCalendar } from '../../../../apis';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
+import { GoogleCredentials } from '../../../../services';
+import { Calendar, InboxOperation } from '../../../../types';
+import { calendarSource, makeRecurringDedupStage, mapEventStage } from './sync';
 
 const COMMIT_PAGE_SIZE = 10;
 
@@ -33,7 +26,7 @@ const DEFAULT_SYNC_BACK_DAYS = 30;
 const DEFAULT_SYNC_FORWARD_DAYS = 365;
 const DEFAULT_PAGE_SIZE = 100;
 
-export default InboxOperation.GoogleCalendarSync.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.GoogleCalendarSync> = InboxOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(
     ({
       binding: bindingRef,
@@ -127,77 +120,4 @@ export default InboxOperation.GoogleCalendarSync.pipe(
   Operation.opaqueHandler,
 );
 
-/** Maps a Google event to a commit unit (event → feed). Resolves attendees via `Resolver`; drops
- * cancelled/start-less events (mapEvent returns null). Events carry no tags or extracted objects. */
-const mapEventStage: Stage.Stage<GoogleCalendar.Event, SyncBinding.CommitUnit, never, Resolver> = Stage.map(
-  'map-event',
-  (event: GoogleCalendar.Event) =>
-    mapEvent(event).pipe(
-      Effect.map((mapped) =>
-        mapped
-          ? {
-              message: mapped,
-              foreignId: event.id,
-              key: event.updated ? Date.parse(event.updated) : 0,
-              tagUris: [],
-            }
-          : undefined,
-      ),
-    ),
-);
-
-/** Drops repeat instances of a recurring series (keeps the first), matching the initial-sync dedup.
- * A no-op for incremental sync, where `listEventsByUpdated` returns series masters. */
-const makeRecurringDedupStage = (enabled: boolean): Stage.Stage<GoogleCalendar.Event, GoogleCalendar.Event> => {
-  const seen = new Set<string>();
-  return Stage.map('dedup-recurring', (event: GoogleCalendar.Event) =>
-    Effect.sync(() => {
-      if (!enabled || !event.recurringEventId) {
-        return event;
-      }
-      if (seen.has(event.recurringEventId)) {
-        return undefined;
-      }
-      seen.add(event.recurringEventId);
-      return event;
-    }),
-  );
-};
-
-/** Streams Google Calendar events: initial sync windows by start time, incremental by `updatedMin`. */
-const calendarSource = (
-  calendarId: string,
-  cursorKey: number,
-  opts: { syncBackDays: number; syncForwardDays: number; pageSize: number; searchFilter?: string },
-) => {
-  const fetchPage = (pageToken: string | undefined) =>
-    cursorKey === 0
-      ? GoogleCalendar.listEventsByStartTime(
-          calendarId,
-          addDays(new Date(), -opts.syncBackDays).toISOString(),
-          addDays(new Date(), opts.syncForwardDays).toISOString(),
-          opts.pageSize,
-          pageToken,
-          opts.searchFilter,
-        )
-      : GoogleCalendar.listEventsByUpdated(
-          calendarId,
-          new Date(cursorKey).toISOString(),
-          opts.pageSize,
-          pageToken,
-          opts.searchFilter,
-        );
-
-  return Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
-    Effect.gen(function* () {
-      if (state.done) {
-        return Option.none();
-      }
-      const { items = [], nextPageToken } = yield* fetchPage(Option.getOrUndefined(state.pageToken));
-      return Option.some([
-        Chunk.fromIterable(items),
-        { pageToken: Option.fromNullable(nextPageToken), done: !nextPageToken },
-      ] as const);
-    }),
-  );
-};
+export default handler;

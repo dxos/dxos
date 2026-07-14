@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { addDays, format, subDays } from 'date-fns';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
@@ -17,30 +15,21 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
-import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
-// Connection is referenced in the inferred type of this module's default export via
-// InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { ContentBlock, Cursor, Person } from '@dxos/types';
 
-import { GoogleMail } from '../../../apis';
-import { GMAIL_SOURCE } from '../../../constants';
-import { meta } from '../../../meta';
-import {
-  GoogleCredentials,
-  GoogleMailApi,
-  type GoogleMailApiError,
-  type GoogleMailApiService,
-} from '../../../services';
-import { EmailCommit } from '../../../sync';
-import { InboxOperation, Mailbox } from '../../../types';
-import { onArrivalExtractors, readBindingOptions } from '../../../util';
-import { parseFromHeader } from '../../util';
-import { type AttachmentMetadata, type DecodedMessage, decodeBody, mapToMessage } from './mapper';
+import { GoogleMail } from '../../../../apis';
+import { GMAIL_SOURCE } from '../../../../constants';
+import { meta } from '../../../../meta';
+import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '../../../../services';
+import { EmailCommit } from '../../../../sync';
+import { Mailbox } from '../../../../types';
+import { onArrivalExtractors, readBindingOptions } from '../../../../util';
+import { parseFromHeader } from '../../../util';
+import { type AttachmentMetadata, type DecodedMessage, decodeBody, mapToMessage } from '../mapper';
 
 type DateChunk = {
   readonly start: Date;
@@ -72,6 +61,28 @@ const STREAMING_CONFIG = {
  */
 export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
 
+export type RunGmailSyncConfig = {
+  binding: Ref.Ref<SyncBinding.SyncBinding>;
+  userId?: string;
+  /**
+   * Default to all mail (every folder incl. Sent) so full conversations sync; a specific label
+   * restricts to that folder. See `fetchMessagesForDateRange` for how `'all'` maps to the query.
+   */
+  label?: string;
+  /** Lower (oldest) bound of the range to sync — unix ms or yyyy-MM-dd. Defaults to 30 days ago. */
+  after?: string | number;
+  /** Upper (newest) bound of the range — unix ms or yyyy-MM-dd. Defaults to today. Backfill passes the oldest-synced date here to cap a backward walk. */
+  before?: string | number;
+  /** Batch size. */
+  batchSize?: number;
+  /**
+   * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
+   * sync, newest-first from today); a cursor → `forward` (incremental, from the cursor). Pass
+   * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
+   */
+  direction?: Cursor.Direction;
+};
+
 /**
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
  * ambient operation services). It *requires* the service rather than providing HTTP/credentials
@@ -83,27 +94,12 @@ export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(ma
 export const runGmailSync = ({
   binding: bindingRef,
   userId = 'me',
-  // Default to all mail (every folder incl. Sent) so full conversations sync; a specific label
-  // restricts to that folder. See `fetchMessagesForDateRange` for how `'all'` maps to the query.
   label = 'all',
   after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
   before,
+  batchSize,
   direction,
-}: {
-  binding: Ref.Ref<SyncBinding.SyncBinding>;
-  userId?: string;
-  label?: string;
-  /** Lower (oldest) bound of the range to sync — unix ms or yyyy-MM-dd. Defaults to 30 days ago. */
-  after?: string | number;
-  /** Upper (newest) bound of the range — unix ms or yyyy-MM-dd. Defaults to today. Backfill passes the oldest-synced date here to cap a backward walk. */
-  before?: string | number;
-  /**
-   * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
-   * sync, newest-first from today); a cursor → `forward` (incremental, from the cursor). Pass
-   * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
-   */
-  direction?: Cursor.Direction;
-}): Effect.Effect<
+}: RunGmailSyncConfig): Effect.Effect<
   { newMessages: number },
   GoogleMailApiError | EntityNotFoundError,
   GoogleMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
@@ -141,7 +137,7 @@ export const runGmailSync = ({
     });
     const rangeEnd = upperBound;
     const start = rangeStart;
-    log('syncing gmail', {
+    log.info('syncing...', {
       mailbox: Obj.getURI(mailbox),
       userId,
       cursorKey,
@@ -151,8 +147,10 @@ export const runGmailSync = ({
     });
 
     const feed = yield* Database.load(mailbox.feed);
+
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
     const tagIndex = yield* Database.load(mailbox.tags);
+
     // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
     // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
     const draftPool = yield* EmailStage.queryDraftPool(mailbox);
@@ -209,6 +207,7 @@ export const runGmailSync = ({
     // below then drops all further messages so the stream drains and the run stops without error.
     const controller = new AbortController();
 
+    // TODO(burdon): Should be only one?
     // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
     // Keyed by the mailbox URI so MailboxArticle and the R0 popover can subscribe to this run.
     const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
@@ -220,7 +219,8 @@ export const runGmailSync = ({
         },
       }),
     );
-    const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+
+    const updateProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
 
     // Accumulate the exact retrieval total as each date chunk's id list is enumerated (known before any
     // full-message fetch), revising the meter's total so it renders a determinate bar even without a
@@ -246,6 +246,7 @@ export const runGmailSync = ({
       if (statsCompartments.length === 0) {
         return;
       }
+
       const snapshot = {
         startedAt,
         ...(finishedAt ? { finishedAt } : {}),
@@ -291,8 +292,8 @@ export const runGmailSync = ({
         attachmentCount += mapped.attachments?.length ?? 0;
         publishStats();
 
-        console.log('processed', processed);
-        if (processed > 10) {
+        // TODO(burdon): Apply batch to pages not messages?
+        if (batchSize && processed > batchSize) {
           controller.abort();
         }
 
@@ -313,7 +314,7 @@ export const runGmailSync = ({
       onEnumerated: addToTotal,
       // Advance at retrieval (one per fetched message) so `current` reaches `total`; dedup/decode drops
       // happen downstream of the source, so counting there would leave the bar short of 100%.
-      onRetrieved: () => advanceProgress(1),
+      onRetrieved: () => updateProgress(1),
     }).pipe(
       SyncBinding.dedupStage<GoogleMail.Message>(
         'dedup',
@@ -328,7 +329,7 @@ export const runGmailSync = ({
       //   (docs/superpowers/specs/2026-07-04-mail-sync-performance-exploration.md) quantifies it.
       // EmailStage.htmlToMarkdown,
       mapToMessageStage,
-      // TODO(burdon): Move this to the end of the pipeline.
+      // TODO(burdon): Move this to the end of the pipeline?
       collectStats,
       EmailStage.processAttachments(),
       onArrivalExtractors(mailbox),
@@ -384,32 +385,6 @@ export const runGmailSync = ({
     };
   }).pipe(Effect.withSpan('gmail-sync'));
 
-export default InboxOperation.GoogleMailSync.pipe(
-  Operation.withHandler(({ binding: bindingRef, userId, label, after, before, direction }) =>
-    Effect.gen(function* () {
-      const bindingObj = bindingRef.target;
-      if (!bindingObj || !Obj.getDatabase(bindingObj)) {
-        return { newMessages: 0 };
-      }
-      const connectionRef = Ref.make(Relation.getSource(bindingObj));
-
-      return yield* runGmailSync({ binding: bindingRef, userId, label, after, before, direction }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            GoogleMailApi.Live.pipe(
-              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromConnection(connectionRef))),
-            ),
-            InboxResolver.Live,
-          ),
-        ),
-      );
-    }),
-  ),
-  // Erase the inferred handler type (which transitively references Capability.Service via the sync
-  // module) so the default export is portably nameable in the emitted .d.ts (TS2883).
-  Operation.opaqueHandler,
-);
-
 // TODO(wittjosiah): Migrate this label→Tag sync onto a pipeline too (source: labels; sink:
 //   find-or-create Tag), rather than the imperative loop below.
 // Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
@@ -427,6 +402,7 @@ const syncLabels = Effect.fn('gmail-sync.labels')(function* (mailbox: Mailbox.Ma
       labelMap.set(labelItem.id, Mailbox.tagUri(tag));
     }
   }
+
   return labelMap;
 });
 
@@ -509,6 +485,7 @@ type GmailSourceConfig = {
  * window are emitted; both cover the same range (see `fetchMessagesForDateRange`'s within-chunk
  * ordering).
  */
+// TODO(burdon): Rename.
 const gmailSource = (config: GmailSourceConfig) =>
   // Resolve the API service once, then build the stream (id fetch → per-message fetch) against it.
   Stream.unwrap(

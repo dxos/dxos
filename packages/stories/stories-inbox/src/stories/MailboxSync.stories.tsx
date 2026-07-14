@@ -33,7 +33,7 @@ import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types'
 
 import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin, SyncTriggerRunner } from '../testing';
 
-const SYNC_STORY_TYPES = [
+const TYPES = [
   AccessToken.AccessToken,
   Connection.Connection,
   Cursor.Cursor,
@@ -52,7 +52,7 @@ const SYNC_STORY_TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const SYNC_STORY_CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
 
 type DecoratorOptions = {
   routine?: boolean;
@@ -66,8 +66,8 @@ const createDecorators = ({ routine = false }: DecoratorOptions = {}) => [
     plugins: [
       ...corePlugins(),
       ClientPlugin({
-        types: SYNC_STORY_TYPES,
-        ...SYNC_STORY_CLIENT_SERVICES,
+        types: TYPES,
+        ...CLIENT_SERVICES,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
             if (client.halo.identity.get()) {
@@ -100,16 +100,11 @@ const DefaultStory = () => (
   />
 );
 
-const CronSyncStory = () => (
+const SyncTriggerStory = () => (
   <>
     <SyncTriggerRunner />
     <ModuleContainer
-      layout={[
-        [Module.Mailbox],
-        [Module.Message],
-        [Module.Topics],
-        [Module.Connector, Module.Triggers, Module.Archive, Module.Stats],
-      ]}
+      layout={[[Module.Mailbox], [Module.Message], [Module.Connector, Module.Triggers, Module.Archive, Module.Stats]]}
       compact
     />
   </>
@@ -134,7 +129,10 @@ export const Default: Story = {
   render: DefaultStory,
 };
 
-export const CronSync: Story = {
-  render: CronSyncStory,
+export const WithSyncTrigger: Story = {
+  render: SyncTriggerStory,
   decorators: createDecorators({ routine: true }),
+  args: {
+    batch: 10,
+  },
 };
