@@ -31,13 +31,16 @@ const proxyFetch: typeof globalThis.fetch = (input, init) =>
 
 const apiKeyString = (apiKey?: Redacted.Redacted<string>): string => (apiKey ? Redacted.value(apiKey) : '');
 
+/** A HeyGen provider wired to the edge CORS proxy (shared by the generation service and the picker UI). */
+export const makeHeyGenProvider = (): HeyGenProvider => new HeyGenProvider({ fetch: proxyFetch });
+
 /**
  * The HeyGen `kind: 'video'` {@link GenerationService.GenerationService}. Asynchronous: `enqueue`
  * submits the job (persisted by the studio generate op), `awaitResult` polls to completion and maps
  * the produced URL to a single `video/mp4` variant.
  */
 export const makeHeyGenGenerationService = (): GenerationService.GenerationService => {
-  const provider = new HeyGenProvider({ fetch: proxyFetch });
+  const provider = makeHeyGenProvider();
   return {
     kind: 'video',
     id: HEYGEN_ID,

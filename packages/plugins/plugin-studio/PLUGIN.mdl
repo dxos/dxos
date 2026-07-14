@@ -289,9 +289,6 @@ Both depend on `@dxos/plugin-studio/types` and resolve their credential via
 
 ## Roadmap (out of scope this milestone)
 
-- **HeyGen avatar/voice pickers**: a provider-supplied custom `GenerateForm`
-  surface driven by `listAvatars`/`listVoices` (v1 accepts the ids via the
-  schema-driven form).
 - **`kind:'audio'`**: an `audio/*` default `VariantRenderer` + an audio provider.
 - **Graduate** `Artifact`/`Variant`/`Generation` to `@dxos/types` (namespace
   re-export; no call-site changes).
