@@ -8,6 +8,7 @@ import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
+import { type FormFieldMap } from '@dxos/react-ui-form';
 
 import * as Generation from './Generation';
 
@@ -93,6 +94,9 @@ export interface GenerationService {
   readonly requestSchema: Schema.Schema.AnyNoContext;
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;
+  /** Per-field renderers (keyed by JSON path) for the schema-driven form — customizes specific
+   * request fields (e.g. HeyGen's avatar/voice pickers) without replacing the whole form. */
+  readonly fieldMap?: FormFieldMap;
   /** One-shot generation (synchronous providers). Mutually exclusive with enqueue/awaitResult. */
   generate?(request: GenerationRequest, options: GenerateOptions): Promise<GenerationResult>;
   /** Submit a job; returns the provider job id to persist (asynchronous providers). */

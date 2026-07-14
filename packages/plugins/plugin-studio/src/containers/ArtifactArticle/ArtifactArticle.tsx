@@ -314,6 +314,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               key={composing ? 'draft' : selectedVariant?.id}
               schema={provider.requestSchema}
               values={composing ? draftConfig : (selectedVariant?.config ?? {})}
+              fieldMap={provider.fieldMap}
               readonly={!composing}
               hideEmpty={composing}
               autoSave={composing}
