@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Cause } from 'effect';
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -17,7 +17,7 @@ import type * as Types from 'effect/Types';
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
 
-import { RunAgainError, type NoHandlerError } from './errors';
+import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
 
 /**
