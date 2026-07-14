@@ -37,10 +37,10 @@ const insertionOrderTimestamps = async (db: Database.Database, mailbox: Mailbox.
 };
 
 // The Gmail sync driven end-to-end against a real ECHO db + a mock Gmail API — no live account.
-// `runGmailSync` requires `GoogleMailApi` rather than providing the live HTTP client itself, so the
+// `syncGmail` requires `GoogleMailApi` rather than providing the live HTTP client itself, so the
 // whole pipeline — fetch, dedup, decode, map, contact/thread extraction, tag application, commit,
 // cursor advance — exercises against generated data.
-describe('runGmailSync against a mock Gmail API', () => {
+describe('syncGmail against a mock Gmail API', () => {
   let builder: EchoTestBuilder;
 
   beforeAll(async () => {
