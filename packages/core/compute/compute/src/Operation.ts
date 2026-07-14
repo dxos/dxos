@@ -481,8 +481,8 @@ export const NotifyOptionsAnnotation = Annotation.make({
  * so `input` must itself be serializable.
  */
 export interface SerializedInvocation {
-  /** Target operation key (a DXN URI, e.g. `dxn:org.dxos.plugin.deck.operation.open`). */
-  readonly operation: DXN.DXN;
+  /** Target operation key as a URI (a DXN, e.g. `dxn:org.dxos.plugin.deck.operation.open`). */
+  readonly operation: URI.URI;
   /** Input passed to the operation; must be serializable. */
   readonly input?: unknown;
 }
