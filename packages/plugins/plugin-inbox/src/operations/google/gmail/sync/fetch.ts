@@ -13,7 +13,6 @@ import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 import { Cursor } from '@dxos/types';
 
-import { GoogleMail } from '../../../../apis';
 import { GoogleMailApi, type GoogleMailApiService } from '../../../../services';
 import { type AttachmentMetadata } from '../mapper';
 
