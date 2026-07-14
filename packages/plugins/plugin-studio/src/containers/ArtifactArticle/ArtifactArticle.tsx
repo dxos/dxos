@@ -140,6 +140,8 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     },
     [draft],
   );
+  // A produced variant is frozen; its full form is shown but edits are not persisted.
+  const handleFrozenChange = useCallback(() => {}, []);
 
   // Generation consumes the draft (its config + prompt) and appends a new frozen variant.
   const handleGenerate = useCallback(async () => {
@@ -331,8 +333,10 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
                     : {
                         kind: artifact.kind,
                         schema: provider.requestSchema,
+                        // Show the full form (all fields) for a frozen variant; `readonly` would omit
+                        // empty fields. A no-op onChange keeps the produced variant unmodified.
                         value: selectedVariant?.config ?? {},
-                        readonly: true,
+                        onChange: handleFrozenChange,
                       }
                 }
                 limit={1}
