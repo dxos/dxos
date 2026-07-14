@@ -426,7 +426,7 @@ class FilterClass implements Filter$.Any {
   ): Filter$.Filter<Filter$.Type<Filters[number]>> {
     return new FilterClass({
       type: 'and',
-      filters: filters.map((f) => f.ast),
+      filters: filters.map((filter) => filter.ast),
     });
   }
 
@@ -435,7 +435,7 @@ class FilterClass implements Filter$.Any {
   ): Filter$.Filter<Filter$.Type<Filters[number]>> {
     return new FilterClass({
       type: 'or',
-      filters: filters.map((f) => f.ast),
+      filters: filters.map((filter) => filter.ast),
     });
   }
 
@@ -724,7 +724,7 @@ class QueryClass implements Query$.Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
-      order: order.map((o) => o.ast),
+      order: order.map((orderItem) => orderItem.ast),
     });
   }
 
