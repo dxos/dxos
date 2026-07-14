@@ -56,7 +56,7 @@ describe('reconcileBoardCards (pull)', () => {
       Cursor.makeExternal({
         source: connection.accessToken,
         target: Ref.make(kanban),
-        remoteId: boardId,
+        externalId: boardId,
       }),
     );
     if (!Cursor.isExternal(binding)) {
@@ -366,7 +366,7 @@ describe('pushBoardCards (push)', () => {
       Cursor.makeExternal({
         source: connection.accessToken,
         target: Ref.make(kanban),
-        remoteId: boardId,
+        externalId: boardId,
       }),
     );
     if (!Cursor.isExternal(binding)) {

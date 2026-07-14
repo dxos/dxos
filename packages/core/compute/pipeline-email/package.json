@@ -39,6 +39,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",

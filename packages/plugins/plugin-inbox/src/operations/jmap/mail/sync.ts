@@ -26,7 +26,6 @@ import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
-import { EmailCommit } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
@@ -162,12 +161,10 @@ export const runJmapSync = ({
       onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
-      EmailCommit.toCommitUnit(),
+      EmailStage.toCommitUnit({ tagIndex }),
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: Cursor.commit }),
-      Effect.provide(
-        Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats }),
-      ),
+      Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats })),
     );
 
     // Flush indexes once at the end of the run (per-page commits no longer flush — see

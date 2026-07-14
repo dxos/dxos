@@ -74,10 +74,10 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
  * Reconcile Linear data for one team target bound by an external-sync {@link Cursor.Cursor}.
  *
  * The binding's `spec.source` is the {@link Connection}'s access token that authenticates the sync;
- * its `spec.target` is the team's local root Project; its `spec.remoteId` is the Linear
+ * its `spec.target` is the team's local root Project; its `spec.externalId` is the Linear
  * team UUID. Bidirectional (pull-then-push): upsert the team's projects as
  * Project objects, upsert issues as Tasks (respecting `maxDaysBack` if set),
- * push diverged local edits back, then record `lastRunAt`/`lastError` and
+ * push diverged local edits back, then record `lastTick`/`lastError` and
  * per-id snapshots on the binding. Comments are intentionally skipped in v1
  * (see sync.ts).
  */

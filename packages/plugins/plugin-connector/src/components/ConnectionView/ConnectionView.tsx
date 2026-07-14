@@ -160,12 +160,12 @@ const BindingRow = ({
   const [resolvedTarget] = useObject(binding.spec.target);
   const missing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
   // Label precedence: explicit binding label → remote id → the target's own label → its type's
-  // translated label (single-target connectors leave a binding without a label/remoteId, e.g.
+  // translated label (single-target connectors leave a binding without a label/externalId, e.g.
   // Gmail's Mailbox). Sync status lives in the description, so the label never describes sync progress.
   const targetTypename = resolvedTarget ? Obj.getTypename(resolvedTarget) : undefined;
   const label: string =
     binding.spec.label ??
-    binding.spec.remoteId ??
+    binding.spec.externalId ??
     (resolvedTarget ? Obj.getLabel(resolvedTarget) : undefined) ??
     // `typename.label` is owned by the target type's plugin (a foreign namespace we can't
     // guarantee), so fall back to the raw typename when that plugin defines no label.
@@ -174,8 +174,8 @@ const BindingRow = ({
 
   const status = missing
     ? t('binding-target-missing.message')
-    : binding.lastRunAt
-      ? `${t('last-sync.label')}: ${new Date(binding.lastRunAt).toLocaleString()}`
+    : binding.lastTick
+      ? `${t('last-sync.label')}: ${new Date(binding.lastTick).toLocaleString()}`
       : t('never-synced.label');
 
   // Seed the options form from the cursor's current options.

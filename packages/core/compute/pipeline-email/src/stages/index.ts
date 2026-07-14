@@ -12,3 +12,4 @@ export * from './summarize';
 export * from './tag';
 
 export * as EmailStage from './EmailStage';
+export * as FactStage from './FactStage';

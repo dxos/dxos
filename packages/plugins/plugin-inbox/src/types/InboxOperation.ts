@@ -440,7 +440,7 @@ export const GoogleContactsSync = Operation.make({
   },
   input: Schema.Struct({
     binding: Ref.Ref(Cursor.Cursor).annotations({
-      description: 'Binding whose connection owns credentials and whose remoteId is the contact group to sync.',
+      description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
     }),
     pageSize: Schema.optional(Schema.Number),
   }),

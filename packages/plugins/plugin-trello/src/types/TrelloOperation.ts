@@ -67,7 +67,7 @@ export const MaterializeTrelloTarget = Operation.make({
  *
  * Does **not** discover boards. Pulls cards from Trello into local Expando cards
  * (keyed by foreign id), pushes locally-created and locally-edited cards back to
- * Trello, and updates the binding's `lastRunAt`/`lastError`.
+ * Trello, and updates the binding's `lastTick`/`lastError`.
  */
 export const SyncTrelloBoard = Operation.make({
   meta: {

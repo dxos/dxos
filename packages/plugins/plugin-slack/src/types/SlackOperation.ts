@@ -53,7 +53,7 @@ export const GetSlackChannels = Operation.make({
 /**
  * Find-or-create the empty local `Channel` root for a selected Slack
  * conversation so a {@link Cursor.Cursor} can be created eagerly against it.
- * Keyed by the conversation's `remoteId` foreign key, so it is idempotent
+ * Keyed by the conversation's `externalId` foreign key, so it is idempotent
  * across re-selection.
  */
 export const MaterializeSlackTarget = Operation.make({
@@ -75,7 +75,7 @@ export const MaterializeSlackTarget = Operation.make({
  * and appends them to the channel's feed as `@dxos/types` `Message` objects.
  * `Message.threadId` carries Slack's `thread_ts` so threaded replies are
  * reconstructable on read without a separate object type. The new cursor
- * value / `lastRunAt` / `lastError` are written back onto the binding.
+ * value / `lastTick` / `lastError` are written back onto the binding.
  */
 export const SyncSlackChannel = Operation.make({
   meta: {

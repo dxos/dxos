@@ -56,14 +56,14 @@ const syncBinding = ({
   db: Database.Database;
 }) =>
   Effect.gen(function* () {
-    const remoteId = binding.spec.remoteId;
-    if (!remoteId) {
+    const externalId = binding.spec.externalId;
+    if (!externalId) {
       return { appended: 0 };
     }
 
     const localRoot = yield* Database.load(binding.spec.target);
     if (!Subscription.instanceOf(localRoot)) {
-      log.warn('Bluesky binding target is not a Subscription.Feed; skipping', { remoteId });
+      log.warn('Bluesky binding target is not a Subscription.Feed; skipping', { externalId });
       return { appended: 0 };
     }
     const subscriptionFeed = localRoot;
@@ -79,14 +79,14 @@ const syncBinding = ({
     // an explicit `binding.spec.options.maxPages` override, clamped to the
     // hard safety cap.
     const lastSeen = binding.value;
-    const maxPages = resolveMaxPages(remoteId, binding.spec.options as { maxPages?: number } | undefined);
+    const maxPages = resolveMaxPages(externalId, binding.spec.options as { maxPages?: number } | undefined);
     const collected: BlueskyApi.FeedViewPost[] = [];
     let pageCursor: string | undefined;
     let newestUri: string | undefined;
     let reachedKnown = false;
 
     for (let page = 0; page < maxPages; page++) {
-      const response = yield* fetchPostsForTarget({ remoteId, cursor: pageCursor });
+      const response = yield* fetchPostsForTarget({ externalId, cursor: pageCursor });
       if (response.feed.length === 0) {
         break;
       }
@@ -147,36 +147,36 @@ const syncBinding = ({
  * otherwise self-targets get the chronological default and custom feeds
  * get the algorithmic-feed default.
  */
-const resolveMaxPages = (remoteId: string, options: { maxPages?: number } | undefined): number => {
+const resolveMaxPages = (externalId: string, options: { maxPages?: number } | undefined): number => {
   const override = options?.maxPages;
   if (typeof override === 'number' && override > 0) {
     return Math.min(override, MAX_PAGES_HARD_CAP);
   }
-  return remoteId.startsWith(BLUESKY_TARGET.FEED_PREFIX) ? DEFAULT_MAX_PAGES.FEED : DEFAULT_MAX_PAGES.SELF;
+  return externalId.startsWith(BLUESKY_TARGET.FEED_PREFIX) ? DEFAULT_MAX_PAGES.FEED : DEFAULT_MAX_PAGES.SELF;
 };
 
 /**
- * Dispatch on the target's `remoteId` to the right Bluesky XRPC call.
+ * Dispatch on the target's `externalId` to the right Bluesky XRPC call.
  * The authenticated branches pull credentials (handle, PDS, token, …) from
  * the `Credentials` service, so the only state needed here is the
  * target's id and the page cursor.
  */
-const fetchPostsForTarget = ({ remoteId, cursor }: { remoteId: string; cursor: string | undefined }) =>
+const fetchPostsForTarget = ({ externalId, cursor }: { externalId: string; cursor: string | undefined }) =>
   Effect.gen(function* () {
-    if (remoteId === BLUESKY_TARGET.MY_POSTS) {
+    if (externalId === BLUESKY_TARGET.MY_POSTS) {
       const creds = yield* BlueskyApi.Credentials;
       return yield* BlueskyApi.getAuthorFeed({ actor: creds.handle, cursor });
     }
-    if (remoteId === BLUESKY_TARGET.MY_LIKES) {
+    if (externalId === BLUESKY_TARGET.MY_LIKES) {
       const creds = yield* BlueskyApi.Credentials;
       return yield* BlueskyApi.getActorLikes({ actor: creds.handle, cursor });
     }
-    if (remoteId === BLUESKY_TARGET.MY_BOOKMARKS) {
+    if (externalId === BLUESKY_TARGET.MY_BOOKMARKS) {
       return yield* BlueskyApi.getBookmarks({ cursor });
     }
-    if (remoteId.startsWith(BLUESKY_TARGET.FEED_PREFIX)) {
+    if (externalId.startsWith(BLUESKY_TARGET.FEED_PREFIX)) {
       return yield* BlueskyApi.getFeed({
-        feed: remoteId.slice(BLUESKY_TARGET.FEED_PREFIX.length),
+        feed: externalId.slice(BLUESKY_TARGET.FEED_PREFIX.length),
         cursor,
       });
     }

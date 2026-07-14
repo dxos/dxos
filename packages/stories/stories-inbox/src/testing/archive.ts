@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Cursor } from '@dxos/cursor';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection, CursorsQuery, isCursorForTarget } from '@dxos/plugin-connector';

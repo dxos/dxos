@@ -76,7 +76,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       Cursor.makeExternal({
         source: connection.accessToken,
         target: Ref.make(project),
-        remoteId: String(repo().id),
+        externalId: String(repo().id),
         snapshots,
       }),
     );

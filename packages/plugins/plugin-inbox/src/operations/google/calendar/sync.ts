@@ -62,7 +62,7 @@ export default InboxOperation.GoogleCalendarSync.pipe(
 
           const feed = yield* Database.load(calendar.feed);
           const fk = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE);
-          const calendarId = fk?.id ?? binding.spec.remoteId ?? defaults.googleCalendarId;
+          const calendarId = fk?.id ?? binding.spec.externalId ?? defaults.googleCalendarId;
           const optRecord = binding.spec.options ?? {};
           const syncBack = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : defaults.syncBackDays;
           const syncForward =
@@ -135,10 +135,9 @@ const mapEventStage: Stage.Stage<GoogleCalendar.Event, Cursor.CommitUnit, never,
       Effect.map((mapped) =>
         mapped
           ? {
-              message: mapped,
+              object: mapped,
               foreignId: event.id,
               key: event.updated ? Date.parse(event.updated) : 0,
-              tagUris: [],
             }
           : undefined,
       ),

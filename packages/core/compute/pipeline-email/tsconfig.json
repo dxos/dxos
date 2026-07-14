@@ -20,6 +20,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../sdk/schema"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {

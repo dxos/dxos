@@ -139,7 +139,7 @@ export default InboxOperation.GoogleContactsSync.pipe(
         if (!Cursor.isExternal(binding)) {
           return { upserted: 0 };
         }
-        const groupResourceName = binding.spec.remoteId;
+        const groupResourceName = binding.spec.externalId;
         if (!groupResourceName) {
           return { upserted: 0 };
         }

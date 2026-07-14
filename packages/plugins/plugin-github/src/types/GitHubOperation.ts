@@ -78,7 +78,7 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
  * Pull-then-push for the bound repo: auto-upsert its owning org + members,
  * three-way merge the repo as a Project and its issues/PRs as Tasks (respecting
  * `maxDaysBack` if set), then push diverged Project/Task fields back to GitHub.
- * Sync state (`lastRunAt`/`lastError`/`spec.snapshots`) is written onto the binding.
+ * Sync state (`lastTick`/`lastError`/`spec.snapshots`) is written onto the binding.
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {

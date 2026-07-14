@@ -498,9 +498,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
 
       const outcome = yield* Effect.either(
         Effect.gen(function* () {
-          const remoteId = binding.spec.remoteId;
-          if (!remoteId) {
-            return yield* Effect.dieMessage('Cursor has no remoteId; cannot resolve a Linear team.');
+          const externalId = binding.spec.externalId;
+          if (!externalId) {
+            return yield* Effect.dieMessage('Cursor has no externalId; cannot resolve a Linear team.');
           }
           // `binding.spec.options` is an opaque provider-defined record in the
           // shared contract; this connector owns and validates its shape.
@@ -508,9 +508,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
 
           const syncResult = yield* Effect.either(
             Effect.gen(function* () {
-              // Resolve the remote `Team` for this binding's `remoteId`.
+              // Resolve the remote `Team` for this binding's `externalId`.
               const allTeams = yield* LinearApi.fetchTeams();
-              const remoteTeam = allTeams.find((team) => team.id === remoteId);
+              const remoteTeam = allTeams.find((team) => team.id === externalId);
               if (!remoteTeam) {
                 return yield* Effect.fail(new Error('Team not accessible to connection token'));
               }

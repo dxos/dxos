@@ -142,19 +142,19 @@ export const findChannelForConversation: (
  * when a binding is created, so the `Cursor`'s `spec.target` has somewhere to point.
  */
 export const findOrCreateChannelForTarget: (input: {
-  remoteId: string;
+  externalId: string;
   name?: string;
 }) => Effect.Effect<Channel.Channel, never, Database.Service> = Effect.fn('findOrCreateChannelForTarget')(function* ({
-  remoteId,
+  externalId,
   name,
 }) {
-  const existing = yield* findChannelForConversation(remoteId);
+  const existing = yield* findChannelForConversation(externalId);
   if (existing) {
     return existing;
   }
   const channel = Channel.make({
-    [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: remoteId }] },
-    name: name ?? remoteId,
+    [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: externalId }] },
+    name: name ?? externalId,
   });
   return yield* Database.add(channel);
 });
@@ -247,7 +247,7 @@ const resolveBots = (
  *  4. Map each Slack message → `@dxos/types` Message and append the batch to
  *     the channel's feed.
  *  5. Write the newest `ts` seen back onto the binding's `value` so the next
- *     sync is incremental, plus `lastRunAt` / `lastError`.
+ *     sync is incremental, plus `lastTick` / `lastError`.
  *
  * `Database.Service` is provided inside the handler.
  * The binding ref carries the database; the space db is resolved via the
@@ -290,16 +290,16 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           }
           const localRoot = yield* Database.load(binding.spec.target);
 
-          // Resolve the remote conversation id: prefer the binding's `spec.remoteId`,
+          // Resolve the remote conversation id: prefer the binding's `spec.externalId`,
           // fall back to the target Channel's Slack foreign key (legacy bindings).
-          const remoteId =
-            binding.spec.remoteId ?? Obj.getMeta(localRoot).keys.find((key) => key.source === SLACK_SOURCE)?.id;
+          const externalId =
+            binding.spec.externalId ?? Obj.getMeta(localRoot).keys.find((key) => key.source === SLACK_SOURCE)?.id;
 
           // Captured on the success path so the cursor's value + run status advance in one atomic update.
           let newestTs: string | undefined;
           const syncResult = yield* Effect.either(
             Effect.gen(function* () {
-              if (remoteId === undefined) {
+              if (externalId === undefined) {
                 return { added: 0 } satisfies PullResult;
               }
               if (!Channel.instanceOf(localRoot)) {
@@ -310,9 +310,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               // One round-trip to fetch the conversation metadata so we can
               // mirror a friendly name onto the local Channel.
               const allConversations = yield* SlackApi.fetchConversations();
-              const conversation = allConversations.find((conv) => conv.id === remoteId);
+              const conversation = allConversations.find((conv) => conv.id === externalId);
 
-              const messages = yield* SlackApi.fetchHistory(remoteId, { oldest: binding.value });
+              const messages = yield* SlackApi.fetchHistory(externalId, { oldest: binding.value });
               if (messages.length === 0) {
                 return { added: 0 } satisfies PullResult;
               }

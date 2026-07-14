@@ -22,7 +22,6 @@ import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 import { GMAIL_SOURCE } from '../constants';
 import { seedMailboxBinding } from '../testing/sync-fixture';
 import { type Mailbox } from '../types';
-import { EmailCommit } from './index';
 
 const TEST_SOURCE = 'test.mail';
 
@@ -117,6 +116,7 @@ describe('sync pipeline harness', () => {
   const drain = (
     options: Cursor.LayerOptions & {
       db: Database.Database;
+      tagIndex?: TagIndex.TagIndex;
       fault?: Stage.Stage<Cursor.CommitUnit, Cursor.CommitUnit, Error>;
     },
   ) => {
@@ -128,7 +128,7 @@ describe('sync pipeline harness', () => {
       ),
       mapStage,
       EmailStage.extractContacts(),
-      EmailCommit.toCommitUnit(),
+      EmailStage.toCommitUnit({ tagIndex: options.tagIndex }),
     );
     const withFault = options.fault ? mapped.pipe(options.fault) : mapped;
     return withFault.pipe(
@@ -179,7 +179,7 @@ describe('sync pipeline harness', () => {
   });
 
   test('commit batches identical commit effects (by identity) into one call per page', async ({ expect }) => {
-    const { db, feed, tagIndex, binding } = await setup();
+    const { db, feed, binding } = await setup();
 
     const calls: (readonly Cursor.CommitUnit[])[] = [];
     // A single stable reference reused across every unit in a run (the shape a per-run commit effect
@@ -191,7 +191,7 @@ describe('sync pipeline harness', () => {
       });
 
     const makeUnit = (raw: Raw): Cursor.CommitUnit => ({
-      message: Obj.make(Message.Message, {
+      object: Obj.make(Message.Message, {
         [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
         created: new Date(raw.key).toISOString(),
         sender: { email: raw.email },
@@ -199,16 +199,13 @@ describe('sync pipeline harness', () => {
       }),
       foreignId: raw.id,
       key: raw.key,
-      tagUris: [],
       commitEffects: [commitEffect],
     });
 
     const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
       Cursor.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
-        Effect.provide(
-          Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
-        ),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -235,7 +232,7 @@ describe('sync pipeline harness', () => {
   test('processAttachments creates a resolvable Blob on the feed and skips oversized attachments', async ({
     expect,
   }) => {
-    const { db, feed, tagIndex, binding } = await setup();
+    const { db, feed, binding } = await setup();
 
     type AttachmentRaw = Raw & { readonly attachments?: readonly EmailStage.Attachment[] };
     const smallBytes = new Uint8Array([1, 2, 3, 4]);
@@ -287,12 +284,10 @@ describe('sync pipeline harness', () => {
         mapAttachmentStage,
         EmailStage.processAttachments(),
         EmailStage.extractContacts(),
-        EmailCommit.toCommitUnit(),
+        EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(
-          Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
-        ),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -329,7 +324,7 @@ describe('sync pipeline harness', () => {
   });
 
   test('email stages compose in any order (Mapped → Mapped) ahead of the terminal toCommitUnit', async ({ expect }) => {
-    const { db, feed, tagIndex, binding } = await setup();
+    const { db, feed, binding } = await setup();
 
     type AttachmentRaw = Raw & { readonly attachments?: readonly EmailStage.Attachment[] };
     const bytes = new Uint8Array([9, 8, 7]);
@@ -366,12 +361,10 @@ describe('sync pipeline harness', () => {
         // both are Mapped → Mapped, so order doesn't matter; only toCommitUnit must run last.
         EmailStage.extractContacts(),
         EmailStage.processAttachments(),
-        EmailCommit.toCommitUnit(),
+        EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(
-          Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
-        ),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -452,17 +445,14 @@ describe('reconcileDrafts stage', () => {
     EffectEx.runPromise(
       Effect.gen(function* () {
         const feed = yield* Database.load(mailbox.feed);
-        const tagIndex = yield* Database.load(mailbox.tags);
         const draftPool = yield* EmailStage.queryDraftPool(mailbox);
         const stats: Cursor.Stats = { newMessages: 0 };
         yield* Stream.fromIterable(synced).pipe(
           EmailStage.reconcileDrafts(draftPool),
-          EmailCommit.toCommitUnit(),
+          EmailStage.toCommitUnit(),
           Stream.grouped(2),
           Pipeline.run({ sink: Cursor.commit }),
-          Effect.provide(
-            Cursor.layer({ cursor: binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey: 0, stats }),
-          ),
+          Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: GMAIL_SOURCE, cursorKey: 0, stats })),
         );
       }).pipe(Effect.provide(Database.layer(db))),
     );

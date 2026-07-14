@@ -5965,6 +5965,9 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../pipeline-rdf
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types

@@ -108,13 +108,13 @@ const meta = {
                 Cursor.makeExternal({
                   source: connection.accessToken,
                   target: Ref.make(roadmap),
-                  remoteId: 'board-1',
+                  externalId: 'board-1',
                   label: 'Product Roadmap',
                   options: { includeArchived: true, label: 'roadmap' },
                 }),
               );
-              Obj.update(roadmapCursor, (cursor) => {
-                cursor.lastRunAt = new Date().toISOString();
+              Obj.update(roadmapCursor, (roadmapCursor) => {
+                roadmapCursor.lastTick = new Date().toISOString();
               });
 
               // A live binding that has never synced and recorded an error.
@@ -123,12 +123,12 @@ const meta = {
                 Cursor.makeExternal({
                   source: connection.accessToken,
                   target: Ref.make(engineering),
-                  remoteId: 'board-2',
+                  externalId: 'board-2',
                   label: 'Engineering',
                 }),
               );
-              Obj.update(engineeringCursor, (cursor) => {
-                cursor.lastError = 'Rate limited by remote service.';
+              Obj.update(engineeringCursor, (engineeringCursor) => {
+                engineeringCursor.lastError = 'Rate limited by remote service.';
               });
 
               // An orphaned binding whose target object was deleted elsewhere.
@@ -137,7 +137,7 @@ const meta = {
                 Cursor.makeExternal({
                   source: connection.accessToken,
                   target: Ref.make(orphaned),
-                  remoteId: 'board-3',
+                  externalId: 'board-3',
                   label: 'Deleted Board',
                 }),
               );

@@ -81,7 +81,7 @@ export type ConnectorCoordinator = {
   setCursors: (input: {
     db: Database.Database;
     connection: Ref.Ref<Connection.Connection>;
-    selected: ReadonlyArray<{ remoteId: string; name?: string }>;
+    selected: ReadonlyArray<{ externalId: string; name?: string }>;
     existingTarget?: Ref.Ref<Obj.Unknown>;
   }) => Effect.Effect<{ added: number; removed: number }, Error>;
 };

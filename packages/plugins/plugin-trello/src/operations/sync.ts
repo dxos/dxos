@@ -557,10 +557,10 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
             return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
           }
 
-          // Resolve the remote board id: prefer the binding's `remoteId`, fall
+          // Resolve the remote board id: prefer the binding's `externalId`, fall
           // back to the Kanban's foreign-key meta (set by `materializeTarget`).
           const boardId =
-            bound.spec.remoteId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
+            bound.spec.externalId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
           if (boardId === undefined) {
             return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
           }

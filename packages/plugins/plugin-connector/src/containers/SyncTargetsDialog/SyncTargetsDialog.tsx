@@ -42,8 +42,8 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   const initiallySelected = useMemo(() => {
     const ids = new Set<string>();
     for (const cursor of allCursors) {
-      if (isCursorForConnection(cursor, connection) && cursor.spec.remoteId) {
-        ids.add(cursor.spec.remoteId);
+      if (isCursorForConnection(cursor, connection) && cursor.spec.externalId) {
+        ids.add(cursor.spec.externalId);
       }
     }
     return ids;
@@ -83,7 +83,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
     try {
       const chosen = availableTargets
         .filter((target) => selected.has(target.id))
-        .map((target) => ({ remoteId: target.id, name: target.name }));
+        .map((target) => ({ externalId: target.id, name: target.name }));
       const coordinator = manager.capabilities.get(ConnectorCoordinator);
       await EffectEx.runAndForwardErrors(
         coordinator.setCursors({

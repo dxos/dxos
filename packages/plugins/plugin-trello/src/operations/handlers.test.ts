@@ -189,7 +189,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
         Cursor.makeExternal({
           source: connection.accessToken,
           target: Ref.make(kanban),
-          remoteId: remoteTarget.id,
+          externalId: remoteTarget.id,
           label: remoteTarget.name,
         }),
       );
@@ -246,7 +246,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     }
 
     // Sync stamped success on the binding.
-    expect(binding.lastRunAt).toBeDefined();
+    expect(binding.lastTick).toBeDefined();
     expect(binding.lastError).toBeUndefined();
   });
 
@@ -282,13 +282,13 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       .handler({ binding: Ref.make(bindingA) })
       .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
     expect(bindingA.lastError).toBeUndefined();
-    expect(bindingA.lastRunAt).toBeDefined();
+    expect(bindingA.lastTick).toBeDefined();
 
     // Board B fails — the sync handler fails and stamps the error on the binding.
     await syncTrelloBoardHandler
       .handler({ binding: Ref.make(bindingB) })
       .pipe(stubOperationService, Effect.provide(layer), Effect.either, EffectEx.runAndForwardErrors);
     expect(bindingB.lastError).toContain('boom');
-    expect(bindingB.lastRunAt).toBeUndefined();
+    expect(bindingB.lastTick).toBeUndefined();
   });
 });

@@ -62,7 +62,7 @@ describe('plugin-linear sync', () => {
       Cursor.makeExternal({
         source: connection.accessToken,
         target: Ref.make(teamRoot),
-        remoteId: 'team-1',
+        externalId: 'team-1',
       }),
     );
     if (!Cursor.isExternal(binding)) {

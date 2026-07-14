@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { FactStore, type RDF } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 
-import * as FactCommit from './FactCommit';
+import * as FactStage from './FactStage';
 
 const makeFact = (id: string): RDF.Fact => ({
   id,
@@ -35,7 +35,7 @@ const makeFact = (id: string): RDF.Fact => ({
   sourceHash: 'abc123',
 });
 
-describe('FactCommit.factsCommit', () => {
+describe('FactStage.toCommitUnit', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -62,7 +62,7 @@ describe('FactCommit.factsCommit', () => {
     ]);
 
     const result = await Effect.gen(function* () {
-      yield* FactCommit.factsCommit(page);
+      yield* FactStage.toCommitUnit(page);
       const store = yield* FactStore;
       const facts = yield* store.query({});
       const state = yield* Cursor.Service;
@@ -88,7 +88,7 @@ describe('FactCommit.factsCommit', () => {
     const originalValue = cursor.value;
 
     await Effect.gen(function* () {
-      yield* FactCommit.factsCommit(Chunk.empty());
+      yield* FactStage.toCommitUnit(Chunk.empty());
     }).pipe(
       Effect.provide(
         Cursor.layer({ cursor: binding, foreignKeySource: 'inbox.facts', cursorKey: 0, stats: { newMessages: 0 } }),

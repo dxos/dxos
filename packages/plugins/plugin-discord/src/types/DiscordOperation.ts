@@ -65,7 +65,7 @@ export const MaterializeDiscordTarget = Operation.make({
  *
  * Loads the binding, asks Discord for messages newer than `binding.value`,
  * maps each into a `@dxos/types` `Message`, and appends them to the bound
- * Channel's feed. Updates the binding's `value`/`lastRunAt`/`lastError`.
+ * Channel's feed. Updates the binding's `value`/`lastTick`/`lastError`.
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {

@@ -2,23 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 
 import { Cursor } from '@dxos/cursor';
-import { type FactUnit } from '@dxos/pipeline-email';
 import { FactStore } from '@dxos/pipeline-rdf';
+
+import { type FactUnit } from './extract-facts-commit';
 
 /**
  * `Pipeline.run` sink for the cursored fact pipeline. Persists a page of {@link FactUnit} facts to
- * the {@link FactStore} and advances the {@link Cursor} to the page's max key in the same step —
- * page-atomic, mirroring `Cursor.upsertCommit`. Use after `Stream.grouped(pageSize)` (which also
+ * the {@link FactStore} and advances the {@link Cursor.Cursor} to the page's max key in the same step
+ * — page-atomic, mirroring `Cursor.upsertCommit`. Use after `Stream.grouped(pageSize)` (which also
  * emits the trailing partial page). Facts are extracted upstream (extract-only) and only persisted
  * here, so there is no double write.
  */
-export const factsCommit = (page: Chunk.Chunk<FactUnit>): Effect.Effect<void, never, Cursor.Service | FactStore> =>
+export const toCommitUnit = (page: Chunk.Chunk<FactUnit>): Effect.Effect<void, never, Cursor.Service | FactStore> =>
   Effect.gen(function* () {
     const units = Chunk.toReadonlyArray(page);
     if (units.length === 0) {

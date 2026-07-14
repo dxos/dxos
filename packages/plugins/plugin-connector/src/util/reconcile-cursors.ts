@@ -12,7 +12,7 @@ import { type Connection, type ConnectorEntry } from '../types';
 import { CursorsQuery, isCursorForConnection } from './cursor-queries';
 
 /** A user-chosen remote target to bind. */
-export type SyncTargetSelection = { remoteId: string; name?: string };
+export type SyncTargetSelection = { externalId: string; name?: string };
 
 export type ReconcileCursorsInput = {
   /** Resolves the connector's `materializeTarget` operation against the connection's space. */
@@ -52,18 +52,18 @@ export const reconcileCursors = ({
     );
     const existingByRemote = new Map<string, Cursor.ExternalCursor>();
     for (const cursor of existingCursors) {
-      if (cursor.spec.remoteId !== undefined) {
-        existingByRemote.set(cursor.spec.remoteId, cursor);
+      if (cursor.spec.externalId !== undefined) {
+        existingByRemote.set(cursor.spec.externalId, cursor);
       }
     }
-    const selectedIds = new Set(selected.map((sel) => sel.remoteId));
+    const selectedIds = new Set(selected.map((sel) => sel.externalId));
 
     let added = 0;
     let removed = 0;
 
     // Remove deselected cursors (leave the synced object in place).
     for (const cursor of existingCursors) {
-      if (cursor.spec.remoteId !== undefined && !selectedIds.has(cursor.spec.remoteId)) {
+      if (cursor.spec.externalId !== undefined && !selectedIds.has(cursor.spec.externalId)) {
         yield* Database.remove(cursor);
         removed++;
       }
@@ -71,9 +71,9 @@ export const reconcileCursors = ({
 
     // The first newly-selected target binds the supplied `existingTarget`
     // (init-from-object flow); the rest materialize fresh local roots.
-    const firstNew = existingTarget ? selected.find((sel) => !existingByRemote.has(sel.remoteId)) : undefined;
+    const firstNew = existingTarget ? selected.find((sel) => !existingByRemote.has(sel.externalId)) : undefined;
     for (const sel of selected) {
-      if (existingByRemote.has(sel.remoteId)) {
+      if (existingByRemote.has(sel.externalId)) {
         continue;
       }
       let target: Obj.Unknown;
@@ -87,14 +87,14 @@ export const reconcileCursors = ({
           connector.materializeTarget,
           {
             connection: Ref.make(connection),
-            remoteTarget: { id: sel.remoteId, name: sel.name ?? sel.remoteId },
+            remoteTarget: { id: sel.externalId, name: sel.name ?? sel.externalId },
           },
           { spaceId: db.spaceId },
         );
         target = yield* Database.load(materialized);
       } else {
         // Targetless connector: no dedicated local root object, so the cursor's target is the
-        // connection itself. The remote target is identified by `remoteId`; synced objects land
+        // connection itself. The remote target is identified by `externalId`; synced objects land
         // directly in the space.
         // TODO(wittjosiah): Verify whether a self-referencing cursor (target === the connection) is
         //   a good pattern or an anti-pattern; consider a dedicated marker/null target instead.
@@ -104,7 +104,7 @@ export const reconcileCursors = ({
         Cursor.makeExternal({
           source: connection.accessToken,
           target: Ref.make(target),
-          remoteId: sel.remoteId,
+          externalId: sel.externalId,
           ...(sel.name ? { label: sel.name } : {}),
         }),
       );

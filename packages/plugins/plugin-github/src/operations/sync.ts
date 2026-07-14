@@ -545,27 +545,27 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
           return yield* Effect.dieMessage('Binding ref must be preloaded by caller (no database derivable).');
         }
 
-        // The repo's foreign id: prefer the binding's `remoteId`, falling back
+        // The repo's foreign id: prefer the binding's `externalId`, falling back
         // to the GitHub foreign key on the target object.
-        const remoteId =
-          binding.spec.remoteId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
+        const externalId =
+          binding.spec.externalId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
 
         const bindingId = binding.id;
 
         const outcome = yield* Effect.either(
           Effect.gen(function* () {
-            if (remoteId === undefined) {
-              return yield* Effect.dieMessage('Cursor has no remoteId and the target has no GitHub foreign key.');
+            if (externalId === undefined) {
+              return yield* Effect.dieMessage('Cursor has no externalId and the target has no GitHub foreign key.');
             }
 
             // Fetch all repos visible to the token once so the binding can
             // resolve its remote `GitHubRepo`. The binding stores the numeric
-            // repo id as `remoteId` (a stringified integer).
+            // repo id as `externalId` (a stringified integer).
             // TODO(wittjosiah): Switch to `fetchRepo(owner, name)` once the
             //   binding carries `owner`/`name`. `fetchUserRepos()` walks every
             //   repo the token can see and dominates large-account syncs.
             const allRepos = yield* GitHubApi.fetchUserRepos();
-            const remoteRepo = allRepos.find((repo) => String(repo.id) === remoteId);
+            const remoteRepo = allRepos.find((repo) => String(repo.id) === externalId);
             if (!remoteRepo) {
               return yield* Effect.dieMessage('Repository not accessible to connection token');
             }

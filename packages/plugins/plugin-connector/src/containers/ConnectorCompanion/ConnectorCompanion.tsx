@@ -100,8 +100,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
     ? t('binding-source-missing.message')
     : targetMissing
       ? t('binding-target-missing.message')
-      : subject.lastRunAt
-        ? `${t('last-sync.label')}: ${new Date(subject.lastRunAt).toLocaleString()}`
+      : subject.lastTick
+        ? `${t('last-sync.label')}: ${new Date(subject.lastTick).toLocaleString()}`
         : t('never-synced.label');
 
   return (

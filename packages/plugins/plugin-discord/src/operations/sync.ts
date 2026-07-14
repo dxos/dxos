@@ -131,7 +131,7 @@ export const findChannelForDiscordChannel: (
  *
  * Pull-only:
  *  1. Load the binding; its source is the `AccessToken`, its target the
- *     local `Channel`, and `binding.spec.remoteId` is the Discord channel id.
+ *     local `Channel`, and `binding.spec.externalId` is the Discord channel id.
  *  2. Ask Discord for messages with id greater than `binding.value` (or from
  *     "now minus maxDays" on first sync).
  *  3. Map each Discord message → `@dxos/types` Message and append the batch to
@@ -139,7 +139,7 @@ export const findChannelForDiscordChannel: (
  *  4. Advance `binding.value` to the largest id seen so the next sync is incremental.
  *
  * Success/failure status is written back onto the binding via `Cursor.advance`/
- * `Cursor.recordError` (`value`/`lastRunAt`/`lastError`).
+ * `Cursor.recordError` (`value`/`lastTick`/`lastError`).
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel> =
   DiscordOperation.SyncDiscordChannel.pipe(
@@ -157,13 +157,13 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
 
         // Resolve the binding's endpoints up front: the source access token
         // supplies the credential for the Discord layer, the target is the
-        // local Channel, and `remoteId` is the Discord channel id to pull.
+        // local Channel, and `externalId` is the Discord channel id to pull.
         const binding = yield* Database.load(bindingRef).pipe(Effect.provide(Database.layer(db)));
         invariant(Cursor.isExternal(binding), 'Cursor is missing an external-sync spec for Discord channel.');
         const accessToken = yield* Database.load(binding.spec.source).pipe(Effect.provide(Database.layer(db)));
         const localRoot = yield* Database.load(binding.spec.target).pipe(Effect.provide(Database.layer(db)));
-        const remoteId = binding.spec.remoteId;
-        invariant(remoteId, 'Cursor is missing a remoteId for Discord channel.');
+        const externalId = binding.spec.externalId;
+        invariant(externalId, 'Cursor is missing an externalId for Discord channel.');
         invariant(Channel.instanceOf(localRoot), 'Cursor target is not a Channel.');
 
         // Captured on the success path so the cursor's value + run status advance in one atomic update.
@@ -181,7 +181,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             const messages: MessageResponse[] = [];
             let after = initialAfter;
             while (true) {
-              const page = yield* rest.listMessages(remoteId, { after, limit: MESSAGE_PAGE_LIMIT });
+              const page = yield* rest.listMessages(externalId, { after, limit: MESSAGE_PAGE_LIMIT });
               if (page.length === 0) {
                 break;
               }

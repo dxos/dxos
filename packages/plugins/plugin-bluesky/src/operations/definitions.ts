@@ -65,7 +65,7 @@ export const MaterializeBlueskyTarget = Operation.make({
  * Fetches posts via XRPC (public for the user's own feed; via Edge atproto
  * proxy for `getActorLikes` / `getBookmarks` / `getFeed`) and appends new
  * Posts to the backing `Subscription.Feed` queue (the cursor's target).
- * Updates the cursor's `value` / `lastRunAt` / `lastError`.
+ * Updates the cursor's `value` / `lastTick` / `lastError`.
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
