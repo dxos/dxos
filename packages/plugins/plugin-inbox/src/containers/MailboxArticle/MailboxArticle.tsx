@@ -551,8 +551,6 @@ const useMailboxActions = (
         );
       }
 
-      // Cross-plugin: the connector plugin contributes the "Connect" group (via the mailbox type's
-      // `ConnectorAuthAnnotation`) when unconnected. A gap separator pushes it to the right end.
       return builder
         .separator('gap')
         .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }))

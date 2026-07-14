@@ -52,8 +52,6 @@ export default Capability.makeModule(
       },
     });
 
-    // Connect is contributed by the connector plugin (via the Portfolio type's `ConnectorAuthAnnotation`);
-    // the article inlines its own "Sync" action.
     return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension]);
   }),
 );

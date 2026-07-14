@@ -91,9 +91,6 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
     }
   }, [invokePromise, db, subject, setSyncing]);
 
-  // Import + own "Sync" (when connected) are inlined; the connector plugin contributes the "Connect"
-  // group (via the Portfolio type's `ConnectorAuthAnnotation`) when unconnected. The gap separator
-  // pushes the connect/sync to the right, after the import control.
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const menuActions = useMenuBuilder(

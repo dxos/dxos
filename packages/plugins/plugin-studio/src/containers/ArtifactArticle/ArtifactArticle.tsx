@@ -309,8 +309,6 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
       // Gap pushes the connect/generate + overflow to the right end of the toolbar.
       builder.separator('gap');
 
-      // Own action: Generate once connected; otherwise the connector plugin contributes the "Connect"
-      // group (via the Artifact type's `ConnectorAuthAnnotation`), spliced in via graphActions.
       if (connected) {
         builder.action(
           'generate',

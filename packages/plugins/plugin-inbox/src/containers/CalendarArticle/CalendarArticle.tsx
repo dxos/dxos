@@ -220,8 +220,6 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           },
         );
       }
-      // Cross-plugin: the "Connect" group is contributed by the connector plugin (via the type's
-      // `ConnectorAuthAnnotation`) when unconnected. A gap separator pushes it to the right end.
       return builder
         .separator('gap')
         .subgraph(graphActions(graph, get, id, { filter: isToolbarAction }))
