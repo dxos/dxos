@@ -5,7 +5,6 @@
 import type * as RpcClient from '@effect/rpc/RpcClient';
 import type * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
-import type * as Layer from 'effect/Layer';
 
 import { Trigger } from '@dxos/async';
 import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClientOverProtocol } from '@dxos/client-protocol';
@@ -22,11 +21,11 @@ export type WorkerSessionProps = {
    * Reverse-direction (worker→tab) protocol serving the tab's {@link BridgeService} (WebRTC transport)
    * over effect-rpc. The worker is the client; the tab is the runner.
    */
-  systemProtocol: Layer.Layer<RpcClient.Protocol>;
+  systemProtocol: RpcClient.Protocol['Type'];
   /**
    * Forward-direction (tab→worker) protocol over which the worker serves the client services.
    */
-  appProtocol: Layer.Layer<RpcServer.Protocol>;
+  appProtocol: RpcServer.Protocol['Type'];
   // TODO(wittjosiah): Remove shellPort.
   shellPort?: MessagePort;
   readySignal: Trigger<Error | undefined>;
@@ -40,7 +39,7 @@ export class WorkerSession {
   private readonly _shellClientRpc?: ClientRpcServer;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
-  private readonly _systemProtocol: Layer.Layer<RpcClient.Protocol>;
+  private readonly _systemProtocol: RpcClient.Protocol['Type'];
   #closeBridge?: () => Promise<void>;
 
   public readonly onClose = new Callback<() => Promise<void>>();

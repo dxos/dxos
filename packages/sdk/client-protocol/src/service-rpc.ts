@@ -5,7 +5,7 @@
 import type * as EffectRpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcSchema from '@effect/rpc/RpcSchema';
-import type * as RpcServer from '@effect/rpc/RpcServer';
+import * as RpcServer from '@effect/rpc/RpcServer';
 import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -139,10 +139,10 @@ export type ClientRpcServerParams = {
    */
   port?: MessagePortLike;
   /**
-   * Pre-built server protocol layer (e.g. handed to a worker-framework session via effect context).
-   * Provide this or {@link port}.
+   * Pre-built server protocol (the value the {@link RpcServer.Protocol} tag resolves to — e.g. handed
+   * to a worker-framework session via effect context). Provide this or {@link port}.
    */
-  protocol?: Layer.Layer<RpcServer.Protocol>;
+  protocol?: RpcServer.Protocol['Type'];
   /**
    * Resolved per call so the served set follows the host lifecycle (services host open/close).
    */
@@ -172,7 +172,12 @@ export class ClientRpcServer {
     const handlers = makeClientServicesHandlers(this.#params);
     const options = { disableTracing: true, concurrency: 'unbounded' } as const;
     if (this.#params.protocol) {
-      this.#server = Rpc.serveOverProtocol(this.#params.protocol, ClientServicesRpcs, handlers, options);
+      this.#server = Rpc.serveOverProtocol(
+        Layer.succeed(RpcServer.Protocol, this.#params.protocol),
+        ClientServicesRpcs,
+        handlers,
+        options,
+      );
     } else {
       invariant(this.#params.port, 'ClientRpcServer requires a port or a protocol.');
       this.#server = Rpc.serve(this.#params.port, ClientServicesRpcs, handlers, options);

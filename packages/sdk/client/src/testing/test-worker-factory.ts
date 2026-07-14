@@ -5,7 +5,6 @@
 import * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
@@ -70,8 +69,8 @@ export class TestWorkerFactory extends Resource {
             // framework runs it for the session's lifetime.
             createSession: ({ isOwner }) =>
               Effect.gen(function* () {
-                const appProtocol = Layer.succeed(RpcServer.Protocol, yield* RpcServer.Protocol);
-                const systemProtocol = Layer.succeed(RpcClient.Protocol, yield* RpcClient.Protocol);
+                const appProtocol = yield* RpcServer.Protocol;
+                const systemProtocol = yield* RpcClient.Protocol;
                 const session = yield* Effect.promise(() => runtime.createSession({ appProtocol, systemProtocol }));
                 if (isOwner) {
                   runtime.connectWebrtcBridge(session);

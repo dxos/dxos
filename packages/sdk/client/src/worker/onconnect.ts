@@ -6,7 +6,9 @@ import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
 import * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
@@ -119,18 +121,26 @@ export const onconnect = async (event: MessageEvent<any>) => {
   );
 
   const workerRuntime = await workerRuntimePromise;
-  // Adapt this legacy SharedWorker path's raw ports to the effect-rpc protocol layers WorkerRuntime
+  // Adapt this legacy SharedWorker path's raw ports to the effect-rpc protocol values WorkerRuntime
   // now consumes: the worker serves the client services on the app port and is the BridgeService
-  // client on the system port (mirrors the worker-framework session protocol construction).
-  await workerRuntime.createSession({
-    appProtocol: RpcServer.layerProtocolWorkerRunner.pipe(
-      Layer.provide(BrowserWorkerRunner.layerMessagePort(appChannel.port2)),
-      Layer.orDie,
-    ),
-    systemProtocol: RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
+  // client on the system port (mirrors the worker-framework session protocol construction). The
+  // scope keeps the protocol runners alive for the session and is closed when the session ends.
+  const sessionScope = Effect.runSync(Scope.make());
+  const sessionProtocols = Layer.merge(
+    RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(appChannel.port2))),
+    RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
       Layer.provide(BrowserWorker.layerPlatform(() => systemChannel.port2)),
-      Layer.orDie,
     ),
+  );
+  const context = await EffectEx.runPromise(
+    Layer.build(sessionProtocols).pipe(Effect.orDie, Scope.extend(sessionScope)),
+  );
+  await workerRuntime.createSession({
+    appProtocol: Context.get(context, RpcServer.Protocol),
+    systemProtocol: Context.get(context, RpcClient.Protocol),
+    onClose: async () => {
+      await EffectEx.runPromise(Scope.close(sessionScope, Exit.void));
+    },
   });
 };
 

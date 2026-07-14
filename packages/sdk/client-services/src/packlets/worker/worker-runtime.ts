@@ -40,8 +40,8 @@ import { WorkerSession } from './worker-session';
 // serves the client services (+ WorkerService); systemProtocol carries the reverse-direction
 // BridgeService (worker→tab).
 export type CreateSessionProps = {
-  appProtocol: Layer.Layer<RpcServer.Protocol>;
-  systemProtocol: Layer.Layer<RpcClient.Protocol>;
+  appProtocol: RpcServer.Protocol['Type'];
+  systemProtocol: RpcClient.Protocol['Type'];
   shellPort?: MessagePort;
   onClose?: () => Promise<void>;
 };
