@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -17,9 +17,9 @@ import { Button, DropdownMenu, Icon, IconButton, Input, Panel, Select, Toolbar, 
 import { useAttention } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 
-import { PromptEditor, VariantGallery } from '#components';
+import { GenerateForm, PromptEditor, VariantGallery } from '#components';
 import { meta } from '#meta';
-import { GenerateForm, VariantRenderer } from '#surfaces';
+import { VariantRenderer } from '#surfaces';
 import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
@@ -115,6 +115,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
   // "All" and "Draft" compose against the editable draft; a numbered tab inspects a frozen variant.
   const composing = !selectedVariant;
+  // The provider supplies its own request-config form (e.g. HeyGen's avatar/voice pickers), else the
+  // schema-driven default.
+  const FormComponent = provider?.Form ?? GenerateForm;
 
   // Connector-managed credential: show the "Connect" button until the provider's connection exists.
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -139,6 +142,15 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
       });
     },
     [draft],
+  );
+  const handleNameChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const next = event.target.value;
+      Obj.update(artifact, (artifact) => {
+        artifact.name = next.length > 0 ? next : undefined;
+      });
+    },
+    [artifact],
   );
 
   // Generation consumes the draft (its config + prompt) and appends a new frozen variant.
@@ -292,20 +304,20 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           </DropdownMenu.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-[1fr_1fr] p-2 gap-2'>
-        <div className='grid grid-rows-[6lh_1fr] gap-2 shrink-0 dx-document'>
+      <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
+        <div className='grid grid-rows-[6lh_1fr] py-2 gap-2 dx-document'>
           <PromptEditor
+            classNames='border border-separator rounded p-2'
             id={selectedVariant ? `${artifactId}/variant/${selectedVariant.id}/prompt` : `${artifactId}/prompt`}
             text={composing ? promptText : undefined}
             value={composing ? undefined : selectedGeneration?.prompt}
             readonly={!composing}
             placeholder={t('prompt.placeholder')}
             compact
-            classNames='border border-separator rounded p-2'
           />
-          <div className='flex flex-col gap-2 min-bs-0'>
+          <div className='flex flex-col'>
             {/* A produced (frozen) variant can be designated the artifact's cover default. */}
-            <div className='flex h-6'>
+            <div className=''>
               {selectedVariant && !selectedVariant.jobId && (
                 <Input.Root>
                   <div className='flex items-center gap-2'>
@@ -318,33 +330,28 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
                 </Input.Root>
               )}
             </div>
+            {/* Artifact-level name (independent of the selected variant). */}
+            <Input.Root>
+              <Input.TextInput
+                placeholder={t('name.placeholder')}
+                value={artifactSnapshot?.name ?? ''}
+                onChange={handleNameChange}
+              />
+            </Input.Root>
+            {/* The provider's request-config form (its own `Form`, else the schema-driven default),
+                inlined. Composing edits the draft; a produced variant is shown read-only. */}
             {provider && (
-              <Surface.Surface
+              <FormComponent
                 key={composing ? 'draft' : selectedVariant?.id}
-                type={GenerateForm}
-                data={
-                  composing
-                    ? {
-                        kind: artifact.kind,
-                        schema: provider.requestSchema,
-                        value: draftConfig,
-                        onChange: handleConfigChange,
-                      }
-                    : {
-                        // A produced variant is frozen: the full form is shown read-only (the
-                        // GenerateForm keeps empty fields visible so it isn't sparse).
-                        kind: artifact.kind,
-                        schema: provider.requestSchema,
-                        value: selectedVariant?.config ?? {},
-                        readonly: true,
-                      }
-                }
-                limit={1}
+                schema={provider.requestSchema}
+                value={composing ? draftConfig : (selectedVariant?.config ?? {})}
+                onChange={composing ? handleConfigChange : undefined}
+                readonly={!composing}
               />
             )}
           </div>
         </div>
-        <div className='relative grow min-bs-0 overflow-auto'>
+        <div className='dx-container border-t border-subdued-separator'>
           {selected === 'all' ? (
             <VariantGallery
               variants={galleryItems}
@@ -363,19 +370,21 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
                 {t('generating.label')}
               </div>
             ) : (
-              <Surface.Surface
-                type={VariantRenderer}
-                data={{
-                  variant: {
-                    contentType: selectedVariant.contentType,
-                    url: selectedVariant.url,
-                    content: selectedVariant.content,
-                    generation: selectedVariant.generation,
-                  },
-                  contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
-                }}
-                limit={1}
-              />
+              <div className='dx-expander p-2'>
+                <Surface.Surface
+                  type={VariantRenderer}
+                  data={{
+                    variant: {
+                      contentType: selectedVariant.contentType,
+                      url: selectedVariant.url,
+                      content: selectedVariant.content,
+                      generation: selectedVariant.generation,
+                    },
+                    contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
+                  }}
+                  limit={1}
+                />
+              </div>
             ))
           )}
         </div>

@@ -6,10 +6,23 @@
 
 import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
+import { type ComponentType } from 'react';
 
 import { BaseError } from '@dxos/errors';
 
 import * as Generation from './Generation';
+
+/** Props for a provider's request-config form (see {@link GenerationService.Form}). */
+export type GenerationFormProps = {
+  /** The provider's `requestSchema`. */
+  schema: Schema.Schema.AnyNoContext;
+  /** Current config values. */
+  value: Record<string, unknown>;
+  /** Persist the updated config (omitted when `readonly`). */
+  onChange?: (value: Record<string, unknown>) => void;
+  /** Render the values without editing. */
+  readonly?: boolean;
+};
 
 /**
  * Provider-agnostic, per-`kind` generation contract shared by plugin-studio and provider
@@ -94,6 +107,9 @@ export interface GenerationService {
   readonly requestSchema: Schema.Schema.AnyNoContext;
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;
+  /** Custom request-config form for this provider; the studio article falls back to a schema-driven
+   * default when absent. */
+  readonly Form?: ComponentType<GenerationFormProps>;
   /** One-shot generation (synchronous providers). Mutually exclusive with enqueue/awaitResult. */
   generate?(request: GenerationRequest, options: GenerateOptions): Promise<GenerationResult>;
   /** Submit a job; returns the provider job id to persist (asynchronous providers). */

@@ -26,7 +26,9 @@ export const VideoVariant = ({ variant }: VideoVariantProps) => {
     return null;
   }
 
-  return <MediaPlayer src={src} kind='video' fit='contain' alt={variant.generation?.prompt} classNames='mli-auto' />;
+  return (
+    <MediaPlayer classNames='dx-container' src={src} kind='video' fit='contain' alt={variant.generation?.prompt} />
+  );
 };
 
 VideoVariant.displayName = 'VideoVariant';

@@ -29,9 +29,9 @@ export type IdeogramGenerateResponse = {
 
 /**
  * Maps an Ideogram `/generate` response to provider-agnostic {@link GenerationService.VariantData}.
- * Each variant carries `image/png` content and a `Generation` recording the model/seed/provider
- * knobs (resolution, style, safety) under `parameters`. Entries without a `url` (e.g. safety-filtered)
- * are dropped — provider URLs are ephemeral.
+ * Each variant carries `image/png` content and a `Generation` recording the provider/model/seed +
+ * resolved prompt. Entries without a `url` (e.g. safety-filtered) are dropped — provider URLs are
+ * ephemeral.
  */
 export const mapIdeogramResponse = (
   response: IdeogramGenerateResponse,
@@ -52,10 +52,5 @@ export const mapIdeogramResponse = (
         seed: entry.seed ?? undefined,
         requestId: response.request_id ?? undefined,
         createdAt: response.created ?? undefined,
-        parameters: {
-          resolution: entry.resolution ?? undefined,
-          styleType: entry.style_type ?? undefined,
-          isImageSafe: entry.is_image_safe ?? undefined,
-        },
       },
     }));

@@ -11,9 +11,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { isSpace } from '@dxos/client/echo';
 import { Collection, Obj } from '@dxos/echo';
 
-import { ArtifactCard, GenerateForm as GenerateFormComponent, ImageVariant, VideoVariant } from '#components';
+import { ArtifactCard, ImageVariant, VideoVariant } from '#components';
 import { ArtifactArticle, ArtifactsArticle, GalleryArticle, LightboxArticle } from '#containers';
-import { GenerateForm, VariantRenderer } from '#surfaces';
+import { VariantRenderer } from '#surfaces';
 import { Artifact, Lightbox } from '#types';
 
 import { ARTIFACTS_NODE_DATA } from '../constants';
@@ -98,20 +98,6 @@ export default Capability.makeModule(() =>
           (data) => typeof data.contentType === 'string' && data.contentType.startsWith('video/'),
         ),
         component: ({ data }) => <VideoVariant variant={data.variant} />,
-      }),
-
-      // Default schema-driven generate form, overridable per kind via Position.first.
-      Surface.create({
-        id: 'generateForm',
-        filter: Surface.makeFilter(GenerateForm, (data) => !!data.schema),
-        component: ({ data }) => (
-          <GenerateFormComponent
-            schema={data.schema}
-            value={data.value}
-            onChange={data.onChange}
-            readonly={data.readonly}
-          />
-        ),
       }),
     ]),
   ),

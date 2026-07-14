@@ -47,6 +47,7 @@ export const translations = [
         'all.tab.label': 'All',
         'draft.label': 'Draft',
         'cover.label': 'Use as cover',
+        'name.placeholder': 'Name',
         'empty.message': 'No variants yet.',
         'more.label': 'More',
         'delete.label': 'Delete artifact',

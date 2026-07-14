@@ -42,11 +42,6 @@ describe('ideogram mapping', () => {
       requestId: 'req-1',
       createdAt: '2026-07-11T00:00:00Z',
     });
-    expect(variants[0].generation?.parameters).toMatchObject({
-      resolution: '1024x1024',
-      styleType: 'REALISTIC',
-      isImageSafe: true,
-    });
   });
 
   test('coerces null fields to undefined (Ideogram returns null, Generation schema is not nullable)', ({ expect }) => {
@@ -75,13 +70,7 @@ describe('ideogram mapping', () => {
     expect(generation?.createdAt).toBeUndefined();
     expect(generation?.prompt).toBeUndefined();
     expect(generation?.seed).toBeUndefined();
-    expect(generation?.parameters?.resolution).toBeUndefined();
-    expect(generation?.parameters?.styleType).toBeUndefined();
-    expect(generation?.parameters?.isImageSafe).toBeUndefined();
     for (const value of Object.values(generation ?? {})) {
-      expect(value).not.toBeNull();
-    }
-    for (const value of Object.values(generation?.parameters ?? {})) {
       expect(value).not.toBeNull();
     }
   });

@@ -124,16 +124,18 @@ export const MediaPlayer = ({
     }
 
     return (
-      <video
-        className={mx('max-w-full max-h-full aspect-video', fitClass, classNames)}
-        src={src}
-        controls={controls}
-        autoPlay={autoPlay}
-        loop={loop}
-        muted={muted}
-        crossOrigin={crossOrigin}
-        aria-label={alt}
-      />
+      <div className={mx('grid place-items-center', classNames)}>
+        <video
+          className={mx('max-w-full max-h-full aspect-video', fitClass)}
+          src={src}
+          controls={controls}
+          autoPlay={autoPlay}
+          loop={loop}
+          muted={muted}
+          crossOrigin={crossOrigin}
+          aria-label={alt}
+        />
+      </div>
     );
   }
 

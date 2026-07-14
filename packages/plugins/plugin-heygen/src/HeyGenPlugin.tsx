@@ -3,9 +3,9 @@
 //
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 
-import { Connector, GenerationService, ReactSurface } from '#capabilities';
+import { Connector, GenerationService } from '#capabilities';
 import { meta } from '#meta';
 
 export const HeyGenPlugin = Plugin.define(meta).pipe(
@@ -19,7 +19,6 @@ export const HeyGenPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvents.Startup,
     activate: GenerationService,
   }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.make,
 );
 

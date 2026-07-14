@@ -22,14 +22,7 @@ export const ImageVariant = ({ variant }: ImageVariantProps) => {
     return null;
   }
 
-  return (
-    <MediaPlayer
-      src={src}
-      fit='contain'
-      alt={variant.generation?.prompt}
-      classNames='block max-is-full bs-auto mli-auto rounded'
-    />
-  );
+  return <MediaPlayer classNames='dx-container' src={src} fit='contain' alt={variant.generation?.prompt} />;
 };
 
 ImageVariant.displayName = 'ImageVariant';

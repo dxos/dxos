@@ -42,8 +42,6 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
      * result is filled in). A variant carries its own job so a long poll resumes across remount.
      */
     jobId: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-    /** Extensibility escape hatch (media-specific extras). */
-    meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--image--regular', hue: 'purple' }),

@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
 import { Role } from '@dxos/app-framework';
 import { type Obj, type Ref } from '@dxos/echo';
 
@@ -29,18 +27,3 @@ export const VariantRenderer: Role.Role<{
   variant: VariantContent;
   contentType: string;
 }> = Role.make('org.dxos.plugin.studio.role.variantRenderer');
-
-/**
- * Role token for the request-config form, filtered by `kind`. The studio default renders a
- * schema-driven `Form` from the provider's `requestSchema`; a provider can override with a
- * kind-specific UI via `Position.first`.
- */
-export const GenerateForm: Role.Role<{
-  kind: string;
-  schema: Schema.Schema.AnyNoContext;
-  value: Record<string, unknown>;
-  /** Absent when the form is read-only (e.g. showing a produced variant's recorded params). */
-  onChange?: (value: Record<string, unknown>) => void;
-  /** Render the values without editing — used to show a selected variant's provenance. */
-  readonly?: boolean;
-}> = Role.make('org.dxos.plugin.studio.role.generateForm');
