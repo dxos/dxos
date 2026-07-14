@@ -5,17 +5,19 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { FormInputAnnotation, HiddenAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Markdown } from '@dxos/plugin-markdown';
 
 /**
  * A single version of a post; wraps a commentable markdown document.
+ * Hidden from the space's Database type listing: a Draft is an internal wrapper, created only via
+ * op:AddDraft under a Post — never a standalone, browsable top-level type.
  */
 export class Draft extends Type.makeObject<Draft>(DXN.make('org.dxos.type.blogger.draft', '0.1.0'))(
   Schema.Struct({
     label: Schema.optional(Schema.String),
     content: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
-  }).pipe(LabelAnnotation.set(['label'])),
+  }).pipe(LabelAnnotation.set(['label']), HiddenAnnotation.set(true)),
 ) {}
 
 /**

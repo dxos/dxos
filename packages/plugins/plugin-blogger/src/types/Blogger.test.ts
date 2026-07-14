@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import { describe, expect, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { invariant } from '@dxos/invariant';
 import { Markdown } from '@dxos/plugin-markdown';
 
@@ -36,5 +38,13 @@ describe('Blogger schema', () => {
     invariant(instructions);
     expect(Obj.instanceOf(Markdown.Document, instructions)).toBe(true);
     expect(publication.posts).toEqual([]);
+  });
+
+  test('Draft is hidden from the space type listing; Post and Publication are not', () => {
+    const isHidden = (schema: Parameters<typeof HiddenAnnotation.get>[0]) =>
+      HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false));
+    expect(isHidden(Type.getSchema(Blogger.Draft))).toBe(true);
+    expect(isHidden(Type.getSchema(Blogger.Post))).toBe(false);
+    expect(isHidden(Type.getSchema(Blogger.Publication))).toBe(false);
   });
 });

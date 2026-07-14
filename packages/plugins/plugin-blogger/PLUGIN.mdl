@@ -323,6 +323,7 @@ feat F-1: Publications Section
   req F-1.1: A "Publications" section is contributed under each space's content group (mirroring plugin-studio's Studio section), listing that space's Publication objects as branch nodes.
   req F-1.2: "+ Publication" on the Publications section invokes op:AddPublication targeting that space's database.
   req F-1.3: Each Publication node expands to its Post children, with a "+ Post" action invoking op:AddPost.
+  req F-1.4: type:Draft is marked hidden (HiddenAnnotation) so it never appears as a browsable type under the space's Database section — Drafts exist only as children of a Post.
 ```
 
 ```mdl
