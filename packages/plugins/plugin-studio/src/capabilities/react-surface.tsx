@@ -105,7 +105,12 @@ export default Capability.makeModule(() =>
         id: 'generateForm',
         filter: Surface.makeFilter(GenerateForm, (data) => !!data.schema),
         component: ({ data }) => (
-          <GenerateFormComponent schema={data.schema} value={data.value} onChange={data.onChange} />
+          <GenerateFormComponent
+            schema={data.schema}
+            value={data.value}
+            onChange={data.onChange}
+            readonly={data.readonly}
+          />
         ),
       }),
     ]),

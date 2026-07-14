@@ -26,8 +26,10 @@ export type HeyGenGenerateFormProps = {
   schema: Schema.Schema.AnyNoContext;
   /** Current config values on the artifact. */
   value: Record<string, unknown>;
-  /** Persist the updated config (writes Artifact.config). */
-  onChange: (value: Record<string, unknown>) => void;
+  /** Persist the updated config (writes Artifact.config). Omit when `readonly`. */
+  onChange?: (value: Record<string, unknown>) => void;
+  /** Render the values without editing (e.g. a produced variant's recorded params). */
+  readonly?: boolean;
 };
 
 /**
@@ -36,7 +38,7 @@ export type HeyGenGenerateFormProps = {
  * the account's avatars/voices (fetched via the HeyGen API using the Connector-managed credential,
  * keyed by `source: heygen.com`). Ported from the former plugin-generator `GenerationProperties`.
  */
-export const HeyGenGenerateForm = ({ schema, value, onChange }: HeyGenGenerateFormProps) => {
+export const HeyGenGenerateForm = ({ schema, value, onChange, readonly }: HeyGenGenerateFormProps) => {
   const space = useActiveSpace();
   const [token] = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: HEYGEN_SOURCE }));
   const apiKey = token?.token;
@@ -83,7 +85,7 @@ export const HeyGenGenerateForm = ({ schema, value, onChange }: HeyGenGenerateFo
 
   const handleValuesChanged = useCallback(
     (values: Record<string, unknown>) => {
-      onChange({
+      onChange?.({
         ...value,
         ...values,
         // Normalize the picker fields (empty string → undefined); preserve any other schema fields.
@@ -109,7 +111,7 @@ export const HeyGenGenerateForm = ({ schema, value, onChange }: HeyGenGenerateFo
           {...props}
           options={makeOptions(avatars, currentAvatar)}
           placeholder={placeholder ?? 'Select an avatar'}
-          readonly={status !== 'ready' || (avatars.length === 0 && !currentAvatar)}
+          readonly={readonly || status !== 'ready' || (avatars.length === 0 && !currentAvatar)}
         />
       ),
       voiceId: (props) => (
@@ -117,15 +119,21 @@ export const HeyGenGenerateForm = ({ schema, value, onChange }: HeyGenGenerateFo
           {...props}
           options={makeOptions(voices, currentVoice)}
           placeholder={placeholder ?? 'Select a voice'}
-          readonly={status !== 'ready' || (voices.length === 0 && !currentVoice)}
+          readonly={readonly || status !== 'ready' || (voices.length === 0 && !currentVoice)}
         />
       ),
     }),
-    [avatars, voices, placeholder, status, currentAvatar, currentVoice],
+    [avatars, voices, placeholder, status, currentAvatar, currentVoice, readonly],
   );
 
   return (
-    <Form.Root schema={schema} defaultValues={value} fieldMap={fieldMap} onValuesChanged={handleValuesChanged}>
+    <Form.Root
+      schema={schema}
+      defaultValues={value}
+      fieldMap={fieldMap}
+      readonly={readonly}
+      onValuesChanged={readonly ? undefined : handleValuesChanged}
+    >
       <Form.Content>
         <Form.FieldSet />
       </Form.Content>

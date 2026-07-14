@@ -12,7 +12,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { GenerationService, StudioCapabilities, StudioOperation, Variant } from '../types';
+import { Generation, GenerationService, StudioCapabilities, StudioOperation, Variant } from '../types';
 
 /** Route a provider rejection to the failure channel, preserving the original Error for name matching. */
 const toError = (error: unknown): Error =>
@@ -116,10 +116,19 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
       const result = yield* run.pipe(Effect.ensuring(Effect.sync(() => monitor?.remove())));
 
       for (const data of result.variants) {
+        // Record provenance so each variant carries the prompt + params that produced it, falling
+        // back to the request when the provider does not echo them; the UI reconstructs the form
+        // from this when the variant is selected.
+        const generation: Generation.Generation = {
+          provider: service.id,
+          ...data.generation,
+          prompt: data.generation?.prompt ?? prompt,
+          parameters: data.generation?.parameters ?? artifactObj.config,
+        };
         const variant = Variant.make({
           contentType: data.contentType ?? service.contentType,
           url: data.url,
-          generation: data.generation,
+          generation,
         });
         // Owned by the artifact: cascade-deletes and deep-clones with it.
         Obj.setParent(variant, artifactObj);

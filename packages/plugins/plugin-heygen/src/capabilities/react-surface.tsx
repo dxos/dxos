@@ -24,7 +24,12 @@ export default Capability.makeModule(() =>
         position: Position.first,
         filter: Surface.makeFilter(GenerateForm, (data) => data.kind === 'video'),
         component: ({ data }) => (
-          <HeyGenGenerateForm schema={data.schema} value={data.value} onChange={data.onChange} />
+          <HeyGenGenerateForm
+            schema={data.schema}
+            value={data.value}
+            onChange={data.onChange}
+            readonly={data.readonly}
+          />
         ),
       }),
     ]),

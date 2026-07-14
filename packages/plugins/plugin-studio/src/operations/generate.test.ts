@@ -139,6 +139,9 @@ describe('generate', () => {
     // Default contentType comes from the provider; generation provenance is recorded.
     expect(loaded[0].contentType).toBe('image/png');
     expect(loaded[0].generation?.seed).toBe(1);
+    // Prompt falls back to the request when the provider omits it, so the variant records what produced it.
+    expect(loaded[0].generation?.provider).toBe('mock');
+    expect(loaded[0].generation?.prompt).toBe('A serene mountain lake at dawn.');
     // Cover is seeded with the first produced variant.
     expect(artifact.cover?.target?.id).toBe(loaded[0].id);
   });

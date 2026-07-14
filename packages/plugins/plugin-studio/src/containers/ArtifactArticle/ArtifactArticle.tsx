@@ -174,6 +174,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   }, [invokePromise, artifact]);
 
   const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
+  // A selected variant's recorded provenance drives a read-only view of the prompt + params that
+  // produced it; the "All" tab restores the editable compose form.
+  const selectedGeneration = selectedVariant?.generation;
 
   return (
     <Panel.Root role={role}>
@@ -246,8 +249,10 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
       <Panel.Content classNames='grid grid-rows-[auto_1fr] p-2 gap-2'>
         <div role='none' className='grid grid-rows-[6lh_1fr] gap-2 shrink-0 dx-document'>
           <PromptEditor
-            id={`${artifactId}/prompt`}
-            text={promptText}
+            id={selectedGeneration ? `${artifactId}/variant/${selectedVariant?.id}/prompt` : `${artifactId}/prompt`}
+            text={selectedGeneration ? undefined : promptText}
+            value={selectedGeneration?.prompt}
+            readonly={!!selectedGeneration}
             placeholder={t('prompt.placeholder')}
             compact
             classNames='border border-separator rounded p-2'
@@ -255,12 +260,21 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           {provider && (
             <Surface.Surface
               type={GenerateForm}
-              data={{
-                kind: artifact.kind,
-                schema: provider.requestSchema,
-                value: configValue,
-                onChange: handleConfigChange,
-              }}
+              data={
+                selectedGeneration
+                  ? {
+                      kind: artifact.kind,
+                      schema: provider.requestSchema,
+                      value: selectedGeneration.parameters ?? {},
+                      readonly: true,
+                    }
+                  : {
+                      kind: artifact.kind,
+                      schema: provider.requestSchema,
+                      value: configValue,
+                      onChange: handleConfigChange,
+                    }
+              }
               limit={1}
             />
           )}

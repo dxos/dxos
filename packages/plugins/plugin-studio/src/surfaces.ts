@@ -39,5 +39,8 @@ export const GenerateForm: Role.Role<{
   kind: string;
   schema: Schema.Schema.AnyNoContext;
   value: Record<string, unknown>;
-  onChange: (value: Record<string, unknown>) => void;
+  /** Absent when the form is read-only (e.g. showing a produced variant's recorded params). */
+  onChange?: (value: Record<string, unknown>) => void;
+  /** Render the values without editing — used to show a selected variant's provenance. */
+  readonly?: boolean;
 }> = Role.make('org.dxos.plugin.studio.role.generateForm');
