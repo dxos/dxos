@@ -20,7 +20,14 @@ const toError = (error: unknown): Error =>
 
 const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOperation.Generate.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ artifact, provider, count }) {
+    Effect.fnUntraced(function* ({
+      artifact,
+      provider,
+      name: inputName,
+      config: inputConfig,
+      variant: variantRef,
+      count,
+    }) {
       const artifactObj = yield* Database.load(artifact);
 
       // Resolve the provider by the artifact's kind, then by explicit id, else the first for the kind.
@@ -35,6 +42,12 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
       const text = yield* Database.load(instructions.text);
       const prompt = text.content ?? '';
 
+      // Resuming an async job reuses the pending variant's stored config/name; otherwise the draft.
+      const resumeVariant = variantRef ? yield* Database.load(variantRef) : undefined;
+      const config = resumeVariant?.config ?? inputConfig;
+      // Variant label: the supplied name, else a short prefix of the prompt.
+      const name = resumeVariant?.name ?? inputName ?? (prompt ? prompt.slice(0, 80) : undefined);
+
       // The API key is resolved from the Connector-managed AccessToken (keyed by the provider's
       // `source`); keyless providers (e.g. the test mock) leave `source` undefined.
       let apiKey: Redacted.Redacted<string> | undefined;
@@ -46,10 +59,10 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
         apiKey = Redacted.make(credential.apiKey);
       }
 
-      // The request is the prompt merged with the artifact's kind-specific config; the provider
-      // validates it against its own requestSchema.
+      // The request is the prompt merged with the kind-specific config; the provider validates it
+      // against its own requestSchema.
       const request: GenerationService.GenerationRequest = {
-        ...(artifactObj.config ?? {}),
+        ...(config ?? {}),
         prompt,
         ...(count !== undefined ? { count } : {}),
       };
@@ -75,74 +88,107 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
         },
       };
 
-      // Synchronous providers implement `generate`; asynchronous ones implement `enqueue` +
-      // `awaitResult` and persist the job id on the artifact so a long poll resumes across remount.
-      // (Locals narrow the optional methods so no non-null assertion is needed.)
-      const { enqueue, awaitResult, generate } = service;
-      const clearJobId = () =>
-        Obj.update(artifactObj, (artifactObj) => {
-          artifactObj.jobId = undefined;
+      // Record provenance so each variant carries the prompt + params that produced it, falling back
+      // to the request prompt when the provider does not echo it.
+      const makeGeneration = (data: GenerationService.VariantData): Generation.Generation => ({
+        provider: service.id,
+        ...data.generation,
+        prompt: data.generation?.prompt ?? prompt,
+      });
+
+      // Append a produced (frozen) variant owned by the artifact; seed the cover with the first.
+      const appendVariant = (data: GenerationService.VariantData) =>
+        Effect.gen(function* () {
+          const created = Variant.make({
+            name,
+            contentType: data.contentType ?? service.contentType,
+            url: data.url,
+            config,
+            generation: makeGeneration(data),
+          });
+          Obj.setParent(created, artifactObj);
+          yield* Database.add(created);
+          Obj.update(artifactObj, (artifactObj) => {
+            artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(created)];
+            if (!artifactObj.cover) {
+              artifactObj.cover = Ref.make(created);
+            }
+          });
         });
+
+      // Synchronous providers implement `generate`; asynchronous ones implement `enqueue` +
+      // `awaitResult`. For async a pending Variant holds the in-flight jobId (persisted so a long
+      // poll resumes across remount), then is filled in on completion. (Locals narrow the optional
+      // methods so no non-null assertion is needed.)
+      const { enqueue, awaitResult, generate } = service;
       const run = Effect.gen(function* () {
         if (enqueue && awaitResult) {
-          let jobId = artifactObj.jobId;
+          let pending = resumeVariant;
+          let jobId = pending?.jobId;
           if (!jobId) {
             const enqueued = yield* Effect.tryPromise({ try: () => enqueue(request, options), catch: toError });
             jobId = enqueued.jobId;
+            const created = Variant.make({ name, config, jobId });
+            Obj.setParent(created, artifactObj);
+            yield* Database.add(created);
             Obj.update(artifactObj, (artifactObj) => {
-              artifactObj.jobId = jobId;
+              artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(created)];
             });
+            pending = created;
           }
-          // Clear the persisted jobId on failure/abort too — otherwise the article's resume effect
-          // would re-invoke this op in a loop (or silently restart a poll the user just cancelled).
+          if (!pending || jobId === undefined) {
+            return yield* Effect.fail(new GenerationService.GenerationError('Failed to enqueue generation job.'));
+          }
+          const pendingVariant = pending;
+          const pendingJobId = jobId;
+          // Clear the jobId on failure/abort — otherwise the article's resume effect would re-invoke
+          // this op in a loop (or silently restart a poll the user just cancelled).
           const awaited = yield* Effect.tryPromise({
-            try: () => awaitResult(jobId, options),
+            try: () => awaitResult(pendingJobId, options),
             catch: (error) => {
-              clearJobId();
+              Obj.update(pendingVariant, (pendingVariant) => {
+                pendingVariant.jobId = undefined;
+              });
               return toError(error);
             },
           });
-          clearJobId();
-          return awaited;
+          // Fill the pending variant with the first result (freezing it); append any extras.
+          const [first, ...rest] = awaited.variants;
+          if (first) {
+            Obj.update(pendingVariant, (pendingVariant) => {
+              pendingVariant.contentType = first.contentType ?? service.contentType;
+              pendingVariant.url = first.url;
+              pendingVariant.generation = makeGeneration(first);
+              pendingVariant.jobId = undefined;
+            });
+            Obj.update(artifactObj, (artifactObj) => {
+              if (!artifactObj.cover) {
+                artifactObj.cover = Ref.make(pendingVariant);
+              }
+            });
+          } else {
+            Obj.update(pendingVariant, (pendingVariant) => {
+              pendingVariant.jobId = undefined;
+            });
+          }
+          for (const data of rest) {
+            yield* appendVariant(data);
+          }
+          return { count: awaited.variants.length };
         }
         if (generate) {
-          return yield* Effect.tryPromise({ try: () => generate(request, options), catch: toError });
+          const result = yield* Effect.tryPromise({ try: () => generate(request, options), catch: toError });
+          for (const data of result.variants) {
+            yield* appendVariant(data);
+          }
+          return { count: result.variants.length };
         }
         return yield* Effect.fail(
           new GenerationService.GenerationError(`Provider ${service.id} implements neither generate nor enqueue.`),
         );
       });
 
-      const result = yield* run.pipe(Effect.ensuring(Effect.sync(() => monitor?.remove())));
-
-      for (const data of result.variants) {
-        // Record provenance so each variant carries the prompt + params that produced it, falling
-        // back to the request when the provider does not echo them; the UI reconstructs the form
-        // from this when the variant is selected.
-        const generation: Generation.Generation = {
-          provider: service.id,
-          ...data.generation,
-          prompt: data.generation?.prompt ?? prompt,
-          parameters: data.generation?.parameters ?? artifactObj.config,
-        };
-        const variant = Variant.make({
-          contentType: data.contentType ?? service.contentType,
-          url: data.url,
-          generation,
-        });
-        // Owned by the artifact: cascade-deletes and deep-clones with it.
-        Obj.setParent(variant, artifactObj);
-        yield* Database.add(variant);
-        Obj.update(artifactObj, (artifactObj) => {
-          artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(variant)];
-          // Seed the cover with the first produced variant.
-          if (!artifactObj.cover) {
-            artifactObj.cover = Ref.make(variant);
-          }
-        });
-      }
-
-      return { count: result.variants.length };
+      return yield* run.pipe(Effect.ensuring(Effect.sync(() => monitor?.remove())));
     }),
   ),
   Operation.opaqueHandler,

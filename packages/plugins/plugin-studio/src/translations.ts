@@ -45,6 +45,8 @@ export const translations = [
         'generate-error.title': 'Generation failed',
         'close.label': 'Close',
         'all.tab.label': 'All',
+        'draft.label': 'Draft',
+        'draft.message': 'Compose a prompt, then generate a variant.',
         'empty.message': 'No variants yet.',
         'more.label': 'More',
         'delete.label': 'Delete artifact',

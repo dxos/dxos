@@ -20,18 +20,20 @@ import { type Text } from '@dxos/schema';
 import { PromptEditor, VariantGallery } from '#components';
 import { meta } from '#meta';
 import { GenerateForm, VariantRenderer } from '#surfaces';
-import { type Artifact, StudioCapabilities, StudioOperation } from '#types';
+import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
 
-type Selected = 'all' | number;
+/** `'all'` gallery, `'draft'` compose tab, or the index of a produced (frozen) variant. */
+type Selected = 'all' | 'draft' | number;
 
 /**
- * Media-agnostic article surface for an {@link Artifact}: a Toolbar with per-variant tabs (plus an
- * "All" gallery tab), a generator selector + Connect/Generate action, and an overflow menu (Delete);
- * the editable prompt; the kind-specific request form (a schema-driven {@link GenerateForm} surface,
- * overridable per kind); and the selected variant (rendered via the {@link VariantRenderer} surface
- * for its contentType) or the gallery.
+ * Media-agnostic article surface for an {@link Artifact}. The toolbar has an "All" gallery tab, a
+ * "Draft" compose tab, and a tab per produced {@link Variant}, plus a generator selector +
+ * Connect/Generate action and an overflow menu (Delete). The properties panel (prompt + kind-specific
+ * request form) binds to the current selection: the editable in-memory draft variant for
+ * "Draft"/"All", or the selected produced variant read-only (frozen once generated). Generating
+ * consumes the draft to append a new frozen variant; the draft persists for the next compose.
  */
 export const ArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -48,7 +50,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     [services, artifact.kind],
   );
 
-  // Reactive view of the artifact's variants + config.
+  // Reactive view of the artifact's variants.
   const [artifactSnapshot] = useObject(artifact);
 
   // The chosen generator (persisted on the artifact) drives the request form, connect button, and op.
@@ -72,12 +74,12 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         url: variant.url,
         content: variant.content,
         contentType: variant.contentType,
-        label: variant.generation?.prompt ?? undefined,
+        label: variant.name ?? variant.generation?.prompt ?? undefined,
       })),
     [variants],
   );
 
-  // Load the live prompt Text object (edits persist to its content).
+  // Load the live prompt Text object (edits persist to its content); shown editable while composing.
   const artifactId = artifact.id;
   const [promptText, setPromptText] = useState<Text.Text>();
   useEffect(() => {
@@ -99,8 +101,20 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artifactId]);
 
-  const [selected, setSelected] = useState<Selected>('all');
+  // In-memory draft variant (never added to the db): the editable compose surface. Reset when the
+  // generator changes so it seeds from the new provider's default config.
+  const draft = useMemo(
+    () => Variant.make({ config: { ...(provider?.defaultRequest ?? {}) } }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [artifactId, provider?.id],
+  );
+
+  const [selected, setSelected] = useState<Selected>('draft');
   const [generating, setGenerating] = useState(false);
+
+  const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
+  // "All" and "Draft" compose against the editable draft; a numbered tab inspects a frozen variant.
+  const composing = !selectedVariant;
 
   // Connector-managed credential: show the "Connect" button until the provider's connection exists.
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -113,32 +127,34 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   );
   const showConnect = !!connectorData && !connected && isSurfaceAvailable({ type: ConnectorAuth, data: connectorData });
 
-  // The kind-specific request config (validated against the provider's requestSchema).
-  const configValue = useMemo<Record<string, unknown>>(
-    () => ({ ...(provider?.defaultRequest ?? {}), ...(artifactSnapshot?.config ?? {}) }),
-    [provider?.defaultRequest, artifactSnapshot?.config],
+  // The draft's request config (provider defaults overlaid with the draft's edits).
+  const draftConfig = useMemo<Record<string, unknown>>(
+    () => ({ ...(provider?.defaultRequest ?? {}), ...(draft.config ?? {}) }),
+    [provider?.defaultRequest, draft],
   );
   const handleConfigChange = useCallback(
     (next: Record<string, unknown>) => {
-      Obj.update(artifact, (artifact) => {
-        artifact.config = next;
+      Obj.update(draft, (draft) => {
+        draft.config = next;
       });
     },
-    [artifact],
+    [draft],
   );
 
+  // Generation consumes the draft (its config + prompt) and appends a new frozen variant.
   const handleGenerate = useCallback(async () => {
     if (!db) {
       return;
     }
+    const producedIndex = variants.length;
     setGenerating(true);
     try {
       await invokePromise(
         StudioOperation.Generate,
-        { artifact: Ref.make(artifact), provider: provider?.id },
+        { artifact: Ref.make(artifact), provider: provider?.id, name: draft.name, config: draft.config },
         { spaceId: db.spaceId },
       );
-      setSelected('all');
+      setSelected(producedIndex);
     } catch (error) {
       log.catch(error);
       void invokePromise(LayoutOperation.AddToast, {
@@ -152,30 +168,37 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     } finally {
       setGenerating(false);
     }
-  }, [invokePromise, artifact, db, provider?.id]);
+  }, [invokePromise, artifact, db, provider?.id, draft, variants.length]);
 
-  // Resume an in-flight asynchronous generation (persisted jobId) on mount so a long provider poll
-  // survives navigation/remount. The generate op detects the stored jobId and polls (no re-enqueue).
+  // A produced variant with a persisted jobId is an in-flight async job; resume awaiting it on mount
+  // so a long provider poll survives navigation/remount (the op polls without re-enqueueing).
+  const pendingIndex = useMemo(() => variants.findIndex((variant) => !!variant.jobId), [variants]);
+  const pendingId = pendingIndex >= 0 ? variants[pendingIndex]?.id : undefined;
   const resumingRef = useRef(false);
-  const inFlightJobId = artifactSnapshot?.jobId;
   useEffect(() => {
-    if (!db || !inFlightJobId || generating || resumingRef.current) {
+    const pendingRef = pendingIndex >= 0 ? variantRefs[pendingIndex] : undefined;
+    if (!db || !pendingRef || generating || resumingRef.current) {
       return;
     }
     resumingRef.current = true;
-    void handleGenerate().finally(() => {
-      resumingRef.current = false;
-    });
-  }, [db, inFlightJobId, generating, handleGenerate]);
+    void invokePromise(
+      StudioOperation.Generate,
+      { artifact: Ref.make(artifact), provider: provider?.id, variant: pendingRef },
+      { spaceId: db.spaceId },
+    )
+      .catch((error) => log.catch(error))
+      .finally(() => {
+        resumingRef.current = false;
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [db, pendingId, generating, invokePromise, artifact, provider?.id]);
 
   // Undo-aware removal (trashes the object, removing it from any collection + closing its plank).
   const handleDelete = useCallback(() => {
     void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] });
   }, [invokePromise, artifact]);
 
-  const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
-  // A selected variant's recorded provenance drives a read-only view of the prompt + params that
-  // produced it; the "All" tab restores the editable compose form.
+  const busy = generating || pendingIndex >= 0;
   const selectedGeneration = selectedVariant?.generation;
 
   return (
@@ -186,13 +209,20 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
             {t('all.tab.label')}
           </Button>
+          <IconButton
+            iconOnly
+            icon='ph--pencil-simple--regular'
+            label={t('draft.label')}
+            variant={selected === 'draft' ? 'primary' : 'ghost'}
+            onClick={() => setSelected('draft')}
+          />
           {variants.map((variant, index) => (
             <Button
               key={variant.id}
               variant={selected === index ? 'primary' : 'ghost'}
               onClick={() => setSelected(index)}
             >
-              {index + 1}
+              {variant.jobId ? <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' /> : index + 1}
             </Button>
           ))}
           <Toolbar.Separator />
@@ -218,10 +248,10 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           ) : (
             <IconButton
               variant='primary'
-              icon={generating ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
-              iconClassNames={generating ? 'animate-spin' : undefined}
-              label={generating ? t('generating.label') : t('generate.label')}
-              disabled={!db || !provider || !hasAttention || generating}
+              icon={busy ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
+              iconClassNames={busy ? 'animate-spin' : undefined}
+              label={busy ? t('generating.label') : t('generate.label')}
+              disabled={!db || !provider || !hasAttention || busy || !composing}
               onClick={() => {
                 void handleGenerate();
               }}
@@ -249,37 +279,38 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
       <Panel.Content classNames='grid grid-rows-[auto_1fr] p-2 gap-2'>
         <div role='none' className='grid grid-rows-[6lh_1fr] gap-2 shrink-0 dx-document'>
           <PromptEditor
-            id={selectedGeneration ? `${artifactId}/variant/${selectedVariant?.id}/prompt` : `${artifactId}/prompt`}
-            text={selectedGeneration ? undefined : promptText}
-            value={selectedGeneration?.prompt}
-            readonly={!!selectedGeneration}
+            id={selectedVariant ? `${artifactId}/variant/${selectedVariant.id}/prompt` : `${artifactId}/prompt`}
+            text={composing ? promptText : undefined}
+            value={composing ? undefined : selectedGeneration?.prompt}
+            readonly={!composing}
             placeholder={t('prompt.placeholder')}
             compact
             classNames='border border-separator rounded p-2'
           />
           {provider && (
             <Surface.Surface
+              key={composing ? 'draft' : selectedVariant?.id}
               type={GenerateForm}
               data={
-                selectedGeneration
+                composing
                   ? {
                       kind: artifact.kind,
                       schema: provider.requestSchema,
-                      value: selectedGeneration.parameters ?? {},
-                      readonly: true,
+                      value: draftConfig,
+                      onChange: handleConfigChange,
                     }
                   : {
                       kind: artifact.kind,
                       schema: provider.requestSchema,
-                      value: configValue,
-                      onChange: handleConfigChange,
+                      value: selectedVariant?.config ?? {},
+                      readonly: true,
                     }
               }
               limit={1}
             />
           )}
         </div>
-        <div role='none' className='grow min-bs-0 overflow-auto'>
+        <div role='none' className='relative grow min-bs-0 overflow-auto'>
           {selected === 'all' ? (
             <VariantGallery
               variants={galleryItems}
@@ -292,22 +323,28 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               }}
             />
           ) : selectedVariant ? (
-            <Surface.Surface
-              type={VariantRenderer}
-              data={{
-                variant: {
-                  contentType: selectedVariant.contentType,
-                  url: selectedVariant.url,
-                  content: selectedVariant.content,
-                  generation: selectedVariant.generation,
-                },
-                contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
-              }}
-              limit={1}
-            />
+            selectedVariant.jobId ? (
+              <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+                {t('generating.label')}
+              </div>
+            ) : (
+              <Surface.Surface
+                type={VariantRenderer}
+                data={{
+                  variant: {
+                    contentType: selectedVariant.contentType,
+                    url: selectedVariant.url,
+                    content: selectedVariant.content,
+                    generation: selectedVariant.generation,
+                  },
+                  contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
+                }}
+                limit={1}
+              />
+            )
           ) : (
             <div role='status' className='flex items-center justify-center bs-full text-subdued'>
-              {t('empty.message')}
+              {t('draft.message')}
             </div>
           )}
         </div>

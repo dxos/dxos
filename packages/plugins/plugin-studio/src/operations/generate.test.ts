@@ -102,13 +102,17 @@ describe('generate', () => {
       services = [],
       creds = [],
       provider,
+      config,
+      variant,
     }: {
       services?: GenerationService.GenerationService[];
       creds?: { service: string; apiKey: string }[];
       provider?: string;
+      config?: Record<string, unknown>;
+      variant?: Ref.Ref<Variant.Variant>;
     } = {},
   ) =>
-    generateHandler.handler({ artifact: Ref.make(artifact), provider }).pipe(
+    generateHandler.handler({ artifact: Ref.make(artifact), provider, config, variant }).pipe(
       Effect.provideService(Capability.Service, capabilityService(...services)),
       Effect.provide(Database.layer(db)),
       Effect.provide(configuredCredentialsLayer(creds)),
@@ -183,7 +187,7 @@ describe('generate', () => {
     );
   });
 
-  test('async provider: enqueues, persists then clears jobId, appends the awaited variant', async ({ expect }) => {
+  test('async provider: enqueues, creates a pending variant, then fills it in', async ({ expect }) => {
     const artifact = addArtifact('A dancing avatar.', 'video');
     await db.flush();
 
@@ -195,30 +199,39 @@ describe('generate', () => {
     expect(calls).toEqual([{ op: 'enqueue' }, { op: 'awaitResult', jobId: 'job-123' }]);
 
     await db.flush();
-    // jobId is cleared once the result is appended.
-    expect(artifact.jobId).toBeUndefined();
-    expect(artifact.variants ?? []).toHaveLength(1);
+    // The pending variant is filled in place (its jobId cleared once the result arrives).
+    const [ref] = artifact.variants ?? [];
+    expect(ref).toBeDefined();
+    const loaded = ref ? await ref.load() : undefined;
+    expect(loaded?.jobId).toBeUndefined();
+    expect(loaded?.url).toBe('https://example.com/v.mp4');
   });
 
-  test('async provider: resumes an in-flight jobId (awaitResult only, no re-enqueue)', async ({ expect }) => {
+  test('async provider: resumes a pending variant (awaitResult only, no re-enqueue)', async ({ expect }) => {
     const artifact = addArtifact('A dancing avatar.', 'video');
+    // Simulate an in-flight pending variant owned by the artifact.
+    const pending = db.add(Variant.make({ jobId: 'job-123', config: {} }));
+    Obj.setParent(pending, artifact);
     Obj.update(artifact, (artifact) => {
-      artifact.jobId = 'job-123';
+      artifact.variants = [Ref.make(pending)];
     });
     await db.flush();
 
     const calls: { op: 'enqueue' | 'awaitResult'; jobId?: string }[] = [];
     const result = await run(artifact, {
       services: [mockAsyncService([{ url: 'https://example.com/v.mp4' }], calls)],
+      variant: Ref.make(pending),
     });
     expect(result.count).toBe(1);
-    // Resumed: only awaitResult was called with the persisted job id (no enqueue).
+    // Resumed: only awaitResult was called with the pending variant's job id (no enqueue).
     expect(calls).toEqual([{ op: 'awaitResult', jobId: 'job-123' }]);
     await db.flush();
-    expect(artifact.jobId).toBeUndefined();
+    expect(artifact.variants ?? []).toHaveLength(1);
+    expect(pending.jobId).toBeUndefined();
+    expect(pending.url).toBe('https://example.com/v.mp4');
   });
 
-  test('async provider: clears jobId when awaitResult fails (no resume loop / cancel restart)', async ({ expect }) => {
+  test('async provider: clears the pending jobId when awaitResult fails (no resume loop)', async ({ expect }) => {
     const artifact = addArtifact('A dancing avatar.', 'video');
     await db.flush();
 
@@ -236,8 +249,11 @@ describe('generate', () => {
 
     await expect(run(artifact, { services: [failing] })).rejects.toThrow(/boom/);
     await db.flush();
-    // jobId is cleared on failure so the article's resume effect won't loop.
-    expect(artifact.jobId).toBeUndefined();
-    expect(artifact.variants ?? []).toHaveLength(0);
+    // The pending variant remains but its jobId is cleared so the article's resume effect won't loop.
+    const [ref] = artifact.variants ?? [];
+    expect(ref).toBeDefined();
+    const loaded = ref ? await ref.load() : undefined;
+    expect(loaded?.jobId).toBeUndefined();
+    expect(loaded?.url).toBeUndefined();
   });
 });
