@@ -106,7 +106,7 @@ module Worker
   api:
     run: (options: Options) => void     # start the worker message loop (defaults endpoint to `self`).
     Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, createRuntime.
-    RuntimeHandle: {...}                # createSession({ appPort, systemPort, clientId, isOwner, onClose }) + optional idempotent stop().
+    RuntimeHandle: {...}                # createSession({ clientId, isOwner, onClose }) + optional idempotent stop().
 ```
 
 ### `@dxos/worker-framework/coordinator`

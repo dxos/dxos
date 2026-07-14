@@ -20,10 +20,10 @@
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./Client": {
-      "source": "./src/Client/index.ts",
-      "types": "./dist/types/src/Client/index.d.ts",
-      "browser": "./dist/lib/browser/Client/index.mjs",
-      "node": "./dist/lib/node-esm/Client/index.mjs"
+      "source": "./src/Client.ts",
+      "types": "./dist/types/src/Client.d.ts",
+      "browser": "./dist/lib/browser/Client.mjs",
+      "node": "./dist/lib/node-esm/Client.mjs"
     },
     "./Worker": {
       "source": "./src/Worker.ts",
