@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { RpcClient, RpcServer } from '@effect/rpc';
+import { type Effect, type Scope } from 'effect';
+
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
@@ -9,17 +12,22 @@ import * as WorkerProtocol from './WorkerProtocol';
 
 export type RuntimeHandle = {
   createSession(args: {
-    appPort: MessagePort;
-    systemPort: MessagePort;
     clientId: string;
     isOwner: boolean;
+
+    // TODO(dmaretskyi): repurpose as directional ports: clientToWorker and workerToClient. Hide ports and just expose RPC compoennts (RpcClient.Protocol).
+    appPort: MessagePort;
+    systemPort: MessagePort;
+
+    // TODO(dmaretskyi): I think this can be removed, and instead onClose is executed whenever the returned effect interrupts itself.
     onClose: () => Promise<void>;
-  }): Promise<void>;
-  /**
-   * Tears down the service runtime. Invoked by the framework when the worker is displaced by a
-   * newer instance or otherwise shut down. Optional and must be idempotent.
-   */
-  stop?(): Promise<void>;
+    // TODO(dmaretskyi): Use to provide port RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))
+    // TODO(dmaretskyi):
+    // RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
+    //   Layer.provide(BrowserWorker.layerPlatform(() => port)),
+    // )
+    // TODO(dmaretskyi): This RpcClient protocol is for worker to contanct the client.
+  }): Effect.Effect<never, never, Scope.Scope | RpcClient.Protocol | RpcServer.Protocol>;
 };
 
 export type Options = {
@@ -42,7 +50,7 @@ export type Options = {
   createRuntime: (args: {
     config: Record<string, any> | undefined;
     requestShutdown: () => void;
-  }) => Promise<RuntimeHandle>;
+  }) => Effect.Effect<RuntimeHandle, never, Scope.Scope>;
 };
 
 const defaultEndpoint = (): WorkerProtocol.WorkerEndpoint => {
