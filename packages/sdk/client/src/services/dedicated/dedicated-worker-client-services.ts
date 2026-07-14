@@ -60,10 +60,10 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         // worker→client port. Imported lazily so the RTC stack is only pulled in when a worker
         // connection opens.
         const { RtcTransportService } = await import('@dxos/network-manager');
+        const iceProviders = config.get('runtime.services.iceProviders');
         const transportService = new RtcTransportService(
           { iceServers: [...(config.get('runtime.services.ice') ?? [])] },
-          config.get('runtime.services.iceProviders') &&
-            createIceProvider(config.get('runtime.services.iceProviders')!),
+          iceProviders ? createIceProvider(iceProviders) : undefined,
         );
         this.#bridgeServer = serveBridgeService(workerToClient, transportService);
         await this.#bridgeServer.open();
