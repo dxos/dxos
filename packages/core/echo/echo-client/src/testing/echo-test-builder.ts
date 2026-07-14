@@ -15,7 +15,7 @@ import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Filter, Obj, Query, type Type } from '@dxos/echo';
+import { Filter, Obj, Query, type Entity, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -40,6 +40,7 @@ type OpenDatabaseOptions = {
 
 type PeerOptions = {
   types?: Type.AnyEntity[];
+  registry?: Entity.Unknown[];
   assignQueuePositions?: boolean;
   /** Path to a file-based SQLite database for persistence tests. Uses in-memory SQLite when omitted. */
   storagePath?: string;
@@ -83,6 +84,7 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _types: Type.AnyEntity[];
+  private readonly _registry: Entity.Unknown[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
   private readonly _clients = new Set<EchoClient>();
@@ -99,10 +101,11 @@ export class EchoTestPeer extends Resource {
     never
   >;
 
-  constructor({ types, assignQueuePositions, storagePath }: PeerOptions = {}) {
+  constructor({ types, registry, assignQueuePositions, storagePath }: PeerOptions = {}) {
     super();
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
+    this._registry = registry ?? [];
     this._assignQueuePositions = assignQueuePositions;
     this._storagePath = storagePath;
   }
@@ -148,6 +151,7 @@ export class EchoTestPeer extends Resource {
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
     void this._echoClient.graph.registry.add(this._types);
+    void this._echoClient.graph.registry.add(this._registry);
   }
 
   get client() {
