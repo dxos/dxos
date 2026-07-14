@@ -14,12 +14,6 @@ import * as WorkerProtocol from './WorkerProtocol';
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
 
-// Temporary port instrumentation helper (worker-framework undefined-MessagePort crash).
-const describePort = (port: unknown): { present: boolean; type: string } => ({
-  present: port != null,
-  type: Object.prototype.toString.call(port),
-});
-
 export interface LeaderTimeouts {
   /**
    * Interval at which a leader broadcasts liveness heartbeats while holding the lock.
@@ -306,13 +300,6 @@ export class Connection extends Resource {
 
       const { clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner } = result;
       log('worker-connection: connected to worker', { leaderId, isOwner });
-      // Temporary port instrumentation: ports as received from the coordinator's `provide-port`.
-      log.warn('[port-trace] tab received provide-port', {
-        clientId: this.#clientId,
-        leaderId,
-        clientToWorker: describePort(clientToWorker),
-        workerToClient: describePort(workerToClient),
-      });
 
       queueMicrotask(async () => {
         try {
@@ -440,14 +427,6 @@ class LeaderSession extends Resource {
           ready.wake(event.data);
           break;
         case 'session':
-          // Temporary port instrumentation: ports as received from the worker, before the leader
-          // forwards them to the coordinator (transfer neuters the leader's copy after this point).
-          log.warn('[port-trace] leader forwarding session ports', {
-            clientId: event.data.clientId,
-            leaderId: this.#leaderId,
-            clientToWorker: describePort(event.data.clientToWorker),
-            workerToClient: describePort(event.data.workerToClient),
-          });
           this.#coordinator.sendMessage({
             type: 'provide-port',
             clientToWorker: event.data.clientToWorker,

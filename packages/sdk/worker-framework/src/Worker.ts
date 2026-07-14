@@ -176,19 +176,6 @@ export const run = ({
           const workerToClientChannel = new MessageChannel();
 
           log('dedicated-worker: posting session ports', { clientId: message.clientId });
-          // Temporary port instrumentation (worker-framework undefined-MessagePort crash): the origin
-          // of the session ports; if these are present but the tab receives undefined, the relay drops them.
-          log.warn('[port-trace] worker minted session ports', {
-            clientId: message.clientId,
-            port1s: {
-              clientToWorker: clientToWorkerChannel.port1 != null,
-              workerToClient: workerToClientChannel.port1 != null,
-            },
-            port2s: {
-              clientToWorker: clientToWorkerChannel.port2 != null,
-              workerToClient: workerToClientChannel.port2 != null,
-            },
-          });
           endpoint.postMessage(
             {
               type: 'session',
