@@ -90,7 +90,7 @@ export interface GenerationService {
    * the connector's "Connect" button (via the `ConnectorAuth` surface) when no credential is present.
    */
   readonly connectorId?: string;
-  /** Effect Schema of the kind-specific request config; drives the default GenerateForm. */
+  /** Effect Schema of the kind-specific request config; drives the schema-driven request form. */
   readonly requestSchema: Schema.Schema.AnyNoContext;
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;

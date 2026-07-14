@@ -4,7 +4,6 @@
 
 export * from './ArtifactCard';
 export * from './GalleryImage';
-export * from './GenerateForm';
 export * from './PromptEditor';
 export * from './VariantGallery';
 export * from './VariantRenderer';

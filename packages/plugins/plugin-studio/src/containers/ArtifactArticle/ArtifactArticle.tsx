@@ -15,9 +15,10 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, DropdownMenu, Icon, IconButton, Input, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { Form } from '@dxos/react-ui-form';
 import { type Text } from '@dxos/schema';
 
-import { GenerateForm, PromptEditor, VariantGallery } from '#components';
+import { PromptEditor, VariantGallery } from '#components';
 import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
 import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
@@ -338,16 +339,22 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               </Input.Root>
             </div>
 
-            {/* Schema-driven request-config form (from the generator's requestSchema), inlined.
-                Composing edits the draft; a produced variant is shown read-only. */}
+            {/* Schema-driven request-config form (from the generator's requestSchema). Composing
+                edits the draft; a produced variant is shown read-only (all fields, empties kept). */}
             {provider && (
-              <GenerateForm
+              <Form.Root
                 key={composing ? 'draft' : selectedVariant?.id}
                 schema={provider.requestSchema}
-                value={composing ? draftConfig : (selectedVariant?.config ?? {})}
-                onChange={composing ? handleConfigChange : undefined}
+                values={composing ? draftConfig : (selectedVariant?.config ?? {})}
                 readonly={!composing}
-              />
+                keepEmptyReadonly={!composing}
+                autoSave={composing}
+                onValuesChanged={composing ? handleConfigChange : undefined}
+              >
+                <Form.Content>
+                  <Form.FieldSet />
+                </Form.Content>
+              </Form.Root>
             )}
           </div>
         </div>
