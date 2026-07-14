@@ -2,16 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Graph, type Node } from '@dxos/app-graph';
-import { MenuBuilder, graphActions, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type Graph } from '@dxos/app-graph';
+import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
 import { deleteAction, openGroup } from '../Toolbar';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
-
-/** Contributed actions opt into the toolbar via `disposition: 'toolbar'` (vs context-menu-only). */
-const isToolbarAction = (action: Node.ActionLike) => action.properties.disposition === 'toolbar';
 
 export type UseEventToolbarActionsProps = {
   /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */

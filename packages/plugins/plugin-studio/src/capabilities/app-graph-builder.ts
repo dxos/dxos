@@ -8,11 +8,12 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { Connection, Connector, connectorAuthActions } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { Artifact } from '#types';
+import { Artifact, StudioCapabilities } from '#types';
 
 import {
   ARTIFACTS_NODE_DATA,
@@ -23,14 +24,14 @@ import {
   getKindIcon,
 } from '../constants';
 
-/**
- * Contributes the Studio navtree entry: a "Studio" section under the `content` group (always
- * present, so it is the create hub) with a virtual "Artifacts" child node that opens the
- * ArtifactsArticle. Mirrors plugin-inbox's Mailboxes section + virtual Drafts/Topics nodes.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
+      /**
+       * Contributes the Studio navtree entry: a "Studio" section under the `content` group (always
+       * present, so it is the create hub) with a virtual "Artifacts" child node that opens the
+       * ArtifactsArticle. Mirrors plugin-inbox's Mailboxes section + virtual Drafts/Topics nodes.
+       */
       GraphBuilder.createExtension({
         id: 'studioSection',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
@@ -83,8 +84,45 @@ export default Capability.makeModule(
           ]);
         },
       }),
+
+      GraphBuilder.createExtension({
+        id: 'artifactConnectorAuth',
+        match: (node) => (Obj.instanceOf(Artifact.Artifact, node.data) ? Option.some(node.data) : Option.none()),
+        // A `connector:` (not `actions:`) extension, so `connectorAuthActions`' group node keeps its
+        // type — see the doc comment on `AppNode.makeToolbarActionGroup`.
+        relation: Node.actionRelation(),
+        connector: (artifact, get) =>
+          Effect.gen(function* () {
+            const db = Obj.getDatabase(artifact);
+            if (!db) {
+              return [];
+            }
+
+            const services = (yield* Capability.Service).getAll(StudioCapabilities.GenerationService);
+            const provider = services.find((candidate) => candidate.kind === artifact.kind);
+            if (!provider?.connectorId) {
+              return [];
+            }
+
+            const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
+            const connected = allConnections.some((connection) => connection.connectorId === provider.connectorId);
+            if (connected) {
+              // Connected: the article's own "Generate" button covers this action.
+              return [];
+            }
+
+            const allConnectors = (yield* Capability.Service).getAll(Connector).flat();
+            return connectorAuthActions({
+              connectorIds: [provider.connectorId],
+              db,
+              spaceId: db.spaceId,
+              allConnectors,
+              allConnections,
+            });
+          }),
+      }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

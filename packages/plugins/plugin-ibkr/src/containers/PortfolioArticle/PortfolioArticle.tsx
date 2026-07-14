@@ -78,7 +78,7 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <PortfolioSyncAction subject={subject} />
+          <PortfolioSyncAction subject={subject} attendableId={attendableId} />
           <PortfolioImportAction subject={subject} />
         </Toolbar.Root>
       </Panel.Toolbar>

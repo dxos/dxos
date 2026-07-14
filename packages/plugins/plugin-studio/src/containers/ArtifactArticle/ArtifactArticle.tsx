@@ -2,21 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, DropdownMenu, Icon, IconButton, Input, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
+import { Menu, graphActions, isToolbarAction, useMenuActions } from '@dxos/react-ui-menu';
 
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
@@ -39,7 +41,6 @@ type Selected = 'all' | 'draft' | number;
 export const ArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
-  const isSurfaceAvailable = Surface.useIsAvailable();
   const { invokePromise } = useOperationInvoker();
 
   const db = Obj.getDatabase(artifact);
@@ -99,16 +100,18 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   // "All" and "Draft" compose against the editable draft; a numbered tab inspects a frozen variant.
   const composing = !selectedVariant;
 
-  // Connector-managed credential: show the "Connect" button until the provider's connection exists.
+  // Connector-managed credential: show the "Connect" action (contributed by this plugin's own
+  // app-graph-builder) until the provider's connection exists.
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connected = provider?.connectorId
     ? connections.some((connection) => connection.connectorId === provider.connectorId)
     : true;
-  const connectorData = useMemo(
-    () => (provider?.connectorId ? { connectorIds: [provider.connectorId] } : undefined),
-    [provider?.connectorId],
+  const { graph } = useAppGraph();
+  const connectActions = useMemo(
+    () => Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction })),
+    [graph, attendableId],
   );
-  const showConnect = !!connectorData && !connected && isSurfaceAvailable({ type: ConnectorAuth, data: connectorData });
+  const connectMenuActions = useMenuActions(connectActions);
 
   // The draft's request config (provider defaults overlaid with the draft's edits).
   const draftConfig = useMemo<Record<string, unknown>>(
@@ -278,9 +281,10 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               </Select.Portal>
             </Select.Root>
           )}
-          {showConnect && connectorData ? (
-            // TODO(burdon): Inject via capability.
-            <Surface.Surface type={ConnectorAuth} data={connectorData} limit={1} />
+          {!connected ? (
+            <Menu.Root {...connectMenuActions} attendableId={attendableId}>
+              <Menu.Toolbar />
+            </Menu.Root>
           ) : (
             <IconButton
               variant='primary'

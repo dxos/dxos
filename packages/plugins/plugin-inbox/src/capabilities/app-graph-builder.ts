@@ -14,7 +14,7 @@ import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/ec
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connector';
+import { Connection, Connector, ConnectorOperation, SyncBinding, connectorAuthActions } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
@@ -25,6 +25,9 @@ import { meta } from '#meta';
 import { Calendar, InboxOperation, Mailbox } from '#types';
 
 import {
+  GMAIL_CONNECTOR_ID,
+  GOOGLE_CALENDAR_CONNECTOR_ID,
+  JMAP_MAIL_CONNECTOR_ID,
   MAILBOX_DRAFTS_NODE_DATA,
   MAILBOX_DRAFTS_TYPE,
   MAILBOX_SUBSCRIPTIONS_NODE_DATA,
@@ -684,6 +687,74 @@ export default Capability.makeModule(
               },
             },
           ]);
+        },
+      }),
+
+      GraphBuilder.createExtension({
+        id: 'mailboxConnectorAuth',
+        // Filter nodes store the parent mailbox as node.data; exclude them so this only appears on the mailbox itself.
+        match: (node) =>
+          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
+            ? Option.some(node.data)
+            : Option.none(),
+        // A `connector:` (not `actions:`) extension, so `connectorAuthActions`' group node keeps its
+        // type — see the doc comment on `AppNode.makeToolbarActionGroup`.
+        relation: Node.actionRelation(),
+        connector: (mailbox, get) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          const connections = get(
+            db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding).source()).atom,
+          );
+          if (connections.some(Connection.instanceOf)) {
+            // Connected: the article's own "Sync" button covers this action.
+            return Effect.succeed([]);
+          }
+          return Effect.gen(function* () {
+            const allConnectors = (yield* Capability.Service).getAll(Connector).flat();
+            const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
+            return connectorAuthActions({
+              connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID],
+              db,
+              spaceId: db.spaceId,
+              existingTarget: Ref.make(mailbox),
+              allConnectors,
+              allConnections,
+            });
+          });
+        },
+      }),
+
+      GraphBuilder.createExtension({
+        id: 'calendarConnectorAuth',
+        match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        // A `connector:` (not `actions:`) extension, so `connectorAuthActions`' group node keeps its
+        // type — see the doc comment on `AppNode.makeToolbarActionGroup`.
+        relation: Node.actionRelation(),
+        connector: (calendar, get) => {
+          const db = Obj.getDatabase(calendar);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          const bindings = get(db.query(Query.select(Filter.id(calendar.id)).targetOf(SyncBinding.SyncBinding)).atom);
+          if (bindings.some(SyncBinding.instanceOf)) {
+            // Connected: the article's own "Sync" button covers this action.
+            return Effect.succeed([]);
+          }
+          return Effect.gen(function* () {
+            const allConnectors = (yield* Capability.Service).getAll(Connector).flat();
+            const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
+            return connectorAuthActions({
+              connectorIds: [GOOGLE_CALENDAR_CONNECTOR_ID],
+              db,
+              spaceId: db.spaceId,
+              existingTarget: Ref.make(calendar),
+              allConnectors,
+              allConnections,
+            });
+          });
         },
       }),
     ]);

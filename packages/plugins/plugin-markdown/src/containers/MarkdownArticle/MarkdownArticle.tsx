@@ -15,6 +15,7 @@ import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
 
 import {
@@ -71,13 +72,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const { graph } = useAppGraph();
     const runAction = useActionRunner();
     const customActions = useMemo(() => {
-      return Atom.make((get) => {
-        const actions = get(graph.actions(attendableId ?? id));
-        const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-        const edges = nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' }));
-        return { nodes, edges };
-      });
-    }, [graph]);
+      return Atom.make((get) => graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction }));
+    }, [graph, attendableId, id]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);

@@ -11,10 +11,6 @@ import { meta } from '#meta';
 import { type Calendar } from '#types';
 
 import { Initialize, InitializeAction } from '../../components';
-import { GOOGLE_CALENDAR_CONNECTOR_ID } from '../../constants';
-
-// Stable reference for the ConnectorAuth Surface's `connectorIds` (avoids a new array each render).
-const CONNECTOR_IDS = [GOOGLE_CALENDAR_CONNECTOR_ID];
 
 export type InitializeCalendarProps = {
   calendar: Calendar.Calendar;
@@ -39,10 +35,12 @@ InitializeCalendar.displayName = 'InitializeCalendar';
 
 export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // The connect dropdown shown when the calendar isn't connected yet is contributed by this plugin's
+  // own app-graph-builder (`calendarConnectorAuth`), keyed on the calendar's own graph node id.
   return (
     <InitializeAction
       target={calendar}
-      connectorIds={CONNECTOR_IDS}
+      nodeId={calendar.id}
       syncLabel={t('sync-calendar.label')}
       notify={{
         success: ['sync-calendar-success.title', { ns: meta.profile.key }],

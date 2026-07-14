@@ -4,9 +4,10 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Connector, ConnectorAuth, type ConnectorEntry } from '@dxos/plugin-connector';
+import { Connector, type ConnectorEntry } from '@dxos/plugin-connector';
+import { ConnectorAuthMenu } from '@dxos/plugin-connector/components';
 import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -19,7 +20,7 @@ export type IntegrationPromptProps = {
 /**
  * Agent-facing connector prompt: rendered when the assistant needs a service the user has not yet
  * connected. Resolves the matching {@link Connector} entries for `service` and offers to connect via
- * the shared connector-auth surface, so the user can grant access inline instead of the agent failing
+ * the shared connector-auth menu, so the user can grant access inline instead of the agent failing
  * silently.
  */
 export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
@@ -27,13 +28,13 @@ export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
   const space = useActiveSpace();
   const connectors = useCapabilities(Connector).flat();
   const matched = useMemo(() => (service ? matchConnectors(connectors, service) : []), [connectors, service]);
+  const connectorIds = useMemo(() => matched.map((connector) => connector.id), [matched]);
 
   if (!service) {
     return null;
   }
 
   const label = matched[0]?.label ?? service;
-  const connectorIds = matched.map((connector) => connector.id);
 
   return (
     <div role='group' className='flex flex-col gap-2 my-2 p-3 border border-subdued-separator rounded-sm'>
@@ -48,9 +49,9 @@ export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
           </p>
         </div>
       </div>
-      {connectorIds.length > 0 && space && (
+      {connectorIds.length > 0 && (
         <div className='flex justify-end'>
-          <Surface.Surface type={ConnectorAuth} data={{ connectorIds }} limit={1} />
+          <ConnectorAuthMenu connectorIds={connectorIds} db={space?.db} />
         </div>
       )}
     </div>
