@@ -14,16 +14,17 @@ export type VideoVariantProps = {
 
 /**
  * Default `VariantRenderer` for `video/*`: a `<video controls>` resolved from the variant's
- * url/content. Fills the container with `object-contain` (rather than sizing to the video's
- * intrinsic dimensions) so switching variants does not flash the element at its default small size
- * before metadata loads.
+ * url/content. Positioned `absolute inset-0` to fill its (positioned) container with
+ * `object-contain`, so its box is fixed by the container rather than the video's intrinsic
+ * dimensions — switching variants no longer flashes the element at its default small size before
+ * metadata loads. The caller must provide a sized, `relative` container.
  */
 export const VideoVariant = ({ variant }: VideoVariantProps) => {
   const src = useVariantSource(variant);
   if (!src) {
     return null;
   }
-  return <video src={src} controls preload='metadata' className='block is-full bs-full object-contain rounded' />;
+  return <video src={src} controls preload='metadata' className='absolute inset-0 is-full bs-full object-contain' />;
 };
 
 VideoVariant.displayName = 'VideoVariant';

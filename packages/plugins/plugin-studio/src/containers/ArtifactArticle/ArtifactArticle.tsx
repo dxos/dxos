@@ -279,7 +279,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             />
           )}
         </div>
-        <div role='none' className='grow min-bs-0 overflow-auto'>
+        <div role='none' className='relative grow min-bs-0 overflow-auto'>
           {selected === 'all' ? (
             <VariantGallery
               variants={galleryItems}
