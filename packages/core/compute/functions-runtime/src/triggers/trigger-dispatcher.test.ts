@@ -6,19 +6,16 @@ import { Registry } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
-import { Cause } from 'effect';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import {
   Operation,
   OperationHandlerSet,
-  RunAgainError,
   ServiceNotAvailableError,
   ServiceResolver,
   Trace,
@@ -31,7 +28,6 @@ import { Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { dbg } from '@dxos/log';
 import { Person, Task } from '@dxos/types';
 
 import { TriggerDispatcher } from './trigger-dispatcher';
@@ -903,7 +899,7 @@ describe('TriggerDispatcher', () => {
   });
 
   describe('Retry', () => {
-    it.effect.only(
+    it.effect(
       'should if trigger returns RunAgainError',
       Effect.fnUntraced(function* ({ expect }) {
         const dispatcher = yield* TriggerDispatcher;
@@ -914,11 +910,90 @@ describe('TriggerDispatcher', () => {
           spec: Trigger.specDirect(),
         });
         yield* Database.add(trigger);
-        const result = yield* dispatcher.invokeTrigger({ trigger, event: {} });
+        yield* dispatcher.invokeTrigger({ trigger, event: {} });
 
         yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
         const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(Effect.flatten);
         expect(counter.count).toBe(3);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a genuine failure arms cooldown rather than a retry',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          // A Person object is not a persistent operation, so invocation fails the instance
+          // invariant -- a genuine failure, distinct from a RunAgainError re-invocation request.
+          const badFn = Obj.make(Person.Person, { fullName: 'not-an-operation' });
+          const { db } = yield* Database.Service;
+          db.registry.add([badFn]);
+
+          const trigger = Trigger.make({
+            runnable: Ref.make(badFn) as any,
+            enabled: true,
+            spec: Trigger.specDirect(),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          const { result } = yield* dispatcher.invokeTrigger({ trigger, event: {} });
+          expect(Exit.isFailure(result)).toBe(true);
+
+          // No retry is enqueued; draining does nothing and the trigger is in cooldown.
+          const drained = yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
+          expect(drained.length).toBe(0);
+
+          const registry = yield* Registry.AtomRegistry;
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus?.retryPending).toBe(false);
+          expect(triggerStatus?.cooldownUntil).toBeInstanceOf(Date);
+        },
+        Effect.provide(
+          TestLayer({
+            timeControl: 'manual',
+            startingTime: new Date('2025-09-05T15:01:00.000Z'),
+            failureCooldown: Duration.minutes(5),
+          }),
+        ),
+      ),
+    );
+  });
+
+  describe('Runtime State', () => {
+    it.effect(
+      'exposes per-trigger cron schedule and last result',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('*/5 * * * *'),
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const registry = yield* Registry.AtomRegistry;
+        yield* dispatcher.refreshTriggers();
+
+        {
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus).toBeDefined();
+          expect(triggerStatus?.nextExecution).toBeInstanceOf(Date);
+          expect(triggerStatus?.retryPending).toBe(false);
+          expect(triggerStatus?.lastResult).toBeUndefined();
+        }
+
+        yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
+
+        {
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          const lastResult = triggerStatus?.lastResult;
+          invariant(lastResult, 'expected a last result');
+          expect(Exit.isSuccess(lastResult)).toBe(true);
+        }
       }, Effect.provide(TestLayer())),
     );
   });

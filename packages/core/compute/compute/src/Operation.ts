@@ -656,7 +656,7 @@ export const schedule = <I, O>(
  * Call this inside an operation to stop the current invocation and have the system re-run it.
  * Currently only supported for operations running as a result of a trigger.
  */
-export const runAgain = (): Effect.Effect<never, void, void> =>
+export const runAgain = (): Effect.Effect<never, void> =>
   Effect.failCauseSync(() => Cause.die(new RunAgainError()));
 
 /**
