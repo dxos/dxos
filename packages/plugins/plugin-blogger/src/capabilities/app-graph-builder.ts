@@ -127,7 +127,8 @@ export default Capability.makeModule(
           return Effect.succeed([
             Node.makeAction({
               id: 'add-post',
-              data: () => Operation.invoke(BloggerOperation.AddPost, { publication: Ref.make(publication), target: db }),
+              data: () =>
+                Operation.invoke(BloggerOperation.AddPost, { publication: Ref.make(publication), target: db }),
               properties: {
                 label: ['add-object.label', { ns: Type.getTypename(Blogger.Post) }],
                 icon: 'ph--plus--regular',
