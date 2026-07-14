@@ -13,9 +13,9 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 
-import { GoogleCalendar } from '../../../apis';
-import { AccessTokenNotPopulatedError } from '../../../errors';
-import { InboxOperation } from '../../../types';
+import { GoogleCalendar } from '../../../../apis';
+import { AccessTokenNotPopulatedError } from '../../../../errors';
+import { InboxOperation } from '../../../../types';
 
 const CALENDAR_LIST_URL =
   'https://www.googleapis.com/calendar/v3/users/me/calendarList?fields=items(id,summary,description,primary)';
@@ -33,6 +33,7 @@ const listGoogleCalendars = (token: string) =>
       Effect.flatMap(HttpClientResponse.schemaBodyJson(GoogleCalendar.CalendarListResponse)),
       Effect.scoped,
     );
+
     return body.items ?? [];
   });
 

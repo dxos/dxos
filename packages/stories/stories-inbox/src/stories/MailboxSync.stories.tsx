@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -31,9 +31,9 @@ import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
 import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
-import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin, SyncTriggerRunner } from '../testing';
+import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
 
-const SYNC_STORY_TYPES = [
+const TYPES = [
   AccessToken.AccessToken,
   Connection.Connection,
   Cursor.Cursor,
@@ -52,13 +52,13 @@ const SYNC_STORY_TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const SYNC_STORY_CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
 
 type DecoratorOptions = {
-  routine?: boolean;
+  trigger?: boolean;
 };
 
-const createDecorators = ({ routine = false }: DecoratorOptions = {}) => [
+const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
@@ -66,17 +66,17 @@ const createDecorators = ({ routine = false }: DecoratorOptions = {}) => [
     plugins: [
       ...corePlugins(),
       ClientPlugin({
-        types: SYNC_STORY_TYPES,
-        ...SYNC_STORY_CLIENT_SERVICES,
+        types: TYPES,
+        ...CLIENT_SERVICES,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
             if (client.halo.identity.get()) {
               return;
             }
 
-            const { personalSpace: space } = yield* initializeIdentity(client);
-            space.db.add(Mailbox.make());
-            yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            const { personalSpace } = yield* initializeIdentity(client);
+            personalSpace.db.add(Mailbox.make());
+            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
           }),
       }),
       SpacePlugin({}),
@@ -85,7 +85,7 @@ const createDecorators = ({ routine = false }: DecoratorOptions = {}) => [
       DebugPlugin({}),
       PreviewPlugin(),
       ProgressPlugin(),
-      ...(routine ? [RoutinePlugin()] : []),
+      ...(trigger ? [RoutinePlugin()] : []),
       StorySyncPlugin(),
       StoryModulesPlugin(),
       StorybookPlugin({}),
@@ -95,29 +95,18 @@ const createDecorators = ({ routine = false }: DecoratorOptions = {}) => [
 
 const DefaultStory = () => (
   <ModuleContainer
-    layout={[[Module.Mailbox], [Module.Message], [Module.Topics], [Module.Connector, Module.Archive, Module.Stats]]}
+    layout={[
+      [Module.Mailbox, Module.Message],
+      [Module.Archive, Module.Stats],
+      [Module.Connector, Module.Triggers],
+    ]}
     compact
   />
 );
 
-const CronSyncStory = () => (
-  <>
-    <SyncTriggerRunner />
-    <ModuleContainer
-      layout={[
-        [Module.Mailbox],
-        [Module.Message],
-        [Module.Topics],
-        [Module.Connector, Module.Triggers, Module.Archive, Module.Stats],
-      ]}
-      compact
-    />
-  </>
-);
-
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
-  component: DefaultStory as FC,
+  component: DefaultStory,
   decorators: createDecorators(),
   parameters: {
     layout: 'fullscreen',
@@ -134,7 +123,10 @@ export const Default: Story = {
   render: DefaultStory,
 };
 
-export const CronSync: Story = {
-  render: CronSyncStory,
-  decorators: createDecorators({ routine: true }),
+export const WithSyncTrigger: Story = {
+  render: DefaultStory,
+  decorators: createDecorators({ trigger: true }),
+  args: {
+    batch: 10,
+  },
 };

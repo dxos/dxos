@@ -10,10 +10,10 @@ import { Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { OtelHarness } from '../../../testing/otel-harness';
-import { inboxSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
-import { runGmailSync } from './sync';
+import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
+import { OtelHarness } from '../../../../testing/otel-harness';
+import { inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
+import { syncGmail } from './sync';
 
 // Benchmarks the sync stack across dataset sizes to surface O(n²) growth (e.g. per-message
 // commit/append time rising with N), verifying at every size that the expected spans (root, fetch,
@@ -44,7 +44,7 @@ const EXPECTED_SPANS = [
   'sync.commit.advanceCursor',
 ];
 
-describe.runIf(process.env.DX_BENCH)('runGmailSync benchmark', () => {
+describe.runIf(process.env.DX_BENCH)('syncGmail benchmark', () => {
   let builder: EchoTestBuilder;
   const harness = new OtelHarness('inbox-sync-bench');
 
@@ -73,7 +73,7 @@ describe.runIf(process.env.DX_BENCH)('runGmailSync benchmark', () => {
 
       const startedAt = performance.now();
       const { newMessages } = await EffectEx.runPromise(
-        runGmailSync({ binding: Ref.make(binding), after }).pipe(
+        syncGmail({ binding: Ref.make(binding), after }).pipe(
           Effect.provide(inboxSyncTestServices(db, dataset)),
           Effect.provide(harness.layer),
         ),

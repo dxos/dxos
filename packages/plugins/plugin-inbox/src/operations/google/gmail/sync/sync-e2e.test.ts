@@ -23,8 +23,8 @@ import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Cursor, Message } from '@dxos/types';
 
-import { GMAIL_CONNECTOR_ID } from '../../../constants';
-import { Mailbox } from '../../../types';
+import { GMAIL_CONNECTOR_ID } from '../../../../constants';
+import { Mailbox } from '../../../../types';
 
 const config = configPreset({ edge: 'local' });
 

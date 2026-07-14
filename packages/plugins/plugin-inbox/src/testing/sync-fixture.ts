@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, createProgressRegistry } from '@dxos/app-toolkit';
 import { Credential, Operation } from '@dxos/compute';
 import { Blob, Database, Ref, Relation, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -63,21 +63,20 @@ export const seedMailboxBinding = async (
  * seeded mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and
  * never touches `Operation` — it is provided (unavailable invoker) only to satisfy the requirement
  * channel. `Capability.Service` is a bare `CapabilityManager` (no `PluginManager`/plugin-activation
- * lifecycle needed) so a test can optionally contribute a `ProgressRegistry` to observe `runGmailSync`'s
- * live progress monitor.
+ * lifecycle needed) that always contributes a `ProgressRegistry` — `runGmailSync` resolves it as a
+ * singleton via `Capability.get`, matching the always-loaded `plugin-progress` host in production. A
+ * test may override the default with its own instance to observe the sync's live progress monitor.
  */
 const ambientSyncServices = (
   db: Database.Database,
   options: { progressRegistry?: AppCapabilities.ProgressRegistry } = {},
 ) => {
   const capabilities = CapabilityManager.make({ registry: Registry.make() });
-  if (options.progressRegistry) {
-    capabilities.contribute({
-      module: 'test',
-      interface: AppCapabilities.ProgressRegistry,
-      implementation: options.progressRegistry,
-    });
-  }
+  capabilities.contribute({
+    module: 'test',
+    interface: AppCapabilities.ProgressRegistry,
+    implementation: options.progressRegistry ?? createProgressRegistry(Registry.make()),
+  });
   return Layer.mergeAll(
     Database.layer(db),
     InboxResolver.Live.pipe(Layer.provide(Database.layer(db))),
