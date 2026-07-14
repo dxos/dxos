@@ -20,6 +20,9 @@ export type Spec =
   | { kind: 'items'; limit?: number }
   | { kind: 'count' };
 
+export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
+export type AggregateTypeId = typeof AggregateTypeId;
+
 /**
  * A per-group aggregate declaration, materialised as a top-level field on the flat result record
  * `Query.aggregate` produces and orderable via a following `orderBy(Order.property(name))`. Name it
@@ -30,10 +33,9 @@ export type Spec =
  * `group` entries aggregates the entire input into a single row.
  */
 export interface Aggregate<T, V> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Aggregate': { element: T; value: V };
+  readonly [AggregateTypeId]: { element: T; value: V };
 
-  'spec': Spec;
+  spec: Spec;
 }
 
 export type Any = Aggregate<any, any>;
@@ -47,15 +49,15 @@ export type AggregationResult<A extends Record<string, Any>> = EffectTypes.Simpl
 >;
 
 class AggregateClass<T, V> implements Aggregate<T, V> {
-  private static 'variance': Aggregate<any, any>['~Aggregate'] = {} as Aggregate<any, any>['~Aggregate'];
+  private static 'variance': Aggregate<any, any>[AggregateTypeId] = {} as Aggregate<any, any>[AggregateTypeId];
 
-  static 'is'(value: unknown): value is Any {
-    return typeof value === 'object' && value !== null && '~Aggregate' in value;
+  static is(value: unknown): value is Any {
+    return typeof value === 'object' && value !== null && AggregateTypeId in value;
   }
 
-  'constructor'(public readonly spec: Spec) {}
+  constructor(public readonly spec: Spec) {}
 
-  '~Aggregate' = AggregateClass.variance as Aggregate<T, V>['~Aggregate'];
+  [AggregateTypeId] = AggregateClass.variance as Aggregate<T, V>[AggregateTypeId];
 }
 
 /**
