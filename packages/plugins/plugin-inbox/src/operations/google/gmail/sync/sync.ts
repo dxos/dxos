@@ -179,19 +179,17 @@ export const syncGmail = ({
     // below then drops all further messages so the stream drains and the run stops without error.
     const controller = new AbortController();
 
-    // TODO(burdon): Should be only one?
-    // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
-    // Keyed by the mailbox URI so MailboxArticle and the R0 popover can subscribe to this run.
-    const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
-      registry.register(createSyncProgressKey(mailbox), {
-        label: mailbox.name ?? 'Mailbox',
-        onCancel: () => {
-          controller.abort();
-        },
-      }),
-    );
-
-    const updateProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+    // Live progress monitor. Keyed by the mailbox URI so MailboxArticle and the R0 popover can
+    // subscribe to this run. The registry is a singleton contributed by an always-loaded host
+    // (`plugin-progress`); tests contribute one via `inboxSyncTestServices`. Absence is a wiring
+    // bug, not a typed failure — `orDie` keeps the operation's error channel provider-scoped.
+    const progressRegistry = yield* Capability.get(AppCapabilities.ProgressRegistry).pipe(Effect.orDie);
+    const progressMonitor = progressRegistry.register(createSyncProgressKey(mailbox), {
+      label: mailbox.name ?? 'Mailbox',
+      onCancel: () => {
+        controller.abort();
+      },
+    });
 
     // Accumulate the exact retrieval total as each date chunk's id list is enumerated (known before any
     // full-message fetch), revising the meter's total so it renders a determinate bar even without a
@@ -200,7 +198,7 @@ export const syncGmail = ({
     let totalToRetrieve = 0;
     const addToTotal = (count: number) => {
       totalToRetrieve += count;
-      progressMonitors.forEach((monitor) => monitor.total(totalToRetrieve));
+      progressMonitor.total(totalToRetrieve);
     };
 
     const startedAt = new Date().toISOString();
@@ -280,7 +278,7 @@ export const syncGmail = ({
       onEnumerated: addToTotal,
       // Advance at retrieval (one per fetched message) so `current` reaches `total`; dedup/decode drops
       // happen downstream of the source, so counting there would leave the bar short of 100%.
-      onRetrieved: () => updateProgress(1),
+      onRetrieved: () => progressMonitor.advance(1),
     }).pipe(
       SyncBinding.dedupStage<GoogleMail.Message>(
         'dedup',
@@ -319,7 +317,7 @@ export const syncGmail = ({
           // Log the raw error for debugging; the meter shows only a short reason (the full exception —
           // provider errors, auth tokens — must not reach the UI).
           log.warn('gmail sync failed', { error });
-          progressMonitors.forEach((monitor) => monitor.fail('Sync failed'));
+          progressMonitor.fail('Sync failed');
         }),
       ),
     );
@@ -335,14 +333,12 @@ export const syncGmail = ({
     finishedAt = new Date(finishedMs).toISOString();
     publishStats();
 
-    progressMonitors.forEach((monitor) => {
-      if (controller.signal.aborted) {
-        monitor.note('Cancelled');
-      } else {
-        monitor.done();
-      }
-      monitor.remove();
-    });
+    if (controller.signal.aborted) {
+      progressMonitor.note('Cancelled');
+    } else {
+      progressMonitor.done();
+    }
+    progressMonitor.remove();
 
     log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
     return {

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type Progress } from '@dxos/progress';
-import { Panel } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter';
@@ -49,9 +49,11 @@ const DefaultStory = ({ state: stateProp, ...args }: ProgressMeterProps) => {
   }, [stateProp]);
 
   return (
-    <Panel.Root classNames='border'>
-      <Panel.Toolbar />
-      <Panel.Content>Content</Panel.Content>
+    <Panel.Root classNames='bg-base-surface'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
+      <Panel.Content className='p-2 h-[10rem]' />
       <Panel.Statusbar asChild>
         <ProgressMeter {...args} state={state} />
       </Panel.Statusbar>

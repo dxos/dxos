@@ -328,7 +328,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         <Panel.Statusbar asChild>
           <ProgressMeter
             state={progress}
-            classNames='h-12 border-t border-separator'
+            classNames='border-t border-separator'
             onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
           />
         </Panel.Statusbar>
