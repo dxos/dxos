@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
-
 import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { withModuleProps } from '@dxos/story-modules';
@@ -32,7 +30,7 @@ import {
   TokenManagerModule,
   TraceModule,
   TriggersModule,
-} from '../components';
+} from '../modules';
 
 /**
  * Role tokens for the stories-assistant modules. Each module is contributed as a dedicated
@@ -89,7 +87,7 @@ export const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
     id: 'module.context',
     filter: Surface.makeFilter(Module.Context),
-    component: () => <ContextModule />,
+    component: withModuleProps(ContextModule),
   }),
   Surface.create({
     id: 'module.database',
@@ -166,16 +164,24 @@ export const moduleSurfaces: Surface.Definition[] = [
     filter: Surface.makeFilter(Module.Tasks),
     component: withModuleProps(TasksModule),
   }),
-  Surface.create({ id: 'module.test', filter: Surface.makeFilter(Module.Test), component: () => <TestModule /> }),
+  Surface.create({
+    id: 'module.test',
+    filter: Surface.makeFilter(Module.Test),
+    component: withModuleProps(TestModule),
+  }),
   Surface.create({
     id: 'module.tokenManager',
     filter: Surface.makeFilter(Module.TokenManager),
-    component: () => <TokenManagerModule />,
+    component: withModuleProps(TokenManagerModule),
   }),
-  Surface.create({ id: 'module.trace', filter: Surface.makeFilter(Module.Trace), component: () => <TraceModule /> }),
+  Surface.create({
+    id: 'module.trace',
+    filter: Surface.makeFilter(Module.Trace),
+    component: withModuleProps(TraceModule),
+  }),
   Surface.create({
     id: 'module.triggers',
     filter: Surface.makeFilter(Module.Triggers),
-    component: () => <TriggersModule />,
+    component: withModuleProps(TriggersModule),
   }),
 ];

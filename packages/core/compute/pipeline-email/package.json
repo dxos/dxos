@@ -34,6 +34,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/markdown": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",

@@ -21,17 +21,9 @@ import {
   EchoHostService,
   type EdgeAutomergeReplicator,
   EdgeAutomergeReplicatorService,
-  type IMetadataStore,
-  IMetadataStoreService,
   MeshEchoReplicatorLayer,
   MeshEchoReplicatorService,
-  type SpaceManager,
-  SpaceManagerLayer,
-  SpaceManagerService,
-  SqliteMetadataStore,
-  SqliteMetadataStoreLayer,
   runSqliteHealthCheck,
-  valueEncoding,
 } from '@dxos/echo-host';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import {
@@ -93,6 +85,9 @@ import {
   InvitationsManagerService,
   SpaceInvitationProtocol,
 } from '../invitations';
+import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore, SqliteMetadataStoreLayer } from '../metadata';
+import { valueEncoding } from '../pipeline';
+import { type SpaceManager, SpaceManagerLayer, SpaceManagerService } from '../space';
 import {
   DataSpaceManager,
   DataSpaceManagerLayer,

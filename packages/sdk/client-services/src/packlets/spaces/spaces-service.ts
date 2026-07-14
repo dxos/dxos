@@ -15,7 +15,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type EchoHost, type SpaceManager } from '@dxos/echo-host';
+import { type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { writeMessages } from '@dxos/feed-store';
@@ -62,6 +62,7 @@ import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
 import { type IdentityManager } from '../identity';
+import { type SpaceManager } from '../space';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,

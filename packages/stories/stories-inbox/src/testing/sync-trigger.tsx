@@ -27,6 +27,7 @@ export class MailboxTriggerRelation extends Type.makeRelation<MailboxTriggerRela
  * {@link InboxOperation.GoogleMailSync}. Idempotent — skips when a
  * {@link MailboxTriggerRelation} already links the mailbox to a trigger.
  */
+// TODO(burdon): Convert to decorator?
 export const SyncTriggerRunner = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
@@ -39,6 +40,7 @@ export const SyncTriggerRunner = () => {
     space?.db,
     mailbox ? Query.select(Filter.id(mailbox.id)).sourceOf(MailboxTriggerRelation) : Query.select(Filter.nothing()),
   );
+
   const configuredRef = useRef(false);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export const SyncTriggerRunner = () => {
         [Obj.Parent]: mailbox,
         enabled: true,
         runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
-        spec: Trigger.specManual(),
+        spec: Trigger.specDirect(),
         input: { binding: Ref.make(binding) },
       }),
     );

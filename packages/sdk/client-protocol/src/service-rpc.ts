@@ -32,8 +32,10 @@ import {
   SystemService,
   WorkerService,
 } from '@dxos/protocols/rpc';
-import { type RpcPort, layerProtocolRpcPortClient } from '@dxos/rpc';
+import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
+import { createIFramePort } from '@dxos/rpc-tunnel';
 
+import { DEFAULT_CLIENT_CHANNEL } from './config';
 import * as Rpc from './Rpc';
 import { type ClientServices } from './service';
 
@@ -170,6 +172,38 @@ export class ClientRpcServer {
     await server?.close();
   }
 }
+
+export type ServeClientServicesOverIFrameOptions = {
+  iframe: HTMLIFrameElement;
+  origin: string;
+  channel?: string;
+  services: () => Partial<ClientServicesHandlers>;
+};
+
+/**
+ * Serves {@link ClientServices} to a child iframe (e.g. the shell) over the effect-rpc byte protocol
+ * and opens the connection. The iframe uses a byte {@link RpcPort} transport (not a `MessagePort`),
+ * matching the shell's {@link ClientServicesProxy} consumer, so this serves over
+ * {@link layerProtocolRpcPortServer} rather than the Worker-runner protocol used by
+ * {@link ClientRpcServer}. Kept here — alongside the rpc definitions — so the `RpcPort` binding is
+ * resolved in this package's type universe rather than in `@dxos/client`, whose merged-with-`main`
+ * build resolves `ClientRpcServer.port` as a `MessagePort`.
+ */
+export const serveClientServicesOverIFrame = async ({
+  iframe,
+  origin,
+  channel = DEFAULT_CLIENT_CHANNEL,
+  services,
+}: ServeClientServicesOverIFrameOptions): Promise<Rpc.GroupServer> => {
+  const server = Rpc.serveOverProtocol(
+    layerProtocolRpcPortServer(createIFramePort({ channel, iframe, origin })),
+    ClientServicesRpcs,
+    makeClientServicesHandlers({ services }),
+    { disableTracing: true, concurrency: 'unbounded' },
+  );
+  await server.open();
+  return server;
+};
 
 /**
  * Builds handler layers for every client service RPC, dispatching to the service implementations

@@ -64,6 +64,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -107,6 +110,9 @@
     },
     {
       "path": "../plugin-file"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-preview"

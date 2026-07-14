@@ -6,7 +6,7 @@ import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Blob, Database, Feed, Filter, Obj, Query, Ref, Scope, Tag } from '@dxos/echo';
+import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Message, Person } from '@dxos/types';
@@ -20,6 +20,19 @@ import { runJmapSync } from './sync';
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
   db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getFeedUri(mailbox.feed.target!)!))).run();
+
+/** Feed insertion order (oldest-inserted first) as message `created` timestamps. */
+const insertionOrderTimestamps = async (db: Database.Database, mailbox: Mailbox.Mailbox) => {
+  const feed = mailbox.feed.target!;
+  const messages = await db
+    .query(
+      Query.select(Filter.type(Message.Message))
+        .from(Scope.feed(Feed.getFeedUri(feed)!))
+        .orderBy(Order.natural('asc')),
+    )
+    .run();
+  return messages.map((message) => Date.parse(message.created));
+};
 
 // The JMAP sync driven end-to-end against a real ECHO db + a mock JMAP API — no live account.
 // `runJmapSync` requires `JmapMailApi` rather than providing the live HTTP client itself, so the
@@ -167,6 +180,36 @@ describe('runJmapSync against a mock JMAP API', () => {
     const ids = await feedIds();
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBe(mid.emails.length + recent.emails.length + older.emails.length);
+  });
+
+  test("backward keeps JMAP's newest-first order and forward reverses to oldest-first", async ({ expect }) => {
+    // Small enough to land in one page (QUERY_PAGE_SIZE = 50), so feed insertion order directly
+    // reflects `jmapSource`'s query order.
+    const end = subDays(new Date(), 3);
+    const dataset = generateJmapDataset({ count: 4, seed: 7, start: subDays(end, 2), end });
+    const after = subDays(new Date(), 14).toISOString();
+
+    // No cursor → backward (initial sync): newest-first, so the cursor advance doesn't strand a gap
+    // (harmless here since backward never advances the cursor, but keeps the two directions symmetric).
+    const backward = await seed();
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(backward.binding), after }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(backward.db, dataset)),
+      ),
+    );
+    const backwardOrder = await insertionOrderTimestamps(backward.db, backward.mailbox);
+    expect(backwardOrder).toEqual([...backwardOrder].sort((left, right) => right - left));
+
+    // Explicit forward (incremental resume): oldest-first, so a run capped by MAX_SCAN advances the
+    // cursor gap-free instead of jumping to the newest key and stranding the older, unprocessed middle.
+    const forward = await seed();
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(forward.db, dataset)),
+      ),
+    );
+    const forwardOrder = await insertionOrderTimestamps(forward.db, forward.mailbox);
+    expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
   });
 
   test('attachments land as Blobs on the feed with resolvable attachment refs', async ({ expect }) => {

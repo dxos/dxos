@@ -201,10 +201,11 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
           <DropdownMenu.Portal>
             <DropdownMenu.Content>
               <DropdownMenu.Viewport>
-                {items?.map(({ label, onClick: onSelect }, index) => (
+                {items?.map(({ label, icon, onClick: onSelect }, index) => (
                   // `context` is the generic payload threaded to each handler; the cast is the
                   // generic boundary (T may be `void`, so `context` is typed `T | undefined`).
                   <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                    {icon && <Icon icon={icon} />}
                     {label}
                   </DropdownMenu.Item>
                 ))}
@@ -528,22 +529,22 @@ CardLink.displayName = CARD_LINK_NAME;
 export const Card = {
   Root: CardRoot,
 
-  // Header
+  // Containers
   Header: CardHeader,
+  Body: CardBody,
 
-  // Header / row parts
+  // Header components
   Block: CardBlock,
   DragHandle: CardDragHandle,
   ActionIconButton: CardActionIconButton,
   Menu: CardMenu,
   Title: CardTitle,
 
-  // Body
-  Body: CardBody,
+  // Body components
   Section: CardSection,
   Row: CardRow,
 
-  // Body parts
+  // Row components
   Text: CardText,
   Html: CardHtml,
   Poster: CardPoster,

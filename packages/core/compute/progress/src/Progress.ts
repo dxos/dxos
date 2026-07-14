@@ -175,5 +175,4 @@ export const deriveEta = (task: TaskProgress): number | undefined => {
   if (task.total !== undefined && task.current > 0 && task.current < task.total && task.elapsedMs !== undefined) {
     return (task.elapsedMs / task.current) * (task.total - task.current);
   }
-  return undefined;
 };
