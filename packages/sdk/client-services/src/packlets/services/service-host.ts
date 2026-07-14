@@ -66,7 +66,6 @@ import {
   type ServiceContextRuntimeProps,
   ServiceContextService,
 } from './service-context';
-import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostProps = {
   /**
@@ -98,7 +97,9 @@ export type InitializeOptions = {
  */
 export class ClientServicesHost {
   private readonly _resourceLock?: ResourceLock;
-  private readonly _serviceRegistry: ServiceRegistry<ClientServicesHandlers>;
+  // Effect-rpc handlers served over each connection, resolved from the Layer stack on open and reset
+  // to the host-local set on close. Held directly (no separate registry indirection).
+  #handlers: Partial<ClientServicesHandlers>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _statusUpdate = new Event<void>();
@@ -165,9 +166,7 @@ export class ClientServicesHost {
         const scope = Effect.runSync(Scope.make());
         try {
           const rpc = await EffectEx.runPromise(
-            makeInProcessClientServicesRpc(() => this._serviceRegistry.services).pipe(
-              Effect.provideService(Scope.Scope, scope),
-            ),
+            makeInProcessClientServicesRpc(() => this.#handlers).pipe(Effect.provideService(Scope.Scope, scope)),
           );
           const services = makeServicesFromRpc(rpc, Runtime.defaultRuntime);
           return await createDiagnostics(services, this._serviceContext, this._config!);
@@ -190,9 +189,9 @@ export class ClientServicesHost {
     this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
     this._loggingService = new LoggingServiceImpl();
 
-    this._serviceRegistry = new ServiceRegistry<ClientServicesHandlers>({
+    this.#handlers = {
       SystemService: this._systemService,
-    });
+    };
   }
 
   get isOpen() {
@@ -207,12 +206,8 @@ export class ClientServicesHost {
     return this._serviceContext;
   }
 
-  get serviceRegistry() {
-    return this._serviceRegistry;
-  }
-
   get services() {
-    return this._serviceRegistry.services;
+    return this.#handlers;
   }
 
   /**
@@ -359,7 +354,7 @@ export class ClientServicesHost {
     this._serviceContext = resolved.serviceContext;
     const identityService = resolved.identityService;
 
-    this._serviceRegistry.setServices({
+    this.#handlers = {
       SystemService: this._systemService,
       IdentityService: identityService,
       ContactsService: resolved.contactsService,
@@ -388,7 +383,7 @@ export class ClientServicesHost {
       }),
 
       EdgeAgentService: resolved.edgeAgentService,
-    });
+    };
 
     log('service-host: opening service context...');
     await this._serviceContext.open(ctx);
@@ -425,7 +420,7 @@ export class ClientServicesHost {
     log('closing...', { deviceKey });
     this.diagnosticsBroadcastHandler.stop();
     await this._devtoolsProxy?.close();
-    this._serviceRegistry.setServices({ SystemService: this._systemService });
+    this.#handlers = { SystemService: this._systemService };
     await this._loggingService.close();
     await this._serviceContext.close();
     await this.#stackRuntime?.dispose();

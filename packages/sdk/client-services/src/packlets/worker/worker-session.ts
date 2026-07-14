@@ -88,7 +88,7 @@ export class WorkerSession {
     };
 
     const services = () => ({
-      ...this._serviceHost.serviceRegistry.services,
+      ...this._serviceHost.services,
       WorkerService: this.#workerServiceHandlers,
     });
 

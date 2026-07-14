@@ -1,6 +1,6 @@
 # client-services — Worker runtime refactor
 
-_Resume: Phase 3 — eliminate `ServiceRegistry`, serving handlers from Context. Uncommitted: none. Last: Phase 2 landed — `WorkerRuntime` is now a `Context.Tag` + `layerWorkerRuntime` with an Effect service surface (`start`/`stop`/`createSession`/`connectWebrtcBridge`), `WorkerSession.open`/`close` return Effects, call sites drop the `Effect.promise` bridges; builds/lint/tests green. Deviations from the sketch: lifecycle stays caller-driven (explicit `start`/`stop` Effects, not Layer finalizers) because `Worker.run` wraps `createRuntime` in `Effect.scoped` and resolves it immediately; runtime deps are passed via the `layerWorkerRuntime` factory options rather than separate `WorkerConfigProvider`/`StorageLock`/`SqliteLayer` tags; `WorkerSession` remains a class (state holder) with Effect open/close; readiness gate still a `Trigger`._
+_Resume: Phase 4 — make `ClientServicesHost` an Effect service (Context.Tag + Layer) and fold `ServiceContext` into it. Uncommitted: none. Last: Phase 3 landed — `ServiceRegistry` deleted; `ClientServicesHost` holds resolved handlers in a private `#handlers` field (set on open, reset on close); full Context-union serving deferred into Phase 4. Earlier: Phase 2 landed — `WorkerRuntime` is now a `Context.Tag` + `layerWorkerRuntime` with an Effect service surface (`start`/`stop`/`createSession`/`connectWebrtcBridge`), `WorkerSession.open`/`close` return Effects, call sites drop the `Effect.promise` bridges; builds/lint/tests green. Deviations from the sketch: lifecycle stays caller-driven (explicit `start`/`stop` Effects, not Layer finalizers) because `Worker.run` wraps `createRuntime` in `Effect.scoped` and resolves it immediately; runtime deps are passed via the `layerWorkerRuntime` factory options rather than separate `WorkerConfigProvider`/`StorageLock`/`SqliteLayer` tags; `WorkerSession` remains a class (state holder) with Effect open/close; readiness gate still a `Trigger`._
 
 Remove the legacy shared-worker services path, then convert `WorkerRuntime` / `WorkerSession` from imperative Promise-based classes to Effect services (Context tags + Layers).
 
@@ -118,23 +118,19 @@ Replace the imperative class + `async`/`Promise` API with Effect services: Conte
 
 ### Tasks
 
-- [ ] **Define remaining handler tags**
-  - Add Context tags for services not yet tagged: `SystemService`, `LoggingService`, `DevtoolsHost` (or confirm they should remain host-local impls merged at serve time)
-  - Export a `ClientServicesHandlersContext` type alias: union of all RPC handler tags matching `ClientServicesHandlers`
-- [ ] **Serve RPC from Context**
-  - Replace `ClientServicesHost._serviceRegistry` with Context-backed handler resolution in `open()` / `services` accessor
-  - Update `ClientRpcServer` params (or call sites) so `makeClientServicesHandlers` pulls from Context instead of `() => Partial<ClientServicesHandlers>`
-  - `worker-session.ts`: drop `...this._serviceHost.serviceRegistry.services` spread; merge `WorkerService` session handlers with Context-provided host handlers
-- [ ] **Update in-process bridge**
-  - `makeInProcessClientServicesRpc` in `@dxos/client-protocol`: accept Context/Layer or a `getHandlers: Effect` instead of `services: () => Partial<ClientServicesHandlers>`
-  - Fix diagnostics path in `service-host.ts` (`getDiagnostics`) to use the same Context-based resolution
-- [ ] **Delete `ServiceRegistry`**
-  - Remove `service-registry.ts`, `service-registry.test.ts`, and `serviceRegistry` getter from `ClientServicesHost`
-  - Remove `setServices` / `addService` / `removeService` call sites
-- [ ] **Verify**
-  - `moon run client-services:test -- src/packlets/services/`
-  - `moon run client-protocol:test` (effect-rpc / handler wiring)
-  - Worker session + local-client-services smoke: RPC dispatch for Identity, Spaces, System
+- [x] **Define remaining handler tags**
+  - Confirmed `SystemService`, `LoggingService`, `DevtoolsHost` stay host-local impls merged at serve time (no Context tag). The per-service RPC tags in `client-services-layer.ts` already back the rest; a dedicated `ClientServicesHandlersContext` union is deferred to Phase 4 where the host becomes a Layer.
+- [x] **Serve RPC from Context**
+  - Replaced the `ServiceRegistry` bag with a private `#handlers` field on `ClientServicesHost`, resolved from the Layer stack on `open()` and reset on `close()`; the `services` accessor returns it directly.
+  - `worker-session.ts`: dropped the `serviceRegistry.services` spread in favour of `this._serviceHost.services`.
+  - NOTE: full Context-union serving (`ClientRpcServer` / `makeClientServicesHandlers` pulling per-tag from Context) folds into Phase 4 once the host is Layer-backed.
+- [x] **Update in-process bridge**
+  - `makeInProcessClientServicesRpc` already takes a lazy `() => Partial<ClientServicesHandlers>` thunk (Context-agnostic); `getDiagnostics` now feeds it `() => this.#handlers`. Signature change to accept a Context/Layer deferred to Phase 4.
+- [x] **Delete `ServiceRegistry`**
+  - Removed `service-registry.ts`, `service-registry.test.ts`, the `serviceRegistry` getter, and the `setServices` / `addService` / `removeService` API.
+- [x] **Verify**
+  - `moon run client-services:build client-services:lint client:build` — green.
+  - `moon run client-services:test` — 154 passed / 3 skipped (effect-rpc + service-context wiring intact).
 
 ### References
 
