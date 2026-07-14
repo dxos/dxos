@@ -8,8 +8,8 @@ import { afterEach, describe, test } from 'vitest';
 import { GenerationService } from '@dxos/plugin-studio/types';
 
 import { IDEOGRAM_GENERATE_URL } from '../constants';
+import { generateWithIdeogram } from './ideogram-client';
 import { mapIdeogramResponse } from './ideogram-mapping';
-import { generateWithIdeogram } from './IdeogramClient';
 
 describe('ideogram mapping', () => {
   test('maps data entries to variants and drops url-less ones', ({ expect }) => {
@@ -29,7 +29,7 @@ describe('ideogram mapping', () => {
           { url: null, prompt: 'filtered' },
         ],
       },
-      { model: 'V_2' },
+      { model: 'V_2', prompt: 'a' },
     );
 
     expect(variants).toHaveLength(1);
@@ -42,11 +42,37 @@ describe('ideogram mapping', () => {
       requestId: 'req-1',
       createdAt: '2026-07-11T00:00:00Z',
     });
-    expect(variants[0].generation?.parameters).toMatchObject({
-      resolution: '1024x1024',
-      styleType: 'REALISTIC',
-      isImageSafe: true,
-    });
+  });
+
+  test('coerces null fields to undefined (Ideogram returns null, Generation schema is not nullable)', ({ expect }) => {
+    const variants = mapIdeogramResponse(
+      {
+        created: null,
+        request_id: null,
+        data: [
+          {
+            url: 'https://img/1.png',
+            prompt: null,
+            resolution: null,
+            seed: null,
+            style_type: null,
+            is_image_safe: null,
+          },
+        ],
+      },
+      { model: 'V_2', prompt: 'a' },
+    );
+
+    const generation = variants[0]?.generation;
+    expect(generation).toBeDefined();
+    // No null anywhere — else Variant.make (which validates the Generation schema) throws a ParseError.
+    expect(generation?.requestId).toBeUndefined();
+    expect(generation?.createdAt).toBeUndefined();
+    expect(generation?.prompt).toBeUndefined();
+    expect(generation?.seed).toBeUndefined();
+    for (const value of Object.values(generation ?? {})) {
+      expect(value).not.toBeNull();
+    }
   });
 });
 

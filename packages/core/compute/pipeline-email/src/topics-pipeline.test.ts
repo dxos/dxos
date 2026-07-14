@@ -4,12 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { type TagResult } from './stages/tag';
 import { runTopicsPipeline } from './topics-pipeline';
-import { Topic } from './types';
 
 const OWNER = 'me@x.com';
 const NOW = '2026-01-10T00:00:00.000Z';
@@ -30,11 +28,11 @@ const messages = () => [
   msg('Invoice #A3F9B2 from Acme', 'billing@acme.com', '2026-01-03T10:00:00.000Z'),
 ];
 
-const stubTag = async (): Promise<TagResult> => ({ tags: ['work'], spam: false });
+const stubTag = async (): Promise<TagResult> => ({ tags: ['work'], spam: false, bulk: false });
 const stubSummarize = async (): Promise<string> => 'A topic summary.';
 
 describe('runTopicsPipeline', () => {
-  test('tags every message and materializes topics', async ({ expect }) => {
+  test('tags every message and returns summarized topic drafts', async ({ expect }) => {
     const result = await runTopicsPipeline(
       { messages: messages(), ownerEmail: OWNER, now: NOW },
       {
@@ -44,9 +42,8 @@ describe('runTopicsPipeline', () => {
     );
     expect(result.messageTags).toHaveLength(4);
     expect(result.messageTags.every((entry) => entry.tags.includes('work'))).toBe(true);
-    expect(result.topics.length).toBeGreaterThan(0);
-    expect(result.topics.every((topic) => Obj.instanceOf(Topic, topic))).toBe(true);
-    expect(result.topics.every((topic) => topic.summary === 'A topic summary.')).toBe(true);
+    expect(result.topicDrafts.length).toBeGreaterThan(0);
+    expect(result.topicDrafts.every((draft) => draft.summary === 'A topic summary.')).toBe(true);
   });
 
   test('limit + skipMessage bound tagging (resumable-lite)', async ({ expect }) => {
@@ -68,12 +65,31 @@ describe('runTopicsPipeline', () => {
         summarize: stubSummarize,
       },
     );
-    const firstLabel = all.topics[0].label;
+    const firstLabel = all.topicDrafts[0].label;
     const result = await runTopicsPipeline(
       { messages: messages(), ownerEmail: OWNER, now: NOW, skipTopic: (label) => label === firstLabel },
       { tag: stubTag, summarize: stubSummarize },
     );
-    expect(result.topics.some((topic) => topic.label === firstLabel)).toBe(false);
-    expect(result.topics.length).toBe(all.topics.length - 1);
+    expect(result.topicDrafts.some((draft) => draft.label === firstLabel)).toBe(false);
+    expect(result.topicDrafts.length).toBe(all.topicDrafts.length - 1);
+  });
+
+  test('keepTopic drops clusters with no known-person participant', async ({ expect }) => {
+    // Only alice is a known person; the billing@acme thread is dropped.
+    const known = new Set(['alice@x.com']);
+    const result = await runTopicsPipeline(
+      {
+        messages: messages(),
+        ownerEmail: OWNER,
+        now: NOW,
+        keepTopic: (draft) => draft.participants.some((email) => known.has(email)),
+      },
+      { tag: stubTag, summarize: stubSummarize },
+    );
+    expect(result.topicDrafts.length).toBeGreaterThan(0);
+    expect(result.topicDrafts.every((draft) => draft.participants.includes('alice@x.com'))).toBe(true);
+    expect(result.topicDrafts.some((draft) => draft.participants.includes('billing@acme.com'))).toBe(false);
+    // Tagging is unaffected by the topic gate — every message is still tagged.
+    expect(result.messageTags).toHaveLength(4);
   });
 });

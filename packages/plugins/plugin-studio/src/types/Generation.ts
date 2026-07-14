@@ -8,15 +8,14 @@ import * as Schema from 'effect/Schema';
 
 /**
  * Provenance recorded on a generated {@link Variant} (inline, not an ECHO object). Absent on
- * uploaded/external variants. `parameters` carries provider-specific knobs (resolution, style, …)
- * so new providers add data without a schema change.
+ * uploaded/external variants. The request knobs live on {@link Variant.config}; this records what
+ * the provider actually did (resolved prompt, seed, request id, …).
  */
 export const Generation = Schema.Struct({
   provider: Schema.String,
   model: Schema.optional(Schema.String),
   /** The resolved/magic prompt actually used by the provider. */
   prompt: Schema.optional(Schema.String),
-  parameters: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
   seed: Schema.optional(Schema.Number),
   createdAt: Schema.optional(Schema.String),
   requestId: Schema.optional(Schema.String),

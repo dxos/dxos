@@ -40,6 +40,9 @@
       "path": "../../core/mesh/rpc"
     },
     {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

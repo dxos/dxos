@@ -53,7 +53,7 @@ TileRoot.displayName = 'Tile.Root';
 //
 
 /** A single `Card.Menu` dropdown item. */
-export type TileMenuItem = { label: string; onClick: () => void };
+export type TileMenuItem = { label: string; icon?: string; onClick: () => void };
 
 type TileHeaderProps = {
   /** Header title content (rendered in a flex row). */

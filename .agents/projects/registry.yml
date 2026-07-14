@@ -14,8 +14,8 @@ projects:
     summary: Open-weight vs premier model routing for the mailbox pipelines (labeling / summaries / drafts).
     tasks: packages/stories/stories-brain/TASKS.md
     design: packages/stories/stories-brain/fixtures/REPORT.md
-    prs: [12163, 12167]
-    resume: 'REPORT §5 actionable items shipped in PR #12167 (classify-sender, isReplyable person-only, triage summarize, single enrichment pass, draft Instructions, model-policy map, topics fix). Next: run the private-corpus evals (classify-sender bootstrap→review, draft re-score) + design two-tier foreground/background latency.'
+    prs: [12163, 12167, 12178]
+    resume: 'PR #12178 (Topics UX v2: bulk triage, opt-in suggestions, TopicArticle master/detail, create-from-message) opened — watch the Check workflow to green + surface the Composer preview. Deferred follow-ups in TASKS.md: Phase A live-feed thread resolution + deck-peer path; Phase C fact extraction; AnchoredTo cleanup on topic delete. Earlier open work: private-corpus evals + two-tier latency design.'
 
   - name: task-planning-skill-update
     status: active

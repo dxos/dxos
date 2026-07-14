@@ -13,11 +13,12 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, ProgressMeter, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
-import { Aggregate, type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
+import { Aggregate, type Database, Ref as EchoRef, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
@@ -226,6 +227,26 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           break;
         }
 
+        case 'create-topic': {
+          const message = messages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void invokePromise(
+              InboxOperation.CreateTopicFromMessage,
+              { mailbox: EchoRef.make(mailbox), message },
+              { spaceId: db.spaceId },
+            )
+              .then((result) => {
+                const topicId = result?.data?.topicId;
+                if (topicId) {
+                  void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
+                }
+              })
+              // Surface the failure instead of silently swallowing it (AI timeout / DB error).
+              .catch((err) => log.catch(err));
+          }
+          break;
+        }
+
         case 'select-tag': {
           setFilterText((prevFilterText) => {
             // Check if tag already exists.
@@ -297,6 +318,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
             pagination={feed ? pagination : undefined}
+            enableIgnoreSender
+            enableCreateTopic
             onAction={handleAction}
           />
         )}
