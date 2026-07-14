@@ -51,9 +51,9 @@ export type ConnectorAuthActionsOptions = {
 };
 
 /**
- * The connector-auth action group for an object — the single source shared by the
- * {@link ConnectorAuthMenu} component (which renders its children as a dropdown menu) and owning
- * plugins' `app-graph-builder` extensions (studio/ibkr/inbox, which contribute it to an object
+ * The connector-auth action group for an object — the single source shared by the standalone
+ * `ConnectorAuthMenu` component (plugin-assistant, which renders its children as a dropdown menu) and
+ * owning plugins' `app-graph-builder` extensions (studio/ibkr/inbox, which contribute it to an object
  * toolbar). Always a single dropdown group so both renderings are identical.
  *
  * Its children: existing {@link Connection}s offered for reuse (bind inline), a separator, then a

@@ -7,9 +7,9 @@ import React, { useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Connector, type ConnectorEntry } from '@dxos/plugin-connector';
-import { ConnectorAuthMenu } from '@dxos/plugin-connector/components';
 import { Icon, useTranslation } from '@dxos/react-ui';
 
+import { ConnectorAuthMenu } from '#components';
 import { meta } from '#meta';
 
 export type IntegrationPromptProps = {

@@ -14,6 +14,8 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { Connection, Connector, type ConnectorEntry, SyncBinding, connectorAuthActions } from '@dxos/plugin-connector';
+import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { Graph, useActionRunner } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -23,9 +25,7 @@ import { Expando } from '@dxos/schema';
 import { AccessToken, Cursor } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Connection, Connector, type ConnectorEntry, SyncBinding } from '#types';
 
-import { connectorAuthActions } from '../../util';
 import { ConnectorAuthMenu } from './ConnectorAuthMenu';
 
 /** `connector-b` already has a Connection below, so it renders as a "reuse" entry; `connector-a` has
@@ -125,7 +125,7 @@ const ToolbarStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-connector/components/ConnectorAuthMenu',
+  title: 'plugins/plugin-assistant/components/ConnectorAuthMenu',
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
@@ -162,7 +162,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...connectorTranslations],
   },
 } satisfies Meta<React.ComponentType>;
 
