@@ -6,16 +6,19 @@ import { Registry } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
+import { Cause } from 'effect';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import {
   Operation,
   OperationHandlerSet,
+  RunAgainError,
   ServiceNotAvailableError,
   ServiceResolver,
   Trace,
@@ -24,10 +27,11 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
-import { Database, DXN, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { dbg } from '@dxos/log';
 import { Person, Task } from '@dxos/types';
 
 import { TriggerDispatcher } from './trigger-dispatcher';
@@ -74,12 +78,45 @@ const ProbeOp = Operation.make({
   services: [Database.Service],
 });
 
-const ProbeHandler = ProbeOp.pipe(
-  Operation.withHandler(
-    Effect.fn(function* () {
-      const { db } = yield* Database.Service;
-      return { spaceId: db.spaceId };
-    }),
+class RetryCounter extends Type.makeObject<RetryCounter>(DXN.make('test.trigger-dispatcher.retryCounter', '0.1.0'))(
+  Schema.Struct({
+    count: Schema.Number,
+  }),
+) {}
+
+const RetryOp = Operation.make({
+  meta: { key: DXN.make('test.trigger-dispatcher.retry'), name: 'Retry' },
+  input: Schema.Void,
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
+const TestHanlers = OperationHandlerSet.make(
+  ProbeOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const { db } = yield* Database.Service;
+        return { spaceId: db.spaceId };
+      }),
+    ),
+  ),
+  RetryOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
+          Effect.flatten,
+          Effect.catchTag('NoSuchElementException', () => Database.add(Obj.make(RetryCounter, { count: 0 }))),
+        );
+        if (counter.count >= 3) {
+          return;
+        }
+
+        Obj.update(counter, (counter) => {
+          counter.count++;
+        });
+        yield* Operation.runAgain();
+      }),
+    ),
   ),
 );
 
@@ -110,13 +147,11 @@ const TestLayer = (
     ),
     Layer.provideMerge(
       TestDatabaseLayer({
-        types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task],
+        types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task, RetryCounter],
       }),
     ),
     Layer.provideMerge(KeyValueStore.layerMemory),
-    Layer.provideMerge(
-      OperationHandlerSet.provide(OperationHandlerSet.merge(ExampleHandlers, OperationHandlerSet.make(ProbeHandler))),
-    ),
+    Layer.provideMerge(OperationHandlerSet.provide(OperationHandlerSet.merge(ExampleHandlers, TestHanlers))),
     Layer.provideMerge(Registry.layer),
     Layer.provideMerge(Trace.layerNoop),
   );
@@ -864,6 +899,27 @@ describe('TriggerDispatcher', () => {
           }),
         ),
       ),
+    );
+  });
+
+  describe('Retry', () => {
+    it.effect.only(
+      'should if trigger returns RunAgainError',
+      Effect.fnUntraced(function* ({ expect }) {
+        const dispatcher = yield* TriggerDispatcher;
+        const op = yield* registerOperation(RetryOp);
+        const trigger = Trigger.make({
+          runnable: Ref.make(op),
+          enabled: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+        const result = yield* dispatcher.invokeTrigger({ trigger, event: {} });
+
+        yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
+        const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(Effect.flatten);
+        expect(counter.count).toBe(3);
+      }, Effect.provide(TestLayer())),
     );
   });
 });
