@@ -188,6 +188,8 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   }, [invokePromise, artifact]);
 
   const busy = generating || pendingIndex >= 0;
+  // The form is read-only when inspecting a produced variant, or while a generation is in flight.
+  const formReadonly = !composing || busy;
 
   // Whether the selected variant is the artifact's cover; toggling designates (or clears) it.
   const isCover = !!selectedVariant && artifactSnapshot?.cover?.target?.id === selectedVariant.id;
@@ -315,10 +317,10 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               schema={provider.requestSchema}
               values={composing ? draftConfig : (selectedVariant?.config ?? {})}
               fieldMap={provider.fieldMap}
-              readonly={!composing}
-              hideEmpty={composing}
-              autoSave={composing}
-              onValuesChanged={composing ? handleConfigChange : undefined}
+              readonly={formReadonly}
+              hideEmpty={!formReadonly}
+              autoSave={!formReadonly}
+              onValuesChanged={formReadonly ? undefined : handleConfigChange}
             >
               <Form.Viewport scroll>
                 <Form.Content>
