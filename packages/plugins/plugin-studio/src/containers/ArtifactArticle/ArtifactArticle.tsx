@@ -281,9 +281,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
-        <div className='grid grid-rows-[auto_1fr] gap-2 dx-document overflow-hidden'>
+        <div className='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
           {/* A produced (frozen) variant can be designated the artifact's cover default. */}
-          <div className='flex flex-col gap-1 p-2'>
+          <div className='flex flex-col gap-1 pt-3 px-2'>
             {/* Artifact-level name (independent of the selected variant). */}
             <Input.Root>
               <Input.TextInput
@@ -315,7 +315,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               schema={provider.requestSchema}
               values={composing ? draftConfig : (selectedVariant?.config ?? {})}
               readonly={!composing}
-              keepEmptyReadonly={!composing}
+              hideEmpty={composing}
               autoSave={composing}
               onValuesChanged={composing ? handleConfigChange : undefined}
             >
