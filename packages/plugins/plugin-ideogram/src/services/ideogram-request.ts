@@ -17,7 +17,12 @@ export const IdeogramRequestConfig = Schema.Struct({
   ),
   model: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false)).annotations({ title: 'Model' })),
   aspectRatio: Schema.optional(Schema.String.annotations({ title: 'Aspect ratio' })),
-  negativePrompt: Schema.optional(Schema.String.annotations({ title: 'Negative prompt' })),
+  negativePrompt: Schema.optional(
+    Schema.String.pipe(
+      Format.FormatAnnotation.set(Format.TypeFormat.Text),
+      Schema.annotations({ title: 'Negative prompt' }),
+    ),
+  ),
   styleType: Schema.optional(Schema.String.annotations({ title: 'Style' })),
   seed: Schema.optional(Schema.Number.annotations({ title: 'Seed' })),
 });
