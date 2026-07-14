@@ -54,21 +54,34 @@ describe('ideogram mapping', () => {
       {
         created: null,
         request_id: null,
-        data: [{ url: 'https://img/1.png', prompt: null, resolution: null, seed: null, is_image_safe: null }],
+        data: [
+          {
+            url: 'https://img/1.png',
+            prompt: null,
+            resolution: null,
+            seed: null,
+            style_type: null,
+            is_image_safe: null,
+          },
+        ],
       },
       { model: 'V_2' },
     );
 
-    const generation = variants[0].generation!;
+    const generation = variants[0]?.generation;
+    expect(generation).toBeDefined();
     // No null anywhere — else Variant.make (which validates the Generation schema) throws a ParseError.
-    expect(generation.requestId).toBeUndefined();
-    expect(generation.createdAt).toBeUndefined();
-    expect(generation.prompt).toBeUndefined();
-    expect(generation.seed).toBeUndefined();
-    for (const value of Object.values(generation)) {
+    expect(generation?.requestId).toBeUndefined();
+    expect(generation?.createdAt).toBeUndefined();
+    expect(generation?.prompt).toBeUndefined();
+    expect(generation?.seed).toBeUndefined();
+    expect(generation?.parameters?.resolution).toBeUndefined();
+    expect(generation?.parameters?.styleType).toBeUndefined();
+    expect(generation?.parameters?.isImageSafe).toBeUndefined();
+    for (const value of Object.values(generation ?? {})) {
       expect(value).not.toBeNull();
     }
-    for (const value of Object.values(generation.parameters ?? {})) {
+    for (const value of Object.values(generation?.parameters ?? {})) {
       expect(value).not.toBeNull();
     }
   });
