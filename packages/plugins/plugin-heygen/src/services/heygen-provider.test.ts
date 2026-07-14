@@ -80,42 +80,66 @@ describe('HeyGenProvider', () => {
     );
   });
 
-  test('listAvatars hits v2 (no ownership filter) and maps data.avatars', async ({ expect }) => {
+  test('listAvatars requests owned avatars (ownership=private), maps id/name, trims and sorts', async ({ expect }) => {
     let url: string | undefined;
     const fetchImpl = (async (input: RequestInfo | URL) => {
       url = String(input);
       return new Response(
         JSON.stringify({
-          data: {
-            avatars: [
-              { avatar_id: 'av-1', avatar_name: 'Angela' },
-              { avatar_id: 'av-2', avatar_name: 'Rex' },
-              { avatar_id: 'no-name' },
-            ],
-            talking_photos: [{ talking_photo_id: 'tp-1', talking_photo_name: 'Photo' }],
-          },
+          // Leading newline / non-breaking space (as HeyGen returns for user-named assets) must be
+          // trimmed, else they sort before clean names.
+          data: [{ id: 'av-2', name: 'Rex' }, { id: 'av-1', name: '\nAngela  ' }, { id: 'no-name' }],
+          has_more: false,
         }),
       );
     }) as typeof fetch;
 
     const avatars = await provider(fetchImpl).listAvatars({ apiKey: 'sk-test' });
-    expect(url).toBe('https://api.heygen.com/v2/avatars');
+    expect(url).toBe('https://api.heygen.com/v3/avatars?ownership=private&limit=50');
     expect(avatars).toEqual([
       { id: 'av-1', name: 'Angela' },
       { id: 'av-2', name: 'Rex' },
     ]);
   });
 
-  test('listVoices hits v2 (no type filter) and maps data.voices', async ({ expect }) => {
+  test('listAvatars tolerates the v2-shaped body (data.avatars, avatar_id/avatar_name)', async ({ expect }) => {
+    const fetchImpl = (async () =>
+      new Response(
+        JSON.stringify({
+          data: {
+            avatars: [{ avatar_id: 'av-1', avatar_name: 'Angela' }, { avatar_id: 'no-name' }],
+          },
+        }),
+      )) as typeof fetch;
+
+    const avatars = await provider(fetchImpl).listAvatars({ apiKey: 'sk-test' });
+    expect(avatars).toEqual([{ id: 'av-1', name: 'Angela' }]);
+  });
+
+  test('listVoices requests owned voices (type=private), maps the flat data array, trims and sorts', async ({
+    expect,
+  }) => {
     let url: string | undefined;
     const fetchImpl = (async (input: RequestInfo | URL) => {
       url = String(input);
-      return new Response(JSON.stringify({ data: { voices: [{ voice_id: 'vo-1', name: 'Rex' }] } }));
+      return new Response(
+        JSON.stringify({
+          data: [
+            { voice_id: 'vo-2', name: 'Rich', type: 'private' },
+            { voice_id: 'vo-1', name: '\nBritpop  ', type: 'private' },
+            { voice_id: 'no-name' },
+          ],
+          has_more: false,
+        }),
+      );
     }) as typeof fetch;
 
     const voices = await provider(fetchImpl).listVoices({ apiKey: 'sk-test' });
-    expect(url).toBe('https://api.heygen.com/v2/voices');
-    expect(voices).toEqual([{ id: 'vo-1', name: 'Rex' }]);
+    expect(url).toBe('https://api.heygen.com/v3/voices?type=private&limit=100');
+    expect(voices).toEqual([
+      { id: 'vo-1', name: 'Britpop' },
+      { id: 'vo-2', name: 'Rich' },
+    ]);
   });
 
   test('requires an api key', async ({ expect }) => {

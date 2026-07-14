@@ -3,6 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import {
   type GenerateInput,
@@ -16,7 +17,6 @@ import {
   UnsupportedKindError,
 } from './heygen-provider-types';
 
-const V2_BASE_URL = 'https://api.heygen.com/v2';
 const V3_BASE_URL = 'https://api.heygen.com/v3';
 
 // v3 create-video endpoint with a flat body and a top-level `fit` field.
@@ -25,12 +25,16 @@ const GENERATE_URL = `${V3_BASE_URL}/videos`;
 // v3 status check: `GET /v3/videos/{video_id}`.
 const STATUS_URL = `${V3_BASE_URL}/videos`;
 
-// Avatars/voices are only exposed under v2 (there is no `/v3/avatars`). These return the full set the
-// account can use — the built-in public presets plus any private assets — so the picker is populated
-// even for accounts with no custom avatars/voices. No ownership/type filter: it would hide the presets.
-// https://docs.heygen.com/reference/list-avatars-v2 · https://docs.heygen.com/reference/list-voices-v2
-const AVATARS_URL = `${V2_BASE_URL}/avatars`;
-const VOICES_URL = `${V2_BASE_URL}/voices`;
+// The pickers list only the account's OWN avatars/voices, not HeyGen's (huge) public catalog. The
+// ownership filter differs per endpoint: `/v3/avatars` takes `ownership=private` (and rejects
+// `type=private` with a 400), while `/v3/voices` takes `type=private`. Both return a flat `data` array.
+// `limit` is a safety cap (owned sets are small); `/v3/avatars` rejects a limit over 50.
+// https://docs.heygen.com/reference/list-avatars-v2 · https://docs.heygen.com/reference/list-voices-v3
+const AVATARS_URL = `${V3_BASE_URL}/avatars?ownership=private&limit=50`;
+const VOICES_URL = `${V3_BASE_URL}/voices?type=private&limit=100`;
+
+// Bounds a list request so a slow/oversized response fails fast instead of hanging the picker.
+const LIST_TIMEOUT_MS = 15_000;
 
 const DEFAULT_POLL_INTERVAL_MS = 5_000;
 const DEFAULT_TIMEOUT_MS = 5 * 60_000;
@@ -94,49 +98,74 @@ export class HeyGenProvider implements GenerationProvider {
   }
 
   async listAvatars(options: ProviderCallOptions): Promise<GenerationOption[]> {
-    if (!options.apiKey) {
-      throw new MissingApiKeyError();
-    }
-
-    const response = await this.#fetch(AVATARS_URL, {
-      method: 'GET',
-      headers: { 'X-Api-Key': options.apiKey },
-      signal: options.signal,
-    });
-    if (!response.ok) {
-      throw new ProviderFailureError(`HeyGen listAvatars failed: ${response.status} ${await readErrorBody(response)}`);
-    }
-
-    // v2 nests the arrays under `data`; `talking_photos` are intentionally omitted because they
-    // require a different `character.type` in the generate body than the `avatar` we post.
-    const body = (await response.json()) as {
-      data?: { avatars?: Array<{ avatar_id?: string; avatar_name?: string }> };
+    // Boundary cast of the untyped JSON body. `data` is a flat array on v3 (`{ data: [...] }`);
+    // tolerate the v2 nesting (`data.avatars`) and both field conventions (v3 `id`/`name`, v2
+    // `avatar_id`/`avatar_name`). `talking_photos` are omitted — they need a different
+    // `character.type` when posting than the `avatar` we send.
+    type Entry = { id?: string; avatar_id?: string; name?: string; avatar_name?: string };
+    const body = (await this.#getList('listAvatars', AVATARS_URL, options)) as {
+      data?: Entry[] | { avatars?: Entry[] };
     };
-    return (body.data?.avatars ?? [])
-      .map((entry) => ({ id: entry.avatar_id, name: entry.avatar_name }))
-      .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && typeof entry.name === 'string');
+    const container = body.data;
+    const entries = Array.isArray(container) ? container : (container?.avatars ?? []);
+    return sortByName(
+      entries
+        .map((entry) => ({ id: entry.id ?? entry.avatar_id, name: (entry.name ?? entry.avatar_name)?.trim() }))
+        .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && !!entry.name),
+    );
   }
 
   async listVoices(options: ProviderCallOptions): Promise<GenerationOption[]> {
+    // Boundary cast of the untyped JSON body. v3 returns a flat `data` array (unlike v2 avatars,
+    // which nest under `data.voices`).
+    const body = (await this.#getList('listVoices', VOICES_URL, options)) as {
+      data?: Array<{ voice_id?: string; name?: string }>;
+    };
+    return sortByName(
+      (body.data ?? [])
+        .map((entry) => ({ id: entry.voice_id, name: entry.name?.trim() }))
+        .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && !!entry.name),
+    );
+  }
+
+  /**
+   * Shared GET for the list endpoints: enforces the api key, applies {@link LIST_TIMEOUT_MS} (composed
+   * with any caller signal), logs a diagnostic on failure, and returns the parsed JSON body for the
+   * caller to shape. Throws {@link ProviderFailureError} on a non-2xx or timeout.
+   */
+  async #getList(label: string, url: string, options: ProviderCallOptions): Promise<unknown> {
     if (!options.apiKey) {
       throw new MissingApiKeyError();
     }
 
-    const response = await this.#fetch(VOICES_URL, {
-      method: 'GET',
-      headers: { 'X-Api-Key': options.apiKey },
-      signal: options.signal,
-    });
-    if (!response.ok) {
-      throw new ProviderFailureError(`HeyGen listVoices failed: ${response.status} ${await readErrorBody(response)}`);
+    const controller = new AbortController();
+    const onAbort = () => controller.abort(options.signal?.reason);
+    options.signal?.addEventListener('abort', onAbort, { once: true });
+    const timer = setTimeout(
+      () => controller.abort(new ProviderFailureError(`HeyGen ${label} timed out.`)),
+      LIST_TIMEOUT_MS,
+    );
+    let response: Response;
+    try {
+      response = await this.#fetch(url, {
+        method: 'GET',
+        headers: { 'X-Api-Key': options.apiKey },
+        signal: controller.signal,
+      });
+    } catch (err) {
+      // Surface the timeout reason (rather than a bare AbortError) so the picker shows why it failed.
+      throw controller.signal.reason instanceof ProviderFailureError ? controller.signal.reason : err;
+    } finally {
+      clearTimeout(timer);
+      options.signal?.removeEventListener('abort', onAbort);
     }
 
-    const body = (await response.json()) as {
-      data?: { voices?: Array<{ voice_id?: string; name?: string }> };
-    };
-    return (body.data?.voices ?? [])
-      .map((entry) => ({ id: entry.voice_id, name: entry.name }))
-      .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && typeof entry.name === 'string');
+    if (!response.ok) {
+      const detail = await readErrorBody(response);
+      log.warn(`heygen ${label} failed`, { url, status: response.status, detail, apiKey: describeKey(options.apiKey) });
+      throw new ProviderFailureError(`HeyGen ${label} failed: ${response.status} ${detail}`);
+    }
+    return response.json();
   }
 
   async #postGenerate(input: GenerateInput, options: ProviderCallOptions): Promise<string> {
@@ -227,6 +256,24 @@ export class HeyGenProvider implements GenerationProvider {
     throw new ProviderFailureError('HeyGen job timed out.');
   }
 }
+
+/** Alphabetize picker options by display name (case-insensitive) so the selector is scannable. */
+const sortByName = (options: GenerationOption[]): GenerationOption[] =>
+  [...options].sort((left, right) => left.name.localeCompare(right.name));
+
+/**
+ * Non-secret fingerprint of the API key for diagnostics. Never logs the raw key — only its shape, so
+ * a global 401 can be triaged (empty/truncated key, stray whitespace or quotes from a paste, vs. a
+ * structurally-valid key that HeyGen simply rejects).
+ */
+const describeKey = (key: string): Record<string, unknown> => ({
+  length: key.length,
+  prefix: key.slice(0, 4),
+  suffix: key.slice(-2),
+  trimmedDiffers: key !== key.trim(),
+  hasWhitespace: /\s/.test(key),
+  hasQuotes: /^["']|["']$/.test(key),
+});
 
 /** Best-effort decode of an error response body so the user sees the actual reason. */
 const readErrorBody = async (response: Response): Promise<string> => {
