@@ -8,9 +8,11 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
+import { Artifact } from '#types';
 
 import {
   ARTIFACTS_NODE_DATA,
@@ -51,8 +53,11 @@ export default Capability.makeModule(
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === STUDIO_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
-        connector: (space) =>
-          Effect.succeed([
+        // The virtual "Artifacts" node opens the browse/create hub and lists the space's Artifacts as
+        // navigable children (each routes to its ArtifactArticle via the object-article surface).
+        connector: (space, get) => {
+          const artifacts = get(space.db.query(Filter.type(Artifact.Artifact)).atom);
+          return Effect.succeed([
             Node.make({
               id: ARTIFACTS_SEGMENT,
               type: ARTIFACTS_NODE_TYPE,
@@ -62,10 +67,14 @@ export default Capability.makeModule(
                 icon: 'ph--images--regular',
                 iconHue: 'purple',
                 space,
-                role: 'leaf',
+                role: 'branch',
               },
+              nodes: artifacts
+                .map((artifact: Artifact.Artifact) => AppNode.makeObject({ get, db: space.db, object: artifact }))
+                .filter((node): node is NonNullable<typeof node> => node !== null),
             }),
-          ]),
+          ]);
+        },
       }),
     ]);
 
