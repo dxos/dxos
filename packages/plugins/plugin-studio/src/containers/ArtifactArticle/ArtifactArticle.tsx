@@ -292,8 +292,8 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           </DropdownMenu.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-[auto_1fr] p-2 gap-2'>
-        <div role='none' className='grid grid-rows-[6lh_1fr] gap-2 shrink-0 dx-document'>
+      <Panel.Content classNames='grid grid-rows-[1fr_1fr] p-2 gap-2'>
+        <div className='grid grid-rows-[6lh_1fr] gap-2 shrink-0 dx-document'>
           <PromptEditor
             id={selectedVariant ? `${artifactId}/variant/${selectedVariant.id}/prompt` : `${artifactId}/prompt`}
             text={composing ? promptText : undefined}
@@ -303,19 +303,21 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             compact
             classNames='border border-separator rounded p-2'
           />
-          <div role='none' className='flex flex-col gap-2 min-bs-0'>
+          <div className='flex flex-col gap-2 min-bs-0'>
             {/* A produced (frozen) variant can be designated the artifact's cover default. */}
-            {selectedVariant && !selectedVariant.jobId && (
-              <Input.Root>
-                <div className='flex items-center gap-2'>
-                  <Input.Checkbox
-                    checked={isCover}
-                    onCheckedChange={(checked) => handleCoverChange(checked === true)}
-                  />
-                  <Input.Label>{t('cover.label')}</Input.Label>
-                </div>
-              </Input.Root>
-            )}
+            <div className='flex h-6'>
+              {selectedVariant && !selectedVariant.jobId && (
+                <Input.Root>
+                  <div className='flex items-center gap-2'>
+                    <Input.Checkbox
+                      checked={isCover}
+                      onCheckedChange={(checked) => handleCoverChange(checked === true)}
+                    />
+                    <Input.Label>{t('cover.label')}</Input.Label>
+                  </div>
+                </Input.Root>
+              )}
+            </div>
             {provider && (
               <Surface.Surface
                 key={composing ? 'draft' : selectedVariant?.id}
@@ -342,7 +344,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             )}
           </div>
         </div>
-        <div role='none' className='relative grow min-bs-0 overflow-auto'>
+        <div className='relative grow min-bs-0 overflow-auto'>
           {selected === 'all' ? (
             <VariantGallery
               variants={galleryItems}
@@ -354,8 +356,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
                 }
               }}
             />
-          ) : selectedVariant ? (
-            selectedVariant.jobId ? (
+          ) : (
+            selectedVariant &&
+            (selectedVariant.jobId ? (
               <div role='status' className='flex items-center justify-center bs-full text-subdued'>
                 {t('generating.label')}
               </div>
@@ -373,11 +376,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
                 }}
                 limit={1}
               />
-            )
-          ) : (
-            <div role='status' className='flex items-center justify-center bs-full text-subdued'>
-              {t('draft.message')}
-            </div>
+            ))
           )}
         </div>
       </Panel.Content>

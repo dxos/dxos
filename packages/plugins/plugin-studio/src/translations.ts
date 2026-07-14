@@ -46,7 +46,6 @@ export const translations = [
         'close.label': 'Close',
         'all.tab.label': 'All',
         'draft.label': 'Draft',
-        'draft.message': 'Compose a prompt, then generate a variant.',
         'cover.label': 'Use as cover',
         'empty.message': 'No variants yet.',
         'more.label': 'More',
