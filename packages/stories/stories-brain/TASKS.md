@@ -370,6 +370,9 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 
 ## Bugs
 
+- [ ] **MailboxArticle search/filtering isn't working.** The filter/query editor in
+      `plugin-inbox` `MailboxArticle` doesn't filter the message list. Fix the filter wiring;
+      follow-up: back search with the Fact index rather than the current query builder.
 - [x] **`subject-facts` returned 0 for Nicole.** Fixed: the subject index now matches by
       token-substring over entity slug + label (e.g. `gudmand` ⊂ `ngudmand`) instead of exact slug,
       and reports `exactSlugFacts` so the mismatch is surfaced. (factCount 7 for Nicole.)

@@ -3,6 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
+import { Topic } from '@dxos/pipeline-email';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { Message } from '@dxos/types';
@@ -34,6 +35,17 @@ export const translations = [
         'rename-object.label': 'Rename message',
         'delete-object.label': 'Delete message',
         'object-deleted.label': 'Message deleted',
+      },
+      [Type.getTypename(Topic)]: {
+        'typename.label': 'Topic',
+        'typename.label_zero': 'Topics',
+        'typename.label_one': 'Topic',
+        'typename.label_other': 'Topics',
+        'object-name.placeholder': 'New topic',
+        'add-object.label': 'Add topic',
+        'rename-object.label': 'Rename topic',
+        'delete-object.label': 'Delete topic',
+        'object-deleted.label': 'Topic deleted',
       },
       [Type.getTypename(Calendar.Calendar)]: {
         'typename.label': 'Calendar',
@@ -147,6 +159,8 @@ export const translations = [
         'drafts.article.description': 'Draft list (coming soon).',
         'drafts.empty.message': 'No drafts yet.',
         'topics.label': 'Topics',
+        'topic.label': 'Topic',
+        'topics.toolbar.title': 'Topics toolbar',
         'analyze-topics.label': 'Analyze Topics',
         'analyze-topics-success.title': 'Topics updated.',
         'analyze-topics-error.title': 'Failed to analyze topics.',
@@ -161,6 +175,7 @@ export const translations = [
         'topics.accept.label': 'Accept',
         'topics.dismiss.label': 'Dismiss',
         'subscriptions.label': 'Subscriptions',
+        'subscriptions.toolbar.title': 'Subscriptions toolbar',
         'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
         'subscriptions.count.label': '{{email}} · {{count}} messages',
         'subscriptions.remove.label_zero': 'Remove',
