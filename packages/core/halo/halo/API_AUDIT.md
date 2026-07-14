@@ -249,10 +249,11 @@ atom-based, so `Atom` is the natural currency for the React layer.
 | `Identity.share(opts?)` → `Invitation.Flow`                 | `client.halo.share()` — device-invitation initiation (delegates the lifecycle to `Invitation`)                  |
 | `Identity.join(code)` → `Invitation.Flow`                   | `client.halo.join()` — device/account join                                                                      |
 
-Types: `Profile` and `Device` already exist in this package as Effect schemas; `Identity`
-(the proxy type: `did`, `identityKey`, `spaceKey`, `profile`) collapses into
-`{ did, profile }` — `spaceKey` consumers (composer-app `queryAllCredentials`,
-plugin-onboarding `util.ts`) are credential plumbing that the credential verbs below absorb.
+Types: device kind and the identity profile fields are inlined into `Identity` (`DeviceKind`,
+`DeviceInfo`, `Info`) rather than living in separate schema modules. The legacy `Identity` proxy
+type (`did`, `identityKey`, `spaceKey`, `profile`) collapses into `Info` = `{ did, displayName? }`
+— `spaceKey` consumers (composer-app `queryAllCredentials`, plugin-onboarding `util.ts`) are
+credential plumbing, deferred with the credential verbs below.
 
 The table above is the full target surface. The **first shipped cut** (this PR) implements the
 common path — `current`/`changes`, `create`, `recover`, `updateProfile`, `devices`/`deviceChanges`,
@@ -342,9 +343,10 @@ will live in a future `@dxos/halo-keyhive`, not in `@dxos/halo`.
 
 Suggested sequence:
 
-1. **Define services** in `@dxos/halo` (tags, verbs, event/error schemas — no layers). Reuse
-   `Profile`, `Device`; add `Space`, `Member`, `InvitationEvent`, `Invitation.Flow` schemas.
-   Keep the Keyhive membership runtime out of `@dxos/halo` (destined for `@dxos/halo-keyhive`).
+1. **Define services** in `@dxos/halo` (tags, verbs, event/error schemas — no layers). Inline the
+   value types each service needs (`DeviceKind`/`Info`, `Access`/`Member`, `InvitationEvent`,
+   `Invitation.Flow`) rather than shipping separate schema modules. Keep the Keyhive membership
+   runtime out of `@dxos/halo` (destined for `@dxos/halo-keyhive`).
 2. **`layerClient`** in a `@dxos/halo-adapter-client` package (keeps `@dxos/halo` free of the
    client dependency), provided by `plugin-client` alongside — then instead of —
    `ClientCapabilities.Client`. **(Implemented — see `@dxos/halo-adapter-client`, with an

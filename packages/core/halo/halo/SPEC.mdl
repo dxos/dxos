@@ -37,6 +37,7 @@ module Identity
 
     # Schemas / types
     Info: Schema.Struct                  # { did: IdentityDid; displayName? } — local identity view.
+    DeviceKind: 'unknown' | 'browser' | 'native' | 'mobile' | 'agent' | 'agent-managed'
     DeviceInfo: Schema.Struct            # { key; kind?; label?; current } — a device.
     RecoverArgs: union                   # { recoveryCode } | { token } | { recoveryProof }.
 
@@ -63,7 +64,8 @@ module Space
 
     # Schemas / types
     State: 'inactive' | 'closed' | 'ready'
-    Member: Schema.Struct                # { did?; role: Group.Access; online }.
+    Access: 'pull' | 'read' | 'edit' | 'admin'
+    Member: Schema.Struct                # { did?; role: Access; online }.
     Info: Schema.Struct                  # { id: SpaceId; name?; state }.
     Archive: { filename; contents }      # export / import payload.
 
@@ -92,7 +94,7 @@ module Invitation
     Kind: 'device' | 'space'
     AuthMethod: 'none' | 'shared-secret' | 'known-public-key'
     Type: 'interactive' | 'delegated' | 'multiuse'
-    ShareOptions: { authMethod?; type?; multiUse? }
+    ShareOptions: { authMethod?; type?; multiUse?; target? }
     Event: union                         # connecting → readyForAuthentication → success | cancelled | error.
     Flow: interface                      # { id; kind; events: Stream<Event>; authenticate; cancel; code }.
     Scope: { device } | { spaceId }
@@ -106,11 +108,9 @@ module Invitation
     code: (Flow) => Effect               # encoded, shareable invitation code.
 ```
 
-### Schema modules
-
-ECHO object / value schemas backing the durable, application-visible types. These are plain
-`Schema` modules (no service): `Profile` (identity profile), `Device` (device metadata), and
-`Group` (membership view + the `Access` capability level, reused by `Space.Member`).
+The value types the services need are inlined into their modules (`Identity.DeviceKind` /
+`Identity.Info`, `Space.Access` / `Space.Member`) rather than living in separate schema modules,
+keeping the package to the three service surfaces.
 
 ---
 

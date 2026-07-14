@@ -10,16 +10,10 @@
   ],
   "references": [
     {
-      "path": "../../../common/effect"
-    },
-    {
       "path": "../../../common/errors"
     },
     {
       "path": "../../../common/keys"
-    },
-    {
-      "path": "../../echo/echo"
     }
   ]
 }

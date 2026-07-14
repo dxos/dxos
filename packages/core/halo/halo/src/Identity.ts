@@ -12,9 +12,15 @@ import * as Stream from 'effect/Stream';
 
 import { IdentityDid } from '@dxos/keys';
 
-import * as Device from './Device';
 import { type IdentityError } from './errors';
 import * as Invitation from './Invitation';
+
+/**
+ * Device kind (platform / host class). Replaces the legacy protobuf `DeviceType` enum;
+ * `agent`/`agent-managed` denote EDGE- or Hub-hosted agent devices.
+ */
+export const DeviceKind = Schema.Literal('unknown', 'browser', 'native', 'mobile', 'agent', 'agent-managed');
+export type DeviceKind = typeof DeviceKind.Type;
 
 /**
  * Public view of the local identity. Replaces the legacy `Identity` proxy type; `identityKey`
@@ -28,12 +34,12 @@ export type Info = typeof Info.Type;
 
 /**
  * Public view of a device belonging to the local identity. Replaces the legacy `Device` proxy
- * type (`deviceKey` → `key`, `DeviceKind` → {@link Device.Kind}).
+ * type (`deviceKey` → `key`).
  */
 export const DeviceInfo = Schema.Struct({
   /** Hex-encoded device key. */
   key: Schema.String,
-  kind: Schema.optional(Device.Kind),
+  kind: Schema.optional(DeviceKind),
   label: Schema.optional(Schema.String),
   /** Whether this device is the local (current) device. */
   current: Schema.Boolean,

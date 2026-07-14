@@ -12,7 +12,7 @@ import {
   Invitation as ClientInvitation,
   InvitationEncoder,
 } from '@dxos/client/invitations';
-import { Group, Invitation as HaloInvitation, InvitationError } from '@dxos/halo';
+import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -143,10 +143,10 @@ const toType = (type?: HaloInvitation.Type): ClientInvitation.Type => {
 };
 
 /**
- * Maps a legacy space-member role to the Keyhive-aligned {@link Group.Access} level.
+ * Maps a legacy space-member role to the Keyhive-aligned {@link HaloSpace.Access} level.
  * Returns `undefined` for `REMOVED` (not a current member).
  */
-export const toAccess = (role: HaloSpaceMember.Role): Group.Access | undefined => {
+export const toAccess = (role: HaloSpaceMember.Role): HaloSpace.Access | undefined => {
   switch (role) {
     case HaloSpaceMember.Role.OWNER:
     case HaloSpaceMember.Role.ADMIN:
@@ -161,10 +161,10 @@ export const toAccess = (role: HaloSpaceMember.Role): Group.Access | undefined =
 };
 
 /**
- * Maps a Keyhive-aligned {@link Group.Access} level to a legacy space-member role.
+ * Maps a Keyhive-aligned {@link HaloSpace.Access} level to a legacy space-member role.
  * Returns `undefined` for `pull` (no legacy equivalent — reject at the call site).
  */
-export const fromAccess = (access: Group.Access): HaloSpaceMember.Role | undefined => {
+export const fromAccess = (access: HaloSpace.Access): HaloSpaceMember.Role | undefined => {
   switch (access) {
     case 'admin':
       return HaloSpaceMember.Role.ADMIN;

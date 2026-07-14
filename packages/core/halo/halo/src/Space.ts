@@ -13,8 +13,15 @@ import * as Stream from 'effect/Stream';
 import { IdentityDid, SpaceId } from '@dxos/keys';
 
 import { type SpaceError } from './errors';
-import * as Group from './Group';
 import * as Invitation from './Invitation';
+
+/**
+ * Capability level granted to a space member, matching the Keyhive `Access` enum. Ordered; each
+ * implies the previous: `pull` < `read` < `edit` < `admin`. Replaces the legacy
+ * `SpaceMember.Role` enum.
+ */
+export const Access = Schema.Literal('pull', 'read', 'edit', 'admin');
+export type Access = typeof Access.Type;
 
 /**
  * Lifecycle state of a space. Replaces the legacy `SpaceState` protobuf enum (subset relevant to
@@ -30,7 +37,7 @@ export type State = typeof State.Type;
 export const Member = Schema.Struct({
   /** DID of the member identity, when known. */
   did: Schema.optional(IdentityDid),
-  role: Group.Access,
+  role: Access,
   /** Whether the member is currently online. */
   online: Schema.Boolean,
 });
@@ -59,9 +66,6 @@ export type CreateOptions = {
   readonly name?: string;
 };
 
-/** Re-exported for convenience: a space member's access level. */
-export type Access = Group.Access;
-
 /**
  * Space management and membership, plus space-invitation initiation. `share`/`join` construct
  * {@link Invitation.Flow}s whose lifecycle is driven through {@link Invitation.Service}.
@@ -84,11 +88,7 @@ export class Service extends Context.Tag('@dxos/halo/Space')<
     /** Reactive stream of a space's membership. */
     readonly memberChanges: (id: SpaceId) => Stream.Stream<readonly Member[]>;
     /** Change a member's access level (Keyhive delegation). */
-    readonly updateMemberRole: (
-      id: SpaceId,
-      subject: IdentityDid,
-      role: Group.Access,
-    ) => Effect.Effect<void, SpaceError>;
+    readonly updateMemberRole: (id: SpaceId, subject: IdentityDid, role: Access) => Effect.Effect<void, SpaceError>;
     /** Remove a member (Keyhive revocation). */
     readonly removeMember: (id: SpaceId, subject: IdentityDid) => Effect.Effect<void, SpaceError>;
     /** Initiate a space invitation (host side). */
@@ -134,7 +134,7 @@ export const memberChanges = (id: SpaceId): Stream.Stream<readonly Member[], nev
 export const updateMemberRole = (
   id: SpaceId,
   subject: IdentityDid,
-  role: Group.Access,
+  role: Access,
 ): Effect.Effect<void, SpaceError, Service> =>
   Effect.flatMap(Service, (service) => service.updateMemberRole(id, subject, role));
 
