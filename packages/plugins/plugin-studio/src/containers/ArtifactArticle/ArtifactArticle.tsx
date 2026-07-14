@@ -15,14 +15,11 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
-import { type File } from '@dxos/types';
 
 import { PromptEditor, VariantGallery } from '#components';
 import { meta } from '#meta';
 import { GenerateForm, VariantRenderer } from '#surfaces';
-import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
-
-import { useFileUpload } from '../../hooks';
+import { type Artifact, StudioCapabilities, StudioOperation } from '#types';
 
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
 
@@ -169,32 +166,6 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     });
   }, [db, inFlightJobId, generating, handleGenerate]);
 
-  // Uploaded files become content-backed Variant objects owned by the artifact.
-  const handleUpload = useCallback(
-    (uploaded: File.File, source: globalThis.File) => {
-      if (!db) {
-        return;
-      }
-      const variant = Variant.make({ content: Ref.make(uploaded), contentType: source.type || undefined });
-      Obj.setParent(variant, artifact);
-      db.add(variant);
-      Obj.update(artifact, (artifact) => {
-        artifact.variants = [...(artifact.variants ?? []), Ref.make(variant)];
-        if (!artifact.cover) {
-          artifact.cover = Ref.make(variant);
-        }
-      });
-      setSelected('all');
-    },
-    [db, artifact],
-  );
-  const upload = useFileUpload({
-    subject: artifact,
-    accept: 'image/*,video/*',
-    multiple: true,
-    onUpload: handleUpload,
-  });
-
   const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
 
   return (
@@ -214,12 +185,6 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               {index + 1}
             </Button>
           ))}
-          <IconButton
-            icon='ph--upload-simple--regular'
-            label={t('upload.label')}
-            disabled={!upload.enabled}
-            onClick={() => upload.open()}
-          />
           <Toolbar.Separator />
           {providers.length > 0 && (
             <Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
@@ -299,7 +264,6 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             </div>
           )}
         </div>
-        {upload.input}
       </Panel.Content>
     </Panel.Root>
   );

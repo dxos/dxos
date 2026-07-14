@@ -43,7 +43,6 @@ export const translations = [
         'generating.label': 'Generating…',
         'create.label': 'Create artifact',
         'generate-error.title': 'Generation failed',
-        'upload.label': 'Upload',
         'close.label': 'Close',
         'all.tab.label': 'All',
         'empty.message': 'No variants yet.',
