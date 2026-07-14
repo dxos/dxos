@@ -115,9 +115,6 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
   // "All" and "Draft" compose against the editable draft; a numbered tab inspects a frozen variant.
   const composing = !selectedVariant;
-  // The provider supplies its own request-config form (e.g. HeyGen's avatar/voice pickers), else the
-  // schema-driven default.
-  const FormComponent = provider?.Form ?? GenerateForm;
 
   // Connector-managed credential: show the "Connect" button until the provider's connection exists.
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -307,7 +304,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
         <div className='grid grid-rows-[6lh_1fr] py-2 gap-2 dx-document'>
           <PromptEditor
-            classNames='border border-separator rounded p-2'
+            classNames='border border-separator rounded-sm p-2'
             id={selectedVariant ? `${artifactId}/variant/${selectedVariant.id}/prompt` : `${artifactId}/prompt`}
             text={composing ? promptText : undefined}
             value={composing ? undefined : selectedGeneration?.prompt}
@@ -317,31 +314,34 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           />
           <div className='flex flex-col'>
             {/* A produced (frozen) variant can be designated the artifact's cover default. */}
-            <div className=''>
-              {selectedVariant && !selectedVariant.jobId && (
-                <Input.Root>
-                  <div className='flex items-center gap-2'>
-                    <Input.Checkbox
-                      checked={isCover}
-                      onCheckedChange={(checked) => handleCoverChange(checked === true)}
-                    />
-                    <Input.Label>{t('cover.label')}</Input.Label>
-                  </div>
-                </Input.Root>
-              )}
+            <div className='flex flex-col gap-1'>
+              <div className='h-6'>
+                {selectedVariant && !selectedVariant.jobId && (
+                  <Input.Root>
+                    <div className='flex items-center gap-2'>
+                      <Input.Checkbox
+                        checked={isCover}
+                        onCheckedChange={(checked) => handleCoverChange(checked === true)}
+                      />
+                      <Input.Label>{t('cover.label')}</Input.Label>
+                    </div>
+                  </Input.Root>
+                )}
+              </div>
+              {/* Artifact-level name (independent of the selected variant). */}
+              <Input.Root>
+                <Input.TextInput
+                  placeholder={t('name.placeholder')}
+                  value={artifactSnapshot?.name ?? ''}
+                  onChange={handleNameChange}
+                />
+              </Input.Root>
             </div>
-            {/* Artifact-level name (independent of the selected variant). */}
-            <Input.Root>
-              <Input.TextInput
-                placeholder={t('name.placeholder')}
-                value={artifactSnapshot?.name ?? ''}
-                onChange={handleNameChange}
-              />
-            </Input.Root>
-            {/* The provider's request-config form (its own `Form`, else the schema-driven default),
-                inlined. Composing edits the draft; a produced variant is shown read-only. */}
+
+            {/* Schema-driven request-config form (from the generator's requestSchema), inlined.
+                Composing edits the draft; a produced variant is shown read-only. */}
             {provider && (
-              <FormComponent
+              <GenerateForm
                 key={composing ? 'draft' : selectedVariant?.id}
                 schema={provider.requestSchema}
                 value={composing ? draftConfig : (selectedVariant?.config ?? {})}
