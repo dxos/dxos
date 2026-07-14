@@ -52,6 +52,12 @@ export const createOnConnect = (): ((ev: MessageEvent) => void) => {
               clientId: message.clientId,
               leaderId: message.leaderId,
             });
+            // Temporary port instrumentation: ports as they pass through the coordinator relay.
+            log.warn('[port-trace] coordinator routing provide-port', {
+              clientId: message.clientId,
+              clientToWorker: { present: message.clientToWorker != null, type: Object.prototype.toString.call(message.clientToWorker) },
+              workerToClient: { present: message.workerToClient != null, type: Object.prototype.toString.call(message.workerToClient) },
+            });
             clientPort.postMessage(message, {
               transfer: [message.clientToWorker, message.workerToClient],
             });

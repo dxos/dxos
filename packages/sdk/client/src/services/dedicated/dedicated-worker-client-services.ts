@@ -53,6 +53,12 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       config: options.config?.values,
       leaderTimeouts: options.leaderTimeouts,
       onConnect: async ({ clientToWorker, workerToClient }) => {
+        // Temporary port instrumentation (worker-framework undefined-MessagePort crash): the tab-side
+        // consumer that feeds `layerMessagePort`; an undefined port here is the direct crash cause.
+        log.warn('[port-trace] onConnect', {
+          clientToWorker: describePort(clientToWorker),
+          workerToClient: describePort(workerToClient),
+        });
         const config = options.config ?? new Config();
         const origin = typeof location !== 'undefined' ? location.origin : 'unknown';
 
@@ -161,6 +167,12 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     await this.#connection.close();
   }
 }
+
+// Temporary port instrumentation helper (worker-framework undefined-MessagePort crash).
+const describePort = (port: unknown): { present: boolean; type: string } => ({
+  present: port != null,
+  type: Object.prototype.toString.call(port),
+});
 
 const mapLogMeta = (meta: LogEntry.Meta | undefined): CallMetadata | undefined => {
   return (
