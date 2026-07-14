@@ -38,7 +38,7 @@ export const GalleryImage = ({ src, contentType, alt, classNames }: GalleryImage
       {alt ? (
         <Card.Header>
           <Card.Block>
-            <Icon icon={isVideo ? 'ph--video-camera--regular' : 'ph--image--regular'} size={5} />
+            <Icon icon={isVideo ? 'ph--video--regular' : 'ph--image--regular'} size={5} />
           </Card.Block>
           <Card.Title classNames='text-description'>{alt}</Card.Title>
         </Card.Header>
