@@ -13,8 +13,9 @@ import { FormInputAnnotation } from '@dxos/echo/Annotation';
  */
 export const IdeogramRequestConfig = Schema.Struct({
   model: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false)).annotations({ title: 'Model' })),
-  prompt: Schema.optional(
-    Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text), Schema.annotations({ title: 'Prompt' })),
+  prompt: Schema.NonEmptyString.pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Text),
+    Schema.annotations({ title: 'Prompt' }),
   ),
   negativePrompt: Schema.optional(
     Schema.String.pipe(

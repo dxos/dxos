@@ -29,7 +29,7 @@ describe('ideogram mapping', () => {
           { url: null, prompt: 'filtered' },
         ],
       },
-      { model: 'V_2' },
+      { model: 'V_2', prompt: 'a' },
     );
 
     expect(variants).toHaveLength(1);
@@ -60,7 +60,7 @@ describe('ideogram mapping', () => {
           },
         ],
       },
-      { model: 'V_2' },
+      { model: 'V_2', prompt: 'a' },
     );
 
     const generation = variants[0]?.generation;

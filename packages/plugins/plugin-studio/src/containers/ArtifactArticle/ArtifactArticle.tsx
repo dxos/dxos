@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -74,7 +75,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         url: variant.url,
         content: variant.content,
         contentType: variant.contentType,
-        label: variant.name,
+        label: variant.name ?? variant.generation?.prompt,
       })),
     [variants],
   );
@@ -88,8 +89,10 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [artifactId, provider?.id],
   );
+  // Observe the draft so edits (via the form) re-render for the Generate-enabled check.
+  const [draftSnapshot] = useObject(draft);
 
-  const [selected, setSelected] = useState<Selected>('draft');
+  const [selected, setSelected] = useState<Selected>('all');
   const [generating, setGenerating] = useState(false);
 
   const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
@@ -190,6 +193,11 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   const busy = generating || pendingIndex >= 0;
   // The form is read-only when inspecting a produced variant, or while a generation is in flight.
   const formReadonly = !composing || busy;
+  // Generation is enabled only when the draft satisfies the provider's request schema (required
+  // fields present, e.g. a non-empty prompt + any provider-required values).
+  const canGenerate =
+    !!provider &&
+    Schema.is(provider.requestSchema)({ ...(provider.defaultRequest ?? {}), ...(draftSnapshot?.config ?? {}) });
 
   // Whether the selected variant is the artifact's cover; toggling designates (or clears) it.
   const isCover = !!selectedVariant && artifactSnapshot?.cover?.target?.id === selectedVariant.id;
@@ -257,7 +265,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               icon={busy ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
               iconClassNames={busy ? 'animate-spin' : undefined}
               label={busy ? t('generating.label') : t('generate.label')}
-              disabled={!db || !provider || !hasAttention || busy || !composing}
+              disabled={!db || !provider || !hasAttention || busy || !composing || !canGenerate}
               onClick={() => {
                 void handleGenerate();
               }}

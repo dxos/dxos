@@ -17,11 +17,12 @@ import { HeyGenProvider } from './HeyGenProvider';
  * (script) plus the avatar and voice ids. Studio renders these as a schema-driven form.
  */
 export const HeyGenRequestConfig = Schema.Struct({
-  prompt: Schema.optional(
-    Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text), Schema.annotations({ title: 'Prompt' })),
+  prompt: Schema.NonEmptyString.pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Text),
+    Schema.annotations({ title: 'Prompt' }),
   ),
-  avatarId: Schema.optional(Schema.String.annotations({ title: 'Avatar', description: 'HeyGen avatar id.' })),
-  voiceId: Schema.optional(Schema.String.annotations({ title: 'Voice', description: 'HeyGen voice id.' })),
+  avatarId: Schema.NonEmptyString.annotations({ title: 'Avatar', description: 'HeyGen avatar id.' }),
+  voiceId: Schema.NonEmptyString.annotations({ title: 'Voice', description: 'HeyGen voice id.' }),
 });
 export interface HeyGenRequestConfig extends Schema.Schema.Type<typeof HeyGenRequestConfig> {}
 
