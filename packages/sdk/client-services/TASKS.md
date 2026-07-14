@@ -1,6 +1,6 @@
 # client-services — Worker runtime refactor
 
-_Resume: Phase 2 — convert `WorkerRuntime` / `WorkerSession` to Effect services (Context tags + Layers). Uncommitted: none. Last: Phase 1 (kill shared-worker) landed — dead SharedWorker path removed, config surface simplified, `WorkerRuntime` stripped to the dedicated-worker shape; builds/lint/tests green._
+_Resume: Phase 3 — eliminate `ServiceRegistry`, serving handlers from Context. Uncommitted: none. Last: Phase 2 landed — `WorkerRuntime` is now a `Context.Tag` + `layerWorkerRuntime` with an Effect service surface (`start`/`stop`/`createSession`/`connectWebrtcBridge`), `WorkerSession.open`/`close` return Effects, call sites drop the `Effect.promise` bridges; builds/lint/tests green. Deviations from the sketch: lifecycle stays caller-driven (explicit `start`/`stop` Effects, not Layer finalizers) because `Worker.run` wraps `createRuntime` in `Effect.scoped` and resolves it immediately; runtime deps are passed via the `layerWorkerRuntime` factory options rather than separate `WorkerConfigProvider`/`StorageLock`/`SqliteLayer` tags; `WorkerSession` remains a class (state holder) with Effect open/close; readiness gate still a `Trigger`._
 
 Remove the legacy shared-worker services path, then convert `WorkerRuntime` / `WorkerSession` from imperative Promise-based classes to Effect services (Context tags + Layers).
 
@@ -67,29 +67,29 @@ Replace the imperative class + `async`/`Promise` API with Effect services: Conte
 
 ### Tasks
 
-- [ ] **Define services and errors**
+- [x] **Define services and errors**
   - `WorkerRuntime` tag: `start`, `stop`, `createSession`, `connectWebrtcBridge`, `updateSignalMetadata`, `host` accessor
   - `WorkerSession` tag (or opaque handle): `open`, `close`, `origin`, `bridgeService`
   - Typed errors via `BaseError.extend` (`WorkerRuntimeStartError`, `WorkerSessionOpenError`, …) — no bare `Error` in `Effect<A, E, R>`
-- [ ] **Define config / dependency tags**
+- [x] **Define config / dependency tags**
   - Extract options currently on `WorkerRuntimeOptions` into injectable tags: `WorkerConfigProvider`, `StorageLock` (`acquire`/`release`), `SqliteLayer`, `WorkerLifecyclePolicy` (if anything remains after Phase 1)
   - `ClientServicesHost` — Phase 4 defines Context tag + Layer; Phase 2 `WorkerRuntime` Layer depends on it
-- [ ] **Implement `WorkerRuntimeLive` Layer**
+- [x] **Implement `WorkerRuntimeLive` Layer**
   - Port `start` init sequence (config resolve → host initialize/open → identity tags → ready signal) to `Effect.gen`
   - Port `stop` teardown (sessions, host close, scope close, runtime dispose, `onStop`) with `Effect.ensuring` / Layer finalizers
   - Port session registry + WebRTC bridge selection (`_reconnectWebrtc`, `_sessionForNetworking`) to `Ref`-backed state
   - Keep `RtcTransportProxyFactory` as mutable bridge holder inside Layer closure or its own tag
-- [ ] **Implement `WorkerSessionLive`**
+- [x] **Implement `WorkerSessionLive`**
   - Port `WorkerSession.open` / `close` to Effect: RPC server open, `makeBridgeServiceClientOverProtocol`, `WorkerService.start` gate, navigator lock watcher
   - Replace `Callback` / `setTimeout` stop with `Effect.forkDaemon` or scheduler if needed
-- [ ] **Update call sites (Promise → Effect)**
+- [x] **Update call sites (Promise → Effect)**
   - `packages/sdk/client/src/services/dedicated/dedicated-worker.ts` — build runtime via Layer; `createSession` returns `Effect.never` without `Effect.promise` bridges
   - `packages/sdk/client/src/testing/test-worker-factory.ts` — same
   - Export Layer + tags from `packages/sdk/client-services/src/packlets/worker/`
-- [ ] **Delete or thin legacy classes**
+- [x] **Delete or thin legacy classes**
   - Remove `class WorkerRuntime` / `class WorkerSession` once Layer-backed services ship, or keep classes as thin wrappers only if external API requires it (prefer tags)
   - Update `worker-runtime.ts` / `worker-session.ts` tests; add Layer integration test if unit coverage is thin
-- [ ] **Verify**
+- [x] **Verify**
   - `moon run client-services:test -- src/packlets/worker/`
   - `moon run client:test` (dedicated-worker-client-services tests)
   - Manual: dedicated worker session open/close, WebRTC bridge on owner tab, worker stop on last session

@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { Trigger } from '@dxos/async';
 import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClientOverProtocol } from '@dxos/client-protocol';
+import { EffectEx } from '@dxos/effect';
 import { log, logInfo } from '@dxos/log';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type WorkerService } from '@dxos/protocols/rpc';
@@ -33,6 +34,9 @@ export type WorkerSessionProps = {
 
 /**
  * Represents a tab connection within the worker.
+ *
+ * The session holds imperative per-connection transport state (RPC servers, the WebRTC bridge client);
+ * its lifecycle is driven by {@link WorkerRuntime} through the {@link open} / {@link close} Effects.
  */
 export class WorkerSession {
   private readonly _clientRpc: ClientRpcServer;
@@ -66,7 +70,7 @@ export class WorkerSession {
       Effect.sync(() => {
         // Close on the next tick so the RPC response is delivered before the transport tears down.
         setTimeout(() => {
-          void this.close().catch((err) => log.catch(err));
+          void EffectEx.runPromise(this.close()).catch((err) => log.catch(err));
         });
       }),
   };
@@ -103,38 +107,42 @@ export class WorkerSession {
       : undefined;
   }
 
-  async open(): Promise<void> {
-    log('opening...');
-    // The tab serves the WebRTC `BridgeService` on the reverse channel; build a client the worker's
-    // network stack can proxy through.
-    const { bridgeService, close } = await makeBridgeServiceClientOverProtocol(this._systemProtocol);
-    this.bridgeService = bridgeService;
-    this.#closeBridge = close;
+  open(): Effect.Effect<void> {
+    return Effect.promise(async () => {
+      log('opening...');
+      // The tab serves the WebRTC `BridgeService` on the reverse channel; build a client the worker's
+      // network stack can proxy through.
+      const { bridgeService, close } = await makeBridgeServiceClientOverProtocol(this._systemProtocol);
+      this.bridgeService = bridgeService;
+      this.#closeBridge = close;
 
-    await Promise.all([this._clientRpc.open(), this._maybeOpenShell()]);
+      await Promise.all([this._clientRpc.open(), this._maybeOpenShell()]);
 
-    // Wait until the tab calls `WorkerService.start` (conveys origin + liveness lock).
-    await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
+      // Wait until the tab calls `WorkerService.start` (conveys origin + liveness lock).
+      await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
 
-    if (this.lockKey) {
-      void this._afterLockReleases(this.lockKey, () => this.close());
-    }
+      if (this.lockKey) {
+        void this._afterLockReleases(this.lockKey, () => EffectEx.runPromise(this.close()));
+      }
 
-    log('opened');
+      log('opened');
+    });
   }
 
-  async close(): Promise<void> {
-    log.debug('closing...');
-    try {
-      await this.onClose.callIfSet();
-    } catch (err: any) {
-      log.catch(err);
-    }
+  close(): Effect.Effect<void> {
+    return Effect.promise(async () => {
+      log.debug('closing...');
+      try {
+        await this.onClose.callIfSet();
+      } catch (err: any) {
+        log.catch(err);
+      }
 
-    await Promise.all([this._clientRpc.close(), this._shellClientRpc?.close(), this.#closeBridge?.()]);
-    this.bridgeService = undefined;
-    this.#closeBridge = undefined;
-    log.debug('closed');
+      await Promise.all([this._clientRpc.close(), this._shellClientRpc?.close(), this.#closeBridge?.()]);
+      this.bridgeService = undefined;
+      this.#closeBridge = undefined;
+      log.debug('closed');
+    });
   }
 
   private async _maybeOpenShell(): Promise<void> {

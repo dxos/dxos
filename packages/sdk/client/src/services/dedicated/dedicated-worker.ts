@@ -6,8 +6,9 @@ import * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
 
-import { WorkerRuntime } from '@dxos/client-services';
+import { makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as Worker from '@dxos/worker-framework/Worker';
@@ -39,7 +40,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         }
         log('dedicated-worker: OPFS probe complete', { opfsAvailable });
 
-        const runtime = new WorkerRuntime({
+        const runtime = makeWorkerRuntime({
           configProvider: async () => config,
           onStop: async () => {
             log('dedicated-worker: WorkerRuntime onStop, closing self');
@@ -58,11 +59,11 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         }
 
         log('dedicated-worker: starting WorkerRuntime');
-        await runtime.start();
+        await EffectEx.runPromise(runtime.start());
         log('dedicated-worker: WorkerRuntime started');
 
         return {
-          stop: async () => runtime.stop(),
+          stop: async () => EffectEx.runPromise(runtime.stop()),
           // The framework hands the session the forward (tab→worker) and reverse (worker→tab) protocol
           // layers via effect context. The WorkerRuntime session manages its own lifecycle (it closes
           // when the tab-liveness lock releases), so the effect opens the session then blocks — the
@@ -71,11 +72,11 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
             Effect.gen(function* () {
               const appProtocol = yield* RpcServer.Protocol;
               const systemProtocol = yield* RpcClient.Protocol;
-              const session = yield* Effect.promise(() => runtime.createSession({ appProtocol, systemProtocol }));
+              const session = yield* runtime.createSession({ appProtocol, systemProtocol });
               if (isOwner) {
                 performance.mark('dedicated-worker:session-ready');
                 log('dedicated-worker: connecting webrtc bridge to owning client', { clientId });
-                runtime.connectWebrtcBridge(session);
+                yield* runtime.connectWebrtcBridge(session);
               }
               return yield* Effect.never;
             }),
