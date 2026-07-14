@@ -132,6 +132,8 @@ export const HeyGenGenerateForm = ({ schema, value, onChange, readonly }: HeyGen
       defaultValues={value}
       fieldMap={fieldMap}
       readonly={readonly}
+      // Keep every field visible when read-only (show the full form, not just the set fields).
+      keepEmptyReadonly={readonly}
       onValuesChanged={readonly ? undefined : handleValuesChanged}
     >
       <Form.Content>

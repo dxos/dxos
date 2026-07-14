@@ -36,6 +36,8 @@ export const GenerateForm = ({ schema, value, onChange, readonly }: GenerateForm
       schema={schema}
       values={value}
       readonly={readonly}
+      // Keep every field visible when read-only (show the full form, not just the set fields).
+      keepEmptyReadonly={readonly}
       autoSave={!readonly}
       onValuesChanged={readonly ? undefined : handleValuesChanged}
     >
