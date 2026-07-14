@@ -285,7 +285,7 @@ export interface State {
   readonly lastResult: Exit.Exit<unknown> | null;
 }
 
-export interface InvokerOptions {
+export interface InvokeOptions {
   trigger: Trigger;
   event: TriggerEvent.TriggerEvent;
 }
@@ -307,7 +307,7 @@ export interface Monitor {
    * Available only for direct and timer triggers.
    * Invocation respects the trigger's concurrency limit.
    */
-  readonly invokeTrigger: (options: InvokerOptions) => Effect.Effect<void>;
+  readonly invokeTrigger: (options: InvokeOptions) => Effect.Effect<void>;
 }
 
 /**
