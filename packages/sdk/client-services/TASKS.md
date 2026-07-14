@@ -67,11 +67,11 @@ Replace the imperative class + `async`/`Promise` API with Effect services: Conte
 
 ### Tasks
 
-- [x] **Define services and errors**
-  - `WorkerRuntime` tag: `start`, `stop`, `createSession`, `connectWebrtcBridge`, `updateSignalMetadata`, `host` accessor
-  - `WorkerSession` tag (or opaque handle): `open`, `close`, `origin`, `bridgeService`
-  - Typed errors via `BaseError.extend` (`WorkerRuntimeStartError`, `WorkerSessionOpenError`, …) — no bare `Error` in `Effect<A, E, R>`
-- [x] **Define config / dependency tags**
+- [x] **Define services and errors** (services done; typed errors deferred)
+  - `WorkerRuntime` tag: `start`, `stop`, `createSession`, `connectWebrtcBridge`, `host` accessor
+  - `WorkerSession` retained as a class (state holder) with Effect `open` / `close`
+  - [ ] Typed errors via `BaseError.extend` — NOT done: `start` catches into the `Trigger<Error>` ready-gate; `stop` / `createSession` / session open/close still wrap fallible work in bare `Effect.promise` (rejection → defect), with `try/finally` guarding teardown. Introduce typed errors alongside the Phase 4 host Layer.
+- [x] **Define config / dependency tags** (via factory options, not tags)
   - Extract options currently on `WorkerRuntimeOptions` into injectable tags: `WorkerConfigProvider`, `StorageLock` (`acquire`/`release`), `SqliteLayer`, `WorkerLifecyclePolicy` (if anything remains after Phase 1)
   - `ClientServicesHost` — Phase 4 defines Context tag + Layer; Phase 2 `WorkerRuntime` Layer depends on it
 - [x] **Implement `WorkerRuntimeLive` Layer**
@@ -83,9 +83,9 @@ Replace the imperative class + `async`/`Promise` API with Effect services: Conte
   - Port `WorkerSession.open` / `close` to Effect: RPC server open, `makeBridgeServiceClientOverProtocol`, `WorkerService.start` gate, navigator lock watcher
   - Replace `Callback` / `setTimeout` stop with `Effect.forkDaemon` or scheduler if needed
 - [x] **Update call sites (Promise → Effect)**
-  - `packages/sdk/client/src/services/dedicated/dedicated-worker.ts` — build runtime via Layer; `createSession` returns `Effect.never` without `Effect.promise` bridges
+  - `packages/sdk/client/src/services/dedicated/dedicated-worker.ts` — constructs the runtime via `makeWorkerRuntime` (the `layerWorkerRuntime` DI wrapper exists but is not yet the call-site path); `createSession` returns `Effect.never` without `Effect.promise` bridges
   - `packages/sdk/client/src/testing/test-worker-factory.ts` — same
-  - Export Layer + tags from `packages/sdk/client-services/src/packlets/worker/`
+  - Export `WorkerRuntime` tag + `layerWorkerRuntime` + `makeWorkerRuntime` from `packages/sdk/client-services/src/packlets/worker/`
 - [x] **Delete or thin legacy classes**
   - Remove `class WorkerRuntime` / `class WorkerSession` once Layer-backed services ship, or keep classes as thin wrappers only if external API requires it (prefer tags)
   - Update `worker-runtime.ts` / `worker-session.ts` tests; add Layer integration test if unit coverage is thin

@@ -122,7 +122,9 @@ export class WorkerSession {
       await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
 
       if (this.lockKey) {
-        void this._afterLockReleases(this.lockKey, () => EffectEx.runPromise(this.close()));
+        void this._afterLockReleases(this.lockKey, () =>
+          EffectEx.runPromise(this.close()).catch((err) => log.catch(err)),
+        );
       }
 
       log('opened');

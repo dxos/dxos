@@ -133,13 +133,18 @@ export const makeWorkerRuntime = ({
       stopped = true;
       // Release the lock to notify remote clients that the worker is terminating.
       releaseLock();
-      await clientServices.close(Context.default());
-      if (serviceScope) {
-        await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
-        serviceScope = undefined;
+      // Always dispose the SQLite runtime and run onStop, even if host / scope teardown rejects —
+      // otherwise a failed close would leak the runtime and skip the shutdown signal.
+      try {
+        await clientServices.close(Context.default());
+        if (serviceScope) {
+          await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
+          serviceScope = undefined;
+        }
+      } finally {
+        await runtime.dispose();
+        await onStop?.();
       }
-      await runtime.dispose();
-      await onStop?.();
     });
 
   const clientServices = new ClientServicesHost({
@@ -205,10 +210,13 @@ export const makeWorkerRuntime = ({
         log('started');
         // Bridge the host identity/devices Handlers to the effect-rpc client surface in-process.
         serviceScope = Effect.runSync(Scope.make());
+        const { IdentityService: identityHandlers, DevicesService: devicesHandlers } = clientServices.services;
+        invariant(identityHandlers, 'IdentityService handler not available');
+        invariant(devicesHandlers, 'DevicesService handler not available');
         const [identityService, devicesService] = await EffectEx.runPromise(
           Effect.all([
-            makeInProcessClient(IdentityService.Rpcs, clientServices.services.IdentityService!),
-            makeInProcessClient(DevicesService.Rpcs, clientServices.services.DevicesService!),
+            makeInProcessClient(IdentityService.Rpcs, identityHandlers),
+            makeInProcessClient(DevicesService.Rpcs, devicesHandlers),
           ]).pipe(Effect.provideService(Scope.Scope, serviceScope)),
         );
         setIdentityTags({
@@ -224,7 +232,12 @@ export const makeWorkerRuntime = ({
       }
     });
 
-  const createSession = ({ appProtocol, systemProtocol, shellPort, onClose }: CreateSessionProps): Effect.Effect<WorkerSession> =>
+  const createSession = ({
+    appProtocol,
+    systemProtocol,
+    shellPort,
+    onClose,
+  }: CreateSessionProps): Effect.Effect<WorkerSession> =>
     Effect.gen(function* () {
       const session = new WorkerSession({
         serviceHost: clientServices,
