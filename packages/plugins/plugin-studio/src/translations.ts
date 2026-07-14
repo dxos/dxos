@@ -55,7 +55,6 @@ export const translations = [
         'kind.placeholder': 'Kind',
         'kind.image.label': 'Image',
         'kind.video.label': 'Video',
-        'generator.placeholder': 'Generator',
       },
     },
   },
