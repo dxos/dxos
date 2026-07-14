@@ -1,6 +1,6 @@
 # client-services — Worker runtime refactor
 
-_Resume: Phase 4 — make `ClientServicesHost` an Effect service (Context.Tag + Layer) and fold `ServiceContext` into it. Uncommitted: none. Last: Phase 3 landed — `ServiceRegistry` deleted; `ClientServicesHost` holds resolved handlers in a private `#handlers` field (set on open, reset on close); full Context-union serving deferred into Phase 4. Earlier: Phase 2 landed — `WorkerRuntime` is now a `Context.Tag` + `layerWorkerRuntime` with an Effect service surface (`start`/`stop`/`createSession`/`connectWebrtcBridge`), `WorkerSession.open`/`close` return Effects, call sites drop the `Effect.promise` bridges; builds/lint/tests green. Deviations from the sketch: lifecycle stays caller-driven (explicit `start`/`stop` Effects, not Layer finalizers) because `Worker.run` wraps `createRuntime` in `Effect.scoped` and resolves it immediately; runtime deps are passed via the `layerWorkerRuntime` factory options rather than separate `WorkerConfigProvider`/`StorageLock`/`SqliteLayer` tags; `WorkerSession` remains a class (state holder) with Effect open/close; readiness gate still a `Trigger`._
+_Resume: Phase 4 (NOT STARTED — analyzed, see the implementation note under the Phase 4 heading). Phases 1–3 landed & green on PR #12214. Uncommitted: none. Last: Phase 3 landed — `ServiceRegistry` deleted; `ClientServicesHost` holds resolved handlers in a private `#handlers` field (set on open, reset on close); full Context-union serving deferred into Phase 4. Earlier: Phase 2 landed — `WorkerRuntime` is now a `Context.Tag` + `layerWorkerRuntime` with an Effect service surface (`start`/`stop`/`createSession`/`connectWebrtcBridge`), `WorkerSession.open`/`close` return Effects, call sites drop the `Effect.promise` bridges; builds/lint/tests green. Deviations from the sketch: lifecycle stays caller-driven (explicit `start`/`stop` Effects, not Layer finalizers) because `Worker.run` wraps `createRuntime` in `Effect.scoped` and resolves it immediately; runtime deps are passed via the `layerWorkerRuntime` factory options rather than separate `WorkerConfigProvider`/`StorageLock`/`SqliteLayer` tags; `WorkerSession` remains a class (state holder) with Effect open/close; readiness gate still a `Trigger`._
 
 Remove the legacy shared-worker services path, then convert `WorkerRuntime` / `WorkerSession` from imperative Promise-based classes to Effect services (Context tags + Layers).
 
@@ -145,6 +145,37 @@ Replace the imperative class + `async`/`Promise` API with Effect services: Conte
 Today `ClientServicesHost` is an imperative class that builds a `ManagedRuntime` over `ServiceContextLayer` + `ClientServicesRpcLayer`, resolves `ServiceContextService`, then separately opens the host (`serviceContext.open`, `identityService.open`). `ServiceContext` is a second lifecycle orchestrator (`Resource` with `_open`/`_close` stages: migrate → identity → network → `_initialize`). Collapse to a single `ClientServicesHost` Context tag + Layer that owns the full stack and lifecycle.
 
 **Depends on:** Phases 2–3 can proceed against the current class; Phase 4 should land before deleting the legacy `ClientServicesHost` class. `WorkerRuntime` / `LocalClientServices` should eventually consume `ClientServicesHost` via Layer rather than `new ClientServicesHost()`.
+
+> **Implementation note (analysis, not yet built).** The fold is the one genuinely
+> hard/high-risk piece and is **blocked on a circular dependency** that must be
+> designed around first: the four RPC handler layers that need orchestration
+> (`identityServiceLayer` → `createIdentity` + `initialized` + `broadcastProfileUpdate`,
+> `contactsServiceLayer`/`spacesServiceLayer` → `whenDataSpaceManagerReady`,
+> `edgeAgentServiceLayer` → `whenEdgeAgentManagerReady`) resolve the orchestrator as a
+> **stack component** (`ServiceContextService`) that sits _below_ them in
+> `ClientServicesRpcLayer.pipe(Layer.provideMerge(ServiceContextLayer(...)))`. Moving that
+> orchestration onto `ClientServicesHost` (which is constructed _outside_ the stack, via
+> `new ClientServicesHost` in `WorkerRuntime`, `LocalClientServices`, and both test-builders,
+> each supplying its own SQLite `ManagedRuntime`) would make the stack depend on the host that
+> builds the stack. Removing `ServiceContextService` therefore requires re-introducing an
+> in-stack orchestration/readiness tag (essentially `ServiceContext` renamed) that the RPC
+> layers depend on, while the host's `open`/`close` merely drive its lifecycle stages — i.e.
+> the class can be relocated/renamed but its _role_ (an in-stack orchestrator the RPC layers
+> resolve) cannot simply be absorbed by the host.
+>
+> Recommended sequencing when picking this up:
+>
+> 1. Introduce `ClientServicesHost` `Context.Tag` + `layerClientServicesHost(props)` and switch
+>    `LocalClientServices` + `WorkerRuntime` + both test-builders to resolve the host from a
+>    `ManagedRuntime` over that layer (so the tag has real consumers, not dead scaffolding).
+> 2. Split `ServiceContext` into (a) a stack-resident orchestration/readiness service tag the RPC
+>    layers depend on, and (b) lifecycle `open`/`close` programs that move onto the host.
+> 3. Delete `ServiceContextService` / the `ServiceContext` `Resource` class; update
+>    `test-builder.ts` `createServiceContext`, diagnostics, devtools (`spaces.ts`, `metadata.ts`),
+>    and the `service-context.test.ts` / `invitations.test.ts` / per-service tests.
+> 4. Verify against `client-services:test` (154 tests cover service-context/invitations/spaces/
+>    identity) **and** `client-e2e:test` — the browser/e2e path is the real safety net and cannot
+>    be exercised in the headless dev container, so this phase must be verified in CI.
 
 ### Design sketch
 
