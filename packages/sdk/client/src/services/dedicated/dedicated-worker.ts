@@ -48,8 +48,6 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
           acquireLock: async () => {},
           releaseLock: () => {},
           automaticallyConnectWebrtc: false,
-          // Liveness and displacement are owned by worker-framework's Worker.run.
-          manageLifecycle: false,
           sqliteLayer: opfsAvailable ? undefined : layerMemory,
         });
 

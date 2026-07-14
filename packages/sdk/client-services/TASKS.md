@@ -1,6 +1,6 @@
 # client-services — Worker runtime refactor
 
-_Resume: Phase 1 — inventory shared-worker call sites and confirm dedicated-worker observability parity before deleting `onconnect.ts`. Uncommitted: none. Last: task list created._
+_Resume: Phase 2 — convert `WorkerRuntime` / `WorkerSession` to Effect services (Context tags + Layers). Uncommitted: none. Last: Phase 1 (kill shared-worker) landed — dead SharedWorker path removed, config surface simplified, `WorkerRuntime` stripped to the dedicated-worker shape; builds/lint/tests green._
 
 Remove the legacy shared-worker services path, then convert `WorkerRuntime` / `WorkerSession` from imperative Promise-based classes to Effect services (Context tags + Layers).
 
@@ -10,7 +10,7 @@ The `SHARED_WORKER` services mode already throws in `createClientServices`; the 
 
 ### Tasks
 
-- [ ] **Audit shared-worker consumers**
+- [x] **Audit shared-worker consumers**
   - `packages/sdk/client/src/worker/onconnect.ts` — legacy SharedWorker runtime bootstrap + `getWorkerClientServices` / `getWorkerConfig` / `getWorkerServiceHost`
   - `packages/sdk/client/src/worker/index.ts` and `packages/sdk/react-client/src/worker.ts` re-exports
   - `packages/apps/composer-app/src/workers/shared-worker.ts` — observability + IDB log store in shared worker
@@ -19,25 +19,25 @@ The `SHARED_WORKER` services mode already throws in `createClientServices`; the 
   - `docs/legacy/guide/snippets-react/shared-worker.ts`
   - `packages/e2e/rpc-tunnel-e2e/src/test-worker.ts`
   - Vite / build wiring: `packages/apps/composer-app/vite.config.ts` (shared-worker entry if present)
-- [ ] **Migrate composer observability off shared-worker**
+- [x] **Migrate composer observability off shared-worker**
   - Move IDB log store + `ObservabilityProvider.Client.identityProvider` setup from `shared-worker.ts` into the dedicated-worker path (`dedicated-worker.ts` / `dedicated-worker-entrypoint.ts` + `onBeforeStart` hook)
   - Confirm tracing / log replay still works when services run in dedicated worker (buffering backend in `TRACE_PROCESSOR`)
-- [ ] **Delete shared-worker entrypoints and exports**
+- [x] **Delete shared-worker entrypoints and exports**
   - Remove `packages/sdk/client/src/worker/` packlet (or reduce to empty barrel if something must remain)
   - Remove `packages/apps/composer-app/src/workers/shared-worker.ts`
   - Remove `packages/apps/testbench-app/src/shared-worker.ts`
   - Remove legacy docs snippet
-- [ ] **Simplify app services-mode selection**
+- [x] **Simplify app services-mode selection**
   - `composer-app/main.tsx`: drop `DX_SHARED_WORKER`, `useSharedWorker`, iOS SharedWorker workaround, and memory-SQLite branch; default to `DEDICATED_WORKER` (or `HOST` when `DX_HOST`)
   - `packages/sdk/client/src/client/client.ts`: remove `SHARED_WORKER` default mapping if still present
-- [ ] **Remove dead config / API surface**
+- [x] **Remove dead config / API surface**
   - `client-services-factory.tsx`: drop deprecated `createWorker?: () => SharedWorker` option and `SHARED_WORKER` case (already throws — delete entirely)
   - Proto enum `SHARED_WORKER` in `config.proto` / `services.proto`: deprecate or reserve; update `platform.ts`, devtools labels, story fixtures, effect-proto test
   - `packages/common/log/src/platform/browser/index.ts` comment referencing `onconnect.ts`
-- [ ] **Strip `WorkerRuntime` shared-worker-only code**
+- [x] **Strip `WorkerRuntime` shared-worker-only code**
   - Remove `manageLifecycle` option and BroadcastChannel displacement from `worker-runtime.ts` (dedicated path sets `manageLifecycle: false`; worker-framework owns displacement)
   - Remove `clientConfigOverlay` / per-connection config seeding pattern from deleted `onconnect.ts` — dedicated worker receives config once at init via worker-framework
-- [ ] **Verify**
+- [x] **Verify**
   - `moon run client-services:build client:build`
   - `moon run client-e2e:test` (or targeted e2e that exercise dedicated worker)
   - Composer boots with `DEDICATED_WORKER` and observability intact

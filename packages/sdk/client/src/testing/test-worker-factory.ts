@@ -55,8 +55,6 @@ export class TestWorkerFactory extends Resource {
             acquireLock: async () => {},
             releaseLock: () => {},
             automaticallyConnectWebrtc: false,
-            // Liveness and displacement are owned by worker-framework's Worker.run.
-            manageLifecycle: false,
             sqliteLayer: sqliteLayerMemory,
           });
           await runtime.start();

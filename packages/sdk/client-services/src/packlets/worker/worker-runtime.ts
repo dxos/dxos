@@ -13,7 +13,6 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 
 import { Trigger } from '@dxos/async';
-import { DEFAULT_WORKER_BROADCAST_CHANNEL } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -47,7 +46,6 @@ export type CreateSessionProps = {
 };
 
 export type WorkerRuntimeOptions = {
-  channel?: string;
   configProvider: () => MaybePromise<Config>;
   acquireLock: () => Promise<void>;
   releaseLock: () => void;
@@ -58,13 +56,6 @@ export type WorkerRuntimeOptions = {
   automaticallyConnectWebrtc?: boolean;
 
   /**
-   * Whether this runtime manages worker displacement itself (broadcasting a stop to prior workers).
-   * Set false when running under worker-framework, which owns liveness and displacement.
-   * @default true
-   */
-  manageLifecycle?: boolean;
-
-  /**
    * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
    * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
    */
@@ -72,7 +63,7 @@ export type WorkerRuntimeOptions = {
 };
 
 /**
- * Runtime for the shared and dedciated worker.
+ * Runtime for the dedicated worker.
  * Manages connections from proxies (in tabs).
  * Tabs make requests to the `ClientServicesHost`, and provide a WebRTC gateway.
  */
@@ -85,13 +76,7 @@ export class WorkerRuntime {
   private readonly _ready = new Trigger<Error | undefined>();
   private readonly _sessions = new Set<WorkerSession>();
   private readonly _clientServices!: ClientServicesHost;
-  private readonly _channel: string;
   private readonly _automaticallyConnectWebrtc: boolean;
-  // When false, liveness and worker displacement are owned by the enclosing runner (worker-framework's
-  // runWorker) rather than by this runtime. The shared-worker path (which does not run under
-  // worker-framework) keeps managing displacement itself.
-  private readonly _manageLifecycle: boolean;
-  private _broadcastChannel?: BroadcastChannel;
   private _stopped = false;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
@@ -104,21 +89,17 @@ export class WorkerRuntime {
   >;
 
   constructor({
-    channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
     configProvider,
     acquireLock,
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
-    manageLifecycle = true,
     sqliteLayer,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
     this._releaseLock = releaseLock;
     this._onStop = onStop;
-    this._channel = channel;
-    this._manageLifecycle = manageLifecycle;
     if (sqliteLayer) {
       log.warn('Using testing SQLite layer');
     }
@@ -147,20 +128,6 @@ export class WorkerRuntime {
   async start(): Promise<void> {
     log('starting...');
     try {
-      // Displacement of a previous worker. Owned by worker-framework when running under it; the
-      // shared-worker path manages it here.
-      if (this._manageLifecycle) {
-        log('worker-runtime: broadcasting stop to displace previous worker');
-        this._broadcastChannel = new BroadcastChannel(this._channel);
-        this._broadcastChannel.postMessage({ action: 'stop' });
-        this._broadcastChannel.onmessage = async (event) => {
-          if (event.data?.action === 'stop') {
-            log('worker-runtime: received stop broadcast');
-            await this.stop();
-          }
-        };
-      }
-
       log('worker-runtime: acquiring storage lock');
       await this._acquireLock();
       log('worker-runtime: storage lock acquired, resolving config');
@@ -216,8 +183,6 @@ export class WorkerRuntime {
     this._stopped = true;
     // Release the lock to notify remote clients that the worker is terminating.
     this._releaseLock();
-    this._broadcastChannel?.close();
-    this._broadcastChannel = undefined;
     await this._clientServices.close(Context.default());
     if (this._serviceScope) {
       await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
@@ -225,30 +190,6 @@ export class WorkerRuntime {
     }
     await this._runtime.dispose();
     await this._onStop?.();
-  }
-
-  /**
-   * Update signaling telemetry tags from a client-supplied config overlay.
-   *
-   * The worker services outlive individual client connections, so the first client seeds the
-   * worker's core config (storage, signaling, edge features). For fields that can legitimately
-   * differ per tab — `observabilityGroup` and `signalTelemetryEnabled` — this method lets later
-   * connections refresh the signal metadata the worker attaches to its signaling requests
-   * (last-writer-wins, matching the pre-DX-930 per-session RPC behaviour).
-   */
-  updateSignalMetadata(config: Config): void {
-    const observabilityGroup = config.get('runtime.client.observabilityGroup');
-    if (observabilityGroup) {
-      this._signalMetadataTags.group = observabilityGroup;
-    } else {
-      // Clear stale group so a later config that removes observabilityGroup stops attributing
-      // telemetry to the previous client's group (last-writer-wins).
-      delete this._signalMetadataTags.group;
-    }
-    const signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled');
-    if (signalTelemetryEnabled !== undefined) {
-      this._signalTelemetryEnabled = signalTelemetryEnabled;
-    }
   }
 
   /**
