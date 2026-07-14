@@ -13,15 +13,17 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { inboxSyncLiveServices, seedMailboxBinding } from '../../../testing/sync-fixture';
-import { runGmailSync } from './sync';
+import { inboxSyncLiveServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
+import { syncGmail } from './sync';
 
 const ACCESS_TOKEN = process.env.GOOGLE_ACCESS_TOKEN;
 const FIXTURE_OUT = process.env.FIXTURE_OUT;
 
-// The fixture-fetch tool (see scripts/google-auth.mjs + scripts/fetch-fixture.mjs): syncs a real
-// Gmail account in-process against the live API and writes the exported feed to FIXTURE_OUT. Skipped
-// unless GOOGLE_ACCESS_TOKEN + FIXTURE_OUT are set — it is a manual tool, never a CI unit test.
+/**
+ * The fixture-fetch tool (see scripts/google-auth.mjs + scripts/fetch-fixture.mjs): syncs a real
+ * Gmail account in-process against the live API and writes the exported feed to FIXTURE_OUT. Skipped
+ * unless GOOGLE_ACCESS_TOKEN + FIXTURE_OUT are set — it is a manual tool, never a CI unit test.
+ */
 describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live Gmail', () => {
   test(
     'syncs the account and writes the exported feed to FIXTURE_OUT',
@@ -32,7 +34,7 @@ describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live 
 
         const messages = await EffectEx.runPromise(
           Effect.gen(function* () {
-            yield* runGmailSync({
+            yield* syncGmail({
               binding: Ref.make(binding),
               ...(process.env.FETCH_AFTER ? { after: process.env.FETCH_AFTER } : {}),
             });

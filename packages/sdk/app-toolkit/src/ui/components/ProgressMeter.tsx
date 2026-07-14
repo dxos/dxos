@@ -5,14 +5,14 @@
 import React, { useEffect, useState } from 'react';
 
 import { Progress } from '@dxos/progress';
-import { IconButton, composable, composableProps } from '@dxos/react-ui';
+import { IconButton, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type ProgressMeterProps = {
+export type ProgressMeterProps = ThemedClassName<{
   state: Progress.TaskProgress;
   /** When provided (and the task is active + cancellable), a cancel control invokes this. */
   onCancel?: () => void;
-};
+}>;
 
 /**
  * Renders one progress provider's state. When the total is known, a labelled bar with count and
@@ -28,12 +28,14 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
     const active = status === 'running' || status === 'pending';
     // The registry only recomputes elapsedMs when the task is touched, so tick locally while active.
     const elapsedMs = useElapsed(state.startedAt, active, state.elapsedMs);
-    const rootProps = composableProps(props, { classNames: 'flex flex-col gap-1', role: 'group' });
     // Show the cancel control only while the task is still active and the producer registered a handler.
     const cancellable = !!onCancel && state.cancellable && active;
 
     return (
-      <div {...rootProps} ref={forwardedRef}>
+      <div
+        {...composableProps(props, { classNames: 'grid grid-rows-[24px_4px_24px] gap-0.5 px-1', role: 'group' })}
+        ref={forwardedRef}
+      >
         <div className='flex justify-between items-center gap-2 text-xs text-description'>
           <span className='truncate'>{label ?? name}</span>
           <div className='flex items-center gap-1 shrink-0'>
@@ -41,34 +43,48 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
               {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}
             </span>
             {cancellable && (
-              <IconButton variant='ghost' size={3} icon='ph--x--regular' iconOnly label='Cancel' onClick={onCancel} />
+              <IconButton
+                density='xs'
+                variant='ghost'
+                size={3}
+                square
+                icon='ph--x--regular'
+                iconOnly
+                label='Cancel'
+                onClick={onCancel}
+              />
             )}
           </div>
         </div>
+
         {/* A progress line only when a real fraction is known; an indeterminate bar conveys nothing. */}
         {!indeterminate && (
           <div
             role='progressbar'
             aria-valuenow={current}
             aria-valuemax={total}
-            className='relative h-1 rounded overflow-hidden bg-separator'
+            className='relative h-full rounded overflow-hidden bg-separator'
           >
             <div
               className={mx(
-                'absolute inset-y-0 start-0 rounded',
+                // Ease the width between updates so incremental advances glide rather than jump.
+                'absolute inset-y-0 start-0 rounded transition-[width] duration-500 ease-linear',
                 status === 'error' ? 'bg-error-surface' : 'bg-primary-surface',
               )}
               style={{ width: `${fraction * 100}%` }}
             />
           </div>
         )}
-        {status === 'error' && state.error ? (
-          <div className='text-xs text-error-text truncate'>{state.error}</div>
-        ) : (
-          !indeterminate &&
-          eta !== undefined &&
-          status === 'running' && <div className='text-xs text-subdued'>{formatDuration(eta)} remaining</div>
-        )}
+
+        <div className='flex items-center'>
+          {status === 'error' && state.error ? (
+            <div className='text-xs text-error-text truncate'>{state.error}</div>
+          ) : (
+            !indeterminate &&
+            eta !== undefined &&
+            status === 'running' && <div className='text-xs text-subdued'>{formatDuration(eta)} remaining</div>
+          )}
+        </div>
       </div>
     );
   },

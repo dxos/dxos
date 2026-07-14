@@ -5836,6 +5836,9 @@ importers:
 
   packages/core/compute/pipeline:
     dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -19761,6 +19764,9 @@ importers:
       '@dxos/plugin-outliner':
         specifier: workspace:*
         version: link:../../plugins/plugin-outliner
+      '@dxos/plugin-progress':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-progress
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
@@ -19800,6 +19806,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
+      '@dxos/story-modules':
+        specifier: workspace:*
+        version: link:../story-modules
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

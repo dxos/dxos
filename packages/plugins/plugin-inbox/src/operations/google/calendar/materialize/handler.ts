@@ -7,9 +7,39 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { CalendarForeignKeyWrongTypeError } from '../../../errors';
-import { Calendar, InboxOperation } from '../../../types';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
+import { CalendarForeignKeyWrongTypeError } from '../../../../errors';
+import { Calendar, InboxOperation } from '../../../../types';
+
+/**
+ * Find-or-create the local Calendar materialized for this remote calendar id.
+ * Idempotent within a space — keyed by `Obj.Meta.keys` matching
+ * `{ source: 'com.google', id }`.
+ */
+const findOrCreateCalendar = (remoteId: string, name: string) =>
+  Effect.gen(function* () {
+    const existing = yield* Database.query(
+      Query.select(Filter.foreignKeys(Calendar.Calendar, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }])),
+    ).run;
+    if (existing.length > 0) {
+      const candidate = existing[0];
+      // TODO(wittjosiah): Filter.foreignKeys typing may not narrow to Calendar; drop guard if it does.
+      if (!Calendar.instanceOf(candidate)) {
+        return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
+      }
+      if (candidate.name !== name) {
+        Obj.update(candidate, (candidate) => {
+          candidate.name = name;
+        });
+      }
+      return candidate;
+    }
+    const calendar = Calendar.make({
+      [Obj.Meta]: { keys: [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }] },
+      name,
+    });
+    return yield* Database.add(calendar);
+  });
 
 /**
  * Eagerly materializes a local Calendar for a selected remote Google calendar so a
@@ -43,33 +73,3 @@ const handler: Operation.WithHandler<typeof InboxOperation.MaterializeCalendarTa
   );
 
 export default handler;
-
-/**
- * Find-or-create the local Calendar materialized for this remote calendar id.
- * Idempotent within a space — keyed by `Obj.Meta.keys` matching
- * `{ source: 'google.com', id }`.
- */
-const findOrCreateCalendar = (remoteId: string, name: string) =>
-  Effect.gen(function* () {
-    const existing = yield* Database.query(
-      Query.select(Filter.foreignKeys(Calendar.Calendar, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }])),
-    ).run;
-    if (existing.length > 0) {
-      const candidate = existing[0];
-      // TODO(wittjosiah): Filter.foreignKeys typing may not narrow to Calendar; drop guard if it does.
-      if (!Calendar.instanceOf(candidate)) {
-        return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
-      }
-      if (candidate.name !== name) {
-        Obj.update(candidate, (candidate) => {
-          candidate.name = name;
-        });
-      }
-      return candidate;
-    }
-    const calendar = Calendar.make({
-      [Obj.Meta]: { keys: [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }] },
-      name,
-    });
-    return yield* Database.add(calendar);
-  });

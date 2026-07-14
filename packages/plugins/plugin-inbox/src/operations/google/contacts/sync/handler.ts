@@ -9,24 +9,19 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-// Connection is referenced in the inferred type of this module's default export via
-// InboxOperation.GoogleContactsSync's schema; the import lets TypeScript name it in .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { Cursor, Person } from '@dxos/types';
 
-import { GooglePeople } from '../../../apis';
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { GoogleCredentials } from '../../../services';
-import { InboxOperation } from '../../../types';
-import { mapGooglePerson } from './mapper';
+import { GooglePeople } from '../../../../apis';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
+import { GoogleCredentials } from '../../../../services';
+import { InboxOperation } from '../../../../types';
+import { mapGooglePerson } from '../mapper';
 
 const COMMIT_PAGE_SIZE = 10;
 
@@ -126,7 +121,7 @@ const upsertPerson = ({ resourceName, props }: MappedPerson) =>
     return true;
   });
 
-export default InboxOperation.GoogleContactsSync.pipe(
+const handler = InboxOperation.GoogleContactsSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;
@@ -184,3 +179,5 @@ export default InboxOperation.GoogleContactsSync.pipe(
   ),
   Operation.opaqueHandler,
 );
+
+export default handler;

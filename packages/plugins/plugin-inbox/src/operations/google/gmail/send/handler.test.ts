@@ -12,8 +12,8 @@ import { Obj } from '@dxos/echo';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
-import { GoogleMail } from '../../../apis';
-import { GoogleCredentials } from '../../../services/google-credentials';
+import { GoogleMail } from '../../../../apis';
+import { GoogleCredentials } from '../../../../services/google-credentials';
 
 const TestLayer = Layer.mergeAll(
   credentialsLayerConfig([
