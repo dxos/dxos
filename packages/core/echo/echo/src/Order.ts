@@ -6,11 +6,13 @@
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
-export interface Order<T> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Order': { value: T };
+export const OrderTypeId = '~@dxos/echo/Order' as const;
+export type OrderTypeId = typeof OrderTypeId;
 
-  'ast': QueryAST.Order;
+export interface Order<T> {
+  readonly [OrderTypeId]: { value: T };
+
+  ast: QueryAST.Order;
 }
 
 export type Any = Order<any>;

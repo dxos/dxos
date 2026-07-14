@@ -20,9 +20,13 @@ import type * as Obj from './Obj';
 import * as Ref from './Ref';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Type$ from './Type';
+
+export const FilterTypeId = '~@dxos/echo/Filter' as const;
+export type FilterTypeId = typeof FilterTypeId;
+
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: Types.Covariant<T> };
+  readonly [FilterTypeId]: { value: Types.Covariant<T> };
 
   'ast': QueryAST.Filter;
 }

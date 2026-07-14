@@ -57,12 +57,14 @@ export interface AggregateResult {
   readonly '~@dxos/echo/Query.AggregateResult': true;
 }
 
+export const QueryTypeId = '~@dxos/echo/Query' as const;
+export type QueryTypeId = typeof QueryTypeId;
+
 // TODO(burdon): Narrow T to Entity.Unknown?
 export interface Query<T> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Query': { value: T };
+  readonly [QueryTypeId]: { value: T };
 
-  'ast': QueryAST.Query;
+  ast: QueryAST.Query;
 
   /**
    * Filter the current selection based on a filter.

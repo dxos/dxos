@@ -20,6 +20,9 @@ export type Spec =
   | { kind: 'items'; limit?: number }
   | { kind: 'count' };
 
+export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
+export type AggregateTypeId = typeof AggregateTypeId;
+
 /**
  * A per-group aggregate declaration, materialised as a top-level field on the flat result record
  * `Query.aggregate` produces and orderable via a following `orderBy(Order.property(name))`. Name it
@@ -30,10 +33,9 @@ export type Spec =
  * `group` entries aggregates the entire input into a single row.
  */
 export interface Aggregate<T, V> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Aggregate': { element: T; value: V };
+  readonly [AggregateTypeId]: { element: T; value: V };
 
-  'spec': Spec;
+  spec: Spec;
 }
 
 export type Any = Aggregate<any, any>;
