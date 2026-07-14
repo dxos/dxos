@@ -14,7 +14,7 @@ import {
   type ProviderCallOptions,
   ProviderFailureError,
   UnsupportedKindError,
-} from './GenerationProvider';
+} from './heygen-provider-types';
 
 const V3_BASE_URL = 'https://api.heygen.com/v3';
 

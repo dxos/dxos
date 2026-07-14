@@ -8,8 +8,8 @@ import { afterEach, describe, test } from 'vitest';
 import { GenerationService } from '@dxos/plugin-studio/types';
 
 import { IDEOGRAM_GENERATE_URL } from '../constants';
+import { generateWithIdeogram } from './ideogram-client';
 import { mapIdeogramResponse } from './ideogram-mapping';
-import { generateWithIdeogram } from './IdeogramClient';
 
 describe('ideogram mapping', () => {
   test('maps data entries to variants and drops url-less ones', ({ expect }) => {
