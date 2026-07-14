@@ -492,10 +492,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
             case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),
-                Option.map(Cause.pretty),
-                Option.getOrElse(() => 'Process failed with unknown error'),
+                Option.getOrElse(() => Cause.die('Process failed with unknown error')),
               );
-              return Effect.runSync(Deferred.die(deferred, error));
+              return Effect.runSync(Deferred.failCause(deferred, error));
             }
             case Process.State.TERMINATED:
               return Effect.runSync(Deferred.die(deferred, 'Process was terminated'));

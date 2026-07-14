@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './active-topics';
 export * from './classify-sender';
 export * from './contacts';
 export * from './draft';

@@ -9,6 +9,7 @@ import * as AnchoredTo from './AnchoredTo';
 import * as Channel from './Channel';
 import * as ContentBlock from './ContentBlock';
 import * as Cursor from './Cursor';
+import * as DraftMessage from './DraftMessage';
 import * as Employer from './Employer';
 import * as Event from './Event';
 import * as File from './File';
@@ -51,6 +52,7 @@ export {
   Channel,
   ContentBlock,
   Cursor,
+  DraftMessage,
   Employer,
   Event,
   File,

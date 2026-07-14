@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -16,7 +17,7 @@ import type * as Types from 'effect/Types';
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
 
-import type { NoHandlerError } from './errors';
+import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
 
 /**
@@ -674,6 +675,12 @@ export const schedule = <I, O>(
   Effect.flatMap(Service, (ops) => ops.schedule(op, ...(args as [I, InvokeOptions?]))).pipe(
     Effect.withSpan('Operation.schedule'),
   );
+
+/**
+ * Call this inside an operation to stop the current invocation and have the system re-run it.
+ * Currently only supported for operations running as a result of a trigger.
+ */
+export const runAgain = (): Effect.Effect<never, void> => Effect.failCauseSync(() => Cause.die(new RunAgainError()));
 
 /**
  * Provides additional invocation options to all invocations.

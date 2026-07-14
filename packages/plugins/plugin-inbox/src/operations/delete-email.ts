@@ -8,11 +8,12 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { DraftMessage } from '@dxos/types';
 
 import { GoogleMail, Jmap, JmapMail } from '../apis';
 import { GMAIL_SOURCE, JMAP_MESSAGE_SOURCE } from '../constants';
 import { GoogleCredentials, JmapCredentials } from '../services';
-import { DraftMessage, InboxOperation, Mailbox } from '../types';
+import { InboxOperation, Mailbox } from '../types';
 import { findBindingForTarget } from '../util';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';

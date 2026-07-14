@@ -5,7 +5,6 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { AuthStatus, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-host';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -14,6 +13,9 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
+import { MetadataStore } from '../metadata';
+import { valueEncoding } from '../pipeline';
+import { AuthStatus, SpaceManager } from '../space';
 import { IdentityManager } from './identity-manager';
 
 describe('identity/identity-manager', () => {

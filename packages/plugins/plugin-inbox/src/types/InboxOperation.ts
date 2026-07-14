@@ -677,7 +677,7 @@ export const AnalyzeTopics = Operation.make({
   meta: {
     key: makeKey('analyzeTopics'),
     name: 'Analyze Topics',
-    description: 'Tags every message and clusters the mailbox threads into Topic objects with summaries.',
+    description: 'Tags every message and clusters the mailbox threads into suggested topics for review.',
     icon: 'ph--stack--regular',
   },
   // Capability.Service: read the ProgressRegistry to publish a live monitor for the run.
@@ -694,7 +694,48 @@ export const AnalyzeTopics = Operation.make({
   }),
   output: Schema.Struct({
     tagged: Schema.Number,
-    topics: Schema.Number,
+    suggestions: Schema.Number,
+  }),
+});
+
+export const CreateTopicFromMessage = Operation.make({
+  meta: {
+    key: makeKey('createTopicFromMessage'),
+    name: 'Create Topic',
+    description: "Creates a Topic seeded from a message's thread, with an LLM summary.",
+    icon: 'ph--stack--regular',
+  },
+  services: [AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox the message belongs to; the created topic is anchored to it.',
+    }),
+    message: Type.getSchema(Message.Message).annotations({
+      description: 'Message whose thread seeds the topic.',
+    }),
+  }),
+  output: Schema.Struct({
+    topicId: Schema.String,
+  }),
+});
+
+export const UnsubscribeSender = Operation.make({
+  meta: {
+    key: makeKey('unsubscribeSender'),
+    name: 'Unsubscribe',
+    description: 'Adds a skip-sender filter and fires the List-Unsubscribe one-click request for a bulk sender.',
+    icon: 'ph--prohibit--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox to add the skip-sender filter to.' }),
+    email: Schema.String.annotations({ description: 'Sender email to unsubscribe from and filter.' }),
+    unsubscribe: Schema.String.annotations({ description: 'The raw List-Unsubscribe header value.' }),
+  }),
+  output: Schema.Struct({
+    filtered: Schema.Boolean,
+    /** True when a List-Unsubscribe one-click HTTP request was sent successfully. */
+    unsubscribed: Schema.Boolean,
   }),
 });
 

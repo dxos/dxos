@@ -20,11 +20,7 @@ import {
   StatsModule,
   TopicsModule,
   TriggersModule,
-} from '../components';
-
-// `ModuleProps` (space + attendableId) and the `withModuleProps` adapter now live in the shared
-// `@dxos/story-modules` package — the container owns space resolution and attention registration.
-export type { ModuleProps } from '@dxos/story-modules';
+} from '../modules';
 
 /**
  * Role tokens for the MailboxSync story columns. Each module is contributed as a dedicated

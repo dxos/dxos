@@ -5,13 +5,7 @@
 import * as Runtime from 'effect/Runtime';
 
 import { Trigger } from '@dxos/async';
-import {
-  type ClientServices,
-  type ClientServicesProvider,
-  Rpc,
-  clientServiceBundle,
-  serveBridgeService,
-} from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, Rpc, serveBridgeService } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -20,7 +14,6 @@ import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
 import { createIceProvider } from '@dxos/network-manager';
 import { subscribeStream } from '@dxos/protocols';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
-import { type ServiceBundle } from '@dxos/rpc';
 import type { MaybePromise } from '@dxos/util';
 import { WorkerProtocol } from '@dxos/worker-framework';
 import * as Client from '@dxos/worker-framework/Client';
@@ -148,10 +141,6 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   onReconnect = (callback: () => Promise<void>) => {
     this.#connection.onReconnect(callback);
   };
-
-  get descriptors(): ServiceBundle<ClientServices> {
-    return clientServiceBundle;
-  }
 
   get rpc() {
     invariant(this.#services, 'services not initialized');

@@ -211,6 +211,22 @@ gh run watch
 
 Handy as aliases — e.g. `gh alias set deploy-labs 'workflow run deploy-apps.yml -f environment=labs'`, then just `gh deploy-labs`.
 
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+
+```bash
+# Push secrets to the deployed composer-labs Worker.
+pnpm secrets remote labs
+
+# See what would be pushed without making any change.
+pnpm secrets remote main --dry-run
+
+# Write .dev.vars for local `wrangler dev`.
+pnpm secrets dev
+
+# Target a different 1Password item.
+pnpm secrets remote labs --item "some other item"
+```
+
 ### New npm packages
 
 New packages are created with `"private": true` in their `package.json` (see [New Packages](./AGENTS.md#new-packages)). Publishing a package to npm for the first time requires an initial manual publish, since npm's OIDC trusted publishing (used by [`publish-all.yml`](https://github.com/dxos/dxos/blob/main/.github/workflows/publish-all.yml)) can only be configured for a package that already exists on the registry:

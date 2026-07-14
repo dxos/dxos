@@ -15,6 +15,7 @@ import {
   type DataSpace,
   InvitationsManager,
   InvitationsServiceImpl,
+  MetadataStore,
   type ServiceContext,
   createAdmissionKeypair,
 } from '@dxos/client-services';
@@ -28,7 +29,6 @@ import {
 import { InvitationsProxy } from '@dxos/client/invitations';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
-import { MetadataStore } from '@dxos/echo-host';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

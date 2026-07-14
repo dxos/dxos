@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 import { Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
+import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
@@ -21,7 +22,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { Operation, Process, Trigger, TriggerEvent } from '@dxos/compute';
+import { Operation, Process, RunAgainError, Trigger, TriggerEvent } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -88,12 +89,48 @@ export interface TriggerExecutionResult {
 }
 
 /**
- * Cront trigger runtime state.
+ * Unified runtime state for a single trigger, tracking *when/whether the trigger should run again*
+ * across every trigger kind (not only cron).
  */
-interface ScheduledTrigger {
+interface RuntimeTriggerState {
   trigger: Trigger.Trigger;
-  cron: Cron.Cron;
-  nextExecution: Date;
+
+  /**
+   * Parsed cron schedule. Set only for `timer` triggers.
+   */
+  cron?: Cron.Cron;
+
+  /**
+   * Next scheduled cron execution. Set only for `timer` triggers.
+   */
+  nextExecution?: Date;
+
+  /**
+   * Time until which scheduled invocations of this trigger are skipped after a genuine failure.
+   * Applies to all trigger kinds. Manual {@link TriggerDispatcher.invokeTrigger} calls bypass it.
+   */
+  cooldownUntil?: Date;
+
+  /**
+   * Pending re-invocation requested via {@link Operation.runAgain} ({@link RunAgainError}).
+   * Retries are drained at the tail of the invocation queue, ordered by `enqueuedAt`.
+   */
+  retry?: {
+    /**
+     * Event to replay on the retry. Re-running is assumed safe with the same input.
+     */
+    event: TriggerEvent.TriggerEvent;
+
+    /**
+     * Monotonic sequence number used to order pending retries FIFO at the tail of the queue.
+     */
+    enqueuedAt: number;
+  };
+
+  /**
+   * Result of the most recent invocation of this trigger.
+   */
+  lastResult?: Exit.Exit<unknown> | null;
 }
 
 type TriggerDispatcherServices = Registry.AtomRegistry | ProcessManager.Service | TriggerStateStore | Database.Service;
@@ -106,9 +143,36 @@ export type InvocationsState = {
   result: Exit.Exit<unknown> | null;
 };
 
+/**
+ * Observable per-trigger runtime status, derived from the dispatcher's internal runtime state.
+ */
+export type TriggerRuntimeStatus = {
+  triggerId: string;
+
+  /**
+   * Next scheduled cron execution (timer triggers only).
+   */
+  nextExecution?: Date;
+
+  /**
+   * Time until which the trigger is in failure cooldown, if any.
+   */
+  cooldownUntil?: Date;
+
+  /**
+   * Whether a re-invocation is pending from {@link RunAgainError}.
+   */
+  retryPending: boolean;
+
+  /**
+   * Result of the most recent invocation, if any.
+   */
+  lastResult?: Exit.Exit<unknown> | null;
+};
+
 export type TriggerDispatcherState = {
   enabled: boolean;
-  // TODO(dmaretskyi): Rework this to be grouped by trigger, with Ref's to objects, and the current state of the trigger: cursor, time when runs, rerun's, etc..
+  triggers: TriggerRuntimeStatus[];
   invocations: InvocationsState[];
   errors: Error[];
 };
@@ -193,19 +257,38 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
   private _triggers: Trigger.Trigger[] = [];
-  private _scheduledTriggers = new Map<string, ScheduledTrigger>();
+
+  /**
+   * Unified runtime state for every trigger kind: cron schedule, failure cooldown, and pending
+   * {@link RunAgainError} retries. Keyed by trigger id.
+   */
+  private _runtimeState = new Map<string, RuntimeTriggerState>();
+
   // `keepAlive` prevents the registry from disposing the atom node when no subscribers
   // are mounted (e.g. when start/stop runs before the UI subscribes). Without it,
   // updates written before the first subscription are dropped and the next read
   // re-initializes to the default {enabled: false, ...}.
   private _state: Atom.Writable<TriggerDispatcherState> = Atom.make<TriggerDispatcherState>({
     enabled: false,
+    triggers: [],
     invocations: [],
     errors: [],
   }).pipe(Atom.keepAlive);
   private _maxConcurrency: number;
   private _failureCooldown: Duration.Duration;
-  private _cooldownUntil = new Map<string, Date>();
+
+  /**
+   * Global concurrency limiter shared across all invocation paths (timer, feed, subscription,
+   * manual, and retry drain). Enforces {@link _maxConcurrency} on top of any per-trigger
+   * concurrency. Created eagerly so it can wrap invocations without an initialization effect.
+   */
+  private _concurrencyLimiter: Effect.Semaphore;
+
+  /**
+   * Monotonic counter assigning FIFO ordering to pending retries so re-enqueued retries land at
+   * the tail of the queue.
+   */
+  private _retrySequence = 0;
 
   constructor(options: TriggerDispatcherOptions) {
     this._services = options.services;
@@ -214,18 +297,51 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
+    this._concurrencyLimiter = Effect.unsafeMakeSemaphore(this._maxConcurrency);
   }
 
   private _isInCooldown = (triggerId: string): boolean => {
-    const until = this._cooldownUntil.get(triggerId);
+    const entry = this._runtimeState.get(triggerId);
+    const until = entry?.cooldownUntil;
     if (!until) {
       return false;
     }
     if (until.getTime() <= this.getCurrentTime().getTime()) {
-      this._cooldownUntil.delete(triggerId);
+      entry.cooldownUntil = undefined;
       return false;
     }
     return true;
+  };
+
+  /**
+   * Return the runtime-state entry for a trigger, creating a bare one if absent. Callers that
+   * invoke a trigger before {@link refreshTriggers} has populated the map (e.g. a manual
+   * {@link invokeTrigger}) rely on this to record cooldown/retry state.
+   */
+  private _getOrCreateRuntimeState = (trigger: Trigger.Trigger): RuntimeTriggerState => {
+    let entry = this._runtimeState.get(trigger.id);
+    if (!entry) {
+      entry = { trigger };
+      this._runtimeState.set(trigger.id, entry);
+    } else {
+      entry.trigger = trigger;
+    }
+    return entry;
+  };
+
+  /**
+   * Publish the current per-trigger runtime state onto the observable dispatcher state so the UI
+   * can render cursor/next-run/cooldown/retry status.
+   */
+  private _publishRuntimeStatuses = (registry: Registry.Registry): void => {
+    const triggers: TriggerRuntimeStatus[] = Array.fromIterable(this._runtimeState.values()).map((entry) => ({
+      triggerId: entry.trigger.id,
+      nextExecution: entry.nextExecution,
+      cooldownUntil: entry.cooldownUntil,
+      retryPending: entry.retry !== undefined,
+      lastResult: entry.lastResult,
+    }));
+    registry.update(this._state, Struct.evolve({ triggers: () => triggers }));
   };
 
   get running(): boolean {
@@ -298,14 +414,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         this._timerFiber = undefined;
       }
 
-      // Clear scheduled triggers
-      this._scheduledTriggers.clear();
-      this._cooldownUntil.clear();
+      // Clear runtime state for all triggers.
+      this._runtimeState.clear();
+      this._publishRuntimeStatuses(registry);
 
       log.info('TriggerDispatcher stopped');
     }).pipe(Effect.provide(this._services));
 
-  // TODO(dmaretskyi): Respect concurrency limit.
   invokeTrigger = (options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult> =>
     Effect.gen(this, function* () {
       const { trigger, event } = options;
@@ -328,7 +443,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }),
       );
 
-      // Sandboxed section.
+      // Sandboxed section. The global concurrency limiter wraps the actual op invocation so that
+      // the total number of concurrent invocations across all triggers/kinds never exceeds
+      // `_maxConcurrency`, on top of any per-trigger concurrency enforced at the call sites.
       const result = yield* Effect.gen(this, function* () {
         if (!trigger.enabled) {
           return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
@@ -376,28 +493,40 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           Effect.flatten,
           Effect.catchTag('NoSuchElementException', () => Effect.dieMessage('Trigger invocation produced no output')),
         );
-      }).pipe(Effect.exit);
+      }).pipe(this._concurrencyLimiter.withPermits(1), Effect.exit);
 
       const triggerExecutionResult: TriggerExecutionResult = {
         triggerId: trigger.id,
         result,
         feedCursor: trigger.spec?.kind === 'feed' && 'cursor' in event ? event.cursor : undefined,
       };
+      const runtimeState = this._getOrCreateRuntimeState(trigger);
+      runtimeState.lastResult = result;
       if (Exit.isSuccess(result)) {
         log('trigger execution success', {
           triggerId: trigger.id,
         });
-        this._cooldownUntil.delete(trigger.id);
+        // A successful run clears both the cooldown and any pending retry.
+        runtimeState.cooldownUntil = undefined;
+        runtimeState.retry = undefined;
+      } else if (this._isRunAgainRequest(result)) {
+        // `RunAgainError` is a request to re-invoke the trigger, not a genuine failure: skip the
+        // cooldown and enqueue a pending retry at the tail of the queue.
+        runtimeState.cooldownUntil = undefined;
+        runtimeState.retry = { event, enqueuedAt: this._retrySequence++ };
+        log('trigger requested re-invocation', { triggerId: trigger.id });
       } else {
         const cooldownMs = Duration.toMillis(this._failureCooldown);
         const until = new Date(this.getCurrentTime().getTime() + cooldownMs);
-        this._cooldownUntil.set(trigger.id, until);
+        runtimeState.cooldownUntil = until;
+        runtimeState.retry = undefined;
         log.error('trigger execution failure', {
           triggerId: trigger.id,
           cooldownUntil: until,
           error: EffectEx.causeToError(result.cause),
         });
       }
+      this._publishRuntimeStatuses(registry);
       registry.update(
         this._state,
         Struct.evolve({
@@ -409,6 +538,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
       return triggerExecutionResult;
     }).pipe(Effect.provide(this._services));
+
+  /**
+   * Distinguish a {@link RunAgainError} re-invocation request from a genuine failure. The process
+   * failure cause propagates intact, surfacing the error as a defect (`Exit.die(RunAgainError)`).
+   */
+  private _isRunAgainRequest = (result: Exit.Exit<unknown>): boolean =>
+    Exit.isFailure(result) && RunAgainError.is(Cause.squash(result.cause));
 
   invokeScheduledTriggers = ({ kinds = ['timer', 'feed', 'subscription'], untilExhausted = false } = {}): Effect.Effect<
     TriggerExecutionResult[]
@@ -423,20 +559,21 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               const now = this.getCurrentTime();
               const triggersToInvoke: Trigger.Trigger[] = [];
 
-              for (const [triggerId, scheduledTrigger] of this._scheduledTriggers.entries()) {
-                if (scheduledTrigger.nextExecution <= now) {
+              for (const [triggerId, entry] of this._runtimeState.entries()) {
+                if (entry.cron && entry.nextExecution && entry.nextExecution <= now) {
                   // Update next execution time using Effect's Cron
-                  scheduledTrigger.nextExecution = Cron.next(scheduledTrigger.cron, now);
+                  entry.nextExecution = Cron.next(entry.cron, now);
 
                   if (this._isInCooldown(triggerId)) {
                     log('skipping trigger in cooldown', { triggerId });
                     continue;
                   }
-                  triggersToInvoke.push(scheduledTrigger.trigger);
+                  triggersToInvoke.push(entry.trigger);
                 }
               }
 
-              // Invoke all due triggers
+              // Invoke all due triggers. The global concurrency limiter enforces `_maxConcurrency`
+              // inside `invokeTrigger`, so the fan-out here is unbounded.
               invocations.push(
                 ...(yield* Effect.forEach(
                   triggersToInvoke,
@@ -445,7 +582,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                       trigger,
                       event: { tick: now.getTime() } satisfies TriggerEvent.TimerEvent,
                     }),
-                  { concurrency: 1 },
+                  { concurrency: 'unbounded' },
                 )),
               );
             }
@@ -584,16 +721,66 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             }
             break;
           }
-          case 'manual':
-            // Manual triggers are only invoked through invokeTrigger.
+          case 'direct':
+            // Direct triggers are only invoked through invokeTrigger.
             break;
           default: {
             return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
           }
         }
       }
+
+      // Drain pending `RunAgainError` retries at the tail of the queue, regardless of trigger kind
+      // (a `direct` trigger that requested a retry is re-invoked here even though it is skipped by
+      // the per-kind dispatch above). Each pass takes the retries pending at that moment in FIFO
+      // order; a retry that re-requests re-runs is re-enqueued with a fresh sequence number so it
+      // lands again at the tail. With `untilExhausted`, keep draining until no retries remain.
+      invocations.push(...(yield* this._drainRetries({ untilExhausted })));
+
       return invocations;
     }).pipe(Effect.provide(this._services));
+
+  /**
+   * Re-invoke triggers with a pending {@link RunAgainError} retry. Retries respect the global
+   * concurrency limit (enforced within {@link invokeTrigger}) and are processed FIFO.
+   */
+  private _drainRetries = ({ untilExhausted }: { untilExhausted: boolean }): Effect.Effect<TriggerExecutionResult[]> =>
+    Effect.gen(this, function* () {
+      const invocations: TriggerExecutionResult[] = [];
+      while (true) {
+        const pending: { trigger: Trigger.Trigger; enqueuedAt: number; event: TriggerEvent.TriggerEvent }[] = [];
+        for (const entry of this._runtimeState.values()) {
+          if (entry.retry) {
+            pending.push({ trigger: entry.trigger, enqueuedAt: entry.retry.enqueuedAt, event: entry.retry.event });
+          }
+        }
+        if (pending.length === 0) {
+          break;
+        }
+        pending.sort((a, b) => a.enqueuedAt - b.enqueuedAt);
+
+        // Clear the pending flags before invoking; `invokeTrigger` re-sets `retry` (with a fresh
+        // sequence number) if the trigger requests yet another re-run.
+        const batch = pending.map(({ trigger, event }) => {
+          const entry = this._runtimeState.get(trigger.id);
+          if (entry) {
+            entry.retry = undefined;
+          }
+          return { trigger, event };
+        });
+
+        invocations.push(
+          ...(yield* Effect.forEach(batch, ({ trigger, event }) => this.invokeTrigger({ trigger, event }), {
+            concurrency: 'unbounded',
+          })),
+        );
+
+        if (!untilExhausted) {
+          break;
+        }
+      }
+      return invocations;
+    });
 
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
     Effect.gen(this, function* () {
@@ -624,15 +811,19 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       this._triggers = triggers;
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
 
-      // Remove triggers that are no longer present
-      for (const triggerId of this._scheduledTriggers.keys()) {
+      // Remove runtime state for triggers that are no longer present.
+      for (const triggerId of this._runtimeState.keys()) {
         if (!currentTriggerIds.has(triggerId)) {
-          this._scheduledTriggers.delete(triggerId);
+          this._runtimeState.delete(triggerId);
         }
       }
 
-      // Add or update triggers
+      // Create or update a runtime-state entry for every trigger so cooldown and retry state is
+      // tracked uniformly across kinds. Existing cooldown/retry/last-result state is preserved.
       for (const trigger of triggers) {
+        const entry = this._getOrCreateRuntimeState(trigger);
+
+        // Refresh the cron schedule for timer triggers, carrying over the next execution time.
         if (trigger.spec?.kind === 'timer' && trigger.enabled) {
           const timerSpec = trigger.spec as Trigger.TimerSpec;
 
@@ -641,9 +832,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
           if (Either.isRight(cronEither)) {
             const cron = cronEither.right;
-            const existing = this._scheduledTriggers.get(trigger.id);
             const now = this.getCurrentTime();
-            const nextExecution = existing?.nextExecution ?? Cron.next(cron, now);
+            const nextExecution = entry.nextExecution ?? Cron.next(cron, now);
 
             log('Updated scheduled trigger', {
               triggerId: trigger.id,
@@ -651,22 +841,29 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               nextExecution,
               now,
             });
-            this._scheduledTriggers.set(trigger.id, {
-              trigger,
-              cron,
-              nextExecution,
-            });
+            entry.cron = cron;
+            entry.nextExecution = nextExecution;
           } else {
+            // Drop any stale cron schedule so an invalid expression is never fired.
+            entry.cron = undefined;
+            entry.nextExecution = undefined;
             log.error('Invalid cron expression', {
               triggerId: trigger.id,
               cron: timerSpec.cron,
               error: cronEither.left.message,
             });
           }
+        } else {
+          // Not a schedulable timer trigger (or disabled): clear any cron schedule.
+          entry.cron = undefined;
+          entry.nextExecution = undefined;
         }
       }
 
-      log('Updated scheduled triggers', { count: this._scheduledTriggers.size });
+      const registry = yield* Registry.AtomRegistry;
+      this._publishRuntimeStatuses(registry);
+
+      log('Updated runtime trigger state', { count: this._runtimeState.size });
     })
       .pipe(Effect.withSpan('TriggerDispatcher.refreshTriggers'))
       .pipe(Effect.provide(this._services));

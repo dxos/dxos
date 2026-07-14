@@ -46,6 +46,7 @@
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
     "publish-package": "node scripts/publish-package.mjs",
     "query-logs": "node scripts/query-logs.mjs",
+    "secrets": "node scripts/secrets.mjs",
     "test": "moon run :test -- --no-file-parallelism",
     "test-browser": "MOON_CONCURRENCY=4 moon run :test-browser -- --no-file-parallelism",
     "test-storybook": "MOON_CONCURRENCY=4 moon run :test-storybook -- --no-file-parallelism",

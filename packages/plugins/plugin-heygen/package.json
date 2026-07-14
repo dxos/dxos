@@ -19,6 +19,11 @@
       "types": "./dist/types/src/capabilities/index.d.ts",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -60,11 +65,23 @@
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-studio": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

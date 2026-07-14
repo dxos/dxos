@@ -24,7 +24,7 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
-import { Database, DXN, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -34,37 +34,123 @@ import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
 /**
- * Database + queue live in the outer merge so test bodies and triggers see them; ProcessManager stack matches
- * {@link ProcessManager.test.ts} but without duplicating TestDatabaseLayer inside the pipe.
+ * Strict resolver that mimics the production {@link LayerStack}: refuses
+ * to materialise space-affinity services unless the caller supplies a
+ * matching `space` in the {@link ServiceResolver.ResolutionContext}.
+ *
+ * Built lazily once `Database.Service` is available so the resolver can
+ * tie itself to the live test database's `spaceId`.
  */
-const TestLayer = Layer.mergeAll(
-  TriggerStateStore.layerMemory,
-  Layer.mergeAll(AiService.notAvailable, credentialsLayerConfig([]), FetchHttpClient.layer),
-).pipe(
-  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
-  Layer.provideMerge(ServiceResolver.layerRequirements(Database.Service)),
-  Layer.provideMerge(
-    TestDatabaseLayer({
-      types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task],
-    }),
+const SpaceAwareResolverLayer = Layer.effect(
+  ServiceResolver.ServiceResolver,
+  Effect.gen(function* () {
+    const dbService = yield* Database.Service;
+    return ServiceResolver.make((tag, context) =>
+      Effect.gen(function* () {
+        if (tag.key !== Database.Service.key) {
+          return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key)));
+        }
+        if (context.space !== dbService.db.spaceId) {
+          return yield* Effect.fail(
+            new ServiceNotAvailableError(
+              `Database.Service requires space context (got ${context.space ?? 'none'}, want ${dbService.db.spaceId})`,
+            ),
+          );
+        }
+        return dbService as any;
+      }),
+    );
+  }),
+);
+
+/**
+ * Operation whose handler depends on {@link Database.Service}. Resolved via the
+ * operation handler set registered with {@link OperationHandlerSet.provide} below.
+ */
+const ProbeOp = Operation.make({
+  meta: { key: DXN.make('test.trigger-dispatcher.probeDatabase'), name: 'Probe Database' },
+  input: Schema.Any,
+  output: Schema.Struct({ spaceId: Schema.String }),
+  services: [Database.Service],
+});
+
+class RetryCounter extends Type.makeObject<RetryCounter>(DXN.make('test.trigger-dispatcher.retryCounter', '0.1.0'))(
+  Schema.Struct({
+    count: Schema.Number,
+  }),
+) {}
+
+const RetryOp = Operation.make({
+  meta: { key: DXN.make('test.trigger-dispatcher.retry'), name: 'Retry' },
+  input: Schema.Void,
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
+const TestHanlers = OperationHandlerSet.make(
+  ProbeOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const { db } = yield* Database.Service;
+        return { spaceId: db.spaceId };
+      }),
+    ),
   ),
-  Layer.provideMerge(KeyValueStore.layerMemory),
-  Layer.provideMerge(OperationHandlerSet.provide(ExampleHandlers)),
-  Layer.provideMerge(Registry.layer),
-  Layer.provideMerge(Trace.layerNoop),
+  RetryOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
+          Effect.flatten,
+          Effect.catchTag('NoSuchElementException', () => Database.add(Obj.make(RetryCounter, { count: 0 }))),
+        );
+        if (counter.count >= 3) {
+          return;
+        }
+
+        Obj.update(counter, (counter) => {
+          counter.count++;
+        });
+        yield* Operation.runAgain();
+      }),
+    ),
+  ),
 );
 
 /** Full environment for trigger tests; cast so `it.effect` accepts the provided service union. */
-const makeTestTriggerDispatcherLayer = (
-  options: ({ timeControl: 'natural' } | { timeControl: 'manual'; startingTime: Date }) & {
+const TestLayer = (
+  options: {
+    timeControl?: 'natural' | 'manual';
+    startingTime?: Date;
     failureCooldown?: Duration.Duration;
-  },
-) => Layer.provideMerge(TriggerDispatcher.layer(options), TestLayer);
-
-const TestTriggerDispatcherLayer = makeTestTriggerDispatcherLayer({
-  timeControl: 'manual',
-  startingTime: new Date('2025-09-05T15:01:00.000Z'),
-});
+    spaceAwareResolver?: boolean;
+  } = {},
+) =>
+  Layer.empty.pipe(
+    Layer.provideMerge(
+      TriggerDispatcher.layer({
+        timeControl: options.timeControl ?? 'manual',
+        startingTime: options.startingTime ?? new Date('2025-09-05T15:01:00.000Z'),
+        failureCooldown: options.failureCooldown,
+      }),
+    ),
+    Layer.provide(TriggerStateStore.layerMemory),
+    Layer.provideMerge(AiService.notAvailable),
+    Layer.provideMerge(credentialsLayerConfig([])),
+    Layer.provideMerge(FetchHttpClient.layer),
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(
+      options.spaceAwareResolver ? SpaceAwareResolverLayer : ServiceResolver.layerRequirements(Database.Service),
+    ),
+    Layer.provideMerge(
+      TestDatabaseLayer({
+        types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task, RetryCounter],
+      }),
+    ),
+    Layer.provideMerge(KeyValueStore.layerMemory),
+    Layer.provideMerge(OperationHandlerSet.provide(OperationHandlerSet.merge(ExampleHandlers, TestHanlers))),
+    Layer.provideMerge(Registry.layer),
+    Layer.provideMerge(Trace.layerNoop),
+  );
 
 /**
  * Store an operation definition in the database registry rather than persisting it to the
@@ -94,7 +180,7 @@ describe('TriggerDispatcher', () => {
         const timeDiff = newTime.getTime() - initialTime.getTime();
 
         expect(timeDiff).toBe(Duration.toMillis(Duration.hours(1)));
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
   });
 
@@ -106,34 +192,34 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specManual(),
+          spec: Trigger.specDirect(),
         });
         yield* Database.add(trigger);
         const dispatcher = yield* TriggerDispatcher;
         const { result } = yield* dispatcher.invokeTrigger({
           trigger,
-          event: { data: { tick: 42 } } satisfies TriggerEvent.ManualEvent,
+          event: { data: { tick: 42 } } satisfies TriggerEvent.DirectEvent,
         });
 
         expect(result).toEqual(Exit.succeed({ data: { tick: 42 } }));
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
-      'should not invoke manual triggers from scheduled dispatch',
+      'should not invoke direct triggers from scheduled dispatch',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specManual(),
+          spec: Trigger.specDirect(),
         });
         yield* Database.add(trigger);
         const dispatcher = yield* TriggerDispatcher;
-        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['manual'] });
+        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['direct'] });
 
         expect(invocations).toEqual([]);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -153,7 +239,7 @@ describe('TriggerDispatcher', () => {
         });
 
         expect(result).toEqual(Exit.succeed({ tick: 0 }));
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -177,7 +263,7 @@ describe('TriggerDispatcher', () => {
         });
 
         expect(result).toEqual(Exit.succeed({ tick: 0 }));
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
   });
 
@@ -204,7 +290,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -238,7 +324,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(enabledTrigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -277,7 +363,7 @@ describe('TriggerDispatcher', () => {
         yield* dispatcher.advanceTime(Duration.minutes(3));
         results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
         expect(results.length).toBe(1);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
   });
 
@@ -320,7 +406,7 @@ describe('TriggerDispatcher', () => {
           expect(Exit.isFailure(results[0].result)).toBe(true);
         },
         Effect.provide(
-          makeTestTriggerDispatcherLayer({
+          TestLayer({
             timeControl: 'manual',
             startingTime: new Date('2025-09-05T15:01:00.000Z'),
             failureCooldown: Duration.minutes(5),
@@ -351,7 +437,7 @@ describe('TriggerDispatcher', () => {
         // Can invoke the trigger
         const result = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
         expect(Exit.isSuccess(result.result)).toBe(true);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
   });
 
@@ -383,7 +469,7 @@ describe('TriggerDispatcher', () => {
           const result = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
           expect(Exit.isSuccess(result.result)).toBe(true);
         }
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -405,7 +491,7 @@ describe('TriggerDispatcher', () => {
         // Can still invoke manually even with invalid cron
         const result = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
         expect(result.length).toBe(0);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
   });
 
@@ -418,7 +504,7 @@ describe('TriggerDispatcher', () => {
           yield* dispatcher.start();
           yield* dispatcher.stop();
         },
-        Effect.provide(makeTestTriggerDispatcherLayer({ timeControl: 'natural' })),
+        Effect.provide(TestLayer({ timeControl: 'natural' })),
       ),
     );
   });
@@ -447,7 +533,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -491,7 +577,7 @@ describe('TriggerDispatcher', () => {
           const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
         }
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -530,7 +616,7 @@ describe('TriggerDispatcher', () => {
           },
           triggerId: trigger.id,
         });
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -571,7 +657,7 @@ describe('TriggerDispatcher', () => {
           const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
         }
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
   });
 
@@ -605,7 +691,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -645,7 +731,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect.skip(
@@ -691,7 +777,7 @@ describe('TriggerDispatcher', () => {
         // Fourth invocation without changes - should not trigger
         results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
         expect(results.length).toBe(0);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -729,7 +815,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
@@ -766,7 +852,7 @@ describe('TriggerDispatcher', () => {
           changeType: 'unknown', // TODO: This should be 'create' or 'update'
           triggerId: trigger.id,
         });
-      }, Effect.provide(TestTriggerDispatcherLayer)),
+      }, Effect.provide(TestLayer())),
     );
   });
 
@@ -777,111 +863,138 @@ describe('TriggerDispatcher', () => {
   // own space context into `ProcessManager.spawn` so dispatched operations
   // can resolve the same space-scoped services their handler declares.
   describe('Service Resolution', () => {
-    /**
-     * Operation whose handler depends on {@link Database.Service}. Resolved via the
-     * operation handler set registered with {@link OperationHandlerSet.provide} below.
-     */
-    const ProbeOp = Operation.make({
-      meta: { key: DXN.make('test.trigger-dispatcher.probeDatabase'), name: 'Probe Database' },
-      input: Schema.Any,
-      output: Schema.Struct({ spaceId: Schema.String }),
-      services: [Database.Service],
-    });
+    it.effect(
+      'invokeTrigger spawns operations with the dispatcher environment so space-affinity services resolve',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = yield* registerOperation(ProbeOp);
 
-    const ProbeHandler = ProbeOp.pipe(
-      Operation.withHandler(
-        Effect.fn(function* () {
+          const trigger = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specTimer('* * * * *'),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          const { result } = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
+
+          invariant(
+            Exit.isSuccess(result),
+            `trigger invocation failed: ${Exit.isFailure(result) ? String(result.cause) : ''}`,
+          );
+
           const { db } = yield* Database.Service;
-          return { spaceId: db.spaceId };
-        }),
-      ),
-    );
-
-    /**
-     * Strict resolver that mimics the production {@link LayerStack}: refuses
-     * to materialise space-affinity services unless the caller supplies a
-     * matching `space` in the {@link ServiceResolver.ResolutionContext}.
-     *
-     * Built lazily once `Database.Service` is available so the resolver can
-     * tie itself to the live test database's `spaceId`.
-     */
-    const SpaceAwareResolverLayer = Layer.effect(
-      ServiceResolver.ServiceResolver,
-      Effect.gen(function* () {
-        const dbService = yield* Database.Service;
-        return ServiceResolver.make((tag, context) =>
-          Effect.gen(function* () {
-            if (tag.key !== Database.Service.key) {
-              return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key)));
-            }
-            if (context.space !== dbService.db.spaceId) {
-              return yield* Effect.fail(
-                new ServiceNotAvailableError(
-                  `Database.Service requires space context (got ${context.space ?? 'none'}, want ${dbService.db.spaceId})`,
-                ),
-              );
-            }
-            return dbService as any;
+          expect(result.value).toEqual({ spaceId: db.spaceId });
+        },
+        Effect.provide(
+          TestLayer({
+            timeControl: 'manual',
+            startingTime: new Date('2025-09-05T15:01:00.000Z'),
+            spaceAwareResolver: true,
           }),
-        );
-      }),
-    );
-
-    /**
-     * Mirror of {@link TestLayer} but with the strict {@link SpaceAwareResolverLayer}
-     * standing in for the production {@link LayerStack}. Asserts that the
-     * dispatcher derives its space from the captured `Database.Service` and
-     * threads it into `ProcessManager.spawn` so the operation's declared
-     * services resolve correctly.
-     */
-    const SpaceAwareTriggerDispatcherLayer = TriggerDispatcher.layer({
-      timeControl: 'manual',
-      startingTime: new Date('2025-09-05T15:01:00.000Z'),
-    }).pipe(
-      Layer.provideMerge(
-        Layer.mergeAll(
-          TriggerStateStore.layerMemory,
-          AiService.notAvailable,
-          credentialsLayerConfig([]),
-          FetchHttpClient.layer,
         ),
       ),
-      Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
-      Layer.provideMerge(SpaceAwareResolverLayer),
-      Layer.provideMerge(
-        TestDatabaseLayer({
-          types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task],
-        }),
-      ),
-      Layer.provideMerge(KeyValueStore.layerMemory),
-      Layer.provideMerge(OperationHandlerSet.provide(OperationHandlerSet.make(ProbeHandler))),
-      Layer.provideMerge(Registry.layer),
-      Layer.provideMerge(Trace.layerNoop),
+    );
+  });
+
+  describe('Retry', () => {
+    it.effect(
+      'should if trigger returns RunAgainError',
+      Effect.fnUntraced(function* ({ expect }) {
+        const dispatcher = yield* TriggerDispatcher;
+        const op = yield* registerOperation(RetryOp);
+        const trigger = Trigger.make({
+          runnable: Ref.make(op),
+          enabled: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+        yield* dispatcher.invokeTrigger({ trigger, event: {} });
+
+        yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
+        const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(Effect.flatten);
+        expect(counter.count).toBe(3);
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(
-      'invokeTrigger spawns operations with the dispatcher environment so space-affinity services resolve',
-      Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = yield* registerOperation(ProbeOp);
+      'a genuine failure arms cooldown rather than a retry',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          // A Person object is not a persistent operation, so invocation fails the instance
+          // invariant -- a genuine failure, distinct from a RunAgainError re-invocation request.
+          const badFn = Obj.make(Person.Person, { fullName: 'not-an-operation' });
+          const { db } = yield* Database.Service;
+          db.registry.add([badFn]);
 
+          const trigger = Trigger.make({
+            runnable: Ref.make(badFn) as any,
+            enabled: true,
+            spec: Trigger.specDirect(),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          const { result } = yield* dispatcher.invokeTrigger({ trigger, event: {} });
+          expect(Exit.isFailure(result)).toBe(true);
+
+          // No retry is enqueued; draining does nothing and the trigger is in cooldown.
+          const drained = yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
+          expect(drained.length).toBe(0);
+
+          const registry = yield* Registry.AtomRegistry;
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus?.retryPending).toBe(false);
+          expect(triggerStatus?.cooldownUntil).toBeInstanceOf(Date);
+        },
+        Effect.provide(
+          TestLayer({
+            timeControl: 'manual',
+            startingTime: new Date('2025-09-05T15:01:00.000Z'),
+            failureCooldown: Duration.minutes(5),
+          }),
+        ),
+      ),
+    );
+  });
+
+  describe('Runtime State', () => {
+    it.effect(
+      'exposes per-trigger cron schedule and last result',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specTimer('* * * * *'),
+          spec: Trigger.specTimer('*/5 * * * *'),
         });
         yield* Database.add(trigger);
 
         const dispatcher = yield* TriggerDispatcher;
-        const { result } = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
+        const registry = yield* Registry.AtomRegistry;
+        yield* dispatcher.refreshTriggers();
 
-        invariant(
-          Exit.isSuccess(result),
-          `trigger invocation failed: ${Exit.isFailure(result) ? String(result.cause) : ''}`,
-        );
+        {
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus).toBeDefined();
+          expect(triggerStatus?.nextExecution).toBeInstanceOf(Date);
+          expect(triggerStatus?.retryPending).toBe(false);
+          expect(triggerStatus?.lastResult).toBeUndefined();
+        }
 
-        const { db } = yield* Database.Service;
-        expect(result.value).toEqual({ spaceId: db.spaceId });
-      }, Effect.provide(SpaceAwareTriggerDispatcherLayer)),
+        yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
+
+        {
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          const lastResult = triggerStatus?.lastResult;
+          invariant(lastResult, 'expected a last result');
+          expect(Exit.isSuccess(lastResult)).toBe(true);
+        }
+      }, Effect.provide(TestLayer())),
     );
   });
 });
