@@ -56,14 +56,14 @@ Replace the imperative class + `async`/`Promise` API with Effect services: Conte
 
 ### Design sketch
 
-| Current | Target |
-|---|---|
-| `class WorkerRuntime` with ctor side effects | `WorkerRuntime` Context.Tag + `WorkerRuntimeLive` Layer |
-| `class WorkerSession` constructed by runtime | `WorkerSession` tag (or session handle returned from `createSession` Effect) |
-| `start()` / `stop()` / `createSession()` Promises | `Effect.Effect<…, WorkerRuntimeError, …>` programs on the service interface |
-| `Trigger` readiness gate | `Deferred` or `Effect.async` / subscription in Layer finalizer |
-| `Set<WorkerSession>` session registry | `Ref` or service-held state inside Layer scope |
-| `dedicated-worker.ts` `Effect.promise(() => runtime.createSession(...))` | `yield* WorkerRuntime.createSession(...)` |
+| Current                                                                  | Target                                                                       |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `class WorkerRuntime` with ctor side effects                             | `WorkerRuntime` Context.Tag + `WorkerRuntimeLive` Layer                      |
+| `class WorkerSession` constructed by runtime                             | `WorkerSession` tag (or session handle returned from `createSession` Effect) |
+| `start()` / `stop()` / `createSession()` Promises                        | `Effect.Effect<…, WorkerRuntimeError, …>` programs on the service interface  |
+| `Trigger` readiness gate                                                 | `Deferred` or `Effect.async` / subscription in Layer finalizer               |
+| `Set<WorkerSession>` session registry                                    | `Ref` or service-held state inside Layer scope                               |
+| `dedicated-worker.ts` `Effect.promise(() => runtime.createSession(...))` | `yield* WorkerRuntime.createSession(...)`                                    |
 
 ### Tasks
 
@@ -108,13 +108,13 @@ Replace the imperative class + `async`/`Promise` API with Effect services: Conte
 
 ### Design sketch
 
-| Current | Target |
-|---|---|
-| `ServiceRegistry<ClientServicesHandlers>` + `setServices()` on open/close | Handlers live in the Layer scope; no mutable re-assignment |
-| `serviceHost.serviceRegistry.services` / `services` getter | `Context` union of RPC tags (+ `SystemService`, `LoggingService`, `DevtoolsHost` tags as needed) |
-| `services: () => ({ ...registry.services, WorkerService })` in `WorkerSession` | `makeClientServicesHandlers` built from `yield*` / `Context.get` per tag |
-| `makeInProcessClientServicesRpc(() => this._serviceRegistry.services)` | `makeInProcessClientServicesRpc` (or successor) reads handlers from provided Context/Layer |
-| `close()` resets registry to `{ SystemService }` only | Layer finalizer / scoped Context teardown |
+| Current                                                                        | Target                                                                                           |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `ServiceRegistry<ClientServicesHandlers>` + `setServices()` on open/close      | Handlers live in the Layer scope; no mutable re-assignment                                       |
+| `serviceHost.serviceRegistry.services` / `services` getter                     | `Context` union of RPC tags (+ `SystemService`, `LoggingService`, `DevtoolsHost` tags as needed) |
+| `services: () => ({ ...registry.services, WorkerService })` in `WorkerSession` | `makeClientServicesHandlers` built from `yield*` / `Context.get` per tag                         |
+| `makeInProcessClientServicesRpc(() => this._serviceRegistry.services)`         | `makeInProcessClientServicesRpc` (or successor) reads handlers from provided Context/Layer       |
+| `close()` resets registry to `{ SystemService }` only                          | Layer finalizer / scoped Context teardown                                                        |
 
 ### Tasks
 
@@ -152,13 +152,13 @@ Today `ClientServicesHost` is an imperative class that builds a `ManagedRuntime`
 
 ### Design sketch
 
-| Current | Target |
-|---|---|
-| `class ClientServicesHost` + `open(ctx)` / `close(ctx)` Promises | `ClientServicesHost` Context.Tag + `ClientServicesHostLive` Layer |
-| `ServiceContext` class + `ServiceContextService` tag | Removed — lifecycle programs live on `ClientServicesHost` service |
+| Current                                                                        | Target                                                                                                         |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `class ClientServicesHost` + `open(ctx)` / `close(ctx)` Promises               | `ClientServicesHost` Context.Tag + `ClientServicesHostLive` Layer                                              |
+| `ServiceContext` class + `ServiceContextService` tag                           | Removed — lifecycle programs live on `ClientServicesHost` service                                              |
 | `ServiceContextLayer` + separate host `open()` calling `serviceContext.open()` | Single Layer composes component tags + RPC handlers; host `open`/`close` are `Effect` programs over that scope |
-| `service-host.open` resolves handlers then copies to `ServiceRegistry` | Handlers resolved from same Layer scope (feeds Phase 3) |
-| Tests/devtools/diagnostics take `ServiceContext` | Take `ClientServicesHost` tag or underlying component tags directly |
+| `service-host.open` resolves handlers then copies to `ServiceRegistry`         | Handlers resolved from same Layer scope (feeds Phase 3)                                                        |
+| Tests/devtools/diagnostics take `ServiceContext`                               | Take `ClientServicesHost` tag or underlying component tags directly                                            |
 
 ### Tasks
 
