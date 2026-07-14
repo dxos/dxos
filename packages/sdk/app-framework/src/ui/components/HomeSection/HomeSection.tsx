@@ -19,7 +19,7 @@ type HomeSectionRootProps = ThemedClassName<PropsWithChildren>;
  * consistent width and rhythm regardless of which plugin owns them.
  */
 const HomeSectionRoot = forwardRef<HTMLDivElement, HomeSectionRootProps>(({ classNames, children }, forwardedRef) => (
-  <div ref={forwardedRef} role='none' className={mx('flex flex-col w-full mx-auto max-w-[40rem]', classNames)}>
+  <div ref={forwardedRef} className={mx('flex flex-col w-full mx-auto max-w-[40rem]', classNames)}>
     {children}
   </div>
 ));
@@ -46,7 +46,7 @@ type HomeSectionHeaderProps = ThemedClassName<
  */
 const HomeSectionHeader = forwardRef<HTMLDivElement, HomeSectionHeaderProps>(
   ({ title, onClose, classNames, children }, forwardedRef) => (
-    <div role='none' ref={forwardedRef} className={mx('flex items-center gap-2', classNames)}>
+    <div ref={forwardedRef} className={mx('flex items-center gap-2', classNames)}>
       {title && <h2 className='grow truncate text-sm font-medium text-description'>{title}</h2>}
       {!title && <span role='none' className='grow' />}
       {children}

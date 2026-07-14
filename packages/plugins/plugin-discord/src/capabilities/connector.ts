@@ -10,7 +10,14 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { AccessToken } from '@dxos/cursor';
 import { Obj, Ref } from '@dxos/echo';
-import { Connection, Connector, type CredentialForm, type OnTokenCreated } from '@dxos/plugin-connector';
+import {
+  Connection,
+  ConnectionTestError,
+  Connector,
+  type CredentialForm,
+  type OnTokenCreated,
+  type TestConnection,
+} from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -130,6 +137,24 @@ const onTokenCreated = makeOnTokenCreated(makeDiscordLayerFromToken);
 const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
 
 /**
+ * Discord user `testConnection`: `GET /users/@me` with the stored OAuth token.
+ * A rejected token or transport failure surfaces as a user-facing error so the
+ * connection UI can offer to reauthenticate.
+ */
+const userTestConnection: TestConnection = ({ accessToken }) =>
+  Effect.gen(function* () {
+    const rest = yield* DiscordREST;
+    yield* rest.getMyUser();
+  }).pipe(
+    Effect.provide(makeDiscordUserLayerFromToken(accessToken.token)),
+    Effect.asVoid,
+    Effect.mapError(
+      () =>
+        new ConnectionTestError({ message: 'Discord rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
+  );
+
+/**
  * Contributes two `Connector` entries for Discord:
  * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
  * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
@@ -167,6 +192,7 @@ export default Capability.makeModule(
         materializeTarget: DiscordOperation.MaterializeDiscordTarget,
         sync: DiscordOperation.SyncDiscordChannel,
         onTokenCreated: userOnTokenCreated,
+        testConnection: userTestConnection,
       },
     ]);
   }),

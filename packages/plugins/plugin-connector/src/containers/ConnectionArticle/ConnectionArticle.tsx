@@ -12,7 +12,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
 import { ConnectionView } from '#components';
-import { useConnector, useSyncConnection, useSyncTargetsChecklist } from '#hooks';
+import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
 
 import { type Connection } from '../../types';
 import { CursorsQuery, isCursorForConnection } from '../../util';
@@ -40,6 +40,8 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
 
   const { available: syncTargetsAvailable, loading, openChecklist } = useSyncTargetsChecklist(subject);
   const { available: syncAvailable, syncing, sync } = useSyncConnection(subject);
+  const { status: testStatus, error: testError, retest } = useTestConnection(subject);
+  const { available: canReauthenticate, reauthenticating, reauthenticate } = useReauthenticate(subject);
 
   const handleDelete = useCallback(() => {
     void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
@@ -72,8 +74,14 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       syncing={syncing}
       loadingTargets={loading}
       syncTargetsAvailable={syncTargetsAvailable}
+      testStatus={testStatus}
+      testError={testError}
+      canReauthenticate={canReauthenticate}
+      reauthenticating={reauthenticating}
       onSync={() => void sync()}
       onChangeTargets={openChecklist}
+      onReauthenticate={reauthenticate}
+      onTestConnection={retest}
       onDelete={handleDelete}
       onRemoveBinding={handleRemoveBinding}
     />

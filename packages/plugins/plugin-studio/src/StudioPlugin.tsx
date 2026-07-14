@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Artifact, Lightbox, Variant } from '#types';
@@ -14,6 +14,7 @@ import { Artifact, Lightbox, Variant } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const StudioPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Artifact.Artifact, Variant.Variant, Lightbox.Lightbox] }),

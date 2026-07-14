@@ -14,6 +14,8 @@ import { Empty } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
+import { type TestConnectionStatus } from '../../hooks';
+
 // The action section uses Form's `settings` variant purely for its labeled-row chrome
 // (action-mode `Form.Row`s); there are no fields to bind, so the schema is empty.
 const ACTIONS_SCHEMA = Schema.Struct({});
@@ -42,8 +44,18 @@ export type ConnectionViewProps = {
   loadingTargets: boolean;
   /** True when sync-target discovery is ready to open the dialog. */
   syncTargetsAvailable: boolean;
+  /** Result of probing the stored credential when the connection was opened. */
+  testStatus: TestConnectionStatus;
+  /** User-facing reason when `testStatus` is `'invalid'`. */
+  testError?: string;
+  /** True when the connector supports in-place reauthentication (OAuth connectors). */
+  canReauthenticate: boolean;
+  /** True while a reauthentication popup/redirect is being initiated. */
+  reauthenticating: boolean;
   onSync: () => void;
   onChangeTargets: () => void;
+  onReauthenticate: () => void;
+  onTestConnection: () => void;
   onDelete: () => void;
   onRemoveBinding: (binding: Cursor.ExternalCursor) => void;
 };
@@ -68,8 +80,14 @@ export const ConnectionView = ({
   syncing,
   loadingTargets,
   syncTargetsAvailable,
+  testStatus,
+  testError,
+  canReauthenticate,
+  reauthenticating,
   onSync,
   onChangeTargets,
+  onReauthenticate,
+  onTestConnection,
   onDelete,
   onRemoveBinding,
 }: ConnectionViewProps) => {
@@ -91,6 +109,38 @@ export const ConnectionView = ({
                       <Form.Row label={t('sync-now.label')} description={t('sync-now.description')}>
                         <Button onClick={onSync} disabled={syncing || bindings.length === 0}>
                           {syncing ? t('syncing.label') : t('sync-now.label')}
+                        </Button>
+                      </Form.Row>
+                    )}
+
+                    {/* Credential status is hidden for connectors that can't be tested (`unsupported`). */}
+                    {testStatus !== 'unsupported' && (
+                      <Form.Row
+                        label={t('connection-status.label')}
+                        description={
+                          testStatus === 'valid'
+                            ? t('connection-valid.message')
+                            : testStatus === 'invalid'
+                              ? t('connection-invalid.message')
+                              : t('connection-checking.message')
+                        }
+                        validation={
+                          testStatus === 'invalid' && testError ? (
+                            <span className='text-sm text-error-text'>{testError}</span>
+                          ) : undefined
+                        }
+                      >
+                        <Button onClick={onTestConnection} disabled={testStatus === 'testing'}>
+                          {t('test-connection.label')}
+                        </Button>
+                      </Form.Row>
+                    )}
+
+                    {/* Reauthenticate is available for OAuth connectors; the credential is replaced in place. */}
+                    {canReauthenticate && (
+                      <Form.Row label={t('reauthenticate.label')} description={t('reauthenticate.description')}>
+                        <Button onClick={onReauthenticate} disabled={reauthenticating}>
+                          {reauthenticating ? t('reauthenticating.label') : t('reauthenticate.label')}
                         </Button>
                       </Form.Row>
                     )}

@@ -73,7 +73,7 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
             <Form.FieldSet />
-            <div role='none' className='flex flex-col gap-2 mlb-2'>
+            <div className='flex flex-col gap-2 mlb-2'>
               <Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
               </Button>

@@ -11688,18 +11688,37 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
       '@dxos/plugin-studio':
         specifier: workspace:*
         version: link:../plugin-studio
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
       effect:
         specifier: 3.21.4
         version: 3.21.4
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
 
   packages/plugins/plugin-ibkr:
     dependencies:
@@ -16238,6 +16257,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -16268,6 +16290,9 @@ importers:
       '@dxos/plugin-file':
         specifier: workspace:*
         version: link:../plugin-file
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -18564,6 +18589,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
+      '@dxos/rpc-tunnel':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc-tunnel
       '@dxos/worker-framework':
         specifier: workspace:*
         version: link:../worker-framework
