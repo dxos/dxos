@@ -85,6 +85,8 @@ export const HeyGenGenerateForm = ({ schema, value, onChange }: HeyGenGenerateFo
     (values: Record<string, unknown>) => {
       onChange({
         ...value,
+        ...values,
+        // Normalize the picker fields (empty string → undefined); preserve any other schema fields.
         avatarId: values.avatarId || undefined,
         voiceId: values.voiceId || undefined,
       });
