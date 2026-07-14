@@ -53,7 +53,7 @@ export const createOnConnect = (): ((ev: MessageEvent) => void) => {
               leaderId: message.leaderId,
             });
             clientPort.postMessage(message, {
-              transfer: [message.appPort, message.systemPort],
+              transfer: [message.clientToWorker, message.workerToClient],
             });
           } else {
             log.error('coordinator: no port for client', {

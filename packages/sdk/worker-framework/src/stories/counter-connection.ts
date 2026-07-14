@@ -66,12 +66,12 @@ export class CounterConnection extends Resource {
             }),
         }),
       leaderLockKey: COUNTER_LEADER_LOCK_KEY,
-      onConnect: async ({ appPort, leaderId, isOwner }) => {
+      onConnect: async ({ clientToWorker, leaderId, isOwner }) => {
         invariant(this.#scope, 'counter rpc scope not initialized');
         this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner };
         this.sessionChanged.emit(this.#sessionInfo);
         this.#rpc = (await EffectEx.runPromise(
-          Rpc.makeClient(appPort, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.extend(this.#scope)),
+          Rpc.makeClient(clientToWorker, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.extend(this.#scope)),
         )) as CounterRpc;
         return {
           close: async () => {

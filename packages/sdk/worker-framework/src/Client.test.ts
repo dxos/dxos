@@ -4,11 +4,13 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import * as Effect from 'effect/Effect';
+
 import { Event, Trigger, asyncTimeout } from '@dxos/async';
 
-import * as Worker from '../Worker';
-import * as WorkerProtocol from '../WorkerProtocol';
-import { Connection } from './worker-connection';
+import * as Worker from './Worker';
+import * as WorkerProtocol from './WorkerProtocol';
+import * as Client from './Client';
 
 /**
  * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request
@@ -69,15 +71,15 @@ const createWorkerFactory = (storageLockKey: string) => () => {
       close: () => channel.port1.close(),
     },
     storageLockKey,
-    createRuntime: async () => ({
-      createSession: async () => {},
-      stop: async () => {},
-    }),
+    createRuntime: () =>
+      Effect.succeed({
+        createSession: () => Effect.never,
+      }),
   });
   return channel.port2 as WorkerProtocol.WorkerOrPort;
 };
 
-type Connected = { appPort: MessagePort; systemPort: MessagePort; isOwner: boolean };
+type Connected = { clientToWorker: MessagePort; workerToClient: MessagePort; isOwner: boolean };
 
 const makeConnection = (
   hub: ReturnType<typeof createHub>,
@@ -85,13 +87,13 @@ const makeConnection = (
   leaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
 ) => {
   const connectedTrigger = new Trigger<Connected>();
-  const connection = new Connection({
+  const connection = new Client.Connection({
     createWorker: createWorkerFactory(keys.storageLockKey),
     createCoordinator: () => hub.connect(),
     leaderLockKey: keys.leaderLockKey,
     leaderTimeouts,
-    onConnect: async ({ appPort, systemPort, isOwner }) => {
-      connectedTrigger.wake({ appPort, systemPort, isOwner });
+    onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
+      connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
       return { close: async () => {} };
     },
   });
