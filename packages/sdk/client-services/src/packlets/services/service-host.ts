@@ -96,35 +96,35 @@ export type InitializeOptions = {
  * Remote service implementation.
  */
 export class ClientServicesHost {
-  private readonly _resourceLock?: ResourceLock;
+  readonly #resourceLock?: ResourceLock;
   // Effect-rpc handlers served over each connection, resolved from the Layer stack on open and reset
   // to the host-local set on close. Held directly (no separate registry indirection).
   #handlers: Partial<ClientServicesHandlers>;
-  private readonly _systemService: SystemServiceImpl;
-  private readonly _loggingService: LoggingServiceImpl;
-  private readonly _statusUpdate = new Event<void>();
+  readonly #systemService: SystemServiceImpl;
+  readonly #loggingService: LoggingServiceImpl;
+  readonly #statusUpdate = new Event<void>();
 
-  private _config?: Config;
-  private _signalManager?: SignalManager;
-  private _networkManager?: SwarmNetworkManager;
-  private _callbacks?: ClientServicesHostCallbacks;
-  private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
-  private _edgeConnection?: EdgeConnection = undefined;
-  private _edgeHttpClient?: EdgeHttpClient = undefined;
+  #config?: Config;
+  #signalManager?: SignalManager;
+  #networkManager?: SwarmNetworkManager;
+  #callbacks?: ClientServicesHostCallbacks;
+  #devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
+  #edgeConnection?: EdgeConnection = undefined;
+  #edgeHttpClient?: EdgeHttpClient = undefined;
 
-  private _serviceContext!: ServiceContext;
+  #serviceContext!: ServiceContext;
   #stackRuntime?: ManagedRuntime.ManagedRuntime<ServiceContextService | ClientServicesRpcContext, never>;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<
+  readonly #runtime: RuntimeProvider.RuntimeProvider<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
   >;
-  private readonly _runtimeProps: ServiceContextRuntimeProps;
-  private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
+  readonly #runtimeProps: ServiceContextRuntimeProps;
+  #diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
-  private _opening = false;
+  #opening = false;
 
-  private _open = false;
+  #open = false;
 
-  private _resetting = false;
+  #resetting = false;
 
   constructor({
     config,
@@ -136,19 +136,19 @@ export class ClientServicesHost {
     runtime,
     runtimeProps,
   }: ClientServicesHostProps) {
-    this._callbacks = callbacks;
-    this._runtime = runtime;
-    this._runtimeProps = runtimeProps ?? {};
+    this.#callbacks = callbacks;
+    this.#runtime = runtime;
+    this.#runtimeProps = runtimeProps ?? {};
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
     }
 
     if (lockKey) {
-      this._resourceLock = new Lock({
+      this.#resourceLock = new Lock({
         lockKey,
         onAcquire: () => {
-          if (!this._opening) {
+          if (!this.#opening) {
             void this.open(new Context());
           }
         },
@@ -157,10 +157,10 @@ export class ClientServicesHost {
     }
 
     // TODO(wittjosiah): If config is not defined here, system service will always have undefined config.
-    this._systemService = new SystemServiceImpl({
-      config: () => this._config,
-      statusUpdate: this._statusUpdate,
-      getCurrentStatus: () => (this.isOpen && !this._resetting ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
+    this.#systemService = new SystemServiceImpl({
+      config: () => this.#config,
+      statusUpdate: this.#statusUpdate,
+      getCurrentStatus: () => (this.isOpen && !this.#resetting ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
       getDiagnostics: async () => {
         // Bridge the host Handlers to the proto services surface that diagnostics collection consumes.
         const scope = Effect.runSync(Scope.make());
@@ -169,16 +169,16 @@ export class ClientServicesHost {
             makeInProcessClientServicesRpc(() => this.#handlers).pipe(Effect.provideService(Scope.Scope, scope)),
           );
           const services = makeServicesFromRpc(rpc, Runtime.defaultRuntime);
-          return await createDiagnostics(services, this._serviceContext, this._config!);
+          return await createDiagnostics(services, this.#serviceContext, this.#config!);
         } finally {
           await EffectEx.runPromise(Scope.close(scope, Exit.void));
         }
       },
       onUpdateStatus: async (status: SystemStatus) => {
         if (!this.isOpen && status === SystemStatus.ACTIVE) {
-          await this._resourceLock?.acquire();
+          await this.#resourceLock?.acquire();
         } else if (this.isOpen && status === SystemStatus.INACTIVE) {
-          await this._resourceLock?.release();
+          await this.#resourceLock?.release();
         }
       },
       onReset: async () => {
@@ -186,24 +186,24 @@ export class ClientServicesHost {
       },
     });
 
-    this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
-    this._loggingService = new LoggingServiceImpl();
+    this.#diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this.#systemService);
+    this.#loggingService = new LoggingServiceImpl();
 
     this.#handlers = {
-      SystemService: this._systemService,
+      SystemService: this.#systemService,
     };
   }
 
   get isOpen() {
-    return this._open;
+    return this.#open;
   }
 
   get config() {
-    return this._config;
+    return this.#config;
   }
 
   get context() {
-    return this._serviceContext;
+    return this.#serviceContext;
   }
 
   get services() {
@@ -214,7 +214,7 @@ export class ClientServicesHost {
    * Debugging util.
    */
   async exportSqliteDatabase(): Promise<Uint8Array> {
-    return await RuntimeProvider.runPromise(this._runtime)(
+    return await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlExport.SqlExport;
         return yield* sql.export;
@@ -226,7 +226,7 @@ export class ClientServicesHost {
    * Debugging util.
    */
   async runSqliteQuery(query: string, params?: unknown[]): Promise<readonly Record<string, unknown>[]> {
-    return await RuntimeProvider.runPromise(this._runtime)(
+    return await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         return yield* sql`${sql.unsafe(query, params)}`;
@@ -240,19 +240,19 @@ export class ClientServicesHost {
    * Can only be called once.
    */
   initialize({ config, ...options }: InitializeOptions): void {
-    invariant(!this._open, 'service host is open');
+    invariant(!this.#open, 'service host is open');
     log('initializing...');
 
     if (config) {
-      if (this._runtimeProps.disableP2pReplication === undefined) {
-        this._runtimeProps.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
+      if (this.#runtimeProps.disableP2pReplication === undefined) {
+        this.#runtimeProps.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
       }
-      if (this._runtimeProps.enableVectorIndexing === undefined) {
-        this._runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+      if (this.#runtimeProps.enableVectorIndexing === undefined) {
+        this.#runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
       }
 
-      invariant(!this._config, 'config already set');
-      this._config = config;
+      invariant(!this.#config, 'config already set');
+      this.#config = config;
     }
 
     // TODO(wittjosiah): This is quite noisy during tests. Make configurable? Remove?
@@ -263,32 +263,32 @@ export class ClientServicesHost {
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
       const clientTag = resolveTelemetryTag(config);
-      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
-      this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
+      this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
+      this.#edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
     const {
       connectionLog = true,
       transportFactory = createRtcTransportFactory(
-        { iceServers: this._config?.get('runtime.services.ice') },
-        this._config?.get('runtime.services.iceProviders') &&
-          createIceProvider(this._config!.get('runtime.services.iceProviders')!),
+        { iceServers: this.#config?.get('runtime.services.ice') },
+        this.#config?.get('runtime.services.iceProviders') &&
+          createIceProvider(this.#config!.get('runtime.services.iceProviders')!),
       ),
-      signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures')?.signaling
-        ? new EdgeSignalManager({ edgeConnection: this._edgeConnection })
-        : new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
+      signalManager = this.#edgeConnection && this.#config?.get('runtime.client.edgeFeatures')?.signaling
+        ? new EdgeSignalManager({ edgeConnection: this.#edgeConnection })
+        : new WebsocketSignalManager(this.#config?.get('runtime.services.signaling') ?? []),
     } = options;
-    this._signalManager = signalManager;
+    this.#signalManager = signalManager;
 
-    invariant(!this._networkManager, 'network manager already set');
-    this._networkManager = new SwarmNetworkManager({
+    invariant(!this.#networkManager, 'network manager already set');
+    this.#networkManager = new SwarmNetworkManager({
       enableDevtoolsLogging: connectionLog,
       transportFactory,
       signalManager,
-      peerInfo: this._edgeConnection
+      peerInfo: this.#edgeConnection
         ? {
-            identityDid: this._edgeConnection.identityDid,
-            peerKey: this._edgeConnection.peerKey,
+            identityDid: this.#edgeConnection.identityDid,
+            peerKey: this.#edgeConnection.peerKey,
           }
         : undefined,
     });
@@ -299,40 +299,40 @@ export class ClientServicesHost {
   @synchronized
   @Trace.span()
   async open(ctx: Context): Promise<void> {
-    if (this._open) {
+    if (this.#open) {
       return;
     }
 
     log('opening service host');
 
-    invariant(this._config, 'config not set');
-    invariant(this._signalManager, 'signal manager not set');
-    invariant(this._networkManager, 'network manager not set');
-    const config = this._config;
-    const signalManager = this._signalManager;
-    const networkManager = this._networkManager;
+    invariant(this.#config, 'config not set');
+    invariant(this.#signalManager, 'signal manager not set');
+    invariant(this.#networkManager, 'network manager not set');
+    const config = this.#config;
+    const signalManager = this.#signalManager;
+    const networkManager = this.#networkManager;
 
-    this._opening = true;
-    log('opening...', { lockKey: this._resourceLock?.lockKey });
+    this.#opening = true;
+    log('opening...', { lockKey: this.#resourceLock?.lockKey });
 
-    await this._resourceLock?.acquire();
+    await this.#resourceLock?.acquire();
 
-    await this._loggingService.open();
+    await this.#loggingService.open();
 
     // Build a single runtime from the ServiceContext layer stack plus the client RPC service
     // handlers layered on top, then resolve the orchestrator and every handler from it.
     const stackLayer = ClientServicesRpcLayer.pipe(
       Layer.provideMerge(
         ServiceContextLayer({
-          ...this._runtimeProps,
+          ...this.#runtimeProps,
           edgeFeatures: config.get('runtime.client.edgeFeatures'),
-          edgeConnection: this._edgeConnection,
-          edgeHttpClient: this._edgeHttpClient,
+          edgeConnection: this.#edgeConnection,
+          edgeHttpClient: this.#edgeHttpClient,
         }),
       ),
       Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
       Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
-      Layer.provideMerge(RuntimeProvider.toLayer(this._runtime)),
+      Layer.provideMerge(RuntimeProvider.toLayer(this.#runtime)),
       Layer.orDie,
     );
     this.#stackRuntime = ManagedRuntime.make(stackLayer);
@@ -351,11 +351,11 @@ export class ClientServicesHost {
         feedService: FeedServiceRpc,
       }),
     );
-    this._serviceContext = resolved.serviceContext;
+    this.#serviceContext = resolved.serviceContext;
     const identityService = resolved.identityService;
 
     this.#handlers = {
-      SystemService: this._systemService,
+      SystemService: this.#systemService,
       IdentityService: identityService,
       ContactsService: resolved.contactsService,
 
@@ -371,13 +371,13 @@ export class ClientServicesHost {
 
       NetworkService: resolved.networkService,
 
-      LoggingService: this._loggingService,
+      LoggingService: this.#loggingService,
 
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),
-        config: this._config,
-        context: this._serviceContext,
+        config: this.#config,
+        context: this.#serviceContext,
         exportSqliteDatabase: () => this.exportSqliteDatabase(),
         runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
       }),
@@ -386,47 +386,47 @@ export class ClientServicesHost {
     };
 
     log('service-host: opening service context...');
-    await this._serviceContext.open(ctx);
+    await this.#serviceContext.open(ctx);
     log('service-host: service context opened');
 
     log('service-host: opening identity service...');
     await identityService.open();
     log('service-host: identity service opened');
 
-    const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
+    const devtoolsProxy = this.#config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
       // TODO(dxos): The devtools websocket proxy serves the protobuf service bundle, which is
       // incompatible with the effect-rpc Handlers the host now provides. Re-enable once this legacy
       // transport is migrated to effect-rpc (or bridged via makeInProcessClient + a proto adapter).
       log.warn('devtoolsProxy is not supported with effect-rpc services; skipping', { devtoolsProxy });
     }
-    this.diagnosticsBroadcastHandler.start();
+    this.#diagnosticsBroadcastHandler.start();
 
-    this._opening = false;
-    this._open = true;
-    this._statusUpdate.emit();
-    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+    this.#opening = false;
+    this.#open = true;
+    this.#statusUpdate.emit();
+    const deviceKey = this.#serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
   }
 
   @synchronized
   @Trace.span()
   async close(ctx: Context): Promise<void> {
-    if (!this._open) {
+    if (!this.#open) {
       return;
     }
 
-    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+    const deviceKey = this.#serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
-    this.diagnosticsBroadcastHandler.stop();
-    await this._devtoolsProxy?.close();
-    this.#handlers = { SystemService: this._systemService };
-    await this._loggingService.close();
-    await this._serviceContext.close();
+    this.#diagnosticsBroadcastHandler.stop();
+    await this.#devtoolsProxy?.close();
+    this.#handlers = { SystemService: this.#systemService };
+    await this.#loggingService.close();
+    await this.#serviceContext.close();
     await this.#stackRuntime?.dispose();
     this.#stackRuntime = undefined;
-    this._open = false;
-    this._statusUpdate.emit();
+    this.#open = false;
+    this.#statusUpdate.emit();
     log('closed', { deviceKey });
   }
 
@@ -434,11 +434,11 @@ export class ClientServicesHost {
     log.info('resetting...');
     // Emit this status update immediately so app returns to fallback.
     // This state is never cleared because the app reloads.
-    this._resetting = true;
-    this._statusUpdate.emit();
-    await this._serviceContext?.close();
+    this.#resetting = true;
+    this.#statusUpdate.emit();
+    await this.#serviceContext?.close();
     // Wipe all SQLite tables so next open starts fresh.
-    await RuntimeProvider.runPromise(this._runtime)(
+    await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         // Echo metadata + large space data.
@@ -468,6 +468,6 @@ export class ClientServicesHost {
       }),
     );
     log.info('reset');
-    await this._callbacks?.onReset?.();
+    await this.#callbacks?.onReset?.();
   }
 }
