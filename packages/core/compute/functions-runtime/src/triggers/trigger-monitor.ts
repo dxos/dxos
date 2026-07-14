@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { Trigger, TriggerEvent } from '@dxos/compute';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 
 import { TriggerDispatcher, type TriggerRuntimeStatus } from './trigger-dispatcher';
 
@@ -70,7 +71,7 @@ export const TriggerMonitorLayer: Layer.Layer<
 
     // Subscribe to dispatcher state changes to update the derived atom.
     const unsubscribeDispatcher = registry.subscribe(dispatcher.state, () => {
-      Effect.runPromise(deriveState.pipe(Effect.provideService(Database.Service, database))).catch(() => {});
+      EffectEx.runPromise(deriveState.pipe(Effect.provideService(Database.Service, database))).catch(() => {});
     });
     yield* Effect.addFinalizer(() => Effect.sync(unsubscribeDispatcher));
 
