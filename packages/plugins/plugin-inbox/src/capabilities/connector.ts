@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
-import { Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -85,10 +85,13 @@ const testGoogleConnection: TestConnection = ({ accessToken }) =>
       }),
     );
   }).pipe(
-    Effect.mapError((error) =>
-      isGoogleAuthRejection(error)
-        ? new Error('Google rejected the credential. Reauthenticate to continue syncing.')
-        : new Error('Could not verify the connection. Check your network and try again.'),
+    Effect.mapError(
+      (error) =>
+        new ConnectionTestError({
+          message: isGoogleAuthRejection(error)
+            ? 'Google rejected the credential. Reauthenticate to continue syncing.'
+            : 'Could not verify the connection. Check your network and try again.',
+        }),
     ),
   );
 

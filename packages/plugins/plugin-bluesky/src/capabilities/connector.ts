@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
-import { Connector, type CredentialForm, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type CredentialForm, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
@@ -71,7 +71,10 @@ const testConnection: TestConnection = ({ connection, client }) =>
   BlueskyApi.getSavedFeeds().pipe(
     Effect.provide(BlueskyApi.Credentials.fromConnection(Ref.make(connection), client)),
     Effect.asVoid,
-    Effect.mapError(() => new Error('Bluesky rejected the credential. Reauthenticate to continue syncing.')),
+    Effect.mapError(
+      () =>
+        new ConnectionTestError({ message: 'Bluesky rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
   );
 
 /**

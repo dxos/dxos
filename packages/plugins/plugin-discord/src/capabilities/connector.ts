@@ -11,6 +11,7 @@ import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import {
   Connection,
+  ConnectionTestError,
   Connector,
   type CredentialForm,
   type OnTokenCreated,
@@ -147,7 +148,10 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
   }).pipe(
     Effect.provide(makeDiscordUserLayerFromToken(accessToken.token)),
     Effect.asVoid,
-    Effect.mapError(() => new Error('Discord rejected the credential. Reauthenticate to continue syncing.')),
+    Effect.mapError(
+      () =>
+        new ConnectionTestError({ message: 'Discord rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
   );
 
 /**

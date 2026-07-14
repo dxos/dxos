@@ -19,6 +19,7 @@ import { Annotation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { SerializedError } from '@dxos/protocols';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
@@ -469,17 +470,6 @@ export class ProcessMonitorService extends Context.Tag('@dxos/functions/ProcessM
   Monitor
 >() {}
 
-/**
- * How a process failed. `message` is the pretty-printed cause for display and logging; `value` is the
- * raw fail/die payload (the typed error object) for consumers that need to inspect it rather than the
- * string — e.g. the notify layer reading a failure's toast override. `value` is not guaranteed to
- * survive a serialized/persisted monitor.
- */
-export interface Failure {
-  readonly message: string;
-  readonly value: unknown;
-}
-
 export interface Info {
   readonly pid: ID;
   readonly parentPid: ID | null;
@@ -502,9 +492,10 @@ export interface Info {
   readonly state: State;
 
   /**
-   * How the process failed, or `null` unless it is in FAILED state. See {@link Failure}.
+   * How the process failed as a serializable {@link SerializedError} (its `context` carries any
+   * structured detail, e.g. a notify override), or `null` unless it is in FAILED state.
    */
-  readonly error: Failure | null;
+  readonly error: SerializedError | null;
 
   /**
    * UNIX timestamp in milliseconds.
@@ -589,7 +580,7 @@ export const prettyProcessTree = (tree: readonly Info[]): string => {
       parts.push(node.params.name);
     }
     if (node.error != null) {
-      parts.push(`(${node.error.message})`);
+      parts.push(`(${node.error.message ?? node.error.name ?? 'error'})`);
     }
     const { inputCount, outputCount, wallTime } = node.metrics;
     parts.push(`[in:${inputCount} out:${outputCount} wall:${Math.round(wallTime)}ms]`);

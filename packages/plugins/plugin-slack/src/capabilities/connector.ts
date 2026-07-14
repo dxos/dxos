@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
@@ -52,7 +52,9 @@ const testConnection: TestConnection = ({ accessToken }) =>
   SlackApi.fetchAuthTest().pipe(
     Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token: accessToken.token })),
     Effect.asVoid,
-    Effect.mapError(() => new Error('Slack rejected the credential. Reauthenticate to continue syncing.')),
+    Effect.mapError(
+      () => new ConnectionTestError({ message: 'Slack rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
   );
 
 /**

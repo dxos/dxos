@@ -91,7 +91,7 @@ export default Capability.makeModule(
           // A failing error may still carry `context.notifyOverride` (see `LayoutOperation.getNotifyOverride`)
           // to replace the generic title with a specific, curated message and an action — e.g. a
           // connector reporting an expired credential. Its fields are safe to display (no raw error).
-          const override = LayoutOperation.getNotifyOverride(process.error?.value);
+          const override = LayoutOperation.getNotifyOverride(process.error);
           const actionLabel = override?.actionLabel;
           const action = override?.action;
           addToast({

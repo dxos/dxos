@@ -39,7 +39,7 @@ const processes: Process.Info[] = [
     pid: Process.ID.make('4d72c688-750b-47f2-87da-8a464e141b74'),
     name: 'Data pipeline',
     state: Process.State.FAILED,
-    error: { message: 'Connection timeout', value: new Error('Connection timeout') },
+    error: { name: 'Error', message: 'Connection timeout' },
     metrics: { wallTime: 3100, inputCount: 5, outputCount: 2 },
   }),
   makeProcess({

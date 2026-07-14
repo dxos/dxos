@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
@@ -45,7 +45,9 @@ const testConnection: TestConnection = ({ accessToken }) =>
   GitHubApi.fetchUser().pipe(
     Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token: accessToken.token })),
     Effect.asVoid,
-    Effect.mapError(() => new Error('GitHub rejected the credential. Reauthenticate to continue syncing.')),
+    Effect.mapError(
+      () => new ConnectionTestError({ message: 'GitHub rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
   );
 
 /**

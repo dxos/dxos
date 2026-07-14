@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { connectionDeckSubject } from '../constants';
 import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
@@ -41,13 +41,10 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       const spaceId = db.spaceId;
       // Serialized invocation the reauth toast runs on click — it rides on the error across the process
       // failure boundary, so it's data (operation key + input), not a live callback.
-      const openConnection: Operation.SerializedInvocation = {
-        operation: DXN.getName(LayoutOperation.Open.meta.key),
-        input: {
-          subject: [connectionDeckSubject(Paths.getSpacePath(spaceId), connection.id)],
-          navigation: 'immediate',
-        },
-      };
+      const openConnection = Operation.prepare(LayoutOperation.Open, {
+        subject: [connectionDeckSubject(Paths.getSpacePath(spaceId), connection.id)],
+        navigation: 'immediate',
+      });
       yield* Effect.all(
         bindings.map((binding) =>
           Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId }).pipe(

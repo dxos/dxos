@@ -13,6 +13,7 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 import type { OAuthProvider } from '@dxos/protocols';
 import type { AccessToken } from '@dxos/types';
 
+import { type ConnectionTestError } from '../errors';
 import * as Connection from './Connection';
 import * as SyncBinding from './SyncBinding';
 
@@ -102,7 +103,7 @@ export type TestConnection = (input: {
   accessToken: AccessToken.AccessToken;
   connection: Connection.Connection;
   client: Client;
-}) => Effect.Effect<void, Error, HttpClient.HttpClient>;
+}) => Effect.Effect<void, ConnectionTestError, HttpClient.HttpClient>;
 
 /** OAuth spec for Connector.oauth. */
 export type ConnectorOAuthSpec = {

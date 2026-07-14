@@ -15,6 +15,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
@@ -68,6 +69,30 @@ const toPersistedChildEvent = (event: Process.ChildEvent<unknown>) =>
         success: Exit.isSuccess(event.result),
         error: Exit.isFailure(event.result) ? Cause.pretty(event.result.cause) : undefined,
       };
+
+/**
+ * Serialize a failed process's cause into a {@link Process.Info}'s `error`. `message` falls back to the
+ * pretty-printed cause; `context` is carried through so structured detail (e.g. a notify override) on a
+ * `BaseError` survives. Every operation handler is wrapped in `Effect.orDie` before running as a
+ * process, so a typed error thrown in a nested invoke arrives as a defect, not a `Fail` — check both
+ * channels for the failing value.
+ */
+const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info['error']> => {
+  const message = Cause.pretty(cause);
+  const value = Cause.failureOption(cause).pipe(
+    Option.orElse(() => Cause.dieOption(cause)),
+    Option.getOrNull,
+  );
+  if (!Predicate.isRecord(value)) {
+    return { message };
+  }
+  return {
+    name: typeof value.name === 'string' ? value.name : undefined,
+    message: typeof value.message === 'string' ? value.message : message,
+    stack: typeof value.stack === 'string' ? value.stack : undefined,
+    context: Predicate.isRecord(value.context) ? value.context : undefined,
+  };
+};
 
 const fromPersistedChildEvent = (event: {
   pid: Process.ID;
@@ -198,21 +223,10 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   }
   snapshotProcessInfo(): Process.Info {
     const status = this.#currentStatus;
-    // `message` is the pretty-printed cause (display/log); `value` is the raw fail/die payload so
-    // consumers can inspect the typed error. Every operation handler is wrapped in `Effect.orDie`
-    // before running as a process, so a typed error thrown in a nested invoke arrives as a defect,
-    // not a `Fail` — check both channels for the value.
-    const error: Process.Failure | null = Option.getOrNull(
+    const error = Option.getOrNull(
       Option.flatMap(status.exit, (ex) =>
         Exit.match(ex, {
-          onFailure: (cause) =>
-            Option.some({
-              message: Cause.pretty(cause),
-              value: Cause.failureOption(cause).pipe(
-                Option.orElse(() => Cause.dieOption(cause)),
-                Option.getOrNull,
-              ),
-            }),
+          onFailure: (cause) => Option.some(serializeFailure(cause)),
           onSuccess: () => Option.none(),
         }),
       ),

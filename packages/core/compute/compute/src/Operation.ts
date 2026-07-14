@@ -481,11 +481,21 @@ export const NotifyOptionsAnnotation = Annotation.make({
  * so `input` must itself be serializable.
  */
 export interface SerializedInvocation {
-  /** Target operation key as a bare NSID (the `dxn:` prefix omitted), e.g. `org.dxos.plugin.deck.operation.open`. */
-  readonly operation: DXN.Name<string>;
+  /** Target operation key (a DXN URI, e.g. `dxn:org.dxos.plugin.deck.operation.open`). */
+  readonly operation: DXN.DXN;
   /** Input passed to the operation; must be serializable. */
   readonly input?: unknown;
 }
+
+/**
+ * Builds a {@link SerializedInvocation} from a live {@link Definition} and its input — the serializable
+ * counterpart to a direct `invoke`, for describing an invocation that must cross a serialization
+ * boundary (e.g. a deferred toast action). Resolve it later with `OperationHandlerSet.getHandlerByKey`.
+ */
+export const prepare = <I, O>(operation: Definition<I, O>, input: I): SerializedInvocation => ({
+  operation: operation.meta.key,
+  input,
+});
 
 /**
  * Options for operation invocation.

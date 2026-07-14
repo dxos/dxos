@@ -16,6 +16,14 @@ const NOT_REAUTHENTICATABLE_MESSAGE = 'Connection cannot be reauthenticated (no 
 
 const AUTH_EXPIRED_MESSAGE = 'Connection credentials have expired and must be reauthenticated.' as const;
 
+const TEST_FAILED_MESSAGE = 'Connection test failed.' as const;
+
+/**
+ * A connector's {@link TestConnection} probe rejected the stored credential or could not reach the
+ * service. Its `message` is the user-facing reason shown in the connection UI.
+ */
+export class ConnectionTestError extends BaseError.extend('ConnectionTestError', TEST_FAILED_MESSAGE) {}
+
 /** No Connector capability row matches the requested `connectorId`. */
 export class ConnectorNotFoundError extends BaseError.extend('ConnectorNotFoundError', NO_CONNECTOR_MESSAGE) {
   constructor(connectorId: string) {
@@ -53,7 +61,7 @@ export class ConnectionNotReauthenticatableError extends BaseError.extend(
 /**
  * A connector's remote API call failed with HTTP 401: the stored credential is invalid or expired.
  * Carries a `notifyOverride` in `context` so the generic sync-failure toast (driven by
- * `Process.Info.error.value` + `LayoutOperation.getNotifyOverride`) shows a reauthentication message and a
+ * `Process.Info.error` + `LayoutOperation.getNotifyOverride`) shows a reauthentication message and a
  * button to the connection instead of the raw provider error. `action` is a serialized operation invocation
  * (the error crosses the process failure boundary, so it can't carry a live callback); the caller
  * supplies the navigate-to-connection invocation.

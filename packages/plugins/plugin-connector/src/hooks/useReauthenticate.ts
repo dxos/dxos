@@ -43,6 +43,9 @@ export const useReauthenticate = (connection: Connection.Connection | undefined)
       return;
     }
     const coordinator = manager.capabilities.get(ConnectorCoordinator);
+    if (!coordinator) {
+      return;
+    }
     setReauthenticating(true);
     void EffectEx.runAndForwardErrors(coordinator.reauthenticate({ db, connection: Ref.make(connection) }))
       .catch(() => {})

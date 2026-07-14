@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { BaseError } from '@dxos/errors';
 
 import { ConnectionAuthExpiredError, isUnauthorizedError } from './errors';
@@ -54,16 +55,16 @@ describe('isUnauthorizedError', () => {
 });
 
 describe('ConnectionAuthExpiredError', () => {
-  const action = {
-    operation: 'org.dxos.plugin.deck.operation.open',
-    input: { subject: ['space-1/settings/connections/connection-1'], navigation: 'immediate' },
-  };
+  const action = Operation.prepare(LayoutOperation.Open, {
+    subject: ['space-1/settings/connections/connection-1'],
+    navigation: 'immediate' as const,
+  });
 
   test('carries a serializable notifyOverride the notify layer can read back', ({ expect }) => {
     const error = new ConnectionAuthExpiredError({ connectionId: 'connection-1', action });
 
-    // The notify layer reads the override off the process's raw failure value (unwrapped from the
-    // cause by the runtime), so pass the error directly.
+    // The notify layer reads the override off the failed process's `error` (a `SerializedError` whose
+    // `context` carries it); a `BaseError` exposes `.context` directly, so pass the error itself.
     const override = LayoutOperation.getNotifyOverride(error);
     expect(override?.title).toBe('Connection expired');
     expect(override?.actionLabel).toBe('Go to connection');

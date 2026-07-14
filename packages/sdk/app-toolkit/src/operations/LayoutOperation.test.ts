@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { BaseError } from '@dxos/errors';
+import { DXN } from '@dxos/keys';
 
 import * as LayoutOperation from './LayoutOperation';
 
@@ -16,15 +17,15 @@ describe('notify override', () => {
       }
     }
 
-    // `getNotifyOverride` takes the raw failure value (`Process.Info.error.value`), which the process
-    // runtime unwraps from the fail/die channel before the notify layer ever sees it.
+    // `getNotifyOverride` reads the override off a failed process's `error` (`Process.Info.error`, a
+    // `SerializedError` whose `context` carries it); a `BaseError` exposes `.context` directly.
     const override = LayoutOperation.getNotifyOverride(new ExampleError());
     expect(override?.title).toBe('Nicer title');
     expect(override?.actionLabel).toBe('Retry');
   });
 
   test('carries a serialized action invocation', ({ expect }) => {
-    const action = { operation: 'org.dxos.plugin.deck.operation.open', input: { subject: ['a/b/c'] } };
+    const action = { operation: DXN.make('org.dxos.plugin.deck.operation.open'), input: { subject: ['a/b/c'] } };
     class ExampleError extends BaseError.extend('ExampleError', 'Example failed.') {
       constructor() {
         super({ context: LayoutOperation.setNotifyOverride({ title: 'x', actionLabel: 'Go', action }) });
