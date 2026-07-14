@@ -8,11 +8,13 @@ import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Function from 'effect/Function';
 import * as HashSet from 'effect/HashSet';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
+import * as Scope from 'effect/Scope';
 
 import { EffectEx, Performance } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
@@ -298,6 +300,7 @@ class ManagerImpl implements PluginManager {
   private readonly _loadTimeout: Duration.DurationInput;
   private readonly _activationTimeout: Duration.DurationInput;
   private readonly _capabilities = new Map<string, Capability.Any[]>();
+  private readonly _moduleScopes = new Map<string, Scope.CloseableScope>();
   private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
   // Coalesces concurrent `_resolveLazyPlugin` calls per plugin id. Without
@@ -991,6 +994,7 @@ class ManagerImpl implements PluginManager {
         this._set(this._eventsFiredAtom, []);
         this._set(this._pendingResetAtom, []);
         this._moduleMemoMap.clear();
+        this._moduleScopes.clear();
         yield* Ref.set(this._activatingEvents, []);
         yield* Ref.set(this._activatingModules, []);
 
@@ -1534,6 +1538,7 @@ class ManagerImpl implements PluginManager {
         const deferred = yield* Deferred.make<Capability.Any[], Error>();
         this._moduleMemoMap.set(module.id, deferred);
 
+        const scope = yield* Scope.make();
         const loadEffect = Effect.gen(this, function* () {
           log('loading module', { module: module.id, parentEvent });
           performance.mark(`module:${module.id}:start`);
@@ -1542,6 +1547,7 @@ class ManagerImpl implements PluginManager {
           const [duration, capabilities] = yield* module.activate().pipe(
             Effect.provideService(Capability.Service, this.capabilities),
             Effect.provideService(Plugin.Service, this),
+            Scope.extend(scope),
             // Cap activation so a single misbehaving module can't hold the
             // event chain open. On timeout the failure is recorded against
             // the plugin and surfaced as `PluginTimeoutError`.
@@ -1555,6 +1561,7 @@ class ManagerImpl implements PluginManager {
             Effect.timed,
           );
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
+          this._moduleScopes.set(module.id, scope);
           const elapsed = Duration.toMillis(duration);
           performance.mark(`module:${module.id}:end`);
           performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
@@ -1567,6 +1574,7 @@ class ManagerImpl implements PluginManager {
           });
           return normalized as Capability.Any[];
         }).pipe(
+          Effect.tapError(() => Scope.close(scope, Exit.void)),
           Effect.withSpan('PluginManager._loadModule'),
           together(
             Effect.sleep(Duration.seconds(10)).pipe(
@@ -1652,6 +1660,12 @@ class ManagerImpl implements PluginManager {
           yield* program;
         }
         this._capabilities.delete(id);
+      }
+
+      const scope = this._moduleScopes.get(id);
+      if (scope) {
+        yield* Scope.close(scope, Exit.void);
+        this._moduleScopes.delete(id);
       }
 
       const activeIndex = this._get(this._activeAtom).findIndex((event) => event === id);
