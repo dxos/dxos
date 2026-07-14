@@ -84,7 +84,10 @@ jobs:
             --assets preview/packages/apps/composer-app/out/composer \
             preview/packages/apps/composer-app/out/composer/_worker.js \
             | tee deploy.log
-          URL=$(grep -Eo 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -n1)
+          # wrangler prints both a per-version URL and the stable alias URL — the alias is the one that
+          # stays constant across pushes to the same PR, so it must be matched by its own label, not by
+          # position (a plain "first workers.dev URL" grep would grab the per-version one instead).
+          URL=$(grep 'Version Preview Alias URL:' deploy.log | grep -Eo 'https://[a-z0-9.-]+\.workers\.dev')
           if [[ -z "$URL" ]]; then
             echo "Could not find a preview URL in wrangler's output" >&2
             exit 1
