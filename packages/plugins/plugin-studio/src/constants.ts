@@ -18,3 +18,13 @@ export const STUDIO_SEGMENT = 'studio';
 
 /** Path segment / node id for the Artifacts node under the Studio section. */
 export const ARTIFACTS_SEGMENT = 'artifacts';
+
+/** Presentation metadata for an artifact `kind` (image/video/…) — the glyph shown on nodes, cards,
+ * and the create menu. Keyed by the open `kind` discriminator so a new medium adds an entry here. */
+export const KIND_META: Record<string, { icon: string }> = {
+  image: { icon: 'ph--image--regular' },
+  video: { icon: 'ph--video-camera--regular' },
+};
+
+/** Icon representing an artifact's `kind` (falls back to a generic glyph for an unknown kind). */
+export const getKindIcon = (kind: string): string => KIND_META[kind]?.icon ?? 'ph--sparkle--regular';

@@ -15,6 +15,8 @@ import { ArtifactCard } from '#components';
 import { meta } from '#meta';
 import { Artifact } from '#types';
 
+import { getKindIcon } from '../../constants';
+
 type Kind = 'image' | 'video';
 
 type TileData = {
@@ -84,11 +86,11 @@ export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
               <DropdownMenu.Content align='start'>
                 <DropdownMenu.Viewport>
                   <DropdownMenu.Item onClick={() => void handleCreate('image')}>
-                    <Icon icon='ph--image--regular' size={4} />
+                    <Icon icon={getKindIcon('image')} size={4} />
                     <span className='grow'>{t('kind.image.label')}</span>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item onClick={() => void handleCreate('video')}>
-                    <Icon icon='ph--video-camera--regular' size={4} />
+                    <Icon icon={getKindIcon('video')} size={4} />
                     <span className='grow'>{t('kind.video.label')}</span>
                   </DropdownMenu.Item>
                 </DropdownMenu.Viewport>

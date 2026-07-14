@@ -20,6 +20,7 @@ import {
   ARTIFACTS_SEGMENT,
   STUDIO_SECTION_TYPE,
   STUDIO_SEGMENT,
+  getKindIcon,
 } from '../constants';
 
 /**
@@ -70,7 +71,13 @@ export default Capability.makeModule(
                 role: 'branch',
               },
               nodes: artifacts
-                .map((artifact: Artifact.Artifact) => AppNode.makeObject({ get, db: space.db, object: artifact }))
+                .map((artifact: Artifact.Artifact) => {
+                  const node = AppNode.makeObject({ get, db: space.db, object: artifact });
+                  // Show the kind's icon (image/video) rather than the generic Artifact-type glyph.
+                  return node
+                    ? { ...node, properties: { ...node.properties, icon: getKindIcon(artifact.kind) } }
+                    : null;
+                })
                 .filter((node): node is NonNullable<typeof node> => node !== null),
             }),
           ]);

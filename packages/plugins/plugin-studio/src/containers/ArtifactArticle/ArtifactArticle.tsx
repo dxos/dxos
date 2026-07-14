@@ -281,7 +281,16 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         </div>
         <div role='none' className='grow min-bs-0 overflow-auto'>
           {selected === 'all' ? (
-            <VariantGallery variants={galleryItems} emptyMessage={t('empty.message')} />
+            <VariantGallery
+              variants={galleryItems}
+              emptyMessage={t('empty.message')}
+              onSelect={(id) => {
+                const index = variants.findIndex((variant) => variant.id === id);
+                if (index >= 0) {
+                  setSelected(index);
+                }
+              }}
+            />
           ) : selectedVariant ? (
             <Surface.Surface
               type={VariantRenderer}
