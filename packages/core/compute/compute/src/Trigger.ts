@@ -18,7 +18,7 @@ import * as Runnable from './Runnable';
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export const Kinds = ['email', 'feed', 'manual', 'subscription', 'timer', 'webhook'] as const;
+export const Kinds = ['email', 'feed', 'direct', 'subscription', 'timer', 'webhook'] as const;
 export type Kind = (typeof Kinds)[number];
 
 const kindLiteralAnnotations = { title: 'Kind' };
@@ -91,18 +91,17 @@ export const specSubscription = (
 });
 
 /**
- * Manual invocation only; never scheduled by the dispatcher.
+ * Direct invocation only; never scheduled by the dispatcher (invoked on demand by a caller).
  */
-// TODO(dmaretskyi): Rename to "DirectSpec", spec: "direct"
-export const ManualSpec = Schema.Struct({
-  kind: Schema.Literal('manual').annotations(kindLiteralAnnotations),
+export const DirectSpec = Schema.Struct({
+  kind: Schema.Literal('direct').annotations(kindLiteralAnnotations),
 });
-export type ManualSpec = Schema.Schema.Type<typeof ManualSpec>;
+export type DirectSpec = Schema.Schema.Type<typeof DirectSpec>;
 
 /**
- * Construct a Manual trigger spec.
+ * Construct a Direct trigger spec.
  */
-export const specManual = (): ManualSpec => ({ kind: 'manual' });
+export const specDirect = (): DirectSpec => ({ kind: 'direct' });
 
 /**
  * Cron timer.
@@ -152,7 +151,7 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, FeedSpec, ManualSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations(
+export const Spec = Schema.Union(EmailSpec, FeedSpec, DirectSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations(
   {
     title: 'Trigger',
   },
@@ -230,6 +229,6 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);
 
 /**
- * Checks if a trigger having this spec can be manually invoked.
+ * Checks if a trigger having this spec can be manually invoked (a `direct` or `timer` trigger).
  */
-export const isManuallyInvokable = (spec?: Spec): boolean => spec?.kind === 'manual' || spec?.kind === 'timer';
+export const isManuallyInvokable = (spec?: Spec): boolean => spec?.kind === 'direct' || spec?.kind === 'timer';

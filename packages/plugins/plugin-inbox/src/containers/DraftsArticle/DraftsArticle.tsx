@@ -12,11 +12,11 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
-import { Message } from '@dxos/types';
+import { DraftMessage, Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
-import { DraftMessage, Mailbox } from '#types';
+import { Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';

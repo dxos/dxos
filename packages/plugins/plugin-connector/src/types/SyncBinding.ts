@@ -58,8 +58,12 @@ export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dx
 
 export const instanceOf = (value: unknown): value is SyncBinding => Relation.instanceOf(SyncBinding, value);
 
+type BindingInstance = Type.InstanceType<typeof SyncBinding>;
+
 export type MakeProps = Omit<Relation.MakeProps<typeof SyncBinding>, 'cursor'> & {
   cursor?: Obj.MakeProps<typeof Cursor.Cursor>;
+  [Relation.Source]: Relation.SourceOf<BindingInstance>;
+  [Relation.Target]: Relation.TargetOf<BindingInstance>;
 };
 
 /**
@@ -68,9 +72,19 @@ export type MakeProps = Omit<Relation.MakeProps<typeof SyncBinding>, 'cursor'> &
  * constructed here so callers never build one; pass `cursor` to initialize its fields (`value`,
  * `lastRunAt`, `lastError`) — e.g. to seed sync state.
  */
-export const make = ({ cursor: cursorProps, ...props }: MakeProps) => {
-  const cursor = Cursor.make(cursorProps);
-  const binding = Relation.make(SyncBinding, { ...props, cursor: Ref.make(cursor) });
+export const make = (input: MakeProps) => {
+  const cursor = Cursor.make(input.cursor);
+  const relationProps = {
+    id: input.id,
+    remoteId: input.remoteId,
+    name: input.name,
+    snapshots: input.snapshots,
+    options: input.options,
+    [Relation.Source]: input[Relation.Source],
+    [Relation.Target]: input[Relation.Target],
+    cursor: Ref.make(cursor),
+  } satisfies Relation.MakeProps<typeof SyncBinding>;
+  const binding = Relation.make(SyncBinding, relationProps);
   // The cursor is owned by the binding: parenting cascade-deletes it with the binding, and persists it
   // transitively when the binding is added.
   Relation.setParent(cursor, binding);
@@ -112,8 +126,8 @@ export type Stats = { newMessages: number };
 
 /**
  * The minimal shape the sync lifecycle needs from a binding: its progress cursor. `SyncBinding`
- * satisfies this structurally, as will sibling relation types (e.g. `DerivedBinding`) that have no
- * `Connection` source but still track sync progress via a cursor.
+ * satisfies this structurally, as will any sibling relation type that has no `Connection` source but
+ * still tracks sync progress via a cursor.
  */
 export type CursorHolder = { readonly cursor: Ref.Ref<Cursor.Cursor> };
 

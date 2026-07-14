@@ -20,6 +20,7 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
+import { EmailStage } from '@dxos/pipeline-email';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -35,9 +36,9 @@ import {
   type GoogleMailApiError,
   type GoogleMailApiService,
 } from '../../../services';
-import { EmailStage, type SyncDirection, resolveSyncWindow } from '../../../sync';
+import { EmailCommit } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
-import { readBindingOptions } from '../../../util';
+import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
 import { type AttachmentMetadata, type DecodedMessage, decodeBody, mapToMessage } from './mapper';
 
@@ -53,7 +54,7 @@ type DateRangeConfig = {
   readonly end: Date;
   readonly chunkDays: number;
   /** `forward` walks oldest→newest windows (incremental resume); `backward` walks newest→oldest (initial/backfill). */
-  readonly direction: SyncDirection;
+  readonly direction: Cursor.Direction;
 };
 
 const STREAMING_CONFIG = {
@@ -101,7 +102,7 @@ export const runGmailSync = ({
    * sync, newest-first from today); a cursor → `forward` (incremental, from the cursor). Pass
    * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
    */
-  direction?: SyncDirection;
+  direction?: Cursor.Direction;
 }): Effect.Effect<
   { newMessages: number },
   GoogleMailApiError | EntityNotFoundError,
@@ -130,7 +131,7 @@ export const runGmailSync = ({
       direction: resolvedDirection,
       start: rangeStart,
       end: upperBound,
-    } = resolveSyncWindow({
+    } = Cursor.resolveWindow({
       cursorKey,
       now: new Date(),
       after,
@@ -309,10 +310,10 @@ export const runGmailSync = ({
       mapToMessageStage,
       collectStats,
       EmailStage.processAttachments(),
-      EmailStage.onArrivalExtractors(mailbox),
+      onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
-      EmailStage.toCommitUnit(),
+      EmailCommit.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(
@@ -466,7 +467,7 @@ const fetchAttachments = (
 type GmailSourceConfig = {
   readonly userId: string;
   readonly label: string;
-  readonly direction: SyncDirection;
+  readonly direction: Cursor.Direction;
   /** Full [start, end) range to cover; the walk order within it is set by `direction`. */
   readonly start: Date;
   readonly end: Date;
@@ -556,7 +557,7 @@ const fetchMessagesForDateRange = (
   userId: string,
   label: string,
   dateChunk: DateChunk,
-  direction: SyncDirection,
+  direction: Cursor.Direction,
   searchFilter?: string,
 ) =>
   Stream.unwrap(

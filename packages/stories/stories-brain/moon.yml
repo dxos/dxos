@@ -54,3 +54,9 @@ tasks:
       cache: false
       runInCI: false
       interactive: true
+  active-topics:
+    command: 'node scripts/active-topics.mjs'
+    options:
+      cache: false
+      runInCI: false
+      interactive: true
