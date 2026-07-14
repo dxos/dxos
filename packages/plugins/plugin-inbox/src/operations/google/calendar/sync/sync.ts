@@ -2,18 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { addDays } from 'date-fns';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver } from '@dxos/extractor';
-import { Stage } from '@dxos/pipeline';
+import { log } from '@dxos/log';
+import { Pipeline, Stage } from '@dxos/pipeline';
 import { SyncBinding } from '@dxos/plugin-connector';
 
 import { GoogleCalendar } from '../../../../apis';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
+import { Calendar } from '../../../../types';
 import { mapEvent } from '../mapper';
+import { type CalendarPageEffect, fetchEvents } from './fetch';
+
+const COMMIT_PAGE_SIZE = 10;
+
+const DEFAULT_SYNC_BACK_DAYS = 30;
+const DEFAULT_SYNC_FORWARD_DAYS = 365;
+const DEFAULT_PAGE_SIZE = 100;
 
 /** Maps a Google event to a commit unit (event → feed). Resolves attendees via `Resolver`; drops
  * cancelled/start-less events (mapEvent returns null). Events carry no tags or extracted objects. */
@@ -52,51 +61,89 @@ export const makeRecurringDedupStage = (enabled: boolean): Stage.Stage<GoogleCal
   );
 };
 
-/** The page-fetch effect's error + requirements (references `CredentialsService` via the Google API);
- * reused as the source stream's error/context so the exported type is nameable without a phantom import (TS2883). */
-type CalendarPageEffect =
-  | ReturnType<typeof GoogleCalendar.listEventsByStartTime>
-  | ReturnType<typeof GoogleCalendar.listEventsByUpdated>;
-
-/** Streams Google Calendar events: initial sync windows by start time, incremental by `updatedMin`. */
-export const getEvents = (
-  calendarId: string,
-  cursorKey: number,
-  opts: { syncBackDays: number; syncForwardDays: number; pageSize: number; searchFilter?: string },
-): Stream.Stream<
-  GoogleCalendar.Event,
-  Effect.Effect.Error<CalendarPageEffect>,
-  Effect.Effect.Context<CalendarPageEffect>
-> => {
-  const fetchPage = (pageToken: string | undefined) =>
-    cursorKey === 0
-      ? GoogleCalendar.listEventsByStartTime(
-          calendarId,
-          addDays(new Date(), -opts.syncBackDays).toISOString(),
-          addDays(new Date(), opts.syncForwardDays).toISOString(),
-          opts.pageSize,
-          pageToken,
-          opts.searchFilter,
-        )
-      : GoogleCalendar.listEventsByUpdated(
-          calendarId,
-          new Date(cursorKey).toISOString(),
-          opts.pageSize,
-          pageToken,
-          opts.searchFilter,
-        );
-
-  return Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
-    Effect.gen(function* () {
-      if (state.done) {
-        return Option.none();
-      }
-
-      const { items = [], nextPageToken } = yield* fetchPage(Option.getOrUndefined(state.pageToken));
-      return Option.some([
-        Chunk.fromIterable(items),
-        { pageToken: Option.fromNullable(nextPageToken), done: !nextPageToken },
-      ] as const);
-    }),
-  );
+export type SyncCalendarProps = {
+  binding: Ref.Ref<SyncBinding.SyncBinding>;
+  googleCalendarId?: string;
+  syncBackDays?: number;
+  syncForwardDays?: number;
+  pageSize?: number;
 };
+
+/**
+ * Runs the Google Calendar sync pipeline for a binding: fetch events → dedup → drop recurring
+ * repeats → map to commit units → commit each page (advancing the cursor). Requires the ambient
+ * services (Google Calendar API credentials, `Resolver`, `Database`) rather than providing them, so a
+ * test can drive it against a mock API; the handler wraps it with the Live layers. The return type is
+ * written out so the emitted `.d.ts` can name it without expanding the Google API's `CredentialsService`
+ * (TS2883).
+ */
+export const syncCalendar = ({
+  binding: bindingRef,
+  googleCalendarId = 'primary',
+  syncBackDays = DEFAULT_SYNC_BACK_DAYS,
+  syncForwardDays = DEFAULT_SYNC_FORWARD_DAYS,
+  pageSize = DEFAULT_PAGE_SIZE,
+}: SyncCalendarProps): Effect.Effect<
+  { newEvents: number },
+  Effect.Effect.Error<CalendarPageEffect> | EntityNotFoundError,
+  Database.Service | Resolver | Effect.Effect.Context<CalendarPageEffect>
+> =>
+  Effect.gen(function* () {
+    const binding = yield* Database.load(bindingRef);
+    const calendar = Relation.getTarget(binding);
+    if (!Calendar.instanceOf(calendar)) {
+      // The integration mechanism only ever binds Calendars for Google Calendar.
+      return { newEvents: 0 };
+    }
+
+    const feed = yield* Database.load(calendar.feed);
+    const fk = Obj.getMeta(calendar).keys?.find((key) => key.source === GOOGLE_INTEGRATION_SOURCE);
+    const calendarId = fk?.id ?? binding.remoteId ?? googleCalendarId;
+    const optRecord = binding.options ?? {};
+    const syncBack = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : syncBackDays;
+    const syncForward = typeof optRecord.syncForwardDays === 'number' ? optRecord.syncForwardDays : syncForwardDays;
+    const searchFilter = typeof optRecord.filter === 'string' ? optRecord.filter : undefined;
+
+    // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A missing
+    // cursor means initial sync (window by start time); otherwise incremental (by `updatedMin`).
+    const cursor = yield* Database.load(binding.cursor);
+    const cursorKey = typeof cursor.value === 'string' ? Date.parse(cursor.value) : 0;
+    const isInitialSync = cursorKey === 0;
+    log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
+
+    const stats: SyncBinding.Stats = { newMessages: 0 };
+    yield* fetchEvents(calendarId, cursorKey, {
+      syncBackDays: syncBack,
+      syncForwardDays: syncForward,
+      pageSize,
+      searchFilter,
+    }).pipe(
+      SyncBinding.dedupStage<GoogleCalendar.Event>(
+        'dedup',
+        (event) => event.id,
+        (event) => (event.updated ? Date.parse(event.updated) : 0),
+      ),
+      makeRecurringDedupStage(isInitialSync),
+      mapEventStage,
+      Stream.grouped(COMMIT_PAGE_SIZE),
+      Pipeline.run({ sink: SyncBinding.commit }),
+      Effect.provide(
+        SyncBinding.layer({
+          binding,
+          feed,
+          foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
+          cursorKey,
+          // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
+          formatCursor: (key) => new Date(key).toISOString(),
+          stats,
+        }),
+      ),
+    );
+
+    // Flush indexes once at the end of the run (per-page commits no longer flush — see
+    // `SyncBinding.commit`) so cross-run dedup / resolution observe this run's writes.
+    yield* Database.flush({ indexes: true });
+
+    log('calendar sync complete', { newEvents: stats.newMessages, isInitialSync });
+    return { newEvents: stats.newMessages };
+  });
