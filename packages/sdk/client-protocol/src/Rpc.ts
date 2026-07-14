@@ -137,3 +137,64 @@ export const serve = <G, H extends Layer.Layer<never, never, never>>(
     },
   };
 };
+
+/**
+ * Serves an {@link RpcGroup} over a caller-supplied {@link RpcServer.Protocol} layer.
+ * Transport-agnostic counterpart to {@link makeClientOverProtocol}: consumers provide a byte
+ * protocol over a legacy transport (e.g. `@dxos/rpc`'s RpcPort layer for iframe/devtools bridges).
+ */
+export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>(
+  protocol: Layer.Layer<RpcServer.Protocol>,
+  group: G,
+  handlers: H,
+  options?: ServeOptions,
+): GroupServer => {
+  let runtime: ManagedRuntime.ManagedRuntime<never, never> | undefined;
+  // Cache the in-flight open so concurrent opens share one initialization and a close during open
+  // can await it before disposing — otherwise `runtime` is unset mid-open and a fast open/close
+  // (e.g. client restart) leaks the runtime.
+  let openPromise: Promise<void> | undefined;
+
+  return {
+    async open(): Promise<void> {
+      if (openPromise) {
+        return openPromise;
+      }
+
+      openPromise = (async () => {
+        const timingEnabled = RpcTiming.isEnabled(options?.timing);
+        const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
+        const handlersLayer = timingEnabled
+          ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
+          : handlers;
+        const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
+          disableTracing: options?.disableTracing ?? true,
+          concurrency: options?.concurrency ?? 'unbounded',
+        }).pipe(Layer.provide(handlersLayer), Layer.provide(protocol), Layer.orDie);
+
+        const current = ManagedRuntime.make(serverLayer);
+        try {
+          await current.runPromise(Effect.void);
+        } catch (error) {
+          // Leave the server un-opened on startup failure so a later open() can retry.
+          openPromise = undefined;
+          await current.dispose();
+          throw error;
+        }
+        runtime = current;
+      })();
+      return openPromise;
+    },
+
+    async close(): Promise<void> {
+      if (openPromise) {
+        // Wait for an in-flight open so we dispose the runtime it created rather than leaking it.
+        await openPromise.catch(() => {});
+        openPromise = undefined;
+      }
+      const current = runtime;
+      runtime = undefined;
+      await current?.dispose();
+    },
+  };
+};

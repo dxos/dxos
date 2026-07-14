@@ -87,6 +87,7 @@ export const FormField = (props: FormFieldProps) => {
     fieldMap,
     fieldProvider,
     readonly,
+    hideEmpty = true,
     layout,
 
     // RefFieldProps
@@ -144,7 +145,7 @@ export const FormField = (props: FormFieldProps) => {
   // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
   // empty-value checks, but those branches only apply when the value is
   // actually a non-null array/object, so this check doesn't interfere.
-  if (readonly && fieldState.getValue() == null) {
+  if (readonly && hideEmpty && fieldState.getValue() == null) {
     return null;
   }
 

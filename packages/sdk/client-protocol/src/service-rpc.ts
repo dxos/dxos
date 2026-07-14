@@ -5,6 +5,7 @@
 import type * as EffectRpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcSchema from '@effect/rpc/RpcSchema';
+import * as RpcServer from '@effect/rpc/RpcServer';
 import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -15,6 +16,7 @@ import * as Stream from 'effect/Stream';
 
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
+import { invariant } from '@dxos/invariant';
 import { runServiceCall } from '@dxos/protocols';
 import {
   ContactsService,
@@ -32,8 +34,10 @@ import {
   SystemService,
   WorkerService,
 } from '@dxos/protocols/rpc';
-import { type RpcPort, layerProtocolRpcPortClient } from '@dxos/rpc';
+import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
+import { createIFramePort } from '@dxos/rpc-tunnel';
 
+import { DEFAULT_CLIENT_CHANNEL } from './config';
 import * as Rpc from './Rpc';
 import { type ClientServices } from './service';
 
@@ -130,7 +134,15 @@ const resolveServiceMethod = (
 //
 
 export type ClientRpcServerParams = {
-  port: MessagePortLike;
+  /**
+   * Native Worker-platform transport. Provide this or {@link protocol}.
+   */
+  port?: MessagePortLike;
+  /**
+   * Pre-built server protocol (the value the {@link RpcServer.Protocol} tag resolves to — e.g. handed
+   * to a worker-framework session via effect context). Provide this or {@link port}.
+   */
+  protocol?: RpcServer.Protocol['Type'];
   /**
    * Resolved per call so the served set follows the host lifecycle (services host open/close).
    */
@@ -157,10 +169,19 @@ export class ClientRpcServer {
       return;
     }
 
-    this.#server = Rpc.serve(this.#params.port, ClientServicesRpcs, makeClientServicesHandlers(this.#params), {
-      disableTracing: true,
-      concurrency: 'unbounded',
-    });
+    const handlers = makeClientServicesHandlers(this.#params);
+    const options = { disableTracing: true, concurrency: 'unbounded' } as const;
+    if (this.#params.protocol) {
+      this.#server = Rpc.serveOverProtocol(
+        Layer.succeed(RpcServer.Protocol, this.#params.protocol),
+        ClientServicesRpcs,
+        handlers,
+        options,
+      );
+    } else {
+      invariant(this.#params.port, 'ClientRpcServer requires a port or a protocol.');
+      this.#server = Rpc.serve(this.#params.port, ClientServicesRpcs, handlers, options);
+    }
     await this.#server.open();
   }
 
@@ -170,6 +191,38 @@ export class ClientRpcServer {
     await server?.close();
   }
 }
+
+export type ServeClientServicesOverIFrameOptions = {
+  iframe: HTMLIFrameElement;
+  origin: string;
+  channel?: string;
+  services: () => Partial<ClientServicesHandlers>;
+};
+
+/**
+ * Serves {@link ClientServices} to a child iframe (e.g. the shell) over the effect-rpc byte protocol
+ * and opens the connection. The iframe uses a byte {@link RpcPort} transport (not a `MessagePort`),
+ * matching the shell's {@link ClientServicesProxy} consumer, so this serves over
+ * {@link layerProtocolRpcPortServer} rather than the Worker-runner protocol used by
+ * {@link ClientRpcServer}. Kept here — alongside the rpc definitions — so the `RpcPort` binding is
+ * resolved in this package's type universe rather than in `@dxos/client`, whose merged-with-`main`
+ * build resolves `ClientRpcServer.port` as a `MessagePort`.
+ */
+export const serveClientServicesOverIFrame = async ({
+  iframe,
+  origin,
+  channel = DEFAULT_CLIENT_CHANNEL,
+  services,
+}: ServeClientServicesOverIFrameOptions): Promise<Rpc.GroupServer> => {
+  const server = Rpc.serveOverProtocol(
+    layerProtocolRpcPortServer(createIFramePort({ channel, iframe, origin })),
+    ClientServicesRpcs,
+    makeClientServicesHandlers({ services }),
+    { disableTracing: true, concurrency: 'unbounded' },
+  );
+  await server.open();
+  return server;
+};
 
 /**
  * Builds handler layers for every client service RPC, dispatching to the service implementations

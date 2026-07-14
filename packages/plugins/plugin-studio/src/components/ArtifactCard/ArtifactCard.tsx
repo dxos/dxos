@@ -19,8 +19,8 @@ export type ArtifactCardProps = {
  * rendered by the host, honoring "layout reuses existing types".
  */
 export const ArtifactCard = ({ subject }: ArtifactCardProps) => {
-  const src = useArtifactCoverSource(subject);
-  return <GalleryImage src={src} alt={subject.name} />;
+  const { src, contentType } = useArtifactCoverSource(subject);
+  return <GalleryImage src={src} contentType={contentType} alt={subject.name} />;
 };
 
 ArtifactCard.displayName = 'ArtifactCard';

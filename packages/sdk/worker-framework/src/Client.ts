@@ -8,8 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
-import { isAbortError, requestExclusiveLockWithTimeout, waitWithLockOrRpcTimeout } from '../internal/locks';
-import * as WorkerProtocol from '../WorkerProtocol';
+import { isAbortError, requestExclusiveLockWithTimeout, waitWithLockOrRpcTimeout } from './internal/locks';
+import * as WorkerProtocol from './WorkerProtocol';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
@@ -47,8 +47,8 @@ export type Options = {
   config?: Record<string, any>;
   leaderTimeouts?: LeaderTimeouts;
   onConnect: (args: {
-    appPort: MessagePort;
-    systemPort: MessagePort;
+    clientToWorker: MessagePort;
+    workerToClient: MessagePort;
     leaderId: string;
     livenessLockKey: string;
     isOwner: boolean;
@@ -298,7 +298,7 @@ export class Connection extends Resource {
         return;
       }
 
-      const { appPort, systemPort, leaderId, livenessLockKey, isOwner } = result;
+      const { clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner } = result;
       log('worker-connection: connected to worker', { leaderId, isOwner });
 
       queueMicrotask(async () => {
@@ -321,7 +321,7 @@ export class Connection extends Resource {
       });
 
       this.#connectionHandle = await waitWithLockOrRpcTimeout(
-        this.#onConnect({ appPort, systemPort, leaderId, livenessLockKey, isOwner }),
+        this.#onConnect({ clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner }),
         'opening worker connection handle',
       );
 
@@ -429,8 +429,8 @@ class LeaderSession extends Resource {
         case 'session':
           this.#coordinator.sendMessage({
             type: 'provide-port',
-            appPort: event.data.appPort,
-            systemPort: event.data.systemPort,
+            clientToWorker: event.data.clientToWorker,
+            workerToClient: event.data.workerToClient,
             clientId: event.data.clientId,
             leaderId: this.#leaderId,
             livenessLockKey: this.#livenessLockKey,

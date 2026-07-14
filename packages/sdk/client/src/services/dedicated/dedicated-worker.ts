@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Effect from 'effect/Effect';
+
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -19,60 +23,65 @@ export type RunDedicatedWorkerOptions = {
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
   Worker.run({
     storageLockKey: STORAGE_LOCK_KEY,
-    createRuntime: async ({ config: configValues, requestShutdown }) => {
-      const config = new Config(configValues ?? {});
-      log('dedicated-worker: probing OPFS availability');
-      let opfsAvailable = false;
-      try {
-        if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
-          await navigator.storage.getDirectory();
-          opfsAvailable = true;
-        }
-      } catch {
-        log.warn('OPFS not available, disabling persistent indexing');
-        opfsAvailable = false;
-      }
-      log('dedicated-worker: OPFS probe complete', { opfsAvailable });
-
-      const runtime = new WorkerRuntime({
-        configProvider: async () => config,
-        onStop: async () => {
-          log('dedicated-worker: WorkerRuntime onStop, closing self');
-          requestShutdown();
-        },
-        acquireLock: async () => {},
-        releaseLock: () => {},
-        automaticallyConnectWebrtc: false,
-        // Liveness and displacement are owned by worker-framework's Worker.run.
-        manageLifecycle: false,
-        sqliteLayer: opfsAvailable ? undefined : layerMemory,
-      });
-
-      if (options.onBeforeStart) {
-        log('dedicated-worker: running onBeforeStart');
-        await options.onBeforeStart(config);
-        log('dedicated-worker: onBeforeStart complete');
-      }
-
-      log('dedicated-worker: starting WorkerRuntime');
-      await runtime.start();
-      log('dedicated-worker: WorkerRuntime started');
-
-      return {
-        stop: async () => runtime.stop(),
-        createSession: async ({ appPort, systemPort, clientId, isOwner, onClose }) => {
-          const session = await runtime.createSession({
-            systemPort,
-            appPort,
-            onClose,
-          });
-          if (isOwner) {
-            performance.mark('dedicated-worker:session-ready');
-            log('dedicated-worker: connecting webrtc bridge to owning client', { clientId });
-            runtime.connectWebrtcBridge(session);
+    createRuntime: ({ config: configValues, requestShutdown }) =>
+      Effect.promise(async () => {
+        const config = new Config(configValues ?? {});
+        log('dedicated-worker: probing OPFS availability');
+        let opfsAvailable = false;
+        try {
+          if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
+            await navigator.storage.getDirectory();
+            opfsAvailable = true;
           }
-        },
-      };
-    },
+        } catch {
+          log.warn('OPFS not available, disabling persistent indexing');
+          opfsAvailable = false;
+        }
+        log('dedicated-worker: OPFS probe complete', { opfsAvailable });
+
+        const runtime = new WorkerRuntime({
+          configProvider: async () => config,
+          onStop: async () => {
+            log('dedicated-worker: WorkerRuntime onStop, closing self');
+            requestShutdown();
+          },
+          acquireLock: async () => {},
+          releaseLock: () => {},
+          automaticallyConnectWebrtc: false,
+          // Liveness and displacement are owned by worker-framework's Worker.run.
+          manageLifecycle: false,
+          sqliteLayer: opfsAvailable ? undefined : layerMemory,
+        });
+
+        if (options.onBeforeStart) {
+          log('dedicated-worker: running onBeforeStart');
+          await options.onBeforeStart(config);
+          log('dedicated-worker: onBeforeStart complete');
+        }
+
+        log('dedicated-worker: starting WorkerRuntime');
+        await runtime.start();
+        log('dedicated-worker: WorkerRuntime started');
+
+        return {
+          stop: async () => runtime.stop(),
+          // The framework hands the session the forward (tab→worker) and reverse (worker→tab) protocol
+          // layers via effect context. The WorkerRuntime session manages its own lifecycle (it closes
+          // when the tab-liveness lock releases), so the effect opens the session then blocks — the
+          // framework runs it for the session's lifetime.
+          createSession: ({ clientId, isOwner }) =>
+            Effect.gen(function* () {
+              const appProtocol = yield* RpcServer.Protocol;
+              const systemProtocol = yield* RpcClient.Protocol;
+              const session = yield* Effect.promise(() => runtime.createSession({ appProtocol, systemProtocol }));
+              if (isOwner) {
+                performance.mark('dedicated-worker:session-ready');
+                log('dedicated-worker: connecting webrtc bridge to owning client', { clientId });
+                runtime.connectWebrtcBridge(session);
+              }
+              return yield* Effect.never;
+            }),
+        };
+      }),
   });
 };
