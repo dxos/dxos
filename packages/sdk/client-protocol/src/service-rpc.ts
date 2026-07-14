@@ -5,6 +5,7 @@
 import type * as EffectRpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcSchema from '@effect/rpc/RpcSchema';
+import * as RpcServer from '@effect/rpc/RpcServer';
 import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -15,6 +16,7 @@ import * as Stream from 'effect/Stream';
 
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
+import { invariant } from '@dxos/invariant';
 import { runServiceCall } from '@dxos/protocols';
 import {
   ContactsService,
@@ -132,7 +134,15 @@ const resolveServiceMethod = (
 //
 
 export type ClientRpcServerParams = {
-  port: MessagePortLike;
+  /**
+   * Native Worker-platform transport. Provide this or {@link protocol}.
+   */
+  port?: MessagePortLike;
+  /**
+   * Pre-built server protocol (the value the {@link RpcServer.Protocol} tag resolves to — e.g. handed
+   * to a worker-framework session via effect context). Provide this or {@link port}.
+   */
+  protocol?: RpcServer.Protocol['Type'];
   /**
    * Resolved per call so the served set follows the host lifecycle (services host open/close).
    */
@@ -159,10 +169,19 @@ export class ClientRpcServer {
       return;
     }
 
-    this.#server = Rpc.serve(this.#params.port, ClientServicesRpcs, makeClientServicesHandlers(this.#params), {
-      disableTracing: true,
-      concurrency: 'unbounded',
-    });
+    const handlers = makeClientServicesHandlers(this.#params);
+    const options = { disableTracing: true, concurrency: 'unbounded' } as const;
+    if (this.#params.protocol) {
+      this.#server = Rpc.serveOverProtocol(
+        Layer.succeed(RpcServer.Protocol, this.#params.protocol),
+        ClientServicesRpcs,
+        handlers,
+        options,
+      );
+    } else {
+      invariant(this.#params.port, 'ClientRpcServer requires a port or a protocol.');
+      this.#server = Rpc.serve(this.#params.port, ClientServicesRpcs, handlers, options);
+    }
     await this.#server.open();
   }
 

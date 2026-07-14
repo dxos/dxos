@@ -2,10 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import type * as RpcClient from '@effect/rpc/RpcClient';
+import type * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
 
 import { Trigger } from '@dxos/async';
-import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClient } from '@dxos/client-protocol';
+import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClientOverProtocol } from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type WorkerService } from '@dxos/protocols/rpc';
@@ -16,11 +18,14 @@ import { type ClientServicesHost } from '../services';
 export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;
   /**
-   * Reverse-direction (worker→tab) channel serving the tab's {@link BridgeService} (WebRTC transport)
+   * Reverse-direction (worker→tab) protocol serving the tab's {@link BridgeService} (WebRTC transport)
    * over effect-rpc. The worker is the client; the tab is the runner.
    */
-  systemPort: MessagePort;
-  appPort: MessagePort;
+  systemProtocol: RpcClient.Protocol['Type'];
+  /**
+   * Forward-direction (tab→worker) protocol over which the worker serves the client services.
+   */
+  appProtocol: RpcServer.Protocol['Type'];
   // TODO(wittjosiah): Remove shellPort.
   shellPort?: MessagePort;
   readySignal: Trigger<Error | undefined>;
@@ -34,7 +39,7 @@ export class WorkerSession {
   private readonly _shellClientRpc?: ClientRpcServer;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
-  private readonly _systemPort: MessagePort;
+  private readonly _systemProtocol: RpcClient.Protocol['Type'];
   #closeBridge?: () => Promise<void>;
 
   public readonly onClose = new Callback<() => Promise<void>>();
@@ -66,9 +71,9 @@ export class WorkerSession {
       }),
   };
 
-  constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionProps) {
+  constructor({ serviceHost, systemProtocol, appProtocol, shellPort, readySignal }: WorkerSessionProps) {
     this._serviceHost = serviceHost;
-    this._systemPort = systemPort;
+    this._systemProtocol = systemProtocol;
 
     // Hold requests until the worker runtime is ready; propagate startup errors to callers.
     const onRequest = async () => {
@@ -85,7 +90,7 @@ export class WorkerSession {
 
     this._clientRpc = new ClientRpcServer({
       services,
-      port: appPort,
+      protocol: appProtocol,
       onRequest,
     });
 
@@ -100,9 +105,9 @@ export class WorkerSession {
 
   async open(): Promise<void> {
     log('opening...');
-    // The tab serves the WebRTC `BridgeService` on the system port; build a client the worker's
+    // The tab serves the WebRTC `BridgeService` on the reverse channel; build a client the worker's
     // network stack can proxy through.
-    const { bridgeService, close } = await makeBridgeServiceClient(this._systemPort);
+    const { bridgeService, close } = await makeBridgeServiceClientOverProtocol(this._systemProtocol);
     this.bridgeService = bridgeService;
     this.#closeBridge = close;
 
