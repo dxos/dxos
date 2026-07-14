@@ -80,6 +80,44 @@ describe('HeyGenProvider', () => {
     );
   });
 
+  test('listAvatars hits v2 (no ownership filter) and maps data.avatars', async ({ expect }) => {
+    let url: string | undefined;
+    const fetchImpl = (async (input: RequestInfo | URL) => {
+      url = String(input);
+      return new Response(
+        JSON.stringify({
+          data: {
+            avatars: [
+              { avatar_id: 'av-1', avatar_name: 'Angela' },
+              { avatar_id: 'av-2', avatar_name: 'Rex' },
+              { avatar_id: 'no-name' },
+            ],
+            talking_photos: [{ talking_photo_id: 'tp-1', talking_photo_name: 'Photo' }],
+          },
+        }),
+      );
+    }) as typeof fetch;
+
+    const avatars = await provider(fetchImpl).listAvatars({ apiKey: 'sk-test' });
+    expect(url).toBe('https://api.heygen.com/v2/avatars');
+    expect(avatars).toEqual([
+      { id: 'av-1', name: 'Angela' },
+      { id: 'av-2', name: 'Rex' },
+    ]);
+  });
+
+  test('listVoices hits v2 (no type filter) and maps data.voices', async ({ expect }) => {
+    let url: string | undefined;
+    const fetchImpl = (async (input: RequestInfo | URL) => {
+      url = String(input);
+      return new Response(JSON.stringify({ data: { voices: [{ voice_id: 'vo-1', name: 'Rex' }] } }));
+    }) as typeof fetch;
+
+    const voices = await provider(fetchImpl).listVoices({ apiKey: 'sk-test' });
+    expect(url).toBe('https://api.heygen.com/v2/voices');
+    expect(voices).toEqual([{ id: 'vo-1', name: 'Rex' }]);
+  });
+
   test('requires an api key', async ({ expect }) => {
     const fetchImpl = (async () => new Response('{}')) as typeof fetch;
     await expect(

@@ -16,9 +16,8 @@ import {
   UnsupportedKindError,
 } from './heygen-provider-types';
 
+const V2_BASE_URL = 'https://api.heygen.com/v2';
 const V3_BASE_URL = 'https://api.heygen.com/v3';
-
-const LIMIT = 50;
 
 // v3 create-video endpoint with a flat body and a top-level `fit` field.
 // https://developers.heygen.com/reference/create-video
@@ -26,9 +25,12 @@ const GENERATE_URL = `${V3_BASE_URL}/videos`;
 // v3 status check: `GET /v3/videos/{video_id}`.
 const STATUS_URL = `${V3_BASE_URL}/videos`;
 
-// v3 list endpoints with server-side ownership/type filters restrict to user-owned entries.
-const AVATARS_URL = `${V3_BASE_URL}/avatars?ownership=private&limit=${LIMIT}`;
-const VOICES_URL = `${V3_BASE_URL}/voices?type=private&limit=${LIMIT}`;
+// Avatars/voices are only exposed under v2 (there is no `/v3/avatars`). These return the full set the
+// account can use — the built-in public presets plus any private assets — so the picker is populated
+// even for accounts with no custom avatars/voices. No ownership/type filter: it would hide the presets.
+// https://docs.heygen.com/reference/list-avatars-v2 · https://docs.heygen.com/reference/list-voices-v2
+const AVATARS_URL = `${V2_BASE_URL}/avatars`;
+const VOICES_URL = `${V2_BASE_URL}/voices`;
 
 const DEFAULT_POLL_INTERVAL_MS = 5_000;
 const DEFAULT_TIMEOUT_MS = 5 * 60_000;
@@ -105,11 +107,13 @@ export class HeyGenProvider implements GenerationProvider {
       throw new ProviderFailureError(`HeyGen listAvatars failed: ${response.status} ${await readErrorBody(response)}`);
     }
 
+    // v2 nests the arrays under `data`; `talking_photos` are intentionally omitted because they
+    // require a different `character.type` in the generate body than the `avatar` we post.
     const body = (await response.json()) as {
-      data?: Array<{ id?: string; avatar_id?: string; name?: string }>;
+      data?: { avatars?: Array<{ avatar_id?: string; avatar_name?: string }> };
     };
-    return (body.data ?? [])
-      .map((entry) => ({ id: entry.id ?? entry.avatar_id, name: entry.name }))
+    return (body.data?.avatars ?? [])
+      .map((entry) => ({ id: entry.avatar_id, name: entry.avatar_name }))
       .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && typeof entry.name === 'string');
   }
 
@@ -128,10 +132,10 @@ export class HeyGenProvider implements GenerationProvider {
     }
 
     const body = (await response.json()) as {
-      data?: Array<{ id?: string; voice_id?: string; name?: string }>;
+      data?: { voices?: Array<{ voice_id?: string; name?: string }> };
     };
-    return (body.data ?? [])
-      .map((entry) => ({ id: entry.id ?? entry.voice_id, name: entry.name }))
+    return (body.data?.voices ?? [])
+      .map((entry) => ({ id: entry.voice_id, name: entry.name }))
       .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && typeof entry.name === 'string');
   }
 
