@@ -224,7 +224,6 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
               }}
             />
           )}
-          <div role='none' className='grow' />
           {/* Overflow menu at the end of the toolbar (object-level actions). */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
