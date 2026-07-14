@@ -49,7 +49,7 @@ module Identity
     updateProfile: (profile) => Effect
     devices: Effect                      # readonly DeviceInfo[].
     deviceChanges: Stream
-    share: (options?) => Effect          # device invitation → Invitation.Flow.
+    share: (options?: Invitation.ShareOptions) => Effect  # device invitation → Invitation.Flow.
     join: (code) => Effect               # device join → Invitation.Flow.
 ```
 
@@ -76,7 +76,7 @@ module Space
     members / memberChanges              # membership snapshot + reactive stream.
     updateMemberRole: (id, subject, role) => Effect  # Keyhive delegation.
     removeMember: (id, subject) => Effect            # Keyhive revocation.
-    share: (id, options?) => Effect      # space invitation → Invitation.Flow.
+    share: (id, options?: Invitation.ShareOptions) => Effect  # space invitation → Invitation.Flow.
     join: (code) => Effect               # space join → Invitation.Flow.
     exportSpace / importSpace
 ```

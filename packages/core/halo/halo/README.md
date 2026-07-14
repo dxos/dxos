@@ -4,6 +4,7 @@ DXOS HALO
 
 - [MIGRATION.md](./MIGRATION.md) — HALO → Keyhive migration plan.
 - [API_AUDIT.md](./API_AUDIT.md) — audit of HALO API usage across Composer/plugins and the proposed Effect service replacement.
+- [CONSUMER_MIGRATION.md](./CONSUMER_MIGRATION.md) — cookbook for moving consumers off `@dxos/client` onto the HALO services.
 
 ## Installation
 
