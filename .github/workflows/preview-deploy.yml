@@ -11,6 +11,14 @@ on:
   workflow_run:
     workflows: ['Preview Build']
     types: [completed]
+  # TEMPORARY — manual escape hatch to test this workflow's own changes against a branch other than main
+  # (workflow_run always resolves the workflow file from the default branch, so it can't exercise in-flight
+  # edits to this file). Remove this trigger and the run_id input once the migration is verified.
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Preview Build run ID to pull the artifact from
+        required: true
 
 permissions:
   contents: read
@@ -19,7 +27,7 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -37,7 +45,7 @@ jobs:
           name: composer-preview-bundle
           path: preview
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ inputs.run_id || github.event.workflow_run.id }}
 
       - name: Read deploy metadata
         id: meta
