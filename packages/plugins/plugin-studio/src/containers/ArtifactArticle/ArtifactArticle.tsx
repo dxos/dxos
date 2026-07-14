@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, DropdownMenu, Icon, IconButton, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, IconButton, Input, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 
@@ -201,6 +201,22 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   const busy = generating || pendingIndex >= 0;
   const selectedGeneration = selectedVariant?.generation;
 
+  // Whether the selected variant is the artifact's cover; toggling designates (or clears) it.
+  const isCover = !!selectedVariant && artifactSnapshot?.cover?.target?.id === selectedVariant.id;
+  const handleCoverChange = useCallback(
+    (checked: boolean) => {
+      if (typeof selected !== 'number') {
+        return;
+      }
+      const ref = variantRefs[selected];
+      Obj.update(artifact, (artifact) => {
+        artifact.cover = checked ? ref : undefined;
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [artifact, selected],
+  );
+
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar>
@@ -287,28 +303,42 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             compact
             classNames='border border-separator rounded p-2'
           />
-          {provider && (
-            <Surface.Surface
-              key={composing ? 'draft' : selectedVariant?.id}
-              type={GenerateForm}
-              data={
-                composing
-                  ? {
-                      kind: artifact.kind,
-                      schema: provider.requestSchema,
-                      value: draftConfig,
-                      onChange: handleConfigChange,
-                    }
-                  : {
-                      kind: artifact.kind,
-                      schema: provider.requestSchema,
-                      value: selectedVariant?.config ?? {},
-                      readonly: true,
-                    }
-              }
-              limit={1}
-            />
-          )}
+          <div role='none' className='flex flex-col gap-2 min-bs-0'>
+            {/* A produced (frozen) variant can be designated the artifact's cover default. */}
+            {selectedVariant && !selectedVariant.jobId && (
+              <Input.Root>
+                <div className='flex items-center gap-2'>
+                  <Input.Checkbox
+                    checked={isCover}
+                    onCheckedChange={(checked) => handleCoverChange(checked === true)}
+                  />
+                  <Input.Label>{t('cover.label')}</Input.Label>
+                </div>
+              </Input.Root>
+            )}
+            {provider && (
+              <Surface.Surface
+                key={composing ? 'draft' : selectedVariant?.id}
+                type={GenerateForm}
+                data={
+                  composing
+                    ? {
+                        kind: artifact.kind,
+                        schema: provider.requestSchema,
+                        value: draftConfig,
+                        onChange: handleConfigChange,
+                      }
+                    : {
+                        kind: artifact.kind,
+                        schema: provider.requestSchema,
+                        value: selectedVariant?.config ?? {},
+                        readonly: true,
+                      }
+                }
+                limit={1}
+              />
+            )}
+          </div>
         </div>
         <div role='none' className='relative grow min-bs-0 overflow-auto'>
           {selected === 'all' ? (
