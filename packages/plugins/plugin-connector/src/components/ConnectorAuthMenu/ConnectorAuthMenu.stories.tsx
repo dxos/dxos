@@ -17,8 +17,8 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, useActionRunner } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Menu, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
 import { AccessToken, Cursor } from '@dxos/types';
 
@@ -103,7 +103,9 @@ const ToolbarStory = () => {
       allConnections,
     });
     const nextGraph = Graph.make({ registry });
-    nextGraph.pipe(Graph.addNodes([{ id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions }]));
+    nextGraph.pipe(
+      Graph.addNodes([{ id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions }]),
+    );
     return nextGraph;
   }, [registry, space, target, allConnectors, allConnections]);
 

@@ -49,6 +49,4 @@ export type ConnectorAuthAnnotationValue = {
  * object's schema and contributes the connect action group.
  */
 export const ConnectorAuthAnnotationId = Symbol.for('@dxos/plugin-connector/annotation/ConnectorAuth');
-export const ConnectorAuthAnnotation = createAnnotationHelper<ConnectorAuthAnnotationValue>(
-  ConnectorAuthAnnotationId,
-);
+export const ConnectorAuthAnnotation = createAnnotationHelper<ConnectorAuthAnnotationValue>(ConnectorAuthAnnotationId);
