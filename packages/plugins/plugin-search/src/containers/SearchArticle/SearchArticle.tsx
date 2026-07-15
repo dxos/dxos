@@ -5,32 +5,22 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Entity, Filter, Query } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
-import { Text } from '@dxos/schema';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { SearchResultStack } from '#components';
-import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '#hooks';
+import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
 
 export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
-  // TODO(burdon): Option to query across spaces.
+  // TODO(burdon): Cross-space search — Milestone 2 (fan-out + merge).
   const [query, setQuery] = useState<string>();
-  // TODO(burdon): Re-enable full-text search when indexer is available in all environments.
-  const objects = useQuery(
-    space.db,
-    query === undefined ? Query.select(Filter.nothing()) : Query.select(Filter.not(Filter.type(Text.Text))),
-  );
-
+  const objects = useQuery(space.db, buildSearchQuery(query));
   const { setMatch } = useGlobalSearch();
-  const results = useGlobalSearchResults(objects);
-  const { results: webResults } = useWebSearch({ query });
-  const allResults = useMemo(
-    () => [...results, ...webResults].filter(({ object }) => object && Entity.getLabel(object)),
-    [results, webResults],
-  );
+  const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
+  const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 
   const handleSearch = useCallback(
     (text: string) => {
