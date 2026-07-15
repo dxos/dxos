@@ -8,13 +8,39 @@ import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
+import { log } from '@dxos/log';
 
 import { type Connection, type ConnectorEntry } from '../types';
 import { isCursorForConnection } from './cursor-predicates';
-import { runOnCursorCreated } from './run-on-cursor-created';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
+
+/**
+ * Runs a connector's {@link ConnectorEntry.onCursorCreated} hook for a newly-created cursor, if
+ * declared. Only `catchAllDefect` is needed — the hook's error channel is typed `never`, so it can
+ * never produce a typed failure.
+ */
+const runOnCursorCreated = (
+  connector: ConnectorEntry,
+  input: {
+    connection: Connection.Connection;
+    cursor: Cursor.ExternalCursor;
+    target: Obj.Unknown;
+    db: Database.Database;
+  },
+): Effect.Effect<void, never> => {
+  if (!connector.onCursorCreated) {
+    return Effect.void;
+  }
+  return connector
+    .onCursorCreated(input)
+    .pipe(
+      Effect.catchAllDefect((defect) =>
+        Effect.sync(() => log.warn('onCursorCreated defect', { connectorId: connector.id, defect })),
+      ),
+    );
+};
 
 export type ReconcileCursorsInput = {
   /** Resolves the connector's `materializeTarget` operation against the connection's space. */

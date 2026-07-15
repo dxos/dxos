@@ -9,12 +9,38 @@ import { AppNode } from '@dxos/app-toolkit';
 import { Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
+import { log } from '@dxos/log';
 import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { ConnectorCoordinator, type ConnectorEntry } from '../types';
 import * as Connection from '../types/Connection';
-import { runOnCursorCreated } from './run-on-cursor-created';
+
+/**
+ * Runs a connector's {@link ConnectorEntry.onCursorCreated} hook for a newly-created cursor, if
+ * declared. Only `catchAllDefect` is needed — the hook's error channel is typed `never`, so it can
+ * never produce a typed failure.
+ */
+const runOnCursorCreated = (
+  connector: ConnectorEntry,
+  input: {
+    connection: Connection.Connection;
+    cursor: Cursor.ExternalCursor;
+    target: Obj.Unknown;
+    db: Database.Database;
+  },
+): Effect.Effect<void, never> => {
+  if (!connector.onCursorCreated) {
+    return Effect.void;
+  }
+  return connector
+    .onCursorCreated(input)
+    .pipe(
+      Effect.catchAllDefect((defect) =>
+        Effect.sync(() => log.warn('onCursorCreated defect', { connectorId: connector.id, defect })),
+      ),
+    );
+};
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';

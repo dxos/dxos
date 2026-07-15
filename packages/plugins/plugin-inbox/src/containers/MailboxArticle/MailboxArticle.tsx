@@ -71,7 +71,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const showItem = useShowItem();
   const runAction = useActionRunner();
   // Pull "Sync" toolbar action once a connection is bound to this mailbox.
-  const { connection, sync, syncing } = useTargetSync(mailbox, {
+  const { connection, sync } = useTargetSync(mailbox, {
     success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
     error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
   });
@@ -315,10 +315,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     filterElement,
     connection,
     sync,
-    syncing,
-    // Same monitor as the statusbar meter (`syncProgress`, above) — a sync already running in the
-    // background (e.g. kicked off by the routine's timer trigger) disables the button too, not just
-    // this hook's own in-flight `syncing` flag.
+    // Same monitor as the statusbar meter (`syncProgress`, above): true for the whole duration of a
+    // sync, whether kicked off by this toolbar action or independently by the routine's timer trigger.
     syncRunning: syncProgress?.status === 'running',
   });
 
@@ -458,15 +456,13 @@ type MailboxActionsOptions = {
   /** Bound connection (drives the own pull-"Sync" action). */
   connection?: Connection.Connection;
   sync: () => Promise<void>;
-  /** In-flight sync flag, read reactively in the builder. */
-  syncing: Atom.Atom<boolean>;
   /** Whether the mailbox's sync progress monitor is currently running (see `syncProgress` above). */
   syncRunning: boolean;
 };
 
 const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
-  { sortDescending, nodeId, filterElement, connection, sync, syncing, syncRunning }: MailboxActionsOptions,
+  { sortDescending, nodeId, filterElement, connection, sync, syncRunning }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
@@ -545,15 +541,14 @@ const useMailboxActions = (
 
       // Own action: pull-sync from the provider once connected.
       if (connection) {
-        const isSyncing = get(syncing) || syncRunning;
         builder.action(
           'sync',
           {
             label: ['sync-mailbox.label', { ns: meta.profile.key }],
-            icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+            icon: syncRunning ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
             variant: 'primary',
             iconOnly: false,
-            disabled: isSyncing,
+            disabled: syncRunning,
           },
           () => {
             void sync();
@@ -572,7 +567,6 @@ const useMailboxActions = (
       filterElement,
       connection,
       sync,
-      syncing,
       syncRunning,
       sortDescending,
       loadRemoteImages,

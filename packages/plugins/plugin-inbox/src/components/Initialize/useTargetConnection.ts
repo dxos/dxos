@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { useCallback, useMemo } from 'react';
 
@@ -13,7 +12,6 @@ import { Cursor } from '@dxos/link';
 import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { useQuery } from '@dxos/react-client/echo';
-import { useAtomState } from '@dxos/react-hooks';
 
 /**
  * Find the {@link Connection} bound to the given `target` object via an external-sync
@@ -83,7 +81,12 @@ const useSyncTimerTrigger = <T extends Obj.Any>(
  * `remote` flag — the monitor decides, not this hook); otherwise resolves the bound {@link Connection}
  * and invokes {@link ConnectorOperation.SyncConnection} directly — the same shared fan-out handler the
  * connection settings' "Sync now" and the mailbox node's context-menu action use, for connectors with
- * no deployed sync trigger (JMAP, Contacts). Tracks an in-flight `syncing` flag for the empty-state UI.
+ * no deployed sync trigger (JMAP, Contacts).
+ *
+ * No in-flight flag: callers that have a live progress monitor for `target` (e.g. `MailboxArticle`'s
+ * `syncProgress`) should disable their own "Sync" action while it reports `running`, which already
+ * covers a sync kicked off by this callback (the callback itself awaits the run to completion) as well
+ * as one started independently by the target's background routine.
  *
  * `connection` exposes whether the target is bound (drives "connect vs. sync").
  *
@@ -95,13 +98,10 @@ export const useTargetSync = <T extends Obj.Any>(
 ): {
   connection: Connection.Connection | undefined;
   sync: () => Promise<void>;
-  /** In-flight flag as an atom so a menu builder can read it reactively via `get`. */
-  syncing: Atom.Atom<boolean>;
 } => {
   const { connection } = useTargetConnection(target);
   const db = Obj.getDatabase(target);
   const { invokePromise } = useOperationInvoker();
-  const { atom: syncing, set: setSyncing } = useAtomState(false);
   const syncTrigger = useSyncTimerTrigger(db, target);
 
   const invokeSyncTrigger = useSpaceCallback(
@@ -124,21 +124,16 @@ export const useTargetSync = <T extends Obj.Any>(
     if (!connection) {
       return;
     }
-    setSyncing(true);
-    try {
-      if (syncTrigger) {
-        await invokeSyncTrigger();
-        return;
-      }
-      await invokePromise(
-        ConnectorOperation.SyncConnection,
-        { connection: Ref.make(connection) },
-        { spaceId: db?.spaceId, notify },
-      );
-    } finally {
-      setSyncing(false);
+    if (syncTrigger) {
+      await invokeSyncTrigger();
+      return;
     }
-  }, [invokePromise, connection, db, notify, setSyncing, syncTrigger, invokeSyncTrigger]);
+    await invokePromise(
+      ConnectorOperation.SyncConnection,
+      { connection: Ref.make(connection) },
+      { spaceId: db?.spaceId, notify },
+    );
+  }, [invokePromise, connection, db, notify, syncTrigger, invokeSyncTrigger]);
 
-  return { connection, sync, syncing };
+  return { connection, sync };
 };

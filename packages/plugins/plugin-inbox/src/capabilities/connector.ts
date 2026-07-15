@@ -129,10 +129,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 const onCursorCreated =
   (sync: Operation.Definition<SyncInput, SyncOutput>): OnCursorCreated =>
   ({ target, cursor, db }) =>
-    Effect.tryPromise({
-      try: () => createSyncRoutine({ db, target, cursor, sync }),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-    }).pipe(Effect.orDie);
+    Effect.promise(() => createSyncRoutine({ db, target, cursor, sync }));
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
