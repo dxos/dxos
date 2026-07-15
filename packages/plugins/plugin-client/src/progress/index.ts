@@ -3,4 +3,3 @@
 //
 
 export * from './progress-keys';
-export * from './space-label';

@@ -2,22 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Fiber } from 'effect';
 import * as Effect from 'effect/Effect';
+import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Space } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
-import { type Database } from '@dxos/echo';
+import { ServiceResolver } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 
 import { ClientCapabilities } from '#types';
 
-import {
-  createSpaceFeedReplicationProgressKey,
-  createSpaceReplicationProgressKey,
-  getSpaceProgressLabel,
-} from '../progress';
+import { createSpaceFeedReplicationProgressKey, createSpaceReplicationProgressKey } from '../progress';
 
 type MonitorUpdate = {
   readonly label: string;
@@ -35,19 +33,16 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
     const registry = yield* Capability.get(AppCapabilities.ProgressRegistry);
+    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
 
-    const syncContext = new Context();
-    const subscribedSpaces = new Set<SpaceId>();
     const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        void syncContext.dispose();
         for (const monitor of monitors.values()) {
           monitor.remove();
         }
         monitors.clear();
-        subscribedSpaces.clear();
       }),
     );
 
@@ -70,36 +65,38 @@ export default Capability.makeModule(
       }
     };
 
-    const applySyncState = (space: Space, state: Database.SyncState): void => {
-      applyMonitor(createSpaceReplicationProgressKey(space.id), toDocumentUpdate(space, state));
-      applyMonitor(createSpaceFeedReplicationProgressKey(space.id), toFeedUpdate(space, state));
-    };
+    const runtime = yield* Effect.runtime<Scope.Scope>();
+    const subscribeSpace = (spaceId: SpaceId, name?: string): void =>
+      void Effect.gen(function* () {
+        const fiber = processManagerRuntime.runFork(
+          Database.subscribeToSyncState().pipe(
+            Stream.runForEach(
+              Effect.fnUntraced(function* (state) {
+                applyMonitor(createSpaceReplicationProgressKey(spaceId), toDocumentUpdate(name, state));
+                applyMonitor(createSpaceFeedReplicationProgressKey(spaceId), toFeedUpdate(name, state));
+              }),
+            ),
+            Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
+          ),
+        );
 
-    const subscribeSpace = (space: Space): void => {
-      if (subscribedSpaces.has(space.id)) {
-        return;
-      }
-      subscribedSpaces.add(space.id);
-
-      syncContext.onDispose(space.internal.db.subscribeToSyncState((state) => applySyncState(space, state)));
-    };
-
-    for (const space of client.spaces.get()) {
-      subscribeSpace(space);
-    }
+        yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
+      }).pipe(Effect.provide(runtime), Effect.runFork);
 
     const spacesSubscription = client.spaces.subscribe((spaces) => {
       for (const space of spaces) {
-        subscribeSpace(space);
+        subscribeSpace(space.id, space.properties.name);
       }
     });
-
     yield* Effect.addFinalizer(() => Effect.sync(() => spacesSubscription.unsubscribe()));
+    for (const space of client.spaces.get()) {
+      subscribeSpace(space.id, space.properties.name);
+    }
   }),
 );
 
 /** Derives the automerge document monitor state, or `undefined` when caught up. */
-const toDocumentUpdate = (space: Space, state: Database.SyncState): MonitorUpdate | undefined => {
+const toDocumentUpdate = (name: string | undefined, state: Database.SyncState): MonitorUpdate | undefined => {
   const unsynced = state.unsyncedDocumentCount;
   if (unsynced === 0) {
     return undefined;
@@ -107,14 +104,14 @@ const toDocumentUpdate = (space: Space, state: Database.SyncState): MonitorUpdat
 
   const total = state.totalDocumentCount > 0 ? state.totalDocumentCount : unsynced;
   return {
-    label: getSpaceProgressLabel(space, 'CRDTs'),
+    label: getSpaceProgressLabel(name ?? 'Space', 'CRDTs'),
     current: Math.max(0, total - unsynced),
     total,
   };
 };
 
 /** Derives the ECHO feed block monitor state, or `undefined` when caught up. */
-const toFeedUpdate = (space: Space, state: Database.SyncState): MonitorUpdate | undefined => {
+const toFeedUpdate = (name: string | undefined, state: Database.SyncState): MonitorUpdate | undefined => {
   const blocksToPull = Number(state.blocksToPull);
   const blocksToPush = Number(state.blocksToPush);
   const pending = blocksToPull + blocksToPush;
@@ -125,9 +122,15 @@ const toFeedUpdate = (space: Space, state: Database.SyncState): MonitorUpdate | 
   const totalBlocks = Number(state.totalBlocks);
   const total = totalBlocks > 0 ? totalBlocks : pending;
   return {
-    label: getSpaceProgressLabel(space, 'Feeds'),
+    label: getSpaceProgressLabel(name ?? 'Space', 'Feeds'),
     current: Math.max(0, total - pending),
     total,
     note: `↓${blocksToPull} ↑${blocksToPush}`,
   };
+};
+
+/** Human label for a space progress monitor. */
+const getSpaceProgressLabel = (name: string | undefined, suffix?: string): string => {
+  const name_ = name ?? 'Space';
+  return suffix ? `${name_} · ${suffix}` : name_;
 };
