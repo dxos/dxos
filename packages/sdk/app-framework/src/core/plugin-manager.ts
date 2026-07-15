@@ -994,6 +994,9 @@ class ManagerImpl implements PluginManager {
         this._set(this._eventsFiredAtom, []);
         this._set(this._pendingResetAtom, []);
         this._moduleMemoMap.clear();
+        for (const scope of this._moduleScopes.values()) {
+          yield* Scope.close(scope, Exit.void);
+        }
         this._moduleScopes.clear();
         yield* Ref.set(this._activatingEvents, []);
         yield* Ref.set(this._activatingModules, []);
@@ -1574,7 +1577,7 @@ class ManagerImpl implements PluginManager {
           });
           return normalized as Capability.Any[];
         }).pipe(
-          Effect.tapError(() => Scope.close(scope, Exit.void)),
+          Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
           Effect.withSpan('PluginManager._loadModule'),
           together(
             Effect.sleep(Duration.seconds(10)).pipe(
