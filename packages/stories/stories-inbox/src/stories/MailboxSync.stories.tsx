@@ -81,8 +81,6 @@ const DECORATORS = [
       DebugPlugin({}),
       PreviewPlugin(),
       ProgressPlugin(),
-      // Required for the auto-created sync Routine's timer trigger to actually run — without it,
-      // the trigger dispatcher/monitor aren't resolvable and the toolbar "Sync" button would fail.
       RoutinePlugin(),
       StorySyncPlugin(),
       StoryModulesPlugin(),
