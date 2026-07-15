@@ -47,7 +47,60 @@ publishes the packages; all other checks should be green.
    space-invitation hooks to `@dxos/halo-react`; leave ECHO `space.db` sites.
 6. **Cleanup** — drop now-unused `@dxos/react-client/halo` imports; changeset.
 
+## Migration outcome — what moved and what stays
+
+### Migrated to `@dxos/halo` / `@dxos/halo-react`
+
+- **plugin-client foundation** — `react-context.tsx` wraps the tree in
+  `HaloProvider`; `layer-specs.ts` contributes `IdentityLayerSpec`/`SpaceLayerSpec`
+  so the process manager resolves the services. `Identity.Info` extended with
+  `identityKey` (hex) + `data`.
+- **plugin-client containers/operations** — `AccountContainer`, `ProfileContainer`;
+  `UpdateProfile` operation routes through `Identity.Service`.
+- **plugin-assistant** — `Chat`, `ChatThread` (`useIdentity`).
+- **plugin-comments** — `CommentsArticle` (`useIdentity`, DID only).
+- **plugin-transcription** — `useTranscriptionRecording`.
+- **plugin-markdown / plugin-code / plugin-script** — editor identity now sourced
+  from `@dxos/halo-react`. Enabled by narrowing `createDataExtensions` in
+  `@dxos/ui-editor` to a structural `DataExtensionsIdentity`
+  (`{ identityKey?, displayName?, data? }`), which the halo `Identity.Info`
+  satisfies — no `@dxos/halo` dependency pushed into the foundational editor.
+
+### Deliberately NOT migrated (separate tracks / blocked)
+
+These consume the **client** identity type through boundaries the settled
+decisions keep on `@dxos/client`. Moving them is out of scope for the HALO
+service migration, not an oversight:
+
+- **ECHO `SpaceMember` sites** — `plugin-space/SpacePresence`,
+  `plugin-thread` (`MessageThread`, `ThreadArticle`, `ChannelArticle`, `util`),
+  `plugin-comments` (`CommentThread`, `util`). These read members via
+  `useMembers` from `@dxos/react-client/echo` (`SpaceMember.identity.identityKey:
+PublicKey`) and compare with `PublicKey.equals`, and feed `getMessageMetadata`
+  from both the local identity and member identities. This is the ECHO members
+  track, which stays separate.
+- **Shell / client-invitation UI** — `plugin-client/DevicesContainer` feeds the
+  client `Device` into `@dxos/shell`'s `DeviceListItem` and creates device
+  invitations via the client observable API (`client.halo.share()`,
+  `useMulticastObservable`, `InvitationEncoder`). Shell + the invitation
+  observable API are a separate track.
+- **Credential / recovery / onboarding flows** — `RecoveryCredentialsContainer`,
+  `useHubClient`, `plugin-onboarding` (`WelcomeScreen`, `onboarding-manager`,
+  `util`). These need the deferred HALO verbs (credential query/write,
+  recovery-credential creation, EDGE attest) and pass identity into the
+  client-typed `Welcome` prop. Blocked until the Phase 2 verbs land.
+- **CLI commands** (`plugin-client/src/commands/**`, `plugin-registry`,
+  `plugin-script` deploy) and **capabilities/operations that hold the client at
+  the process-manager boundary** (`client.ts`, `create-identity`, etc.) — these
+  are the layer that _provides_ the client to the services; they stay on
+  `@dxos/client` by design.
+
 ## Status
 
-- Phase 1: done (commits on the branch).
-- Phase 2+: in progress.
+- **Phase 1 (foundation): done.**
+- **Phase 4/5 (clean consumer sites): done** for every site whose only HALO use is
+  identity/DID reads not bound to ECHO members, Shell, or deferred verbs.
+- **Phase 2 (deferred verbs) + the client-typed remainder: not done.** Requires
+  implementing credential/recovery/device/EDGE verbs in `@dxos/halo` +
+  `@dxos/halo-adapter-client`, then migrating Recovery/Devices/onboarding. Tracked
+  as task #7. The ECHO-member and Shell sites are intentionally out of scope.
