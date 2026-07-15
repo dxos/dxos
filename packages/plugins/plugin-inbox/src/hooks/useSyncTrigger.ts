@@ -5,16 +5,14 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
 import { Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Connector } from '@dxos/plugin-connector';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
 // (which exports this file), so going through the barrel would create a module cycle.
-import { useTargetConnection } from '../components/Initialize/useTargetConnection';
+import { useConnectorEntry, useTargetConnection } from '../components/Initialize/useTargetConnection';
 import { createSyncRoutine, findBindingForTarget } from '../util';
 
 /**
@@ -37,7 +35,7 @@ export const useSyncTrigger = ({
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
   const { connection } = useTargetConnection(subject);
-  const connectorEntries = useCapabilities(Connector);
+  const connector = useConnectorEntry(connection);
 
   const subjectUri = Obj.getURI(subject);
   const syncTrigger = useMemo(
@@ -66,11 +64,7 @@ export const useSyncTrigger = ({
       return;
     }
 
-    if (!connection) {
-      return;
-    }
-    const connector = connectorEntries.flat().find((entry) => entry.id === connection.connectorId);
-    if (!connector?.sync) {
+    if (!connection || !connector?.sync) {
       return;
     }
 
@@ -84,7 +78,7 @@ export const useSyncTrigger = ({
     } finally {
       setPending(false);
     }
-  }, [syncTrigger, db, subject, connection, connectorEntries]);
+  }, [syncTrigger, db, subject, connection, connector]);
 
   return { syncEnabled, syncTrigger, pending, handleToggleSync };
 };

@@ -30,13 +30,14 @@ const ensureOperationRecord = async (
 };
 
 /**
- * Creates a recurring sync {@link Routine} for `target` (a Mailbox or Calendar): a local (`remote`
- * unset) timer trigger, every 10 minutes, wired to `sync` — the connector's own sync operation, the
- * same one `ConnectorOperation.SyncConnection`/the toolbar's fallback path invoke directly — with
- * `binding` bound to `cursor` (the target's external-sync {@link Cursor}). The routine is related to
- * `target` by query ({@link connectedRoutinesQuery}, surfaced in the routines companion) rather than
- * by an ownership field on `target`; the trigger's `input` also carries a `mailbox`/`calendar` ref
- * purely so that query can find it. No-op if a routine with a `timer` trigger is already connected.
+ * Ensures a recurring sync {@link Routine} exists for `target` (a Mailbox or Calendar) and returns its
+ * timer trigger — the existing one if a routine is already connected, otherwise a freshly-created one:
+ * a local (`remote` unset) timer trigger, every 10 minutes, wired to `sync` — the connector's own sync
+ * operation, the same one `ConnectorOperation.SyncConnection` invokes directly — with `binding` bound
+ * to `cursor` (the target's external-sync {@link Cursor}). The routine is related to `target` by query
+ * ({@link connectedRoutinesQuery}, surfaced in the routines companion) rather than by an ownership
+ * field on `target`; the trigger's `input` also carries a `mailbox`/`calendar` ref purely so that query
+ * can find it.
  */
 export const createSyncRoutine = async ({
   db,
@@ -48,13 +49,13 @@ export const createSyncRoutine = async ({
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
   sync: Operation.Definition<SyncInput, SyncOutput>;
-}): Promise<void> => {
+}): Promise<Trigger.Trigger | undefined> => {
   const connected = await db.query(connectedRoutinesQuery(target)).run();
-  const hasSyncTrigger = connected.some((routine) =>
-    routine.triggers.some((ref) => ref.target?.spec?.kind === 'timer'),
-  );
-  if (hasSyncTrigger) {
-    return;
+  for (const routine of connected) {
+    const existingTrigger = routine.triggers.find((ref) => ref.target?.spec?.kind === 'timer')?.target;
+    if (existingTrigger) {
+      return existingTrigger;
+    }
   }
 
   const operation = await ensureOperationRecord(db, sync);
@@ -72,4 +73,5 @@ export const createSyncRoutine = async ({
   });
 
   db.add(routine);
+  return trigger;
 };

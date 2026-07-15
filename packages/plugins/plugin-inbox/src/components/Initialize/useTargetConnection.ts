@@ -5,13 +5,15 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker, useSpaceCallback } from '@dxos/app-framework/ui';
-import { type Operation, Trigger, type TriggerEvent } from '@dxos/compute';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { useCapabilities, useSpaceCallback } from '@dxos/app-framework/ui';
+import { Trigger, type TriggerEvent } from '@dxos/compute';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, Connector, type ConnectorEntry, isCursorForTarget } from '@dxos/plugin-connector';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { useQuery } from '@dxos/react-client/echo';
+
+import { createSyncRoutine, findBindingForTarget } from '../../util';
 
 /**
  * Find the {@link Connection} bound to the given `target` object via an external-sync
@@ -75,13 +77,22 @@ const useSyncTimerTrigger = <T extends Obj.Any>(
   }, [routines, allTriggers, targetUri]);
 };
 
+/** The {@link ConnectorEntry} backing `connection`, resolved from the registered {@link Connector} capability list. */
+export const useConnectorEntry = (connection: Connection.Connection | undefined): ConnectorEntry | undefined => {
+  const connectorEntries = useCapabilities(Connector);
+  return useMemo(
+    () => connectorEntries.flat().find((entry) => entry.id === connection?.connectorId),
+    [connectorEntries, connection],
+  );
+};
+
 /**
- * Build a `sync` callback for `target`: when a sync timer trigger exists for `target`, force-runs it
- * via {@link Trigger.TriggerMonitorService.invokeTrigger} (edge or local, per the trigger's own
- * `remote` flag — the monitor decides, not this hook); otherwise resolves the bound {@link Connection}
- * and invokes {@link ConnectorOperation.SyncConnection} directly — the same shared fan-out handler the
- * connection settings' "Sync now" and the mailbox node's context-menu action use, for connectors with
- * no deployed sync trigger (JMAP, Contacts).
+ * Build a `sync` callback for `target`: force-runs its sync timer trigger via
+ * {@link Trigger.TriggerMonitorService.invokeTrigger} (edge or local, per the trigger's own `remote`
+ * flag — the monitor decides, not this hook) — invoking the trigger *is* how a target syncs, replacing
+ * a direct `ConnectorOperation.SyncConnection` call. If `target` has no sync trigger yet (e.g. it was
+ * bound before this mechanism existed), creates one first via {@link createSyncRoutine} — the same
+ * routine bind-time auto-creation and the properties-panel toggle set up — then invokes it.
  *
  * No in-flight flag: callers that have a live progress monitor for `target` (e.g. `MailboxArticle`'s
  * `syncProgress`) should disable their own "Sync" action while it reports `running`, which already
@@ -94,46 +105,49 @@ const useSyncTimerTrigger = <T extends Obj.Any>(
  */
 export const useTargetSync = <T extends Obj.Any>(
   target: T,
-  notify?: Operation.NotifyOptions,
 ): {
   connection: Connection.Connection | undefined;
   sync: () => Promise<void>;
 } => {
   const { connection } = useTargetConnection(target);
   const db = Obj.getDatabase(target);
-  const { invokePromise } = useOperationInvoker();
   const syncTrigger = useSyncTimerTrigger(db, target);
+  const connector = useConnectorEntry(connection);
 
-  const invokeSyncTrigger = useSpaceCallback(
+  const ensureAndInvokeSyncTrigger = useSpaceCallback(
     db?.spaceId,
     [Trigger.TriggerMonitorService],
     Effect.fnUntraced(function* () {
-      if (!syncTrigger) {
+      if (!db) {
         return;
       }
+      let trigger = syncTrigger;
+      const syncOperation = connector?.sync;
+      if (!trigger) {
+        if (!syncOperation) {
+          return;
+        }
+        const cursor = yield* findBindingForTarget(target).pipe(Effect.provide(Database.layer(db)));
+        if (!cursor) {
+          return;
+        }
+        trigger = yield* Effect.promise(() => createSyncRoutine({ db, target, cursor, sync: syncOperation }));
+        if (!trigger) {
+          return;
+        }
+      }
       const monitor = yield* Trigger.TriggerMonitorService;
-      yield* monitor.invokeTrigger({
-        trigger: syncTrigger,
-        event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent,
-      });
+      yield* monitor.invokeTrigger({ trigger, event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent });
     }),
-    [syncTrigger],
+    [db, syncTrigger, connector, target],
   );
 
   const sync = useCallback(async () => {
     if (!connection) {
       return;
     }
-    if (syncTrigger) {
-      await invokeSyncTrigger();
-      return;
-    }
-    await invokePromise(
-      ConnectorOperation.SyncConnection,
-      { connection: Ref.make(connection) },
-      { spaceId: db?.spaceId, notify },
-    );
-  }, [invokePromise, connection, db, notify, syncTrigger, invokeSyncTrigger]);
+    await ensureAndInvokeSyncTrigger();
+  }, [connection, ensureAndInvokeSyncTrigger]);
 
   return { connection, sync };
 };

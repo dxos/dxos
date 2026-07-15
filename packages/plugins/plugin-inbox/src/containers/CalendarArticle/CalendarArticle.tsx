@@ -45,10 +45,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const calendarRef = useRef<CalendarController>(null);
   const eventStackRef = useRef<MosaicScrollController>(null);
   // Syncing drafts (and the pull "Sync" toolbar action) require a connection bound to this calendar.
-  const { connection, sync } = useTargetSync(subject, {
-    success: ['sync-calendar-success.title', { ns: meta.profile.key }],
-    error: ['sync-calendar-error.title', { ns: meta.profile.key }],
-  });
+  const { connection, sync } = useTargetSync(subject);
 
   const feed = calendar.feed?.target;
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented

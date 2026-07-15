@@ -68,7 +68,7 @@ describe('createSyncRoutine', () => {
 
     const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
     const cursor = makeCursor(db, mailbox);
-    await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
+    const created = await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
     await db.flush();
 
     await expect.poll(() => findSyncRoutine(db, mailbox), { timeout: 5_000 }).toHaveLength(1);
@@ -79,6 +79,7 @@ describe('createSyncRoutine', () => {
     expect(trigger?.enabled).toBe(true);
     expect(trigger?.input?.mailbox?.uri).toBe(db.makeRef(Obj.getURI(mailbox)).uri);
     expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
+    expect(created?.id).toBe(trigger?.id);
   });
 
   test('creates a routine keyed by `calendar` for a calendar target', async ({ expect }) => {
@@ -103,13 +104,15 @@ describe('createSyncRoutine', () => {
 
     const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
     const cursor = makeCursor(db, mailbox);
-    await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
+    const first = await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
     await db.flush();
     await expect.poll(() => findSyncRoutine(db, mailbox), { timeout: 5_000 }).toHaveLength(1);
 
-    await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
+    const second = await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
     await db.flush();
 
     expect(await findSyncRoutine(db, mailbox)).toHaveLength(1);
+    // The second call returns the same, pre-existing trigger rather than creating another.
+    expect(second?.id).toBe(first?.id);
   });
 });

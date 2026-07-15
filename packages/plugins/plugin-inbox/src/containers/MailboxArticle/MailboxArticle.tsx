@@ -71,10 +71,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const showItem = useShowItem();
   const runAction = useActionRunner();
   // Pull "Sync" toolbar action once a connection is bound to this mailbox.
-  const { connection, sync } = useTargetSync(mailbox, {
-    success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
-    error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
-  });
+  const { connection, sync } = useTargetSync(mailbox);
 
   // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
   // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
@@ -84,6 +81,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  // Derived from the same monitor atom the meter reads (not the already-subscribed `syncProgress`
+  // value above) so the menu builder can track it via `get()` — a plain boolean prop wouldn't be
+  // reactive within the builder's own atom-driven update path.
+  const syncProgressAtom = progressRegistry?.monitorAtom(createSyncProgressKey(mailbox));
+  const syncing = useMemo(
+    () =>
+      syncProgressAtom ? Atom.map(syncProgressAtom, (task) => task?.status === 'running') : Atom.make(() => false),
+    [syncProgressAtom],
+  );
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -317,7 +323,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     sync,
     // Same monitor as the statusbar meter (`syncProgress`, above): true for the whole duration of a
     // sync, whether kicked off by this toolbar action or independently by the routine's timer trigger.
-    syncing: syncProgress?.status === 'running',
+    syncing,
   });
 
   return (
@@ -456,8 +462,8 @@ type MailboxActionsOptions = {
   /** Bound connection (drives the own pull-"Sync" action). */
   connection?: Connection.Connection;
   sync: () => Promise<void>;
-  /** Whether the mailbox's sync progress monitor is currently running (see `syncProgress` above). */
-  syncing: boolean;
+  /** Derived from the mailbox's sync progress monitor (see `syncing` above); read via `get()`. */
+  syncing: Atom.Atom<boolean>;
 };
 
 const useMailboxActions = (
@@ -541,14 +547,15 @@ const useMailboxActions = (
 
       // Own action: pull-sync from the provider once connected.
       if (connection) {
+        const isSyncing = get(syncing);
         builder.action(
           'sync',
           {
             label: ['sync-mailbox.label', { ns: meta.profile.key }],
-            icon: syncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+            icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
             variant: 'primary',
             iconOnly: false,
-            disabled: syncing,
+            disabled: isSyncing,
           },
           () => {
             void sync();
