@@ -9,6 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
+import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector/types';
 import { Panel } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
@@ -124,22 +125,32 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
     if (!publisher || !connection || !selectedDraft) {
       return;
     }
-    await invokePromise(BloggerOperation.PublishDraft, {
-      draft: Ref.make(selectedDraft),
-      connection: Ref.make(connection),
-      publisherId: publisher.id,
-    });
+    try {
+      await invokePromise(BloggerOperation.PublishDraft, {
+        draft: Ref.make(selectedDraft),
+        connection: Ref.make(connection),
+        publisherId: publisher.id,
+      });
+    } catch (error) {
+      // The publisher call hits an external API (rate limits, auth, network); surface via the log.
+      log.error('failed to publish draft', { error });
+    }
   }, [invokePromise, publisher, connection, selectedDraft]);
 
   const handleImport = useCallback(async () => {
     if (!publisher || !connection) {
       return;
     }
-    await invokePromise(BloggerOperation.ImportDrafts, {
-      post: Ref.make(subject),
-      connection: Ref.make(connection),
-      publisherId: publisher.id,
-    });
+    try {
+      await invokePromise(BloggerOperation.ImportDrafts, {
+        post: Ref.make(subject),
+        connection: Ref.make(connection),
+        publisherId: publisher.id,
+      });
+    } catch (error) {
+      // The publisher call hits an external API (rate limits, auth, network); surface via the log.
+      log.error('failed to import drafts', { error });
+    }
   }, [invokePromise, publisher, connection, subject]);
 
   const menuActions = useMenuBuilder(
