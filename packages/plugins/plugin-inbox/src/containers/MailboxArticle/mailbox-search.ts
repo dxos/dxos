@@ -41,3 +41,8 @@ export const buildMailboxSelection = (filterText: string, filter: Filter.Any | u
   }
   return Filter.and(base, filter);
 };
+
+/** The free-text term from a parsed filter (the first text-search node), or undefined. */
+export const getSearchText = (filter: Filter.Any | undefined): string | undefined => {
+  return filter && findTextSearch(filter.ast)?.text;
+};

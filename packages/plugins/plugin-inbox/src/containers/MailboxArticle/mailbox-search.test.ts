@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { QueryBuilder } from '@dxos/echo-query';
 
-import { buildMailboxSelection } from './mailbox-search';
+import { buildMailboxSelection, getSearchText } from './mailbox-search';
 
 describe('buildMailboxSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
@@ -26,5 +26,22 @@ describe('buildMailboxSelection', () => {
     const text = 'from:alice@example.com';
     const selection = buildMailboxSelection(text, build(text));
     expect(selection.ast.type).toBe('and');
+  });
+});
+
+describe('getSearchText', () => {
+  const build = (text: string) => new QueryBuilder({}).build(text).filter;
+
+  test('free text returns the term', () => {
+    const text = 'invoice';
+    expect(getSearchText(build(text))).toBe(text);
+  });
+
+  test('structural-only filter returns undefined', () => {
+    expect(getSearchText(build('from:alice@example.com'))).toBeUndefined();
+  });
+
+  test('undefined filter returns undefined', () => {
+    expect(getSearchText(undefined)).toBeUndefined();
   });
 });

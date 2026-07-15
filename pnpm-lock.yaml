@@ -11995,6 +11995,9 @@ importers:
       '@dxos/react-ui-rdf':
         specifier: workspace:*
         version: link:../../ui/react-ui-rdf
+      '@dxos/react-ui-search':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table

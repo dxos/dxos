@@ -164,6 +164,9 @@
       "path": "../../ui/react-ui-rdf"
     },
     {
+      "path": "../../ui/react-ui-search"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {

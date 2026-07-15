@@ -11,7 +11,8 @@ import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { type Message } from '@dxos/types';
+import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
+import { Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';
 
@@ -90,6 +91,8 @@ export type MessageStackProps = {
   enableIgnoreSender?: boolean;
   /** Show the "Create Topic" tile menu item. Off by default (only the mailbox handles `create-topic`). */
   enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, tiles render a highlighted best-match snippet instead of the default preview. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
@@ -107,6 +110,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       pagination,
       enableIgnoreSender,
       enableCreateTopic,
+      searchQuery,
       onAction,
       ...props
     },
@@ -127,6 +131,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   starredAtom: starredAtom?.(item.messages[0]?.id),
                   enableIgnoreSender,
                   enableCreateTopic,
+                  searchQuery,
                   onAction,
                 }
               : {
@@ -135,10 +140,11 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   starredAtom: starredAtom?.(item.id),
                   enableIgnoreSender,
                   enableCreateTopic,
+                  searchQuery,
                   onAction,
                 },
         ),
-      [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, onAction],
+      [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction],
     );
 
     // The incoming `currentId` is a message ID (set when a specific message becomes selected),
@@ -262,13 +268,15 @@ type MessageTileData = {
   starredAtom?: Atom.Atom<boolean>;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, the tile renders a highlighted best-match snippet. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, onAction } = data;
+  const { message, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
@@ -346,7 +354,13 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
         {snippet && (
           <Card.Row>
-            <Card.Text variant='description'>{snippet}</Card.Text>
+            <Card.Text variant='description'>
+              {searchQuery ? (
+                <Highlighted text={buildSnippet(Message.extractText(message), searchQuery)} query={searchQuery} />
+              ) : (
+                snippet
+              )}
+            </Card.Text>
           </Card.Row>
         )}
 
@@ -370,6 +384,8 @@ type ConversationTileData = {
   starredAtom?: Atom.Atom<boolean>;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, each message's snippet renders a highlighted best-match. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
@@ -377,7 +393,8 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, total, starredAtom, enableIgnoreSender, enableCreateTopic, onAction } = data;
+    const { conversationId, messages, total, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction } =
+      data;
     const latest = messages[0];
     // `messages` is already the capped preview; `total` (when larger) is the full thread size.
     const remaining = total !== undefined ? total - messages.length : 0;
@@ -472,7 +489,14 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
 
                   {snippet && (
                     <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
-                      {snippet}
+                      {searchQuery ? (
+                        <Highlighted
+                          text={buildSnippet(Message.extractText(message), searchQuery)}
+                          query={searchQuery}
+                        />
+                      ) : (
+                        snippet
+                      )}
                     </button>
                   )}
                 </div>

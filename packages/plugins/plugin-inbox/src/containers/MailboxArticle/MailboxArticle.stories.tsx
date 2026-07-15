@@ -192,5 +192,11 @@ export const SearchFilter: Story = {
     // without erroring.
     await waitFor(() => expect(getTileCount()).toBe(1), { timeout: 5_000 });
     await expect(canvas.getByText(`${SEARCH_TERM} subject`)).toBeInTheDocument();
+
+    // The narrowed tile's snippet is now the best-match window with the query term highlighted
+    // (`Highlighted` wraps matches in `<mark>`), replacing the default `properties.snippet` preview.
+    const marks = canvasElement.querySelectorAll('mark');
+    const matchingMark = Array.from(marks).find((mark) => mark.textContent?.toLowerCase() === SEARCH_TERM);
+    await expect(matchingMark).toBeTruthy();
   },
 };
