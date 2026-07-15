@@ -127,8 +127,8 @@ export const runGmailSync = ({
     // `before` = oldest-synced → backfill older gaps (never advances the monotonic cursor).
     const {
       direction: resolvedDirection,
-      start: rangeStart,
-      end: upperBound,
+      start,
+      end: rangeEnd,
     } = Cursor.resolveWindow({
       cursorKey,
       now: new Date(),
@@ -137,8 +137,6 @@ export const runGmailSync = ({
       direction,
       syncBackDays: targetOptions.syncBackDays,
     });
-    const rangeEnd = upperBound;
-    const start = rangeStart;
     log('syncing gmail', {
       mailbox: Obj.getURI(mailbox),
       userId,

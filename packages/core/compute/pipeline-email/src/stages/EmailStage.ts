@@ -47,7 +47,8 @@ export type Mapped = {
   readonly message: Message.Message;
   readonly foreignId: string;
   readonly key: number;
-  readonly tagUris: readonly string[];
+  /** Provider label/folder tag URIs to apply on commit; omit for providers/stages that don't tag. */
+  readonly tagUris?: readonly string[];
   /** Attachments fetched by a provider-specific stage upstream of {@link processAttachments}. */
   readonly attachments?: readonly Attachment[];
   /** Contact resolved by {@link extractContacts}, added to the database by {@link toCommitUnit}. */
@@ -264,7 +265,7 @@ export const toCommitUnit = (
         );
       }
 
-      if (tagIndex && mapped.tagUris.length > 0) {
+      if (tagIndex && mapped.tagUris?.length) {
         tagUrisByObject.set(mapped.message, mapped.tagUris);
         commitEffects.push(applyTags);
       }
