@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useSpaceCallback } from '@dxos/app-framework/ui';
@@ -117,28 +118,36 @@ export const useTargetSync = <T extends Obj.Any>(
   const ensureAndInvokeSyncTrigger = useSpaceCallback(
     db?.spaceId,
     [Trigger.TriggerMonitorService],
-    Effect.fnUntraced(function* () {
-      if (!db) {
-        return;
-      }
-      let trigger = syncTrigger;
-      const syncOperation = connector?.sync;
-      if (!trigger) {
-        if (!syncOperation) {
-          return;
-        }
-        const cursor = yield* findBindingForTarget(target).pipe(Effect.provide(Database.layer(db)));
-        if (!cursor) {
-          return;
-        }
-        trigger = yield* Effect.promise(() => createSyncRoutine({ db, target, cursor, sync: syncOperation }));
-        if (!trigger) {
-          return;
-        }
-      }
-      const monitor = yield* Trigger.TriggerMonitorService;
-      yield* monitor.invokeTrigger({ trigger, event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent });
-    }),
+    Effect.fnUntraced(
+      function* () {
+        const database = yield* Effect.fromNullable(db);
+        // Reuse the existing sync trigger; otherwise resolve the connector's `sync` operation and the
+        // bound cursor and create one (the same path bind-time auto-creation and the properties-panel
+        // toggle use). Any missing value along either path (no db/connector/cursor/creation result)
+        // short-circuits via `Effect.fromNullable`'s `NoSuchElementException`, caught below as a no-op.
+        const trigger = yield* Option.fromNullable(syncTrigger).pipe(
+          Option.match({
+            onSome: Effect.succeed,
+            onNone: () =>
+              Effect.fromNullable(connector?.sync).pipe(
+                Effect.flatMap((sync) =>
+                  findBindingForTarget(target).pipe(
+                    Effect.provide(Database.layer(database)),
+                    Effect.flatMap(Effect.fromNullable),
+                    Effect.flatMap((cursor) =>
+                      Effect.promise(() => createSyncRoutine({ db: database, target, cursor, sync })),
+                    ),
+                    Effect.flatMap(Effect.fromNullable),
+                  ),
+                ),
+              ),
+          }),
+        );
+        const monitor = yield* Trigger.TriggerMonitorService;
+        yield* monitor.invokeTrigger({ trigger, event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent });
+      },
+      Effect.catchTag('NoSuchElementException', () => Effect.void),
+    ),
     [db, syncTrigger, connector, target],
   );
 
