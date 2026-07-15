@@ -162,15 +162,7 @@ export const PreviewComponent = ({ view, range, space, dxn, label: labelProp, on
   const objectIcon = Obj.getIcon(subject);
 
   // TODO(burdon): Determine if card or entire document from annotation? GFM?
-  // TODO(burdon0: Different role: move wrapper below into role?
-  const simple = true;
-  if (simple) {
-    return (
-      <div className='flex justify-center'>
-        <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
-      </div>
-    );
-  }
+  // TODO(burdon): Different role: move wrapper below into role?
 
   // Frame transcluded block embeds so they read as a self-contained card within the document flow.
   // The clip/border live on an inner element so they don't clip the resize handle (which straddles the
