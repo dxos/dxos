@@ -54,11 +54,7 @@ const TYPES = [
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
 const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
 
-type DecoratorOptions = {
-  trigger?: boolean;
-};
-
-const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
+const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
@@ -85,7 +81,9 @@ const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
       DebugPlugin({}),
       PreviewPlugin(),
       ProgressPlugin(),
-      ...(trigger ? [RoutinePlugin()] : []),
+      // Required for the auto-created sync Routine's timer trigger to actually run — without it,
+      // the trigger dispatcher/monitor aren't resolvable and the toolbar "Sync" button would fail.
+      RoutinePlugin(),
       StorySyncPlugin(),
       StoryModulesPlugin(),
       StorybookPlugin({}),
@@ -107,7 +105,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
   component: DefaultStory,
-  decorators: createDecorators(),
+  decorators: DECORATORS,
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -121,12 +119,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: DefaultStory,
-};
-
-export const WithSyncTrigger: Story = {
-  render: DefaultStory,
-  decorators: createDecorators({ trigger: true }),
-  args: {
-    batch: 10,
-  },
 };
