@@ -3,15 +3,17 @@
 //
 
 import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Option from 'effect/Option';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, Mutex, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesHandlers,
@@ -20,9 +22,30 @@ import {
 } from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
+import { failUndefined, warnAfterTimeout } from '@dxos/debug';
+import {
+  type AutomergeReplicator,
+  type EchoHost,
+  EchoHostService,
+  type EdgeAutomergeReplicator,
+  EdgeAutomergeReplicatorService,
+  MeshEchoReplicatorService,
+  runSqliteHealthCheck,
+} from '@dxos/echo-host';
+import {
+  EdgeClient,
+  type EdgeConnection,
+  EdgeHttpClient,
+  type EdgeIdentity,
+  createChainEdgeIdentity,
+  createEphemeralEdgeIdentity,
+  createStubEdgeIdentity,
+} from '@dxos/edge-client';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
+import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -32,20 +55,52 @@ import {
   createIceProvider,
   createRtcTransportFactory,
 } from '@dxos/network-manager';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
+import { Invitation, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
+import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
   type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
 } from '../diagnostics';
+import {
+  type CreateIdentityOptions,
+  type Identity,
+  type IdentityManager,
+  IdentityManagerService,
+  type JoinIdentityProps,
+} from '../identity';
+import {
+  type EdgeIdentityRecoveryManager,
+  EdgeIdentityRecoveryManagerService,
+} from '../identity/identity-recovery-manager';
+import {
+  DeviceInvitationProtocol,
+  type InvitationProtocol,
+  type InvitationsHandler,
+  InvitationsHandlerService,
+  type InvitationsManager,
+  InvitationsManagerService,
+  SpaceInvitationProtocol,
+} from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata';
+import { type SpaceManager, SpaceManagerService } from '../space';
+import {
+  type DataSpaceManager,
+  DataSpaceManagerService,
+  type SigningContextProvider,
+  SigningContextProviderService,
+} from '../spaces';
 import { SystemServiceImpl } from '../system';
 import {
   type ClientServicesRpcContext,
@@ -62,10 +117,15 @@ import {
   SpacesServiceRpc,
 } from './client-services-layer';
 import {
-  ServiceContext,
+  type CrossDeviceSpaceSynchronizer,
+  CrossDeviceSpaceSynchronizerService,
+} from './cross-device-space-synchronizer';
+import { type FeedSyncer, FeedSyncerService } from './feed-syncer';
+import {
   ServiceContextLayer,
   type ServiceContextRuntimeProps,
-  ServiceContextService,
+  type ServiceContextStackContext,
+  StorageMigrationService,
 } from './service-context';
 
 export type ClientServicesHostProps = {
@@ -93,8 +153,20 @@ export type InitializeOptions = {
   connectionLog?: boolean;
 };
 
+// Alias for consumers (tests, devtools, diagnostics) that referred to the former `ServiceContext`
+// orchestrator; its lifecycle and API now live on {@link ClientServicesHost} directly.
+export type ServiceContext = ClientServicesHost;
+
 /**
- * Remote service implementation.
+ * Shared backend for all client services.
+ *
+ * Owns the full client stack and its lifecycle: it builds the layer-composed components (keyring,
+ * feed store, echo host, identity/space managers, …) plus the client RPC handlers, then drives the
+ * open sequence (migrate → identity → network → space initialization) and teardown. It reads or
+ * creates the identity, propagates it outward (`_setNetworkIdentity`), and opens the identity-bound
+ * services once an identity is available (`_initialize`). The host provides itself into the stack
+ * (via {@link ClientServicesHostService}) so the RPC handler layers can resolve the orchestration
+ * entry points they need without a separate `ServiceContext` service.
  */
 export class ClientServicesHost {
   readonly #resourceLock?: ResourceLock;
@@ -113,8 +185,10 @@ export class ClientServicesHost {
   #edgeConnection?: EdgeConnection = undefined;
   #edgeHttpClient?: EdgeHttpClient = undefined;
 
-  #serviceContext!: ServiceContext;
-  #stackRuntime?: ManagedRuntime.ManagedRuntime<ServiceContextService | ClientServicesRpcContext, never>;
+  #stackRuntime?: ManagedRuntime.ManagedRuntime<
+    ClientServicesHostService | ClientServicesRpcContext | ServiceContextStackContext,
+    never
+  >;
   readonly #runtime: RuntimeProvider.RuntimeProvider<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
   >;
@@ -122,10 +196,34 @@ export class ClientServicesHost {
   #diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
   #opening = false;
-
   #open = false;
-
   #resetting = false;
+
+  // Stack components, resolved from the layer runtime on open. Present after `open` starts.
+  #ctx?: Context;
+  #metadataStore?: IMetadataStore;
+  #blobStore?: BlobStoreApi;
+  #keyring?: KeyringApi;
+  #feedStore?: FeedStore<any>;
+  #spaceManager?: SpaceManager;
+  #identityManager?: IdentityManager;
+  #recoveryManager?: EdgeIdentityRecoveryManager;
+  #invitations?: InvitationsHandler;
+  #invitationsManager?: InvitationsManager;
+  #echoHost?: EchoHost;
+  #signingContextProvider?: SigningContextProvider;
+  #dataSpaceManager?: DataSpaceManager;
+  #edgeAgentManager?: EdgeAgentManager;
+  #deviceSpaceSync?: CrossDeviceSpaceSynchronizer;
+  #meshReplicator?: AutomergeReplicator;
+  #echoEdgeReplicator?: EdgeAutomergeReplicator;
+  #feedSyncer?: FeedSyncer;
+  #storageMigrate?: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+
+  // Orchestration state (formerly on `ServiceContext`).
+  readonly #initialized = new Trigger();
+  readonly #edgeIdentityUpdateMutex = new Mutex();
+  readonly #handlerFactories = new Map<Invitation.Kind, (invitation: Partial<Invitation>) => InvitationProtocol>();
 
   constructor({
     config,
@@ -170,7 +268,7 @@ export class ClientServicesHost {
             makeInProcessClientServicesRpc(() => this.#handlers).pipe(Effect.provideService(Scope.Scope, scope)),
           );
           const services = makeServicesFromRpc(rpc, Runtime.defaultRuntime);
-          return await createDiagnostics(services, this.#serviceContext, this.#config!);
+          return await createDiagnostics(services, this, this.#config!);
         } finally {
           await EffectEx.runPromise(Scope.close(scope, Exit.void));
         }
@@ -203,12 +301,78 @@ export class ClientServicesHost {
     return this.#config;
   }
 
-  get context() {
-    return this.#serviceContext;
+  // Self-reference retained for the former `host.context` accessor.
+  get context(): ClientServicesHost {
+    return this;
   }
 
   get services() {
     return this.#handlers;
+  }
+
+  get initialized() {
+    return this.#initialized;
+  }
+
+  get identityManager(): IdentityManager {
+    return this.#identityManager ?? failUndefined();
+  }
+
+  get spaceManager(): SpaceManager {
+    return this.#spaceManager ?? failUndefined();
+  }
+
+  get metadataStore(): IMetadataStore {
+    return this.#metadataStore ?? failUndefined();
+  }
+
+  get blobStore(): BlobStoreApi {
+    return this.#blobStore ?? failUndefined();
+  }
+
+  get recoveryManager(): EdgeIdentityRecoveryManager {
+    return this.#recoveryManager ?? failUndefined();
+  }
+
+  get keyring(): KeyringApi {
+    return this.#keyring ?? failUndefined();
+  }
+
+  get feedStore(): FeedStore<any> {
+    return this.#feedStore ?? failUndefined();
+  }
+
+  get echoHost(): EchoHost {
+    return this.#echoHost ?? failUndefined();
+  }
+
+  get invitations(): InvitationsHandler {
+    return this.#invitations ?? failUndefined();
+  }
+
+  get invitationsManager(): InvitationsManager {
+    return this.#invitationsManager ?? failUndefined();
+  }
+
+  get networkManager(): SwarmNetworkManager {
+    return this.#networkManager ?? failUndefined();
+  }
+
+  get signalManager(): SignalManager {
+    return this.#signalManager ?? failUndefined();
+  }
+
+  // Present after the stack constructs it; usable once `initialized` wakes.
+  get dataSpaceManager(): DataSpaceManager | undefined {
+    return this.#dataSpaceManager;
+  }
+
+  get edgeAgentManager(): EdgeAgentManager | undefined {
+    return this.#edgeAgentManager;
+  }
+
+  get edgeConnection(): EdgeConnection | undefined {
+    return this.#edgeConnection;
   }
 
   /**
@@ -256,11 +420,6 @@ export class ClientServicesHost {
       this.#config = config;
     }
 
-    // TODO(wittjosiah): This is quite noisy during tests. Make configurable? Remove?
-    if (!options.signalManager) {
-      // log.warn('running signaling without telemetry metadata.');
-    }
-
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
       const clientTag = resolveTelemetryTag(config);
@@ -299,7 +458,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async open(ctx: Context): Promise<void> {
+  async open(ctx: Context = new Context()): Promise<void> {
     if (this.#open) {
       return;
     }
@@ -314,15 +473,17 @@ export class ClientServicesHost {
     const networkManager = this.#networkManager;
 
     this.#opening = true;
+    this.#ctx = ctx;
     log('opening...', { lockKey: this.#resourceLock?.lockKey });
 
     await this.#resourceLock?.acquire();
 
     await this.#loggingService.open();
 
-    // Build a single runtime from the ServiceContext layer stack plus the client RPC service
-    // handlers layered on top, then resolve the orchestrator and every handler from it.
+    // Build a single runtime from the component layer stack plus the client RPC handlers, providing
+    // the host itself so the handler layers can resolve their orchestration entry points.
     const stackLayer = ClientServicesRpcLayer.pipe(
+      Layer.provideMerge(Layer.succeed(ClientServicesHostService, this)),
       Layer.provideMerge(
         ServiceContextLayer({
           ...this.#runtimeProps,
@@ -339,7 +500,26 @@ export class ClientServicesHost {
     this.#stackRuntime = ManagedRuntime.make(stackLayer);
     const resolved = await this.#stackRuntime.runPromise(
       Effect.all({
-        serviceContext: ServiceContextService,
+        // Components.
+        metadataStore: IMetadataStoreService,
+        blobStore: BlobStoreApiService,
+        keyring: KeyringApiService,
+        feedStore: FeedStoreService,
+        spaceManager: SpaceManagerService,
+        identityManager: IdentityManagerService,
+        recoveryManager: EdgeIdentityRecoveryManagerService,
+        invitations: InvitationsHandlerService,
+        invitationsManager: InvitationsManagerService,
+        echoHost: EchoHostService,
+        signingContextProvider: SigningContextProviderService,
+        dataSpaceManager: DataSpaceManagerService,
+        edgeAgentManager: EdgeAgentManagerService,
+        deviceSpaceSync: CrossDeviceSpaceSynchronizerService,
+        storageMigrate: StorageMigrationService,
+        meshReplicator: Effect.serviceOption(MeshEchoReplicatorService),
+        echoEdgeReplicator: Effect.serviceOption(EdgeAutomergeReplicatorService),
+        feedSyncer: Effect.serviceOption(FeedSyncerService),
+        // Handlers.
         identityService: IdentityServiceRpc,
         contactsService: ContactsServiceRpc,
         invitationsService: InvitationsServiceRpc,
@@ -352,43 +532,80 @@ export class ClientServicesHost {
         feedService: FeedServiceRpc,
       }),
     );
-    this.#serviceContext = resolved.serviceContext;
-    const identityService = resolved.identityService;
 
+    this.#metadataStore = resolved.metadataStore;
+    this.#blobStore = resolved.blobStore;
+    this.#keyring = resolved.keyring;
+    this.#feedStore = resolved.feedStore;
+    this.#spaceManager = resolved.spaceManager;
+    this.#identityManager = resolved.identityManager;
+    this.#recoveryManager = resolved.recoveryManager;
+    this.#invitations = resolved.invitations;
+    this.#invitationsManager = resolved.invitationsManager;
+    this.#echoHost = resolved.echoHost;
+    this.#signingContextProvider = resolved.signingContextProvider;
+    this.#dataSpaceManager = resolved.dataSpaceManager;
+    this.#edgeAgentManager = resolved.edgeAgentManager;
+    this.#deviceSpaceSync = resolved.deviceSpaceSync;
+    this.#storageMigrate = resolved.storageMigrate;
+    this.#meshReplicator = Option.getOrUndefined(resolved.meshReplicator);
+    this.#echoEdgeReplicator = Option.getOrUndefined(resolved.echoEdgeReplicator);
+    this.#feedSyncer = Option.getOrUndefined(resolved.feedSyncer);
+
+    // Wire the setters for components that point "up the stack".
+    this.#handlerFactories.set(
+      Invitation.Kind.DEVICE,
+      () =>
+        new DeviceInvitationProtocol(
+          this.#keyring!,
+          () => this.#identityManager!.identity ?? failUndefined(),
+          this._acceptIdentity.bind(this),
+        ),
+    );
+    this.#recoveryManager.setAcceptRecoveredIdentity((params) => this._acceptIdentity(params));
+    this.#invitationsManager.setInvitationHandlerFactory((invitation) => this.getInvitationHandler(invitation));
+    this.#echoHost.setFeedSyncHandlers({
+      syncFeed: async (feedSyncCtx, request) =>
+        this.#feedSyncer?.syncBlocking(feedSyncCtx, {
+          spaceId: request.spaceId as SpaceId,
+          subspaceTag: request.subspaceTag,
+          shouldPush: request.shouldPush,
+          shouldPull: request.shouldPull,
+        }),
+      getSyncState: async (feedSyncCtx, request) => {
+        if (!this.#feedSyncer) {
+          return { namespaces: [] };
+        }
+        return this.#feedSyncer.getSyncState(feedSyncCtx, request);
+      },
+    });
+
+    const identityService = resolved.identityService;
     this.#handlers = {
       SystemService: this.#systemService,
       IdentityService: identityService,
       ContactsService: resolved.contactsService,
-
       InvitationsService: resolved.invitationsService,
-
       DevicesService: resolved.devicesService,
-
       SpacesService: resolved.spacesService,
-
       DataService: resolved.dataService,
       QueryService: resolved.queryService,
       FeedService: resolved.feedService,
-
       NetworkService: resolved.networkService,
-
       LoggingService: this.#loggingService,
-
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),
         config: this.#config,
-        context: this.#serviceContext,
+        context: this,
         exportSqliteDatabase: () => this.exportSqliteDatabase(),
         runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
       }),
-
       EdgeAgentService: resolved.edgeAgentService,
     };
 
-    log('service-host: opening service context...');
-    await this.#serviceContext.open(ctx);
-    log('service-host: service context opened');
+    // Run the open lifecycle stages (formerly ServiceContext._open).
+    await this._openStack(ctx);
 
     log('service-host: opening identity service...');
     await identityService.open();
@@ -406,24 +623,24 @@ export class ClientServicesHost {
     this.#opening = false;
     this.#open = true;
     this.#statusUpdate.emit();
-    const deviceKey = this.#serviceContext.identityManager.identity?.deviceKey;
+    const deviceKey = this.#identityManager?.identity?.deviceKey;
     log('opened', { deviceKey });
   }
 
   @synchronized
   @Trace.span()
-  async close(ctx: Context): Promise<void> {
+  async close(ctx: Context = Context.default()): Promise<void> {
     if (!this.#open) {
       return;
     }
 
-    const deviceKey = this.#serviceContext.identityManager.identity?.deviceKey;
+    const deviceKey = this.#identityManager?.identity?.deviceKey;
     log('closing...', { deviceKey });
     this.#diagnosticsBroadcastHandler.stop();
     await this.#devtoolsProxy?.close();
     this.#handlers = { SystemService: this.#systemService };
     await this.#loggingService.close();
-    await this.#serviceContext.close();
+    await this._closeStack(ctx);
     await this.#stackRuntime?.dispose();
     this.#stackRuntime = undefined;
     this.#open = false;
@@ -437,7 +654,9 @@ export class ClientServicesHost {
     // This state is never cleared because the app reloads.
     this.#resetting = true;
     this.#statusUpdate.emit();
-    await this.#serviceContext?.close();
+    if (this.#open) {
+      await this._closeStack(this.#ctx ?? Context.default());
+    }
     // Wipe all SQLite tables so next open starts fresh.
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
@@ -471,11 +690,238 @@ export class ClientServicesHost {
     log.info('reset');
     await this.#callbacks?.onReset?.();
   }
+
+  //
+  // Orchestration (formerly ServiceContext).
+  //
+
+  async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
+    ctx ??= this.#ctx ?? Context.default();
+    const identity = await this.identityManager.createIdentity(params, ctx);
+    await this._setNetworkIdentity({ identity });
+    await identity.joinNetwork(ctx);
+    await this._initialize(ctx);
+    return identity;
+  }
+
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+    if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
+      throw new Error('Identity must be created before joining a space.');
+    }
+    const factory = this.#handlerFactories.get(invitation.kind);
+    invariant(factory, `Unknown invitation kind: ${invitation.kind}`);
+    return factory(invitation);
+  }
+
+  async broadcastProfileUpdate(profile: ProfileDocument | undefined): Promise<void> {
+    if (!profile || !this.#dataSpaceManager) {
+      return;
+    }
+    for (const space of this.#dataSpaceManager.spaces.values()) {
+      await space.updateOwnProfile(profile);
+    }
+  }
+
+  /**
+   * Resolves the {@link DataSpaceManager} once identity-bound services have opened (`initialized`).
+   */
+  async whenDataSpaceManagerReady(): Promise<DataSpaceManager> {
+    await this.#initialized.wait();
+    return this.#dataSpaceManager ?? failUndefined();
+  }
+
+  /**
+   * Resolves the {@link EdgeAgentManager} once identity-bound services have opened (`initialized`).
+   */
+  async whenEdgeAgentManagerReady(): Promise<EdgeAgentManager> {
+    await this.#initialized.wait();
+    return this.#edgeAgentManager ?? failUndefined();
+  }
+
+  private async _acceptIdentity(params: JoinIdentityProps): Promise<Identity> {
+    const ctx = this.#ctx ?? Context.default();
+    const { identity, identityRecord } = await this.identityManager.prepareIdentity(params, ctx);
+    await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential!, identity });
+    await identity.joinNetwork(ctx);
+    await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
+    await this._initialize(ctx);
+    return identity;
+  }
+
+  private async _checkStorageVersion(): Promise<void> {
+    await this.metadataStore.load();
+    if (this.metadataStore.version !== STORAGE_VERSION) {
+      throw new InvalidStorageVersionError(STORAGE_VERSION, this.metadataStore.version);
+      // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
+    }
+  }
+
+  /**
+   * Opens the identity-bound services once an identity is available.
+   */
+  @Trace.span()
+  private async _initialize(ctx: Context): Promise<void> {
+    log('_initialize: start');
+    const identity = this.identityManager.identity ?? failUndefined();
+
+    await this.#dataSpaceManager!.open(ctx);
+    log('_initialize: DataSpaceManager opened');
+
+    await this.#edgeAgentManager!.open(ctx);
+    log('_initialize: EdgeAgentManager opened');
+
+    this.#handlerFactories.set(
+      Invitation.Kind.SPACE,
+      (invitation) =>
+        new SpaceInvitationProtocol(
+          this.#dataSpaceManager!,
+          this.#signingContextProvider!(),
+          this.#keyring!,
+          invitation.spaceKey,
+        ),
+    );
+    this.#initialized.wake();
+
+    this.#deviceSpaceSync!.setIdentity(identity);
+    await this.#deviceSpaceSync!.open?.(ctx);
+  }
+
+  private async _setNetworkIdentity(params?: { deviceCredential?: Credential; identity?: Identity }): Promise<void> {
+    log('_setNetworkIdentity: acquiring mutex...');
+    using _ = await this.#edgeIdentityUpdateMutex.acquire();
+    log('_setNetworkIdentity: mutex acquired');
+
+    let edgeIdentity: EdgeIdentity;
+    const identity = params?.identity;
+    if (identity) {
+      if (params?.deviceCredential) {
+        edgeIdentity = await createChainEdgeIdentity(
+          identity.signer,
+          identity.identityKey,
+          identity.deviceKey,
+          { credential: params.deviceCredential },
+          [], // TODO(dmaretskyi): Service access credentials.
+        );
+      } else {
+        // TODO: throw here or from identity if device chain can't be loaded, to avoid indefinite hangup
+        await warnAfterTimeout(10_000, 'Waiting for identity to be ready for edge connection', async () => {
+          await identity.ready();
+        });
+
+        invariant(identity.deviceCredentialChain);
+
+        edgeIdentity = await createChainEdgeIdentity(
+          identity.signer,
+          identity.identityKey,
+          identity.deviceKey,
+          identity.deviceCredentialChain,
+          [], // TODO(dmaretskyi): Service access credentials.
+        );
+      }
+    } else {
+      edgeIdentity = await createEphemeralEdgeIdentity();
+    }
+
+    this.#edgeConnection?.setIdentity(edgeIdentity);
+    this.#edgeHttpClient?.setIdentity(edgeIdentity);
+    this.networkManager.setPeerInfo({
+      identityDid: edgeIdentity.identityDid,
+      peerKey: edgeIdentity.peerKey,
+    });
+    log('_setNetworkIdentity: done');
+  }
+
+  /**
+   * Open lifecycle stages over the resolved stack components (formerly ServiceContext._open).
+   */
+  private async _openStack(ctx: Context): Promise<void> {
+    log('running storage migrations...');
+    await RuntimeProvider.runPromise(this.#runtime)(this.#storageMigrate!);
+
+    await this._checkStorageVersion();
+
+    log('running sqlite health check...');
+    await runSqliteHealthCheck(this.#runtime);
+    log('sqlite health check passed');
+
+    log('opening identityManager...');
+    await this.#identityManager!.open(ctx);
+    log('identityManager opened', { hasIdentity: !!this.#identityManager!.identity });
+
+    log('setting network identity...');
+    await this._setNetworkIdentity({ identity: this.#identityManager!.identity });
+
+    log('opening edge connection...');
+    await this.#edgeConnection?.open(ctx);
+
+    log('opening signal manager...');
+    await this.#signalManager!.open(ctx);
+
+    log('opening network manager...');
+    await this.#networkManager!.open();
+
+    // EchoHost open/close is owned by its layer scope; the host is already open here.
+    if (this.#meshReplicator) {
+      log('adding mesh replicator...');
+      await this.#echoHost!.addReplicator(ctx, this.#meshReplicator);
+    }
+    if (this.#echoEdgeReplicator) {
+      log('adding edge replicator...');
+      await this.#echoHost!.addReplicator(ctx, this.#echoEdgeReplicator);
+    }
+
+    log('loading metadata store...');
+    await this.#metadataStore!.load();
+
+    log('opening space manager...');
+    await this.#spaceManager!.open();
+
+    if (this.#identityManager!.identity) {
+      log('joining network...');
+      await this.#identityManager!.identity.joinNetwork(ctx);
+
+      log('initializing spaces...');
+      await this._initialize(ctx);
+    } else {
+      log('no identity, skipping network join and space initialization');
+    }
+
+    log('opening feed syncer...');
+    await this.#feedSyncer?.open(ctx);
+
+    log('loading persistent invitations...');
+    const loadedInvitations = await this.#invitationsManager!.loadPersistentInvitations(ctx);
+    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
+
+    log('stack opened');
+  }
+
+  /**
+   * Close lifecycle stages (formerly ServiceContext._close).
+   */
+  private async _closeStack(ctx: Context): Promise<void> {
+    log('closing stack...');
+    await this.#feedSyncer?.close();
+    await this.#deviceSpaceSync?.close?.();
+    await this.#dataSpaceManager?.close(ctx);
+    await this.#edgeAgentManager?.close();
+    await this.#identityManager?.close(ctx);
+    await this.#spaceManager?.close();
+    // EchoHost close is owned by its layer scope and runs when the runtime is disposed.
+
+    await this.#networkManager?.close(ctx);
+    await this.#signalManager?.close();
+    await this.#edgeConnection?.close();
+    await this.#feedStore?.close();
+    await this.#metadataStore?.close();
+    log('stack closed');
+  }
 }
 
 /**
- * Context tag for the {@link ClientServicesHost}. Lets Effect consumers resolve the host as a service
- * rather than threading a `new ClientServicesHost(...)` instance through constructors.
+ * Context tag for the {@link ClientServicesHost}. The host provides itself under this tag when it
+ * builds its component stack, so client RPC handler layers can resolve the orchestration entry
+ * points (`createIdentity`, readiness gates, …) they need.
  */
 export class ClientServicesHostService extends EffectContext.Tag('@dxos/client-services/ClientServicesHost')<
   ClientServicesHostService,
@@ -484,9 +930,7 @@ export class ClientServicesHostService extends EffectContext.Tag('@dxos/client-s
 
 /**
  * Layer that constructs a {@link ClientServicesHost} from its props and exposes it under
- * {@link ClientServicesHostService}. Host lifecycle (`open` / `close`) stays caller-driven — the host
- * is a long-lived resource whose open/close are gated on external locks — so this only owns
- * construction, matching how {@link WorkerRuntime} and {@link LocalClientServices} build the host today.
+ * {@link ClientServicesHostService}. Host lifecycle (`open` / `close`) stays caller-driven.
  */
 export const layerClientServicesHost = (props: ClientServicesHostProps): Layer.Layer<ClientServicesHostService> =>
   Layer.sync(ClientServicesHostService, () => new ClientServicesHost(props));
