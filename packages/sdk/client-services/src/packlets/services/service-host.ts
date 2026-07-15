@@ -3,6 +3,7 @@
 //
 
 import * as SqlClient from '@effect/sql/SqlClient';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -471,3 +472,21 @@ export class ClientServicesHost {
     await this.#callbacks?.onReset?.();
   }
 }
+
+/**
+ * Context tag for the {@link ClientServicesHost}. Lets Effect consumers resolve the host as a service
+ * rather than threading a `new ClientServicesHost(...)` instance through constructors.
+ */
+export class ClientServicesHostService extends EffectContext.Tag('@dxos/client-services/ClientServicesHost')<
+  ClientServicesHostService,
+  ClientServicesHost
+>() {}
+
+/**
+ * Layer that constructs a {@link ClientServicesHost} from its props and exposes it under
+ * {@link ClientServicesHostService}. Host lifecycle (`open` / `close`) stays caller-driven — the host
+ * is a long-lived resource whose open/close are gated on external locks — so this only owns
+ * construction, matching how {@link WorkerRuntime} and {@link LocalClientServices} build the host today.
+ */
+export const layerClientServicesHost = (props: ClientServicesHostProps): Layer.Layer<ClientServicesHostService> =>
+  Layer.sync(ClientServicesHostService, () => new ClientServicesHost(props));
