@@ -29,7 +29,7 @@ import { ClientServicesHostService } from './service-host';
 // Each client RPC service handler is exposed as an individual Effect service tag. Handlers depend
 // directly on the lower-level component tags they consume (EchoHostService, IdentityManagerService,
 // …); only handlers that need lifecycle orchestration (identity creation, readiness gates)
-// additionally depend on {@link ServiceContextService}.
+// additionally depend on {@link ClientServicesHostService} (the host provides itself into the stack).
 //
 
 export class IdentityServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/IdentityService')<
@@ -98,7 +98,7 @@ export type ClientServicesRpcContext =
   | FeedServiceRpc;
 
 // Identity creation is a lifecycle sequence and profile broadcast iterates live spaces, so both
-// remain orchestrator responsibilities resolved from {@link ServiceContextService}.
+// remain orchestrator responsibilities resolved from {@link ClientServicesHostService}.
 const identityServiceLayer = Layer.effect(
   IdentityServiceRpc,
   Effect.gen(function* () {
