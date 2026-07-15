@@ -68,9 +68,9 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/plugin-blogger": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
     "effect": "catalog:"

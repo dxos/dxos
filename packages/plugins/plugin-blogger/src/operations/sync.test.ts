@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { AccessToken } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector/types';
-import { AccessToken } from '@dxos/types';
 
 import { Blog, Publisher } from '../types';
 import { runImportDrafts } from './import-drafts';

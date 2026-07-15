@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { AccessToken } from '@dxos/link';
 import { Publisher } from '@dxos/plugin-blogger/types';
 import { Connection } from '@dxos/plugin-connector/types';
-import { AccessToken } from '@dxos/types';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 import { makeTypefullyPublisherService } from './typefully-api';

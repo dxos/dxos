@@ -8835,6 +8835,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8902,9 +8905,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -17614,15 +17614,15 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/plugin-blogger':
         specifier: workspace:*
         version: link:../plugin-blogger
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
