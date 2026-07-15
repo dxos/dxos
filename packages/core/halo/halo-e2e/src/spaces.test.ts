@@ -10,7 +10,7 @@ import { describe } from 'vitest';
 import { Space } from '@dxos/halo';
 import { SpaceId } from '@dxos/keys';
 
-import { makeClientLayer } from './testing';
+import { currentOf, makeClientLayer } from './testing';
 
 describe('Spaces', () => {
   it.effect(
@@ -29,10 +29,10 @@ describe('Spaces', () => {
   it.effect(
     'lists spaces',
     Effect.fn(function* ({ expect }) {
-      const before = yield* Space.list;
+      const before = yield* currentOf(Space.spaces);
       const info = yield* Space.create({ name: 'one' });
       yield* Space.waitReady(info.id);
-      const after = yield* Space.list;
+      const after = yield* currentOf(Space.spaces);
       expect(after.length).toEqual(before.length + 1);
     }, Effect.provide(makeClientLayer())),
   );
@@ -43,7 +43,7 @@ describe('Spaces', () => {
       const info = yield* Space.create({ name: 'solo' });
       yield* Space.waitReady(info.id);
 
-      const members = yield* Space.members(info.id);
+      const members = yield* currentOf(Space.members(info.id));
       expect(members).toHaveLength(1);
       expect(members[0].role).toEqual('admin');
     }, Effect.provide(makeClientLayer())),

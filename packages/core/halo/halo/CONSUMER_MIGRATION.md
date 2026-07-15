@@ -28,9 +28,9 @@ with an agreed disposition:
    `useIdentity` / `useDevices` / `useCredentials` / `useSpaces` / `useSpace` /
    `useMembers` / `useSpaceInvitations` across 163 files — the bulk of the
    consumer surface. The new [`@dxos/halo-react`](../halo-react) hook library
-   provides drop-in equivalents backed by the HALO services (bridging the
-   `changes` / `memberChanges` / `deviceChanges` streams to React state via
-   `useSyncExternalStore`-style subscriptions). Components migrate hook-by-hook
+   provides drop-in equivalents backed by the HALO services (each reactive read
+   is a current-value `Stream` surfaced through `@effect-atom` atoms and
+   `useAtomValue`). Components migrate hook-by-hook
    by swapping the import and wrapping the tree in `HaloProvider` instead of
    `ClientProvider`; see [Migrating React hooks](#migrating-react-hooks). Hooks
    with no service verb yet (`useCredentials`) stay on `@dxos/react-client`.
@@ -70,8 +70,9 @@ import { Identity, Space } from '@dxos/halo';
 const halo = layerClient(client); // Layer<Identity.Service | Space.Service>
 
 const program = Effect.gen(function* () {
-  const identity = yield* Identity.current;
-  const spaces = yield* Space.list;
+  // Reactive reads are current-value streams; take the head for a one-shot snapshot.
+  const identity = yield* Stream.runHead(Identity.identity);
+  const spaces = yield* Stream.runHead(Space.spaces);
   // ...
 });
 
@@ -156,8 +157,8 @@ const identity = client.halo.identity.get();
 if (!identity) return;
 const did = identity.did;
 
-// After
-const maybe = yield * Identity.current; // Option<Identity.Info>
+// After — reads are current-value streams; take the head for a one-shot read
+const maybe = Option.flatten(yield * Stream.runHead(Identity.identity)); // Option<Identity.Info>
 if (Option.isNone(maybe)) return;
 const did = maybe.value.did;
 ```
@@ -173,8 +174,8 @@ favor of the DID.
 const sub = client.halo.identity.subscribe((identity) => onChange(identity));
 // ... sub.unsubscribe();
 
-// After — reactive stream, completes when the scope closes
-yield * Stream.runForEach(Identity.changes, (maybe) => Effect.sync(() => onChange(maybe)));
+// After — the same stream, subscribed instead of head-read; completes when the scope closes
+yield * Stream.runForEach(Identity.identity, (maybe) => Effect.sync(() => onChange(maybe)));
 ```
 
 ### Identity — create / update profile
@@ -195,9 +196,8 @@ yield * Identity.updateProfile({ displayName: 'Alice B.' });
 // Before
 const devices = client.halo.devices.get();
 
-// After
-const devices = yield * Identity.devices; // readonly DeviceInfo[]  ({ key, kind?, label?, current })
-// reactive: Identity.deviceChanges
+// After — Identity.devices is a current-value stream
+const devices = yield * Stream.runHead(Identity.devices); // Option<readonly DeviceInfo[]>  ({ key, kind?, label?, current })
 ```
 
 `DeviceInfo.kind` is the inlined `Identity.DeviceKind` literal
@@ -212,10 +212,9 @@ stay on the client for that.
 const spaces = client.spaces.get();
 const space = getSpace(object) ?? client.spaces.get(spaceId);
 
-// After
-const spaces = yield * Space.list; // readonly Space.Info[]
+// After — Space.spaces is a current-value stream; get is a point lookup
+const spaces = yield * Stream.runHead(Space.spaces); // Option<readonly Space.Info[]>
 const maybe = yield * Space.get(spaceId); // Option<Space.Info>
-// reactive: Space.changes
 ```
 
 `Space.Info` is `{ id, name?, state }` — a snapshot. For `space.db` / query /
@@ -254,9 +253,8 @@ yield * Space.waitReady(spaceId);
 // Before
 const members = space.members.get(); // SpaceMember[]
 
-// After
-const members = yield * Space.members(spaceId); // readonly Space.Member[]  ({ did?, role, online })
-// reactive: Space.memberChanges(spaceId)
+// After — Space.members(id) is a current-value stream
+const members = yield * Stream.runHead(Space.members(spaceId)); // Option<readonly Space.Member[]>  ({ did?, role, online })
 ```
 
 `Member.role` is the Keyhive-aligned `Space.Access`
@@ -325,9 +323,8 @@ yield *
 // Before
 const invitations = space.invitations.get();
 
-// After — querying lives on the owning service
-const flows = yield * Space.invitations(spaceId); // device: Identity.invitations
-// reactive: Space.invitationChanges(spaceId) / Identity.invitationChanges
+// After — querying lives on the owning service as a current-value stream
+const flows = yield * Stream.runHead(Space.invitations(spaceId)); // device: Identity.invitations
 ```
 
 Drive an individual `Invitation.Flow` through the flow verbs (`Invitation.events`

@@ -85,9 +85,7 @@ const setMemberRole = async (
  * Builds the {@link HaloSpace.Service} implementation over a client's `spaces` proxy.
  */
 export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.Service> => ({
-  list: Effect.sync(() => client.spaces.get().map(toSpaceInfo)),
-
-  changes: streamFromObservable(client.spaces).pipe(Stream.map((spaces) => (spaces ?? []).map(toSpaceInfo))),
+  spaces: streamFromObservable(client.spaces).pipe(Stream.map((spaces) => (spaces ?? []).map(toSpaceInfo))),
 
   get: (id) =>
     Effect.sync(() => {
@@ -128,13 +126,7 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
-  members: (id) =>
-    Effect.try({
-      try: () => toMembers(resolveSpace(client, id).members.get()),
-      catch: (error) => new SpaceError({ context: { error } }),
-    }),
-
-  memberChanges: (id) => {
+  members: (id) => {
     const space = client.spaces.get(id);
     return space ? streamFromObservable(space.members).pipe(Stream.map(toMembers)) : Stream.empty;
   },
@@ -169,12 +161,7 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
-  invitations: (id) =>
-    Effect.sync(() =>
-      (client.spaces.get(id)?.invitations.get() ?? []).map((invitation) => makeFlow(invitation, 'space')),
-    ),
-
-  invitationChanges: (id) => {
+  invitations: (id) => {
     const space = client.spaces.get(id);
     return space
       ? streamFromObservable(space.invitations).pipe(

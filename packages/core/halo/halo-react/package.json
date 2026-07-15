@@ -28,7 +28,8 @@
   ],
   "dependencies": {
     "@dxos/halo": "workspace:*",
-    "@dxos/keys": "workspace:*"
+    "@dxos/keys": "workspace:*",
+    "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
     "react": "catalog:",

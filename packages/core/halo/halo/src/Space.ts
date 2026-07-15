@@ -92,10 +92,11 @@ export type CreateOptions = {
 export class Service extends Context.Tag('@dxos/halo/Space')<
   Service,
   {
-    /** All spaces known to the local identity. */
-    readonly list: Effect.Effect<readonly Info[]>;
-    /** Reactive stream of the space set. */
-    readonly changes: Stream.Stream<readonly Info[]>;
+    /**
+     * All spaces known to the local identity as a stream that emits the current set immediately
+     * on subscription. Take the first element for a one-shot read; subscribe for updates.
+     */
+    readonly spaces: Stream.Stream<readonly Info[]>;
     /** Resolve a space by id. */
     readonly get: (id: SpaceId) => Effect.Effect<Option.Option<Info>>;
     /** Create a new space. */
@@ -104,10 +105,8 @@ export class Service extends Context.Tag('@dxos/halo/Space')<
     readonly waitReady: (id: SpaceId) => Effect.Effect<void, SpaceError>;
     /** Enable or disable EDGE replication for a space. */
     readonly setEdgeReplication: (id: SpaceId, setting: EdgeReplication) => Effect.Effect<void, SpaceError>;
-    /** Members of a space. */
-    readonly members: (id: SpaceId) => Effect.Effect<readonly Member[], SpaceError>;
-    /** Reactive stream of a space's membership. */
-    readonly memberChanges: (id: SpaceId) => Stream.Stream<readonly Member[]>;
+    /** A space's membership; emits the current set immediately, then on join/leave/role/presence. */
+    readonly members: (id: SpaceId) => Stream.Stream<readonly Member[]>;
     /** Change a member's access level (Keyhive delegation). */
     readonly updateMemberRole: (id: SpaceId, subject: IdentityDid, role: Access) => Effect.Effect<void, SpaceError>;
     /** Remove a member (Keyhive revocation). */
@@ -116,10 +115,8 @@ export class Service extends Context.Tag('@dxos/halo/Space')<
     readonly share: (id: SpaceId, options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, SpaceError>;
     /** Redeem a space-invitation code (guest side). */
     readonly join: (code: string) => Effect.Effect<Invitation.Flow, SpaceError>;
-    /** Currently-active (host-created) invitation flows for a space. */
-    readonly invitations: (id: SpaceId) => Effect.Effect<readonly Invitation.Flow[]>;
-    /** Reactive stream of a space's active-invitation set. */
-    readonly invitationChanges: (id: SpaceId) => Stream.Stream<readonly Invitation.Flow[]>;
+    /** A space's active (host-created) invitation flows; emits the current set immediately. */
+    readonly invitations: (id: SpaceId) => Stream.Stream<readonly Invitation.Flow[]>;
     /** Export a space to an archive. */
     readonly export: (id: SpaceId) => Effect.Effect<Archive, SpaceError>;
     /** Import a space from an archive. */
@@ -127,12 +124,9 @@ export class Service extends Context.Tag('@dxos/halo/Space')<
   }
 >() {}
 
-/** All spaces known to the local identity (requires {@link Service}). */
-export const list: Effect.Effect<readonly Info[], never, Service> = Effect.flatMap(Service, (service) => service.list);
-
-/** Reactive stream of the space set (requires {@link Service}). */
-export const changes: Stream.Stream<readonly Info[], never, Service> = Stream.unwrap(
-  Effect.map(Service, (service) => service.changes),
+/** All spaces as a current-value stream (requires {@link Service}). */
+export const spaces: Stream.Stream<readonly Info[], never, Service> = Stream.unwrap(
+  Effect.map(Service, (service) => service.spaces),
 );
 
 /** Resolve a space by id (requires {@link Service}). */
@@ -151,13 +145,9 @@ export const waitReady = (id: SpaceId): Effect.Effect<void, SpaceError, Service>
 export const setEdgeReplication = (id: SpaceId, setting: EdgeReplication): Effect.Effect<void, SpaceError, Service> =>
   Effect.flatMap(Service, (service) => service.setEdgeReplication(id, setting));
 
-/** Members of a space (requires {@link Service}). */
-export const members = (id: SpaceId): Effect.Effect<readonly Member[], SpaceError, Service> =>
-  Effect.flatMap(Service, (service) => service.members(id));
-
-/** Reactive stream of a space's membership (requires {@link Service}). */
-export const memberChanges = (id: SpaceId): Stream.Stream<readonly Member[], never, Service> =>
-  Stream.unwrap(Effect.map(Service, (service) => service.memberChanges(id)));
+/** A space's membership as a current-value stream (requires {@link Service}). */
+export const members = (id: SpaceId): Stream.Stream<readonly Member[], never, Service> =>
+  Stream.unwrap(Effect.map(Service, (service) => service.members(id)));
 
 /** Change a member's access level (requires {@link Service}). */
 export const updateMemberRole = (
@@ -182,13 +172,9 @@ export const share = (
 export const join = (code: string): Effect.Effect<Invitation.Flow, SpaceError, Service> =>
   Effect.flatMap(Service, (service) => service.join(code));
 
-/** Currently-active invitation flows for a space (requires {@link Service}). */
-export const invitations = (id: SpaceId): Effect.Effect<readonly Invitation.Flow[], never, Service> =>
-  Effect.flatMap(Service, (service) => service.invitations(id));
-
-/** Reactive stream of a space's active-invitation set (requires {@link Service}). */
-export const invitationChanges = (id: SpaceId): Stream.Stream<readonly Invitation.Flow[], never, Service> =>
-  Stream.unwrap(Effect.map(Service, (service) => service.invitationChanges(id)));
+/** A space's active invitation flows as a current-value stream (requires {@link Service}). */
+export const invitations = (id: SpaceId): Stream.Stream<readonly Invitation.Flow[], never, Service> =>
+  Stream.unwrap(Effect.map(Service, (service) => service.invitations(id)));
 
 /** Export a space to an archive (requires {@link Service}). */
 export const exportSpace = (id: SpaceId): Effect.Effect<Archive, SpaceError, Service> =>

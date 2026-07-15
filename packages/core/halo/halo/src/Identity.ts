@@ -62,40 +62,32 @@ export type RecoverArgs =
 export class Service extends Context.Tag('@dxos/halo/Identity')<
   Service,
   {
-    /** The local identity, if one exists. */
-    readonly current: Effect.Effect<Option.Option<Info>>;
-    /** Reactive stream of the local identity. */
-    readonly changes: Stream.Stream<Option.Option<Info>>;
+    /**
+     * The local identity (`Option.none` when none exists) as a stream that emits the current
+     * value immediately on subscription. Take the first element for a one-shot read; subscribe
+     * for updates.
+     */
+    readonly identity: Stream.Stream<Option.Option<Info>>;
     /** Create the local identity (and its first device). */
     readonly create: (options?: { displayName?: string; deviceLabel?: string }) => Effect.Effect<Info, IdentityError>;
     /** Re-admit this device to an existing identity via a recovery credential. */
     readonly recover: (args: RecoverArgs) => Effect.Effect<Info, IdentityError>;
     /** Update the identity profile. */
     readonly updateProfile: (profile: { displayName?: string }) => Effect.Effect<Info, IdentityError>;
-    /** Devices belonging to the local identity. */
-    readonly devices: Effect.Effect<readonly DeviceInfo[]>;
-    /** Reactive stream of the device set. */
-    readonly deviceChanges: Stream.Stream<readonly DeviceInfo[]>;
+    /** Devices belonging to the local identity; emits the current set immediately. */
+    readonly devices: Stream.Stream<readonly DeviceInfo[]>;
     /** Initiate a device invitation (host side). */
     readonly share: (options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, IdentityError>;
     /** Redeem a device-invitation code on a new device (guest side). */
     readonly join: (code: string) => Effect.Effect<Invitation.Flow, IdentityError>;
-    /** Currently-active (host-created) device-invitation flows. */
-    readonly invitations: Effect.Effect<readonly Invitation.Flow[]>;
-    /** Reactive stream of the active device-invitation set. */
-    readonly invitationChanges: Stream.Stream<readonly Invitation.Flow[]>;
+    /** Active (host-created) device-invitation flows; emits the current set immediately. */
+    readonly invitations: Stream.Stream<readonly Invitation.Flow[]>;
   }
 >() {}
 
-/** The local identity, if one exists (requires {@link Service}). */
-export const current: Effect.Effect<Option.Option<Info>, never, Service> = Effect.flatMap(
-  Service,
-  (service) => service.current,
-);
-
-/** Reactive stream of the local identity (requires {@link Service}). */
-export const changes: Stream.Stream<Option.Option<Info>, never, Service> = Stream.unwrap(
-  Effect.map(Service, (service) => service.changes),
+/** The local identity as a current-value stream (requires {@link Service}). */
+export const identity: Stream.Stream<Option.Option<Info>, never, Service> = Stream.unwrap(
+  Effect.map(Service, (service) => service.identity),
 );
 
 /** Create the local identity (requires {@link Service}). */
@@ -112,15 +104,9 @@ export const recover = (args: RecoverArgs): Effect.Effect<Info, IdentityError, S
 export const updateProfile = (profile: { displayName?: string }): Effect.Effect<Info, IdentityError, Service> =>
   Effect.flatMap(Service, (service) => service.updateProfile(profile));
 
-/** Devices belonging to the local identity (requires {@link Service}). */
-export const devices: Effect.Effect<readonly DeviceInfo[], never, Service> = Effect.flatMap(
-  Service,
-  (service) => service.devices,
-);
-
-/** Reactive stream of the device set (requires {@link Service}). */
-export const deviceChanges: Stream.Stream<readonly DeviceInfo[], never, Service> = Stream.unwrap(
-  Effect.map(Service, (service) => service.deviceChanges),
+/** Devices belonging to the local identity as a current-value stream (requires {@link Service}). */
+export const devices: Stream.Stream<readonly DeviceInfo[], never, Service> = Stream.unwrap(
+  Effect.map(Service, (service) => service.devices),
 );
 
 /** Initiate a device invitation (requires {@link Service}). */
@@ -131,13 +117,7 @@ export const share = (options?: Invitation.ShareOptions): Effect.Effect<Invitati
 export const join = (code: string): Effect.Effect<Invitation.Flow, IdentityError, Service> =>
   Effect.flatMap(Service, (service) => service.join(code));
 
-/** Currently-active device-invitation flows (requires {@link Service}). */
-export const invitations: Effect.Effect<readonly Invitation.Flow[], never, Service> = Effect.flatMap(
-  Service,
-  (service) => service.invitations,
-);
-
-/** Reactive stream of the active device-invitation set (requires {@link Service}). */
-export const invitationChanges: Stream.Stream<readonly Invitation.Flow[], never, Service> = Stream.unwrap(
-  Effect.map(Service, (service) => service.invitationChanges),
+/** Active device-invitation flows as a current-value stream (requires {@link Service}). */
+export const invitations: Stream.Stream<readonly Invitation.Flow[], never, Service> = Stream.unwrap(
+  Effect.map(Service, (service) => service.invitations),
 );

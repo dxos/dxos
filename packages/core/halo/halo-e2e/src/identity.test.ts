@@ -10,14 +10,14 @@ import { describe } from 'vitest';
 
 import { Identity } from '@dxos/halo';
 
-import { makeClientLayer } from './testing';
+import { currentOf, makeClientLayer } from './testing';
 
 describe('Identity', () => {
   it.effect(
     'no identity before creation',
     Effect.fn(
       function* ({ expect }) {
-        const current = yield* Identity.current;
+        const current = yield* currentOf(Identity.identity);
         expect(Option.isNone(current)).toBe(true);
       },
       Effect.provide(makeClientLayer({ identity: false })),
@@ -32,10 +32,10 @@ describe('Identity', () => {
         expect(info.displayName).toEqual('test-user');
         expect(info.did).toBeTypeOf('string');
 
-        const current = yield* Identity.current;
+        const current = yield* currentOf(Identity.identity);
         expect(Option.getOrThrow(current).did).toEqual(info.did);
 
-        const devices = yield* Identity.devices;
+        const devices = yield* currentOf(Identity.devices);
         expect(devices).toHaveLength(1);
         expect(devices[0].current).toBe(true);
       },
@@ -48,7 +48,7 @@ describe('Identity', () => {
     Effect.fn(
       function* ({ expect }) {
         yield* Identity.create({ displayName: 'test-user', deviceLabel: 'custom-device' });
-        const devices = yield* Identity.devices;
+        const devices = yield* currentOf(Identity.devices);
         expect(devices).toHaveLength(1);
         expect(devices[0].label).toEqual('custom-device');
       },
@@ -64,7 +64,7 @@ describe('Identity', () => {
         const updated = yield* Identity.updateProfile({ displayName: 'test-user-updated' });
         expect(updated.displayName).toEqual('test-user-updated');
 
-        const current = yield* Identity.current;
+        const current = yield* currentOf(Identity.identity);
         expect(Option.getOrThrow(current).displayName).toEqual('test-user-updated');
       },
       Effect.provide(makeClientLayer({ identity: false })),
@@ -72,16 +72,16 @@ describe('Identity', () => {
   );
 
   it.effect(
-    'changes stream emits the created identity',
+    'the identity stream emits the created identity',
     Effect.fn(
       function* ({ expect }) {
         yield* Identity.create({ displayName: 'streamed' });
-        const first = yield* Identity.changes.pipe(
+        const identity = yield* Identity.identity.pipe(
           Stream.filter(Option.isSome),
           Stream.runHead,
           Effect.map(Option.flatten),
         );
-        expect(Option.getOrThrow(first).displayName).toEqual('streamed');
+        expect(Option.getOrThrow(identity).displayName).toEqual('streamed');
       },
       Effect.provide(makeClientLayer({ identity: false })),
     ),

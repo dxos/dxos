@@ -9,7 +9,7 @@ import { describe } from 'vitest';
 
 import { Identity, Space } from '@dxos/halo';
 
-import { TestNetwork, TestNetworkLive, awaitTerminal, makeClientLayer, pollUntil } from './testing';
+import { TestNetwork, TestNetworkLive, awaitTerminal, currentOf, makeClientLayer, pollUntil } from './testing';
 
 describe('Invitations', () => {
   it.effect(
@@ -30,12 +30,12 @@ describe('Invitations', () => {
       expect(guestTerminal._tag).toEqual('success');
 
       // The guest joined the host's identity.
-      const guestIdentity = yield* Identity.current.pipe(Effect.provide(guest));
-      const hostIdentity = yield* Identity.current.pipe(Effect.provide(host));
+      const guestIdentity = yield* currentOf(Identity.identity).pipe(Effect.provide(guest));
+      const hostIdentity = yield* currentOf(Identity.identity).pipe(Effect.provide(host));
       expect(Option.getOrThrow(guestIdentity).did).toEqual(Option.getOrThrow(hostIdentity).did);
 
       // The host now sees two devices.
-      yield* pollUntil(Identity.devices.pipe(Effect.provide(host)), (devices) => devices.length === 2);
+      yield* pollUntil(currentOf(Identity.devices).pipe(Effect.provide(host)), (devices) => devices.length === 2);
     }, Effect.provide(TestNetworkLive)),
     30_000,
   );
@@ -61,10 +61,13 @@ describe('Invitations', () => {
       expect(guestTerminal._tag).toEqual('success');
 
       // The host space now has two members.
-      yield* pollUntil(Space.members(space.id).pipe(Effect.provide(host)), (members) => members.length === 2);
+      yield* pollUntil(
+        currentOf(Space.members(space.id)).pipe(Effect.provide(host)),
+        (members) => members.length === 2,
+      );
 
       // The guest gained access to the space.
-      yield* pollUntil(Space.list.pipe(Effect.provide(guest)), (spaces) => spaces.length > 0);
+      yield* pollUntil(currentOf(Space.spaces).pipe(Effect.provide(guest)), (spaces) => spaces.length > 0);
     }, Effect.provide(TestNetworkLive)),
     30_000,
   );
@@ -80,7 +83,7 @@ describe('Invitations', () => {
       yield* Space.waitReady(space.id);
 
       yield* Space.share(space.id);
-      const active = yield* Space.invitations(space.id);
+      const active = yield* currentOf(Space.invitations(space.id));
       expect(active.length).toBeGreaterThan(0);
       expect(active[0].kind).toEqual('space');
     }, Effect.provide(makeClientLayer())),

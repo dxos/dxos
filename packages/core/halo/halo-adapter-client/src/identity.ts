@@ -35,12 +35,7 @@ const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
  * Builds the {@link HaloIdentity.Service} implementation over a client's `halo` proxy.
  */
 export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIdentity.Service> => ({
-  current: Effect.sync(() => {
-    const identity = client.halo.identity.get();
-    return identity ? Option.some(toInfo(identity)) : Option.none();
-  }),
-
-  changes: streamFromObservable(client.halo.identity).pipe(
+  identity: streamFromObservable(client.halo.identity).pipe(
     Stream.map((identity) => (identity ? Option.some(toInfo(identity)) : Option.none())),
   ),
 
@@ -68,9 +63,7 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
       catch: (error) => new IdentityError({ context: { error } }),
     }),
 
-  devices: Effect.sync(() => client.halo.devices.get().map(toDeviceInfo)),
-
-  deviceChanges: streamFromObservable(client.halo.devices).pipe(Stream.map((devices) => devices.map(toDeviceInfo))),
+  devices: streamFromObservable(client.halo.devices).pipe(Stream.map((devices) => devices.map(toDeviceInfo))),
 
   share: (options) =>
     Effect.try({
@@ -84,9 +77,7 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
       catch: (error) => new IdentityError({ context: { error } }),
     }),
 
-  invitations: Effect.sync(() => client.halo.invitations.get().map((invitation) => makeFlow(invitation, 'device'))),
-
-  invitationChanges: streamFromObservable(client.halo.invitations).pipe(
+  invitations: streamFromObservable(client.halo.invitations).pipe(
     Stream.map((invitations) => invitations.map((invitation) => makeFlow(invitation, 'device'))),
   ),
 });

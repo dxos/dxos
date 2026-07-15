@@ -11,12 +11,11 @@ See `API_AUDIT.md` for the consumer audit and `MIGRATION.md` for the HALO → Ke
 
 The `Invitation` module holds invitation types and flow-level verbs only (no service tag);
 `Identity` and `Space` own invitation initiation (`share`/`join`) and querying of the active set
-(`invitations` / `invitationChanges`) — device invitations on `Identity`, space invitations on
-`Space`.
+(`invitations`) — device invitations on `Identity`, space invitations on `Space`.
 
 Modules follow the DXOS namespace-module styleguide: PascalCase file in `src/`, marked
 `// @import-as-namespace`, re-exported from `index.ts` as `export * as <Name> from './<Name>'`,
-and consumed as a namespace (`Identity.current`, never a bare `identityCurrent`).
+and consumed as a namespace (`Identity.identity`, never a bare `identityCurrent`).
 
 ## Extensions
 
@@ -43,17 +42,17 @@ module Identity
     DeviceInfo: Schema.Struct            # { key; kind?; label?; current } — a device.
     RecoverArgs: union                   # { recoveryCode } | { token } | { recoveryProof }.
 
-    # Verbs (Effects requiring Service)
-    current: Effect                      # Option<Info> snapshot.
-    changes: Stream                      # reactive Option<Info>.
+    # Reads — current-value Streams (emit current immediately; take the head for a one-shot read)
+    identity: Stream                     # reactive Option<Info>.
+    devices: Stream                      # reactive readonly DeviceInfo[].
+    invitations: Stream                  # reactive active device-invitation flows.
+
+    # Effects requiring Service
     create: (options?) => Effect         # create identity (+ first device).
     recover: (RecoverArgs) => Effect     # re-admit a device via a recovery credential.
     updateProfile: (profile) => Effect
-    devices: Effect                      # readonly DeviceInfo[].
-    deviceChanges: Stream
     share: (options?: Invitation.ShareOptions) => Effect  # device invitation → Invitation.Flow.
     join: (code) => Effect               # device join → Invitation.Flow.
-    invitations / invitationChanges      # active device-invitation flows.
 ```
 
 ```mdl
@@ -74,17 +73,20 @@ module Space
     Info: Schema.Struct                  # { id: SpaceId; name?; state }.
     Archive: { filename; contents }      # export / import payload.
 
-    # Verbs (Effects requiring Service)
-    list / changes / get                 # enumerate + resolve spaces.
+    # Reads — current-value Streams (emit current immediately; take the head for a one-shot read)
+    spaces: Stream                       # reactive readonly Info[].
+    members: (id) => Stream              # reactive readonly Member[].
+    invitations: (id) => Stream          # reactive active space-invitation flows.
+
+    # Effects requiring Service
+    get: (id) => Effect                  # resolve a space by id (Option<Info>).
     create: (options?) => Effect         # options: { name?; tags?; membershipPolicy? }.
     waitReady: (id) => Effect            # resolve once the space is ready.
     setEdgeReplication: (id, setting) => Effect  # toggle EDGE replication.
-    members / memberChanges              # membership snapshot + reactive stream.
     updateMemberRole: (id, subject, role) => Effect  # Keyhive delegation.
     removeMember: (id, subject) => Effect            # Keyhive revocation.
     share: (id, options?: Invitation.ShareOptions) => Effect  # space invitation → Invitation.Flow.
     join: (code) => Effect               # space join → Invitation.Flow.
-    invitations: (id) / invitationChanges: (id)  # active space-invitation flows.
     exportSpace / importSpace
 ```
 

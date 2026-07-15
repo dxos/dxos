@@ -105,6 +105,13 @@ export const awaitTerminal = (flow: Invitation.Flow): Effect.Effect<Invitation.E
   );
 
 /**
+ * Reads the current value of a HALO current-value stream — its first emission, which the adapter
+ * publishes immediately on subscription. Throws if the stream ends without emitting.
+ */
+export const currentOf = <A, R>(stream: Stream.Stream<A, never, R>): Effect.Effect<A, never, R> =>
+  Stream.runHead(stream).pipe(Effect.map(Option.getOrThrow));
+
+/**
  * Repeats an effect (100ms spacing, 10s cap) until its result satisfies the predicate. Returns
  * the satisfying value. Effect-native replacement for `expect.poll` when the polled read needs the
  * service context.

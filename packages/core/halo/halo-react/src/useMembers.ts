@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
+import { Result, useAtomValue } from '@effect-atom/atom-react';
 import * as Stream from 'effect/Stream';
+import { useMemo } from 'react';
 
 import { Space } from '@dxos/halo';
 import { type SpaceId } from '@dxos/keys';
 
-import { useHaloServices } from './useHaloServices';
-import { useReactive } from './useReactive';
+import { useHaloRuntime } from './HaloProvider';
 
 const EMPTY: readonly Space.Member[] = [];
 
@@ -20,11 +19,7 @@ const EMPTY: readonly Space.Member[] = [];
  * {@link SpaceId}).
  */
 export const useMembers = (spaceId?: SpaceId): readonly Space.Member[] => {
-  const service = Context.get(useHaloServices(), Space.Service);
-  return useReactive(
-    // Total the snapshot: an unresolved space yields no members rather than throwing.
-    spaceId ? Effect.orElseSucceed(service.members(spaceId), () => EMPTY) : Effect.succeed(EMPTY),
-    spaceId ? service.memberChanges(spaceId) : Stream.empty,
-    [service, spaceId],
-  );
+  const runtime = useHaloRuntime();
+  const atom = useMemo(() => runtime.atom(spaceId ? Space.members(spaceId) : Stream.empty), [runtime, spaceId]);
+  return Result.getOrElse(useAtomValue(atom), () => EMPTY);
 };

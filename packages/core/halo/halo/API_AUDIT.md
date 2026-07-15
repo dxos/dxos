@@ -199,10 +199,10 @@ Two services (`Context.Tag`s) plus a serviceless `Invitation` module:
   its event stream, authenticate/cancel/code. It does **not** initiate invitations nor query the
   active set.
 - **`Identity`** — identity & device management, **plus** device invitations: _initiation_
-  (`share`/`join`) and _querying_ (`invitations` / `invitationChanges`). Uses `Invitation`'s
+  (`share`/`join`) and _querying_ (`invitations`, a current-value stream). Uses `Invitation`'s
   `Flow`.
 - **`Space`** — space management & membership, **plus** space invitations: _initiation_
-  (`share`/`join`) and _querying_ (`invitations(id)` / `invitationChanges(id)`). Uses
+  (`share`/`join`) and _querying_ (`invitations(id)`, a current-value stream). Uses
   `Invitation`'s `Flow`.
 
 ```text
@@ -235,21 +235,20 @@ atom-based, so `Atom` is the natural currency for the React layer.
 
 ### 3.2 `Identity.Service` — identity & device management
 
-| Verb                                                        | Replaces                                                                                                        |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `Identity.current` → `Option<Profile>`                      | `halo.identity.get()`                                                                                           |
-| `Identity.changes` → `Stream<Option<Profile>>`              | `halo.identity.subscribe()`, `useIdentity`                                                                      |
-| `Identity.create(profile?)`                                 | `halo.createIdentity()`                                                                                         |
-| `Identity.updateProfile(profile)`                           | `halo.updateProfile()`                                                                                          |
-| `Identity.recover({ code \| token \| proof })`              | `halo.recoverIdentity()` + raw `IdentityService.recoverIdentity` (§2.3)                                         |
-| `Identity.createRecoveryKey({ key, algorithm, lookupKey })` | raw `IdentityService.createRecoveryCredential` (recovery code + passkey)                                        |
-| `Identity.requestRecoveryChallenge()`                       | raw `IdentityService.requestRecoveryChallenge`                                                                  |
-| `Identity.devices` / `Identity.deviceChanges`               | `halo.devices`, `useDevices`                                                                                    |
-| `Identity.localDevice`                                      | `halo.device`                                                                                                   |
-| `Identity.updateDevice(profile)`                            | raw `DevicesService.updateDevice`                                                                               |
-| `Identity.attest({ challenge, audience? })`                 | `createEdgeIdentity(client).presentCredentials()` (§2.4) — signed, audience-bound message per MIGRATION.md §5.1 |
-| `Identity.share(opts?)` → `Invitation.Flow`                 | `client.halo.share()` — device-invitation initiation (delegates the lifecycle to `Invitation`)                  |
-| `Identity.join(code)` → `Invitation.Flow`                   | `client.halo.join()` — device/account join                                                                      |
+| Verb                                                            | Replaces                                                                                                        |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `Identity.identity` → `Stream<Option<Profile>>` (current-value) | `halo.identity.get()`, `halo.identity.subscribe()`, `useIdentity`                                               |
+| `Identity.create(profile?)`                                     | `halo.createIdentity()`                                                                                         |
+| `Identity.updateProfile(profile)`                               | `halo.updateProfile()`                                                                                          |
+| `Identity.recover({ code \| token \| proof })`                  | `halo.recoverIdentity()` + raw `IdentityService.recoverIdentity` (§2.3)                                         |
+| `Identity.createRecoveryKey({ key, algorithm, lookupKey })`     | raw `IdentityService.createRecoveryCredential` (recovery code + passkey)                                        |
+| `Identity.requestRecoveryChallenge()`                           | raw `IdentityService.requestRecoveryChallenge`                                                                  |
+| `Identity.devices` → `Stream` (current-value)                   | `halo.devices`, `useDevices`                                                                                    |
+| `Identity.localDevice`                                          | `halo.device`                                                                                                   |
+| `Identity.updateDevice(profile)`                                | raw `DevicesService.updateDevice`                                                                               |
+| `Identity.attest({ challenge, audience? })`                     | `createEdgeIdentity(client).presentCredentials()` (§2.4) — signed, audience-bound message per MIGRATION.md §5.1 |
+| `Identity.share(opts?)` → `Invitation.Flow`                     | `client.halo.share()` — device-invitation initiation (delegates the lifecycle to `Invitation`)                  |
+| `Identity.join(code)` → `Invitation.Flow`                       | `client.halo.join()` — device/account join                                                                      |
 
 Types: device kind and the identity profile fields are inlined into `Identity` (`DeviceKind`,
 `DeviceInfo`, `Info`) rather than living in separate schema modules. The legacy `Identity` proxy
@@ -258,8 +257,9 @@ type (`did`, `identityKey`, `spaceKey`, `profile`) collapses into `Info` = `{ di
 credential plumbing, deferred with the credential verbs below.
 
 The table above is the full target surface. The **first shipped cut** (this PR) implements the
-common path — `current`/`changes`, `create`, `recover`, `updateProfile`, `devices`/`deviceChanges`,
-`share`/`join`. The remaining verbs are **deferred** to keep the package definitions-only and
+common path — `identity`, `create`, `recover`, `updateProfile`, `devices`, `share`/`join`,
+`invitations` (each reactive read a single current-value stream). The remaining verbs are
+**deferred** to keep the package definitions-only and
 lean: `createRecoveryKey` / `requestRecoveryChallenge`, `localDevice` / `updateDevice`, `attest`,
 and the transitional `credentials` / `writeCredential` pair. Credentials in particular dissolve
 into Keyhive membership ops and would drag the protobuf `Credential` type into this
@@ -271,12 +271,12 @@ capability-grant verb when the EDGE shim lands.
 
 | Verb                                                                            | Replaces                                                                                                                                   |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Space.spaces` / `Space.changes`                                                | `client.spaces.get()`, `client.spaces.subscribe()`, `useSpaces`                                                                            |
+| `Space.spaces` → `Stream` (current-value)                                       | `client.spaces.get()`, `client.spaces.subscribe()`, `useSpaces`                                                                            |
 | `Space.get(id)` → `Option<Space>`                                               | `client.spaces.get(id)`, `useSpace(id)`                                                                                                    |
 | `Space.create(props?, { tags?, membershipPolicy? })`                            | `client.spaces.create()`                                                                                                                   |
 | `Space.waitReady(id)` (or `Space.state(id): Stream`)                            | `space.waitUntilReady()`, `space.state.get()`, `SpaceState`                                                                                |
 | `Space.update(id, { name, icon, hue, tags })`                                   | direct property writes (plugin-space rename)                                                                                               |
-| `Space.members(id)` / `Space.memberChanges(id)`                                 | `useMembers`, `SpaceMember` reads                                                                                                          |
+| `Space.members(id)` → `Stream` (current-value)                                  | `useMembers`, `SpaceMember` reads                                                                                                          |
 | `Space.updateMemberRole(id, subject, role)` / `Space.removeMember(id, subject)` | Keyhive delegation/revocation (no current consumer). Shipped: adapter maps to `space.updateMemberRole` (member resolved by DID)            |
 | `Space.export(id, { format })` / `Space.import(archive, opts?)`                 | `space.internal.export()`, `client.spaces.import()`                                                                                        |
 | `Space.migrate(id)`                                                             | `space.internal.migrate()`, `db.runMigrations`                                                                                             |

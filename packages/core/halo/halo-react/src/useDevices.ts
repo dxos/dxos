@@ -2,18 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Context from 'effect/Context';
+import { Result, useAtomValue } from '@effect-atom/atom-react';
+import { useMemo } from 'react';
 
 import { Identity } from '@dxos/halo';
 
-import { useHaloServices } from './useHaloServices';
-import { useReactive } from './useReactive';
+import { useHaloRuntime } from './HaloProvider';
+
+const EMPTY: readonly Identity.DeviceInfo[] = [];
 
 /**
  * Returns the devices belonging to the local identity. Reactive. Replaces
  * `@dxos/react-client`'s `useDevices`.
  */
 export const useDevices = (): readonly Identity.DeviceInfo[] => {
-  const service = Context.get(useHaloServices(), Identity.Service);
-  return useReactive(service.devices, service.deviceChanges, [service]);
+  const runtime = useHaloRuntime();
+  const atom = useMemo(() => runtime.atom(Identity.devices), [runtime]);
+  return Result.getOrElse(useAtomValue(atom), () => EMPTY);
 };
