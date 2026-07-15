@@ -2,116 +2,105 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import React from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Filter, Obj } from '@dxos/echo';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Sketch } from '@dxos/plugin-sketch';
-import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
-import { SketchBuilder } from '@dxos/plugin-sketch/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { type Client } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { createObject } from '@dxos/echo-client';
+import { random } from '@dxos/random';
 import { Panel } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor } from '@dxos/react-ui-editor';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { useLinkQuery } from '#hooks';
 import { translations } from '#translations';
 import { Markdown } from '#types';
 
-import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
+import {
+  MarkdownEditor,
+  type MarkdownEditorEditorRootProps,
+  MarkdownEditorProvider,
+  type MarkdownEditorProviderProps,
+} from './MarkdownEditor';
 
-// A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
-const SKETCH_CONTENT = new SketchBuilder()
-  .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
-  .build();
+random.seed(1);
 
-type StoryArgs = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
+const CONTENT = [
+  '# Markdown editor',
+  '',
+  '> Edit any column and watch the others update.',
+  '',
+  'Renders **markdown** formatting inline, or as raw *source*.',
+  '',
+  '## Section One',
+  '',
+  'Bound to a raw `Text` object (no client or database); every column shares the same object.',
+  '',
+  '- First item',
+  '- Second item',
+  '- Third item',
+  '',
+  '## Section Two',
+  '',
+  Array.from({ length: 3 })
+    .map(() => random.lorem.paragraphs())
+    .join('\n\n'),
+  '',
+].join('\n');
 
-const DefaultStory = (props: StoryArgs) => {
-  const [space] = useSpaces();
-  const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
-  const handleLinkQuery = useLinkQuery(space?.db, doc);
-  const id = doc && Obj.getURI(doc);
-  if (!id) {
-    return <Loading data={{ id }} />;
-  }
-
-  return (
-    <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
-      <MarkdownEditorProvider id={id} attendableId={id} object={doc} onLinkQuery={handleLinkQuery} {...props}>
-        {(editorRootProps) => (
-          <Editor.Root {...editorRootProps}>
-            {/* Mirror MarkdownArticle: Panel.Toolbar/Content are NOT `asChild` (MarkdownEditor.Toolbar is not
-                composable, so asChild wraps it in a dx-slot-warning div that breaks the grid-area layout). */}
-            <Panel.Root role='article'>
-              <Panel.Toolbar>
-                <MarkdownEditor.Toolbar classNames='dx-document' />
-              </Panel.Toolbar>
-              <Panel.Content>
-                <MarkdownEditor.Content />
-                {/* Embedded objects (transclusions) portal into block-container elements created by the editor. */}
-                <MarkdownEditor.Blocks />
-              </Panel.Content>
-            </Panel.Root>
-          </Editor.Root>
-        )}
-      </MarkdownEditorProvider>
-    </AttendableContainer>
-  );
+// Per-column editor config; the column's view mode is taken from `defaultViewMode`.
+type StoryArgs = {
+  columns: Markdown.Settings[];
 };
 
-const withClient = (seed: (client: Client) => Effect.Effect<void>): Decorator =>
-  withPluginManager({
-    // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
-    setupEvents: [AppActivationEvents.SetupSettings],
-    plugins: [
-      ...corePlugins(),
-      SketchPlugin(),
-      ClientPlugin({
-        types: [Markdown.Document, Text.Text, Sketch.Sketch, Sketch.Canvas],
-        onClientInitialized: ({ client }) => seed(client),
-      }),
-    ],
-  });
+const EditorArticle = (props: MarkdownEditorEditorRootProps) => (
+  <Editor.Root {...props}>
+    <Panel.Root role='article'>
+      <Panel.Toolbar>
+        <MarkdownEditor.Toolbar classNames='dx-document' />
+      </Panel.Toolbar>
+      <Panel.Content>
+        <MarkdownEditor.Content />
+        <MarkdownEditor.Blocks />
+      </Panel.Content>
+    </Panel.Root>
+  </Editor.Root>
+);
 
-const seedPlainDocument = (client: Client) =>
-  Effect.gen(function* () {
-    const { personalSpace } = yield* initializeIdentity(client);
-    personalSpace.db.add(Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }));
-  });
+const EditorColumn = ({ id, object, settings }: Pick<MarkdownEditorProviderProps, 'id' | 'object' | 'settings'>) => (
+  <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
+    <MarkdownEditorProvider
+      id={id}
+      attendableId={id}
+      object={object}
+      viewMode={settings?.defaultViewMode}
+      settings={settings}
+    >
+      {(editorRootProps) => <EditorArticle {...editorRootProps} />}
+    </MarkdownEditorProvider>
+  </AttendableContainer>
+);
 
-const seedEmbeddedSketch = (client: Client) =>
-  Effect.gen(function* () {
-    const { personalSpace } = yield* initializeIdentity(client);
-    const sketch = personalSpace.db.add(Sketch.make({ name: 'Test Sketch', canvas: { content: SKETCH_CONTENT } }));
-    const uri = Obj.getURI(sketch);
-    personalSpace.db.add(
-      Markdown.make({
-        content: [
-          '# Test Document',
-          '',
-          'The sketch below renders inline as a block surface:',
-          '',
-          `![${sketch.name}](${uri})`,
-          '',
-        ].join('\n'),
-      }),
-    );
-  });
+// Renders one column per config; all columns bind to the same raw ECHO object, so edits sync live via automerge.
+const DefaultStory = ({ columns }: StoryArgs) => {
+  // An automerge-backed ECHO object created without a client or database.
+  const object = useMemo(() => createObject(Text.make({ content: CONTENT })), []);
+
+  return (
+    <div className='dx-container grid' style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
+      {columns.map((settings, index) => (
+        <EditorColumn key={index} id={`${object.id}/${index}`} object={object} settings={settings} />
+      ))}
+    </div>
+  );
+};
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/components/MarkdownEditor',
   render: DefaultStory,
-  decorators: [withLayout({ layout: 'column' })],
+  decorators: [withTheme()],
   parameters: {
     translations: [...translations, ...editorTranslations],
   },
@@ -122,9 +111,27 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withClient(seedPlainDocument)],
+  decorators: [withLayout({ layout: 'column' }), withAttention()],
+  args: {
+    columns: [
+      {
+        defaultViewMode: 'preview',
+      },
+    ],
+  },
 };
 
-export const WithEmbeddedSketch: Story = {
-  decorators: [withClient(seedEmbeddedSketch)],
+export const TwoColumn: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' }), withAttention()],
+  args: {
+    columns: [
+      {
+        defaultViewMode: 'preview',
+        numberedHeadings: true,
+      },
+      {
+        defaultViewMode: 'source',
+      },
+    ],
+  },
 };

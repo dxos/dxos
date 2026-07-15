@@ -16,6 +16,9 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { Sketch } from '@dxos/plugin-sketch';
+import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
+import { SketchBuilder } from '@dxos/plugin-sketch/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -34,6 +37,11 @@ import { MarkdownPlugin } from '../../MarkdownPlugin';
 random.seed(1);
 
 const generator: ValueGenerator = random as any;
+
+// A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
+const SKETCH_CONTENT = new SketchBuilder()
+  .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
+  .build();
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define(
@@ -76,70 +84,87 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<Args>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
-      plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        MarkdownExtensionsPlugin(),
-        ClientPlugin({
-          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+    withPluginManager<Args>(
+      ({ args: { title = 'Testing', content = '', objects: showObjects = false, sketch: showSketch = false } }) => ({
+        // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
+        setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
+        plugins: [
+          ...corePlugins(),
+          StorybookPlugin({}),
+          MarkdownExtensionsPlugin(),
+          SketchPlugin(),
+          ClientPlugin({
+            types: [
+              Markdown.Document,
+              Text.Text,
+              Person.Person,
+              Organization.Organization,
+              Sketch.Sketch,
+              Sketch.Canvas,
+            ],
+            onClientInitialized: ({ client }) =>
+              Effect.gen(function* () {
+                const { personalSpace } = yield* initializeIdentity(client);
 
-              const createObjects = createObjectFactory(personalSpace.db, generator);
-              yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
+                const createObjects = createObjectFactory(personalSpace.db, generator);
+                yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
 
-              const kai = personalSpace.db.add(
-                Obj.make(Person.Person, {
-                  fullName: 'Kai Bot',
-                  image: 'https://placehold.net/avatar.svg',
-                  emails: [
-                    {
-                      label: 'Email',
-                      value: 'kai@dxos.org',
-                    },
-                  ],
-                }),
-              );
-              const dxos = personalSpace.db.add(
-                Obj.make(Organization.Organization, {
-                  name: 'DXOS',
-                  image: 'https://placehold.net/8.png',
-                  website: 'https://dxos.org',
-                }),
-              );
-              yield* Effect.promise(() => personalSpace.db.flush());
+                const kai = personalSpace.db.add(
+                  Obj.make(Person.Person, {
+                    fullName: 'Kai Bot',
+                    image: 'https://placehold.net/avatar.svg',
+                    emails: [
+                      {
+                        label: 'Email',
+                        value: 'kai@dxos.org',
+                      },
+                    ],
+                  }),
+                );
+                const dxos = personalSpace.db.add(
+                  Obj.make(Organization.Organization, {
+                    name: 'DXOS',
+                    image: 'https://placehold.net/8.png',
+                    website: 'https://dxos.org',
+                  }),
+                );
+                yield* Effect.promise(() => personalSpace.db.flush());
 
-              const objects = showObjects ? [kai, dxos] : [];
+                const objects = showObjects ? [kai, dxos] : [];
 
-              personalSpace.db.add(
-                Markdown.make({
-                  name: title,
-                  content: [
-                    `# ${title}`,
-                    content,
-                    objects
-                      .map((object, i) => [
-                        'This is object #' + (i + 1),
-                        `![${Obj.getLabel(object)}](${Obj.getURI(object)})`,
-                      ])
-                      .flat()
-                      .join('\n\n'),
-                    'This is the end of the document.',
-                  ].join('\n\n'),
-                }),
-              );
+                // The sketch renders inline as a block surface (transclusion) within the article.
+                const sketch = showSketch
+                  ? personalSpace.db.add(Sketch.make({ name: 'Test Sketch', canvas: { content: SKETCH_CONTENT } }))
+                  : undefined;
 
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
-            }),
-        }),
+                personalSpace.db.add(
+                  Markdown.make({
+                    name: title,
+                    content: [
+                      `# ${title}`,
+                      content,
+                      ...(sketch ? [`![${sketch.name}](${Obj.getURI(sketch)})`] : []),
+                      objects
+                        .map((object, i) => [
+                          'This is object #' + (i + 1),
+                          `![${Obj.getLabel(object)}](${Obj.getURI(object)})`,
+                        ])
+                        .flat()
+                        .join('\n\n'),
+                      'This is the end of the document.',
+                    ].join('\n\n'),
+                  }),
+                );
 
-        MarkdownPlugin(),
-        PreviewPlugin(),
-      ],
-    })),
+                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              }),
+          }),
+
+          MarkdownPlugin(),
+          PreviewPlugin(),
+        ],
+      }),
+    ),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -154,6 +179,7 @@ type Args = {
   title: string;
   content: string;
   objects: boolean;
+  sketch: boolean;
 };
 
 type Story = StoryObj<typeof meta>;
@@ -171,5 +197,13 @@ export const WithObjects: Story = {
     title: 'Testing with objects',
     content: 'Here are some inline objects:',
     objects: true,
+  },
+};
+
+export const WithEmbeddedSketch: Story = {
+  args: {
+    title: 'Test Document',
+    content: 'The sketch below renders inline as a block surface:',
+    sketch: true,
   },
 };
