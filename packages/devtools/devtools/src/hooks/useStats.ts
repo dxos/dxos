@@ -130,7 +130,7 @@ export const useStats = (): [Stats, () => void] => {
       client.spaces
         .get()
         .filter((space) => space.state.get() === SpaceState.SPACE_READY)
-        .map((space) => space.internal.db.getSyncState()),
+        .map((space) => space.internal.db.getAutomergeSyncState()),
     );
     const documentsToReconcile = syncStates
       .flatMap((s) => s.peers?.map((p) => p.differentDocuments + p.missingOnLocal + p.missingOnRemote) ?? [])
