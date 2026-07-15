@@ -35,9 +35,6 @@
       "path": "../../../sdk/schema"
     },
     {
-      "path": "../../../sdk/types"
-    },
-    {
       "path": "../../echo/echo"
     },
     {
@@ -51,6 +48,9 @@
     },
     {
       "path": "../compute"
+    },
+    {
+      "path": "../link"
     }
   ]
 }

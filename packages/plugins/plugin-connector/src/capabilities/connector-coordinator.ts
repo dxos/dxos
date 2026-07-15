@@ -10,15 +10,15 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
-import { Database, DXN, type Key, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { AccessToken, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { AccessToken } from '@dxos/types';
 
-import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry, SyncBinding } from '#types';
+import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';
 
 import {
   PROVIDER_FORM_DIALOG,
@@ -27,7 +27,7 @@ import {
   pendingConnectionStorageKey,
 } from '../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../errors';
-import { reconcileSyncBindings } from '../util';
+import { reconcileCursors } from '../util';
 
 /**
  * Pending connection awaiting an OAuth callback.
@@ -171,7 +171,7 @@ const openSyncTargetsDialogAfterConnectionCreated = (
  * bind a supplied `existingTarget` or materialize a fresh local root. Replaces
  * the old `onTokenCreated`-creates-the-target path (e.g. Gmail's Mailbox).
  */
-const createSingleBinding = (
+const createSingleCursor = (
   invoker: Operation.OperationService,
   db: Database.Database,
   connector: ConnectorEntry,
@@ -199,7 +199,7 @@ const createSingleBinding = (
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
       return;
     }
-    yield* Database.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: target }));
+    yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }));
   }).pipe(
     Effect.provide(Database.layer(db)),
     Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
@@ -237,7 +237,7 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
       );
     } else {
       // Single-target (e.g. Gmail): materialize/bind one target immediately.
-      yield* createSingleBinding(invoker, db, connector, persistedConnection, existingTarget);
+      yield* createSingleCursor(invoker, db, connector, persistedConnection, existingTarget);
       if (!existingTarget) {
         yield* navigateToNewConnection(invoker, db, persistedConnection.id);
       }
@@ -679,7 +679,7 @@ export default Capability.makeModule(
         return yield* createConnection({ db, spaceId, connectorId, loginHint, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    const setSyncBindings: ConnectorCoordinator['setSyncBindings'] = ({
+    const setCursors: ConnectorCoordinator['setCursors'] = ({
       db,
       connection: connectionRef,
       selected,
@@ -688,7 +688,7 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const connector = yield* resolveConnector(getConnectorEntries, connection.connectorId ?? '');
-        return yield* reconcileSyncBindings({ invoker, db, connection, connector, selected, existingTarget });
+        return yield* reconcileCursors({ invoker, db, connection, connector, selected, existingTarget });
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
     return Capability.contributes(
@@ -699,7 +699,7 @@ export default Capability.makeModule(
         createCustomConnection,
         finalizeRedirectFlow,
         submitCredentialForm,
-        setSyncBindings,
+        setCursors,
       },
       () =>
         Effect.sync(() => {

@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 import {
   Connection,
   ConnectionTestError,
@@ -18,7 +19,6 @@ import {
   type TestConnection,
 } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
-import { AccessToken } from '@dxos/types';
 
 import {
   DISCORD_BOT_LABEL,

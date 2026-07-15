@@ -33,9 +33,9 @@ export const BrainPlugin = Plugin.define(meta).pipe(
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   AppPlugin.addTranslationsModule({ translations }),
-  // Provisions the per-space FactStore/FeedCursors LayerSpecs + registry; the mailbox `AnalyzeMailbox`
-  // operation (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever
-  // analysis runs.
+  // Provisions the per-space FactStore LayerSpec + registry; the mailbox `AnalyzeMailbox` operation
+  // (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever analysis
+  // runs.
   Plugin.addModule({
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: FactStore,

@@ -8,8 +8,8 @@ import { OAUTH_TIMEOUT_MS, openBrowser, startOAuthCallbackServer } from '@dxos/c
 import { ClientService } from '@dxos/client';
 import { Database } from '@dxos/echo';
 import { createEdgeClient } from '@dxos/functions-runtime/edge';
+import { type AccessToken } from '@dxos/link';
 import { type OAuthFlowResult } from '@dxos/protocols';
-import { type AccessToken } from '@dxos/types';
 
 import {
   type OAuthServerProvider,
