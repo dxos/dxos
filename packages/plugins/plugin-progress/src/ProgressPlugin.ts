@@ -5,7 +5,7 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { ProgressRegistry, ReactSurface } from '#capabilities';
+import { ProgressRegistry, ReactSurface, TraceProgressSink } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -14,6 +14,11 @@ export const ProgressPlugin = Plugin.define(meta).pipe(
     id: 'progress-registry',
     activatesOn: ActivationEvents.Startup,
     activate: () => ProgressRegistry(),
+  }),
+  Plugin.addModule({
+    id: 'trace-progress-sink',
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: () => TraceProgressSink(),
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',

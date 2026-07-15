@@ -103,6 +103,9 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
     return FeedTraceSink.context({
       sink: {
         write: (message) => {
+          if (message.isEphemeral) {
+            return;
+          }
           log('trace message buffered', {
             feedId: feed.id,
             pid: message.meta.pid,

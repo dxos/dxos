@@ -1,9 +1,9 @@
 # Gmail sync and progress reporting
 
-Gmail sync publishes live progress via trace `status.update` events. A
-trace→registry reducer (not yet wired) will project these into
-`AppCapabilities.ProgressRegistry` so `MailboxArticle` and the R0 status
-indicator can subscribe reactively.
+Gmail sync publishes live progress via trace `status.update` events.
+`plugin-progress` contributes a parallel {@link Capabilities.TraceSink} that projects
+those events into `AppCapabilities.ProgressRegistry` (alongside the feed trace sink
+from `plugin-routine`).
 
 ## Architecture
 
@@ -14,8 +14,8 @@ syncGmail (producer)
   ▼
 Trace sink (operation runtime / test harness)
   │
-  ▼  (future)
-trace→registry reducer
+  ├─ FeedTraceSink (plugin-routine) — durable feed persistence
+  └─ createProgressTraceSink (plugin-progress) — live ProgressRegistry
   ▼
 createProgressRegistry (app-toolkit)
   ▼
@@ -56,8 +56,9 @@ The `#sync` suffix lets other mailbox-scoped monitors coexist (e.g. `#topics`).
    reportStatus({ current: 0 });
    reportStatus({ total: totalToRetrieve });
    reportStatus({ current: progressCurrent });
-   reportStatus({ message: 'Sync failed' });
-   reportStatus({ message: 'Cancelled' });
+   reportStatus({ message: PROGRESS_STATUS_FAILED });
+   reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+   reportStatus({ message: PROGRESS_STATUS_COMPLETE });
    ```
 
 3. **Set total** — each date chunk's enumerated id count (before full fetches)
@@ -67,15 +68,13 @@ The `#sync` suffix lets other mailbox-scoped monitors coexist (e.g. `#topics`).
    `progress.current`.
 
 5. **Abort** — `AbortController` + `Pipeline.abortWith` remain for cooperative
-   cancellation; the reducer will wire the meter's cancel control later.
+   cancellation; the progress trace sink wires the meter's cancel control to
+   `ProcessManager.terminate()`.
 
 ## Consumer wiring (`MailboxArticle`)
 
-Unchanged until the reducer lands — still reads `ProgressRegistry`:
-
-```ts
-const syncProgress = useProgress(createSyncProgressKey(mailbox));
-```
+Reads `ProgressRegistry` via `useProgress(createSyncProgressKey(mailbox))` — fed by
+the trace sink while sync runs.
 
 ## Testing
 

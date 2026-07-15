@@ -7,7 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  PROGRESS_STATUS_CANCELLED,
+  PROGRESS_STATUS_COMPLETE,
+  PROGRESS_STATUS_FAILED,
+} from '@dxos/app-toolkit';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
@@ -175,12 +180,12 @@ export const syncGmail = ({
       store.compartment(meta.profile.key),
     );
 
-    // Cooperative cancellation: a trace→registry reducer will wire the meter's cancel control to
-    // `controller.abort()`; until then the signal is only used for in-process abort paths.
+    // Cooperative cancellation: the progress trace sink wires the meter's cancel control to
+    // `ProcessManager.terminate()`; the pipeline also observes this signal for in-process abort.
     const controller = new AbortController();
 
-    // Live sync status via trace `status.update` events. A reducer will project these into the
-    // runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
+    // Live sync status via trace `status.update` events. The progress trace sink projects these into
+    // the runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
     const traceWriter = yield* Trace.TraceService;
     const progressKey = createSyncProgressKey(mailbox);
     const syncLabel = mailbox.name ?? 'Mailbox';
@@ -339,7 +344,7 @@ export const syncGmail = ({
           // Log the raw error for debugging; the meter shows only a short reason (the full exception —
           // provider errors, auth tokens — must not reach the UI).
           log.warn('gmail sync failed', { error });
-          reportStatus({ message: 'Sync failed' });
+          reportStatus({ message: PROGRESS_STATUS_FAILED });
         }),
       ),
     );
@@ -356,7 +361,9 @@ export const syncGmail = ({
     publishStats();
 
     if (controller.signal.aborted) {
-      reportStatus({ message: 'Cancelled' });
+      reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+    } else {
+      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
     }
 
     log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
