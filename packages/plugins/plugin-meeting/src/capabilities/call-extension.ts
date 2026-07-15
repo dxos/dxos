@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
@@ -30,8 +31,8 @@ export default Capability.makeModule(
 
     return Capability.contributes(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
-        const client = capabilities.get(ClientCapabilities.Client);
-        const identity = client.halo.identity.get();
+        const haloIdentity = capabilities.get(ClientCapabilities.HaloIdentity);
+        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         invariant(identity);
 
         // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.

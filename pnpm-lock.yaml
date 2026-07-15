@@ -9303,6 +9303,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

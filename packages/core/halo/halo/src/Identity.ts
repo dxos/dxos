@@ -102,6 +102,11 @@ export class Service extends Context.Tag('@dxos/halo/Identity')<
      * callers (non-React, non-Effect) that need the current value without subscribing.
      */
     readonly getSnapshot: () => Option.Option<Info>;
+    /**
+     * Subscribe to local-identity changes (imperative). Invokes `callback` immediately with the
+     * current value, then on each change. Returns an unsubscribe function.
+     */
+    readonly subscribe: (callback: (identity: Option.Option<Info>) => void) => () => void;
     /** Create the local identity (and its first device). */
     readonly create: (options?: { displayName?: string; deviceLabel?: string }) => Effect.Effect<Info, IdentityError>;
     /** Re-admit this device to an existing identity via a recovery credential. */

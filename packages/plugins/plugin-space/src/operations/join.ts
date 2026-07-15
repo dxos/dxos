@@ -1,6 +1,7 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -17,8 +18,8 @@ import { SpaceOperation } from './definitions';
 const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      if (!client.halo.identity.get()) {
+      const haloIdentity = yield* Capability.get(ClientCapabilities.HaloIdentity);
+      if (Option.isNone(haloIdentity.getSnapshot())) {
         // Space invitations authenticate against a local identity; there is nothing to redeem without one.
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {

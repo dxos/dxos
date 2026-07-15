@@ -53,6 +53,13 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
     return identity ? Option.some(toInfo(identity)) : Option.none();
   },
 
+  subscribe: (callback) => {
+    const subscription = client.halo.identity.subscribe((identity) =>
+      callback(identity ? Option.some(toInfo(identity)) : Option.none()),
+    );
+    return () => subscription.unsubscribe();
+  },
+
   create: (options) =>
     Effect.tryPromise({
       try: async () =>

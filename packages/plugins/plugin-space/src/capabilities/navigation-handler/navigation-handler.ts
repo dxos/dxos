@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
@@ -24,7 +25,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ invitationProp = 'spaceInvitationCode' }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.HaloIdentity);
 
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {
@@ -35,7 +36,7 @@ export default Capability.makeModule(
 
         // Ignore invitations that arrive before a local identity exists rather than forcing
         // identity creation here, bypassing the normal onboarding flow.
-        if (!client.halo.identity.get()) {
+        if (Option.isNone(haloIdentity.getSnapshot())) {
           return;
         }
 
