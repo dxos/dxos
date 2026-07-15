@@ -1,6 +1,6 @@
 # plugin-search — Tasks
 
-_Resume: Milestone 1 COMPLETE (commits 790c44e1..774b3e45) — real FTS search + ranking/highlight in plugin-search, free-text message search in MailboxArticle; final whole-branch review clean. Uncommitted: none. Next: open a PR, or start Milestone 2 (cross-space fan-out + RRF merge)._
+_Resume: Milestone 1 COMPLETE (commits 790c44e1..774b3e45). Milestone 1.5 COMPLETE — shared search-text utils moved to `@dxos/react-ui-search`, `SAMPLE_MESSAGES` corpus added to `@dxos/plugin-testing`, best-match snippets wired into `MessageStack`, `MailboxFilter` extracted, and `SearchResultList` (react-ui-list `Listbox`) shipped with a corpus-backed storybook. Uncommitted: none. Next: open a PR, or start Milestone 2 (cross-space fan-out + RRF merge)._
 
 Work-stream: unify Composer search across lexical (FTS5), semantic (vector),
 structured/RDF, and agent planes; tiered client/EDGE vector index synced via feeds.
@@ -48,17 +48,17 @@ depending on plugin-search.
 
 ### Tasks
 
-- [ ] **Shared search-text utils** — move `computeMatchSpans` + `Highlighted` to
+- [x] **Shared search-text utils** — move `computeMatchSpans` + `Highlighted` to
   `@dxos/react-ui-search` (`src/util`, `src/components/Highlighted`); add pure
   `buildSnippet(text, query)`; update plugin-search call sites (no shims).
-- [ ] **Shared sample corpus** — pure-data `SAMPLE_MESSAGES` (~18 realistic messages
+- [x] **Shared sample corpus** — pure-data `SAMPLE_MESSAGES` (~18 realistic messages
   across projects/invoices/meetings/hiring/incidents) in `@dxos/plugin-testing`.
-- [ ] **Best-match snippet in mailbox cards** — thread the active query to `MessageStack`
+- [x] **Best-match snippet in mailbox cards** — thread the active query to `MessageStack`
   tiles; when searching, show `buildSnippet(Message.extractText(m), query)` highlighted
   instead of the default preview.
-- [ ] **Extract MailboxFilter** — `MailboxFilter.tsx` + `MailboxFilter.stories.tsx`;
+- [x] **Extract MailboxFilter** — `MailboxFilter.tsx` + `MailboxFilter.stories.tsx`;
   reseed `MailboxArticle.stories.tsx` with the corpus; play test exercises search + snippet.
-- [ ] **SearchResultList** — react-ui-list `Listbox` result list (icon + highlighted
+- [x] **SearchResultList** — react-ui-list `Listbox` result list (icon + highlighted
   title/snippet + metadata) + `SearchResultList.stories.tsx` over the corpus.
 
 ### Follow-ups
