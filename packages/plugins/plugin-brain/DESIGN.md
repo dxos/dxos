@@ -26,19 +26,19 @@ Today: `Topic` = `{ label, summary, threadIds[], participants[], keywords[], que
 (string-keyed); `Project` (`@dxos/types`) = `{ name, description, image }`; `Task` (`@dxos/types`).
 Target `Project` (in `@dxos/types`), string arrays promoted to **Relations/Refs** where an entity exists:
 
-| Field | Now | Target |
-| --- | --- | --- |
-| `name` / `label` | `Topic.label` | `name` (reconcile the two) |
-| `summary` | string | string (pipeline-written) |
-| threads | `threadIds: string[]` | `Ref<Thread>[]` / `AnchoredTo` relations to `Message`/`Thread` |
-| contacts | `participants: string[]` | `Ref<Person|Organization>[]` (entity-resolved) |
-| tasks | `tasks: string[]` | `Ref<Outline>` (Outliner task list) |
-| notes | — | `Ref<Document>[]` |
-| collections | — | `Ref<Collection>` (Sketch/Sheet/Table/File) |
-| facts | — | Project-scoped FactStore (via plugin-brain) |
-| questions | `questions: string[]` | keep; later reified questions |
-| keywords | `keywords: string[]` | keep (search/cluster) |
-| status | — | enum (active/paused/done) + dates/milestones |
+| Field            | Now                      | Target                                                         |
+| ---------------- | ------------------------ | -------------------------------------------------------------- |
+| `name` / `label` | `Topic.label`            | `name` (reconcile the two)                                     |
+| `summary`        | string                   | string (pipeline-written)                                      |
+| threads          | `threadIds: string[]`    | `Ref<Thread>[]` / `AnchoredTo` relations to `Message`/`Thread` |
+| contacts         | `participants: string[]` | `Ref` to `Person` / `Organization` (entity-resolved)          |
+| tasks            | `tasks: string[]`        | `Ref<Outline>` (Outliner task list)                            |
+| notes            | —                        | `Ref<Document>[]`                                              |
+| collections      | —                        | `Ref<Collection>` (Sketch/Sheet/Table/File)                    |
+| facts            | —                        | Project-scoped FactStore (via plugin-brain)                    |
+| questions        | `questions: string[]`    | keep; later reified questions                                  |
+| keywords         | `keywords: string[]`     | keep (search/cluster)                                          |
+| status           | —                        | enum (active/paused/done) + dates/milestones                   |
 
 `Task` reconciliation: the Project's task list is an `Outline` of `Task`s (Outliner already models nested
 checklists); `Topic.tasks` string rollup becomes the seed for that Outline. Keep `Topic.Props` (the
@@ -100,7 +100,7 @@ Project, and per-Project **facet** child nodes. The Project object itself opens 
   In simple/multi layout, facets open as companions of the dashboard (reuse the `linkedSegment` companion
   pattern already used for the Topic detail).
 - **Cross-surfacing** — Threads/Contacts/Collections are refs to objects owned by other plugins
-  (inbox/CRM/sketch/sheet); the Project facet nodes are *views* over those refs, not new object stores.
+  (inbox/CRM/sketch/sheet); the Project facet nodes are _views_ over those refs, not new object stores.
 - **Suggestions stay in inbox** — mailbox-scoped topic suggestions + Analyze remain an inbox concern
   (decided in the current refactor); accepting a suggestion creates/links a Project.
 

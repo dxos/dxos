@@ -13,7 +13,7 @@ _2026-07-14. Inventory of every current `Topic` usage ahead of moving the type t
 - **Definition:** [`packages/core/compute/pipeline-email/src/types/Topic.ts`](../../core/compute/pipeline-email/src/types/Topic.ts)
   - `Topic` is already a class: `class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.topic', '0.1.0'))(TopicProps) {}`.
   - **`TopicProps`** — an exported `Schema.Struct` (`label, summary, threadIds[], participants[],
-    keywords[], questions[], tasks[]`) — is **shared**: `Topic` is built from it AND
+keywords[], questions[], tasks[]`) — is **shared**: `Topic` is built from it AND
     `Mailbox.topicSuggestions` is `Schema.optional(Schema.Array(TopicProps))`. The comment states the
     intent: promotion is `Obj.make(Topic, suggestion)` with no field mapping.
   - Exported from the package index (`@dxos/pipeline-email`): `Topic`, `TopicProps` (+ `deriveThreadId`,
@@ -40,29 +40,33 @@ Recommendation captured for the plan: **(A)** unless we want suggestions to dive
 ## 3. Consumers by category
 
 ### Type / schema consumers
-| File | Uses |
-| --- | --- |
-| `plugin-inbox/src/types/Mailbox.ts` | `TopicProps` → `topicSuggestions` field |
-| `plugin-inbox/src/InboxPlugin.tsx` | registers `Topic` in `addTypes` |
-| `plugin-inbox/src/types/InboxOperation.ts` | operation I/O referencing Topic |
+
+| File                                       | Uses                                    |
+| ------------------------------------------ | --------------------------------------- |
+| `plugin-inbox/src/types/Mailbox.ts`        | `TopicProps` → `topicSuggestions` field |
+| `plugin-inbox/src/InboxPlugin.tsx`         | registers `Topic` in `addTypes`         |
+| `plugin-inbox/src/types/InboxOperation.ts` | operation I/O referencing Topic         |
 
 ### Operations (plugin-inbox)
-| File | Uses |
-| --- | --- |
-| `operations/analyze/analyze-topics.ts` | materializes `Topic` objects + `AnchoredTo` |
-| `operations/analyze/create-topic-from-message.ts` | creates one `Topic` from a thread |
+
+| File                                               | Uses                                                |
+| -------------------------------------------------- | --------------------------------------------------- |
+| `operations/analyze/analyze-topics.ts`             | materializes `Topic` objects + `AnchoredTo`         |
+| `operations/analyze/create-topic-from-message.ts`  | creates one `Topic` from a thread                   |
 | `operations/analyze/suggestions.ts` (+ `.test.ts`) | orders/dedupes suggestion drafts (TopicProps shape) |
 
 ### UI components (the move targets)
-| File | Role |
-| --- | --- |
-| `containers/TopicArticle/TopicArticle.tsx` | **detail** view of one `Topic` (subject: Topic) |
-| `containers/TopicArticle/resolve-threads.ts` (+ `.test.ts`) | groups a topic's `threadIds` → threads |
-| `containers/TopicsArticle/TopicsArticle.tsx` | **master** list of Topics + suggestions (mailbox-scoped) |
-| `components/MessageStack/MessageStack.tsx` | "Create Topic" affordance (emits create-topic) |
-| `components/Row`, `Card.*` | presentational (keyword tags, sections) — no Topic coupling |
+
+| File                                                        | Role                                                        |
+| ----------------------------------------------------------- | ----------------------------------------------------------- |
+| `containers/TopicArticle/TopicArticle.tsx`                  | **detail** view of one `Topic` (subject: Topic)             |
+| `containers/TopicArticle/resolve-threads.ts` (+ `.test.ts`) | groups a topic's `threadIds` → threads                      |
+| `containers/TopicsArticle/TopicsArticle.tsx`                | **master** list of Topics + suggestions (mailbox-scoped)    |
+| `components/MessageStack/MessageStack.tsx`                  | "Create Topic" affordance (emits create-topic)              |
+| `components/Row`, `Card.*`                                  | presentational (keyword tags, sections) — no Topic coupling |
 
 ### App-graph (plugin-inbox `app-graph-builder.ts`)
+
 - Topics **folder node** under each mailbox (`MAILBOX_TOPICS_TYPE`, `getTopicsId()`), `data: mailbox`.
 - **`mailboxTopics`** companion extension: selected topic → `linkedSegment('topic')` companion whose
   `data` is the `Topic` (so `TopicArticle` renders it).
@@ -71,23 +75,26 @@ Recommendation captured for the plan: **(A)** unless we want suggestions to dive
   per `Topic`**, rendered by a regular object/article surface.
 
 ### Surfaces (plugin-inbox `react-surface.tsx`)
+
 - `topics` surface → `TopicsArticle` (mailbox-folder filter).
 - `topic` surface → `TopicArticle` via `AppSurface.object(AppSurface.Article, Topic)` — **already the
   regular object/article pattern** the refactor wants; this binding moves to plugin-brain as-is.
 
 ### Translations
+
 - `plugin-inbox/src/translations.ts` — `topics.*`, `topic.*` keys (label, summary, threads, questions,
   tasks, accept/dismiss, empty, suggested, count, analyze). Move the Topic-owned keys to plugin-brain.
 
 ### Stories / harness / tests
-| File | Uses |
-| --- | --- |
-| `stories-inbox/src/stories/TopicsArticle.stories.tsx` | renders `TopicsArticle` (seeds Topics) |
-| `stories-inbox/src/stories/CreateTopic.stories.tsx` | create-topic flow |
-| `stories-inbox/src/modules/TopicsModule.tsx` | Topics surface module |
-| `stories-brain/src/testing/harness/internal/active-topics.ts`, `pipelines/active-topics.ts` | research harness `Topic` assembly |
-| `stories-brain/src/test/{active-topics,artifacts.bench}.test.ts` | harness tests |
-| `plugin-inbox/src/{sync/sync.test.ts,util/util.test.ts}` | incidental references |
+
+| File                                                                                        | Uses                                   |
+| ------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `stories-inbox/src/stories/TopicsArticle.stories.tsx`                                       | renders `TopicsArticle` (seeds Topics) |
+| `stories-inbox/src/stories/CreateTopic.stories.tsx`                                         | create-topic flow                      |
+| `stories-inbox/src/modules/TopicsModule.tsx`                                                | Topics surface module                  |
+| `stories-brain/src/testing/harness/internal/active-topics.ts`, `pipelines/active-topics.ts` | research harness `Topic` assembly      |
+| `stories-brain/src/test/{active-topics,artifacts.bench}.test.ts`                            | harness tests                          |
+| `plugin-inbox/src/{sync/sync.test.ts,util/util.test.ts}`                                    | incidental references                  |
 
 ## 4. Blast radius
 
@@ -108,4 +115,4 @@ Recommendation captured for the plan: **(A)** unless we want suggestions to dive
   `plugin-github/src/operations/materialize-target.ts`.
 - A future `Topic`→`Project` **rename** would collide with this existing `Project` (different field shape,
   different DXN). Renaming is deferred (tracked); this refactor keeps the `Topic` name/DXN and only moves
-  + restyles it. Reconciling the two `Project`s is its own decision.
+  - restyles it. Reconciling the two `Project`s is its own decision.
