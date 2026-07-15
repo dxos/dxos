@@ -17,7 +17,6 @@ import {
   ReactContext,
   ReactSurface,
   SchemaDefs,
-  SpaceFeedReplicationProgress,
   SpaceReplicationProgress,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -62,10 +61,6 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ClientEvents.SpacesReady, AppActivationEvents.ProgressRegistryReady),
     activate: SpaceReplicationProgress,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.SpacesReady, AppActivationEvents.ProgressRegistryReady),
-    activate: SpaceFeedReplicationProgress,
   }),
   Plugin.addModule({
     activatesOn: ActivationEvents.SetupProcessManager,

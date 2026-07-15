@@ -6,64 +6,73 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Space, type PeerSyncState } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { isEdgePeerId } from '@dxos/echo-protocol';
+import { type Database } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
-import { ProgressMonitorBridge, createSpaceReplicationProgressKey, getSpaceProgressLabel } from '../progress';
+import {
+  createSpaceFeedReplicationProgressKey,
+  createSpaceReplicationProgressKey,
+  getSpaceProgressLabel,
+} from '../progress';
+
+type MonitorUpdate = {
+  readonly label: string;
+  readonly current: number;
+  readonly total: number;
+  readonly note?: string;
+};
 
 /**
- * Publishes per-space automerge replication backlog into {@link AppCapabilities.ProgressRegistry}.
- * Subscribes via the client sync-state stream and removes monitors when a space catches up.
+ * Publishes per-space replication backlog — automerge documents and ECHO feed blocks — into the
+ * {@link AppCapabilities.ProgressRegistry}. Subscribes to the combined sync-state stream and drops
+ * monitors once a space catches up.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
-    const registries = yield* Capability.getAll(AppCapabilities.ProgressRegistry);
-    if (registries.length === 0) {
-      log.warn('No progress registries found');
-      return;
-    }
+    const registry = yield* Capability.get(AppCapabilities.ProgressRegistry);
 
-    // TODO(dmaretskyi): Kill the bridge and work with the first registry directly.
-    const bridge = new ProgressMonitorBridge(registries);
     const syncContext = new Context();
     const subscribedSpaces = new Set<SpaceId>();
+    const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        console.log('clear');
         void syncContext.dispose();
-        bridge.clear();
+        for (const monitor of monitors.values()) {
+          monitor.remove();
+        }
+        monitors.clear();
         subscribedSpaces.clear();
       }),
     );
 
-    const applyPeerState = (space: Space, peerState: PeerSyncState): void => {
-      const key = createSpaceReplicationProgressKey(space.id);
-      const unsynced = peerState.unsyncedDocumentCount ?? 0;
-      if (unsynced === 0) {
-        bridge.remove(key);
+    const applyMonitor = (key: string, update: MonitorUpdate | undefined): void => {
+      if (update === undefined) {
+        monitors.get(key)?.remove();
+        monitors.delete(key);
         return;
       }
 
-      const total = peerState.totalDocumentCount ?? 0;
-      const current = total > 0 ? Math.max(0, total - unsynced) : 0;
-      const note =
-        peerState.missingOnLocal > 0 || peerState.missingOnRemote > 0
-          ? `↓${peerState.missingOnLocal} ↑${peerState.missingOnRemote}`
-          : undefined;
+      let monitor = monitors.get(key);
+      if (!monitor) {
+        monitor = registry.register(key, { label: update.label, total: update.total });
+        monitors.set(key, monitor);
+      }
+      monitor.set(update.current);
+      monitor.total(update.total);
+      if (update.note !== undefined) {
+        monitor.note(update.note);
+      }
+    };
 
-      bridge.update(key, {
-        label: getSpaceProgressLabel(space, 'CRDTs'),
-        current,
-        total: total > 0 ? total : unsynced,
-        note,
-      });
+    const applySyncState = (space: Space, state: Database.SyncState): void => {
+      applyMonitor(createSpaceReplicationProgressKey(space.id), toDocumentUpdate(space, state));
+      applyMonitor(createSpaceFeedReplicationProgressKey(space.id), toFeedUpdate(space, state));
     };
 
     const subscribeSpace = (space: Space): void => {
@@ -72,15 +81,7 @@ export default Capability.makeModule(
       }
       subscribedSpaces.add(space.id);
 
-      syncContext.onDispose(
-        space.internal.db.subscribeToSyncState(syncContext, ({ peers = [] }) => {
-          console.log('syncState', peers);
-          const edgePeer = peers.find((state) => isEdgePeerId(state.peerId, space.id));
-          if (edgePeer) {
-            applyPeerState(space, edgePeer);
-          }
-        }),
-      );
+      syncContext.onDispose(space.internal.db.subscribeToSyncState((state) => applySyncState(space, state)));
     };
 
     for (const space of client.spaces.get()) {
@@ -96,3 +97,37 @@ export default Capability.makeModule(
     yield* Effect.addFinalizer(() => Effect.sync(() => spacesSubscription.unsubscribe()));
   }),
 );
+
+/** Derives the automerge document monitor state, or `undefined` when caught up. */
+const toDocumentUpdate = (space: Space, state: Database.SyncState): MonitorUpdate | undefined => {
+  const unsynced = state.unsyncedDocumentCount;
+  if (unsynced === 0) {
+    return undefined;
+  }
+
+  const total = state.totalDocumentCount > 0 ? state.totalDocumentCount : unsynced;
+  return {
+    label: getSpaceProgressLabel(space, 'CRDTs'),
+    current: Math.max(0, total - unsynced),
+    total,
+  };
+};
+
+/** Derives the ECHO feed block monitor state, or `undefined` when caught up. */
+const toFeedUpdate = (space: Space, state: Database.SyncState): MonitorUpdate | undefined => {
+  const blocksToPull = Number(state.blocksToPull);
+  const blocksToPush = Number(state.blocksToPush);
+  const pending = blocksToPull + blocksToPush;
+  if (pending === 0) {
+    return undefined;
+  }
+
+  const totalBlocks = Number(state.totalBlocks);
+  const total = totalBlocks > 0 ? totalBlocks : pending;
+  return {
+    label: getSpaceProgressLabel(space, 'Feeds'),
+    current: Math.max(0, total - pending),
+    total,
+    note: `↓${blocksToPull} ↑${blocksToPush}`,
+  };
+};

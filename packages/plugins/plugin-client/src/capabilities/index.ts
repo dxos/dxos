@@ -20,10 +20,6 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 export const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const SchemaDefs = Capability.lazy('SchemaDefs', () => import('./schema-defs'));
-export const SpaceFeedReplicationProgress = Capability.lazy(
-  'SpaceFeedReplicationProgress',
-  () => import('./space-feed-replication-progress'),
-);
 export const SpaceReplicationProgress = Capability.lazy(
   'SpaceReplicationProgress',
   () => import('./space-replication-progress'),

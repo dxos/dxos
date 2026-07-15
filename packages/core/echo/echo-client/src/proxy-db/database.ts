@@ -8,7 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
   type Blob,
@@ -24,7 +24,7 @@ import {
   type Registry,
   Type,
 } from '@dxos/echo';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
@@ -44,6 +44,7 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { runServiceCall } from '@dxos/protocols';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
@@ -90,14 +91,14 @@ export interface EchoDatabase extends Database.Database {
   runMigrations(migrations: ObjectMigration[]): Promise<void>;
 
   /**
-   * Get the current sync state.
+   * Get the current per-peer automerge document sync state.
    */
-  getSyncState(): Promise<SpaceSyncState>;
+  getAutomergeSyncState(): Promise<SpaceSyncState>;
 
   /**
-   * Get notification about the sync progress with other peers.
+   * Get notification about the per-peer automerge document sync progress.
    */
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
 
   /**
    * Returns ids for all objects in the space (both loaded and unloaded).
@@ -178,6 +179,50 @@ export type EchoDatabaseProps = {
 
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
+};
+
+/**
+ * Feed block backlog aggregated across all namespaces of a space.
+ */
+type SpaceFeedSyncState = Pick<Database.SyncState, 'blocksToPull' | 'blocksToPush' | 'totalBlocks'>;
+
+const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToPush: '0', totalBlocks: '0' };
+
+/**
+ * Poll interval for feed block backlog, which has no change stream.
+ */
+const FEED_SYNC_POLL_INTERVAL = 2_000;
+
+/**
+ * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
+ * otherwise the EDGE peer.
+ */
+const selectPeer = (
+  peers: readonly SpaceSyncState.PeerState[],
+  spaceId: SpaceId,
+  peerId?: string,
+): SpaceSyncState.PeerState | undefined =>
+  peerId !== undefined
+    ? peers.find((peer) => peer.peerId === peerId)
+    : peers.find((peer) => isEdgePeerId(peer.peerId, spaceId));
+
+/**
+ * Flattens per-peer automerge state (for the selected peer) with aggregated feed state.
+ */
+const combineSyncState = (
+  automerge: SpaceSyncState,
+  feeds: SpaceFeedSyncState,
+  spaceId: SpaceId,
+  peerId?: string,
+): Database.SyncState => {
+  const peer = selectPeer(automerge.peers ?? [], spaceId, peerId);
+  return {
+    localDocumentCount: peer?.localDocumentCount ?? 0,
+    remoteDocumentCount: peer?.remoteDocumentCount ?? 0,
+    totalDocumentCount: peer?.totalDocumentCount ?? 0,
+    unsyncedDocumentCount: peer?.unsyncedDocumentCount ?? 0,
+    ...feeds,
+  };
 };
 
 /**
@@ -639,12 +684,79 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.flush();
   }
 
-  getSyncState(): Promise<SpaceSyncState> {
+  getAutomergeSyncState(): Promise<SpaceSyncState> {
     return this._entityManager.getSyncState();
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
     return this._entityManager.subscribeToSyncState(ctx, callback);
+  }
+
+  async getSyncState(options?: Database.GetSyncStateOptions): Promise<Database.SyncState> {
+    const [automerge, feeds] = await Promise.all([this._entityManager.getSyncState(), this.#getSpaceFeedSyncState()]);
+    return combineSyncState(automerge, feeds, this.spaceId, options?.peerId);
+  }
+
+  subscribeToSyncState(cb: (state: Database.SyncState) => void, options?: Database.GetSyncStateOptions): CleanupFn {
+    const ctx = Context.default();
+    let cancelled = false;
+    let automerge: SpaceSyncState = { peers: [] };
+    let feeds: SpaceFeedSyncState = EMPTY_FEED_SYNC_STATE;
+    const emit = () => cb(combineSyncState(automerge, feeds, this.spaceId, options?.peerId));
+
+    // Automerge documents arrive as a stream.
+    ctx.onDispose(
+      this._entityManager.subscribeToSyncState(ctx, (state) => {
+        automerge = state;
+        emit();
+      }),
+    );
+
+    // Feed blocks have no change stream, so poll the backend.
+    const pollFeeds = async () => {
+      const next = await this.#getSpaceFeedSyncState();
+      if (cancelled) {
+        return;
+      }
+      feeds = next;
+      emit();
+    };
+    void pollFeeds();
+    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
+    ctx.onDispose(() => {
+      cancelled = true;
+      clearInterval(timer);
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
+  }
+
+  /**
+   * Aggregates feed block backlog across all namespaces synced for this space.
+   */
+  async #getSpaceFeedSyncState(): Promise<SpaceFeedSyncState> {
+    if (!this.#feedService) {
+      return EMPTY_FEED_SYNC_STATE;
+    }
+    const response = await runServiceCall(
+      this.#runtime,
+      this.#feedService.FeedService.getSyncState({ spaceId: this.spaceId, namespaces: [] }),
+    );
+    let blocksToPull = 0n;
+    let blocksToPush = 0n;
+    let totalBlocks = 0n;
+    for (const namespace of response.namespaces ?? []) {
+      blocksToPull += BigInt(namespace.blocksToPull);
+      blocksToPush += BigInt(namespace.blocksToPush);
+      totalBlocks += BigInt(namespace.totalBlocks);
+    }
+    return {
+      blocksToPull: String(blocksToPull),
+      blocksToPush: String(blocksToPush),
+      totalBlocks: String(totalBlocks),
+    };
   }
 
   getAllObjectIds(): string[] {
