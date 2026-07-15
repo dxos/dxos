@@ -22,12 +22,7 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
 
-  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
-    db,
-    subject,
-    functionKey: 'org.dxos.function.inbox.google-mail-sync',
-    input: {},
-  });
+  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject });
 
   const handleViewTrigger = useCallback(() => {
     if (!db) {

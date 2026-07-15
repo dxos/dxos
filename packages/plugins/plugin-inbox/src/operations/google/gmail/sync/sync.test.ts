@@ -141,6 +141,45 @@ describe('syncGmail against a mock Gmail API', () => {
     expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
   });
 
+  test('cancelling mid-sync clears the monitor instead of leaving it stuck running', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = generateGmailDataset({ count: 30, seed: 29, start, end });
+    const after = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const key = createSyncProgressKey(mailbox);
+
+    // Cancel as soon as the monitor shows real progress, so the run is genuinely mid-flight — the
+    // subscription fires synchronously from the same `advance` call, so this reliably races ahead of
+    // completion rather than after it.
+    let cancelled = false;
+    const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
+      const task = snapshot.tasks.find((task) => task.name === key);
+      if (task && task.current > 0 && !cancelled) {
+        cancelled = true;
+        progress.cancel(key);
+      }
+    });
+
+    await expect(
+      EffectEx.runPromise(
+        syncGmail({ binding: Ref.make(binding), after }).pipe(
+          Effect.provide(inboxSyncTestServices(db, dataset, { progressRegistry: progress })),
+        ),
+      ),
+    ).rejects.toThrow();
+    unsubscribe();
+
+    expect(cancelled).toBe(true);
+    // Not stuck at 'running' — the interrupt-path cleanup (`Effect.onInterrupt`) removes the monitor
+    // just like the success path does, instead of leaving it frozen at its last snapshot forever.
+    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
+  });
+
   test('initial backward, incremental forward, and backfill (cursor stays put)', async ({ expect }) => {
     const now = new Date();
     const day = (ago: number) => format(subDays(now, ago), 'yyyy-MM-dd');
