@@ -112,16 +112,13 @@ export default Capability.makeModule(
         type: SampleItem.SampleItem,
         actions: (item) =>
           Effect.succeed([
-            Node.makeAction({
+            // `AppNode.makeToolbarAction` fixes `disposition: 'toolbar'`, making the action
+            // appear in the article toolbar but not in the navtree context menu.
+            AppNode.makeToolbarAction({
               id: 'randomize',
               data: () => Operation.invoke(SampleOperation.Randomize, { item }),
-              properties: {
-                label: ['randomize-item.label', { ns: meta.profile.key }],
-                icon: 'ph--shuffle--regular',
-                // `disposition: 'toolbar'` makes the action appear in the article toolbar
-                // but not in the navtree context menu.
-                disposition: 'toolbar',
-              },
+              label: ['randomize-item.label', { ns: meta.profile.key }],
+              icon: 'ph--shuffle--regular',
             }),
             Node.makeAction({
               id: 'archive',

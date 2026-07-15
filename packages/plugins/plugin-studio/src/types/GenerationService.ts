@@ -87,7 +87,7 @@ export interface GenerationService {
   readonly source?: string;
   /**
    * `Connection.connectorId` of the Connector that authenticates this provider — lets the UI render
-   * the connector's "Connect" button (via the `ConnectorAuth` surface) when no credential is present.
+   * the connector's "Connect" button (contributed to the app graph) when no credential is present.
    */
   readonly connectorId?: string;
   /** Effect Schema of the kind-specific request config; drives the schema-driven request form. */
