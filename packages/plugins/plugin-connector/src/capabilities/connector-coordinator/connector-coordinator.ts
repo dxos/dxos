@@ -9,25 +9,22 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type Operation } from '@dxos/compute';
-import { Context as DxContext } from '@dxos/context';
-import { Database, DXN, Filter, type Key, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';
 
-import {
-  PROVIDER_FORM_DIALOG,
-  SYNC_TARGETS_DIALOG,
-  connectionDeckSubject,
-  pendingConnectionStorageKey,
-} from '../constants';
-import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../errors';
-import { isCursorForConnection } from '../util';
+import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
+import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
+import { createSingleCursor } from './create-single-cursor';
+import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
+import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
+import { reconcileCursors } from './reconcile-cursors';
 
 /**
  * Pending connection awaiting an OAuth callback.
@@ -43,34 +40,6 @@ type Pending = {
   db: Database.Database;
   connector: ConnectorEntry;
   existingTarget?: Ref.Ref<Obj.Any>;
-};
-
-/**
- * Parses `postMessage` payload from the OAuth relay into a narrow result.
- * Unknown shapes are ignored so arbitrary messages do not reach domain logic.
- */
-const decodeOAuthMessageData = (
-  data: unknown,
-):
-  | { tag: 'success'; accessTokenId: string; accessToken: string }
-  | { tag: 'failure'; reason: string }
-  | { tag: 'invalid' } => {
-  if (data === null || data === undefined || typeof data !== 'object') {
-    return { tag: 'invalid' };
-  }
-  const record = data as Record<string, unknown>;
-  if (record.success === true) {
-    const accessTokenId = record.accessTokenId;
-    const accessToken = record.accessToken;
-    if (typeof accessTokenId === 'string' && typeof accessToken === 'string') {
-      return { tag: 'success', accessTokenId, accessToken };
-    }
-    return { tag: 'invalid' };
-  }
-  if (record.success === false && typeof record.reason === 'string') {
-    return { tag: 'failure', reason: record.reason };
-  }
-  return { tag: 'invalid' };
 };
 
 const resolveConnector = (
@@ -166,161 +135,6 @@ const openSyncTargetsDialogAfterConnectionCreated = (
     Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
-/**
- * Create exactly one binding for a single-target connector (no `getSyncTargets`):
- * bind a supplied `existingTarget` or materialize a fresh local root. Replaces
- * the old `onTokenCreated`-creates-the-target path (e.g. Gmail's Mailbox).
- */
-const createSingleCursor = (
-  invoker: Operation.OperationService,
-  db: Database.Database,
-  connector: ConnectorEntry,
-  connection: Connection.Connection,
-  existingTarget: Ref.Ref<Obj.Any> | undefined,
-): Effect.Effect<void, never> =>
-  Effect.gen(function* () {
-    let target: Obj.Unknown | undefined;
-    if (existingTarget) {
-      target = yield* Database.load(existingTarget);
-      const accessToken = yield* Database.load(connection.accessToken);
-      const name = accessToken.account;
-      if (name) {
-        Obj.update(target, (target) => Obj.setLabel(target, name));
-      }
-    } else if (connector.materializeTarget) {
-      const { target: materialized } = yield* invoker.invoke(
-        connector.materializeTarget,
-        { connection: Ref.make(connection) },
-        { spaceId: db.spaceId },
-      );
-      target = yield* Database.load(materialized);
-    }
-    if (!target) {
-      log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
-      return;
-    }
-    const cursor = yield* Database.add(
-      Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
-    );
-    invariant(Cursor.isExternal(cursor));
-    // Sets up recurring background sync for the target, if the connector declares it. Its own
-    // failure is not special-cased — a defect here is caught by this function's own outer
-    // `catchAllDefect` below, same as any other step in this flow.
-    yield* connector.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
-  }).pipe(
-    Effect.provide(Database.layer(db)),
-    Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
-    Effect.catchAllDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
-  );
-
-/** A user-chosen remote target to bind. */
-export type SyncTargetSelection = { externalId: string; name?: string };
-
-export type ReconcileCursorsInput = {
-  /** Resolves the connector's `materializeTarget` operation against the connection's space. */
-  invoker: Operation.OperationService;
-  /** Live database the cursors are reconciled in. */
-  db: Database.Database;
-  connection: Connection.Connection;
-  connector: ConnectorEntry;
-  selected: ReadonlyArray<SyncTargetSelection>;
-  /** Bind this pre-existing object as the first newly-selected target instead of materializing one. */
-  existingTarget?: Ref.Ref<Obj.Unknown>;
-};
-
-/**
- * Reconcile a connection's external-sync {@link Cursor} objects against the chosen remote targets:
- * remove deselected cursors (the synced object is left in place), and create one cursor per
- * newly-selected target — binding `existingTarget` for the first new selection, otherwise
- * materializing a fresh local root via `connector.materializeTarget`. A connector with no
- * `materializeTarget` (no dedicated local root type, e.g. Google Contacts) binds the connection
- * itself as the target; its synced objects land directly in the space keyed by foreign id. Returns
- * add/remove counts.
- *
- * Runs within a {@link Database} context (provide `Database.layer(db)`); the HTTP client
- * `materializeTarget` needs is provided internally.
- */
-export const reconcileCursors = ({
-  invoker,
-  db,
-  connection,
-  connector,
-  selected,
-  existingTarget,
-}: ReconcileCursorsInput) =>
-  Effect.gen(function* () {
-    const existingCursors = (yield* Database.query(Filter.type(Cursor.Cursor)).run).filter(
-      (cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, connection),
-    );
-    const existingByRemote = new Map<string, Cursor.ExternalCursor>();
-    for (const cursor of existingCursors) {
-      if (cursor.spec.externalId !== undefined) {
-        existingByRemote.set(cursor.spec.externalId, cursor);
-      }
-    }
-    const selectedIds = new Set(selected.map((sel) => sel.externalId));
-
-    let added = 0;
-    let removed = 0;
-
-    // Remove deselected cursors (leave the synced object in place).
-    for (const cursor of existingCursors) {
-      if (cursor.spec.externalId !== undefined && !selectedIds.has(cursor.spec.externalId)) {
-        yield* Database.remove(cursor);
-        removed++;
-      }
-    }
-
-    // The first newly-selected target binds the supplied `existingTarget`
-    // (init-from-object flow); the rest materialize fresh local roots.
-    const firstNew = existingTarget ? selected.find((sel) => !existingByRemote.has(sel.externalId)) : undefined;
-    for (const sel of selected) {
-      if (existingByRemote.has(sel.externalId)) {
-        continue;
-      }
-      let target: Obj.Unknown;
-      if (sel === firstNew && existingTarget) {
-        target = yield* Database.load(existingTarget);
-        if (sel.name) {
-          Obj.update(target, (target) => Obj.setLabel(target, sel.name!));
-        }
-      } else if (connector.materializeTarget) {
-        const { target: materialized } = yield* invoker.invoke(
-          connector.materializeTarget,
-          {
-            connection: Ref.make(connection),
-            remoteTarget: { id: sel.externalId, name: sel.name ?? sel.externalId },
-          },
-          { spaceId: db.spaceId },
-        );
-        target = yield* Database.load(materialized);
-      } else {
-        // Targetless connector: no dedicated local root object, so the cursor's target is the
-        // connection itself. The remote target is identified by `externalId`; synced objects land
-        // directly in the space.
-        // TODO(wittjosiah): Verify whether a self-referencing cursor (target === the connection) is
-        //   a good pattern or an anti-pattern; consider a dedicated marker/null target instead.
-        target = connection;
-      }
-      const cursor = yield* Database.add(
-        Cursor.makeExternal({
-          source: connection.accessToken,
-          target: Ref.make(target),
-          externalId: sel.externalId,
-          ...(sel.name ? { label: sel.name } : {}),
-        }),
-      );
-      invariant(Cursor.isExternal(cursor));
-      // Sets up recurring background sync for the target, if the connector declares it. Not
-      // specially protected — a failure here propagates like any other step in this loop (e.g. a
-      // `materializeTarget` failure); this function has no blanket catch of its own today.
-      yield* connector.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
-      added++;
-    }
-
-    return { added, removed };
-  });
-
 const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pending): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const { token, connection, db, connector, existingTarget } = entry;
@@ -358,79 +172,6 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
       }
     }
   });
-
-const initiateOAuthFlow = (
-  edge: EdgeHttpClient,
-  spaceId: Key.SpaceId,
-  oauth: NonNullable<ConnectorEntry['oauth']>,
-  accessTokenId: string,
-  loginHint: string | undefined,
-): Effect.Effect<{ authUrl: string }, Error> =>
-  Effect.tryPromise({
-    try: () =>
-      edge.initiateOAuthFlow(DxContext.default(), {
-        provider: oauth.provider,
-        scopes: [...oauth.scopes],
-        spaceId,
-        accessTokenId,
-        ...(loginHint ? { loginHint } : {}),
-      }),
-    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-  });
-
-const openOAuthPopupWindow = (authUrl: string): Effect.Effect<void, never> =>
-  Effect.sync(() => {
-    window.open(authUrl, 'oauthPopup', 'width=500,height=600');
-  });
-
-/**
- * Open the auth URL in a new top-level browser tab. Used for
- * `useRedirectFlow` connectors (e.g. atproto) where the auth server
- * nullifies `window.opener` and rejects popups.
- */
-const openOAuthRedirectWindow = (authUrl: string): Effect.Effect<void, never> =>
-  Effect.sync(() => {
-    window.open(authUrl, '_blank');
-  });
-
-/** Snapshot of an in-flight OAuth flow persisted in `localStorage` for redirect-flow connectors. */
-type PendingSnapshot = {
-  /** Absent snapshots (and legacy rows) default to `'create'`. */
-  mode?: 'create' | 'reauth';
-  spaceId: Key.SpaceId;
-  connectorId: string;
-  tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
-  connectionSnapshot: { name: string; connectorId: string };
-  /** Serialized DXN of the existing target to bind the first new selection to. */
-  existingTargetDxn?: string;
-  /** `mode: 'reauth'` only — serialized DXN of the existing AccessToken to refresh in place. */
-  reauthAccessTokenDxn?: string;
-};
-
-const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {
-  try {
-    localStorage.setItem(pendingConnectionStorageKey(accessTokenId), JSON.stringify(snapshot));
-  } catch (error) {
-    log.warn('failed to persist pending connection snapshot', { error });
-  }
-};
-
-const readPendingSnapshot = (accessTokenId: string): PendingSnapshot | undefined => {
-  const raw = localStorage.getItem(pendingConnectionStorageKey(accessTokenId));
-  if (!raw) {
-    return undefined;
-  }
-  try {
-    return JSON.parse(raw) as PendingSnapshot;
-  } catch (error) {
-    log.warn('failed to parse pending connection snapshot', { error });
-    return undefined;
-  }
-};
-
-const deletePendingSnapshot = (accessTokenId: string): void => {
-  localStorage.removeItem(pendingConnectionStorageKey(accessTokenId));
-};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
