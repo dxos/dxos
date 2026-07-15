@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type Connection } from '@dxos/plugin-connector/types';
 
-import { Blogger, BloggerCapabilities, Publisher } from '#types';
+import { Blog, BloggerCapabilities, Publisher } from '#types';
 
 import { UnpublishDraft } from './definitions';
 import { linkedId, resolvePublisherService, tryPublisher } from './sync-support';
@@ -17,9 +17,9 @@ import { linkedId, resolvePublisherService, tryPublisher } from './sync-support'
 /** Deletes the draft's remote copy from `service` (if linked) and clears its foreign key. No-op otherwise. */
 export const runUnpublishDraft = (
   service: Publisher.PublisherService,
-  draft: Blogger.Draft,
+  draft: Blog.Draft,
   connection: Ref.Ref<Connection.Connection>,
-): Effect.Effect<Blogger.Draft, Publisher.PublisherError> =>
+): Effect.Effect<Blog.Draft, Publisher.PublisherError> =>
   Effect.gen(function* () {
     const id = linkedId(draft, service.source);
     if (id) {

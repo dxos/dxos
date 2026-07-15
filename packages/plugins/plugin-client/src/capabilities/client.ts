@@ -44,6 +44,15 @@ export default Capability.makeModule(
       });
     });
 
+    // Interim fix: when a guest tab reconnects to a newly-elected leader worker (e.g. after the
+    // previous leader tab closes), its proxies are left in a broken state. Force a full reload to
+    // re-establish a clean session until the reconnect flow can recover in place.
+    // TODO(dmaretskyi): Remove once guest tabs recover from a leader handover without reloading.
+    client.services.reconnected?.on(() => {
+      log.info('client reconnected, reloading to re-establish session');
+      window.location.reload();
+    });
+
     let spacesReadyFired = false;
     const subscription = client.spaces.subscribe(async () => {
       if (!spacesReadyFired) {

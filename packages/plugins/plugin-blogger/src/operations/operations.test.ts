@@ -13,18 +13,18 @@ import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 
-import { Blogger } from '../types';
+import { Blog } from '../types';
 import { BloggerOperation, BloggerOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: BloggerOperationHandlerSet,
-  types: [Blogger.Publication, Blogger.Post, Blogger.Draft, Markdown.Document, Collection.Collection],
+  types: [Blog.Publication, Blog.Post, Blog.Draft, Markdown.Document, Collection.Collection],
   disableLlmMemoization: true,
 });
 
-describe('Blogger operations', () => {
+describe('Blog operations', () => {
   it.effect(
     'AddPublication creates and persists a Publication',
     Effect.fnUntraced(
@@ -45,7 +45,7 @@ describe('Blogger operations', () => {
         // Persisted: actually attached to the space graph, not merely resolvable by
         // `Database.load` off a live in-memory ref. A query against the database only
         // returns objects that were added to it.
-        const publications = yield* Effect.promise(() => db.query(Filter.type(Blogger.Publication)).run());
+        const publications = yield* Effect.promise(() => db.query(Filter.type(Blog.Publication)).run());
         expect(publications.map((candidate) => candidate.id)).toContain(publication.id);
       },
       Effect.provide(TestLayer),
@@ -91,7 +91,7 @@ describe('Blogger operations', () => {
         const draftRef = post.drafts?.[0];
         invariant(draftRef, 'AddPost must push an initial draft ref onto post.drafts.');
         const draft = yield* Database.load(draftRef);
-        expect(Obj.instanceOf(Blogger.Draft, draft)).toBe(true);
+        expect(Obj.instanceOf(Blog.Draft, draft)).toBe(true);
         expect(draft.label).toBe('Draft 1');
 
         // Persisted: actually filed under the target `Collection`'s `objects`, which is
@@ -132,7 +132,7 @@ describe('Blogger operations', () => {
         // pushed onto an already-attached `post`), not merely resolvable by `Database.load`
         // off a live in-memory ref. (There is no separate explicit `Database.add(draft)` in
         // the handler — see `add-draft.ts` for why that call was removed as dead code.)
-        const drafts = yield* Effect.promise(() => db.query(Filter.type(Blogger.Draft)).run());
+        const drafts = yield* Effect.promise(() => db.query(Filter.type(Blog.Draft)).run());
         expect(drafts.map((candidate) => candidate.id)).toContain(draft.id);
       },
       Effect.provide(TestLayer),

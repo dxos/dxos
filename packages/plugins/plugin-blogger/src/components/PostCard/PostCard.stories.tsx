@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 import { PostCard } from './PostCard';
 
@@ -18,8 +18,8 @@ const DefaultStory = ({ untitled }: { untitled?: boolean }) => {
   const post = useMemo(
     () =>
       untitled
-        ? Blogger.makePost({})
-        : Blogger.makePost({ name: 'Sample Post', summary: 'A short summary of the post.' }),
+        ? Blog.makePost({})
+        : Blog.makePost({ name: 'Sample Post', description: 'A short summary of the post.' }),
     [untitled],
   );
   return <PostCard post={post} onClick={() => {}} />;

@@ -10,42 +10,32 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/plugin-connector/types';
 import { Panel } from '@dxos/react-ui';
+import { ObjectForm } from '@dxos/react-ui-form';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
-import { Blogger, BloggerCapabilities } from '#types';
+import { Blog, BloggerCapabilities } from '#types';
 
-export type PostArticleProps = AppSurface.ObjectArticleProps<Blogger.Post>;
+export type PostArticleProps = AppSurface.ObjectArticleProps<Blog.Post>;
 
 /**
- * Article surface for a `Blogger.Post`: the outline document on top, a toolbar of one tab per
- * draft (plus add/publish/import actions), and the currently selected draft's body below. Publish
- * and import are enabled only once a `PublisherService` is contributed AND a `Connection` whose
- * access token `source` matches that publisher exists in the same space.
+ * Article surface for a `Blog.Post`: a schema-driven form of the Post's own fields (name,
+ * description) on top, a toolbar of one tab per draft (plus add/publish/import actions), and the
+ * currently selected draft's body below. Publish and import are enabled only once a
+ * `PublisherService` is contributed AND a `Connection` whose access token `source` matches that
+ * publisher exists in the same space.
  */
 export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) => {
   const [post] = useObject(subject);
   const { invokePromise } = useOperationInvoker();
-
-  // Reactive single-ref resolution (mirrors PublicationArticle's `instructions` handling):
-  // `useObject` subscribes via `Obj.atom(ref)` and calls `ref.load()`, re-rendering this component
-  // once the outline resolves; we re-read the live `.target` because the markdown article Surface
-  // needs the live `Markdown.Document`, not a snapshot.
-  const outlineRef = post.outline;
-  useObject(outlineRef);
-  const outline = outlineRef.target;
-  const outlineData = useMemo(
-    () => (outline ? { subject: outline, attendableId } : undefined),
-    [outline, attendableId],
-  );
 
   // Reactive ref-ARRAY resolution (mirrors PublicationArticle's `postRefs`/`loadedPosts`): `useObjects`
   // re-renders as each draft ref resolves (and on later edits); we still read the live `.target` below.
   const draftRefs = post.drafts ?? [];
   const loadedDrafts = useObjects(draftRefs);
   const drafts = useMemo(
-    () => draftRefs.map((ref) => ref.target).filter((draft): draft is Blogger.Draft => !!draft),
+    () => draftRefs.map((ref) => ref.target).filter((draft): draft is Blog.Draft => !!draft),
     [draftRefs, loadedDrafts],
   );
 
@@ -182,11 +172,11 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content>
-          <div className='grid h-full grid-rows-[minmax(0,1fr)_minmax(0,1fr)] overflow-hidden'>
+          <div className='grid h-full grid-rows-[minmax(0,1fr)_minmax(0,2fr)] overflow-hidden'>
             <div className='min-bs-0 overflow-hidden'>
-              {outlineData && <Surface.Surface type={AppSurface.Article} data={outlineData} limit={1} />}
+              <ObjectForm object={subject} type={Blog.Post} />
             </div>
-            <div className='min-bs-0 overflow-hidden border-t border-separator'>
+            <div className='min-bs-0 overflow-hidden'>
               {draftData && <Surface.Surface type={AppSurface.Article} data={draftData} limit={1} />}
             </div>
           </div>

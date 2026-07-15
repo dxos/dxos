@@ -59,8 +59,10 @@ export interface DedicatedWorkerStartSessionMessage {
 export interface DedicatedWorkerSessionMessage {
   type: 'session';
   clientId: string;
-  appPort: MessagePort;
-  systemPort: MessagePort;
+  /** Client → worker RPC channel (tab runs the client, worker runs the server). */
+  clientToWorker: MessagePort;
+  /** Worker → client RPC channel (worker runs the client, tab runs the server). */
+  workerToClient: MessagePort;
   isOwner: boolean;
 }
 
@@ -90,8 +92,8 @@ export type CoordinatorMessage =
       type: 'provide-port';
       leaderId: string;
       clientId: string;
-      appPort: MessagePort;
-      systemPort: MessagePort;
+      clientToWorker: MessagePort;
+      workerToClient: MessagePort;
       livenessLockKey: string;
       isOwner: boolean;
     };

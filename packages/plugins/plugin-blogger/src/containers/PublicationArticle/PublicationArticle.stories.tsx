@@ -19,19 +19,19 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 import { PublicationArticle } from './PublicationArticle';
 
 const POST_COUNT = 3;
 
-/** Builds a `Publication` with a handful of posts, each with a name and summary. */
-const makeStoryPublication = (): Blogger.Publication => {
-  const publication = Blogger.makePublication({ name: 'Story Publication' });
+/** Builds a `Publication` with a handful of posts, each with a name and description. */
+const makeStoryPublication = (): Blog.Publication => {
+  const publication = Blog.makePublication({ name: 'Story Publication' });
   for (let i = 0; i < POST_COUNT; i++) {
-    const post = Blogger.makePost({
+    const post = Blog.makePost({
       name: `Post ${i + 1}`,
-      summary: `Summary for post ${i + 1}.`,
+      description: `Summary for post ${i + 1}.`,
     });
     Obj.update(publication, (publication) => {
       publication.posts = [...(publication.posts ?? []), Ref.make(post)];
@@ -61,7 +61,7 @@ const meta = {
         StorybookPlugin({}),
         PreviewPlugin(),
         ClientPlugin({
-          types: [Blogger.Publication, Blogger.Post, Blogger.Draft, Markdown.Document],
+          types: [Blog.Publication, Blog.Post, Blog.Draft, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

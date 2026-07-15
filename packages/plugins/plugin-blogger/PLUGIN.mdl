@@ -55,12 +55,12 @@ type Draft
 type Post
   desc: >
     A blog post: a planning outline plus one or more ordered Drafts
-    (versions). `summary` is shown on PostCard; the newest Draft (last in
+    (versions). `description` is shown on PostCard; the newest Draft (last in
     the array) is selected by default in PostArticle.
   typename: org.dxos.type.blogger.post
   fields:
     name?: string
-    summary?: string                # shown on PostCard
+    description?: string            # shown on PostCard
     outline: Ref<Markdown.Document>
     drafts?: Ref<Draft>[]           # order = version order
   annotations:
@@ -183,7 +183,7 @@ component PostCard
   layout: |
     ┌────────────────────────┐
     │ [icon]  title           │
-    │ summary excerpt         │
+    │ description excerpt     │
     │ [stack-icon]  N drafts  │
     └────────────────────────┘
 ```

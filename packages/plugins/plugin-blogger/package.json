@@ -98,6 +98,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",

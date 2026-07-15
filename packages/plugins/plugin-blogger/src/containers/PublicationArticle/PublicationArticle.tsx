@@ -16,20 +16,20 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { PostCard } from '#components';
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
-import { Blogger } from '#types';
-
-export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blogger.Publication>;
+import { Blog } from '#types';
 
 type ViewMode = 'gallery' | 'instructions';
 
 /** Data for a single Masonry tile: the resolved post plus its open handler. */
 type PostTileData = {
-  post: Blogger.Post;
+  post: Blog.Post;
   onClick: () => void;
 };
 
+export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blog.Publication>;
+
 /**
- * Article surface for a `Blogger.Publication`: a toolbar toggle swaps between a Masonry gallery of
+ * Article surface for a `Blog.Publication`: a toolbar toggle swaps between a Masonry gallery of
  * `PostCard` tiles (one per `subject.posts`) and the publication's shared instructions document,
  * embedded via the markdown article Surface (`AppSurface.Article` matched against `Markdown.Document`
  * by `plugin-markdown`'s `surface.document`).
@@ -40,7 +40,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   const [mode, setMode] = useState<ViewMode>('gallery');
 
   const handleOpenPost = useCallback(
-    (post: Blogger.Post) => {
+    (post: Blog.Post) => {
       void invokePromise(LayoutOperation.Open, {
         subject: [Paths.getObjectPathFromObject(post)],
         pivotId: attendableId,
@@ -72,7 +72,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
     () =>
       (postRefs ?? [])
         .map((ref) => ref.target)
-        .filter((post): post is Blogger.Post => !!post)
+        .filter((post): post is Blog.Post => !!post)
         .map((post) => ({ post, onClick: () => handleOpenPost(post) })),
     [postRefs, loadedPosts, handleOpenPost],
   );

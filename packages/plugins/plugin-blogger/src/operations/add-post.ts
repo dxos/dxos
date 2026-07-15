@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 import { AddPost } from './definitions';
 
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof AddPost> = AddPost.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ publication: publicationRef, name, target }) {
       const publication = yield* Database.load(publicationRef);
-      const post = Blogger.makePost({ name });
+      const post = Blog.makePost({ name });
 
       const targetIsDatabase = Database.isDatabase(target);
       const db = targetIsDatabase ? target : Obj.getDatabase(target);

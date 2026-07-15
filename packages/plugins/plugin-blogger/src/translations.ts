@@ -6,12 +6,12 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Blogger.Publication)]: {
+      [Type.getTypename(Blog.Publication)]: {
         'typename.label': 'Publication',
         'typename.label_zero': 'Publications',
         'typename.label_one': 'Publication',
@@ -19,7 +19,7 @@ export const translations = [
         'object-name.placeholder': 'New publication',
         'add-object.label': 'Add publication',
       },
-      [Type.getTypename(Blogger.Post)]: {
+      [Type.getTypename(Blog.Post)]: {
         'typename.label': 'Post',
         'typename.label_zero': 'Posts',
         'typename.label_one': 'Post',
@@ -28,7 +28,7 @@ export const translations = [
         'add-object.label': 'Add post',
       },
       [meta.profile.key]: {
-        'plugin.name': 'Blogger',
+        'plugin.name': 'Blog',
         'publications.label': 'Publications',
         'post-card.untitled.label': 'Untitled post',
         'post-card.drafts.label_one': '{{count}} draft',

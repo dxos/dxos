@@ -9,16 +9,16 @@ import { useObject } from '@dxos/echo-react';
 import { Card, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 export type PostCardProps = {
-  post: Blogger.Post;
+  post: Blog.Post;
   onClick?: () => void;
 };
 
 /**
- * Summary tile for a `Blogger.Post`, rendered as a Masonry tile in the publication view.
- * Reactive to the passed ECHO object via {@link useObject} so edits to the title/summary/drafts
+ * Summary tile for a `Blog.Post`, rendered as a Masonry tile in the publication view.
+ * Reactive to the passed ECHO object via {@link useObject} so edits to the title/description/drafts
  * update the tile without navigating away and back.
  */
 export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
@@ -61,10 +61,10 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
         <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
       </Card.Header>
       <Card.Body>
-        {post.summary && (
+        {post.description && (
           <Card.Row>
             <Card.Text variant='description' classNames='line-clamp-3'>
-              {post.summary}
+              {post.description}
             </Card.Text>
           </Card.Row>
         )}

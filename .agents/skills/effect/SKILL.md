@@ -103,6 +103,10 @@ Layers construct services and hide implementation dependencies. Avoid leaking in
 
 Provide at the edge: `Effect.provide(program, AppLive)`.
 
+For composing layer stacks (test environments in particular) — single parameterized factory, flat
+`Layer.empty.pipe(...)` stack, ternaries for alternative implementations, `provide` vs
+`provideMerge` — see [layer-composition.md](layer-composition.md).
+
 ### Common Patterns
 
 - **Do notation**: Prefer `Effect.gen` over manual `flatMap` chains.

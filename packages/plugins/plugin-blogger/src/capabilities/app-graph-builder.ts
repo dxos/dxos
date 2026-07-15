@@ -15,7 +15,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 /** Stable navtree segment of the "Publications" section. */
 const PUBLICATIONS_SEGMENT = 'publications';
@@ -65,7 +65,7 @@ export default Capability.makeModule(
           return node.type === PUBLICATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
         connector: (space, get) => {
-          const publications = get(space.db.query(Filter.type(Blogger.Publication)).atom);
+          const publications = get(space.db.query(Filter.type(Blog.Publication)).atom);
           return Effect.succeed(
             publications.map((publication) => {
               const snapshot = get(Obj.atom(publication));
@@ -82,7 +82,7 @@ export default Capability.makeModule(
                 type: PUBLICATION_NODE_TYPE,
                 data: publication,
                 properties: {
-                  label: snapshot.name || ['object-name.placeholder', { ns: Type.getTypename(Blogger.Publication) }],
+                  label: snapshot.name || ['object-name.placeholder', { ns: Type.getTypename(Blog.Publication) }],
                   icon: 'ph--books--regular',
                   iconHue: 'amber',
                   role: 'branch',
@@ -101,7 +101,7 @@ export default Capability.makeModule(
               id: 'add-publication',
               data: () => Operation.invoke(BloggerOperation.AddPublication, { target: space.db }),
               properties: {
-                label: ['add-object.label', { ns: Type.getTypename(Blogger.Publication) }],
+                label: ['add-object.label', { ns: Type.getTypename(Blog.Publication) }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },
@@ -114,7 +114,7 @@ export default Capability.makeModule(
         id: 'publicationActions',
         match: NodeMatcher.whenNodeType(PUBLICATION_NODE_TYPE),
         actions: (node) => {
-          if (!Obj.instanceOf(Blogger.Publication, node.data)) {
+          if (!Obj.instanceOf(Blog.Publication, node.data)) {
             return Effect.succeed([]);
           }
 
@@ -130,7 +130,7 @@ export default Capability.makeModule(
               data: () =>
                 Operation.invoke(BloggerOperation.AddPost, { publication: Ref.make(publication), target: db }),
               properties: {
-                label: ['add-object.label', { ns: Type.getTypename(Blogger.Post) }],
+                label: ['add-object.label', { ns: Type.getTypename(Blog.Post) }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },

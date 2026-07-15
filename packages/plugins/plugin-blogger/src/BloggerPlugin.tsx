@@ -9,13 +9,13 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BloggerPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Blogger.Publication, Blogger.Post, Blogger.Draft] }),
+  AppPlugin.addSchemaModule({ schema: [Blog.Publication, Blog.Post, Blog.Draft] }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

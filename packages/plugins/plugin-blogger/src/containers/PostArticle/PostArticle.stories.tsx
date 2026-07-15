@@ -21,7 +21,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { BloggerOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 import { PostArticle } from './PostArticle';
 
@@ -30,8 +30,8 @@ import { PostArticle } from './PostArticle';
  * meaningful: the one `makePost` creates (re-seeded with "First draft body."), plus a second
  * ("Second draft body.") appended after it.
  */
-const makeStoryPost = (): Blogger.Post => {
-  const post = Blogger.makePost({ name: 'My Post' });
+const makeStoryPost = (): Blog.Post => {
+  const post = Blog.makePost({ name: 'My Post' });
   const [draftRef] = post.drafts ?? [];
   invariant(draftRef);
   const draft1 = draftRef.target;
@@ -44,7 +44,7 @@ const makeStoryPost = (): Blogger.Post => {
     draft1Text.content = 'First draft body.';
   });
 
-  const draft2 = Blogger.makeDraft({ label: 'Draft 2', content: 'Second draft body.' });
+  const draft2 = Blog.makeDraft({ label: 'Draft 2', content: 'Second draft body.' });
   Obj.update(post, (post) => {
     post.drafts = [...(post.drafts ?? []), Ref.make(draft2)];
   });
@@ -78,7 +78,7 @@ const meta = {
         StorybookPlugin({}),
         PreviewPlugin(),
         ClientPlugin({
-          types: [Blogger.Publication, Blogger.Post, Blogger.Draft, Markdown.Document],
+          types: [Blog.Publication, Blog.Post, Blog.Draft, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

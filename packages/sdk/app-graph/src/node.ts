@@ -95,8 +95,9 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
   /** Will automatically add nodes with an edge from this node to each. */
   nodes?: NodeArg<unknown>[];
 
-  /** Will automatically add actions with an edge from this node to each. */
-  actions?: NodeArg<ActionData<any>>[];
+  /** Will automatically add actions with an edge from this node to each. An action child may itself
+   * be an action group (e.g. a toolbar dropdown group), so groups are accepted alongside actions. */
+  actions?: NodeArg<ActionData<any> | typeof actionGroupSymbol>[];
 
   /** Will automatically add specified edges. */
   edges?: [string, RelationInput][];

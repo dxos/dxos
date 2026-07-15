@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type Connection } from '@dxos/plugin-connector/types';
 
-import { Blogger, BloggerCapabilities, Publisher } from '#types';
+import { Blog, BloggerCapabilities, Publisher } from '#types';
 
 import { PublishDraft } from './definitions';
 import { draftText, linkedId, resolvePublisherService, tryPublisher } from './sync-support';
@@ -21,9 +21,9 @@ import { draftText, linkedId, resolvePublisherService, tryPublisher } from './sy
  */
 export const runPublishDraft = (
   service: Publisher.PublisherService,
-  draft: Blogger.Draft,
+  draft: Blog.Draft,
   connection: Ref.Ref<Connection.Connection>,
-): Effect.Effect<Blogger.Draft, Publisher.PublisherError> =>
+): Effect.Effect<Blog.Draft, Publisher.PublisherError> =>
   Effect.gen(function* () {
     const id = linkedId(draft, service.source);
     const text = draftText(draft);

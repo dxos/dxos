@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { Connection } from '@dxos/plugin-connector/types';
 
 import { meta } from '#meta';
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -35,7 +35,7 @@ export const AddPublication = Operation.make({
     name: Schema.optional(Schema.String).annotations({ description: 'The publication name.' }),
     target: TargetSchema,
   }),
-  output: Ref.Ref(Blogger.Publication),
+  output: Ref.Ref(Blog.Publication),
 });
 
 /**
@@ -50,11 +50,11 @@ export const AddPost = Operation.make({
     icon: 'ph--article--regular',
   },
   input: Schema.Struct({
-    publication: Ref.Ref(Blogger.Publication).annotations({ description: 'The publication to add the post to.' }),
+    publication: Ref.Ref(Blog.Publication).annotations({ description: 'The publication to add the post to.' }),
     name: Schema.optional(Schema.String).annotations({ description: 'The post name.' }),
     target: TargetSchema,
   }),
-  output: Ref.Ref(Blogger.Post),
+  output: Ref.Ref(Blog.Post),
 });
 
 /**
@@ -68,9 +68,9 @@ export const AddDraft = Operation.make({
     icon: 'ph--file-plus--regular',
   },
   input: Schema.Struct({
-    post: Ref.Ref(Blogger.Post).annotations({ description: 'The post to add the draft to.' }),
+    post: Ref.Ref(Blog.Post).annotations({ description: 'The post to add the draft to.' }),
   }),
-  output: Ref.Ref(Blogger.Draft),
+  output: Ref.Ref(Blog.Draft),
 });
 
 /** Selects which contributed `PublisherService` to use; falls back to the first one when omitted. */
@@ -91,13 +91,13 @@ export const PublishDraft = Operation.make({
     icon: 'ph--cloud-arrow-up--regular',
   },
   input: Schema.Struct({
-    draft: Ref.Ref(Blogger.Draft).annotations({ description: 'The draft to publish.' }),
+    draft: Ref.Ref(Blog.Draft).annotations({ description: 'The draft to publish.' }),
     connection: Ref.Ref(Connection.Connection).annotations({
       description: 'The publisher connection to push through.',
     }),
     publisherId: PublisherIdSchema,
   }),
-  output: Ref.Ref(Blogger.Draft),
+  output: Ref.Ref(Blog.Draft),
   services: [Capability.Service],
 });
 
@@ -113,13 +113,13 @@ export const ImportDrafts = Operation.make({
     icon: 'ph--cloud-arrow-down--regular',
   },
   input: Schema.Struct({
-    post: Ref.Ref(Blogger.Post).annotations({ description: 'The post to import drafts into.' }),
+    post: Ref.Ref(Blog.Post).annotations({ description: 'The post to import drafts into.' }),
     connection: Ref.Ref(Connection.Connection).annotations({
       description: 'The publisher connection to pull from.',
     }),
     publisherId: PublisherIdSchema,
   }),
-  output: Ref.Ref(Blogger.Post),
+  output: Ref.Ref(Blog.Post),
   services: [Capability.Service],
 });
 
@@ -134,12 +134,12 @@ export const UnpublishDraft = Operation.make({
     icon: 'ph--cloud-slash--regular',
   },
   input: Schema.Struct({
-    draft: Ref.Ref(Blogger.Draft).annotations({ description: 'The draft to unpublish.' }),
+    draft: Ref.Ref(Blog.Draft).annotations({ description: 'The draft to unpublish.' }),
     connection: Ref.Ref(Connection.Connection).annotations({
       description: 'The publisher connection to delete through.',
     }),
     publisherId: PublisherIdSchema,
   }),
-  output: Ref.Ref(Blogger.Draft),
+  output: Ref.Ref(Blog.Draft),
   services: [Capability.Service],
 });

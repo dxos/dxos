@@ -7,14 +7,18 @@ import * as Exit from 'effect/Exit';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { Trigger } from '@dxos/compute';
-import { Filter, Query } from '@dxos/echo';
+import { Operation, Trigger } from '@dxos/compute';
+import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
+import { SyncBinding } from '@dxos/plugin-connector';
+import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ModuleProps } from '@dxos/story-modules';
+
+import { MailboxTriggerRelation } from '../testing';
 
 /** Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}. */
 export const TriggersModule = ({ space }: ModuleProps) => {
@@ -23,6 +27,38 @@ export const TriggersModule = ({ space }: ModuleProps) => {
     Query.select(Filter.type(Trigger.Trigger)).debugLabel('stories-inbox.TriggersModule'),
   );
   const { state, start, stop } = useTriggerRuntimeControls(space.db);
+
+  // The mailbox's sync binding is the trigger's input; a trigger can only be created once it exists.
+  const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
+  const bindings = useQuery(
+    space.db,
+    mailbox ? Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding) : Query.select(Filter.nothing()),
+  );
+  const binding = bindings.find(SyncBinding.instanceOf);
+
+  // Wire a manual trigger to the Gmail sync operation, linked to the mailbox via `MailboxTriggerRelation`.
+  const handleCreateTrigger = useCallback(() => {
+    if (!mailbox || !binding) {
+      return;
+    }
+
+    const trigger = space.db.add(
+      Trigger.make({
+        [Obj.Parent]: mailbox,
+        enabled: true,
+        runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
+        spec: Trigger.specDirect(),
+        input: { binding: Ref.make(binding) },
+      }),
+    );
+    space.db.add(
+      Relation.make(MailboxTriggerRelation, {
+        [Relation.Source]: mailbox,
+        [Relation.Target]: trigger,
+      }),
+    );
+    void space.db.flush();
+  }, [space.db, mailbox, binding]);
 
   const [invokingId, setInvokingId] = useState<string | undefined>();
   const triggerToInvokeRef = useRef<Trigger.Trigger | undefined>(undefined);
@@ -61,6 +97,10 @@ export const TriggersModule = ({ space }: ModuleProps) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text>Triggers</Toolbar.Text>
+          <Toolbar.Separator />
+          <Toolbar.Button onClick={handleCreateTrigger} disabled={!binding || triggers.length > 0}>
+            Create trigger
+          </Toolbar.Button>
           <Toolbar.Separator />
           <Toolbar.Button onClick={start} disabled={state?.enabled}>
             Start dispatcher

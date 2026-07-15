@@ -2,24 +2,39 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
+import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
+import * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import type * as Scope from 'effect/Scope';
+
 import { Trigger } from '@dxos/async';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import * as WorkerProtocol from './WorkerProtocol';
 
+// A single MessagePort multiplexes every request by id, so allow effectively-unbounded concurrent
+// requests over the one worker rather than the pool default of 1 (which lets one open stream block
+// every other call).
+const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
+
+const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePort) =>
+  Layer.merge(
+    RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(clientToWorker))),
+    RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
+      Layer.provide(BrowserWorker.layerPlatform(() => workerToClient)),
+    ),
+  );
+
 export type RuntimeHandle = {
+  stop?(): Promise<void>;
   createSession(args: {
-    appPort: MessagePort;
-    systemPort: MessagePort;
     clientId: string;
     isOwner: boolean;
-    onClose: () => Promise<void>;
-  }): Promise<void>;
-  /**
-   * Tears down the service runtime. Invoked by the framework when the worker is displaced by a
-   * newer instance or otherwise shut down. Optional and must be idempotent.
-   */
-  stop?(): Promise<void>;
+  }): Effect.Effect<never, never, Scope.Scope | RpcClient.Protocol | RpcServer.Protocol>;
 };
 
 export type Options = {
@@ -42,7 +57,7 @@ export type Options = {
   createRuntime: (args: {
     config: Record<string, any> | undefined;
     requestShutdown: () => void;
-  }) => Promise<RuntimeHandle>;
+  }) => Effect.Effect<RuntimeHandle, never, Scope.Scope>;
 };
 
 const defaultEndpoint = (): WorkerProtocol.WorkerEndpoint => {
@@ -132,7 +147,9 @@ export const run = ({
         case 'init': {
           owningClientId = message.ownerClientId ?? message.clientId;
           log('worker init with config', { keys: Object.keys(message.config ?? {}) });
-          runtime = await createRuntime({ config: message.config, requestShutdown });
+          runtime = await EffectEx.runPromise(
+            createRuntime({ config: message.config, requestShutdown }).pipe(Effect.scoped),
+          );
           log('dedicated-worker: runtime ready, posting ready');
           endpoint.postMessage({
             type: 'ready',
@@ -145,39 +162,49 @@ export const run = ({
             log('ignoring duplicate client', { clientId: message.clientId });
             break;
           }
+          // Validate the runtime before mutating any session state: a `start-session` can race an
+          // in-flight `init` (whose handler awaits `createRuntime` before setting `runtime`). Marking
+          // the client processed or posting ports here would hand out a session nobody serves and
+          // permanently wedge the client (future retries hit "ignoring duplicate client").
+          if (!runtime) {
+            log.error('start-session before init; runtime not initialized', { clientId: message.clientId });
+            break;
+          }
           tabsProcessed.add(message.clientId);
 
-          const appChannel = new MessageChannel();
-          const systemChannel = new MessageChannel();
+          const clientToWorkerChannel = new MessageChannel();
+          const workerToClientChannel = new MessageChannel();
 
           log('dedicated-worker: posting session ports', { clientId: message.clientId });
           endpoint.postMessage(
             {
               type: 'session',
-              appPort: appChannel.port1,
-              systemPort: systemChannel.port1,
+              clientToWorker: clientToWorkerChannel.port1,
+              workerToClient: workerToClientChannel.port1,
               clientId: message.clientId,
               isOwner: message.clientId === owningClientId,
             } satisfies WorkerProtocol.DedicatedWorkerMessage,
-            [appChannel.port1, systemChannel.port1],
+            [clientToWorkerChannel.port1, workerToClientChannel.port1],
           );
 
-          if (!runtime) {
-            log.error('start-session before init; runtime not initialized', { clientId: message.clientId });
-            break;
-          }
           log('dedicated-worker: creating session (waiting for handshake)', { clientId: message.clientId });
-          await runtime.createSession({
-            appPort: appChannel.port2,
-            systemPort: systemChannel.port2,
-            clientId: message.clientId,
-            isOwner: message.clientId === owningClientId,
-            onClose: async () => {
-              log('dedicated-worker: session closed', { clientId: message.clientId });
-              tabsProcessed.delete(message.clientId);
-            },
-          });
-          log('dedicated-worker: session created', { clientId: message.clientId });
+          const sessionEffect = runtime
+            .createSession({
+              clientId: message.clientId,
+              isOwner: message.clientId === owningClientId,
+            })
+            .pipe(
+              Effect.provide(sessionProtocols(clientToWorkerChannel.port2, workerToClientChannel.port2)),
+              Effect.ensuring(
+                Effect.sync(() => {
+                  log('dedicated-worker: session closed', { clientId: message.clientId });
+                  tabsProcessed.delete(message.clientId);
+                }),
+              ),
+            );
+          // The session effect runs for the session's lifetime (createSession blocks until the
+          // session ends), so cleanup is handled by `Effect.ensuring` above rather than a log here.
+          await EffectEx.runPromise(sessionEffect.pipe(Effect.scoped));
           break;
         }
 

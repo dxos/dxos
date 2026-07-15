@@ -9,17 +9,17 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type Connection } from '@dxos/plugin-connector/types';
 
-import { Blogger, BloggerCapabilities, Publisher } from '#types';
+import { Blog, BloggerCapabilities, Publisher } from '#types';
 
 import { ImportDrafts } from './definitions';
 import { resolvePublisherService, tryPublisher } from './sync-support';
 
 /** Remote ids already linked to one of the post's existing drafts, for `source`. */
-const linkedRemoteIds = (post: Blogger.Post, source: string): Set<string> =>
+const linkedRemoteIds = (post: Blog.Post, source: string): Set<string> =>
   new Set(
     (post.drafts ?? [])
       .map((ref) => ref.target)
-      .filter((draft): draft is Blogger.Draft => draft != null)
+      .filter((draft): draft is Blog.Draft => draft != null)
       .flatMap((draft) => Obj.getKeys(draft, source).map((key) => key.id)),
   );
 
@@ -30,9 +30,9 @@ const linkedRemoteIds = (post: Blogger.Post, source: string): Set<string> =>
  */
 export const runImportDrafts = (
   service: Publisher.PublisherService,
-  post: Blogger.Post,
+  post: Blog.Post,
   connection: Ref.Ref<Connection.Connection>,
-): Effect.Effect<Blogger.Post, Publisher.PublisherError> =>
+): Effect.Effect<Blog.Post, Publisher.PublisherError> =>
   Effect.gen(function* () {
     const remoteDrafts = yield* tryPublisher(() => service.listDrafts(connection));
     const linkedIds = linkedRemoteIds(post, service.source);
@@ -42,7 +42,7 @@ export const runImportDrafts = (
       // `listDrafts` already returns full body text for most providers; only fall back to the
       // (potentially unsupported, e.g. Typefully v1) `getDraft` call when it did not.
       const text = remote.text || (yield* tryPublisher(() => service.getDraft(connection, remote.id))).text;
-      const draft = Blogger.makeDraft({ label: remote.title, content: text });
+      const draft = Blog.makeDraft({ label: remote.title, content: text });
       Obj.update(draft, (draft) => {
         Obj.getMeta(draft).keys.push({ source: service.source, id: remote.id });
       });

@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { Blogger } from '#types';
+import { Blog } from '#types';
 
 // `BloggerOperation.AddPublication`/`AddPost` persist via `CollectionModel.add` and return a `Ref`
 // for agent/skill callers; they don't produce the `{ id, subject, object }` shape the generic
@@ -21,10 +21,10 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Blogger.Publication),
+        id: Type.getTypename(Blog.Publication),
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Blogger.makePublication(props);
+            const object = Blog.makePublication(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
@@ -33,10 +33,10 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Blogger.Post),
+        id: Type.getTypename(Blog.Post),
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Blogger.makePost(props);
+            const object = Blog.makePost(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,

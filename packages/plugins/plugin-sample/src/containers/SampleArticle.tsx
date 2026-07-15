@@ -15,7 +15,15 @@ import { Obj } from '@dxos/echo';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import {
+  type ActionExecutor,
+  type ActionGraphProps,
+  Menu,
+  MenuBuilder,
+  graphActions,
+  isToolbarAction,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';
@@ -78,8 +86,8 @@ export default SampleArticle;
 //
 
 /**
- * Builds toolbar menu actions from the app graph for the given node.
- * Filters to `disposition: 'toolbar'` actions and uses `MenuBuilder` to compose them.
+ * Builds toolbar menu actions from the app graph for the given node, via `graphActions` (actions
+ * opted into the toolbar with `disposition: 'toolbar'`) spliced into a `MenuBuilder`.
  * `useMenuActions` converts the atom into props for `Menu.Root`.
  * `useActionRunner` executes graph actions when triggered.
  */
@@ -90,16 +98,10 @@ const useMenuActions = (
   const runAction = useActionRunner();
 
   const menuActions = useMenuBuilder(
-    (get): ActionGraphProps => {
-      const actions = get(graph.actions(attendableId));
-      const toolbarActions = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return MenuBuilder.make()
-        .subgraph({
-          nodes: toolbarActions as ActionGraphProps['nodes'],
-          edges: toolbarActions.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
-        })
-        .build();
-    },
+    (get): ActionGraphProps =>
+      MenuBuilder.make()
+        .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        .build(),
     [graph, attendableId],
   );
 

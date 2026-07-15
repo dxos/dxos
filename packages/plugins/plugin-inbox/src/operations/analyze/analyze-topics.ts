@@ -186,7 +186,6 @@ const handler = InboxOperation.AnalyzeTopics.pipe(
       return { tagged: result.messageTags.length, suggestions: suggestions.length };
     }),
   ),
-  // Erase the inferred handler type so the default export is portably nameable in the emitted .d.ts.
   Operation.opaqueHandler,
 );
 

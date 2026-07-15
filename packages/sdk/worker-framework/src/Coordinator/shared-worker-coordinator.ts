@@ -39,7 +39,7 @@ export class SharedWorker implements WorkerProtocol.WorkerCoordinator {
     switch (message.type) {
       case 'provide-port':
         this.#worker.port.postMessage(message, {
-          transfer: [message.appPort, message.systemPort],
+          transfer: [message.clientToWorker, message.workerToClient],
         });
         break;
       default:

@@ -10,15 +10,15 @@ import { invariant } from '@dxos/invariant';
 import { Connection } from '@dxos/plugin-connector/types';
 import { AccessToken } from '@dxos/types';
 
-import { Blogger, Publisher } from '../types';
+import { Blog, Publisher } from '../types';
 import { runImportDrafts } from './import-drafts';
 import { runPublishDraft } from './publish-draft';
 import { runUnpublishDraft } from './unpublish-draft';
 
-describe('Blogger sync operations', () => {
+describe('Blog sync operations', () => {
   test('PublishDraft creates the remote draft and stamps a foreign key on an unlinked draft', async () => {
     const { stub, calls } = makeStub();
-    const draft = Blogger.makeDraft({ content: 'hello world' });
+    const draft = Blog.makeDraft({ content: 'hello world' });
     const connection = makeConnectionRef();
 
     const result = await EffectEx.runPromise(runPublishDraft(stub, draft, connection));
@@ -29,7 +29,7 @@ describe('Blogger sync operations', () => {
 
   test('PublishDraft updates the remote draft when already linked, without re-creating', async () => {
     const { stub, calls } = makeStub();
-    const draft = Blogger.makeDraft({ content: 'hello world' });
+    const draft = Blog.makeDraft({ content: 'hello world' });
     Obj.update(draft, (draft) => {
       Obj.getMeta(draft).keys.push({ source: stub.source, id: 'existing1' });
     });
@@ -42,7 +42,7 @@ describe('Blogger sync operations', () => {
   });
 
   test('ImportDrafts creates a local draft for an unlinked remote id and skips one already linked', async () => {
-    const post = Blogger.makePost();
+    const post = Blog.makePost();
     const initialDraft = post.drafts?.[0]?.target;
     expect(initialDraft).toBeDefined();
     invariant(initialDraft);
@@ -72,7 +72,7 @@ describe('Blogger sync operations', () => {
   });
 
   test('ImportDrafts falls back to getDraft when listDrafts omits the body text', async () => {
-    const post = Blogger.makePost();
+    const post = Blog.makePost();
     const { stub, calls } = makeStub('');
     const connection = makeConnectionRef();
     const draftsBefore = post.drafts?.length ?? 0;
@@ -93,7 +93,7 @@ describe('Blogger sync operations', () => {
 
   test('UnpublishDraft deletes the remote draft and clears the foreign key', async () => {
     const { stub, calls } = makeStub();
-    const draft = Blogger.makeDraft({ content: 'hello world' });
+    const draft = Blog.makeDraft({ content: 'hello world' });
     Obj.update(draft, (draft) => {
       Obj.getMeta(draft).keys.push({ source: stub.source, id: 'new1' });
     });
@@ -107,7 +107,7 @@ describe('Blogger sync operations', () => {
 
   test('UnpublishDraft is a no-op when the draft was never linked', async () => {
     const { stub, calls } = makeStub();
-    const draft = Blogger.makeDraft({ content: 'hello world' });
+    const draft = Blog.makeDraft({ content: 'hello world' });
     const connection = makeConnectionRef();
 
     await EffectEx.runPromise(runUnpublishDraft(stub, draft, connection));
