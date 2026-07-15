@@ -25,7 +25,7 @@ export type MenuItemChrome = {
 
 // TODO(burdon): Narrow MenuActionProperties to a discriminated union.
 export type MenuActionProperties = MenuItemChrome & {
-  variant?: 'action' | 'toggle' | 'switch' | 'custom';
+  variant?: 'action' | 'primary' | 'toggle' | 'switch' | 'custom';
   value?: string;
   checked?: boolean;
   /**

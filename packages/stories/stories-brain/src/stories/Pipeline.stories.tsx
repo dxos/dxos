@@ -32,7 +32,10 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Obj, Query } from '@dxos/echo';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { useCapability } from '@dxos/app-framework/ui';
+import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
@@ -45,24 +48,33 @@ import {
   TranscriptionPipeline,
   makeDatabaseLookup,
 } from '@dxos/pipeline-transcription';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { BrainPlugin } from '@dxos/plugin-brain/plugin';
+import { BrainCapabilities } from '@dxos/plugin-brain/types';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { useSpaces } from '@dxos/react-client/echo';
+import { withLayout } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
+import { ModuleContainer } from '@dxos/story-modules';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import {
-  type EchoObjectItem,
   type InputDataset,
   type InputDatasetMessage,
   type InputMode,
-  InputPanel,
   type InputPayload,
   type OutputDetail,
-  OutputPanel,
   type PipelineInfo,
-  PipelinePanel,
   type StatItem,
 } from '../components';
-import { createMarkdownStoryDecorators } from '../testing';
+import { PIPELINE_RUN, PipelineStoryContext } from '../modules';
+import { Module, StoryModulesPlugin } from '../testing/modules';
 
 const OWNER_EMAIL = 'alice@example.com';
 
@@ -142,17 +154,16 @@ type StoryArgs = { ai: AiConfig };
 
 const DefaultStory = ({ ai }: StoryArgs) => {
   const [space] = useSpaces();
+  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
+  const progress = useCapability(AppCapabilities.ProgressRegistry);
   // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
   const extractOptions = useMemo<RDF.ExtractOptions | undefined>(
     () => (ai.preset === 'ollama' ? { model: ai.model, provider: Provider.ollama.id, strict: false } : undefined),
     [ai],
   );
   const [pipelineId, setPipelineId] = useState(PIPELINES[0].id);
-  const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [stats, setStats] = useState<StatItem[]>([]);
   const [details, setDetails] = useState<OutputDetail[]>([]);
-  const [running, setRunning] = useState(false);
-  const [processed, setProcessed] = useState(0);
   // Current input reported by the InputPanel (the run trigger lives in the pipeline column).
   const [input, setInput] = useState<InputPayload>({ mode: 'document', text: SAMPLE_CONTENT });
   // The messages the email pipeline runs over: empty until Enron is loaded (the only dataset).
@@ -161,22 +172,11 @@ const DefaultStory = ({ ai }: StoryArgs) => {
   // Interrupts the in-flight run (Stop); set by whichever run is active.
   const interruptRef = useRef<(() => void) | null>(null);
 
-  // Live view of the ECHO objects the pipelines materialize (email creates Person/Org/Thread;
-  // transcription links the seeded entities). Reactive: updates as stages persist to the space.
-  const organizations = useQuery(space?.db, Query.type(Organization.Organization));
-  const people = useQuery(space?.db, Query.type(Person.Person));
-  const threads = useQuery(space?.db, Query.type(Thread));
-  const objects = useMemo<EchoObjectItem[]>(
-    () => [
-      ...organizations.map((org) => ({ id: org.id, typename: 'Organization', label: org.name ?? org.id })),
-      ...people.map((person) => ({ id: person.id, typename: 'Person', label: person.fullName ?? person.id })),
-      ...threads.map((thread) => ({ id: thread.id, typename: 'Thread', label: thread.subject ?? thread.threadId })),
-    ],
-    [organizations, people, threads],
-  );
-
   const runRdf = useCallback(
-    (text: string) => {
+    (text: string, handle: AppCapabilities.ProgressMonitor) => {
+      if (!space) {
+        return Promise.resolve();
+      }
       const startedMs = Date.now();
       const collected: DocumentFacts[] = [];
       const program = Effect.gen(function* () {
@@ -187,12 +187,13 @@ const DefaultStory = ({ ai }: StoryArgs) => {
           extractFactsStage(extractOptions),
           normalizeFactsStage({ synonyms: SYNONYMS }),
           Pipeline.run({
-            // Stream facts to the viewer as each document is emitted, rather than only at completion.
+            // Stream facts into Brain's FactStore as each document is emitted (the output module reads
+            // them reactively), and advance the progress monitor.
             sink: (out) =>
-              Effect.sync(() => {
+              Effect.gen(function* () {
                 collected.push(out);
-                setProcessed((value) => value + 1);
-                setFacts((prev) => [...prev, ...out.facts]);
+                handle.advance();
+                yield* registry.forSpace(space.id).putFacts([...out.facts]);
               }),
           }),
         );
@@ -209,77 +210,82 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         ]);
       });
     },
-    [ai.preset, extractOptions],
+    [ai.preset, extractOptions, registry, space],
   );
 
-  const runEmail = useCallback(() => {
-    if (!space) {
-      return Promise.resolve();
-    }
+  const runEmail = useCallback(
+    (handle: AppCapabilities.ProgressMonitor) => {
+      if (!space) {
+        return Promise.resolve();
+      }
 
-    const startedMs = Date.now();
-    const aiLayer = Layer.fresh(AiServiceTestingPreset(ai.preset));
+      const startedMs = Date.now();
+      const aiLayer = Layer.fresh(AiServiceTestingPreset(ai.preset));
 
-    // TODO(burdon): Replace with store?
-    const collected: RDF.Fact[] = [];
-    const indexFacts: FactIndexer = (message) =>
-      EffectEx.runPromise(
-        Effect.gen(function* () {
-          const out: DocumentFacts[] = [];
-          yield* Stream.fromIterable([{ text: Message.extractText(message), source: `email:${message.id}` }]).pipe(
-            extractFactsStage(extractOptions),
-            Pipeline.run({ sink: (item) => Effect.sync(() => out.push(item)) }),
-          );
+      const collected: RDF.Fact[] = [];
+      const indexFacts: FactIndexer = (message) =>
+        EffectEx.runPromise(
+          Effect.gen(function* () {
+            const out: DocumentFacts[] = [];
+            yield* Stream.fromIterable([{ text: Message.extractText(message), source: `email:${message.id}` }]).pipe(
+              extractFactsStage(extractOptions),
+              Pipeline.run({ sink: (item) => Effect.sync(() => out.push(item)) }),
+            );
 
-          return out.flatMap((item) => [...item.facts]);
-        }).pipe(Effect.provide(aiLayer)),
-      ).then((messageFacts) => {
-        collected.push(...messageFacts);
-        setProcessed((value) => value + 1);
-        // Stream this message's facts to the viewer as it is processed, not only at the end.
-        setFacts((prev) => [...prev, ...messageFacts]);
-        return messageFacts;
+            return out.flatMap((item) => [...item.facts]);
+          }).pipe(Effect.provide(aiLayer)),
+        ).then((messageFacts) => {
+          collected.push(...messageFacts);
+          handle.advance();
+          // Stream this message's facts into Brain's FactStore as it is processed, not only at the end.
+          void EffectEx.runPromise(registry.forSpace(space.id).putFacts(messageFacts));
+          return messageFacts;
+        });
+
+      const program = EmailPipeline.run(emails, {
+        db: space.db,
+        indexFacts,
+        ownerEmail: OWNER_EMAIL,
+        now: new Date().toISOString(),
+      }).pipe(Effect.provide(aiLayer));
+
+      const { promise, interrupt } = runInterruptible(program);
+      interruptRef.current = interrupt;
+      return promise.then((result) => {
+        setStats([
+          { label: 'Messages', value: result.stats.total },
+          { label: 'Threads', value: result.threads.length },
+          { label: 'Spam', value: result.stats.spam },
+          { label: 'Facts', value: collected.length },
+          ...rateStats(result.stats.total, startedMs, 'msg'),
+        ]);
+        setDetails([
+          { id: 'messages', label: 'Messages', content: <MessageList result={result} /> },
+          { id: 'threads', label: 'Threads', content: <ThreadList result={result} /> },
+        ]);
       });
-
-    const program = EmailPipeline.run(emails, {
-      db: space.db,
-      indexFacts,
-      ownerEmail: OWNER_EMAIL,
-      now: new Date().toISOString(),
-    }).pipe(Effect.provide(aiLayer));
-
-    const { promise, interrupt } = runInterruptible(program);
-    interruptRef.current = interrupt;
-    return promise.then((result) => {
-      setStats([
-        { label: 'Messages', value: result.stats.total },
-        { label: 'Threads', value: result.threads.length },
-        { label: 'Spam', value: result.stats.spam },
-        { label: 'Facts', value: collected.length },
-        ...rateStats(result.stats.total, startedMs, 'msg'),
-      ]);
-      setDetails([
-        { id: 'messages', label: 'Messages', content: <MessageList result={result} /> },
-        { id: 'threads', label: 'Threads', content: <ThreadList result={result} /> },
-      ]);
-    });
-  }, [space, emails, ai.preset, extractOptions]);
+    },
+    [space, emails, ai.preset, extractOptions, registry],
+  );
 
   // Load the first `count` Enron messages from the dataset parquet (over HTTP) and make them the
   // email pipeline's input; the Dataset tab preview updates to the loaded messages.
-  const handleLoadDataset = useCallback((count: number) => {
-    setRunning(true);
-    void loadEnronMessages({ count })
-      .then((loaded) => {
-        setEmails(loaded);
-        setDatasets([{ id: 'enron', label: `Enron (${loaded.length})`, messages: loaded.map(toPreview) }]);
-      })
-      .catch(() => {})
-      .finally(() => setRunning(false));
-  }, []);
+  const handleLoadDataset = useCallback(
+    (count: number) => {
+      const handle = progress.register(PIPELINE_RUN, { label: 'Loading dataset' });
+      void loadEnronMessages({ count })
+        .then((loaded) => {
+          setEmails(loaded);
+          setDatasets([{ id: 'enron', label: `Enron (${loaded.length})`, messages: loaded.map(toPreview) }]);
+        })
+        .catch(() => {})
+        .finally(() => handle.remove());
+    },
+    [progress],
+  );
 
   const runTranscription = useCallback(
-    (text: string) => {
+    (text: string, handle: AppCapabilities.ProgressMonitor) => {
       if (!space) {
         return Promise.resolve();
       }
@@ -308,10 +314,9 @@ const DefaultStory = ({ ai }: StoryArgs) => {
               Object.assign(block, patch);
             }
           }
-          setProcessed((value) => value + 1);
+          handle.advance();
         });
 
-      setFacts([]);
       const { promise, interrupt } = runInterruptible(
         TranscriptionPipeline.run({ source, lookup: makeDatabaseLookup(space.db), commit }),
       );
@@ -333,56 +338,64 @@ const DefaultStory = ({ ai }: StoryArgs) => {
     [space],
   );
 
-  // Start the selected pipeline over the current input; reset the live views so facts/objects stream
-  // in fresh as the run proceeds (rather than appearing only at completion).
+  // Start the selected pipeline over the current input; clear the store + views so results stream in
+  // fresh, and register a progress task (modules derive "running"/progress + busy from it).
   const handleStart = useCallback(() => {
-    setProcessed(0);
-    setFacts([]);
+    if (!space) {
+      return;
+    }
     setStats([]);
     setDetails([]);
-    setRunning(true);
+    void EffectEx.runPromise(registry.forSpace(space.id).clear());
+    const handle = progress.register(PIPELINE_RUN, {
+      label: 'Pipeline run',
+      onCancel: () => interruptRef.current?.(),
+    });
     const documentText = input.mode === 'document' ? input.text : SAMPLE_CONTENT;
     const transcript = input.mode === 'record' ? input.transcript : documentText;
     const run =
-      pipelineId === 'rdf' ? runRdf(documentText) : pipelineId === 'email' ? runEmail() : runTranscription(transcript);
+      pipelineId === 'rdf'
+        ? runRdf(documentText, handle)
+        : pipelineId === 'email'
+          ? runEmail(handle)
+          : runTranscription(transcript, handle);
     void run
       // Surface a failed run in the Stats tab rather than silently doing nothing (e.g. an unreachable
       // backend or a model whose output could not be parsed).
       .catch((error) => setStats([{ label: 'Error', value: error instanceof Error ? error.message : String(error) }]))
       .finally(() => {
-        setRunning(false);
+        handle.remove();
         interruptRef.current = null;
       });
-  }, [pipelineId, input, runRdf, runEmail, runTranscription]);
+  }, [space, registry, progress, pipelineId, input, runRdf, runEmail, runTranscription]);
 
   const handleStop = useCallback(() => {
-    interruptRef.current?.();
-  }, []);
+    progress.cancel(PIPELINE_RUN);
+  }, [progress]);
 
+  // TODO(burdon): PipelineStoryContext.
   return (
-    <div className='dx-container grid grid-cols-3 gap-2'>
-      <InputPanel
-        mode={MODE_FOR_PIPELINE[pipelineId] ?? 'document'}
-        onModeChange={(next) => setPipelineId(PIPELINE_FOR_MODE[next])}
-        initialDocument={SAMPLE_CONTENT}
-        parse={stubParse}
-        datasets={datasets}
-        sampleTranscript={SAMPLE_TRANSCRIPT}
-        busy={running}
-        onLoadDataset={handleLoadDataset}
-        onInput={setInput}
-      />
-      <PipelinePanel
-        pipelines={PIPELINES}
-        selected={pipelineId}
-        onSelect={setPipelineId}
-        running={running}
-        processed={processed}
-        onStart={handleStart}
-        onStop={handleStop}
-      />
-      <OutputPanel facts={facts} objects={objects} stats={stats} details={details} />
-    </div>
+    <PipelineStoryContext.Provider
+      value={{
+        mode: MODE_FOR_PIPELINE[pipelineId] ?? 'document',
+        onModeChange: (next) => setPipelineId(PIPELINE_FOR_MODE[next]),
+        initialDocument: SAMPLE_CONTENT,
+        parse: stubParse,
+        datasets,
+        sampleTranscript: SAMPLE_TRANSCRIPT,
+        onLoadDataset: handleLoadDataset,
+        onInput: setInput,
+        pipelines: PIPELINES,
+        selected: pipelineId,
+        onSelect: setPipelineId,
+        onStart: handleStart,
+        onStop: handleStop,
+        stats,
+        details,
+      }}
+    >
+      <ModuleContainer layout={[[Module.Input], [Module.Pipeline], [Module.Output]]} />
+    </PipelineStoryContext.Provider>
   );
 };
 
@@ -492,23 +505,35 @@ const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?
 const meta = {
   title: 'stories/stories-brain/Pipeline',
   render: DefaultStory,
-  decorators: createMarkdownStoryDecorators({
-    layout: 'fullscreen',
-    types: [Person.Person, Organization.Organization, Thread],
-    // Seed a couple of entities so the transcription pipeline has something to link against and the
-    // Objects tab is populated before the email pipeline runs.
-    seed: ({ personalSpace: space }) =>
-      Effect.promise(async () => {
-        // TODO(burdon): From const.
-        space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
-        space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
-        await space.db.flush({ indexes: true });
-      }),
-    graphPlugin: {
-      key: 'org.dxos.plugin.stories.pipeline.storyGraph',
-      name: 'Pipeline Story Graph',
-    },
-  }),
+  decorators: [
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              const { personalSpace: space } = yield* initializeIdentity(client);
+              // Seed a couple of entities so the transcription pipeline has something to link against
+              // and the Objects tab is populated before the email pipeline runs.
+              // TODO(burdon): From const.
+              space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
+              space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
+              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            }),
+        }),
+        SpacePlugin({}),
+        MarkdownPlugin(),
+        TranscriptionPlugin(),
+        BrainPlugin(),
+        ProgressPlugin(),
+        StoryModulesPlugin(),
+        StorybookPlugin({}),
+      ],
+    }),
+  ],
   args: {
     ai: { preset: 'edge-remote' },
   },

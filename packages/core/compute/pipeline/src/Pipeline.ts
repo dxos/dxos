@@ -8,6 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Stream from 'effect/Stream';
 
+import { log } from '@dxos/log';
+
 import * as Stage from './Stage';
 
 /**
@@ -52,3 +54,35 @@ export const run: {
     Stream.runForEach(options.sink),
   ),
 );
+
+/**
+ * Abort a pipeline with an `AbortSignal`.
+ * @param signal
+ * @returns
+ */
+export const abortWith = (signal: AbortSignal): (<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>) =>
+  Effect.raceFirst(
+    Effect.async<never>((resume) => {
+      if (signal.aborted) {
+        resume(Effect.interrupt);
+        return;
+      }
+
+      const onAbort = () => {
+        resume(
+          Effect.gen(function* () {
+            log.info('aborting pipeline', {
+              span: yield* Effect.currentSpan.pipe(
+                Effect.map((span) => span.name),
+                Effect.catchAll((_) => Effect.succeed(undefined)),
+              ),
+            });
+            return yield* Effect.interrupt;
+          }),
+        );
+      };
+
+      signal.addEventListener('abort', onAbort, { once: true });
+      return Effect.sync(() => signal.removeEventListener('abort', onAbort));
+    }),
+  );

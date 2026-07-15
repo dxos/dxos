@@ -3,6 +3,8 @@
 //
 
 import * as Reactivity from '@effect/experimental/Reactivity';
+import type * as RpcClient from '@effect/rpc/RpcClient';
+import type * as RpcServer from '@effect/rpc/RpcServer';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -34,11 +36,12 @@ import { type MaybePromise } from '@dxos/util';
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
 
-// All session ports are native MessagePorts served via effect-rpc: appPort carries the client
-// services (+ WorkerService); systemPort carries the reverse-direction BridgeService.
+// Session transports are effect-rpc protocol layers handed over by the worker framework: appProtocol
+// serves the client services (+ WorkerService); systemProtocol carries the reverse-direction
+// BridgeService (worker→tab).
 export type CreateSessionProps = {
-  appPort: MessagePort;
-  systemPort: MessagePort;
+  appProtocol: RpcServer.Protocol['Type'];
+  systemProtocol: RpcClient.Protocol['Type'];
   shellPort?: MessagePort;
   onClose?: () => Promise<void>;
 };
@@ -251,11 +254,11 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
+  async createSession({ appProtocol, systemProtocol, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
-      appPort,
-      systemPort,
+      appProtocol,
+      systemProtocol,
       shellPort,
       readySignal: this._ready,
     });

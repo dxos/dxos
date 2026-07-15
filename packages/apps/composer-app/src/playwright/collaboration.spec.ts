@@ -80,7 +80,12 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test("host and guest can see each others' cursors when same document is in focus", async () => {
+  // TODO(wittjosiah): Flaky -- depends on winning a race between the awareness gossip channel
+  //   becoming live and the peer's cursor-position broadcast, with no way from the test to
+  //   detect readiness (the presence indicator this used to rely on no longer exists at the
+  //   app level). Covered instead by a storybook interaction test exercising the CodeMirror
+  //   awareness extension against an in-memory two-peer transport.
+  test.skip("host and guest can see each others' cursors when same document is in focus", async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 

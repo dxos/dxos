@@ -37,6 +37,7 @@ import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -49,7 +50,6 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
-import { AccessToken } from '@dxos/types';
 
 import { moduleSurfaces } from './modules';
 import { initClientFromSpaceSnapshot } from './snapshot';

@@ -15,8 +15,8 @@ export default Config2.make({
       reusable driver for a service; a Connection is the durable authenticated
       instance (a name, the connector id, and a Ref to an AccessToken stored in
       ECHO). One connector can back many connections (multi-account), and each
-      connection sources one or more SyncBinding relations — a remote target
-      paired with a local ECHO root object — that carry per-binding sync state.
+      connection sources one or more sync Cursors — a remote target paired with
+      a local ECHO root object — that carry per-cursor sync state.
 
       Other plugins register themselves as Connector capability entries,
       describing their OAuth scopes, target-discovery and sync operations, how to
@@ -34,9 +34,9 @@ export default Config2.make({
 
       ECHO writes happen only after authentication succeeds: the AccessToken and
       Connection are persisted together, the connector's onTokenCreated hook
-      fires, and Composer navigates to the new Connection. Binding reconciliation
+      fires, and Composer navigates to the new Connection. Cursor reconciliation
       is non-destructive, preserving existing sync cursors and options for
-      bindings that remain selected.
+      targets that remain selected.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-connector',
     tags: ['system'],

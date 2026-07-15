@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import {
   // eslint-disable-next-line unused-imports/no-unused-imports
   type Connection,
@@ -15,7 +16,6 @@ import {
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
@@ -46,10 +46,9 @@ export const GetTrelloBoards = Operation.make({
 });
 
 /**
- * Find-or-create the empty local Kanban for a selected Trello board so a
- * {@link SyncBinding} relation can be created eagerly (relations require both
- * endpoints to exist). Keyed by the board's foreign key, so it is idempotent
- * across re-selection.
+ * Find-or-create the empty local Kanban for a selected Trello board so an
+ * external-sync {@link Cursor.Cursor} can be created eagerly. Keyed by the
+ * board's foreign key, so it is idempotent across re-selection.
  */
 export const MaterializeTrelloTarget = Operation.make({
   meta: {
@@ -63,21 +62,22 @@ export const MaterializeTrelloTarget = Operation.make({
 });
 
 /**
- * Bidirectional reconcile of a single Trello board bound by a {@link SyncBinding}.
+ * Bidirectional reconcile of a single Trello board bound by an external-sync
+ * {@link Cursor.Cursor}.
  *
  * Does **not** discover boards. Pulls cards from Trello into local Expando cards
  * (keyed by foreign id), pushes locally-created and locally-edited cards back to
- * Trello, and updates the binding's `lastSyncAt`/`lastError`.
+ * Trello, and updates the binding's `lastTick`/`lastError`.
  */
 export const SyncTrelloBoard = Operation.make({
   meta: {
     key: makeKey('syncTrelloBoard'),
     name: 'Sync Trello Board',
-    description: 'Reconcile cards for the Trello board bound by a SyncBinding.',
+    description: 'Reconcile cards for the Trello board bound by a sync cursor.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({

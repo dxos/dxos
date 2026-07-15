@@ -10,10 +10,10 @@ import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, Connection } from '@dxos/plugin-connector';
-import { AccessToken } from '@dxos/types';
 
 import { CompleteOAuthRegistration } from './definitions';
 import { createEdgeHttpClient } from './shared';
