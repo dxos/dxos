@@ -47,9 +47,27 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
   const selectedDraftContentRef = selectedDraft?.content;
   useObject(selectedDraftContentRef);
   const selectedDraftDoc = selectedDraftContentRef?.target;
+  // Distinct from the Post's own `attendableId`: the draft editor needs a unique id so it registers
+  // separately in markdown's EditorViews registry (for scrollToAnchor) and aligns with the comments
+  // selection key `selectionAspect[getURI(draftDoc)]`.
+  const selectedDraftDocId = selectedDraftDoc ? Obj.getURI(selectedDraftDoc) : undefined;
   const draftData = useMemo(
-    () => (selectedDraftDoc ? { subject: selectedDraftDoc, attendableId } : undefined),
-    [selectedDraftDoc, attendableId],
+    () =>
+      selectedDraftDoc && selectedDraftDocId
+        ? { subject: selectedDraftDoc, attendableId: selectedDraftDocId }
+        : undefined,
+    [selectedDraftDoc, selectedDraftDocId],
+  );
+  // Companion comments panel targeting the draft doc (not the Post): satisfies the plugin-comments
+  // react-surface filter `allOf(literal(Article, 'comments'), companion(Article))`, which requires
+  // `subject === 'comments'` plus a `companionTo` ECHO object — mirrors the data shape built by
+  // `plugin-deck`'s `Companion` component.
+  const commentsData = useMemo(
+    () =>
+      selectedDraftDoc && selectedDraftDocId
+        ? { subject: 'comments' as const, companionTo: selectedDraftDoc, attendableId: selectedDraftDocId }
+        : undefined,
+    [selectedDraftDoc, selectedDraftDocId],
   );
 
   const handleAddDraft = useCallback(async () => {
@@ -176,8 +194,13 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
             <div className='min-bs-0 overflow-hidden'>
               <ObjectForm object={subject} type={Blog.Post} />
             </div>
-            <div className='min-bs-0 overflow-hidden'>
-              {draftData && <Surface.Surface type={AppSurface.Article} data={draftData} limit={1} />}
+            <div className='min-bs-0 grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] overflow-hidden'>
+              <div className='min-is-0 overflow-hidden'>
+                {draftData && <Surface.Surface type={AppSurface.Article} data={draftData} limit={1} />}
+              </div>
+              <div className='min-is-0 overflow-hidden'>
+                {commentsData && <Surface.Surface type={AppSurface.Article} data={commentsData} limit={1} />}
+              </div>
             </div>
           </div>
         </Panel.Content>
