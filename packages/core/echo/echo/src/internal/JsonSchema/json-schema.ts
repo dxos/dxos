@@ -377,11 +377,16 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
     throw new Error('Invalid reference field in ref schema');
   }
 
+  // Legacy backward-compat: JSON schemas persisted before the DXN `type:` segment was dropped (e.g. a
+  // deployed function's `inputSchema`, generated at an older SDK version and never redeployed since)
+  // store `dxn:type:<nsid>[:<version>]`; normalize to the canonical `dxn:<nsid>[:<version>]` before
+  // parsing. Mirrors `ObjectMetaIndex`'s index-time normalization for the same legacy form.
   const ref = reference.schema.$ref;
-  const targetSchemaDXN = DXN.tryMake(ref);
+  const normalizedRef = ref.startsWith('dxn:type:') ? `dxn:${ref.slice('dxn:type:'.length)}` : ref;
+  const targetSchemaDXN = DXN.tryMake(normalizedRef);
   invariant(targetSchemaDXN, `Expected a type DXN, got: ${ref}`);
 
-  return createEchoReferenceSchema(ref, DXN.getName(targetSchemaDXN), reference.schemaVersion);
+  return createEchoReferenceSchema(normalizedRef, DXN.getName(targetSchemaDXN), reference.schemaVersion);
 };
 
 //

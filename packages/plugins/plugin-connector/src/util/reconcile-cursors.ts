@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 
 import { type Connection, type ConnectorEntry } from '../types';
 import { isCursorForConnection } from './cursor-predicates';
+import { runOnCursorCreated } from './run-on-cursor-created';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
@@ -100,7 +102,7 @@ export const reconcileCursors = ({
         //   a good pattern or an anti-pattern; consider a dedicated marker/null target instead.
         target = connection;
       }
-      yield* Database.add(
+      const cursor = yield* Database.add(
         Cursor.makeExternal({
           source: connection.accessToken,
           target: Ref.make(target),
@@ -108,6 +110,8 @@ export const reconcileCursors = ({
           ...(sel.name ? { label: sel.name } : {}),
         }),
       );
+      invariant(Cursor.isExternal(cursor));
+      yield* runOnCursorCreated(connector, { connection, cursor, target, db });
       added++;
     }
 

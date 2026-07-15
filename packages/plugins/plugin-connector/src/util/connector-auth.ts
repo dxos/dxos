@@ -7,12 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppNode } from '@dxos/app-toolkit';
 import { Database, type Key, type Obj, type Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { ConnectorCoordinator, type ConnectorEntry } from '../types';
 import * as Connection from '../types/Connection';
+import { runOnCursorCreated } from './run-on-cursor-created';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';
@@ -99,7 +101,15 @@ export const connectorAuthActions = ({
           if (!existingTarget) {
             return;
           }
-          yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }));
+          const target = yield* Database.load(existingTarget);
+          const cursor = yield* Database.add(
+            Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }),
+          );
+          invariant(Cursor.isExternal(cursor));
+          const connector = allConnectors.find((entry) => entry.id === connection.connectorId);
+          if (connector) {
+            yield* runOnCursorCreated(connector, { connection, cursor, target, db });
+          }
         }).pipe(Effect.provide(Database.layer(db))),
     });
 

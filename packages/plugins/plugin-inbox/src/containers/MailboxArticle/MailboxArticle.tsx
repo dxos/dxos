@@ -316,6 +316,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     connection,
     sync,
     syncing,
+    // Same monitor as the statusbar meter (`syncProgress`, above) — a sync already running in the
+    // background (e.g. kicked off by the routine's timer trigger) disables the button too, not just
+    // this hook's own in-flight `syncing` flag.
+    syncRunning: syncProgress?.status === 'running',
   });
 
   return (
@@ -456,11 +460,13 @@ type MailboxActionsOptions = {
   sync: () => Promise<void>;
   /** In-flight sync flag, read reactively in the builder. */
   syncing: Atom.Atom<boolean>;
+  /** Whether the mailbox's sync progress monitor is currently running (see `syncProgress` above). */
+  syncRunning: boolean;
 };
 
 const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
-  { sortDescending, nodeId, filterElement, connection, sync, syncing }: MailboxActionsOptions,
+  { sortDescending, nodeId, filterElement, connection, sync, syncing, syncRunning }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
@@ -539,7 +545,7 @@ const useMailboxActions = (
 
       // Own action: pull-sync from the provider once connected.
       if (connection) {
-        const isSyncing = get(syncing);
+        const isSyncing = get(syncing) || syncRunning;
         builder.action(
           'sync',
           {
@@ -567,6 +573,7 @@ const useMailboxActions = (
       connection,
       sync,
       syncing,
+      syncRunning,
       sortDescending,
       loadRemoteImages,
       setSettings,

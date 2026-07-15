@@ -27,7 +27,7 @@ import {
   pendingConnectionStorageKey,
 } from '../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../errors';
-import { reconcileCursors } from '../util';
+import { reconcileCursors, runOnCursorCreated } from '../util';
 
 /**
  * Pending connection awaiting an OAuth callback.
@@ -199,7 +199,11 @@ const createSingleCursor = (
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
       return;
     }
-    yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }));
+    const cursor = yield* Database.add(
+      Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
+    );
+    invariant(Cursor.isExternal(cursor));
+    yield* runOnCursorCreated(connector, { connection, cursor, target, db });
   }).pipe(
     Effect.provide(Database.layer(db)),
     Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),

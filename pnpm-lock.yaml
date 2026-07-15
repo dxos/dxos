@@ -12002,6 +12002,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-routine':
+        specifier: workspace:*
+        version: link:../plugin-routine
       '@dxos/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings

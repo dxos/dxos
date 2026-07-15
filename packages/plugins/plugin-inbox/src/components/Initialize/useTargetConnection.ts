@@ -3,13 +3,15 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type Operation } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { useOperationInvoker, useSpaceCallback } from '@dxos/app-framework/ui';
+import { type Operation, Trigger, type TriggerEvent } from '@dxos/compute';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
+import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 
@@ -45,12 +47,43 @@ export const useTargetConnection = <T extends Obj.Any>(
 };
 
 /**
- * Build a `sync` callback for `target`: resolves its bound {@link Connection} and invokes
- * {@link ConnectorOperation.SyncConnection} — the same shared fan-out handler the connection settings'
- * "Sync now" and the mailbox node's context-menu action use — so the action works for any connector
- * with no per-provider branching, and picks up connector-agnostic failure handling (e.g. retagging an
- * expired credential) in one place rather than duplicating it here. Tracks an in-flight `syncing` flag
- * for the empty-state UI.
+ * Find `target`'s sync timer trigger: the `timer` trigger owned by a Routine connected to `target`
+ * (see {@link connectedRoutinesQuery}), falling back to a bare `timer` trigger whose `input` refs
+ * `target` directly (pre-existing triggers not wrapped in a routine).
+ */
+const useSyncTimerTrigger = <T extends Obj.Any>(
+  db: ReturnType<typeof Obj.getDatabase>,
+  target: T,
+): Trigger.Trigger | undefined => {
+  const routines = useQuery(db, connectedRoutinesQuery(target));
+  const allTriggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)));
+  const targetUri = Obj.getURI(target);
+
+  return useMemo(() => {
+    for (const routine of routines) {
+      for (const ref of routine.triggers) {
+        if (ref.target?.spec?.kind === 'timer') {
+          return ref.target;
+        }
+      }
+    }
+    return allTriggers.find((trigger) => {
+      if (trigger.spec?.kind !== 'timer') {
+        return false;
+      }
+      const ref = trigger.input?.mailbox ?? trigger.input?.calendar;
+      return ref?.uri === targetUri;
+    });
+  }, [routines, allTriggers, targetUri]);
+};
+
+/**
+ * Build a `sync` callback for `target`: when a sync timer trigger exists for `target`, force-runs it
+ * via {@link Trigger.TriggerMonitorService.invokeTrigger} (edge or local, per the trigger's own
+ * `remote` flag — the monitor decides, not this hook); otherwise resolves the bound {@link Connection}
+ * and invokes {@link ConnectorOperation.SyncConnection} directly — the same shared fan-out handler the
+ * connection settings' "Sync now" and the mailbox node's context-menu action use, for connectors with
+ * no deployed sync trigger (JMAP, Contacts). Tracks an in-flight `syncing` flag for the empty-state UI.
  *
  * `connection` exposes whether the target is bound (drives "connect vs. sync").
  *
@@ -69,6 +102,23 @@ export const useTargetSync = <T extends Obj.Any>(
   const db = Obj.getDatabase(target);
   const { invokePromise } = useOperationInvoker();
   const { atom: syncing, set: setSyncing } = useAtomState(false);
+  const syncTrigger = useSyncTimerTrigger(db, target);
+
+  const invokeSyncTrigger = useSpaceCallback(
+    db?.spaceId,
+    [Trigger.TriggerMonitorService],
+    Effect.fnUntraced(function* () {
+      if (!syncTrigger) {
+        return;
+      }
+      const monitor = yield* Trigger.TriggerMonitorService;
+      yield* monitor.invokeTrigger({
+        trigger: syncTrigger,
+        event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent,
+      });
+    }),
+    [syncTrigger],
+  );
 
   const sync = useCallback(async () => {
     if (!connection) {
@@ -76,6 +126,10 @@ export const useTargetSync = <T extends Obj.Any>(
     }
     setSyncing(true);
     try {
+      if (syncTrigger) {
+        await invokeSyncTrigger();
+        return;
+      }
       await invokePromise(
         ConnectorOperation.SyncConnection,
         { connection: Ref.make(connection) },
@@ -84,7 +138,7 @@ export const useTargetSync = <T extends Obj.Any>(
     } finally {
       setSyncing(false);
     }
-  }, [invokePromise, connection, db, notify, setSyncing]);
+  }, [invokePromise, connection, db, notify, setSyncing, syncTrigger, invokeSyncTrigger]);
 
   return { connection, sync, syncing };
 };
