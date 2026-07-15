@@ -19,6 +19,7 @@ import {
   type MenuItems,
   type MenuItemsAccessor,
   type MenuItemsMap,
+  isSeparator,
 } from '../types';
 import { executeMenuAction } from '../util';
 import { ActionLabel } from './ActionLabel';
@@ -299,9 +300,13 @@ const MenuContent = ({
     <NaturalDropdownMenu.Portal>
       <NaturalDropdownMenu.Content>
         <NaturalDropdownMenu.Viewport>
-          {resolvedItems?.map((item) => (
-            <MenuContentItem key={item.id} item={item} onClick={handleActionClick} />
-          ))}
+          {resolvedItems?.map((item) =>
+            isSeparator(item) ? (
+              <NaturalDropdownMenu.Separator key={item.id} />
+            ) : (
+              <MenuContentItem key={item.id} item={item} onClick={handleActionClick} />
+            ),
+          )}
         </NaturalDropdownMenu.Viewport>
         <NaturalDropdownMenu.Arrow />
       </NaturalDropdownMenu.Content>

@@ -9,8 +9,11 @@ import { Instructions } from '@dxos/compute';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { TopicProps } from '@dxos/pipeline-email';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
+
+import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
 
 /**
  * Foreign-key source for Gmail provider labels. A Gmail label maps to a {@link Tag} object carrying
@@ -101,6 +104,8 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
     FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
+    ConnectorAuthAnnotation.set({ connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID], bindTarget: true }),
   ),
 ) {}
 
