@@ -10,6 +10,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
+import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -29,10 +30,11 @@ type PostTileData = {
 export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blog.Publication>;
 
 /**
- * Article surface for a `Blog.Publication`: a toolbar toggle swaps between a Masonry gallery of
- * `PostCard` tiles (one per `subject.posts`) and the publication's shared instructions document,
- * embedded via the markdown article Surface (`AppSurface.Article` matched against `Markdown.Document`
- * by `plugin-markdown`'s `surface.document`).
+ * Article surface for a `Blog.Publication`: a schema-driven form of the Publication's own fields
+ * (name) on top, and below it a toolbar toggle that swaps between a Masonry gallery of `PostCard`
+ * tiles (one per `subject.posts`) and the publication's shared instructions document, embedded via
+ * the markdown article Surface (`AppSurface.Article` matched against `Markdown.Document` by
+ * `plugin-markdown`'s `surface.document`).
  */
 export const PublicationArticle = ({ role, attendableId, subject }: PublicationArticleProps) => {
   const [publication] = useObject(subject);
@@ -124,15 +126,22 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content>
-          {mode === 'gallery' ? (
-            <Masonry.Root Tile={PostTile}>
-              <Masonry.Content>
-                <Masonry.Viewport items={tileItems} getId={(data) => Obj.getURI(data.post)} />
-              </Masonry.Content>
-            </Masonry.Root>
-          ) : (
-            instructionsData && <Surface.Surface type={AppSurface.Article} data={instructionsData} limit={1} />
-          )}
+          <div className='grid h-full grid-rows-[minmax(0,1fr)_minmax(0,2fr)] overflow-hidden'>
+            <div className='min-bs-0 overflow-hidden'>
+              <ObjectForm object={subject} type={Blog.Publication} />
+            </div>
+            <div className='min-bs-0 overflow-hidden'>
+              {mode === 'gallery' ? (
+                <Masonry.Root Tile={PostTile}>
+                  <Masonry.Content>
+                    <Masonry.Viewport items={tileItems} getId={(data) => Obj.getURI(data.post)} />
+                  </Masonry.Content>
+                </Masonry.Root>
+              ) : (
+                instructionsData && <Surface.Surface type={AppSurface.Article} data={instructionsData} limit={1} />
+              )}
+            </div>
+          </div>
         </Panel.Content>
       </Panel.Root>
     </Menu.Root>
