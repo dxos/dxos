@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getParentId, useNode } from '@dxos/plugin-graph';
-import { DraftMessage, Event, Message, Organization, Person, Topic } from '@dxos/types';
+import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
@@ -27,7 +27,6 @@ import {
   RelatedToOrganization,
   SaveFilterPopover,
   SubscriptionsArticle,
-  TopicArticle,
   TopicsArticle,
 } from '#containers';
 import { Calendar, Mailbox } from '#types';
@@ -66,11 +65,6 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <TopicsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
-      }),
-      Surface.create({
-        id: 'topic',
-        filter: AppSurface.object(AppSurface.Article, Topic.Topic),
-        component: ({ data, role }) => <TopicArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'subscriptions',

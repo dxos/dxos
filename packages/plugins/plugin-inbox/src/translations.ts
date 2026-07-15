@@ -5,7 +5,7 @@
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
-import { Message, Topic } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
@@ -34,17 +34,6 @@ export const translations = [
         'rename-object.label': 'Rename message',
         'delete-object.label': 'Delete message',
         'object-deleted.label': 'Message deleted',
-      },
-      [Type.getTypename(Topic.Topic)]: {
-        'typename.label': 'Topic',
-        'typename.label_zero': 'Topics',
-        'typename.label_one': 'Topic',
-        'typename.label_other': 'Topics',
-        'object-name.placeholder': 'New topic',
-        'add-object.label': 'Add topic',
-        'rename-object.label': 'Rename topic',
-        'delete-object.label': 'Delete topic',
-        'object-deleted.label': 'Topic deleted',
       },
       [Type.getTypename(Calendar.Calendar)]: {
         'typename.label': 'Calendar',
@@ -167,9 +156,6 @@ export const translations = [
         'topics.count.label':
           '{{threads}} threads · {{participants}} participants · {{questions}} questions · {{tasks}} tasks',
         'topics.delete.label': 'Delete topic',
-        'topics.threads.label': 'Threads',
-        'topics.questions.label': 'Questions',
-        'topics.tasks.label': 'Tasks',
         'topics.suggested.title': 'Suggested',
         'topics.accept.label': 'Accept',
         'topics.dismiss.label': 'Dismiss',

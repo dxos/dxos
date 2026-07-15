@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { Card, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Topic } from '@dxos/types';
 
-import { Row } from '#components';
 import { meta } from '#meta';
 
 export type TopicArticleProps = {
@@ -38,17 +37,12 @@ const ListSection = ({ icon, label, items }: { icon: string; label: string; item
 };
 
 /**
- * Detail view for one `Topic` (the "detail" half of the Topics master/detail): its label, summary,
- * keyword chips, participants, and rolled-up questions / tasks / member-thread subjects. Renders the
- * topic's own stored fields (self-contained — no cross-object resolution); resolving `threadIds` to
- * live feed messages with click-to-open is a follow-up (see `resolve-threads.ts`).
+ * Detail view for one `Topic`: its label, summary, keyword chips, participants, and rolled-up
+ * questions / tasks / member-thread subjects. Renders the topic's own stored fields (self-contained —
+ * no cross-object resolution); resolving `threadIds` to live messages with click-to-open is a follow-up.
  */
 export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const keywordTags = useMemo(
-    () => topic.keywords.map((keyword) => ({ id: keyword, label: keyword })),
-    [topic.keywords],
-  );
 
   return (
     <Panel.Root role={role}>
@@ -68,7 +62,18 @@ export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {
                     <Card.Text variant='description'>{topic.summary}</Card.Text>
                   </Card.Row>
                 )}
-                <Row.Tags tags={keywordTags} />
+                {topic.keywords.length > 0 && (
+                  <Card.Row>
+                    <Card.Block>
+                      <Icon icon='ph--tag--regular' />
+                    </Card.Block>
+                    <div className='flex flex-wrap gap-1 py-1 -mx-0.5'>
+                      {topic.keywords.map((keyword) => (
+                        <Tag key={keyword}>{keyword}</Tag>
+                      ))}
+                    </div>
+                  </Card.Row>
+                )}
                 {topic.participants.length > 0 && (
                   <Card.Row>
                     <Card.Block>
@@ -77,9 +82,9 @@ export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {
                     <Card.Text variant='description'>{topic.participants.join(', ')}</Card.Text>
                   </Card.Row>
                 )}
-                <ListSection icon='ph--tree-view--regular' label={t('topics.threads.label')} items={topic.threadIds} />
-                <ListSection icon='ph--question--regular' label={t('topics.questions.label')} items={topic.questions} />
-                <ListSection icon='ph--check-square--regular' label={t('topics.tasks.label')} items={topic.tasks} />
+                <ListSection icon='ph--tree-view--regular' label={t('topic.threads.label')} items={topic.threadIds} />
+                <ListSection icon='ph--question--regular' label={t('topic.questions.label')} items={topic.questions} />
+                <ListSection icon='ph--check-square--regular' label={t('topic.tasks.label')} items={topic.tasks} />
               </Card.Body>
             </Card.Root>
           </ScrollArea.Viewport>

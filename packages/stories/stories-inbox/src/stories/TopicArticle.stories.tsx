@@ -10,9 +10,10 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
+import { TopicArticle } from '@dxos/plugin-brain/containers';
+import { translations as brainTranslations } from '@dxos/plugin-brain/translations';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { TopicArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -92,7 +93,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...inboxTranslations, ...reactUiTranslations],
+    translations: [...brainTranslations, ...inboxTranslations, ...reactUiTranslations],
   },
 } satisfies Meta;
 
