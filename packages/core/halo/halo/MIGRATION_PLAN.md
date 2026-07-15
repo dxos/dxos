@@ -53,58 +53,76 @@ publishes the packages; all other checks should be green.
 
 ## Migration outcome — what moved and what stays
 
-### Migrated to `@dxos/halo` / `@dxos/halo-react`
+The migration decision is: **plugins consume HALO via `@dxos/halo` /
+`@dxos/halo-react`, never `@dxos/client` HALO APIs.** ECHO `space.db` stays on
+`@dxos/echo`. The only place the client backs HALO is the adapter
+(`@dxos/halo-adapter-client`) and plugin-client's client provider + the
+`HaloIdentity`/`HaloSpace` capabilities it contributes.
 
-- **plugin-client foundation** — `react-context.tsx` wraps the tree in
-  `HaloProvider`; `layer-specs.ts` contributes `IdentityLayerSpec`/`SpaceLayerSpec`
-  so the process manager resolves the services. `Identity.Info` extended with
-  `identityKey` (hex) + `data`.
-- **plugin-client containers/operations** — `AccountContainer`, `ProfileContainer`;
-  `UpdateProfile` operation routes through `Identity.Service`.
-- **plugin-assistant** — `Chat`, `ChatThread` (`useIdentity`).
-- **plugin-comments** — `CommentsArticle` (`useIdentity`, DID only).
-- **plugin-transcription** — `useTranscriptionRecording`.
-- **plugin-markdown / plugin-code / plugin-script** — editor identity now sourced
-  from `@dxos/halo-react`. Enabled by narrowing `createDataExtensions` in
-  `@dxos/ui-editor` to a structural `DataExtensionsIdentity`
-  (`{ identityKey?, displayName?, data? }`), which the halo `Identity.Info`
-  satisfies — no `@dxos/halo` dependency pushed into the foundational editor.
+### HALO API added to support consumers
 
-### Deliberately NOT migrated (separate tracks / blocked)
+- `Identity.Info` gained `identityKey` (hex) + `data`; `Space.Member` gained
+  `identityKey` (hex), `displayName`, `data`.
+- `Identity`: `credentials` stream + `Credential` type, `grantServiceAccess`
+  verb, synchronous `getSnapshot()` / `getDevicesSnapshot()` and imperative
+  `subscribe()` for non-React/non-Effect callers.
+- `@dxos/halo-react`: `useCredentials` (plus existing useIdentity/useDevices/
+  useMembers/useSpaces/useInvitations).
+- plugin-client contributes `ClientCapabilities.HaloIdentity` / `HaloSpace`
+  (the service instances) for imperative capability singletons.
 
-These consume the **client** identity type through boundaries the settled
-decisions keep on `@dxos/client`. Moving them is out of scope for the HALO
-service migration, not an oversight:
+### Migrated (off `@dxos/client` HALO)
 
-- **ECHO `SpaceMember` sites** — `plugin-space/SpacePresence`,
-  `plugin-thread` (`MessageThread`, `ThreadArticle`, `ChannelArticle`, `util`),
-  `plugin-comments` (`CommentThread`, `util`). These read members via
-  `useMembers` from `@dxos/react-client/echo` (`SpaceMember.identity.identityKey:
-PublicKey`) and compare with `PublicKey.equals`, and feed `getMessageMetadata`
-  from both the local identity and member identities. This is the ECHO members
-  track, which stays separate.
-- **Shell / client-invitation UI** — `plugin-client/DevicesContainer` feeds the
-  client `Device` into `@dxos/shell`'s `DeviceListItem` and creates device
-  invitations via the client observable API (`client.halo.share()`,
-  `useMulticastObservable`, `InvitationEncoder`). Shell + the invitation
-  observable API are a separate track.
-- **Credential / recovery / onboarding flows** — `RecoveryCredentialsContainer`,
-  `useHubClient`, `plugin-onboarding` (`WelcomeScreen`, `onboarding-manager`,
-  `util`). These need the deferred HALO verbs (credential query/write,
-  recovery-credential creation, EDGE attest) and pass identity into the
-  client-typed `Welcome` prop. Blocked until the Phase 2 verbs land.
-- **CLI commands** (`plugin-client/src/commands/**`, `plugin-registry`,
-  `plugin-script` deploy) and **capabilities/operations that hold the client at
-  the process-manager boundary** (`client.ts`, `create-identity`, etc.) — these
-  are the layer that _provides_ the client to the services; they stay on
-  `@dxos/client` by design.
+- **React consumers** — plugin-client (Account/Profile/Recovery containers,
+  UpdateProfile operation), plugin-assistant (Chat/ChatThread),
+  plugin-comments (CommentsArticle, CommentThread + `getMessageMetadata`),
+  plugin-transcription (useTranscriptionRecording, TranscriptionArticle),
+  plugin-markdown / plugin-code / plugin-script editors, plugin-thread
+  (MessageThread/ThreadArticle/ChannelArticle), plugin-space (SpacePresence).
+  Enabled by narrowing shared UI signatures to structural types
+  (`DataExtensionsIdentity` in `@dxos/ui-editor`, `BylineIdentity` in
+  `@dxos/react-ui-transcription`, `MessageAuthor` in thread/comments) that the
+  HALO `Identity.Info` / `Space.Member` satisfy — no `@dxos/halo` dependency
+  pushed into foundational UI packages.
+- **Imperative capability singletons** — plugin-iroh-beacon (beacon-service),
+  plugin-assistant (edge-model-resolver identity reads), plugin-calls
+  (call-manager + CallSwarmSynchronizer), plugin-meeting (call-extension),
+  plugin-space (navigation-handler, spaces-ready, join operation),
+  plugin-transcription (transcriber) — all read identity/devices via the
+  `HaloIdentity` capability (`getSnapshot`/`getDevicesSnapshot`/`subscribe`).
+
+### Remaining (still on `@dxos/client`), by reason
+
+1. **EDGE VP-auth** — `createEdgeIdentity(client)` from `@dxos/client/edge`
+   (edge-model-resolver, useHubClient, plugin-connector, plugin-payments). Not
+   `client.halo`; needs a HALO EDGE-identity/`presentCredentials` verb before
+   these can drop the client.
+2. **Security-sensitive identity creation** — `create-identity` (needs the
+   personal `spaceId` returned from HALO `create`), `create-passkey` (needs a
+   `createRecoveryCredential` verb; the WebAuthn ceremony stays local).
+3. **Onboarding** — WelcomeScreen / onboarding-manager / util / oauth flows:
+   `client.halo.identity` + `createDidFromIdentityKey` (replaceable with the
+   HALO `.did`) + credential/device queries. Migratable via the new snapshot/
+   subscribe/credentials API but security-sensitive (recovery/oauth) and
+   unverified without running; deferred for careful review.
+4. **plugin-script credential write** — react-surface `writeCredentials` maps to
+   the new `grantServiceAccess` verb but needs a client operation to invoke it
+   from React; deploy helpers receive a `client` param (not capability context).
+5. **DevicesContainer** — Shell `DeviceListItem` (client `Device`) + device
+   invitation observable API (`client.halo.share`).
+6. **app-graph-builder** — `client.halo.identity` atom (keeps client for
+   `client.mesh` regardless); low-value, deferred.
+7. **CLI commands** (`plugin-*/src/commands/**`) — construct the client directly;
+   a separate execution model.
 
 ## Status
 
-- **Phase 1 (foundation): done.**
-- **Phase 4/5 (clean consumer sites): done** for every site whose only HALO use is
-  identity/DID reads not bound to ECHO members, Shell, or deferred verbs.
-- **Phase 2 (deferred verbs) + the client-typed remainder: not done.** Requires
-  implementing credential/recovery/device/EDGE verbs in `@dxos/halo` +
-  `@dxos/halo-adapter-client`, then migrating Recovery/Devices/onboarding. Tracked
-  as task #7. The ECHO-member and Shell sites are intentionally out of scope.
+- **React consumer tier: complete.**
+- **Imperative singleton tier: complete** except the EDGE-auth and script/onboarding
+  cases above.
+- **Remaining tier (EDGE verb, identity-creation verbs, onboarding, script write,
+  DevicesContainer/Shell, CLI): outstanding**, tracked as task #7 — each needs a
+  new HALO verb, a Shell type change, or careful review of security-sensitive
+  flows that cannot be run-verified in this environment.
+- **External blocker unchanged**: `check-packages-published` stays red until a
+  maintainer publishes the three `@dxos/halo*` packages + OIDC.
