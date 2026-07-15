@@ -3,7 +3,7 @@
 //
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { ProgressRegistry, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -13,6 +13,7 @@ export const ProgressPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'progress-registry',
     activatesOn: ActivationEvents.Startup,
+    firesAfterActivation: [AppActivationEvents.ProgressRegistryReady],
     activate: () => ProgressRegistry(),
   }),
   Plugin.addModule({

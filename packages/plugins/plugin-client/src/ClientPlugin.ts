@@ -60,11 +60,11 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activate: Migrations,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ActivationEvent.allOf(ClientEvents.SpacesReady, AppActivationEvents.ProgressRegistryReady),
     activate: SpaceReplicationProgress,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ActivationEvent.allOf(ClientEvents.SpacesReady, AppActivationEvents.ProgressRegistryReady),
     activate: SpaceFeedReplicationProgress,
   }),
   Plugin.addModule({

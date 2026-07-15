@@ -21,6 +21,7 @@ export const ProgressStatusIndicator = () => {
   const { t } = useTranslation(meta.profile.key);
   const registry = useCapability(AppCapabilities.ProgressRegistry);
   const monitors = useProgressMonitors();
+  console.log('monitors', monitors);
   const active = monitors.filter((monitor) => monitor.status === 'running' || monitor.status === 'pending');
 
   return (

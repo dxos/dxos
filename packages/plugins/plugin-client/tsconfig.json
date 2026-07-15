@@ -118,6 +118,9 @@
       "path": "../plugin-observability"
     },
     {
+      "path": "../plugin-progress"
+    },
+    {
       "path": "../plugin-testing"
     }
   ]

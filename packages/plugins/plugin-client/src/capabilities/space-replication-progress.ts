@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Scope from 'effect/Scope';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
@@ -11,14 +10,11 @@ import { type Space, type PeerSyncState } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
-import {
-  ProgressMonitorBridge,
-  createSpaceReplicationProgressKey,
-  getSpaceProgressLabel,
-} from '../progress';
+import { ProgressMonitorBridge, createSpaceReplicationProgressKey, getSpaceProgressLabel } from '../progress';
 
 /**
  * Publishes per-space automerge replication backlog into {@link AppCapabilities.ProgressRegistry}.
@@ -26,20 +22,21 @@ import {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const scope = yield* Scope.Scope;
     const client = yield* Capability.get(ClientCapabilities.Client);
     const registries = yield* Capability.getAll(AppCapabilities.ProgressRegistry);
     if (registries.length === 0) {
+      log.warn('No progress registries found');
       return;
     }
 
+    // TODO(dmaretskyi): Kill the bridge and work with the first registry directly.
     const bridge = new ProgressMonitorBridge(registries);
     const syncContext = new Context();
     const subscribedSpaces = new Set<SpaceId>();
 
-    yield* Scope.addFinalizer(
-      scope,
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
+        console.log('clear');
         void syncContext.dispose();
         bridge.clear();
         subscribedSpaces.clear();
@@ -62,7 +59,7 @@ export default Capability.makeModule(
           : undefined;
 
       bridge.update(key, {
-        label: getSpaceProgressLabel(space),
+        label: getSpaceProgressLabel(space, 'CRDTs'),
         current,
         total: total > 0 ? total : unsynced,
         note,
@@ -77,6 +74,7 @@ export default Capability.makeModule(
 
       syncContext.onDispose(
         space.internal.db.subscribeToSyncState(syncContext, ({ peers = [] }) => {
+          console.log('syncState', peers);
           const edgePeer = peers.find((state) => isEdgePeerId(state.peerId, space.id));
           if (edgePeer) {
             applyPeerState(space, edgePeer);
@@ -95,6 +93,6 @@ export default Capability.makeModule(
       }
     });
 
-    yield* Scope.addFinalizer(scope, Effect.sync(() => spacesSubscription.unsubscribe()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => spacesSubscription.unsubscribe()));
   }),
 );

@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Scope from 'effect/Scope';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
@@ -29,7 +28,6 @@ const ACTIVE_POLL_INTERVAL_MS = 1_000;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const scope = yield* Scope.Scope;
     const client = yield* Capability.get(ClientCapabilities.Client);
     const registries = yield* Capability.getAll(AppCapabilities.ProgressRegistry);
     if (registries.length === 0) {
@@ -46,8 +44,7 @@ export default Capability.makeModule(
     let pollTimer: ReturnType<typeof setInterval> | undefined;
     let cancelled = false;
 
-    yield* Scope.addFinalizer(
-      scope,
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         cancelled = true;
         if (pollTimer) {
@@ -120,6 +117,6 @@ export default Capability.makeModule(
       void pollAll();
     });
 
-    yield* Scope.addFinalizer(scope, Effect.sync(() => spacesSubscription.unsubscribe()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => spacesSubscription.unsubscribe()));
   }),
 );
