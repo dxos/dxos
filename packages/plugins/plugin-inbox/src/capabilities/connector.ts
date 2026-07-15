@@ -169,6 +169,7 @@ export default Capability.makeModule(
         // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
         materializeTarget: InboxOperation.MaterializeJmapTarget,
         sync: InboxOperation.JmapSync,
+        onCursorCreated: onCursorCreated(InboxOperation.JmapSync),
       },
       {
         id: GOOGLE_CALENDAR_CONNECTOR_ID,
