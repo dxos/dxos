@@ -355,8 +355,17 @@ export const OperationOutput = EventType('operation.output', {
  */
 export const StatusUpdate = EventType('status.update', {
   schema: Schema.Struct({
-    /** Human-readable status message. */
-    message: Schema.String,
+    /** Human-readable status message.. */
+    message: Schema.optional(Schema.String),
+
+    /* Progress current item index. */
+    progressCurrent: Schema.optional(Schema.Number),
+
+    /** Progress total item count. */
+    progressTotal: Schema.optional(Schema.Number),
+
+    /** Progress estimate of remaining time (ms). */
+    progressEstimate: Schema.optional(Schema.Number),
   }),
   isEphemeral: true,
 });
@@ -364,5 +373,7 @@ export const StatusUpdate = EventType('status.update', {
 /**
  * Emit the current human-readable execution status to the trace.
  */
-export const emitStatus: (message: string) => Effect.Effect<void, never, TraceService> = (message) =>
-  write(StatusUpdate, { message });
+export const emitStatus: (
+  messageOrData: string | PayloadType<typeof StatusUpdate>,
+) => Effect.Effect<void, never, TraceService> = (message) =>
+  write(StatusUpdate, typeof message === 'string' ? { message } : message);
