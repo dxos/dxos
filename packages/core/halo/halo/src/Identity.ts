@@ -23,12 +23,17 @@ export const DeviceKind = Schema.Literal('unknown', 'browser', 'native', 'mobile
 export type DeviceKind = typeof DeviceKind.Type;
 
 /**
- * Public view of the local identity. Replaces the legacy `Identity` proxy type; `identityKey`
- * and `spaceKey` (credential plumbing) are dropped in favor of the DID.
+ * Public view of the local identity. Keyed by the DID; `identityKey` (hex) is retained for
+ * consumers that seed deterministic UI (avatar/hue) or address the legacy credential key.
+ * `data` carries arbitrary profile metadata (e.g. avatar emoji, hue).
  */
 export const Info = Schema.Struct({
   did: IdentityDid,
+  /** Hex-encoded identity (credential) key, when known. */
+  identityKey: Schema.optional(Schema.String),
   displayName: Schema.optional(Schema.String),
+  /** Arbitrary profile metadata. */
+  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 });
 export type Info = typeof Info.Type;
 
@@ -73,7 +78,10 @@ export class Service extends Context.Tag('@dxos/halo/Identity')<
     /** Re-admit this device to an existing identity via a recovery credential. */
     readonly recover: (args: RecoverArgs) => Effect.Effect<Info, IdentityError>;
     /** Update the identity profile. */
-    readonly updateProfile: (profile: { displayName?: string }) => Effect.Effect<Info, IdentityError>;
+    readonly updateProfile: (profile: {
+      displayName?: string;
+      data?: Record<string, unknown>;
+    }) => Effect.Effect<Info, IdentityError>;
     /** Devices belonging to the local identity; emits the current set immediately. */
     readonly devices: Stream.Stream<readonly DeviceInfo[]>;
     /** Initiate a device invitation (host side). */
@@ -101,8 +109,10 @@ export const recover = (args: RecoverArgs): Effect.Effect<Info, IdentityError, S
   Effect.flatMap(Service, (service) => service.recover(args));
 
 /** Update the identity profile (requires {@link Service}). */
-export const updateProfile = (profile: { displayName?: string }): Effect.Effect<Info, IdentityError, Service> =>
-  Effect.flatMap(Service, (service) => service.updateProfile(profile));
+export const updateProfile = (profile: {
+  displayName?: string;
+  data?: Record<string, unknown>;
+}): Effect.Effect<Info, IdentityError, Service> => Effect.flatMap(Service, (service) => service.updateProfile(profile));
 
 /** Devices belonging to the local identity as a current-value stream (requires {@link Service}). */
 export const devices: Stream.Stream<readonly DeviceInfo[], never, Service> = Stream.unwrap(

@@ -22,7 +22,9 @@ import { makeFlow, streamFromObservable, toShareOptions } from './util';
 
 const toInfo = (identity: ClientIdentity): HaloIdentity.Info => ({
   did: IdentityDid.make(identity.did),
+  identityKey: identity.identityKey?.toHex(),
   displayName: identity.profile?.displayName,
+  data: identity.profile?.data,
 });
 
 const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
