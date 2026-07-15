@@ -713,13 +713,27 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     );
 
     // Feed blocks have no change stream, so poll the backend.
+    let pollInFlight = false;
     const pollFeeds = async () => {
-      const next = await this.#getSpaceFeedSyncState();
-      if (cancelled) {
+      // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
+      if (pollInFlight) {
         return;
       }
-      feeds = next;
-      emit();
+      pollInFlight = true;
+      try {
+        const next = await this.#getSpaceFeedSyncState();
+        if (!cancelled) {
+          feeds = next;
+          emit();
+        }
+      } catch (error) {
+        // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
+        if (!cancelled) {
+          log.warn('failed to poll feed sync state', { error });
+        }
+      } finally {
+        pollInFlight = false;
+      }
     };
     void pollFeeds();
     const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
