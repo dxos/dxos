@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { ProgressRegistry, ReactSurface, TraceProgressSink } from '#capabilities';
@@ -18,7 +18,10 @@ export const ProgressPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'trace-progress-sink',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.SetupProcessManager,
+      AppActivationEvents.ProgressRegistryReady,
+    ),
     activate: () => TraceProgressSink(),
   }),
   Plugin.addModule({
