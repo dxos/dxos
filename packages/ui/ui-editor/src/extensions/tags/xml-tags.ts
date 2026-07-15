@@ -52,10 +52,10 @@ export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
  */
 export type XmlWidgetProps<TProps = any, TContext = any> = TProps & {
   _tag: string;
+  view?: EditorView;
   range: { from: number; to: number };
   children?: any[];
   context?: TContext;
-  view?: EditorView;
   onEvent?: XmlEventHandler;
 };
 

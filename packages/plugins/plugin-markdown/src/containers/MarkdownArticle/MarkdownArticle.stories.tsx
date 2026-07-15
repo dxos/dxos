@@ -76,7 +76,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<{ title?: string; content?: string }>((context) => ({
+    withPluginManager<Args>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
@@ -91,23 +91,43 @@ const meta = {
               const createObjects = createObjectFactory(personalSpace.db, generator);
               yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
 
-              const kai = personalSpace.db.add(Obj.make(Person.Person, { fullName: 'Kai' }));
-              const dxos = personalSpace.db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
+              const kai = personalSpace.db.add(
+                Obj.make(Person.Person, {
+                  fullName: 'Kai Bot',
+                  image: 'https://placehold.net/avatar.svg',
+                  emails: [
+                    {
+                      label: 'Email',
+                      value: 'kai@dxos.org',
+                    },
+                  ],
+                }),
+              );
+              const dxos = personalSpace.db.add(
+                Obj.make(Organization.Organization, {
+                  name: 'DXOS',
+                  image: 'https://placehold.net/8.png',
+                  website: 'https://dxos.org',
+                }),
+              );
               yield* Effect.promise(() => personalSpace.db.flush());
+
+              const objects = showObjects ? [kai, dxos] : [];
 
               personalSpace.db.add(
                 Markdown.make({
-                  name: context.args.title ?? 'Testing',
+                  name: title,
                   content: [
-                    `# ${context.args.title ?? 'Testing'}`,
-                    context.args.content ?? '',
-                    // TODO(burdon): Popovers not currently working.
-                    '## Here are some objects',
-                    `![Alice](${Obj.getURI(kai)})`,
-                    `![DXOS](${Obj.getURI(dxos)})`,
-                    '',
-                    'END',
-                    '',
+                    `# ${title}`,
+                    content,
+                    objects
+                      .map((object, i) => [
+                        'This is object #' + (i + 1),
+                        `![${Obj.getLabel(object)}](${Obj.getURI(object)})`,
+                      ])
+                      .flat()
+                      .join('\n\n'),
+                    'This is the end of the document.',
                   ].join('\n\n'),
                 }),
               );
@@ -130,11 +150,26 @@ const meta = {
 
 export default meta;
 
+type Args = {
+  title: string;
+  content: string;
+  objects: boolean;
+};
+
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
     title: 'Testing',
-    content: ['This is a line with **some** formatting.'].join('\n\n'),
+    content: 'Hello, world!',
+    objects: false,
+  },
+};
+
+export const WithObjects: Story = {
+  args: {
+    title: 'Testing with objects',
+    content: 'Here are some inline objects:',
+    objects: true,
   },
 };
