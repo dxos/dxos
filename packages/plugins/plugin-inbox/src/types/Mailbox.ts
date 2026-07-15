@@ -8,8 +8,12 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Instructions } from '@dxos/compute';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { TopicProps } from '@dxos/pipeline-email';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
+
+import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
 
 /**
  * Foreign-key source for Gmail provider labels. A Gmail label maps to a {@link Tag} object carrying
@@ -93,10 +97,15 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
         filter: Schema.String,
       }),
     ).pipe(FormInputAnnotation.set(false)),
+    // Proposed topics the user has not yet accepted (see {@link TopicProps}). `AnalyzeTopics` writes
+    // these instead of materializing `Topic` objects; accepting one promotes it via `Obj.make(Topic, …)`.
+    topicSuggestions: Schema.optional(Schema.Array(TopicProps)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
     FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
+    ConnectorAuthAnnotation.set({ connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID], bindTarget: true }),
   ),
 ) {}
 
@@ -320,4 +329,59 @@ export const isReplyable = (message: MessageLike, options: { senderClass?: 'pers
   }
   // A classified type (from the LLM stage) wins over the heuristic; otherwise fall back to it.
   return options.senderClass ? options.senderClass === 'person' : !isOrgSender(message);
+};
+
+/** The `List-Unsubscribe` target on a message (the machine-actionable unsubscribe affordance), if any. */
+export const getUnsubscribeTarget = (message: MessageLike): string | undefined => {
+  const value = message.properties?.listUnsubscribe;
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+};
+
+/**
+ * Parse an RFC 2369 `List-Unsubscribe` header (`<https://…>, <mailto:…>`) into its one-click HTTP and
+ * mailto targets. The HTTP form supports RFC 8058 one-click POST; the mailto is the fallback. Pure.
+ */
+export const parseUnsubscribe = (header: string): { http?: string; mailto?: string } => {
+  const targets: { http?: string; mailto?: string } = {};
+  for (const match of header.matchAll(/<([^>]+)>/g)) {
+    const url = match[1].trim();
+    if (/^https?:/i.test(url) && !targets.http) {
+      targets.http = url;
+    } else if (/^mailto:/i.test(url) && !targets.mailto) {
+      targets.mailto = url;
+    }
+  }
+  return targets;
+};
+
+/** A bulk-mail subscription: a sender the user receives list mail from, with its unsubscribe target. */
+export type Subscription = {
+  readonly email: string;
+  readonly name?: string;
+  /** The raw `List-Unsubscribe` header value. */
+  readonly unsubscribe: string;
+  /** Number of messages from this sender in the mailbox. */
+  readonly count: number;
+};
+
+/**
+ * Group the mailbox's messages into subscriptions — one per sender carrying a `List-Unsubscribe`
+ * affordance — for the Subscriptions view. Sorted by message count (noisiest first). Pure.
+ */
+export const deriveSubscriptions = (messages: readonly MessageLike[]): Subscription[] => {
+  const byEmail = new Map<string, { email: string; name?: string; unsubscribe: string; count: number }>();
+  for (const message of messages) {
+    const target = getUnsubscribeTarget(message);
+    const email = message.sender?.email?.toLowerCase();
+    if (!target || !email) {
+      continue;
+    }
+    const existing = byEmail.get(email);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      byEmail.set(email, { email, name: message.sender?.name, unsubscribe: target, count: 1 });
+    }
+  }
+  return [...byEmail.values()].sort((left, right) => right.count - left.count);
 };

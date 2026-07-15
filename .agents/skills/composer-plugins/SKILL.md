@@ -375,6 +375,30 @@ The main plugin file wires everything together using `Plugin.define(meta).pipe()
 
 See: `plugin-chess/src/ChessPlugin.tsx`
 
+### Module activation ordering
+
+Modules do **not** activate in registration order. Each module declares an
+event that triggers it (`activatesOn`), and ordering between modules is
+expressed through **shared activation events** — modules never reference each
+other directly. Two levers on `Plugin.addModule({...})`:
+
+- **`firesAfterActivation: [Event]`** — after this module's `activate` body
+  finishes, the framework fires `Event`; any module with `activatesOn: Event`
+  then runs. Use to publish "I'm ready" (e.g. `ClientEvents.ClientReady`).
+- **`firesBeforeActivation: [Event]`** — before this module's `activate` runs,
+  the framework activates `Event`'s contributors and **waits** for them. Use to
+  force a prerequisite (e.g. schema/migration setup) ahead of this module.
+
+To run module **B after** module A: A declares `firesAfterActivation: [E]`, B
+declares `activatesOn: E`. To force setup **before** B: B declares
+`firesBeforeActivation: [E]`. Combine events with `ActivationEvent.oneOf(...)`
+/ `allOf(...)`.
+
+Canonical example (idiom `org.dxos.app-framework.moduleActivationOrdering`):
+`plugin-client/src/ClientPlugin.ts` — the `Client` module fires
+`ClientEvents.ClientReady` after activating; `SchemaDefs`/`Migrations` listen on
+it and use `firesBeforeActivation` to sequence setup ahead of themselves.
+
 ## React Surface
 
 Surfaces are contributed via `Capability.contributes(Capabilities.ReactSurface, [...])` with `Surface.create()`.

@@ -45,7 +45,7 @@ export const configPreset = ({ edge = 'main', sandbox }: ConfigPresetOptions = {
       client: {
         edgeFeatures: {
           signaling: true,
-          echoReplicator: true,
+          subductionReplicator: true,
           feedReplicator: true,
         },
       },

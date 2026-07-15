@@ -301,13 +301,13 @@
       "path": "../../plugins/plugin-game"
     },
     {
-      "path": "../../plugins/plugin-generator"
-    },
-    {
       "path": "../../plugins/plugin-github"
     },
     {
       "path": "../../plugins/plugin-graph"
+    },
+    {
+      "path": "../../plugins/plugin-heygen"
     },
     {
       "path": "../../plugins/plugin-ibkr"
@@ -521,6 +521,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../sdk/worker-framework"
     },
     {
       "path": "../../ui/brand"

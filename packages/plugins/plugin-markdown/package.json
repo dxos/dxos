@@ -152,6 +152,7 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -182,8 +183,8 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",

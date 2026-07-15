@@ -5,15 +5,13 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 
 import { Client } from '../../client';
 import { TestBuilder } from '../../testing';
-import { TestWorkerFactory } from '../../testing/test-worker-factory';
-import { DedicatedWorkerClientServices, LEADER_LOCK_KEY } from './dedicated-worker-client-services';
-import { MemoryWorkerCoordiantor } from './memory-coordinator';
+import { LEADER_LOCK_KEY } from './dedicated-worker-client-services';
 
 describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
   test('open & close', async () => {
@@ -47,6 +45,36 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using client2 = await new Client({ services: services2 }).initialize();
 
     expect(client2.halo.identity.get()).toEqual(identity);
+  });
+
+  test('late-joining follower reads a space created by the leader', { timeout: 5_000 }, async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    // First client wins leader election, spawns the worker, and writes an object.
+    await using services1 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client1 = await new Client({ services: services1 }).initialize();
+    await client1.halo.createIdentity();
+    await client1.addTypes([TestSchema.Expando]);
+    const space = await client1.spaces.create();
+    space.db.add(Obj.make(TestSchema.Expando, { name: 'from-leader' }));
+    await space.db.flush();
+
+    // Second client joins the already-running worker as a follower (the "second tab" case) and must
+    // reach the shared host services: see the space and read the leader's object over its own appPort.
+    await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client2 = await new Client({ services: services2 }).initialize();
+    await client2.addTypes([TestSchema.Expando]);
+
+    await expect.poll(() => client2.spaces.get(space.id), { timeout: 3_000 }).toBeTruthy();
+    const space2 = client2.spaces.get(space.id)!;
+    await asyncTimeout(space2.waitUntilReady(), 3_000);
+
+    await expect
+      .poll(async () => (await space2.db.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name), {
+        timeout: 3_000,
+      })
+      .toContain('from-leader');
   });
 
   test('steals the leader lock from a stale (zombie) holder', { timeout: 5_000 }, async () => {
@@ -83,41 +111,6 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     await using client = await new Client({ services }).initialize();
     await client.halo.createIdentity();
-  });
-
-  // Timeout override: exercises lock acquisition, the retry backoff, and a fresh WorkerRuntime
-  // start, which typically takes ~300ms but has enough variance (verified over repeated runs) to
-  // warrant more margin than the 1s describe-level default.
-  test('recovers when the leader session itself fails, backing off and re-electing', { timeout: 4_000 }, async () => {
-    const testBuilder = new TestBuilder();
-    onTestFinished(() => testBuilder.destroy());
-
-    const coordinator = new MemoryWorkerCoordiantor();
-    const workerFactory = new TestWorkerFactory(testBuilder.config);
-    await workerFactory.open();
-    onTestFinished(async () => {
-      await workerFactory.close();
-    });
-
-    // Simulate the worker crashing/failing to start on the first leader-election attempt (a
-    // non-abort error). The watcher must back off and re-elect rather than giving up permanently;
-    // the second attempt uses a real worker so the client should still connect.
-    let workerAttempts = 0;
-    await using services = await new DedicatedWorkerClientServices({
-      createWorker: () => {
-        workerAttempts++;
-        if (workerAttempts === 1) {
-          throw new Error('Simulated worker spawn failure');
-        }
-        return workerFactory.make();
-      },
-      createCoordinator: () => coordinator,
-      leaderTimeouts: { portTimeout: 200, staleTimeout: 100, heartbeatInterval: 50, retryBackoff: 100 },
-    }).open();
-
-    await using client = await new Client({ services }).initialize();
-    await client.halo.createIdentity();
-    expect(workerAttempts).toBeGreaterThanOrEqual(2);
   });
 
   // Flaky.

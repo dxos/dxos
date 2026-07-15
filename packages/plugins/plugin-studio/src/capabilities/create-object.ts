@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { Artifact } from '#types';
+import { Artifact, Lightbox } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -19,6 +19,18 @@ export default Capability.makeModule(
         createObject: (_props, options) =>
           Effect.gen(function* () {
             const object = Artifact.make();
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              targetNodeId: options.targetNodeId,
+            });
+          }),
+      }),
+      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Type.getTypename(Lightbox.Lightbox),
+        createObject: (_props, options) =>
+          Effect.gen(function* () {
+            const object = Lightbox.make();
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,

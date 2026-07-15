@@ -48,7 +48,7 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
   }
   return (
     <div className='relative'>
-      <GalleryImage src={src} alt={data.variant.label} />
+      <GalleryImage src={src} contentType={data.variant.contentType} alt={data.variant.label} />
       {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
     </div>
   );

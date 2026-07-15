@@ -60,6 +60,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -100,8 +101,8 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

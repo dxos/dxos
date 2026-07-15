@@ -62,6 +62,18 @@ describe('buildThreads', () => {
     expect(thread.state).toBe('stalled');
   });
 
+  test('recognizes any of the owner aliases as "from the owner"', ({ expect }) => {
+    // The owner replied from an alias; with both addresses supplied the thread is awaiting-theirs.
+    const [thread] = buildThreads(
+      [
+        msg('Deal terms', 'a@x.com', '2001-05-01T10:00:00.000Z'),
+        msg('RE: Deal terms', 'me@dxos.org', '2001-05-01T11:00:00.000Z'),
+      ],
+      { ownerEmail: ['me@enron.com', 'me@dxos.org'], now: '2001-05-02T00:00:00.000Z' },
+    );
+    expect(thread.state).toBe('awaiting-theirs');
+  });
+
   test('summary concatenates per-message summaries', ({ expect }) => {
     const [thread] = buildThreads(
       [

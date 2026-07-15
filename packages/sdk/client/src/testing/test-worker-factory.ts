@@ -2,15 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Effect from 'effect/Effect';
+
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../lock-key';
-import type { DedicatedWorkerMessage } from '../services/dedicated/types';
 
 /**
  * In-thread worker for testing purposes.
@@ -27,93 +30,55 @@ export class TestWorkerFactory extends Resource {
   make(): MessagePort {
     log('worker-entrypoint');
     const messageChannel = new MessageChannel();
+    // Worker.run listens via addEventListener, which (unlike assigning onmessage) does not implicitly
+    // start the port, so dispatch it explicitly rather than relying on the host's auto-start.
+    messageChannel.port1.start();
 
-    let runtime: WorkerRuntime;
-    /**
-     * Client that owns the worker.
-     */
-    let owningClientId: string;
+    Worker.run({
+      endpoint: {
+        postMessage: (message, transfer) =>
+          messageChannel.port1.postMessage(message, transfer ? { transfer } : undefined),
+        addEventListener: (type, listener) => messageChannel.port1.addEventListener(type, listener as EventListener),
+        removeEventListener: (type, listener) =>
+          messageChannel.port1.removeEventListener(type, listener as EventListener),
+        close: () => messageChannel.port1.close(),
+      },
+      storageLockKey: STORAGE_LOCK_KEY,
+      createRuntime: ({ config: configValues, requestShutdown }) =>
+        Effect.promise(async () => {
+          const runtime = new WorkerRuntime({
+            configProvider: async () => this._config ?? new Config(configValues ?? {}),
+            onStop: async () => {
+              messageChannel.port1.close();
+              requestShutdown();
+            },
+            acquireLock: async () => {},
+            releaseLock: () => {},
+            automaticallyConnectWebrtc: false,
+            // Liveness and displacement are owned by worker-framework's Worker.run.
+            manageLifecycle: false,
+            sqliteLayer: sqliteLayerMemory,
+          });
+          await runtime.start();
+          this._ctx.onDispose(() => runtime.stop());
 
-    const tabsProcessed = new Set<string>();
-
-    // Lock release mechanism - holds the lock until runtime stops.
-    let releaseLock: () => void;
-    const lockPromise = new Promise<void>((resolve) => {
-      releaseLock = resolve;
-    });
-
-    // Lock ensures only a single worker is running.
-    void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
-      messageChannel.port1.onmessage = async (ev: MessageEvent<DedicatedWorkerMessage>) => {
-        log('worker got message', { type: ev.data.type });
-        switch (ev.data.type) {
-          case 'init': {
-            owningClientId = ev.data.ownerClientId ?? ev.data.clientId;
-            runtime = new WorkerRuntime({
-              configProvider: async () => {
-                return this._config ?? new Config();
-              },
-              onStop: async () => {
-                // Close the port and release the lock.
-                messageChannel.port1.close();
-                releaseLock();
-              },
-              // TODO(dmaretskyi): We should split the storage lock and liveness. Keep storage lock fully inside WorkerRuntime, while liveness stays outside.
-              acquireLock: async () => {},
-              releaseLock: () => {},
-              automaticallyConnectWebrtc: false,
-              // Use in-memory SQLite for testing instead of OPFS which only works in browsers.
-              sqliteLayer: sqliteLayerMemory,
-            });
-            await runtime.start();
-            this._ctx.onDispose(() => runtime.stop());
-            messageChannel.port1.postMessage({
-              type: 'ready',
-              livenessLockKey: runtime.livenessLockKey,
-            } satisfies DedicatedWorkerMessage);
-            break;
-          }
-          case 'start-session': {
-            if (tabsProcessed.has(ev.data.clientId)) {
-              log('ignoring duplicate client');
-              break;
-            }
-            tabsProcessed.add(ev.data.clientId);
-
-            const appChannel = new MessageChannel();
-            const systemChannel = new MessageChannel();
-
-            messageChannel.port1.postMessage(
-              {
-                type: 'session',
-                appPort: appChannel.port1,
-                systemPort: systemChannel.port1,
-                clientId: ev.data.clientId,
-              } satisfies DedicatedWorkerMessage,
-              [appChannel.port1, systemChannel.port1],
-            );
-
-            // Will block until the other side finishes the handshake.
-            {
-              const session = await runtime.createSession({
-                systemPort: createWorkerPort({ port: systemChannel.port2 }),
-                appPort: createWorkerPort({ port: appChannel.port2 }),
-              });
-              if (ev.data.clientId === owningClientId) {
-                runtime.connectWebrtcBridge(session);
-              }
-            }
-            break;
-          }
-
-          default:
-            log.error('unknown message', { type: ev.data });
-        }
-      };
-      messageChannel.port1.postMessage({ type: 'listening' } satisfies DedicatedWorkerMessage);
-
-      // Hold the lock until the runtime stops.
-      await lockPromise;
+          return {
+            stop: async () => runtime.stop(),
+            // The framework hands the session its protocol layers via effect context. The WorkerRuntime
+            // session manages its own lifecycle, so the effect opens the session then blocks — the
+            // framework runs it for the session's lifetime.
+            createSession: ({ isOwner }) =>
+              Effect.gen(function* () {
+                const appProtocol = yield* RpcServer.Protocol;
+                const systemProtocol = yield* RpcClient.Protocol;
+                const session = yield* Effect.promise(() => runtime.createSession({ appProtocol, systemProtocol }));
+                if (isOwner) {
+                  runtime.connectWebrtcBridge(session);
+                }
+                return yield* Effect.never;
+              }),
+          };
+        }),
     });
 
     return messageChannel.port2;

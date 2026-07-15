@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -12,18 +12,21 @@ import {
   useOptionalCapability,
 } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface, ProgressMeter, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
-import { Aggregate, type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
+import { type AppSurface, ProgressMeter, useAppGraph, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
+import { Aggregate, type Database, Ref as EchoRef, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { Connection } from '@dxos/plugin-connector';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -35,6 +38,7 @@ import {
   isMessageGroup,
   useInjectedMailboxActions,
   useMailboxExtractorActions,
+  useTargetSync,
 } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
@@ -43,7 +47,7 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/google/gmail/sync';
-import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
+import { InitializeMailbox } from './InitializeMailbox';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -65,6 +69,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
+  const runAction = useActionRunner();
+  // Pull "Sync" toolbar action once a connection is bound to this mailbox.
+  const { connection, sync } = useTargetSync(mailbox);
 
   // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
   // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
@@ -74,13 +81,21 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  // Derived from the same monitor atom the meter reads (not the already-subscribed `syncProgress`
+  // value above) so the menu builder can track it via `get()` — a plain boolean prop wouldn't be
+  // reactive within the builder's own atom-driven update path.
+  const syncProgressAtom = progressRegistry?.monitorAtom(createSyncProgressKey(mailbox));
+  const syncing = useMemo(
+    () =>
+      syncProgressAtom ? Atom.map(syncProgressAtom, (task) => task?.status === 'running') : Atom.make(() => false),
+    [syncProgressAtom],
+  );
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
   // Menu state.
   const sortDescending = useAtomState(true);
-  const menuActions = useMailboxActions(mailbox, sortDescending);
 
   const tagMap = useTags(db);
   const feed = useResolveRef(mailbox.feed);
@@ -226,6 +241,26 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           break;
         }
 
+        case 'create-topic': {
+          const message = messages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void invokePromise(
+              InboxOperation.CreateTopicFromMessage,
+              { mailbox: EchoRef.make(mailbox), message },
+              { spaceId: db.spaceId },
+            )
+              .then((result) => {
+                const topicId = result?.data?.topicId;
+                if (topicId) {
+                  void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
+                }
+              })
+              // Surface the failure instead of silently swallowing it (AI timeout / DB error).
+              .catch((err) => log.catch(err));
+          }
+          break;
+        }
+
         case 'select-tag': {
           setFilterText((prevFilterText) => {
             // Check if tag already exists.
@@ -261,28 +296,42 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     }
   }, [filter, filterText, handleAction]);
 
+  // The search box is a toolbar item (custom-rendered) so the connect group can sit to its right.
+  // Memoized so its reference (a menu-builder dep) only changes when the filter props do.
+  const filterElement = useMemo(
+    () => (
+      <MailboxFilter
+        db={db}
+        tags={tagMap}
+        value={filterText}
+        filter={filter}
+        onChange={setFilterText}
+        onSave={handleSaveFilter}
+        onClear={handleClear}
+        editorRef={filterEditorRef}
+        saveButtonRef={filterSaveButtonRef}
+      />
+    ),
+    [db, tagMap, filterText, filter, setFilterText, handleSaveFilter, handleClear],
+  );
+
+  const menuActions = useMailboxActions(mailbox, {
+    sortDescending,
+    nodeId: id,
+    filterElement,
+    connection,
+    sync,
+    // Same monitor as the statusbar meter (`syncProgress`, above): true for the whole duration of a
+    // sync, whether kicked off by this toolbar action or independently by the routine's timer trigger.
+    syncing,
+  });
+
   return (
     <Panel.Root>
       <ElevationProvider elevation='positioned'>
-        <Menu.Root {...menuActions} attendableId={id}>
+        <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
           <Panel.Toolbar asChild>
-            <Menu.Toolbar>
-              {!isEmpty && (
-                <MailboxFilter
-                  db={db}
-                  tags={tagMap}
-                  value={filterText}
-                  filter={filter}
-                  onChange={setFilterText}
-                  onSave={handleSaveFilter}
-                  onClear={handleClear}
-                  editorRef={filterEditorRef}
-                  saveButtonRef={filterSaveButtonRef}
-                />
-              )}
-              <Toolbar.Separator />
-              <InitializeMailboxAction mailbox={mailbox} />
-            </Menu.Toolbar>
+            <Menu.Toolbar />
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>
@@ -297,6 +346,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
             pagination={feed ? pagination : undefined}
+            enableIgnoreSender
+            enableCreateTopic
             onAction={handleAction}
           />
         )}
@@ -305,7 +356,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         <Panel.Statusbar asChild>
           <ProgressMeter
             state={progress}
-            classNames='h-16 p-2 border-t border-separator'
+            classNames='border-t border-separator'
             onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
           />
         </Panel.Statusbar>
@@ -402,7 +453,24 @@ const useMessageTagsAtomFamily = (tagIndex: TagIndex.TagIndex | undefined, tagMa
     );
   }, [tagIndex, tagMap]);
 
-const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<boolean>) => {
+type MailboxActionsOptions = {
+  sortDescending: AtomState<boolean>;
+  /** The mailbox's graph node id (the article's `attendableId`); contributed actions hang off it. */
+  nodeId: string;
+  /** Search box, custom-rendered as a toolbar item so the connect group can sit to its right. */
+  filterElement: ReactNode;
+  /** Bound connection (drives the own pull-"Sync" action). */
+  connection?: Connection.Connection;
+  sync: () => Promise<void>;
+  /** Derived from the mailbox's sync progress monitor (see `syncing` above); read via `get()`. */
+  syncing: Atom.Atom<boolean>;
+};
+
+const useMailboxActions = (
+  mailbox: Mailbox.Mailbox,
+  { sortDescending, nodeId, filterElement, connection, sync, syncing }: MailboxActionsOptions,
+) => {
+  const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
   const [settings, setSettings] = useAtomCapabilityState(InboxCapabilities.Settings);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
@@ -418,8 +486,9 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
   const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
-    () =>
-      MenuBuilder.make()
+    (get) => {
+      // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.
+      const builder = MenuBuilder.make()
         .root({ label: ['mailbox-toolbar.title', { ns: meta.profile.key }] })
         .action(
           'sortAscending',
@@ -466,9 +535,53 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
             label: ['compose-email.label', { ns: meta.profile.key }],
           },
           handleCompose,
-        )
-        .build(),
-    [sortDescending, loadRemoteImages, setSettings, handleCompose, mailboxExtractorActions, mailboxActions],
+        );
+
+      // The search box, custom-rendered as a toolbar item so the connect group can sit to its right.
+      // Always present (even for an empty mailbox — filtering an empty list is harmless).
+      builder.action(
+        'filter',
+        { variant: 'custom', label: ['mailbox-toolbar.title', { ns: meta.profile.key }], render: () => filterElement },
+        () => {},
+      );
+
+      // Own action: pull-sync from the provider once connected.
+      if (connection) {
+        const isSyncing = get(syncing);
+        builder.action(
+          'sync',
+          {
+            label: ['sync-mailbox.label', { ns: meta.profile.key }],
+            icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+            variant: 'primary',
+            iconOnly: false,
+            disabled: isSyncing,
+          },
+          () => {
+            void sync();
+          },
+        );
+      }
+
+      return builder
+        .separator('gap')
+        .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }))
+        .build();
+    },
+    [
+      graph,
+      nodeId,
+      filterElement,
+      connection,
+      sync,
+      syncing,
+      sortDescending,
+      loadRemoteImages,
+      setSettings,
+      handleCompose,
+      mailboxExtractorActions,
+      mailboxActions,
+    ],
   );
 };
 

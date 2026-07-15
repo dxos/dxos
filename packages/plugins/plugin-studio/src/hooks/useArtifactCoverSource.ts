@@ -17,8 +17,14 @@ export type ArtifactCoverLike = {
   variants?: ReadonlyArray<Ref.Ref<Variant.Variant>>;
 };
 
-/** Resolves an Artifact's thumbnail `src`: its cover variant (else its first variant). */
-export const useArtifactCoverSource = (artifact?: ArtifactCoverLike): string | undefined => {
+/** The cover thumbnail's resolved source + its mime (so the renderer can pick `<img>` vs `<video>`). */
+export type ArtifactCover = {
+  src?: string;
+  contentType?: string;
+};
+
+/** Resolves an Artifact's cover thumbnail: its cover variant (else its first variant). */
+export const useArtifactCoverSource = (artifact?: ArtifactCoverLike): ArtifactCover => {
   const coverRef = artifact?.cover ?? artifact?.variants?.[0];
   const key = coverRef?.uri;
   const [variant, setVariant] = useState<Variant.Variant>();
@@ -41,5 +47,5 @@ export const useArtifactCoverSource = (artifact?: ArtifactCoverLike): string | u
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
-  return useVariantSource(variant);
+  return { src: useVariantSource(variant), contentType: variant?.contentType };
 };
