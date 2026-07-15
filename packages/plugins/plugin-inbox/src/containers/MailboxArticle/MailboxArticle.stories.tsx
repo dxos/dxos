@@ -4,6 +4,7 @@
 
 import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
@@ -18,7 +19,7 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
@@ -51,8 +52,8 @@ const MockDeckOperationsPlugin = Plugin.define(
   Plugin.make,
 );
 
-/** Unique term absent from the builder's random lorem-ipsum bodies; used by `SearchFilter`'s play test. */
-const SEARCH_TERM = 'zzzqueryterm';
+/** Real term repeated across several `SAMPLE_MESSAGES` entries; used by `SearchFilter`'s play test. */
+const SEARCH_TERM = 'invoice';
 
 type StoryArgs = {
   /** Number of messages to seed. */
@@ -61,7 +62,7 @@ type StoryArgs = {
   threads?: number;
   /** Force conversation grouping on/off; when omitted, the persisted/product-default value applies. */
   conversations?: boolean;
-  /** Seed one extra message containing `SEARCH_TERM`, threadless, for the `SearchFilter` play test. */
+  /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
   seedSearchTerm?: boolean;
 };
 
@@ -99,20 +100,25 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
               if (seedSearchTerm) {
-                // Threadless (no `threadId`), so under conversation grouping it lands alone in the
-                // aggregate's null-key group and still renders as its own tile.
+                // Seed the realistic shared corpus (not the lorem builder) so the `SearchFilter` play
+                // test exercises full-text search over real, topic-coherent message bodies.
+                const mailbox = personalSpace.db.add(Mailbox.make());
                 const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
                 if (feed) {
-                  yield* Feed.append(feed, [
+                  const messages = SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }) =>
                     Message.make({
-                      sender: { email: 'search-term@example.com', name: 'Search Term Sender' },
-                      blocks: [{ _tag: 'text', text: `${SEARCH_TERM} body` }],
-                      properties: { subject: `${SEARCH_TERM} subject`, snippet: `${SEARCH_TERM} snippet` },
+                      created: subDays(new Date(), daysAgo ?? 0).toISOString(),
+                      sender: { email: from.email, name: from.name },
+                      blocks: [{ _tag: 'text', text: body }],
+                      properties: { subject, snippet: body.slice(0, 120) },
+                      ...(threadId ? { threadId } : {}),
                     }),
-                  ]).pipe(Effect.provide(Database.layer(personalSpace.db)));
+                  );
+                  yield* Feed.append(feed, messages).pipe(Effect.provide(Database.layer(personalSpace.db)));
                 }
+              } else {
+                yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
               }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
@@ -163,8 +169,6 @@ export const Empty: Story = {
 // specifically covers that path (`conversations: true`) rather than the flat, ungrouped one.
 export const SearchFilter: Story = {
   args: {
-    count: 20,
-    threads: 5,
     conversations: true,
     seedSearchTerm: true,
   },
@@ -175,9 +179,9 @@ export const SearchFilter: Story = {
     // attribute is the only reliable way to count rendered tiles.
     const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
 
-    // Wait for the seeded term message to render among the initial (conversation-grouped) tiles.
-    await canvas.findByText(`${SEARCH_TERM} subject`, undefined, { timeout: 12_000 });
-    await expect(getTileCount()).toBeGreaterThan(1);
+    // Wait for the seeded corpus to render (conversation-grouped) before recording the baseline count.
+    await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
+    const initialCount = getTileCount();
 
     // The search box is a CodeMirror `QueryEditor`, not an <input>/<textarea> — it's the only editor
     // instance in the mailbox toolbar, so the first `.cm-content` on the canvas is unambiguous.
@@ -188,15 +192,21 @@ export const SearchFilter: Story = {
     await userEvent.click(editor);
     await userEvent.type(editor, SEARCH_TERM);
 
-    // The query narrows to the one seeded message; the aggregate still groups it (as a singleton)
-    // without erroring.
-    await waitFor(() => expect(getTileCount()).toBe(1), { timeout: 5_000 });
-    await expect(canvas.getByText(`${SEARCH_TERM} subject`)).toBeInTheDocument();
+    // The query narrows to the corpus messages mentioning the term (spread across several topics and
+    // one shared thread), so the match count is a proper, non-trivial subset of the initial tiles.
+    await waitFor(
+      async () => {
+        const matchedCount = getTileCount();
+        await expect(matchedCount).toBeGreaterThanOrEqual(2);
+        await expect(matchedCount).toBeLessThan(initialCount);
+      },
+      { timeout: 5_000 },
+    );
 
-    // The narrowed tile's snippet is now the best-match window with the query term highlighted
-    // (`Highlighted` wraps matches in `<mark>`), replacing the default `properties.snippet` preview.
+    // At least one narrowed tile's snippet is now the best-match window with the query term
+    // highlighted (`Highlighted` wraps matches in `<mark>`), replacing the default snippet preview.
     const marks = canvasElement.querySelectorAll('mark');
-    const matchingMark = Array.from(marks).find((mark) => mark.textContent?.toLowerCase() === SEARCH_TERM);
+    const matchingMark = Array.from(marks).find((mark) => mark.textContent?.toLowerCase().includes(SEARCH_TERM));
     await expect(matchingMark).toBeTruthy();
   },
 };

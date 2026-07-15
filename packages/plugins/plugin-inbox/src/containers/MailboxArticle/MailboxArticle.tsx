@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { type ReactNode, type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -22,9 +22,8 @@ import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
-import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
@@ -49,6 +48,7 @@ import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics
 import { createSyncProgressKey } from '../../operations/google/gmail/sync';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, getSearchText } from './mailbox-search';
+import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -362,55 +362,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 };
 
 MailboxArticle.displayName = 'MailboxArticle';
-
-type MailboxFilterProps = {
-  db?: Database.Database;
-  tags: Tag.Map;
-  value: string;
-  /** Parsed filter; save is enabled only when the text parses. */
-  filter?: Filter.Any;
-  onChange: (value: string) => void;
-  onSave: () => void;
-  onClear: () => void;
-  editorRef: Ref<EditorController>;
-  saveButtonRef: Ref<HTMLButtonElement>;
-};
-
-/** Filter row slotted into the mailbox toolbar (query editor + save/clear actions). */
-const MailboxFilter = ({
-  db,
-  tags,
-  value,
-  filter,
-  onChange,
-  onSave,
-  onClear,
-  editorRef,
-  saveButtonRef,
-}: MailboxFilterProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  return (
-    <>
-      <QueryEditor
-        classNames='grow min-w-0 ps-1'
-        db={db}
-        tags={tags}
-        value={value}
-        onChange={onChange}
-        ref={editorRef}
-      />
-      <IconButton
-        disabled={!filter}
-        icon='ph--folder-plus--regular'
-        iconOnly
-        label={t('mailbox-toolbar-save-button.label')}
-        onClick={onSave}
-        ref={saveButtonRef}
-      />
-      <IconButton icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
-    </>
-  );
-};
 
 /** One thread's worth of results from the conversation-aggregated message query (see the query above). */
 type ThreadGroup = {
