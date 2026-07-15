@@ -79,6 +79,8 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
 
   devices: streamFromObservable(client.halo.devices).pipe(Stream.map((devices) => devices.map(toDeviceInfo))),
 
+  getDevicesSnapshot: () => client.halo.devices.get().map(toDeviceInfo),
+
   credentials: streamFromObservable(client.halo.credentials).pipe(
     Stream.map((credentials) => credentials.map(toCredential)),
   ),

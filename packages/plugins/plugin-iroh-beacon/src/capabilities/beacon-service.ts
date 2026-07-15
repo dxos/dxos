@@ -4,6 +4,7 @@
 
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -27,21 +28,21 @@ const INITIAL_STATE: BeaconState = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.HaloIdentity);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
 
     const stateAtom = Atom.make<BeaconState>(INITIAL_STATE).pipe(Atom.keepAlive);
 
-    const identity = client.halo.identity.get();
-    const deviceKey = client.halo.device?.deviceKey;
+    const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
+    const currentDevice = haloIdentity.getDevicesSnapshot().find((device) => device.current);
 
-    if (identity && deviceKey) {
+    if (identity?.identityKey && currentDevice) {
       const transport = new BroadcastChannelTransport();
       const service = new BeaconService({
         transport,
-        peerId: deviceKey.toHex(),
-        identityKey: identity.identityKey.toHex(),
-        displayName: identity.profile?.displayName ?? undefined,
+        peerId: currentDevice.key,
+        identityKey: identity.identityKey,
+        displayName: identity.displayName ?? undefined,
       });
 
       service.setOnStateChange(() => {

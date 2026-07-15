@@ -113,6 +113,8 @@ export class Service extends Context.Tag('@dxos/halo/Identity')<
     }) => Effect.Effect<Info, IdentityError>;
     /** Devices belonging to the local identity; emits the current set immediately. */
     readonly devices: Stream.Stream<readonly DeviceInfo[]>;
+    /** Synchronous snapshot of the local identity's devices, for imperative callers. */
+    readonly getDevicesSnapshot: () => readonly DeviceInfo[];
     /** HALO credentials of the local identity; emits the current set immediately. */
     readonly credentials: Stream.Stream<readonly Credential[]>;
     /**
@@ -158,6 +160,11 @@ export const updateProfile = (profile: {
 /** Devices belonging to the local identity as a current-value stream (requires {@link Service}). */
 export const devices: Stream.Stream<readonly DeviceInfo[], never, Service> = Stream.unwrap(
   Effect.map(Service, (service) => service.devices),
+);
+
+/** Synchronous snapshot of the local identity's devices (requires {@link Service}). */
+export const getDevicesSnapshot: Effect.Effect<readonly DeviceInfo[], never, Service> = Effect.map(Service, (service) =>
+  service.getDevicesSnapshot(),
 );
 
 /** HALO credentials as a current-value stream (requires {@link Service}). */
