@@ -84,7 +84,6 @@ const handler = InboxOperation.CreateTopicFromMessage.pipe(
       return { topicId: topic.id };
     }),
   ),
-  // Erase the inferred handler type so the default export is portably nameable in the emitted .d.ts.
   Operation.opaqueHandler,
 );
 

@@ -75,6 +75,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@types/react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

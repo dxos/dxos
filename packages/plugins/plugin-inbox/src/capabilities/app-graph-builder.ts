@@ -13,6 +13,7 @@ import { Operation } from '@dxos/compute';
 import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
+import { Topic } from '@dxos/pipeline-email';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
@@ -382,6 +383,31 @@ export default Capability.makeModule(
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
               data: thread.length > 0 ? thread : 'message',
+            }),
+          ]);
+        },
+      }),
+
+      GraphBuilder.createExtension({
+        id: 'mailboxTopics',
+        match: NodeMatcher.whenNodeType(MAILBOX_TOPICS_TYPE),
+        connector: (node, get) => {
+          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
+          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
+          if (!mailbox || !db) {
+            return Effect.succeed([]);
+          }
+
+          // The selected topic (Topics list → detail) becomes the companion's subject so `TopicArticle`
+          // renders it. Topics live in the space db (not a feed), so a plain id lookup resolves them.
+          const topicId = get(selectedId(node.id));
+          const topic = topicId ? get(db.query(Query.select(Filter.id(topicId))).atom)[0] : undefined;
+          return Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('topic'),
+              label: ['topic.label', { ns: meta.profile.key }],
+              icon: 'ph--stack--regular',
+              data: Obj.instanceOf(Topic, topic) ? topic : 'topic',
             }),
           ]);
         },

@@ -73,7 +73,6 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       return yield* runFactPipeline({ feed, cursor, extract, pageSize });
     }),
   ),
-  // Erase the inferred handler type so the default export is portably nameable in the emitted .d.ts.
   Operation.opaqueHandler,
 );
 

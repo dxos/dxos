@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useMemo, useState } from 'react';
+import { type Atom } from '@effect-atom/atom-react';
+import { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
@@ -10,6 +11,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
+import { useAtomState } from '@dxos/react-hooks';
 
 /**
  * Find the {@link Connection} bound to the given `target` object via an external-sync
@@ -52,7 +54,7 @@ export const useTargetConnection = <T extends Obj.Any>(
  *
  * `connection` exposes whether the target is bound (drives "connect vs. sync").
  *
- * Used by `InitializeMailboxAction` and `InitializeCalendarAction`.
+ * Used by `MailboxArticle` and `CalendarArticle` for their inline "Sync" toolbar action.
  */
 export const useTargetSync = <T extends Obj.Any>(
   target: T,
@@ -60,12 +62,13 @@ export const useTargetSync = <T extends Obj.Any>(
 ): {
   connection: Connection.Connection | undefined;
   sync: () => Promise<void>;
-  syncing: boolean;
+  /** In-flight flag as an atom so a menu builder can read it reactively via `get`. */
+  syncing: Atom.Atom<boolean>;
 } => {
   const { connection } = useTargetConnection(target);
   const db = Obj.getDatabase(target);
   const { invokePromise } = useOperationInvoker();
-  const [syncing, setSyncing] = useState(false);
+  const { atom: syncing, set: setSyncing } = useAtomState(false);
 
   const sync = useCallback(async () => {
     if (!connection) {
@@ -81,7 +84,7 @@ export const useTargetSync = <T extends Obj.Any>(
     } finally {
       setSyncing(false);
     }
-  }, [invokePromise, connection, db, notify]);
+  }, [invokePromise, connection, db, notify, setSyncing]);
 
   return { connection, sync, syncing };
 };

@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Effect from 'effect/Effect';
+
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
@@ -40,36 +44,41 @@ export class TestWorkerFactory extends Resource {
         close: () => messageChannel.port1.close(),
       },
       storageLockKey: STORAGE_LOCK_KEY,
-      createRuntime: async ({ config: configValues, requestShutdown }) => {
-        const runtime = new WorkerRuntime({
-          configProvider: async () => this._config ?? new Config(configValues ?? {}),
-          onStop: async () => {
-            messageChannel.port1.close();
-            requestShutdown();
-          },
-          acquireLock: async () => {},
-          releaseLock: () => {},
-          automaticallyConnectWebrtc: false,
-          // Liveness and displacement are owned by worker-framework's Worker.run.
-          manageLifecycle: false,
-          sqliteLayer: sqliteLayerMemory,
-        });
-        await runtime.start();
-        this._ctx.onDispose(() => runtime.stop());
+      createRuntime: ({ config: configValues, requestShutdown }) =>
+        Effect.promise(async () => {
+          const runtime = new WorkerRuntime({
+            configProvider: async () => this._config ?? new Config(configValues ?? {}),
+            onStop: async () => {
+              messageChannel.port1.close();
+              requestShutdown();
+            },
+            acquireLock: async () => {},
+            releaseLock: () => {},
+            automaticallyConnectWebrtc: false,
+            // Liveness and displacement are owned by worker-framework's Worker.run.
+            manageLifecycle: false,
+            sqliteLayer: sqliteLayerMemory,
+          });
+          await runtime.start();
+          this._ctx.onDispose(() => runtime.stop());
 
-        return {
-          stop: async () => runtime.stop(),
-          createSession: async ({ appPort, systemPort, clientId, isOwner }) => {
-            const session = await runtime.createSession({
-              systemPort,
-              appPort,
-            });
-            if (isOwner) {
-              runtime.connectWebrtcBridge(session);
-            }
-          },
-        };
-      },
+          return {
+            stop: async () => runtime.stop(),
+            // The framework hands the session its protocol layers via effect context. The WorkerRuntime
+            // session manages its own lifecycle, so the effect opens the session then blocks — the
+            // framework runs it for the session's lifetime.
+            createSession: ({ isOwner }) =>
+              Effect.gen(function* () {
+                const appProtocol = yield* RpcServer.Protocol;
+                const systemProtocol = yield* RpcClient.Protocol;
+                const session = yield* Effect.promise(() => runtime.createSession({ appProtocol, systemProtocol }));
+                if (isOwner) {
+                  runtime.connectWebrtcBridge(session);
+                }
+                return yield* Effect.never;
+              }),
+          };
+        }),
     });
 
     return messageChannel.port2;

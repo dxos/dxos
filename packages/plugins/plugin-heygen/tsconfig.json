@@ -46,7 +46,16 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../plugin-connector"

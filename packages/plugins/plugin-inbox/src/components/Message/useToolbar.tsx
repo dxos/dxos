@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Graph, type Node } from '@dxos/app-graph';
-import { MenuBuilder, graphActions, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type Graph } from '@dxos/app-graph';
+import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
@@ -11,9 +11,6 @@ import { Mailbox } from '#types';
 import { deleteAction, openGroup } from '../Toolbar';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
 import { useExtractorActions } from './useExtractorActions';
-
-/** Contributed actions opt into the toolbar via `disposition: 'toolbar'` (vs context-menu-only). */
-const isToolbarAction = (action: Node.ActionLike) => action.properties.disposition === 'toolbar';
 
 export type UseMessageToolbarActionsProps = {
   /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */
@@ -146,7 +143,7 @@ export const useMessageActions = ({
         })
         .menu('more', (b) => {
           // Actions contributed by other plugins.
-          b.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }));
+          b.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
 
           if (onDelete) {
             deleteAction(b, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });

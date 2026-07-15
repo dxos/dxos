@@ -101,6 +101,9 @@
       "path": "../../plugins/plugin-outliner"
     },
     {
+      "path": "../../plugins/plugin-progress"
+    },
+    {
       "path": "../../plugins/plugin-space"
     },
     {
@@ -156,6 +159,9 @@
     },
     {
       "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../story-modules"
     }
   ]
 }
