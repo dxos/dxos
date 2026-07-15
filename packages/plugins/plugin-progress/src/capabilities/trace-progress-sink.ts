@@ -24,9 +24,9 @@ export default Capability.makeModule(
         .runPromise(
           Effect.gen(function* () {
             const manager = yield* ProcessManager.ProcessManagerService;
-            const handle = yield* manager.attach(Process.ID.make(pid)).pipe(
-              Effect.catchAll(() => Effect.succeed(undefined)),
-            );
+            const handle = yield* manager
+              .attach(Process.ID.make(pid))
+              .pipe(Effect.catchAll(() => Effect.succeed(undefined)));
             if (handle) {
               yield* handle.terminate();
             }
