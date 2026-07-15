@@ -764,18 +764,18 @@ export class SpaceProxy implements Space, CustomInspectable {
         }
       };
 
-      ctx.onDispose(this._db.subscribeToSyncState(ctx, checkSyncState));
+      ctx.onDispose(this._db.subscribeToAutomergeSyncState(ctx, checkSyncState));
       // TODO(dmaretskyi): Still need polling, otherwise this gets stuck.
       scheduleTaskInterval(
         ctx,
         async () => {
-          checkSyncState(await this._db.getSyncState());
+          checkSyncState(await this._db.getAutomergeSyncState());
         },
         1_000,
       );
 
       scheduleMicroTask(ctx, async () => {
-        checkSyncState(await this._db.getSyncState());
+        checkSyncState(await this._db.getAutomergeSyncState());
       });
     });
   }
