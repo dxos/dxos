@@ -31,7 +31,7 @@ describe('AutomergeHost', () => {
     expect(handle.doc()!.text).toEqual('Hello world');
   });
 
-  test('resolves a document space from collection membership without a loaded handle', async () => {
+  test('resolves a document space from collection membership without a loaded handle', async ({ expect }) => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = await setupAutomergeHost(runtime);
