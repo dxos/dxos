@@ -299,7 +299,6 @@
     "vite": "catalog:",
     "vite-plugin-pwa": "catalog:",
     "vite-plugin-solid": "catalog:",
-    "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:",
     "workbox-window": "catalog:"
   },

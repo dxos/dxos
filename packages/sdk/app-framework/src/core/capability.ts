@@ -6,6 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as Scope from 'effect/Scope';
 
 import type { DXN } from '@dxos/keys';
 
@@ -159,10 +160,10 @@ export const contributes = <I extends InterfaceDef<any>>(
 };
 
 type LoadCapability<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
+  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | Scope.Scope | never>;
 }>;
 type LoadCapabilities<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
+  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | Scope.Scope | never>;
 }>;
 
 type NormalizeReturn<R> = R extends readonly (infer A)[]
@@ -175,7 +176,7 @@ type NormalizeReturn<R> = R extends readonly (infer A)[]
 
 export type LazyCapability<Props = void, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
   props: Props,
-) => Effect.Effect<NormalizeReturn<Capabilities>, E, Service | Plugin.Service | never>;
+) => Effect.Effect<NormalizeReturn<Capabilities>, E, Service | Plugin.Service | Scope.Scope | never>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
@@ -254,6 +255,15 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *     return contributes(Capabilities.OperationHandler, ...);
  *   })
  * );
+ *
+ * // Module with scoped resources (closed automatically on deactivation)
+ * export default Capability.makeModule(
+ *   Effect.fnUntraced(function* () {
+ *     const scope = yield* Scope.Scope;
+ *     yield* Scope.addFinalizer(scope, Effect.sync(() => cleanup()));
+ *     return contributes(Capabilities.MyCapability, implementation);
+ *   })
+ * );
  * ```
  */
 export const makeModule = <
@@ -262,5 +272,5 @@ export const makeModule = <
   E extends Error = Error,
   R extends Service | Plugin.Service | never = Service,
 >(
-  fn: (props: TProps) => Effect.Effect<TReturn, E, R>,
-): ((props: TProps) => Effect.Effect<TReturn, E, R>) => fn;
+  fn: (props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>,
+): ((props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>) => fn;

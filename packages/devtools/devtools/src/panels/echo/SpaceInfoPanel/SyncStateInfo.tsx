@@ -19,7 +19,7 @@ export const SyncStateInfo = ({ space }: SyncStateInfoProps) => {
 
   useEffect(() => {
     if (space) {
-      return space.internal.db.subscribeToSyncState(Context.default(), (syncState) => {
+      return space.internal.db.subscribeToAutomergeSyncState(Context.default(), (syncState) => {
         setSyncState(syncState);
       });
     }
