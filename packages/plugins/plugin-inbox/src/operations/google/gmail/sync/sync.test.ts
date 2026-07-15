@@ -217,6 +217,47 @@ describe('syncGmail against a mock Gmail API', () => {
     expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
   });
 
+  test('cancelling mid-sync clears the monitor instead of leaving it stuck running', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = generateGmailDataset({ count: 30, seed: 29, start, end });
+
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const key = createSyncProgressKey(mailbox);
+
+    // Cancel as soon as the monitor shows real progress, so the run is genuinely mid-flight — the
+    // subscription fires synchronously from the same `advance` call, so this reliably races ahead of
+    // completion rather than after it.
+    let cancelled = false;
+    const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
+      const task = snapshot.tasks.find((task) => task.name === key);
+      if (task && task.current > 0 && !cancelled) {
+        cancelled = true;
+        progress.cancel(key);
+      }
+    });
+
+    // Cancelling aborts the pipeline, which resolves as a fiber interrupt (`Pipeline.abortWith`) — not
+    // a typed failure — so `runPromise` rejects. The cleanup runs via that abort's `onCancel`, not the
+    // post-run code (the interrupt skips it), so the monitor is still removed.
+    await expect(
+      EffectEx.runPromise(
+        syncGmail({ binding: Ref.make(binding) }).pipe(
+          Effect.provide(inboxSyncTestServices(db, dataset, { progressRegistry: progress })),
+        ),
+      ),
+    ).rejects.toThrow();
+    unsubscribe();
+
+    expect(cancelled).toBe(true);
+    // Not stuck at 'running' — the abort-path cleanup removes the monitor just like the success path,
+    // instead of leaving it frozen at its last snapshot forever.
+    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
+  });
+
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
     const now = new Date();
     // Three disjoint date bands (distinct ids via idPrefix), oldest → newest: older, mid, recent.

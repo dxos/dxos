@@ -16,8 +16,9 @@ import { AccessToken, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import { Connection, type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '../types';
-import { isCursorForConnection } from './cursor-predicates';
+import { Connection, type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '#types';
+
+import { isCursorForConnection } from '../../util';
 import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors';
 
 describe('reconcileCursors', () => {

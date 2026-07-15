@@ -306,7 +306,15 @@ export const syncGmail = ({
           stats,
         }),
       ),
-      Pipeline.abortWith(controller.signal),
+      Pipeline.abortWith(
+        controller.signal,
+        // TODO(wittjosiah): Could this note+remove pairing be upstreamed into abortWith itself?
+        Effect.sync(() => {
+          log('gmail sync cancelled', { mailbox: Obj.getURI(mailbox) });
+          progressMonitor.note('Cancelled');
+          progressMonitor.remove();
+        }),
+      ),
       Effect.tapError((error) =>
         Effect.sync(() => {
           // Log the raw error for debugging; the meter shows only a short reason (the full exception —
@@ -328,10 +336,10 @@ export const syncGmail = ({
     finishedAt = new Date(finishedMs).toISOString();
     publishStats();
 
-    if (controller.signal.aborted) {
-      progressMonitor.note('Cancelled');
-      progressMonitor.remove();
-    } else {
+    // On cancel, `Pipeline.abortWith`'s onAbort (above) already noted 'Cancelled' and removed the
+    // monitor — the instant the user cancelled, not after the stream finished draining — so there is
+    // nothing left to do here. Only the completed path has post-run work.
+    if (!controller.signal.aborted) {
       progressMonitor.done();
       progressMonitor.remove();
 

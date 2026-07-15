@@ -86,6 +86,20 @@ export type OnTokenCreated = (input: {
 }) => Effect.Effect<void, never, HttpClient.HttpClient>;
 
 /**
+ * Hook fired after an external-sync {@link Cursor.Cursor} is created for a target — a single-target
+ * bind (Gmail, JMAP) or one newly-selected multi-target row (Calendar). Connectors use this to set up
+ * recurring background sync (a Routine wrapping a timer Trigger, invoking the same {@link sync}
+ * operation `ConnectorOperation.SyncConnection` invokes directly) for the target; unlike
+ * {@link OnTokenCreated}, this runs once per bound target rather than once per connection.
+ */
+export type OnCursorCreated = (input: {
+  connection: Connection.Connection;
+  cursor: Cursor.ExternalCursor;
+  target: Obj.Unknown;
+  db: Database.Database;
+}) => Effect.Effect<void, never>;
+
+/**
  * Probe whether a connection's stored credential is still valid.
  *
  * Success means the credential authenticates against the live service; a typed
@@ -197,6 +211,8 @@ export type ConnectorEntry = {
    * declares {@link oauth} — the user is offered a reauthenticate action on failure.
    */
   testConnection?: TestConnection;
+  /** Set up recurring background sync for a newly-bound target (see {@link OnCursorCreated}). */
+  onCursorCreated?: OnCursorCreated;
 };
 
 /**
