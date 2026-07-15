@@ -357,13 +357,17 @@ const jmapEmailsForIds = (
   ids.pipe(
     Stream.flatMap(
       (id) =>
+        // Drop an id that's gone by fetch time (in the query result, but `emailGet` returns nothing —
+        // deleted between query and get) by filtering the null out. Do NOT recover the error channel:
+        // a real `JmapApiError` (network/auth) must propagate and fail the run so the durable retry
+        // re-fetches, rather than silently dropping the message and stranding it once `high` advances.
         Stream.fromEffect(
           Effect.gen(function* () {
             const api = yield* JmapMailApi;
             const { list } = yield* api.emailGet(target, [id]);
             return list[0];
-          }).pipe(Effect.filterOrFail(Predicate.isNotNullable, () => new Error(`email ${id} not found`))),
-        ).pipe(Stream.orElse(() => Stream.empty)),
+          }),
+        ).pipe(Stream.filter(Predicate.isNotNullable)),
       { concurrency: JMAP_SYNC_CONFIG.fetchConcurrency, bufferSize: 10 },
     ),
   );
