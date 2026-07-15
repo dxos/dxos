@@ -83,7 +83,7 @@ const Story = () => {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
   }
 
-  return <TopicsArticle role='article' space={space} attendableId='story' mailbox={mailbox} />;
+  return <TopicsArticle role='article' subject={mailbox} attendableId='story' />;
 };
 
 const meta = {

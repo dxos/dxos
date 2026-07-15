@@ -26,11 +26,8 @@ import { meta } from '#meta';
 import { Calendar, InboxOperation, Mailbox } from '#types';
 
 import {
-  MAILBOX_DRAFTS_NODE_DATA,
   MAILBOX_DRAFTS_TYPE,
-  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
   MAILBOX_SUBSCRIPTIONS_TYPE,
-  MAILBOX_TOPICS_NODE_DATA,
   MAILBOX_TOPICS_TYPE,
   MAILBOXES_SECTION_TYPE,
 } from '../constants';
@@ -201,7 +198,9 @@ export default Capability.makeModule(
                   Node.make({
                     id: getDraftsId(),
                     type: MAILBOX_DRAFTS_TYPE,
-                    data: MAILBOX_DRAFTS_NODE_DATA,
+                    // The folder node's data IS the mailbox, so the article surface receives it as `subject`
+                    // (see `DraftsArticle`); the surface filter narrows by the node's trailing path segment.
+                    data: mailbox,
                     properties: {
                       label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
@@ -212,7 +211,7 @@ export default Capability.makeModule(
                   Node.make({
                     id: getTopicsId(),
                     type: MAILBOX_TOPICS_TYPE,
-                    data: MAILBOX_TOPICS_NODE_DATA,
+                    data: mailbox,
                     properties: {
                       label: ['topics.label', { ns: meta.profile.key }],
                       icon: 'ph--stack--regular',
@@ -223,7 +222,7 @@ export default Capability.makeModule(
                   Node.make({
                     id: getSubscriptionsId(),
                     type: MAILBOX_SUBSCRIPTIONS_TYPE,
-                    data: MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+                    data: mailbox,
                     properties: {
                       label: ['subscriptions.label', { ns: meta.profile.key }],
                       icon: 'ph--envelope-simple--regular',

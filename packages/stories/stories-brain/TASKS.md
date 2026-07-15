@@ -368,6 +368,35 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
       attachment fetch (never committed to the feed). Unit-tested. FOLLOW-UP: a settings/toolbar UI to
       edit the skip list (currently set programmatically on the Mailbox).
 
+## plugin-inbox article surface pattern (ObjectArticleProps)
+
+**Direction (2026-07-14):** converge every inbox folder article on the `ObjectArticleProps<Mailbox>`
+pattern — the article receives the mailbox as `subject` and derives its db via `Obj.getDatabase(subject)`,
+never a `space` prop (reference: `SubscriptionsArticle`). Folder graph nodes now carry `data: mailbox`
+(sentinels dropped), so the plank passes the mailbox as `subject`; surface filters narrow by the node's
+trailing path segment + `Mailbox.instanceOf(data.subject)`. Props types live next to the component.
+
+- [x] **`TopicsArticle` → `ObjectArticleProps<Mailbox>`** (secured the pattern) — `subject: mailbox`,
+      `db = Obj.getDatabase(mailbox)`, `useQuery` from `@dxos/echo-react` (accepts an `EchoDatabase`;
+      `react-client/echo` `useQuery` expects a Space and threw on the raw db). Guards on `db`.
+- [x] **`DraftsArticle` → `ObjectArticleProps<Mailbox>`** — same conversion; `useQuery` from echo-react.
+- [x] **Graph nodes carry the mailbox** — drafts/topics/subscriptions folder nodes set `data: mailbox`
+      (dropped the `MAILBOX_*_NODE_DATA` sentinels + constants); surface filters match
+      `Mailbox.instanceOf(data.subject)` + `lastSegment === getXId()`. Folder surfaces precede the generic
+      `mailbox` object surface and the plank uses `limit={1}`, so no match collision. `useActiveSpace`
+      dropped from `react-surface`.
+- [x] **`SubscriptionsArticle` unsubscribe removes on success** — `removeSelected` awaits each
+      `UnsubscribeSender`; a returned `{ filtered: true }` adds the sender to a local `removed` set that the
+      subscriptions `useMemo` excludes. Needed because `mailbox.messageFilters` is a stable proxy ref
+      (contents mutate in place) so the `isFiltered` filter alone never recomputes reactively.
+- [x] **Stories/modules updated** — `TopicsModule`, `TopicsArticle.stories`, `CreateTopic.stories` pass
+      `subject={mailbox}`. Build/lint/fmt clean; 167 inbox unit tests green.
+- [ ] **Pre-existing storybook play-test failures (NOT this change).** `TopicsArticle.stories` "Delete Test"
+      and `CreateTopic.stories` "Test" fail identically on the committed baseline (`6dd1aa8a1e`) in this
+      headless env — the topic `useQuery` returns empty so no topic card renders (Default + "Suggestions
+      Test" pass). Verified by stashing all edits and re-running. Investigate the indexing/timing the topic
+      query needs headlessly.
+
 ## Bugs
 
 - [ ] **MailboxArticle search/filtering isn't working.** The filter/query editor in

@@ -15,7 +15,7 @@ projects:
     tasks: packages/stories/stories-brain/TASKS.md
     design: packages/stories/stories-brain/fixtures/REPORT.md
     prs: [12163, 12167, 12178]
-    resume: 'PR #12178 (Topics UX v2: bulk triage, opt-in suggestions, TopicArticle master/detail, create-from-message) opened — watch the Check workflow to green + surface the Composer preview. Deferred follow-ups in TASKS.md: Phase A live-feed thread resolution + deck-peer path; Phase C fact extraction; AnchoredTo cleanup on topic delete. Earlier open work: private-corpus evals + two-tier latency design.'
+    resume: 'PRs #12178 + #12205 merged (Topics UX v2 + Topics/Subscriptions Mosaic lists). In progress (uncommitted, NOT yet a PR): converted plugin-inbox folder articles to the ObjectArticleProps<Mailbox> pattern (db from subject, folder graph nodes carry data:mailbox, sentinels dropped) + SubscriptionsArticle unsubscribe removes on success. Build/lint/fmt + 167 unit tests green. NOTE: TopicsArticle/CreateTopic storybook play-tests fail on the committed baseline too (pre-existing, headless topic-query returns empty). Next: commit this work / open PR when ready; then Priority 1 manual topics + management. Deferred: Active Topics v2 (LLM labels + personEmails), two-tier latency, re-sync dedup bug, MailboxArticle search wiring.'
 
   - name: task-planning-skill-update
     status: active

@@ -6,6 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Type } from '@dxos/echo';
 
+// TODO(burdon): Move to plugin-brain and change to class definition (like Project).
+// TODO(burdon): Reconcile with Project.
+
 // The field shape shared by a persisted `Topic` and an unaccepted `Mailbox.topicSuggestions` entry —
 // extracted so promotion is `Obj.make(Topic, suggestion)` with no mapping.
 export const TopicProps = Schema.Struct({

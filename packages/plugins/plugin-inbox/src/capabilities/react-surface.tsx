@@ -7,7 +7,6 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Topic } from '@dxos/pipeline-email';
@@ -34,12 +33,7 @@ import {
 } from '#containers';
 import { Calendar, Mailbox } from '#types';
 
-import {
-  MAILBOX_DRAFTS_NODE_DATA,
-  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
-  MAILBOX_TOPICS_NODE_DATA,
-  POPOVER_SAVE_FILTER,
-} from '../constants';
+import { POPOVER_SAVE_FILTER } from '../constants';
 import { getDraftsId, getSubscriptionsId, getTopicsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
@@ -57,40 +51,22 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'drafts',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const mailbox = data.properties?.mailbox;
           const lastSegment = data.attendableId.split('/').pop();
-          return (
-            lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_DRAFTS_NODE_DATA
-          );
+          return lastSegment === getDraftsId() && Mailbox.instanceOf(data.subject);
         }),
-        component: ({ data, role }) => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-
-          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
-          return <DraftsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
-        },
+        component: ({ data, role }) => (
+          <DraftsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: 'topics',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const mailbox = data.properties?.mailbox;
           const lastSegment = data.attendableId.split('/').pop();
-          return (
-            lastSegment === getTopicsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_TOPICS_NODE_DATA
-          );
+          return lastSegment === getTopicsId() && Mailbox.instanceOf(data.subject);
         }),
-        component: ({ data, role }) => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-
-          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
-          return <TopicsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
-        },
+        component: ({ data, role }) => (
+          <TopicsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: 'topic',
@@ -100,22 +76,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'subscriptions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const mailbox = data.properties?.mailbox;
           const lastSegment = data.attendableId.split('/').pop();
-          return (
-            lastSegment === getSubscriptionsId() &&
-            Mailbox.instanceOf(mailbox) &&
-            data.subject === MAILBOX_SUBSCRIPTIONS_NODE_DATA
-          );
+          return lastSegment === getSubscriptionsId() && Mailbox.instanceOf(data.subject);
         }),
         component: ({ data, role }) => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-
-          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
-          return <SubscriptionsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
+          return <SubscriptionsArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
         },
       }),
       Surface.create({

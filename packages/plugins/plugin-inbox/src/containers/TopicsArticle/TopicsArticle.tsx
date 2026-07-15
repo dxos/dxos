@@ -7,8 +7,8 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Topic } from '@dxos/pipeline-email';
-import { useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
@@ -18,11 +18,6 @@ import { AnchoredTo } from '@dxos/types';
 
 import { meta } from '#meta';
 import { InboxOperation, type Mailbox } from '#types';
-
-export type TopicsArticleProps = AppSurface.SpaceArticleProps<{
-  attendableId?: string;
-  mailbox: Mailbox.Mailbox;
-}>;
 
 /** An unaccepted topic suggestion (a `Mailbox.topicSuggestions` entry — same fields as a `Topic`). */
 type Suggestion = NonNullable<Mailbox.Mailbox['topicSuggestions']>[number];
@@ -40,11 +35,20 @@ const SuggestionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Suggestio
     const { t } = useTranslation(meta.profile.key);
     const menuItems = useMemo(
       () => [
-        { label: t('topics.accept.label'), icon: 'ph--check--regular', onClick: () => onAccept(suggestion) },
-        { label: t('topics.dismiss.label'), icon: 'ph--x--regular', onClick: () => onDismiss(suggestion) },
+        {
+          label: t('topics.accept.label'),
+          icon: 'ph--check--regular',
+          onClick: () => onAccept(suggestion),
+        },
+        {
+          label: t('topics.dismiss.label'),
+          icon: 'ph--x--regular',
+          onClick: () => onDismiss(suggestion),
+        },
       ],
       [suggestion, onAccept, onDismiss, t],
     );
+
     return (
       <Mosaic.Tile
         asChild
@@ -133,20 +137,24 @@ const TopicTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<TopicTileData>
 
 TopicTile.displayName = 'TopicTile';
 
+export type TopicsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Mailbox>;
+
 /**
  * Topics list for a mailbox — a `react-ui-mosaic` stack of the space's `Topic` objects (produced by
  * the `AnalyzeTopics` operation). Queries all topics in the space; scoping to the mailbox via the
  * `AnchoredTo` relation is a follow-up.
  */
-export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArticleProps) => {
+export const TopicsArticle = ({ role, subject: mailbox, attendableId }: TopicsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const id = String(attendableId ?? Obj.getURI(mailbox));
   const currentId = useSelection(id, 'single');
-  const topics = useQuery(space.db, Filter.type(Topic));
+  const db = Obj.getDatabase(mailbox);
+  const topics = useQuery(db, Filter.type(Topic));
   const suggestions = mailbox.topicSuggestions ?? [];
   const showItem = useShowItem();
-  const handleDelete = useCallback((topic: Topic) => space.db.remove(topic), [space.db]);
+  const handleDelete = useCallback((topic: Topic) => db?.remove(topic), [db]);
+
   // Open the selected topic's detail (`TopicArticle`) following the layout mode — companion in
   // simple mode, companion swap otherwise (deck-peer needs a topic path; a follow-up).
   const handleOpen = useCallback(
@@ -157,6 +165,7 @@ export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArti
     },
     [id, showItem],
   );
+
   // Labels are unique across suggestions (deduped at write time), so remove by label. Splice in place
   // rather than reassigning a `filter`ed array — reassigning an array of live element proxies corrupts
   // the surviving elements' nested array fields (`threadIds` etc. read back as undefined).
@@ -171,9 +180,13 @@ export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArti
       }),
     [mailbox],
   );
+
   const handleAccept = useCallback(
     (suggestion: Suggestion) => {
-      const topic = space.db.add(
+      if (!db) {
+        return;
+      }
+      const topic = db.add(
         Obj.make(Topic, {
           label: suggestion.label,
           summary: suggestion.summary,
@@ -184,11 +197,12 @@ export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArti
           tasks: [...suggestion.tasks],
         }),
       );
-      space.db.add(AnchoredTo.make({ [Relation.Source]: topic, [Relation.Target]: mailbox }));
+      db.add(AnchoredTo.make({ [Relation.Source]: topic, [Relation.Target]: mailbox }));
       dismiss(suggestion);
     },
-    [space.db, mailbox, dismiss],
+    [db, mailbox, dismiss],
   );
+
   const items = useMemo(() => topics.map((topic) => ({ topic, onDelete: handleDelete })), [topics, handleDelete]);
   // Snapshot each suggestion into a plain object so the Mosaic tiles never read a live `topicSuggestions`
   // struct proxy (accepting/dismissing reassigns the array, detaching removed elements — a detached proxy
@@ -207,19 +221,21 @@ export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArti
     onAccept: handleAccept,
     onDismiss: dismiss,
   }));
+
   const handleAnalyze = useCallback(() => {
     void invokePromise(
       InboxOperation.AnalyzeTopics,
       { mailbox: Ref.make(mailbox) },
       {
-        spaceId: space.db.spaceId,
+        spaceId: db?.spaceId,
         notify: {
           success: ['analyze-topics-success.title', { ns: meta.profile.key }],
           error: ['analyze-topics-error.title', { ns: meta.profile.key }],
         },
       },
     );
-  }, [invokePromise, mailbox, space.db]);
+  }, [invokePromise, mailbox, db]);
+
   const menuActions = useTopicsActions(handleAnalyze);
 
   return (

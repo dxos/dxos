@@ -80,7 +80,7 @@ const Story = () => {
     <div className='flex flex-col bs-full'>
       <Button onClick={handleCreate}>Create Topic</Button>
       <div className='grow' data-testid='topic-count' data-count={topics.length}>
-        <TopicsArticle role='article' space={space} attendableId='story' mailbox={mailbox} />
+        <TopicsArticle role='article' subject={mailbox} attendableId='story' />
       </div>
     </div>
   );
