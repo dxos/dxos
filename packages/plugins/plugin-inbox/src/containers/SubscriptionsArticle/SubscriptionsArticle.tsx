@@ -151,7 +151,12 @@ export const SubscriptionsArticle = ({ role, subject: mailbox, attendableId }: S
           <ScrollArea.Root orientation='vertical' padding thin>
             <ScrollArea.Viewport classNames='dx-document'>
               <Mosaic.Container asChild>
-                <Mosaic.Stack Tile={SubscriptionTile} items={items} getId={(item) => item.subscription.email} />
+                <Mosaic.Stack
+                  Tile={SubscriptionTile}
+                  items={items}
+                  draggable={false}
+                  getId={(item) => item.subscription.email}
+                />
               </Mosaic.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>

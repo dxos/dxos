@@ -81,7 +81,7 @@ A space-level **Projects** root (the virtual app-graph node from the current ref
 Project, and per-Project **facet** child nodes. The Project object itself opens a **dashboard** article
 (summary + counts + recent activity); facets open their own articles and/or companions.
 
-```
+```text
 <Space>
 └─ Projects                      (virtual root; lists all Project objects in the space)
    ├─ <Project: "Acme renewal">  (object → dashboard article; master/detail)
