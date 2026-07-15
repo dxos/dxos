@@ -52,6 +52,30 @@ export const DeviceInfo = Schema.Struct({
 export type DeviceInfo = typeof DeviceInfo.Type;
 
 /**
+ * Public view of a HALO credential. Replaces direct consumption of the protobuf `Credential`:
+ * `type` is the subject assertion's `@type`, `id` its hex-encoded credential id.
+ */
+export const Credential = Schema.Struct({
+  /** Hex-encoded credential id, when assigned. */
+  id: Schema.optional(Schema.String),
+  /** The subject assertion's `@type` (e.g. `dxos.halo.credentials.IdentityRecovery`). */
+  type: Schema.String,
+  issuanceDate: Schema.optional(Schema.DateFromSelf),
+});
+export type Credential = typeof Credential.Type;
+
+/**
+ * Options for a self-issued `ServiceAccess` credential granting the identity access to an
+ * EDGE/Hub service.
+ */
+export type ServiceAccessOptions = {
+  /** Target server name (e.g. `hub.dxos.network`). */
+  readonly serverName: string;
+  /** Capabilities to grant (e.g. `['composer:beta']`). */
+  readonly capabilities: readonly string[];
+};
+
+/**
  * Recovery credential presented to re-admit a device to an existing identity.
  */
 export type RecoverArgs =
@@ -84,6 +108,13 @@ export class Service extends Context.Tag('@dxos/halo/Identity')<
     }) => Effect.Effect<Info, IdentityError>;
     /** Devices belonging to the local identity; emits the current set immediately. */
     readonly devices: Stream.Stream<readonly DeviceInfo[]>;
+    /** HALO credentials of the local identity; emits the current set immediately. */
+    readonly credentials: Stream.Stream<readonly Credential[]>;
+    /**
+     * Grant this identity access to an EDGE/Hub service by writing a `ServiceAccess` credential
+     * (self-issued). Replaces hand-constructing the protobuf credential at the call site.
+     */
+    readonly grantServiceAccess: (options: ServiceAccessOptions) => Effect.Effect<void, IdentityError>;
     /** Initiate a device invitation (host side). */
     readonly share: (options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, IdentityError>;
     /** Redeem a device-invitation code on a new device (guest side). */
@@ -118,6 +149,15 @@ export const updateProfile = (profile: {
 export const devices: Stream.Stream<readonly DeviceInfo[], never, Service> = Stream.unwrap(
   Effect.map(Service, (service) => service.devices),
 );
+
+/** HALO credentials as a current-value stream (requires {@link Service}). */
+export const credentials: Stream.Stream<readonly Credential[], never, Service> = Stream.unwrap(
+  Effect.map(Service, (service) => service.credentials),
+);
+
+/** Grant the identity access to an EDGE/Hub service (requires {@link Service}). */
+export const grantServiceAccess = (options: ServiceAccessOptions): Effect.Effect<void, IdentityError, Service> =>
+  Effect.flatMap(Service, (service) => service.grantServiceAccess(options));
 
 /** Initiate a device invitation (requires {@link Service}). */
 export const share = (options?: Invitation.ShareOptions): Effect.Effect<Invitation.Flow, IdentityError, Service> =>
