@@ -291,18 +291,22 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [filter, filterText, handleAction]);
 
   // The search box is a toolbar item (custom-rendered) so the connect group can sit to its right.
-  const filterElement = (
-    <MailboxFilter
-      db={db}
-      tags={tagMap}
-      value={filterText}
-      filter={filter}
-      onChange={setFilterText}
-      onSave={handleSaveFilter}
-      onClear={handleClear}
-      editorRef={filterEditorRef}
-      saveButtonRef={filterSaveButtonRef}
-    />
+  // Memoized so its reference (a menu-builder dep) only changes when the filter props do.
+  const filterElement = useMemo(
+    () => (
+      <MailboxFilter
+        db={db}
+        tags={tagMap}
+        value={filterText}
+        filter={filter}
+        onChange={setFilterText}
+        onSave={handleSaveFilter}
+        onClear={handleClear}
+        editorRef={filterEditorRef}
+        saveButtonRef={filterSaveButtonRef}
+      />
+    ),
+    [db, tagMap, filterText, filter, setFilterText, handleSaveFilter, handleClear],
   );
 
   const menuActions = useMailboxActions(mailbox, {

@@ -58,10 +58,9 @@ export type ConnectorAuthActionsOptions = {
  *
  * Its children: existing {@link Connection}s offered for reuse (bind inline), a separator, then a
  * "Connect X" entry per connector with an auth flow. Returns `[]` when there is nothing to offer.
- * Return this from a `connector:` callback with `relation: Node.actionRelation()` so
- * `graph.actions(nodeId)` picks it up (an `actions:` callback would clobber the group's `type`).
- * Children carry Effect `data`, so execute them with `useActionRunner` (`Menu.Root onAction`) — for
- * the coordinator/database context it provides.
+ * Contribute this from an extension's `actionGroups:` callback so `graph.actions(nodeId)` picks it up
+ * with the group's `type` intact. Children carry Effect `data`, so execute them with `useActionRunner`
+ * (`Menu.Root onAction`) — for the coordinator/database context it provides.
  */
 export const connectorAuthActions = ({
   connectorIds,
@@ -70,9 +69,10 @@ export const connectorAuthActions = ({
   existingTarget,
   allConnectors,
   allConnections,
-}: ConnectorAuthActionsOptions): Node.NodeArg<any, any>[] => {
+}: ConnectorAuthActionsOptions): Node.NodeArg<typeof Node.actionGroupSymbol>[] => {
   const offered = offeredConnectors(allConnectors, connectorIds);
-  const connections = reusableConnections(allConnections, connectorIds);
+  // Reuse binds the object as a new sync target, so only offer it when there is a target to bind.
+  const connections = existingTarget ? reusableConnections(allConnections, connectorIds) : [];
   if (offered.length === 0 && connections.length === 0) {
     return [];
   }

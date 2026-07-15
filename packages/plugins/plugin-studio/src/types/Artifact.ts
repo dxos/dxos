@@ -27,10 +27,12 @@ const resolveArtifactConnectorIds = (
   if (!Obj.instanceOf(Artifact, object)) {
     return [];
   }
-  const provider = capabilities
+  const forKind = capabilities
     .getAll(StudioCapabilities.GenerationService)
     .flat()
-    .find((service) => service.kind === object.kind);
+    .filter((service) => service.kind === object.kind);
+  // Match the chosen generator (as `op:generate` does), falling back to the first provider for the kind.
+  const provider = (object.generator && forKind.find((service) => service.id === object.generator)) || forKind[0];
   return provider?.connectorId ? [provider.connectorId] : [];
 };
 

@@ -143,7 +143,7 @@ export const useMessageActions = ({
         })
         .menu('more', (b) => {
           // Actions contributed by other plugins.
-          b.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }));
+          b.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
 
           if (onDelete) {
             deleteAction(b, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });

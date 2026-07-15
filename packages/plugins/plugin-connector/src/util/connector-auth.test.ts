@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -44,7 +44,7 @@ describe('connectorAuthActions', () => {
     return { db, addConnection };
   };
 
-  test('returns nothing when there is no auth flow and nothing to reuse', async () => {
+  test('returns nothing when there is no auth flow and nothing to reuse', async ({ expect }) => {
     const { db } = await setup();
     const actions = connectorAuthActions({
       connectorIds: ['a'],
@@ -56,7 +56,7 @@ describe('connectorAuthActions', () => {
     expect(actions).toEqual([]);
   });
 
-  test('always produces a single dropdown group', async () => {
+  test('always produces a single dropdown group', async ({ expect }) => {
     const { db } = await setup();
     const actions = connectorAuthActions({
       connectorIds: ['a', 'b'],
@@ -71,13 +71,16 @@ describe('connectorAuthActions', () => {
     expect(group.actions?.map((action) => action.id)).toEqual(['connect-a', 'connect-b']);
   });
 
-  test('reuse and connect sections are separated inside the group', async () => {
+  test('reuse and connect sections are separated inside the group', async ({ expect }) => {
     const { db, addConnection } = await setup();
     const connection = addConnection('b');
+    // Reuse binds a target, so an `existingTarget` is required for reuse entries to appear.
+    const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
     const actions = connectorAuthActions({
       connectorIds: ['a', 'b'],
       db,
       spaceId: db.spaceId,
+      existingTarget: Ref.make(target),
       allConnectors: [makeConnector('a', authFlow), makeConnector('b', authFlow)],
       allConnections: [connection],
     });
