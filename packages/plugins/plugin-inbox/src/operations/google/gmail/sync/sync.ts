@@ -311,6 +311,7 @@ export const syncGmail = ({
       ),
       Pipeline.abortWith(
         controller.signal,
+        // TODO(wittjosiah): Could this note+remove pairing be upstreamed into abortWith itself?
         Effect.sync(() => {
           log('gmail sync cancelled', { mailbox: Obj.getURI(mailbox) });
           progressMonitor.note('Cancelled');
