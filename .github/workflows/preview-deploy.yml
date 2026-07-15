@@ -1,9 +1,11 @@
 name: Preview Deploy
 
-# Deploys the composer-app preview bundle built by preview.yml to Cloudflare
-# Pages. Uses workflow_run so this workflow executes from the BASE branch
-# (trusted), which means secrets are safe to use here. The untrusted PR code
-# never runs in this workflow — we only download the pre-built artifact.
+# Deploys the composer-app preview bundle built by preview.yml as a Cloudflare Worker preview Version
+# (0% traffic, stable per-PR URL via `--preview-alias`) against composer-app's `main` env — same env the
+# build already targets (DX_EDGE_BASE_URL=edge-main in preview.yml) and its dev-tier bindings, so PR
+# previews never touch production data. Uses workflow_run so this workflow executes from the BASE branch
+# (trusted), which means secrets are safe to use here. The untrusted PR code never runs in this workflow —
+# we only download the pre-built artifact.
 
 on:
   workflow_run:
@@ -21,6 +23,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
+      # Only the config is needed (not a full checkout) to resolve the `main` env's Worker name + bindings.
+      - name: Checkout wrangler config
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            packages/apps/composer-app/wrangler.jsonc
+          sparse-checkout-cone-mode: false
+
       - name: Download preview bundle
         uses: actions/download-artifact@v5
         with:
@@ -45,24 +55,36 @@ jobs:
           fi
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
-          echo "branch_alias=pr-$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "preview_alias=pr-$PR_NUMBER" >> $GITHUB_OUTPUT
 
       - name: Install wrangler
-        run: npm install --global wrangler@3
+        run: npm install --global wrangler@^4.59.1
 
-      - name: Deploy to Cloudflare Pages
+      - name: Exclude Worker script from asset upload
+        run: echo '_worker.js' > preview/packages/apps/composer-app/out/composer/.assetsignore
+
+      - name: Deploy preview version
         id: deploy
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          wrangler pages deploy preview/packages/apps/composer-app/out/composer \
-            --project-name composer \
-            --branch "${{ steps.meta.outputs.branch_alias }}" \
+          wrangler versions upload \
+            --config packages/apps/composer-app/wrangler.jsonc \
+            --env main \
+            --preview-alias "${{ steps.meta.outputs.preview_alias }}" \
+            --assets preview/packages/apps/composer-app/out/composer \
+            preview/packages/apps/composer-app/out/composer/_worker.js \
             | tee deploy.log
-          URL=$(grep -Eo 'https://[a-z0-9-]+\.composer-app\.pages\.dev' deploy.log | head -n1)
+          # wrangler prints both a per-version URL and the stable alias URL — the alias is the one that
+          # stays constant across pushes to the same PR, so it must be matched by its own label, not by
+          # position (a plain "first workers.dev URL" grep would grab the per-version one instead).
+          URL=$(grep 'Version Preview Alias URL:' deploy.log | grep -Eo 'https://[a-z0-9.-]+\.workers\.dev')
+          if [[ -z "$URL" ]]; then
+            echo "Could not find a preview URL in wrangler's output" >&2
+            exit 1
+          fi
           echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "alias=https://${{ steps.meta.outputs.branch_alias }}.composer-app.pages.dev" >> $GITHUB_OUTPUT
 
       - name: Comment preview URL on PR
         uses: marocchino/sticky-pull-request-comment@v2
@@ -70,4 +92,4 @@ jobs:
           number: ${{ steps.meta.outputs.pr_number }}
           header: composer-preview
           message: |
-            ${{ steps.deploy.outputs.alias }}
+            ${{ steps.deploy.outputs.url }}
