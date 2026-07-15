@@ -343,7 +343,16 @@ export const syncGmail = ({
       progressMonitor.done();
       progressMonitor.remove();
 
-      if (scanned < maxMessages) {
+      const capped = scanned >= maxMessages;
+      log('gmail sync run finished', {
+        mailbox: Obj.getURI(mailbox),
+        scanned,
+        maxMessages,
+        capped,
+        newMessages: stats.newMessages,
+        action: capped ? 'runAgain' : 'completeBackfill',
+      });
+      if (!capped) {
         // Both halves exhausted naturally (not just capped) — the backward half reached the horizon.
         Cursor.completeBackfill(binding, horizon.getTime());
       } else {
