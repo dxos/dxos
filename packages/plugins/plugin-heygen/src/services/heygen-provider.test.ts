@@ -18,14 +18,14 @@ describe('HeyGenProvider', () => {
 
   test('enqueue posts avatar/voice/script and returns the video id as the job id', async ({ expect }) => {
     let captured: { url: string; apiKey: string | null; body: Record<string, unknown> } | undefined;
-    const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       captured = {
         url: String(input),
         apiKey: new Headers(init?.headers).get('X-Api-Key'),
         body: JSON.parse(String(init?.body)),
       };
       return new Response(JSON.stringify({ data: { video_id: 'vid-1' } }));
-    }) as typeof fetch;
+    };
 
     const { jobId } = await provider(fetchImpl).enqueue(
       { type: 'video', prompt: 'hello', avatarId: 'av-1', voiceId: 'vo-1' },
@@ -39,7 +39,7 @@ describe('HeyGenProvider', () => {
   });
 
   test('enqueue requires avatar and voice ids', async ({ expect }) => {
-    const fetchImpl = (async () => new Response('{}')) as typeof fetch;
+    const fetchImpl: typeof globalThis.fetch = async () => new Response('{}');
     // Missing avatar.
     await expect(
       provider(fetchImpl).enqueue({ type: 'video', prompt: 'x', voiceId: 'vo-1' }, { apiKey: 'sk' }),
@@ -51,7 +51,7 @@ describe('HeyGenProvider', () => {
   });
 
   test('supports video but not audio', ({ expect }) => {
-    const fetchImpl = (async () => new Response('{}')) as typeof fetch;
+    const fetchImpl: typeof globalThis.fetch = async () => new Response('{}');
     const instance = provider(fetchImpl);
     expect(instance.supports('video')).toBe(true);
     expect(instance.supports('audio')).toBe(false);
@@ -59,13 +59,13 @@ describe('HeyGenProvider', () => {
 
   test('awaitResult polls until completed and returns the url', async ({ expect }) => {
     let calls = 0;
-    const fetchImpl = (async () => {
+    const fetchImpl: typeof globalThis.fetch = async () => {
       calls += 1;
       const done = calls >= 2;
       return new Response(
         JSON.stringify({ data: done ? { status: 'completed', url: 'https://cdn/v.mp4' } : { status: 'processing' } }),
       );
-    }) as typeof fetch;
+    };
 
     const { url } = await provider(fetchImpl).awaitResult('vid-1', { apiKey: 'sk-test' });
     expect(url).toBe('https://cdn/v.mp4');
@@ -73,8 +73,8 @@ describe('HeyGenProvider', () => {
   });
 
   test('awaitResult throws on a failed job', async ({ expect }) => {
-    const fetchImpl = (async () =>
-      new Response(JSON.stringify({ data: { status: 'failed', error: { message: 'boom' } } }))) as typeof fetch;
+    const fetchImpl: typeof globalThis.fetch = async () =>
+      new Response(JSON.stringify({ data: { status: 'failed', error: { message: 'boom' } } }));
     await expect(provider(fetchImpl).awaitResult('vid-1', { apiKey: 'sk-test' })).rejects.toBeInstanceOf(
       ProviderFailureError,
     );
@@ -82,7 +82,7 @@ describe('HeyGenProvider', () => {
 
   test('listAvatars requests owned avatars (ownership=private), maps id/name, trims and sorts', async ({ expect }) => {
     let url: string | undefined;
-    const fetchImpl = (async (input: RequestInfo | URL) => {
+    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL) => {
       url = String(input);
       return new Response(
         JSON.stringify({
@@ -92,7 +92,7 @@ describe('HeyGenProvider', () => {
           has_more: false,
         }),
       );
-    }) as typeof fetch;
+    };
 
     const avatars = await provider(fetchImpl).listAvatars({ apiKey: 'sk-test' });
     expect(url).toBe('https://api.heygen.com/v3/avatars?ownership=private&limit=50');
@@ -103,14 +103,14 @@ describe('HeyGenProvider', () => {
   });
 
   test('listAvatars tolerates the v2-shaped body (data.avatars, avatar_id/avatar_name)', async ({ expect }) => {
-    const fetchImpl = (async () =>
+    const fetchImpl: typeof globalThis.fetch = async () =>
       new Response(
         JSON.stringify({
           data: {
             avatars: [{ avatar_id: 'av-1', avatar_name: 'Angela' }, { avatar_id: 'no-name' }],
           },
         }),
-      )) as typeof fetch;
+      );
 
     const avatars = await provider(fetchImpl).listAvatars({ apiKey: 'sk-test' });
     expect(avatars).toEqual([{ id: 'av-1', name: 'Angela' }]);
@@ -120,7 +120,7 @@ describe('HeyGenProvider', () => {
     expect,
   }) => {
     let url: string | undefined;
-    const fetchImpl = (async (input: RequestInfo | URL) => {
+    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL) => {
       url = String(input);
       return new Response(
         JSON.stringify({
@@ -132,7 +132,7 @@ describe('HeyGenProvider', () => {
           has_more: false,
         }),
       );
-    }) as typeof fetch;
+    };
 
     const voices = await provider(fetchImpl).listVoices({ apiKey: 'sk-test' });
     expect(url).toBe('https://api.heygen.com/v3/voices?type=private&limit=100');
@@ -143,7 +143,7 @@ describe('HeyGenProvider', () => {
   });
 
   test('requires an api key', async ({ expect }) => {
-    const fetchImpl = (async () => new Response('{}')) as typeof fetch;
+    const fetchImpl: typeof globalThis.fetch = async () => new Response('{}');
     await expect(
       provider(fetchImpl).enqueue({ type: 'video', prompt: 'x', avatarId: 'a', voiceId: 'v' }, { apiKey: '' }),
     ).rejects.toBeInstanceOf(MissingApiKeyError);

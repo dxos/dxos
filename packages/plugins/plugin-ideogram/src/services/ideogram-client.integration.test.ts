@@ -36,5 +36,6 @@ describe.skipIf(!apiKey)('generateWithIdeogram (live)', () => {
     );
     expect(result.variants.length).toBeGreaterThan(0);
     expect(typeof result.variants[0].url).toBe('string');
-  });
+    // Live image generation routinely exceeds the 5s Vitest default.
+  }, 60_000);
 });

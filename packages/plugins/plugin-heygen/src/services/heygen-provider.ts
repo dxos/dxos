@@ -121,8 +121,10 @@ export class HeyGenProvider implements GenerationProvider {
     const body = (await this.#getList('listVoices', VOICES_URL, options)) as {
       data?: Array<{ voice_id?: string; name?: string }>;
     };
+    // Guard the array: an unexpected shape (e.g. `{ data: {} }`) must not throw on `.map`.
+    const entries = Array.isArray(body.data) ? body.data : [];
     return sortByName(
-      (body.data ?? [])
+      entries
         .map((entry) => ({ id: entry.voice_id, name: entry.name?.trim() }))
         .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && !!entry.name),
     );
@@ -137,6 +139,12 @@ export class HeyGenProvider implements GenerationProvider {
     if (!options.apiKey) {
       throw new MissingApiKeyError();
     }
+    // Honour a signal that is already aborted before we start (adding a listener would not replay it).
+    if (options.signal?.aborted) {
+      throw options.signal.reason instanceof Error
+        ? options.signal.reason
+        : new ProviderFailureError(`HeyGen ${label} aborted.`);
+    }
 
     const controller = new AbortController();
     const onAbort = () => controller.abort(options.signal?.reason);
@@ -145,13 +153,25 @@ export class HeyGenProvider implements GenerationProvider {
       () => controller.abort(new ProviderFailureError(`HeyGen ${label} timed out.`)),
       LIST_TIMEOUT_MS,
     );
-    let response: Response;
     try {
-      response = await this.#fetch(url, {
+      // The timeout must remain armed through body consumption — `fetch` can resolve on headers while
+      // `readErrorBody`/`json` still stall — so parsing happens here, not after the timer is cleared.
+      const response = await this.#fetch(url, {
         method: 'GET',
         headers: { 'X-Api-Key': options.apiKey },
         signal: controller.signal,
       });
+      if (!response.ok) {
+        const detail = await readErrorBody(response);
+        log.warn(`heygen ${label} failed`, {
+          url,
+          status: response.status,
+          detail,
+          apiKey: describeKey(options.apiKey),
+        });
+        throw new ProviderFailureError(`HeyGen ${label} failed: ${response.status} ${detail}`);
+      }
+      return await response.json();
     } catch (err) {
       // Surface the timeout reason (rather than a bare AbortError) so the picker shows why it failed.
       throw controller.signal.reason instanceof ProviderFailureError ? controller.signal.reason : err;
@@ -159,13 +179,6 @@ export class HeyGenProvider implements GenerationProvider {
       clearTimeout(timer);
       options.signal?.removeEventListener('abort', onAbort);
     }
-
-    if (!response.ok) {
-      const detail = await readErrorBody(response);
-      log.warn(`heygen ${label} failed`, { url, status: response.status, detail, apiKey: describeKey(options.apiKey) });
-      throw new ProviderFailureError(`HeyGen ${label} failed: ${response.status} ${detail}`);
-    }
-    return response.json();
   }
 
   async #postGenerate(input: GenerateInput, options: ProviderCallOptions): Promise<string> {
@@ -268,8 +281,7 @@ const sortByName = (options: GenerationOption[]): GenerationOption[] =>
  */
 const describeKey = (key: string): Record<string, unknown> => ({
   length: key.length,
-  prefix: key.slice(0, 4),
-  suffix: key.slice(-2),
+  // Only structural flags — never any raw key characters (would leak the credential into logs).
   trimmedDiffers: key !== key.trim(),
   hasWhitespace: /\s/.test(key),
   hasQuotes: /^["']|["']$/.test(key),

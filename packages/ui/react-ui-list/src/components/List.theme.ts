@@ -94,12 +94,12 @@ const listStyles = tv({
     // single full-width column instead of being indented past an empty icon slot.
     hasIcon: {
       true: {
-        itemContentRoot: 'w-full grid-cols-[var(--dx-rail-item)_minmax(0,1fr)]',
+        itemContentRoot: 'grid-cols-[var(--dx-rail-item)_minmax(0,1fr)]',
         itemContentTitle: 'col-start-2',
         itemContentDescription: 'col-start-2',
       },
       false: {
-        itemContentRoot: 'w-full grid-cols-[minmax(0,1fr)]',
+        itemContentRoot: 'grid-cols-[minmax(0,1fr)]',
         itemContentTitle: 'col-start-1',
         itemContentDescription: 'col-start-1',
       },

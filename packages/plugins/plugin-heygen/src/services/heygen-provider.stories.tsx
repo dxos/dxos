@@ -24,12 +24,12 @@ type Outcome = { kind: Kind; ok: true; options: GenerationOption[] } | { kind: K
 const inspectRaw = async (apiKey: string): Promise<Record<string, unknown>> => {
   // Per-request timeout: `/v2/avatars` returns the full unbounded catalog and can hang, which would
   // otherwise leave the whole inspection stuck on "Inspecting…". A timed-out probe reports as status -1.
-  const fetchJson = async (url: string): Promise<{ status: number; json: any }> => {
+  const fetchJson = async (url: string): Promise<{ status: number; json: unknown }> => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8_000);
     try {
       const res = await proxyFetchLegacy(new URL(url), { headers: { 'X-Api-Key': apiKey }, signal: controller.signal });
-      let json: any = null;
+      let json: unknown = null;
       try {
         json = await res.json();
       } catch {}
@@ -40,6 +40,21 @@ const inspectRaw = async (apiKey: string): Promise<Record<string, unknown>> => {
       clearTimeout(timer);
     }
   };
+
+  // Narrow the untyped response with small guards rather than reading through `any`.
+  const record = (value: unknown): Record<string, unknown> | undefined =>
+    typeof value === 'object' && value !== null && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : undefined;
+  const asEntries = (value: unknown): Array<Record<string, unknown>> =>
+    Array.isArray(value)
+      ? value.map(record).filter((entry): entry is Record<string, unknown> => entry !== undefined)
+      : [];
+  // The entry list: a flat `data` array (v3), else `data.<nestedKey>` (v2's `avatars`/`talking_photos`).
+  const entriesOf = (json: unknown, nestedKey?: string): Array<Record<string, unknown>> => {
+    const data = record(json)?.data;
+    return Array.isArray(data) ? asEntries(data) : nestedKey ? asEntries(record(data)?.[nestedKey]) : [];
+  };
   const names = (entries: Array<Record<string, unknown>>): unknown[] =>
     entries.slice(0, 8).map((entry) => entry.name ?? entry.avatar_name ?? entry.talking_photo_name);
   const types = (entries: Array<Record<string, unknown>>): unknown[] => [
@@ -49,32 +64,30 @@ const inspectRaw = async (apiKey: string): Promise<Record<string, unknown>> => {
   const out: Record<string, unknown> = {};
 
   const v3Avatars = await fetchJson('https://api.heygen.com/v3/avatars?limit=50');
-  const v3AvatarData = v3Avatars.json?.data;
-  const v3AvatarEntries = Array.isArray(v3AvatarData) ? v3AvatarData : (v3AvatarData?.avatars ?? []);
+  const v3AvatarEntries = entriesOf(v3Avatars.json, 'avatars');
   out.v3_avatars = { status: v3Avatars.status, count: v3AvatarEntries.length, sampleNames: names(v3AvatarEntries) };
 
   // v2 splits into stock `avatars` and user-uploaded `talking_photos` (the account's own).
   const v2Avatars = await fetchJson('https://api.heygen.com/v2/avatars');
+  const v2TalkingPhotos = entriesOf(v2Avatars.json, 'talking_photos');
   out.v2_avatars = {
     status: v2Avatars.status,
-    avatars: (v2Avatars.json?.data?.avatars ?? []).length,
-    talkingPhotos: (v2Avatars.json?.data?.talking_photos ?? []).length,
-    sampleTalkingPhotos: names(v2Avatars.json?.data?.talking_photos ?? []),
+    avatars: entriesOf(v2Avatars.json, 'avatars').length,
+    talkingPhotos: v2TalkingPhotos.length,
+    sampleTalkingPhotos: names(v2TalkingPhotos),
   };
 
   const v3Voices = await fetchJson('https://api.heygen.com/v3/voices?limit=100');
-  out.v3_voices = {
-    status: v3Voices.status,
-    count: (v3Voices.json?.data ?? []).length,
-    types: types(v3Voices.json?.data ?? []),
-  };
+  const v3VoiceEntries = entriesOf(v3Voices.json);
+  out.v3_voices = { status: v3Voices.status, count: v3VoiceEntries.length, types: types(v3VoiceEntries) };
 
   const v3VoicesPrivate = await fetchJson('https://api.heygen.com/v3/voices?limit=100&type=private');
+  const v3PrivateEntries = entriesOf(v3VoicesPrivate.json);
   out.v3_voices_private = {
     status: v3VoicesPrivate.status,
-    count: (v3VoicesPrivate.json?.data ?? []).length,
-    types: types(v3VoicesPrivate.json?.data ?? []),
-    sampleNames: names(v3VoicesPrivate.json?.data ?? []),
+    count: v3PrivateEntries.length,
+    types: types(v3PrivateEntries),
+    sampleNames: names(v3PrivateEntries),
   };
 
   return out;
