@@ -422,13 +422,19 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       dep). Topic schema reg + typename/detail translations moved to BrainPlugin; `./containers` export
       added. Removed from inbox. Builds + inbox(167)/brain(13) tests green (`2b92f80605`). DECISION: suggestions
       stay in inbox (brain TopicsArticle will list accepted Topics only).
-- [ ] **2B — Move `TopicsArticle` → plugin-brain (space-level list)** — query all `Topic`s in the space
-      (accepted only; drop suggestions/mailbox/Analyze). Add plugin-brain deps (react-ui-mosaic/attention/
-      list/menu, echo-react, plugin-graph). Virtual space-level Topics root app-graph node + a child per
-      `Topic`; wire the root's article to TopicsArticle.
-- [ ] **2C — plugin-inbox cleanup** — remove the mailbox Topics folder node + `mailboxTopics` companion;
-      extract the mailbox-scoped suggestions + Analyze/Accept UI into an inbox surface (companion/section)
-      so it survives folder removal. (ties into the companions/master-detail track.)
+- [x] **2B — Topics as a space-level type section (plugin-brain)** — used
+      `TypeSection.createTypeSectionExtension(Topic.Topic)` (idiomatic; no new deps) → a per-space Topics
+      section (root + a child per Topic, icon/label from the schema annotations), each opening via the
+      regular object/article surface (`TopicArticle`). Added the matching nav path resolver; registered in
+      BrainPlugin (`fa13dc315e`). Chose the type-section nav over a bespoke mosaic list-panel (consistent
+      with Chats/Calendars); a standalone Topics list-panel is optional follow-up.
+- [x] **2C — plugin-inbox cleanup** — inbox `TopicsArticle` → `TopicSuggestionsArticle` (suggestions +
+      Accept/Dismiss + Analyze only; accepted topics now live in the space-level section). Removed the
+      redundant `mailboxTopics` companion; relabeled the mailbox Topics node → "Topic Suggestions"
+      (lightbulb). Reworked `CreateTopic` + new `TopicSuggestions` stories. Builds + inbox(167)/brain(13)
+      tests + lint + fmt green. Kept a mailbox nav node for suggestions (repurposed, not a companion) —
+      full companion-ization is the companions/master-detail track. Headless storybook Topic play-tests
+      stay stuck at Loading in this env (pre-existing; CI-green through Phase 1/2A/2B) — verify in CI/app.
 - [x] **`TopicArticle` storybook** (#3) — existing `TopicArticle.stories.tsx` now targets the brain
       component (`Default`/`Minimal` render; `Test` hits the known headless topic-query issue). Relocating
       it into a brain-owned stories package is optional polish.

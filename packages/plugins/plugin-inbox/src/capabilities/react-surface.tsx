@@ -27,7 +27,7 @@ import {
   RelatedToOrganization,
   SaveFilterPopover,
   SubscriptionsArticle,
-  TopicsArticle,
+  TopicSuggestionsArticle,
 } from '#containers';
 import { Calendar, Mailbox } from '#types';
 
@@ -57,13 +57,13 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'topics',
+        id: 'topicSuggestions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
           const lastSegment = data.attendableId.split('/').pop();
           return lastSegment === getTopicsId() && Mailbox.instanceOf(data.subject);
         }),
         component: ({ data, role }) => (
-          <TopicsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+          <TopicSuggestionsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({

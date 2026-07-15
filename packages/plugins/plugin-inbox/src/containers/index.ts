@@ -16,6 +16,6 @@ export const MessageArticle: ComponentType<any> = lazy(() => import('./MessageAr
 export const MessageCard: ComponentType<any> = lazy(() => import('./MessageCard'));
 export const SaveFilterPopover: ComponentType<any> = lazy(() => import('./SaveFilterPopover'));
 export const SubscriptionsArticle: ComponentType<any> = lazy(() => import('./SubscriptionsArticle'));
-export const TopicsArticle: ComponentType<any> = lazy(() => import('./TopicsArticle'));
+export const TopicSuggestionsArticle: ComponentType<any> = lazy(() => import('./TopicSuggestionsArticle'));
 export const RelatedToContact: ComponentType<any> = lazy(() => import('./RelatedToContact'));
 export const RelatedToOrganization: ComponentType<any> = lazy(() => import('./RelatedToOrganization'));

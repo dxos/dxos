@@ -18,7 +18,6 @@ import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
-import { TopicsArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -78,9 +77,9 @@ const Story = () => {
   return (
     <div className='flex flex-col bs-full'>
       <Button onClick={handleCreate}>Create Topic</Button>
-      <div className='grow' data-testid='topic-count' data-count={topics.length}>
-        <TopicsArticle role='article' subject={mailbox} attendableId='story' />
-      </div>
+      {/* Accepted/created topics render in the space-level Topics section (plugin-brain); this story
+          asserts creation via the space db count rather than an inbox list. */}
+      <div className='grow' data-testid='topic-count' data-count={topics.length} />
     </div>
   );
 };
@@ -125,18 +124,19 @@ type StoryType = StoryObj<typeof meta>;
 
 export const Default: StoryType = {};
 
-/** Clicking "Create Topic" invokes the operation and a Topic (labelled from the message subject) appears. */
+/** Clicking "Create Topic" invokes the operation and materializes a `Topic` in the space db. */
 export const Test: StoryType = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // No topics initially.
     const button = await waitFor(() => canvas.getByRole('button', { name: /create topic/i }));
-    void expect(canvas.queryByTestId('topic-card')).toBeNull();
+    // No topics initially.
+    void expect(canvas.getByTestId('topic-count').getAttribute('data-count')).toBe('0');
 
     await userEvent.click(button);
 
-    // The operation clusters the single thread and materializes a Topic (label from the subject tokens).
-    const card = await waitFor(() => canvas.getByTestId('topic-card'), { timeout: 10_000 });
-    void expect(within(card).getByText(/project|kickoff/i)).toBeInTheDocument();
+    // The operation clusters the single thread and materializes one Topic.
+    await waitFor(() => expect(canvas.getByTestId('topic-count').getAttribute('data-count')).toBe('1'), {
+      timeout: 10_000,
+    });
   },
 };

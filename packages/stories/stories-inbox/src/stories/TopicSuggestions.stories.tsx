@@ -12,40 +12,14 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { TopicsArticle } from '@dxos/plugin-inbox/containers';
+import { TopicSuggestionsArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { AnchoredTo, Topic } from '@dxos/types';
-
-// Two accepted topics.
-const seedTopics = (space: Space) => {
-  space.db.add(
-    Obj.make(Topic.Topic, {
-      label: 'q2 report budget',
-      summary: 'Alice circulated the Q2 report and budget.',
-      threadIds: ['q2 report'],
-      participants: ['alice@example.com'],
-      keywords: ['q2', 'report', 'budget'],
-      questions: ['When is the budget due?'],
-      tasks: ['Review the draft.'],
-    }),
-  );
-  space.db.add(
-    Obj.make(Topic.Topic, {
-      label: 'launch planning',
-      summary: 'Launch date and checklist under discussion.',
-      threadIds: ['launch plan'],
-      participants: ['bob@example.com'],
-      keywords: ['launch', 'planning'],
-      questions: [],
-      tasks: [],
-    }),
-  );
-};
 
 // Two unaccepted suggestions on the mailbox (same field shape as a Topic).
 const seedSuggestions = (mailbox: Mailbox.Mailbox) =>
@@ -75,18 +49,18 @@ const seedSuggestions = (mailbox: Mailbox.Mailbox) =>
 const Story = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  // Subscribe so accept/dismiss re-render.
+  // Subscribe to Topic so accept (which materializes a Topic) re-renders the suggestions list.
   useQuery(space?.db, Filter.type(Topic.Topic));
 
   if (!space?.db || !mailbox) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
   }
 
-  return <TopicsArticle role='article' subject={mailbox} attendableId='story' />;
+  return <TopicSuggestionsArticle role='article' subject={mailbox} attendableId='story' />;
 };
 
 const meta = {
-  title: 'stories/stories-inbox/TopicsArticle',
+  title: 'stories/stories-inbox/TopicSuggestions',
   render: Story,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -102,7 +76,6 @@ const meta = {
               const { personalSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
                 const mailbox = personalSpace.db.add(Mailbox.make());
-                seedTopics(personalSpace);
                 seedSuggestions(mailbox);
                 await personalSpace.db.flush({ indexes: true });
               });
@@ -133,49 +106,29 @@ const closestElement = (element: Element, selector: string): HTMLElement => {
   return found;
 };
 
-/** The master list: accepted topic cards below a "Suggested" section. */
+/** The opt-in suggestions list. */
 export const Default: Story = {};
 
-/** Deletes a topic via its card action menu and asserts it is removed. */
-export const DeleteTest: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
-
-    const budgetCard = await waitFor(() =>
-      closestElement(canvas.getByText('q2 report budget'), '[data-testid="topic-card"]'),
-    );
-    void expect(canvas.getByText('launch planning')).toBeInTheDocument();
-
-    await userEvent.click(within(budgetCard).getByRole('button', { name: /action menu/i }));
-    await userEvent.click(await waitFor(() => body.getByText(/delete topic/i)));
-
-    await waitFor(() => expect(canvas.queryByText('q2 report budget')).not.toBeInTheDocument());
-    void expect(canvas.getByText('launch planning')).toBeInTheDocument();
-  },
-};
-
-/** Accepts one suggestion (→ Topic) and dismisses another; asserts the Suggested list shrinks. */
+/** Accepts one suggestion (→ Topic) and dismisses the other; asserts the list shrinks to empty. */
 export const SuggestionsTest: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    const section = await waitFor(() => canvas.getByTestId('topics-suggested'));
-    await waitFor(() => expect(within(section).getAllByTestId('topic-suggestion')).toHaveLength(2));
+    await waitFor(() => expect(canvas.getAllByTestId('topic-suggestion')).toHaveLength(2));
 
-    const invoiceCard = closestElement(within(section).getByText('invoice acme'), '[data-testid="topic-suggestion"]');
+    const invoiceCard = closestElement(canvas.getByText('invoice acme'), '[data-testid="topic-suggestion"]');
     await userEvent.click(within(invoiceCard).getByRole('button', { name: /action menu/i }));
     await userEvent.click(await waitFor(() => body.getByText(/^accept$/i)));
 
     await waitFor(() => expect(canvas.getAllByTestId('topic-suggestion')).toHaveLength(1));
-    void expect(within(canvas.getByTestId('topics-suggested')).queryByText('invoice acme')).toBeNull();
+    void expect(canvas.queryByText('invoice acme')).toBeNull();
 
     const remaining = canvas.getByTestId('topic-suggestion');
     await userEvent.click(within(remaining).getByRole('button', { name: /action menu/i }));
     await userEvent.click(await waitFor(() => body.getByText(/^dismiss$/i)));
 
-    await waitFor(() => expect(canvas.queryByTestId('topics-suggested')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('topic-suggestion')).toBeNull());
     void expect(canvas.queryByText('welcome onboarding')).toBeNull();
   },
 };

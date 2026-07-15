@@ -5,14 +5,12 @@
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj, Ref, Relation } from '@dxos/echo';
 import { Card, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { AnchoredTo, Topic } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -34,16 +32,8 @@ const SuggestionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Suggestio
     const { t } = useTranslation(meta.profile.key);
     const menuItems = useMemo(
       () => [
-        {
-          label: t('topics.accept.label'),
-          icon: 'ph--check--regular',
-          onClick: () => onAccept(suggestion),
-        },
-        {
-          label: t('topics.dismiss.label'),
-          icon: 'ph--x--regular',
-          onClick: () => onDismiss(suggestion),
-        },
+        { label: t('topics.accept.label'), icon: 'ph--check--regular', onClick: () => onAccept(suggestion) },
+        { label: t('topics.dismiss.label'), icon: 'ph--x--regular', onClick: () => onDismiss(suggestion) },
       ],
       [suggestion, onAccept, onDismiss, t],
     );
@@ -79,91 +69,20 @@ const SuggestionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Suggestio
 
 SuggestionTile.displayName = 'SuggestionTile';
 
-type TopicTileData = { readonly topic: Topic.Topic; readonly onDelete?: (topic: Topic.Topic) => void };
-
-/** Mosaic tile for one `Topic`: label, summary, and a thread/participant count. */
-const TopicTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<TopicTileData>, 'data' | 'location' | 'current'>>(
-  ({ data, location, current }, forwardedRef) => {
-    const { topic, onDelete } = data;
-    const { t } = useTranslation(meta.profile.key);
-    const menuItems = useMemo(
-      () =>
-        onDelete
-          ? [{ label: t('topics.delete.label'), icon: 'ph--trash--regular', onClick: () => onDelete(topic) }]
-          : undefined,
-      [onDelete, topic, t],
-    );
-    return (
-      <Mosaic.Tile
-        asChild
-        classNames='dx-hover dx-current border-b border-subdued-separator'
-        id={topic.id}
-        data={data}
-        location={location}
-      >
-        <Focus.Item asChild current={current}>
-          <Card.Root fullWidth border={false} ref={forwardedRef} data-testid='topic-card'>
-            <Card.Header>
-              <Card.Block>
-                <Icon icon='ph--stack--regular' />
-              </Card.Block>
-              <Card.Title>{topic.label}</Card.Title>
-              <Card.Menu items={menuItems} />
-            </Card.Header>
-            <Card.Body>
-              {topic.summary.length > 0 && (
-                <Card.Row>
-                  <Card.Text variant='description'>{topic.summary}</Card.Text>
-                </Card.Row>
-              )}
-              <Card.Row>
-                <Card.Text variant='description'>
-                  {t('topics.count.label', {
-                    threads: topic.threadIds.length,
-                    participants: topic.participants.length,
-                    questions: topic.questions.length,
-                    tasks: topic.tasks.length,
-                  })}
-                </Card.Text>
-              </Card.Row>
-            </Card.Body>
-          </Card.Root>
-        </Focus.Item>
-      </Mosaic.Tile>
-    );
-  },
-);
-
-TopicTile.displayName = 'TopicTile';
-
-export type TopicsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Mailbox>;
+export type TopicSuggestionsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Mailbox>;
 
 /**
- * Topics list for a mailbox — a `react-ui-mosaic` stack of the space's `Topic` objects (produced by
- * the `AnalyzeTopics` operation). Queries all topics in the space; scoping to the mailbox via the
- * `AnchoredTo` relation is a follow-up.
+ * Opt-in topic suggestions for a mailbox: the `Mailbox.topicSuggestions` the `AnalyzeTopics` operation
+ * produced, each with Accept (→ materialize a `Topic` + `AnchoredTo` relation) / Dismiss actions, plus a
+ * toolbar action to (re-)run analysis. Accepted topics appear in the space-level Topics section
+ * (`@dxos/plugin-brain`); this view stays mailbox-scoped because suggestions live on the `Mailbox`.
  */
-export const TopicsArticle = ({ role, subject: mailbox, attendableId }: TopicsArticleProps) => {
+export const TopicSuggestionsArticle = ({ role, subject: mailbox, attendableId }: TopicSuggestionsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const id = String(attendableId ?? Obj.getURI(mailbox));
-  const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
-  const topics = useQuery(db, Filter.type(Topic.Topic));
   const suggestions = mailbox.topicSuggestions ?? [];
-  const showItem = useShowItem();
-  const handleDelete = useCallback((topic: Topic.Topic) => db?.remove(topic), [db]);
-
-  // Open the selected topic's detail (`TopicArticle`) following the layout mode — companion in
-  // simple mode, companion swap otherwise (deck-peer needs a topic path; a follow-up).
-  const handleOpen = useCallback(
-    (topicId: string | undefined) => {
-      if (topicId) {
-        void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
-      }
-    },
-    [id, showItem],
-  );
 
   // Labels are unique across suggestions (deduped at write time), so remove by label. Splice in place
   // rather than reassigning a `filter`ed array — reassigning an array of live element proxies corrupts
@@ -202,7 +121,6 @@ export const TopicsArticle = ({ role, subject: mailbox, attendableId }: TopicsAr
     [db, mailbox, dismiss],
   );
 
-  const items = useMemo(() => topics.map((topic) => ({ topic, onDelete: handleDelete })), [topics, handleDelete]);
   // Snapshot each suggestion into a plain object so the Mosaic tiles never read a live `topicSuggestions`
   // struct proxy (accepting/dismissing reassigns the array, detaching removed elements — a detached proxy
   // yields `undefined` fields and throws on render). Computed inline (not memoized): `topicSuggestions`
@@ -235,7 +153,7 @@ export const TopicsArticle = ({ role, subject: mailbox, attendableId }: TopicsAr
     );
   }, [invokePromise, mailbox, db]);
 
-  const menuActions = useTopicsActions(handleAnalyze);
+  const menuActions = useTopicSuggestionsActions(handleAnalyze);
 
   return (
     <Panel.Root role={role}>
@@ -245,33 +163,19 @@ export const TopicsArticle = ({ role, subject: mailbox, attendableId }: TopicsAr
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>
-        {topics.length === 0 && suggestions.length === 0 ? (
-          <Empty label={t('topics.empty.message')} />
+        {suggestions.length === 0 ? (
+          <Empty label={t('topic-suggestions.empty.message')} />
         ) : (
           <ScrollArea.Root orientation='vertical' padding thin>
             <ScrollArea.Viewport>
-              {suggestions.length > 0 && (
-                <div role='group' aria-label={t('topics.suggested.title')} data-testid='topics-suggested'>
-                  <Card.Text classNames='px-2 py-1 font-medium text-description'>
-                    {t('topics.suggested.title')}
-                  </Card.Text>
-                  <Mosaic.Container asChild>
-                    <Mosaic.Stack
-                      Tile={SuggestionTile}
-                      items={suggestionItems}
-                      draggable={false}
-                      getId={(item) => item.suggestion.label}
-                    />
-                  </Mosaic.Container>
-                </div>
-              )}
-              {topics.length > 0 && (
-                <Focus.Group asChild>
-                  <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleOpen}>
-                    <Mosaic.Stack Tile={TopicTile} items={items} draggable={false} getId={(item) => item.topic.id} />
-                  </Mosaic.Container>
-                </Focus.Group>
-              )}
+              <Mosaic.Container asChild>
+                <Mosaic.Stack
+                  Tile={SuggestionTile}
+                  items={suggestionItems}
+                  draggable={false}
+                  getId={(item) => item.suggestion.label}
+                />
+              </Mosaic.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}
@@ -280,14 +184,14 @@ export const TopicsArticle = ({ role, subject: mailbox, attendableId }: TopicsAr
   );
 };
 
-TopicsArticle.displayName = 'TopicsArticle';
+TopicSuggestionsArticle.displayName = 'TopicSuggestionsArticle';
 
-/** Toolbar menu for the topics view: re-run topic analysis over the mailbox. */
-const useTopicsActions = (onAnalyze: () => void) =>
+/** Toolbar menu for the suggestions view: (re-)run topic analysis over the mailbox. */
+const useTopicSuggestionsActions = (onAnalyze: () => void) =>
   useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['topics.toolbar.title', { ns: meta.profile.key }] })
+        .root({ label: ['topic-suggestions.toolbar.title', { ns: meta.profile.key }] })
         .action(
           'analyze',
           {
