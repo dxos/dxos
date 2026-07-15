@@ -10,7 +10,7 @@ indicator can subscribe reactively.
 ```
 syncGmail (producer)
   │  Trace.TraceService
-  │  status.update { message, progressCurrent, progressTotal }
+  │  status.update { message, progress: { key, current, total } }
   ▼
 Trace sink (operation runtime / test harness)
   │
@@ -53,18 +53,18 @@ The `#sync` suffix lets other mailbox-scoped monitors coexist (e.g. `#topics`).
    can emit without wrapping in `Effect`:
 
    ```ts
-   reportStatus({ progressCurrent: 0 });
-   reportStatus({ progressTotal: totalToRetrieve });
-   reportStatus({ progressCurrent });
+   reportStatus({ current: 0 });
+   reportStatus({ total: totalToRetrieve });
+   reportStatus({ current: progressCurrent });
    reportStatus({ message: 'Sync failed' });
    reportStatus({ message: 'Cancelled' });
    ```
 
 3. **Set total** — each date chunk's enumerated id count (before full fetches)
-   revises `progressTotal`. Chunks enumerate serially, so `total` leads `current`.
+   revises `progress.total`. Chunks enumerate serially, so `total` leads `current`.
 
 4. **Advance** — once per retrieved message via `onRetrieved`, incrementing
-   `progressCurrent`.
+   `progress.current`.
 
 5. **Abort** — `AbortController` + `Pipeline.abortWith` remain for cooperative
    cancellation; the reducer will wire the meter's cancel control later.
@@ -80,9 +80,9 @@ const syncProgress = useProgress(createSyncProgressKey(mailbox));
 ## Testing
 
 `sync.test.ts` captures `status.update` events via `Trace.testTraceService` and a
-custom `TraceSink`, asserting `progressCurrent` advances and `progressTotal` is
-set. `inboxSyncTestServices` provides `Trace.writerLayerNoop` by default; pass
-`{ traceLayer }` to observe events.
+custom `TraceSink`, asserting `progress.current` advances, `progress.total` is
+set, and `progress.key` matches `createSyncProgressKey(mailbox)`. `inboxSyncTestServices`
+provides `Trace.writerLayerNoop` by default; pass `{ traceLayer }` to observe events.
 
 ## Related
 

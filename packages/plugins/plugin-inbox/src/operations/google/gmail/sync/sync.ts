@@ -182,24 +182,34 @@ export const syncGmail = ({
     // Live sync status via trace `status.update` events. A reducer will project these into the
     // runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
     const traceWriter = yield* Trace.TraceService;
+    const progressKey = createSyncProgressKey(mailbox);
     const syncLabel = mailbox.name ?? 'Mailbox';
     let progressCurrent = 0;
     let progressTotal: number | undefined;
-    const reportStatus = (patch: Trace.PayloadType<typeof Trace.StatusUpdate>) => {
-      if (patch.progressCurrent !== undefined) {
-        progressCurrent = patch.progressCurrent;
+    type StatusPatch = {
+      message?: string;
+      current?: number;
+      total?: number;
+      estimate?: number;
+    };
+    const reportStatus = (patch: StatusPatch = {}) => {
+      if (patch.current !== undefined) {
+        progressCurrent = patch.current;
       }
-      if (patch.progressTotal !== undefined) {
-        progressTotal = patch.progressTotal;
+      if (patch.total !== undefined) {
+        progressTotal = patch.total;
       }
       traceWriter.write(Trace.StatusUpdate, {
         message: patch.message ?? syncLabel,
-        progressCurrent: patch.progressCurrent ?? progressCurrent,
-        progressTotal: patch.progressTotal ?? progressTotal,
-        progressEstimate: patch.progressEstimate,
+        progress: {
+          key: progressKey,
+          current: patch.current ?? progressCurrent,
+          total: patch.total ?? progressTotal,
+          estimate: patch.estimate,
+        },
       });
     };
-    reportStatus({ progressCurrent: 0 });
+    reportStatus({ current: 0 });
 
     // Accumulate the exact retrieval total as each date chunk's id list is enumerated (known before any
     // full-message fetch), revising the meter's total so it renders a determinate bar even without a
@@ -208,7 +218,7 @@ export const syncGmail = ({
     let totalToRetrieve = 0;
     const addToTotal = (count: number) => {
       totalToRetrieve += count;
-      reportStatus({ progressTotal: totalToRetrieve });
+      reportStatus({ total: totalToRetrieve });
     };
 
     const startedAt = new Date().toISOString();
@@ -290,7 +300,7 @@ export const syncGmail = ({
       // happen downstream of the source, so counting there would leave the bar short of 100%.
       onRetrieved: () => {
         progressCurrent += 1;
-        reportStatus({ progressCurrent });
+        reportStatus({ current: progressCurrent });
       },
     }).pipe(
       Cursor.dedupStage<GoogleMail.Message>(

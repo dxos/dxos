@@ -17,7 +17,7 @@ import { GMAIL_SOURCE } from '../../../../constants';
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
 import { inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
 import { Mailbox } from '../../../../types';
-import { syncGmail } from './sync';
+import { syncGmail, createSyncProgressKey } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -138,11 +138,14 @@ describe('syncGmail against a mock Gmail API', () => {
     );
 
     const progressCurrents = statusUpdates
-      .map((update) => update.progressCurrent)
+      .map((update) => update.progress?.current)
       .filter((current): current is number => current !== undefined);
     expect(progressCurrents.length).toBeGreaterThan(0);
     expect(Math.max(...progressCurrents)).toBeGreaterThan(0);
-    expect(statusUpdates.some((update) => update.progressTotal !== undefined && update.progressTotal > 0)).toBe(true);
+    expect(
+      statusUpdates.some((update) => update.progress?.total !== undefined && update.progress.total > 0),
+    ).toBe(true);
+    expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
     expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
   });
 

@@ -7,7 +7,7 @@ and `@dxos/app-toolkit` (the `ProgressRegistry` capability).
 ## Reference consumer: Gmail sync
 
 `plugin-inbox`'s `syncGmail` operation emits `Trace.StatusUpdate` events
-(`progressCurrent`, `progressTotal`, `message`) during a run. A trace→registry
+(`progress.key`, `progress.current`, `progress.total`, `message`) during a run. A trace→registry
 reducer will project these into `AppCapabilities.ProgressRegistry` for UI
 consumers (`MailboxArticle`, R0 popover).
 

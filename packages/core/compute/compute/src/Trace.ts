@@ -358,14 +358,21 @@ export const StatusUpdate = EventType('status.update', {
     /** Human-readable status message.. */
     message: Schema.optional(Schema.String),
 
-    /* Progress current item index. */
-    progressCurrent: Schema.optional(Schema.Number),
+    progress: Schema.optional(
+      Schema.Struct({
+        /** Progress key. See {@link ProgressRegistry.key}. */
+        key: Schema.String,
 
-    /** Progress total item count. */
-    progressTotal: Schema.optional(Schema.Number),
+        /* Progress current item index. */
+        current: Schema.optional(Schema.Number),
 
-    /** Progress estimate of remaining time (ms). */
-    progressEstimate: Schema.optional(Schema.Number),
+        /** Progress total item count. */
+        total: Schema.optional(Schema.Number),
+
+        /** Progress estimate of remaining time (ms). */
+        estimate: Schema.optional(Schema.Number),
+      }),
+    ),
   }),
   isEphemeral: true,
 });
