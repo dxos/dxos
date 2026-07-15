@@ -45,10 +45,12 @@ export const ProfileContainer = () => {
   const updateProfile = useMemo(
     () =>
       debounce(
-        (profile: Partial<UserProfile>) =>
+        // Merge onto the current profile data so unrelated metadata is preserved.
+        (profile: Partial<UserProfile>, currentData?: Record<string, unknown>) =>
           invokePromise(ClientOperation.UpdateProfile, {
             displayName: profile.displayName,
             data: {
+              ...currentData,
               emoji: profile.emoji,
               hue: profile.hue,
             },
@@ -78,9 +80,9 @@ export const ProfileContainer = () => {
         }
       }
 
-      void updateProfile(profile);
+      void updateProfile(profile, identity?.data);
     },
-    [identity],
+    [identity, updateProfile],
   );
 
   const values = useMemo(
