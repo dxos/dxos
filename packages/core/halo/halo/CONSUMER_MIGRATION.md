@@ -12,9 +12,11 @@ before→after patterns for the cases the services already handle.
 ## Verdict
 
 **The new API cannot yet replace `@dxos/client` everywhere in Composer and the
-plugins.** The three services (`Identity`, `Space`, `Invitation`) cover the
-imperative HALO surface — identity/device lifecycle, space management and
-membership, and the invitation state machine — and the `layerClient(client)`
+plugins.** The two services (`Identity`, `Space`) — plus the serviceless
+`Invitation` flow types/verbs — cover the imperative HALO surface:
+identity/device lifecycle, space management and membership, and the invitation
+state machine (initiation and querying live on `Identity`/`Space`). The
+`layerClient(client)`
 composition root drops in wherever a plugin already holds a `Client`. That is
 enough to migrate imperative call sites (operation handlers, CLI commands,
 managers, import scripts).
@@ -65,7 +67,7 @@ any effect:
 import { layerClient } from '@dxos/halo-adapter-client';
 import { Identity, Space } from '@dxos/halo';
 
-const halo = layerClient(client); // Layer<Identity.Service | Space.Service | Invitation.Service>
+const halo = layerClient(client); // Layer<Identity.Service | Space.Service>
 
 const program = Effect.gen(function* () {
   const identity = yield* Identity.current;
@@ -94,14 +96,13 @@ tree:
 
 ```tsx
 import { Context } from 'effect';
-import { Identity, Invitation, Space } from '@dxos/halo';
-import { makeIdentityService, makeSpaceService, makeInvitationService } from '@dxos/halo-adapter-client';
+import { Identity, Space } from '@dxos/halo';
+import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { HaloProvider } from '@dxos/halo-react';
 
 const services = Context.empty().pipe(
   Context.add(Identity.Service, makeIdentityService(client)),
   Context.add(Space.Service, makeSpaceService(client)),
-  Context.add(Invitation.Service, makeInvitationService(client)),
 );
 
 // Replaces <ClientProvider> for HALO concerns.
@@ -324,10 +325,13 @@ yield *
 // Before
 const invitations = space.invitations.get();
 
-// After — scope selects device vs space
-const flows = yield * Invitation.active({ spaceId }); // or { device: true }
-// reactive: Invitation.activeChanges({ spaceId })
+// After — querying lives on the owning service
+const flows = yield * Space.invitations(spaceId); // device: Identity.invitations
+// reactive: Space.invitationChanges(spaceId) / Identity.invitationChanges
 ```
+
+Drive an individual `Invitation.Flow` through the flow verbs (`Invitation.events`
+/ `authenticate` / `cancel` / `code`), which need no service.
 
 ## What stays on `@dxos/client` (for now)
 

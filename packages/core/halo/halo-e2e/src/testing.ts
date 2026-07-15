@@ -12,21 +12,20 @@ import * as Stream from 'effect/Stream';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Identity, Invitation, Space } from '@dxos/halo';
-import { makeIdentityService, makeInvitationService, makeSpaceService } from '@dxos/halo-adapter-client';
+import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 
 /** Every HALO service, provided by one client adapter. */
-export type HaloServices = Identity.Service | Space.Service | Invitation.Service;
+export type HaloServices = Identity.Service | Space.Service;
 
-/** Builds the HALO-services context for a client (all three adapter services). */
+/** Builds the HALO-services context for a client (both adapter services). */
 const clientContext = (client: Client): Context.Context<HaloServices> =>
   Context.empty().pipe(
     Context.add(Identity.Service, makeIdentityService(client)),
     Context.add(Space.Service, makeSpaceService(client)),
-    Context.add(Invitation.Service, makeInvitationService(client)),
   );
 
 /**
- * A scoped layer providing the three HALO services backed by a freshly-initialized client.
+ * A scoped layer providing the HALO services backed by a freshly-initialized client.
  * The client (and, by default, its identity) is created on build and destroyed on scope close,
  * so each test that provides this layer gets an isolated peer.
  */

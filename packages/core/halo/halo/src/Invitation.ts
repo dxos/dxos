@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
@@ -80,27 +79,10 @@ export interface Flow {
 }
 
 /**
- * Selects which invitations to observe: those admitting devices to the local identity, or those
- * admitting members to a given space.
+ * Supply the auth code to a flow awaiting authentication. Flow verbs operate on a {@link Flow}
+ * handle directly and require no service; the active-flow set is queried through
+ * {@link Identity} (device invitations) and {@link Space} (space invitations).
  */
-export type Scope = { readonly device: true } | { readonly spaceId: SpaceId };
-
-/**
- * Manages the invitation lifecycle. Purely lifecycle — it does not initiate invitations; that is
- * {@link Identity.share}/`join` and {@link Space.share}/`join`, which construct and return the
- * {@link Flow} objects this service observes.
- */
-export class Service extends Context.Tag('@dxos/halo/Invitation')<
-  Service,
-  {
-    /** Currently-active (host-created) invitation flows for a scope. */
-    readonly active: (scope: Scope) => Effect.Effect<readonly Flow[]>;
-    /** Reactive stream of the active-flow set for a scope. */
-    readonly activeChanges: (scope: Scope) => Stream.Stream<readonly Flow[]>;
-  }
->() {}
-
-/** Supply the auth code to a flow awaiting authentication. */
 export const authenticate = (flow: Flow, code: string): Effect.Effect<void, InvitationError> => flow.authenticate(code);
 
 /** Abort a flow. */
@@ -111,11 +93,3 @@ export const events = (flow: Flow): Stream.Stream<Event> => flow.events;
 
 /** Encoded, shareable code for a flow. */
 export const code = (flow: Flow): Effect.Effect<string> => flow.code;
-
-/** Currently-active invitation flows for a scope (requires {@link Service}). */
-export const active = (scope: Scope): Effect.Effect<readonly Flow[], never, Service> =>
-  Effect.flatMap(Service, (service) => service.active(scope));
-
-/** Reactive stream of the active-flow set for a scope (requires {@link Service}). */
-export const activeChanges = (scope: Scope): Stream.Stream<readonly Flow[], never, Service> =>
-  Stream.unwrap(Effect.map(Service, (service) => service.activeChanges(scope)));

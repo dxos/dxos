@@ -10,8 +10,8 @@ import { HaloContext, type HaloServices } from './context';
 export type HaloProviderProps = PropsWithChildren<{
   /**
    * The HALO services context. Build it from a concrete backing — e.g. the client adapter's
-   * `makeIdentityService` / `makeSpaceService` / `makeInvitationService` from
-   * `@dxos/halo-adapter-client` — and pass it here.
+   * `makeIdentityService` / `makeSpaceService` from `@dxos/halo-adapter-client` — and pass it
+   * here.
    */
   services: Context.Context<HaloServices>;
 }>;

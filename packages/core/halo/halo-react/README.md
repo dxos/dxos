@@ -10,14 +10,13 @@ hook-by-hook migration guide.
 
 ```tsx
 import { Context } from 'effect';
-import { Identity, Invitation, Space } from '@dxos/halo';
-import { makeIdentityService, makeSpaceService, makeInvitationService } from '@dxos/halo-adapter-client';
+import { Identity, Space } from '@dxos/halo';
+import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { HaloProvider, useIdentity, useSpaces } from '@dxos/halo-react';
 
 const services = Context.empty().pipe(
   Context.add(Identity.Service, makeIdentityService(client)),
   Context.add(Space.Service, makeSpaceService(client)),
-  Context.add(Invitation.Service, makeInvitationService(client)),
 );
 
 const App = () => (

@@ -85,8 +85,9 @@ export type CreateOptions = {
 };
 
 /**
- * Space management and membership, plus space-invitation initiation. `share`/`join` construct
- * {@link Invitation.Flow}s whose lifecycle is driven through {@link Invitation.Service}.
+ * Space management and membership, plus space invitations. `share`/`join` construct
+ * {@link Invitation.Flow}s driven through the {@link Invitation} flow verbs; `invitations`
+ * observes the active (host-created) space-invitation flows.
  */
 export class Service extends Context.Tag('@dxos/halo/Space')<
   Service,
@@ -115,6 +116,10 @@ export class Service extends Context.Tag('@dxos/halo/Space')<
     readonly share: (id: SpaceId, options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, SpaceError>;
     /** Redeem a space-invitation code (guest side). */
     readonly join: (code: string) => Effect.Effect<Invitation.Flow, SpaceError>;
+    /** Currently-active (host-created) invitation flows for a space. */
+    readonly invitations: (id: SpaceId) => Effect.Effect<readonly Invitation.Flow[]>;
+    /** Reactive stream of a space's active-invitation set. */
+    readonly invitationChanges: (id: SpaceId) => Stream.Stream<readonly Invitation.Flow[]>;
     /** Export a space to an archive. */
     readonly export: (id: SpaceId) => Effect.Effect<Archive, SpaceError>;
     /** Import a space from an archive. */
@@ -176,6 +181,14 @@ export const share = (
 /** Redeem a space-invitation code (requires {@link Service}). */
 export const join = (code: string): Effect.Effect<Invitation.Flow, SpaceError, Service> =>
   Effect.flatMap(Service, (service) => service.join(code));
+
+/** Currently-active invitation flows for a space (requires {@link Service}). */
+export const invitations = (id: SpaceId): Effect.Effect<readonly Invitation.Flow[], never, Service> =>
+  Effect.flatMap(Service, (service) => service.invitations(id));
+
+/** Reactive stream of a space's active-invitation set (requires {@link Service}). */
+export const invitationChanges = (id: SpaceId): Stream.Stream<readonly Invitation.Flow[], never, Service> =>
+  Stream.unwrap(Effect.map(Service, (service) => service.invitationChanges(id)));
 
 /** Export a space to an archive (requires {@link Service}). */
 export const exportSpace = (id: SpaceId): Effect.Effect<Archive, SpaceError, Service> =>

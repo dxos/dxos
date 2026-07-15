@@ -9,8 +9,10 @@ exports Effect service tags, their interfaces, verbs, and ECHO schemas; concrete
 implementations ship as separate layers (e.g. `@dxos/halo-adapter-client` over `@dxos/client`).
 See `API_AUDIT.md` for the consumer audit and `MIGRATION.md` for the HALO → Keyhive plan.
 
-The `Invitation` module is a leaf lifecycle module; `Identity` and `Space` own invitation
-initiation (`share`/`join`) and depend on it.
+The `Invitation` module holds invitation types and flow-level verbs only (no service tag);
+`Identity` and `Space` own invitation initiation (`share`/`join`) and querying of the active set
+(`invitations` / `invitationChanges`) — device invitations on `Identity`, space invitations on
+`Space`.
 
 Modules follow the DXOS namespace-module styleguide: PascalCase file in `src/`, marked
 `// @import-as-namespace`, re-exported from `index.ts` as `export * as <Name> from './<Name>'`,
@@ -24,7 +26,7 @@ and consumed as a namespace (`Identity.current`, never a bare `identityCurrent`)
 
 ## Modules
 
-### Service modules
+### Modules (`Identity` & `Space` are services; `Invitation` is types + flow verbs)
 
 ```mdl
 module Identity
@@ -51,6 +53,7 @@ module Identity
     deviceChanges: Stream
     share: (options?: Invitation.ShareOptions) => Effect  # device invitation → Invitation.Flow.
     join: (code) => Effect               # device join → Invitation.Flow.
+    invitations / invitationChanges      # active device-invitation flows.
 ```
 
 ```mdl
@@ -81,18 +84,17 @@ module Space
     removeMember: (id, subject) => Effect            # Keyhive revocation.
     share: (id, options?: Invitation.ShareOptions) => Effect  # space invitation → Invitation.Flow.
     join: (code) => Effect               # space join → Invitation.Flow.
+    invitations: (id) / invitationChanges: (id)  # active space-invitation flows.
     exportSpace / importSpace
 ```
 
 ```mdl
 module Invitation
   desc: |
-    Invitation lifecycle only — does NOT initiate invitations (that is Identity/Space). Models the
-    legacy interactive state machine as a tagged event stream on a Flow handle.
+    Invitation types + flow-level verbs only — no service tag. Does NOT initiate invitations nor
+    query the active set (both live on Identity/Space). Models the legacy interactive state
+    machine as a tagged event stream on a Flow handle.
   api:
-    # Service
-    Service: Context.Tag                 # the Effect service tag ('@dxos/halo/Invitation').
-
     # Schemas / types
     Kind: 'device' | 'space'
     AuthMethod: 'none' | 'shared-secret' | 'known-public-key'
@@ -100,11 +102,8 @@ module Invitation
     ShareOptions: { authMethod?; type?; multiUse?; target? }
     Event: union                         # connecting → readyForAuthentication → success | cancelled | error.
     Flow: interface                      # { id; kind; events: Stream<Event>; authenticate; cancel; code }.
-    Scope: { device } | { spaceId }
 
-    # Verbs
-    active: (Scope) => Effect            # host-created flows for a scope (readonly Flow[]).
-    activeChanges: (Scope) => Stream
+    # Flow verbs (operate on a Flow; require no service)
     authenticate: (Flow, code) => Effect # supply the auth code to an in-flight flow.
     cancel: (Flow) => Effect
     events: (Flow) => Stream<Event>
@@ -113,7 +112,8 @@ module Invitation
 
 The value types the services need are inlined into their modules (`Identity.DeviceKind` /
 `Identity.Info`, `Space.Access` / `Space.Member`) rather than living in separate schema modules,
-keeping the package to the three service surfaces.
+keeping the package to the two service surfaces (`Identity`, `Space`) plus the serviceless
+`Invitation` module.
 
 ---
 

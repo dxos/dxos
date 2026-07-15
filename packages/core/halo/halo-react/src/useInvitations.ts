@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { Invitation } from '@dxos/halo';
+import { Identity, type Invitation, Space } from '@dxos/halo';
 import { type SpaceId } from '@dxos/keys';
 
 import { useHaloServices } from './useHaloServices';
@@ -20,10 +20,10 @@ const EMPTY: readonly Invitation.Flow[] = [];
  * `Invitation` verbs (`events` / `authenticate` / `cancel` / `code`).
  */
 export const useSpaceInvitations = (spaceId?: SpaceId): readonly Invitation.Flow[] => {
-  const service = Context.get(useHaloServices(), Invitation.Service);
+  const service = Context.get(useHaloServices(), Space.Service);
   return useReactive(
-    spaceId ? service.active({ spaceId }) : Effect.succeed(EMPTY),
-    spaceId ? service.activeChanges({ spaceId }) : Stream.empty,
+    spaceId ? service.invitations(spaceId) : Effect.succeed(EMPTY),
+    spaceId ? service.invitationChanges(spaceId) : Stream.empty,
     [service, spaceId],
   );
 };
@@ -33,6 +33,6 @@ export const useSpaceInvitations = (spaceId?: SpaceId): readonly Invitation.Flow
  * `useHaloInvitations`.
  */
 export const useHaloInvitations = (): readonly Invitation.Flow[] => {
-  const service = Context.get(useHaloServices(), Invitation.Service);
-  return useReactive(service.active({ device: true }), service.activeChanges({ device: true }), [service]);
+  const service = Context.get(useHaloServices(), Identity.Service);
+  return useReactive(service.invitations, service.invitationChanges, [service]);
 };

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe } from 'vitest';
 
-import { Identity, Invitation, Space } from '@dxos/halo';
+import { Identity, Space } from '@dxos/halo';
 
 import { TestNetwork, TestNetworkLive, awaitTerminal, makeClientLayer, pollUntil } from './testing';
 
@@ -80,7 +80,7 @@ describe('Invitations', () => {
       yield* Space.waitReady(space.id);
 
       yield* Space.share(space.id);
-      const active = yield* Invitation.active({ spaceId: space.id });
+      const active = yield* Space.invitations(space.id);
       expect(active.length).toBeGreaterThan(0);
       expect(active[0].kind).toEqual('space');
     }, Effect.provide(makeClientLayer())),

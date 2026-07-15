@@ -5,12 +5,12 @@
 import * as Context from 'effect/Context';
 import { type Context as ReactContext, createContext } from 'react';
 
-import { type Identity, type Invitation, type Space } from '@dxos/halo';
+import { type Identity, type Space } from '@dxos/halo';
 
 /**
- * The three HALO services, as the tag union carried in an Effect service {@link Context.Context}.
+ * The HALO services, as the tag union carried in an Effect service {@link Context.Context}.
  */
-export type HaloServices = Identity.Service | Space.Service | Invitation.Service;
+export type HaloServices = Identity.Service | Space.Service;
 
 /**
  * React context carrying the Effect {@link Context.Context} of HALO services. Hooks read a

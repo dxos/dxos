@@ -83,6 +83,12 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
       try: () => makeFlow(client.halo.join(InvitationEncoder.decode(code)), 'device'),
       catch: (error) => new IdentityError({ context: { error } }),
     }),
+
+  invitations: Effect.sync(() => client.halo.invitations.get().map((invitation) => makeFlow(invitation, 'device'))),
+
+  invitationChanges: streamFromObservable(client.halo.invitations).pipe(
+    Stream.map((invitations) => invitations.map((invitation) => makeFlow(invitation, 'device'))),
+  ),
 });
 
 /**

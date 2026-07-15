@@ -193,19 +193,21 @@ and is provided as a `Layer` at composition time. This keeps `@dxos/halo` free o
 been removed from this package to honor this rule; a future `@dxos/halo-keyhive` will host that
 runtime — see §3.5.)
 
-Three services (`Context.Tag`s), one per aspect:
+Two services (`Context.Tag`s) plus a serviceless `Invitation` module:
 
-- **`Invitation`** — purely the invitation _lifecycle_: the flow handle, its event stream,
-  authenticate/cancel, encode/decode, and observing active invitations. It does **not** know how
-  to _start_ an invitation against an identity or a space.
-- **`Identity`** — identity & device management, **plus** device-invitation _initiation_
-  (`share`/`join`). Depends on `Invitation` (returns/consumes its `Flow`).
-- **`Space`** — space management & membership, **plus** space-invitation _initiation_
-  (`share`/`join`). Depends on `Invitation`.
+- **`Invitation`** — invitation _types + flow verbs_ only (no service tag): the `Flow` handle,
+  its event stream, authenticate/cancel/code. It does **not** initiate invitations nor query the
+  active set.
+- **`Identity`** — identity & device management, **plus** device invitations: _initiation_
+  (`share`/`join`) and _querying_ (`invitations` / `invitationChanges`). Uses `Invitation`'s
+  `Flow`.
+- **`Space`** — space management & membership, **plus** space invitations: _initiation_
+  (`share`/`join`) and _querying_ (`invitations(id)` / `invitationChanges(id)`). Uses
+  `Invitation`'s `Flow`.
 
 ```text
         Identity ─────┐
-                      ├──▶ Invitation      (Invitation depends on neither)
+                      ├──▶ Invitation      (types + flow verbs; depends on neither)
         Space ────────┘
 ```
 
@@ -216,7 +218,7 @@ import { Identity, Invitation, Space } from '@dxos/halo';
 // Initiation lives on Identity/Space; the returned flow is an Invitation.Flow:
 const program = Effect.gen(function* () {
   const flow = yield* Space.share(space.id); // Space.Service → Invitation.Flow
-  yield* Invitation.authenticate(flow, code); // Invitation.Service manages the lifecycle
+  yield* Invitation.authenticate(flow, code); // flow verbs drive the lifecycle (no service)
 });
 ```
 
@@ -292,12 +294,13 @@ Roles map forward to Keyhive `Access` (`read`/`edit`/`admin`/`pull`) per MIGRATI
 member `presence` is not credential data and should move to a presence/network concern rather
 than ride on `SpaceMember`.
 
-### 3.4 `Invitation.Service` — invitation lifecycle
+### 3.4 `Invitation` — invitation flow types & verbs (no service)
 
-Purely the mechanics of an in-flight invitation. It does **not** initiate invitations — that is
-`Identity.share`/`Identity.join` (§3.2) and `Space.share`/`Space.join` (§3.3), which construct
-and return an `Invitation.Flow` this service then drives. `Invitation` depends on neither
-`Identity` nor `Space`.
+The `Invitation` module is **types + flow-level verbs only** — there is no service tag.
+Initiation is `Identity.share`/`join` (§3.2) and `Space.share`/`join` (§3.3), which construct and
+return an `Invitation.Flow`; querying the active set is `Identity.invitations` (device) and
+`Space.invitations` (space). The `Flow` handle carries its own lifecycle, so its verbs need no
+service. `Invitation` depends on neither `Identity` nor `Space`.
 
 | Verb / type                                                                       | Replaces                                                                                                                   |
 | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -305,8 +308,8 @@ and return an `Invitation.Flow` this service then drives. `Invitation` depends o
 | `Invitation.authenticate(flow, code)`                                             | `observable.authenticate()` / `Invitation.State` polling                                                                   |
 | `Invitation.cancel(flow)`                                                         | `observable.cancel()`                                                                                                      |
 | `Invitation.events(flow)` → `Stream<InvitationEvent>`                             | `Invitation.State` polling, `hostInvitation`/`waitForState` helpers                                                        |
-| `Invitation.active(scope?)` / changes                                             | `useSpaceInvitations`                                                                                                      |
-| `Invitation.encode(invitation)` / `Invitation.decode(code)` (pure)                | `InvitationEncoder`                                                                                                        |
+| `Space.invitations(id)` / `Identity.invitations` (+ `*Changes`)                   | `useSpaceInvitations` / `useHaloInvitations`                                                                               |
+| `Invitation.code(flow)` / decode at `Identity.join`/`Space.join`                  | `InvitationEncoder`                                                                                                        |
 | Schemas: `InvitationKind`, `AuthMethod`, `Type`, `InvitationEvent` (tagged union) | `Invitation.State/Type/AuthMethod` protobuf enums (also used in operation schemas via `Schema.Enums`)                      |
 
 Modeling the flow as a `Stream` of tagged events (`connecting` → `readyForAuth(authCode?)` →
@@ -314,8 +317,8 @@ Modeling the flow as a `Stream` of tagged events (`connecting` → `readyForAuth
 comparison in the dialogs and the CLI's hand-rolled `waitForState`. Under Keyhive the lifecycle
 is unchanged — only what `Identity`/`Space` initiation does behind the flow differs: `share`
 mints an ephemeral invitation key or prekey delegation; `join`/`accept` becomes contact-card
-exchange + delegation (MIGRATION.md §4.6). Keeping the lifecycle in one leaf service lets both
-initiation paths and every dialog/CLI consumer share exactly one state machine.
+exchange + delegation (MIGRATION.md §4.6). Keeping the `Flow` state machine in one leaf module
+lets both initiation paths and every dialog/CLI consumer share exactly one shape.
 
 ### 3.5 Layering & migration mechanics
 
@@ -324,7 +327,7 @@ packages provided as `Layer`s at one composition root — today `plugin-client`,
 owns client construction. Plugins import only `@dxos/halo`:
 
 ```text
-@dxos/halo            Identity.Service / Space.Service / Invitation.Service   (tags + verbs + schemas, NO impl)
+@dxos/halo            Identity.Service / Space.Service (+ Invitation types/flow verbs)   (tags + verbs + schemas, NO impl)
    ▲                        ▲
    │                        │  provide layers at composition:
    │                        │

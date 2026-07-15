@@ -169,6 +169,20 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
+  invitations: (id) =>
+    Effect.sync(() =>
+      (client.spaces.get(id)?.invitations.get() ?? []).map((invitation) => makeFlow(invitation, 'space')),
+    ),
+
+  invitationChanges: (id) => {
+    const space = client.spaces.get(id);
+    return space
+      ? streamFromObservable(space.invitations).pipe(
+          Stream.map((invitations) => invitations.map((invitation) => makeFlow(invitation, 'space'))),
+        )
+      : Stream.empty;
+  },
+
   export: (id) =>
     Effect.tryPromise({
       try: async () => {

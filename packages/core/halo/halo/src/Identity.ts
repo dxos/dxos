@@ -55,8 +55,9 @@ export type RecoverArgs =
   | { readonly recoveryProof: string };
 
 /**
- * Identity and device management, plus device-invitation initiation. `share`/`join` construct
- * {@link Invitation.Flow}s whose lifecycle is driven through {@link Invitation.Service}.
+ * Identity and device management, plus device invitations. `share`/`join` construct
+ * {@link Invitation.Flow}s driven through the {@link Invitation} flow verbs; `invitations`
+ * observes the active (host-created) device-invitation flows.
  */
 export class Service extends Context.Tag('@dxos/halo/Identity')<
   Service,
@@ -79,6 +80,10 @@ export class Service extends Context.Tag('@dxos/halo/Identity')<
     readonly share: (options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, IdentityError>;
     /** Redeem a device-invitation code on a new device (guest side). */
     readonly join: (code: string) => Effect.Effect<Invitation.Flow, IdentityError>;
+    /** Currently-active (host-created) device-invitation flows. */
+    readonly invitations: Effect.Effect<readonly Invitation.Flow[]>;
+    /** Reactive stream of the active device-invitation set. */
+    readonly invitationChanges: Stream.Stream<readonly Invitation.Flow[]>;
   }
 >() {}
 
@@ -125,3 +130,14 @@ export const share = (options?: Invitation.ShareOptions): Effect.Effect<Invitati
 /** Redeem a device-invitation code (requires {@link Service}). */
 export const join = (code: string): Effect.Effect<Invitation.Flow, IdentityError, Service> =>
   Effect.flatMap(Service, (service) => service.join(code));
+
+/** Currently-active device-invitation flows (requires {@link Service}). */
+export const invitations: Effect.Effect<readonly Invitation.Flow[], never, Service> = Effect.flatMap(
+  Service,
+  (service) => service.invitations,
+);
+
+/** Reactive stream of the active device-invitation set (requires {@link Service}). */
+export const invitationChanges: Stream.Stream<readonly Invitation.Flow[], never, Service> = Stream.unwrap(
+  Effect.map(Service, (service) => service.invitationChanges),
+);
