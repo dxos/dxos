@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Fiber } from 'effect';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 

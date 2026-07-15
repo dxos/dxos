@@ -86,9 +86,13 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
 
   // The sync-state read does IO; cap it so a stuck space can't hang the
   // command. Falls back to a "no peers" placeholder.
-  const syncStateRaw = yield* tryWithFallback('getSyncState', () => space.internal.db.getAutomergeSyncState(), {
-    peers: {},
-  } as SpaceSyncState);
+  const syncStateRaw = yield* tryWithFallback(
+    'getAutomergeSyncState',
+    () => space.internal.db.getAutomergeSyncState(),
+    {
+      peers: {},
+    } as SpaceSyncState,
+  );
   const syncState = aggregateSyncState(syncStateRaw);
 
   const name = ready ? tryWithFallbackSync(() => space.properties.name, undefined) : 'loading...';
