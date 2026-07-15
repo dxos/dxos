@@ -95,11 +95,10 @@ export const reconcileCursors = ({
         );
         target = yield* Database.load(materialized);
       } else {
-        // Targetless connector: no dedicated local root object, so the cursor's target is the
-        // connection itself. The remote target is identified by `externalId`; synced objects land
-        // directly in the space.
-        // TODO(wittjosiah): Verify whether a self-referencing cursor (target === the connection) is
-        //   a good pattern or an anti-pattern; consider a dedicated marker/null target instead.
+        // Targetless connector: no local root, so the cursor targets the connection itself; synced
+        // objects land directly in the space, keyed by `externalId`.
+        // TODO(wittjosiah): Verify a self-referencing cursor (target === connection) isn't an anti-pattern;
+        //   consider a dedicated marker/null target.
         target = connection;
       }
       const cursor = yield* Database.add(
@@ -111,16 +110,14 @@ export const reconcileCursors = ({
         }),
       );
       invariant(Cursor.isExternal(cursor));
-      // Sets up recurring background sync for the target, if the connector declares it. Not
-      // specially protected — a failure here propagates like any other step in this loop (e.g. a
-      // `materializeTarget` failure); this function has no blanket catch of its own today.
+      // Sets up recurring background sync for the target, if declared. A failure here propagates like
+      // any other step in the loop — no blanket catch.
       yield* connector.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
       added++;
     }
 
-    // Flush index updates for the adds/removes above so a caller that queries cursors right after
-    // (e.g. the coordinator, or a UI refresh) observes a state consistent with the returned counts —
-    // otherwise the index lag lets a just-removed cursor still resolve (flaky under load).
+    // Flush index updates so a caller querying cursors right after observes state consistent with the
+    // returned counts — otherwise index lag lets a just-removed cursor still resolve (flaky under load).
     if (added > 0 || removed > 0) {
       yield* Database.flush({ indexes: true });
     }

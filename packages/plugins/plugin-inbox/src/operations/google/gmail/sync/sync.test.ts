@@ -55,9 +55,8 @@ const maxKey = (dataset: GmailDataset) => Math.max(...dataset.messages.map((mess
 const minKey = (dataset: GmailDataset) => Math.min(...dataset.messages.map((message) => Number(message.internalDate)));
 
 /**
- * Wraps a mock {@link GoogleMailApi} so `getMessage` dies after `n` successful calls — simulates a
- * crash mid-run (e.g. a process kill) so a test can assert the committed prefix is durable and a
- * following run resumes correctly.
+ * Wraps a mock {@link GoogleMailApi} so `getMessage` dies after `n` calls — simulates a mid-run crash
+ * so a test can assert the committed prefix is durable and a following run resumes.
  */
 const withFaultAfterMessages = (n: number, dataset: GmailDataset): Layer.Layer<GoogleMailApi> =>
   Layer.effect(
@@ -75,8 +74,8 @@ const withFaultAfterMessages = (n: number, dataset: GmailDataset): Layer.Layer<G
     }),
   ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
 
-/** Wraps a mock {@link GoogleMailApi} recording every `getMessage` id, so a test can assert which full
- *  messages were actually downloaded (vs skipped as already-synced before the fetch). */
+/** Wraps a mock {@link GoogleMailApi} recording every `getMessage` id, so a test can assert which
+ *  messages were downloaded (vs skipped as already-synced before fetch). */
 const countingGmailApi = (dataset: GmailDataset): { layer: Layer.Layer<GoogleMailApi>; fetched: string[] } => {
   const fetched: string[] = [];
   const layer = Layer.effect(
@@ -95,10 +94,9 @@ const countingGmailApi = (dataset: GmailDataset): { layer: Layer.Layer<GoogleMai
   return { layer, fetched };
 };
 
-// The Gmail sync driven end-to-end against a real ECHO db + a mock Gmail API — no live account.
-// `syncGmail` requires `GoogleMailApi` rather than providing the live HTTP client itself, so the
-// whole pipeline — fetch, dedup, decode, map, contact/thread extraction, tag application, commit,
-// cursor advance — exercises against generated data.
+// Gmail sync driven end-to-end against a real ECHO db + a mock Gmail API — no live account. The whole
+// pipeline (fetch, dedup, decode, map, contact/thread extraction, tag application, commit, cursor
+// advance) exercises against generated data.
 describe('syncGmail against a mock Gmail API', () => {
   let builder: EchoTestBuilder;
 
@@ -194,8 +192,8 @@ describe('syncGmail against a mock Gmail API', () => {
 
     const registry = Registry.make();
     const progress = createProgressRegistry(registry);
-    // The monitor is removed on success, so the final snapshot can't show it — subscribe instead to
-    // capture `current` as the run advances it, one message at a time.
+    // Removed on success, so subscribe to capture `current` as the run advances it rather than reading
+    // the final snapshot.
     const seen: number[] = [];
     const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
       const task = snapshot.tasks.find((task) => task.name === createSyncProgressKey(mailbox));
@@ -228,9 +226,8 @@ describe('syncGmail against a mock Gmail API', () => {
     const progress = createProgressRegistry(registry);
     const key = createSyncProgressKey(mailbox);
 
-    // Cancel as soon as the monitor shows real progress, so the run is genuinely mid-flight — the
-    // subscription fires synchronously from the same `advance` call, so this reliably races ahead of
-    // completion rather than after it.
+    // Cancel as soon as the monitor shows progress, so the run is genuinely mid-flight — the
+    // subscription fires synchronously from `advance`, so it races ahead of completion.
     let cancelled = false;
     const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
       const task = snapshot.tasks.find((task) => task.name === key);
@@ -240,9 +237,8 @@ describe('syncGmail against a mock Gmail API', () => {
       }
     });
 
-    // Cancelling aborts the pipeline, which resolves as a fiber interrupt (`Pipeline.abortWith`) — not
-    // a typed failure — so `runPromise` rejects. The cleanup runs via that abort's `onCancel`, not the
-    // post-run code (the interrupt skips it), so the monitor is still removed.
+    // Cancelling aborts as a fiber interrupt (not a typed failure), so `runPromise` rejects. Cleanup
+    // runs via the abort's `onCancel`, not the skipped post-run code, so the monitor is still removed.
     await expect(
       EffectEx.runPromise(
         syncGmail({ binding: Ref.make(binding) }).pipe(
@@ -253,8 +249,7 @@ describe('syncGmail against a mock Gmail API', () => {
     unsubscribe();
 
     expect(cancelled).toBe(true);
-    // Not stuck at 'running' — the abort-path cleanup removes the monitor just like the success path,
-    // instead of leaving it frozen at its last snapshot forever.
+    // Not stuck at 'running' — the abort-path cleanup removes the monitor like the success path.
     expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
   });
 
@@ -344,9 +339,8 @@ describe('syncGmail against a mock Gmail API', () => {
     );
     expect(Exit.isFailure(exit)).toBe(true);
 
-    // The committed page is durable and is a contiguous newest suffix of the dataset (backward walks
-    // newest-first); `min` reflects the oldest committed key, `max` the newest — no completion (the
-    // run errored, not merely exhausted).
+    // The committed page is durable, a contiguous newest suffix (backward walks newest-first); `min` is
+    // the oldest committed key, `max` the newest — no completion (the run errored, not exhausted).
     const committedAfterFault = await syncedIdsOf(db, mailbox);
     expect(committedAfterFault).toHaveLength(10);
     const sortedDesc = [...dataset.messages].sort(
@@ -379,9 +373,9 @@ describe('syncGmail against a mock Gmail API', () => {
         ),
       );
 
-    // Each run commits up to `maxMessages` genuinely-new messages (the cap is applied post-dedup), and
-    // re-runs until both windows are exhausted. Invariants every run: never a duplicate, never fewer
-    // than before, a `RunAgainError` exit exactly while capped, and eventual completion exactly once.
+    // Each run commits up to `maxMessages` new messages (cap applied post-dedup), re-running until both
+    // windows are exhausted. Invariants: never a duplicate, never fewer than before, a `RunAgainError`
+    // exit exactly while capped, eventual completion once.
     let previousCount = 0;
     let runs = 0;
     let exit: Exit.Exit<unknown, unknown>;
@@ -407,12 +401,10 @@ describe('syncGmail against a mock Gmail API', () => {
     'capped runs make progress even when a boundary day holds more already-synced messages than the cap — ' +
       'regression: the day-granular boundary re-fetch consumed the whole budget and stalled the cursor',
     async ({ expect }) => {
-      // Pinned clock so the day boundaries are fixed (the stall depends on how the dataset's days line
-      // up with the cap). A dataset spread across several days within the horizon; with `maxMessages`
-      // smaller than a single day's message count, every capped run re-enumerates the boundary day's
-      // already-synced messages (newest-first) — before the fix, that consumed the entire per-run
-      // budget on dedup-dropped re-fetches, so `min` never advanced and the oldest messages were never
-      // reached (permanent loss / infinite re-run).
+      // Pinned clock so day boundaries are fixed. With `maxMessages` smaller than a single day's count,
+      // every capped run re-enumerates the boundary day's already-synced messages — before the fix that
+      // consumed the whole per-run budget on dedup-dropped re-fetches, so `min` never advanced and the
+      // oldest messages were never reached (permanent loss / infinite re-run).
       const now = new Date('2026-07-16T12:00:00.000Z');
       const dataset = generateGmailDataset({ count: 25, seed: 29, start: subDays(now, 5), end: subDays(now, 1) });
       const { db, mailbox, binding } = await seedMailboxBinding(builder);
@@ -439,12 +431,9 @@ describe('syncGmail against a mock Gmail API', () => {
   test('attachments land as Blobs on the feed with resolvable attachment refs', async ({ expect }) => {
     const end = subDays(new Date(), 3);
     const message = generateGmailDataset({ count: 1, seed: 5, start: subDays(end, 1), end }).messages[0];
-    // These bytes base64url-encode to `-__-` — deliberately chosen to contain both `-` and `_`, since
-    // that's the exact character class a base64-only encode (e.g. bytes like [1,2,3,4]) never
-    // exercises. A prior version decoded via `Buffer.from(data, 'base64url')`, which threw in the
-    // browser `Buffer` polyfill regardless of content (the encoding name itself is unsupported there)
-    // but happened to work in this Node-based test — this fixture's job is the follow-on byte-equality
-    // assertion below, proving the `-`/`_` → `+`/`/` substitution in the fix is actually correct.
+    // These bytes base64url-encode to `-__-` — deliberately containing both `-` and `_`, the character
+    // class a base64-only encode never exercises, so the byte-equality assertion below proves the
+    // `-`/`_` → `+`/`/` substitution is correct.
     const bytes = new Uint8Array([0xfb, 0xff, 0xfe]);
     // The fixture generates a single-part message (body directly on `payload.body`); once `parts` is
     // present the mapper treats it as multipart, so the plaintext body must move into a part too.
@@ -532,10 +521,9 @@ describe('syncGmail against a mock Gmail API', () => {
   test('a chunk spanning multiple Gmail listMessages pages orders (and advances the cursor) across the whole chunk, not per page', async ({
     expect,
   }) => {
-    // More than one Gmail `listMessages` page (`GMAIL_SYNC_CONFIG.listPageSize` = 500) within a single
-    // date chunk (`dateChunkDays` = 7): reversing page-by-page would only be locally oldest-first
-    // within each 500-message page, not globally across the chunk — this is the regression this test
-    // guards against.
+    // More than one `listMessages` page (`GMAIL_SYNC_CONFIG.listPageSize` = 500) within one date chunk
+    // (`dateChunkDays` = 7): reversing page-by-page would be oldest-first only within each page, not
+    // across the chunk — the regression this test guards against.
     const end = subDays(new Date(), 3);
     const dataset = generateGmailDataset({ count: 510, seed: 13, start: subDays(end, 2), end });
 

@@ -142,9 +142,8 @@ describe('Cursor.layer', () => {
         Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100', min: '50' }),
       );
 
-      // Simulates a crash between the feed append and the cursor's `min` advance: these items already
-      // landed in the feed (so the dedup seed picks them up), but `min` is still 50 even though both
-      // are older than it.
+      // Simulates a crash between the feed append and the `min` advance: the items landed in the feed
+      // (so the seed picks them up) but `min` is still 50 though both are older.
       await EffectEx.runPromise(
         Feed.append(feed, [
           Expando.make({ [Obj.Meta]: { keys: [{ id: 'orphaned-a', source: 'test' }] }, key: 30 }),
@@ -185,8 +184,8 @@ describe('Cursor.layer', () => {
       // Both items were dropped via the dedup set — nothing committed, so `min` hasn't moved yet.
       expect(cursor.min).toBe('50');
 
-      // The stall-proofing seam: fold the scanned extent in even though nothing newly committed, so a
-      // re-run's backward window shrinks instead of re-scanning (and re-dropping) the same items forever.
+      // Stall-proofing: fold in the scanned extent though nothing committed, so a re-run's backward
+      // window shrinks instead of re-scanning the same items forever.
       Cursor.extendRange(cursor, scanned);
       expect(cursor.min).toBe('20');
       expect(cursor.max).toBe('100'); // Unaffected — scanned.maxKey (30) doesn't exceed `max`.
@@ -201,9 +200,8 @@ describe('Cursor.layer', () => {
       const feed = db.add(Feed.make());
       const target = db.add(Expando.make({ name: 'mailbox' }));
 
-      // Insertion order mirrors a backfilling bidirectional sync: the newest message (key 100 = `max`)
-      // is committed FIRST (the initial backward run walks newest-first), then successively older
-      // messages are appended as later runs backfill. So `max`'s item is the OLDEST insertion.
+      // Insertion order mirrors a backfilling sync: newest (key 100 = `max`) committed FIRST, older
+      // messages appended by later runs. So `max`'s item is the OLDEST insertion.
       const keys = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
       await EffectEx.runPromise(
         Feed.append(
@@ -216,8 +214,8 @@ describe('Cursor.layer', () => {
         Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100', min: '10' }),
       );
 
-      // A seed tail smaller than the number of items backfilled after `max` — so a newest-only seed
-      // would NOT contain `max`'s item, exactly the production case with >500 backfilled messages.
+      // Seed tail smaller than the items backfilled after `max`, so a newest-only seed would miss
+      // `max`'s item — the production case with >500 backfilled messages.
       const layer = Cursor.layer({
         cursor,
         feed,
@@ -231,8 +229,8 @@ describe('Cursor.layer', () => {
 
       const { seedHasHigh, boundaryDropped } = await Effect.gen(function* () {
         const state = yield* Cursor.Service;
-        // The forward window re-fetches `key === max` inclusively (same-ms siblings); the strict range
-        // check (`min < key < max`) does NOT drop it, so it must be caught by the dedup set.
+        // The forward window re-fetches `key === max` inclusively; the strict range check doesn't drop
+        // it, so the dedup set must.
         const output: string[] = [];
         yield* Stream.fromIterable([{ id: 'id-100', key: 100 }]).pipe(
           Cursor.dedupStage(
@@ -260,8 +258,8 @@ describe('Cursor.layer', () => {
       const target = db.add(Expando.make({ name: 'mailbox' }));
       const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100' }));
 
-      // The dedup set is empty (empty feed), so the drop decision is purely the interior shortcut. A
-      // `key === 0` fallback (e.g. a dateless single-directional item) sits below the advanced `max`.
+      // Empty dedup set (empty feed), so the drop decision is purely the interior shortcut. A
+      // `key === 0` fallback sits below the advanced `max`.
       const dropUnder = (trackRange: boolean, minKey: number) =>
         Effect.gen(function* () {
           const output: number[] = [];

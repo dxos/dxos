@@ -30,10 +30,9 @@ describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live 
     async () => {
       const builder = await new EchoTestBuilder().open();
       try {
-        // The sync op takes a day-count horizon (`syncBackDays`), but an absolute start date reads
-        // more naturally for a manual fixture pull — accept `FETCH_AFTER=yyyy-mm-dd` and translate it
-        // to the number of days back from today (at least one). Fail loudly on an unparseable date
-        // rather than letting `NaN` flow through as the horizon.
+        // The sync op takes a day-count horizon, but an absolute date reads better for a manual pull —
+        // accept `FETCH_AFTER=yyyy-mm-dd` and translate to days-back (at least one). Fail loudly on an
+        // unparseable date rather than letting `NaN` flow through.
         const fetchAfter = process.env.FETCH_AFTER;
         const afterMs = fetchAfter ? Date.parse(fetchAfter) : Number.NaN;
         if (fetchAfter && Number.isNaN(afterMs)) {

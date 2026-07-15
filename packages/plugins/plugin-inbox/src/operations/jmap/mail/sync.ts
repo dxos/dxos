@@ -41,16 +41,12 @@ const JMAP_SYNC_CONFIG = {
 } as const satisfies SyncStreamConfig;
 
 /**
- * Runs the JMAP sync pipeline for a binding against the {@link JmapMailApi} service (plus the ambient
- * operation services). Every run is bidirectional: it syncs new mail since the cursor's `max`
- * watermark (ascending) and continues backfilling from `min` down to the sync horizon (descending), so
- * an interrupted or capped run always resumes both halves from exactly where it left off — the cursor
- * is the only durable state (see `@dxos/link`'s `Cursor.resolveWindows`). It *requires* the service
- * rather than providing HTTP/credentials itself, so a test can drive the whole sync against a mock
- * JMAP API + a real ECHO db — the operation handler below wraps it with the Live layer. The return
- * type is written out (not inferred) so the module's emitted `.d.ts` can name it without the compiler
- * expanding unnameable cross-package types (TS2883); the deployed operation stays portable via
- * `Operation.opaqueHandler`. Mirrors `runGmailSync`.
+ * Runs the JMAP sync pipeline for a binding. Every run is bidirectional: new mail since the cursor's
+ * `max` (ascending) plus backfill from `min` down to the horizon (descending), so an interrupted or
+ * capped run resumes both halves from the cursor — the only durable state (see `Cursor.resolveWindows`).
+ * Requires `JmapMailApi` rather than providing it, so a test can drive the sync against a mock API; the
+ * handler below wraps it with the Live layer. Return type is written out (not inferred) so the `.d.ts`
+ * can name it without expanding unnameable cross-package types (TS2883). Mirrors `runGmailSync`.
  */
 export const runJmapSync = ({
   binding: bindingRef,
@@ -58,15 +54,9 @@ export const runJmapSync = ({
   dedupSeedTail,
 }: {
   binding: Ref.Ref<Cursor.Cursor>;
-  /**
-   * Caps how many candidate messages this run considers before requesting `Operation.runAgain()` to
-   * pick up where it left off. Test-only override — production always uses the default.
-   */
+  /** Caps candidate messages per run before requesting `Operation.runAgain()`. Test-only override. */
   maxMessages?: number;
-  /**
-   * Overrides the dedup-set seed bound (see `Cursor.layer`). Test-only, so a test can shrink it to
-   * reproduce the seed-eviction dedup bug without a 500+ message dataset; production uses the default.
-   */
+  /** Overrides the dedup-set seed bound (see `Cursor.layer`). Test-only — shrinks it to reproduce the seed-eviction dedup bug. */
   dedupSeedTail?: number;
 }): Effect.Effect<
   { newMessages: number },
@@ -97,12 +87,10 @@ export const runJmapSync = ({
     const { db } = yield* Database.Service;
     const feed = yield* Database.load(mailbox.feed);
     const tagIndex = yield* Database.load(mailbox.tags);
-    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
-    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    // Pool already-sent drafts once; `EmailStage.reconcileDrafts` drops each draft when its canonical copy arrives.
     const draftPool = yield* EmailStage.queryDraftPool(mailbox);
 
-    // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline too (source: folders; sink:
-    //   find-or-create Tag), rather than the imperative loop below.
+    // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline (source: folders; sink: find-or-create Tag).
     // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`.
     const { list: folders } = yield* api.mailboxGet(target);
     const folderTagMap = new Map<string, string>();
@@ -119,8 +107,7 @@ export const runJmapSync = ({
     const minKey = Cursor.parseKey(binding.min);
     const windows = Cursor.resolveWindows({ maxKey, minKey, now, horizon });
 
-    // Resolve the sender contact, build the ECHO message, and resolve folder ids to tag URIs via the
-    // (JMAP-specific) folder map captured here.
+    // Resolve the sender contact, build the ECHO message, and map folder ids to tag URIs.
     const mapToMessageStage: Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver | JmapMailApi> = Stage.map(
       'map-to-message',
       (decoded: DecodedEmail) =>
@@ -148,11 +135,9 @@ export const runJmapSync = ({
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // `jmapEmails` covers both halves (new mail forward + backfill backward) as one unbounded stream; the
-    // per-run cap is applied *after* dedup so it counts only genuinely-new messages (mirrors Gmail — the
-    // windows re-fetch each boundary's already-synced messages, so capping before dedup could stall the
-    // cursor). `scanned` (new messages this run) tells us whether the cap truncated the run (→ re-run) or
-    // both windows were exhausted (→ complete the backfill); `Stream.take` halts fetch once the quota is met.
+    // The per-run cap is applied *after* dedup so it counts only genuinely-new messages — capping before
+    // dedup would let re-fetched boundary messages stall the cursor. `scanned` distinguishes a truncated
+    // run (→ re-run) from both windows exhausted (→ complete backfill).
     let scanned = 0;
     yield* jmapEmails(target, folders, { windows, filter: options.filter }).pipe(
       Cursor.dedupStage<JmapMail.Email>(
@@ -185,18 +170,15 @@ export const runJmapSync = ({
       ),
     );
 
-    // Flush indexes once at the end of the run (per-page commits no longer flush — see
-    // `Cursor.commit`) so cross-run dedup / contact resolution observe this run's writes.
+    // Flush indexes once at run end so cross-run dedup / contact resolution observe this run's writes.
     yield* Database.flush({ indexes: true });
 
     if (scanned < maxMessages) {
-      // Both halves exhausted naturally (not just capped) — the backward half reached the horizon.
+      // Both halves exhausted (not capped) — backward reached the horizon.
       Cursor.completeBackfill(binding, horizon.getTime());
     } else {
-      // Capped: there is more to sync. Requesting a re-run — rather than looping in-process — keeps
-      // this invocation's duration bounded and lets the durable runtime schedule the continuation
-      // (the trigger dispatcher re-queues it; `sync-connection` re-invokes it in-app). Progress is
-      // already committed and flushed above, so the next run picks up from the advanced cursor.
+      // Capped: more to sync. Re-run rather than loop in-process, to bound this invocation and let the
+      // durable runtime schedule the continuation; progress is committed above, so it resumes from the cursor.
       yield* Operation.runAgain().pipe(Effect.orDie);
     }
 
@@ -241,8 +223,8 @@ const decodeBodyStage: Stage.Stage<JmapMail.Email, DecodedEmail, never, never> =
 );
 
 /**
- * Downloads each attachment's bytes via `JmapMailApi.downloadBlob`. One failed download (including a
- * session with no `downloadUrl`) is logged and dropped rather than failing the whole message.
+ * Downloads each attachment's bytes. A failed download (incl. no `downloadUrl`) is logged and dropped
+ * rather than failing the whole message.
  */
 const fetchAttachments = (
   target: JmapMail.Target,
@@ -274,16 +256,12 @@ const fetchAttachments = (
   });
 
 /**
- * Streams JMAP email ids over the resolved {@link Cursor.Window}: build the query filter (folder scope
- * + `after`/`before` date bounds + optional user DSL), then paginate ids. Direction is realized via
- * both the window's bounds and the query's sort order — forward resumes from `max` and pages
- * oldest-first, so a capped run advances `max` gap-free instead of jumping straight to the newest key
- * and stranding the older, unprocessed middle; backward pages newest-first from `min` down to the
- * horizon. The backward window's upper bound is queried 1ms past `min` (`window.end`) so a message
- * sharing that exact millisecond is re-queried — and resolved by the dedup set — rather than silently
- * skipped now that `min` has advanced past it. Split from the full-email fetch so a caller syncing both
- * halves of a bidirectional run can concatenate two id streams (one per window) and cap the combined
- * total *before* paying for a full-email fetch — see `runJmapSync`.
+ * Streams JMAP email ids over a {@link Cursor.Window}: build the query filter (folder scope + date
+ * bounds + optional user DSL), then paginate. Forward pages oldest-first from `max` so a capped run
+ * advances `max` gap-free instead of jumping to the newest key and stranding the middle; backward pages
+ * newest-first from `min` to the horizon. Backward's upper bound is queried 1ms past `min` so a message
+ * sharing that exact millisecond is re-queried (and deduped) rather than skipped once `min` passes it.
+ * Split from the full-email fetch so a bidirectional run can cap the combined id stream before fetching.
  */
 const jmapIds = (
   target: JmapMail.Target,
@@ -312,8 +290,8 @@ const jmapIds = (
       if (!scopesMailbox && excludedFolderIds.length > 0) {
         conditions.push({ inMailboxOtherThan: excludedFolderIds });
       }
-      // Bound the query to the window: `after` (>= max/horizon) and `before` (< end). The backward
-      // window's `end` is `min` — extend it 1ms so the boundary millisecond is included (see doc above).
+      // Bound the query to the window. Backward's `end` is `min` — extend 1ms to include the boundary
+      // millisecond (see doc above).
       const upperBound = window.direction === 'backward' ? new Date(window.end.getTime() + 1) : window.end;
       conditions.push({ after: window.start.toISOString() });
       conditions.push({ before: upperBound.toISOString() });
@@ -346,9 +324,8 @@ const jmapIds = (
   );
 
 /**
- * Fetches the full JMAP email for each id in `ids`, at the standard fetch concurrency. Takes a plain
- * id stream (rather than a window) so a caller syncing both halves of a bidirectional run can
- * concatenate and cap the combined id stream once, then fetch full emails for exactly the capped set.
+ * Fetches the full JMAP email for each id. Takes a plain id stream (not a window) so a bidirectional
+ * run can cap the combined stream once, then fetch full emails for exactly the capped set.
  */
 const jmapEmailsForIds = (
   target: JmapMail.Target,
@@ -357,10 +334,9 @@ const jmapEmailsForIds = (
   ids.pipe(
     Stream.flatMap(
       (id) =>
-        // Drop an id that's gone by fetch time (in the query result, but `emailGet` returns nothing —
-        // deleted between query and get) by filtering the null out. Do NOT recover the error channel:
-        // a real `JmapApiError` (network/auth) must propagate and fail the run so the durable retry
-        // re-fetches, rather than silently dropping the message and stranding it once `max` advances.
+        // Drop an id deleted between query and `emailGet` (returns nothing) by filtering out the null.
+        // Do NOT recover the error channel: a real `JmapApiError` must propagate and fail the run so the
+        // durable retry re-fetches, rather than stranding the message once `max` advances.
         Stream.fromEffect(
           Effect.gen(function* () {
             const api = yield* JmapMailApi;
@@ -373,15 +349,11 @@ const jmapEmailsForIds = (
   );
 
 /**
- * Streams the full JMAP emails for one bidirectional sync run: the forward window's ids (cheap
- * `emailQuery`) then the backward window's, concatenated, each fetched in full (`emailGet`). Mirrors
- * Gmail's `fetchMessages` — the stream is intentionally UNBOUNDED; the caller caps it after dedup on
- * genuinely-new messages (see `runJmapSync`), and `Stream.take` there halts this stream's enumeration
- * and fetch once the quota is met.
+ * Streams full JMAP emails for one bidirectional run: forward window's ids then backward's, concatenated
+ * and fetched in full. Intentionally UNBOUNDED — the caller caps after dedup (see `runJmapSync`).
  *
- * `Cursor.skipCommitted` drops ids already in the run's dedup set *before* `emailGet`, so a re-queried
- * boundary's already-synced ids aren't downloaded (the post-fetch `Cursor.dedupStage` in the caller
- * stays the authority for anything the bounded seed didn't cover).
+ * `Cursor.skipCommitted` drops ids already in the dedup set before `emailGet`, so re-queried boundary
+ * ids aren't downloaded; the caller's post-fetch `Cursor.dedupStage` stays the authority.
  */
 const jmapEmails = (
   target: JmapMail.Target,

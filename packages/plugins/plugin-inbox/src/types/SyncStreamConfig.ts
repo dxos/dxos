@@ -4,11 +4,10 @@
 
 /**
  * Tuning for a source sync's streaming pipeline. Each sync operation (Gmail, JMAP, Calendar, …)
- * declares its OWN constant of this shape — the shared type just keeps the vocabulary consistent
- * across providers; the values are expected to diverge and be tweaked independently even where they
- * currently match. Provider-specific knobs are optional: a provider omits what it doesn't use (e.g.
- * Calendar's list returns full events, so it has no separate full-item fetch to bound, and it is not
- * capped/re-run, so it has no per-run item budget).
+ * declares its own constant of this shape — the shared type just keeps the vocabulary consistent;
+ * values diverge per provider. Provider-specific knobs are optional: a provider omits what it doesn't
+ * use (e.g. Calendar's list returns full events, so no full-item fetch to bound, and it isn't
+ * capped/re-run, so no per-run budget).
  */
 export type SyncStreamConfig = {
   /** Items requested per provider list/query API page — the id/event enumeration page size. */
@@ -20,10 +19,9 @@ export type SyncStreamConfig = {
   /** Candidate items a single run processes before committing and requesting `Operation.runAgain()`. */
   readonly maxItemsPerRun?: number;
   /**
-   * Width of each date window the *forward* (incremental) walk queries on a date-granular provider
-   * (Gmail): it must emit oldest-first for the cursor to advance gap-free under a per-run cap, and
-   * this bounds the in-memory reversal that achieves that. The backward walk needs no chunking (the
-   * provider's native newest-first order already matches it). Omit for position/token paging (JMAP).
+   * Width of each date window the *forward* walk queries on a date-granular provider (Gmail): it emits
+   * oldest-first so the cursor advances gap-free under a cap, and this bounds the in-memory reversal.
+   * The backward walk needs no chunking. Omit for position/token paging (JMAP).
    */
   readonly dateChunkDays?: number;
 };

@@ -89,8 +89,8 @@ export interface TriggerExecutionResult {
 }
 
 /**
- * Unified runtime state for a single trigger, tracking *when/whether the trigger should run again*
- * across every trigger kind (not only cron).
+ * Unified runtime state for a single trigger — when/whether it should run again, across every kind
+ * (not only cron).
  */
 interface RuntimeTriggerState {
   trigger: Trigger.Trigger;
@@ -106,8 +106,8 @@ interface RuntimeTriggerState {
   nextExecution?: Date;
 
   /**
-   * Time until which scheduled invocations of this trigger are skipped after a genuine failure.
-   * Applies to all trigger kinds. Manual {@link TriggerDispatcher.invokeTrigger} calls bypass it.
+   * Time until which scheduled invocations are skipped after a genuine failure (all kinds). Manual
+   * {@link TriggerDispatcher.invokeTrigger} calls bypass it.
    */
   cooldownUntil?: Date;
 
@@ -278,15 +278,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _failureCooldown: Duration.Duration;
 
   /**
-   * Global concurrency limiter shared across all invocation paths (timer, feed, subscription,
-   * manual, and retry drain). Enforces {@link _maxConcurrency} on top of any per-trigger
-   * concurrency. Created eagerly so it can wrap invocations without an initialization effect.
+   * Global concurrency limiter across all invocation paths (incl. retry drain). Enforces
+   * {@link _maxConcurrency} on top of per-trigger concurrency. Created eagerly.
    */
   private _concurrencyLimiter: Effect.Semaphore;
 
   /**
-   * Monotonic counter assigning FIFO ordering to pending retries so re-enqueued retries land at
-   * the tail of the queue.
+   * Monotonic counter giving pending retries FIFO order, so re-enqueued retries land at the tail.
    */
   private _retrySequence = 0;
 
@@ -314,9 +312,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   };
 
   /**
-   * Return the runtime-state entry for a trigger, creating a bare one if absent. Callers that
-   * invoke a trigger before {@link refreshTriggers} has populated the map (e.g. a manual
-   * {@link invokeTrigger}) rely on this to record cooldown/retry state.
+   * Return the runtime-state entry for a trigger, creating a bare one if absent — lets a manual
+   * {@link invokeTrigger} before {@link refreshTriggers} still record cooldown/retry state.
    */
   private _getOrCreateRuntimeState = (trigger: Trigger.Trigger): RuntimeTriggerState => {
     let entry = this._runtimeState.get(trigger.id);
@@ -443,9 +440,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }),
       );
 
-      // Sandboxed section. The global concurrency limiter wraps the actual op invocation so that
-      // the total number of concurrent invocations across all triggers/kinds never exceeds
-      // `_maxConcurrency`, on top of any per-trigger concurrency enforced at the call sites.
+      // The global concurrency limiter wraps the invocation so concurrent invocations across all
+      // triggers/kinds never exceed `_maxConcurrency`, on top of per-trigger concurrency.
       const result = yield* Effect.gen(this, function* () {
         if (!trigger.enabled) {
           return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
@@ -516,11 +512,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         runtimeState.retry = { event, enqueuedAt: this._retrySequence++ };
         log('trigger requested re-invocation', { triggerId: trigger.id });
       } else {
-        // TODO(wittjosiah): A fiber interrupt (e.g. a scheduled timer fire colliding with an in-flight
-        //   `runAgain` retry, or the dispatcher stopping) reaches here and arms a failure cooldown,
-        //   stalling the trigger for `_failureCooldown`. An interrupt is not a genuine failure —
-        //   distinguish `Cause.isInterrupted(result.cause)` and treat it as neutral (re-schedulable, no
-        //   cooldown) instead. Observed as a "Fiber was interrupted" cooldown mid-backfill.
+        // TODO(wittjosiah): A fiber interrupt (timer fire colliding with an in-flight `runAgain` retry,
+        //   or the dispatcher stopping) reaches here and arms a failure cooldown, stalling the trigger.
+        //   Distinguish `Cause.isInterrupted(result.cause)` and treat it as neutral (no cooldown).
         const cooldownMs = Duration.toMillis(this._failureCooldown);
         const until = new Date(this.getCurrentTime().getTime() + cooldownMs);
         runtimeState.cooldownUntil = until;
@@ -735,11 +729,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
       }
 
-      // Drain pending `RunAgainError` retries at the tail of the queue, regardless of trigger kind
-      // (a `direct` trigger that requested a retry is re-invoked here even though it is skipped by
-      // the per-kind dispatch above). Each pass takes the retries pending at that moment in FIFO
-      // order; a retry that re-requests re-runs is re-enqueued with a fresh sequence number so it
-      // lands again at the tail. With `untilExhausted`, keep draining until no retries remain.
+      // Drain pending `RunAgainError` retries at the tail, regardless of kind (a `direct` trigger's
+      // retry runs here too). Each pass takes the currently-pending retries FIFO; a re-request is
+      // re-enqueued with a fresh sequence. With `untilExhausted`, drain until none remain.
       invocations.push(...(yield* this._drainRetries({ untilExhausted })));
 
       return invocations;
@@ -828,8 +820,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
       }
 
-      // Create or update a runtime-state entry for every trigger so cooldown and retry state is
-      // tracked uniformly across kinds. Existing cooldown/retry/last-result state is preserved.
+      // Create/update a runtime-state entry for every trigger so cooldown/retry state is tracked
+      // uniformly across kinds. Existing cooldown/retry/last-result is preserved.
       for (const trigger of triggers) {
         const entry = this._getOrCreateRuntimeState(trigger);
 

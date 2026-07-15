@@ -32,10 +32,8 @@ export type PullResult = {
 };
 
 /**
- * Slack `ts` is a string like `"1700000000.000123"` — seconds with a 6-digit
- * subsecond fraction. Convert to ISO for `Message.created`. We strip subsecond
- * precision because `Date` only has millisecond resolution; the original `ts`
- * is preserved as the foreign key.
+ * Slack `ts` is `"seconds.microseconds"`. Convert to ISO for `Message.created`; subsecond precision is
+ * lost (`Date` is millisecond-only), but the original `ts` is preserved as the foreign key.
  */
 const tsToIso = (ts: string): string => {
   const seconds = Number.parseFloat(ts);
@@ -58,28 +56,13 @@ const friendlyChannelName = (conversation: SlackConversation): string => {
 /**
  * Maps a Slack message into a `@dxos/types` Message.
  *
- * - `created` from the Slack `ts` (millisecond-truncated; original `ts` lives
- *   in the foreign key).
- * - `threadId` from `thread_ts` so threaded replies cluster under their parent
- *   on read without a separate object type. The parent message itself has
- *   `thread_ts === ts` when `reply_count > 0`; we preserve that, so a query
- *   for `threadId == ts` returns parent + replies together.
- * - `sender.name` is resolved through a layered fallback that always produces
- *   a non-empty value:
- *     1. resolved user `display_name` / `real_name` / `name` (most messages),
- *     2. resolved bot name via `bots.info` (bot-posted messages where Slack
- *        supplies only `bot_id`),
- *     3. Slack's own `username` field on the message (legacy bot integrations
- *        and webhook posts),
- *     4. the raw `user` / `bot_id` (opaque but stable),
- *     5. literal `'unknown'`.
- *   `username` is preferred over the raw id because the latter is opaque
- *   (`U0B0X8EKP1Q`) while `username` is human-readable (`composer`).
- * - `sender.email` if the user-info lookup returned one.
- * - `blocks` is currently a single `Text` block from the Slack `text` field.
- *   Slack's rich-text `blocks` array is intentionally NOT mapped yet — it
- *   would require a Slack-block → ContentBlock translator that's a separate
- *   piece of work.
+ * - `created` from Slack `ts` (millisecond-truncated; original `ts` in the foreign key).
+ * - `threadId` from `thread_ts` so replies cluster under their parent on read; the parent has
+ *   `thread_ts === ts`, so a query for `threadId == ts` returns parent + replies together.
+ * - `sender.name` via a layered fallback ending in `'unknown'`: user display/real/name, then bot name,
+ *   then the message `username` (human-readable), then the raw opaque id.
+ * - `sender.email` if the user lookup returned one.
+ * - `blocks` is a single `Text` block; Slack's rich-text `blocks` array is not mapped yet.
  */
 const mapSlackMessage = (
   message: SlackMessage,
@@ -119,9 +102,7 @@ const mapSlackMessage = (
   });
 };
 
-/**
- * Finds an existing Channel whose foreign key matches the given Slack conversation id.
- */
+/** Finds an existing Channel whose foreign key matches the given Slack conversation id. */
 export const findChannelForConversation: (
   conversationId: string,
 ) => Effect.Effect<Channel.Channel | undefined, never, Database.Service> = Effect.fn('findChannelForConversation')(
@@ -134,12 +115,8 @@ export const findChannelForConversation: (
 );
 
 /**
- * Finds an existing Channel for a Slack conversation id, or creates a fresh
- * empty one (with the foreign key set and a backing feed). Idempotent:
- * re-running on the same `(space, conversationId)` returns the same Channel.
- *
- * Used by the connector's `materializeTarget` to create the local root eagerly
- * when a binding is created, so the `Cursor`'s `spec.target` has somewhere to point.
+ * Finds or creates the Channel for a Slack conversation id (idempotent per `(space, conversationId)`).
+ * Used by the connector's `materializeTarget` to eagerly create the local root a `Cursor.spec.target` points at.
  */
 export const findOrCreateChannelForTarget: (input: {
   externalId: string;
@@ -160,15 +137,9 @@ export const findOrCreateChannelForTarget: (input: {
 });
 
 /**
- * Resolves Slack user ids referenced in `messages` to {@link SlackApi.SlackUser}
- * records, using a per-sync cache so each id is only fetched once. Skipped
- * for messages that have only `bot_id` (those are resolved separately via
- * {@link resolveBots}) since `users.info` does not accept bot ids.
- *
- * Failed lookups (deleted users, missing scopes) silently fall through —
- * `mapSlackMessage` substitutes a layered name fallback when the resolved
- * record is missing, so a missing scope degrades gracefully rather than
- * blocking the sync.
+ * Resolves referenced Slack user ids to {@link SlackApi.SlackUser} records, deduped per sync. Bot-only
+ * messages are handled by {@link resolveBots} (`users.info` rejects bot ids). Failed lookups fall
+ * through — `mapSlackMessage`'s name fallback keeps the sync going.
  */
 const resolveUsers = (
   messages: ReadonlyArray<SlackMessage>,
@@ -201,11 +172,8 @@ const resolveUsers = (
   });
 
 /**
- * Resolves Slack bot ids referenced in `messages` to {@link SlackApi.SlackBot}
- * records via `bots.info`, with the same per-sync cache + silent-failure
- * behavior as {@link resolveUsers}. Bot-posted messages (incoming-webhook
- * posts, legacy bot users) carry only `bot_id` (`B…`); their friendly name
- * is not reachable through `users.info`.
+ * Resolves referenced Slack bot ids to {@link SlackApi.SlackBot} records via `bots.info`, same caching
+ * and silent-failure as {@link resolveUsers}. Bot-posted messages carry only `bot_id`, unreachable via `users.info`.
  */
 const resolveBots = (
   messages: ReadonlyArray<SlackMessage>,
@@ -238,28 +206,16 @@ const resolveBots = (
   });
 
 /**
- * Reconciles messages for a single Slack channel binding.
- *
- * Pull-only:
- *  1. Resolve the binding's credential (`spec.source`) and local Channel (`spec.target`).
- *  2. Ask Slack for messages since the binding's `max` (or all history on first sync).
- *  3. Resolve referenced user / bot ids in one batch (cached per sync).
- *  4. Map each Slack message → `@dxos/types` Message and append the batch to
- *     the channel's feed.
- *  5. Write the newest `ts` seen back onto the binding's `max` so the next
- *     sync is incremental, plus `lastTick` / `lastError`.
- *
- * `Database.Service` is provided inside the handler.
- * The binding ref carries the database; the space db is resolved via the
- * Client capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
+ * Reconciles messages for a single Slack channel binding (pull-only): fetch history since `max`,
+ * resolve referenced user/bot ids, map to `@dxos/types` Messages, append to the channel's feed, and
+ * advance the cursor (`max`/`lastTick`/`lastError`) so the next sync is incremental. `Database.Service`
+ * is provided inside the handler; the space db is resolved via the Client capability.
  */
 const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = SlackOperation.SyncSlackChannel.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ binding: bindingRef }) {
-      // TODO(wittjosiah): The operation should depend on `Database.Service` once
-      //   the OperationInvoker has a `databaseResolver`. Until then we require
-      //   the caller to preload `binding.target` so we can derive the db and
-      //   resolve the cursor's credential.
+      // TODO(wittjosiah): Depend on `Database.Service` once the OperationInvoker has a `databaseResolver`;
+      //   until then the caller must preload `binding.target` so we can derive the db.
       const bindingTarget = bindingRef.target;
       if (!bindingTarget) {
         return yield* Effect.fail(new SyncDatabaseMissingError());
@@ -307,8 +263,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               }
               const targetChannel = localRoot;
 
-              // One round-trip to fetch the conversation metadata so we can
-              // mirror a friendly name onto the local Channel.
+              // Fetch conversation metadata to mirror a friendly name onto the local Channel.
               const allConversations = yield* SlackApi.fetchConversations();
               const conversation = allConversations.find((conv) => conv.id === externalId);
 
@@ -320,8 +275,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               const userById = yield* resolveUsers(messages);
               const botById = yield* resolveBots(messages);
 
-              // Slack returns history newest-first; reverse so feed append order
-              // matches chronological order.
+              // Slack returns history newest-first; sort ascending so feed order is chronological.
               const sorted = [...messages].sort((messageA, messageB) => Number(messageA.ts) - Number(messageB.ts));
               const mapped = sorted
                 .map((message) => mapSlackMessage(message, userById, botById))
@@ -336,12 +290,10 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               invariant(feed, 'Channel is not feed-backed');
               yield* Feed.append(feed, mapped);
 
-              // Capture the newest `ts` seen; the cursor advances (max + status) after the sync
-              // succeeds so the next sync is incremental.
+              // Newest `ts` seen; the cursor advances after success so the next sync is incremental.
               newestTs = sorted[sorted.length - 1].ts;
 
-              // Mirror the conversation's display name onto the local Channel if
-              // we just learned a better one (first sync, or renamed remotely).
+              // Mirror the display name onto the local Channel if we learned a better one.
               if (conversation) {
                 const desiredName = friendlyChannelName(conversation);
                 if (targetChannel.name !== desiredName) {
