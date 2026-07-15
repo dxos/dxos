@@ -9,8 +9,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import {
   type EditorRootProps,
   type EditorToolbarState,
@@ -18,7 +17,7 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { type XmlWidgetState } from '@dxos/ui-editor';
-import { isNonNullable } from '@dxos/util';
+import { Merge, isNonNullable } from '@dxos/util';
 
 import {
   type DocumentType,
@@ -41,12 +40,15 @@ import {
 // Context
 //
 
-type MarkdownEditorContextValue = {
-  id: string;
-  attendableId?: string;
-  widgets: XmlWidgetState[];
-} & Pick<ExtensionsOptions, 'compact' | 'viewMode'> &
-  Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>;
+type MarkdownEditorContextValue = Merge<
+  {
+    id: string;
+    attendableId?: string;
+    widgets: XmlWidgetState[];
+  },
+  Pick<ExtensionsOptions, 'compact' | 'viewMode'>,
+  Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>
+>;
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
   createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
@@ -60,16 +62,19 @@ export type MarkdownEditorEditorRootProps = Omit<EditorRootProps, 'children'>;
 // MarkdownEditorProvider
 //
 
-export type MarkdownEditorProviderProps = {
-  object?: DocumentType;
-  extensions?: Extension[];
-  children: (editorRootProps: MarkdownEditorEditorRootProps) => ReactNode;
-} & Pick<
-  MarkdownEditorContextValue,
-  'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
-> &
-  Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
-  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'onSelectObject'>;
+export type MarkdownEditorProviderProps = Merge<
+  {
+    object?: DocumentType;
+    extensions?: Extension[];
+    children: (editorRootProps: MarkdownEditorEditorRootProps) => ReactNode;
+  },
+  Pick<
+    MarkdownEditorContextValue,
+    'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
+  >,
+  Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'>,
+  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectObject'>
+>;
 
 export const MarkdownEditorProvider = ({
   children,
@@ -83,6 +88,7 @@ export const MarkdownEditorProvider = ({
   editorStateStore,
   extensions: extensionsProp,
   slashCommandGroups,
+  identity,
   onLinkQuery,
   onSelectObject,
   onAction,
@@ -105,6 +111,7 @@ export const MarkdownEditorProvider = ({
     editorStateStore,
     setWidgets,
     settings,
+    identity,
     onSelectObject,
   });
 
