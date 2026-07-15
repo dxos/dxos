@@ -164,31 +164,49 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
       const scope = `${folderScope} after:${after} before:${before}`;
       const query = searchFilter ? `${scope} ${searchFilter}` : scope;
 
-      // Gathers every page of the chunk's query into memory before ordering. Gmail paginates
-      // newest-first *within* each page but reversing page-by-page would only be locally correct: a
-      // `forward` walk needs the whole chunk oldest-first so the cursor advances monotonically —
-      // reversing per page would let a newer page's messages commit (and raise the cursor) before an
-      // older page from the same chunk, which can permanently skip that older page if the run is
-      // interrupted between them (a later forward run's query starts *from* the cursor, so it would
-      // never re-fetch dates before it). Chunks stay small (`chunkDays`) so this comfortably fits in
-      // memory; shrink `chunkDays` further if a mailbox's volume ever makes that not true.
+      const listPage = (pageToken: string | undefined) =>
+        api
+          .listMessages(userId, query, GMAIL_SYNC_CONFIG.listPageSize, pageToken)
+          .pipe(Effect.withSpan('gmail-sync.fetch.list'));
+
+      // The backward walk (initial sync/backfill) commits newest-first, which is exactly Gmail's native
+      // page order — no reordering needed, so stream each page's ids lazily. A downstream `Stream.take`
+      // (the per-run cap) can then halt enumeration after the cap rather than forcing this query to page
+      // through every id in `[horizon, low)` on every run (which, for a large mailbox, is most of the
+      // horizon each pass). `low` only ever moves down past fully-committed territory, so an interrupted
+      // page-stream resumes gap-free from the advanced `low`.
+      if (direction === 'backward') {
+        return Stream.paginateChunkEffect(undefined as string | undefined, (pageToken) =>
+          Effect.gen(function* () {
+            log('fetching message IDs', { query, pageToken });
+            const { messages, nextPageToken } = yield* listPage(pageToken);
+            const ids = (messages ?? []).map((message) => message.id);
+            log('fetched message IDs', { count: ids.length, done: !nextPageToken });
+            // Report each page's count as it arrives so the meter's retrieval total leads the fetch.
+            onEnumerated?.(ids.length);
+            return [Chunk.fromIterable(ids), Option.fromNullable(nextPageToken)];
+          }),
+        );
+      }
+
+      // The forward walk (incremental resume) needs the whole chunk oldest-first so the cursor advances
+      // monotonically — Gmail paginates newest-first, and reversing page-by-page would let a newer
+      // page's messages commit (and raise the cursor) before an older page from the same chunk, which
+      // can permanently skip that older page if the run is interrupted between them (a later forward run
+      // starts *from* the cursor, so it never re-fetches dates before it). So buffer the chunk and
+      // reverse. Chunks stay small (`chunkDays`) so this comfortably fits in memory; shrink `chunkDays`
+      // further if a mailbox's volume ever makes that not true.
       const messageIds: string[] = [];
       let pageToken: string | undefined;
       do {
         log('fetching message IDs', { query, pageToken });
-        const { messages, nextPageToken } = yield* api
-          .listMessages(userId, query, GMAIL_SYNC_CONFIG.listPageSize, pageToken)
-          .pipe(Effect.withSpan('gmail-sync.fetch.list'));
+        const { messages, nextPageToken } = yield* listPage(pageToken);
         messageIds.push(...(messages ?? []).map((message) => message.id));
         log('fetched message IDs', { count: messages?.length ?? 0, done: !nextPageToken });
         pageToken = nextPageToken;
       } while (pageToken);
 
-      // Gmail returns messages newest-first across the whole query (every page). A `backward` walk
-      // (initial sync/backfill) wants that native order preserved end-to-end so the most recent
-      // messages commit first; a `forward` walk (incremental resume) wants oldest-first across the
-      // whole chunk, matching the chunk-level walk direction (see `generateDateRanges`).
-      const orderedMessageIds = direction === 'forward' ? messageIds.slice().reverse() : messageIds;
+      const orderedMessageIds = messageIds.slice().reverse();
 
       // Report this chunk's exact count now (before any full-message fetch) so the meter's retrieval
       // total leads the per-message advance.
