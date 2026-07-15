@@ -97,6 +97,11 @@ export class Service extends Context.Tag('@dxos/halo/Identity')<
      * for updates.
      */
     readonly identity: Stream.Stream<Option.Option<Info>>;
+    /**
+     * Synchronous snapshot of the local identity (`Option.none` when none exists). For imperative
+     * callers (non-React, non-Effect) that need the current value without subscribing.
+     */
+    readonly getSnapshot: () => Option.Option<Info>;
     /** Create the local identity (and its first device). */
     readonly create: (options?: { displayName?: string; deviceLabel?: string }) => Effect.Effect<Info, IdentityError>;
     /** Re-admit this device to an existing identity via a recovery credential. */
@@ -127,6 +132,11 @@ export class Service extends Context.Tag('@dxos/halo/Identity')<
 /** The local identity as a current-value stream (requires {@link Service}). */
 export const identity: Stream.Stream<Option.Option<Info>, never, Service> = Stream.unwrap(
   Effect.map(Service, (service) => service.identity),
+);
+
+/** Synchronous snapshot of the local identity (requires {@link Service}). */
+export const getSnapshot: Effect.Effect<Option.Option<Info>, never, Service> = Effect.map(Service, (service) =>
+  service.getSnapshot(),
 );
 
 /** Create the local identity (requires {@link Service}). */

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
+import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
 
 import { ClientEvents } from '#types';
@@ -84,6 +85,10 @@ export default Capability.makeModule(
         }),
       ),
       Capability.contributes(Capabilities.Layer, ClientService.fromClient(client)),
+      // HALO service instances for imperative consumers (so plugins read identity/spaces
+      // through @dxos/halo instead of the client directly).
+      Capability.contributes(ClientCapabilities.HaloIdentity, makeIdentityService(client)),
+      Capability.contributes(ClientCapabilities.HaloSpace, makeSpaceService(client)),
     ];
   }),
 );

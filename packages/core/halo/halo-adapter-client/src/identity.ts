@@ -48,6 +48,11 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
     Stream.map((identity) => (identity ? Option.some(toInfo(identity)) : Option.none())),
   ),
 
+  getSnapshot: () => {
+    const identity = client.halo.identity.get();
+    return identity ? Option.some(toInfo(identity)) : Option.none();
+  },
+
   create: (options) =>
     Effect.tryPromise({
       try: async () =>
