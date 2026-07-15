@@ -415,12 +415,21 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       unchanged); DXN preserved. All ~20 importers moved to `@dxos/types` (`Topic.Topic`/`Topic.Props`), no
       compat shim. DECISION: kept the shared props struct (option A). Type test moved to `@dxos/types`.
       Verified: types/pipeline-email/plugin-inbox builds + tests green (`6f904da7d3`).
-- [ ] **Move `TopicArticle` + `TopicsArticle` → plugin-brain** (#5) — virtual space-level Topics root node
-      + a child node per `Topic`; surface binding = regular object/article. Remove the mailbox Topics
-      folder. OPEN: where do the mailbox-scoped topic *suggestions* + Analyze/Accept UI live once the
-      Topics view is space-level? (ties into the companions/master-detail track.)
-- [ ] **`TopicArticle` storybook** (#3) — one exists in stories-inbox (`TopicArticle.stories.tsx`, with a
-      `Test` play); move + extend it in the new plugin-brain location.
+- [x] **2A — Move `TopicArticle` → plugin-brain** (#5, part 1) — detail view now in plugin-brain, rendered
+      via a regular `AppSurface.object(Article, Topic.Topic)` surface (keyword chips inlined, no inbox `Row`
+      dep). Topic schema reg + typename/detail translations moved to BrainPlugin; `./containers` export
+      added. Removed from inbox. Builds + inbox(167)/brain(13) tests green (`2b92f80605`). DECISION: suggestions
+      stay in inbox (brain TopicsArticle will list accepted Topics only).
+- [ ] **2B — Move `TopicsArticle` → plugin-brain (space-level list)** — query all `Topic`s in the space
+      (accepted only; drop suggestions/mailbox/Analyze). Add plugin-brain deps (react-ui-mosaic/attention/
+      list/menu, echo-react, plugin-graph). Virtual space-level Topics root app-graph node + a child per
+      `Topic`; wire the root's article to TopicsArticle.
+- [ ] **2C — plugin-inbox cleanup** — remove the mailbox Topics folder node + `mailboxTopics` companion;
+      extract the mailbox-scoped suggestions + Analyze/Accept UI into an inbox surface (companion/section)
+      so it survives folder removal. (ties into the companions/master-detail track.)
+- [x] **`TopicArticle` storybook** (#3) — existing `TopicArticle.stories.tsx` now targets the brain
+      component (`Default`/`Minimal` render; `Test` hits the known headless topic-query issue). Relocating
+      it into a brain-owned stories package is optional polish.
 
 ## Bugs
 
