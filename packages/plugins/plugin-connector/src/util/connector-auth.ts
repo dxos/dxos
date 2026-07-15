@@ -9,38 +9,11 @@ import { AppNode } from '@dxos/app-toolkit';
 import { Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
-import { log } from '@dxos/log';
 import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { ConnectorCoordinator, type ConnectorEntry } from '../types';
 import * as Connection from '../types/Connection';
-
-/**
- * Runs a connector's {@link ConnectorEntry.onCursorCreated} hook for a newly-created cursor, if
- * declared. Only `catchAllDefect` is needed — the hook's error channel is typed `never`, so it can
- * never produce a typed failure.
- */
-const runOnCursorCreated = (
-  connector: ConnectorEntry,
-  input: {
-    connection: Connection.Connection;
-    cursor: Cursor.ExternalCursor;
-    target: Obj.Unknown;
-    db: Database.Database;
-  },
-): Effect.Effect<void, never> => {
-  if (!connector.onCursorCreated) {
-    return Effect.void;
-  }
-  return connector
-    .onCursorCreated(input)
-    .pipe(
-      Effect.catchAllDefect((defect) =>
-        Effect.sync(() => log.warn('onCursorCreated defect', { connectorId: connector.id, defect })),
-      ),
-    );
-};
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';
@@ -132,10 +105,11 @@ export const connectorAuthActions = ({
             Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }),
           );
           invariant(Cursor.isExternal(cursor));
+          // Sets up recurring background sync for the target, if the connector declares it. Not
+          // specially protected — a failure here propagates like any other step in this action
+          // (e.g. a `Database.load` failure above); this action has no blanket catch of its own.
           const connector = allConnectors.find((entry) => entry.id === connection.connectorId);
-          if (connector) {
-            yield* runOnCursorCreated(connector, { connection, cursor, target, db });
-          }
+          yield* connector?.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
         }).pipe(Effect.provide(Database.layer(db))),
     });
 

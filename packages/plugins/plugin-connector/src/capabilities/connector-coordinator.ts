@@ -131,32 +131,6 @@ const runOnTokenCreated = (
   );
 };
 
-/**
- * Runs a connector's {@link ConnectorEntry.onCursorCreated} hook for a newly-created cursor, if
- * declared. Only `catchAllDefect` is needed — the hook's error channel is typed `never`, so it can
- * never produce a typed failure.
- */
-const runOnCursorCreated = (
-  connector: ConnectorEntry,
-  input: {
-    connection: Connection.Connection;
-    cursor: Cursor.ExternalCursor;
-    target: Obj.Unknown;
-    db: Database.Database;
-  },
-): Effect.Effect<void, never> => {
-  if (!connector.onCursorCreated) {
-    return Effect.void;
-  }
-  return connector
-    .onCursorCreated(input)
-    .pipe(
-      Effect.catchAllDefect((defect) =>
-        Effect.sync(() => log.warn('onCursorCreated defect', { connectorId: connector.id, defect })),
-      ),
-    );
-};
-
 const navigateToNewConnection = (
   invoker: Operation.OperationService,
   db: Database.Database,
@@ -229,7 +203,10 @@ const createSingleCursor = (
       Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
     );
     invariant(Cursor.isExternal(cursor));
-    yield* runOnCursorCreated(connector, { connection, cursor, target, db });
+    // Sets up recurring background sync for the target, if the connector declares it. Its own
+    // failure is not special-cased — a defect here is caught by this function's own outer
+    // `catchAllDefect` below, same as any other step in this flow.
+    yield* connector.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
   }).pipe(
     Effect.provide(Database.layer(db)),
     Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
