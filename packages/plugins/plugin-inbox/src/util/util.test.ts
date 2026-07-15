@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { createDraftMessage } from './util';
+import { createDraftMessage, getMessageProps } from './util';
 
 describe('createDraftMessage', () => {
   test('compose mode returns empty to and provided subject/body', ({ expect }) => {
@@ -109,5 +109,35 @@ describe('createDraftMessage', () => {
   test('compose mode sets no threadId', ({ expect }) => {
     const props = createDraftMessage({ mode: 'compose', subject: 'Hi', body: 'Hello' });
     expect(props.threadId).toBeUndefined();
+  });
+});
+
+describe('getMessageProps', () => {
+  test('uses the first text block when blocks are present', ({ expect }) => {
+    const message = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Bob', email: 'bob@example.com' },
+      blocks: [{ _tag: 'text' as const, text: 'Hello world' }],
+      properties: { subject: 'Hi' },
+    });
+    const props = getMessageProps(message);
+    expect(props.text).toBe('Hello world');
+    expect(props.snippet).toBe('Hello world');
+  });
+
+  test('tolerates a partially-hydrated message with no blocks (does not throw)', ({ expect }) => {
+    // A message surfaced transiently by the full-text search query can arrive before its `blocks`
+    // are hydrated; getMessageProps must not throw. The cast simulates that out-of-schema runtime
+    // shape (a real ECHO object briefly missing `blocks`), which the type system cannot express.
+    const partial = {
+      id: 'msg-1',
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Alice', email: 'alice@example.com' },
+      properties: { subject: 'Topic' },
+    } as unknown as Message.Message;
+    const props = getMessageProps(partial);
+    expect(props.subject).toBe('Topic');
+    expect(props.text).toBe('');
+    expect(props.snippet).toBeUndefined();
   });
 });

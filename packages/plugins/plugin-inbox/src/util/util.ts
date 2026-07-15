@@ -167,8 +167,9 @@ export const getMessageProps = (
   options?: FormatDateTimeOptions,
 ): MessageProps => {
   const id = message.id;
-  // Always use the first text block for display in the mailbox list.
-  const textBlocks = message.blocks.filter((block) => 'text' in block);
+  // Always use the first text block for display in the mailbox list. `blocks` may be absent on a
+  // partially-hydrated message (e.g. surfaced transiently by the full-text search query), so guard it.
+  const textBlocks = (message.blocks ?? []).filter((block) => 'text' in block);
   const text = textBlocks[0]?.text || '';
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;

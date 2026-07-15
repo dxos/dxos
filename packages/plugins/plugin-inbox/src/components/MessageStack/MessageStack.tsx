@@ -307,7 +307,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
 
   const searchSnippet = useMemo(
-    () => (searchQuery ? buildSnippet(Message.extractText(message), searchQuery) : undefined),
+    () => (searchQuery && message.blocks?.length ? buildSnippet(Message.extractText(message), searchQuery) : undefined),
     [message, searchQuery],
   );
 
@@ -525,7 +525,7 @@ const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: Conver
   const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
 
   const searchSnippet = useMemo(
-    () => (searchQuery ? buildSnippet(Message.extractText(message), searchQuery) : undefined),
+    () => (searchQuery && message.blocks?.length ? buildSnippet(Message.extractText(message), searchQuery) : undefined),
     [message, searchQuery],
   );
 
