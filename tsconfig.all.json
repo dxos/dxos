@@ -262,6 +262,9 @@
       "path": "packages/common/kv-store/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/link/tsconfig.json"
+    },
+    {
       "path": "packages/ui/lit-grid/tsconfig.json"
     },
     {

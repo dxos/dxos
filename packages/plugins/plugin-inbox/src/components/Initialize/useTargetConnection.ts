@@ -3,35 +3,44 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connector';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
+import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 
 /**
- * Find the {@link Connection} bound to the given `target` object via a
- * {@link SyncBinding} relation (the binding's source is the connection that
- * authenticates sync for that target). Returns the first matching connection
- * (or `undefined` if the target is not yet bound).
+ * Find the {@link Connection} bound to the given `target` object via an external-sync
+ * {@link Cursor} (the cursor's `spec.source` access token authenticates sync for that target).
+ * Returns the first matching connection (or `undefined` if the target is not yet bound).
  *
- * Uses ECHO's structural reverse-ref index (`targetOf`) — the relation is keyed
- * by its target endpoint — rather than scanning.
+ * The cursor no longer relates to `Connection` directly (that coupling was removed), so this scans
+ * every cursor in the space, finds the one targeting `target`, then matches its access token against
+ * every `Connection` — fuzzy if a token is ever shared across connections.
  */
 export const useTargetConnection = <T extends Obj.Any>(
   target: T | undefined,
 ): { connection: Connection.Connection | undefined } => {
   const db = target ? Obj.getDatabase(target) : undefined;
-  const connections = useQuery(
-    db,
-    target
-      ? Query.select(Filter.id(target.id)).targetOf(SyncBinding.SyncBinding).source()
-      : Query.select(Filter.nothing()),
-  );
-  const connection = connections.find(Connection.instanceOf);
+  const cursors = useQuery(db, Filter.type(Cursor.Cursor));
+  const connections = useQuery(db, Filter.type(Connection.Connection));
+  const connection = useMemo(() => {
+    if (!target) {
+      return undefined;
+    }
+    const cursor = cursors.find(
+      (candidate): candidate is Cursor.ExternalCursor =>
+        Cursor.isExternal(candidate) && isCursorForTarget(candidate, target),
+    );
+    if (!cursor) {
+      return undefined;
+    }
+    return connections.find((candidate) => candidate.accessToken.uri === cursor.spec.source.uri);
+  }, [target, cursors, connections]);
   return { connection };
 };
 

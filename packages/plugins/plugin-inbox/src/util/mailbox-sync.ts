@@ -20,17 +20,17 @@ import * as Stream from 'effect/Stream';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
+import { type Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
-import { type SyncBinding } from '@dxos/plugin-connector';
 import { Message } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../operations/extractor';
 import { InboxCapabilities, InboxOperation, type Mailbox } from '../types';
 
 /** Read `syncBackDays` and `filter` from the binding options (opaque record). */
-export const readBindingOptions = (binding: SyncBinding.SyncBinding) => {
-  const raw = binding.options;
+export const readBindingOptions = (binding: Cursor.ExternalCursor) => {
+  const raw = binding.spec.options;
   if (!raw || typeof raw !== 'object') {
     return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };
   }

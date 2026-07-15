@@ -162,6 +162,7 @@ export const PreviewComponent = ({ view, range, space, dxn, label: labelProp, on
   const objectIcon = Obj.getIcon(subject);
 
   // TODO(burdon): Determine if card or entire document from annotation? GFM?
+  // TODO(burdon0: Different role: move wrapper below into role?
   const simple = true;
   if (simple) {
     return (

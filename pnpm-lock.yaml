@@ -5472,6 +5472,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5484,9 +5487,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../../sdk/types
       '@effect-atom/atom':
         specifier: 'catalog:'
         version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
@@ -5769,6 +5769,34 @@ importers:
         specifier: 'catalog:'
         version: 0.96.2(effect@3.21.4)
 
+  packages/core/compute/link:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../pipeline
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
+    devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/core/compute/mcp-client:
     dependencies:
       '@dxos/ai':
@@ -5928,6 +5956,9 @@ importers:
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../extractor-lib
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5943,6 +5974,9 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../pipeline-rdf
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
@@ -7532,7 +7566,7 @@ importers:
         version: 0.96.2(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4)
@@ -7665,7 +7699,7 @@ importers:
         version: 0.96.2(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4)
@@ -8523,6 +8557,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
@@ -8916,6 +8953,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9776,6 +9816,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9803,9 +9846,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -10239,6 +10279,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10278,9 +10321,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10289,7 +10329,7 @@ importers:
         version: 0.75.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
@@ -11046,6 +11086,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11656,6 +11699,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11766,6 +11812,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11781,9 +11830,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11833,6 +11879,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11875,9 +11924,6 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11942,15 +11988,15 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
       '@dxos/plugin-studio':
         specifier: workspace:*
         version: link:../plugin-studio
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -12035,6 +12081,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
@@ -12428,6 +12477,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13525,6 +13577,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14346,6 +14401,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14370,9 +14428,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14724,6 +14779,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14845,6 +14903,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15777,6 +15838,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17338,6 +17402,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17356,9 +17423,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -19475,6 +19539,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -19494,9 +19561,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/pipeline':
-        specifier: workspace:*
-        version: link:../../core/compute/pipeline
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client
@@ -19663,6 +19727,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
@@ -19904,6 +19971,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -20088,6 +20158,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -50521,7 +50594,7 @@ snapshots:
       effect: 3.21.4
       multipasta: 0.2.7
 
-  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
+  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
     dependencies:
       '@effect/cluster': 0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform': 0.96.2(effect@3.21.4)
@@ -70489,12 +70562,12 @@ snapshots:
       es-module-lexer: 2.0.0
       expect-type: 1.3.0
       magic-string: 0.30.21
-      obug: 2.1.1
+      obug: 2.1.3
       pathe: 2.0.3
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       std-env: 4.1.0
       tinybench: 2.9.0
-      tinyexec: 1.1.1
+      tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
       vite: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -70533,12 +70606,12 @@ snapshots:
       es-module-lexer: 2.0.0
       expect-type: 1.3.0
       magic-string: 0.30.21
-      obug: 2.1.1
+      obug: 2.1.3
       pathe: 2.0.3
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       std-env: 4.1.0
       tinybench: 2.9.0
-      tinyexec: 1.1.1
+      tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
       vite: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)

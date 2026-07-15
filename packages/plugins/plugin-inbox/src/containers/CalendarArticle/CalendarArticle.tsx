@@ -203,7 +203,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           handleSyncDraft,
         );
       }
-      // Own action: pull-sync from Google once connected (a `SyncBinding` exists).
+      // Own action: pull-sync from Google once connected (an external-sync `Cursor` exists).
       if (connection) {
         const isSyncing = get(syncing);
         builder.action(

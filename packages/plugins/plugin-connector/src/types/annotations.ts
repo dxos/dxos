@@ -35,8 +35,8 @@ export type ConnectorAuthAnnotationValue = {
     | ((object: Obj.Unknown, capabilities: CapabilityManager.CapabilityManager) => readonly string[]);
   /**
    * Bind the object itself as the new connection's first sync target (e.g. an empty Mailbox). Also
-   * selects the connected-state check: `true` ⇒ the object has a `SyncBinding`; otherwise ⇒ the space
-   * has a `Connection` for one of `connectorIds`.
+   * selects the connected-state check: `true` ⇒ an external-sync `Cursor` targets the object; otherwise
+   * ⇒ the space has a `Connection` for one of `connectorIds`.
    */
   bindTarget?: boolean;
 };

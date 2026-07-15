@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { AccessToken } from '@dxos/link';
 import { Node } from '@dxos/plugin-graph';
 import { OAuthProvider } from '@dxos/protocols';
-import { AccessToken } from '@dxos/types';
 
 import { Connection, type ConnectorEntry } from '../types';
 import { connectorAuthActions } from './connector-auth';
