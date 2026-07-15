@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -46,6 +46,7 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/google/gmail/sync';
+import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, getSearchText } from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
@@ -116,12 +117,22 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const conversations = settings.conversations ?? true;
   const direction = sortDescending.value ? 'desc' : 'asc';
 
+  // The ECHO query (and the `searchQuery` that drives highlighting) is driven by a DEFERRED value so
+  // typing in the filter editor doesn't re-run the query and blank the list on every keystroke — the
+  // previous results stay rendered while React resolves the next query in the background. The editor
+  // itself, and the save-filter gating below, stay bound to the immediate `filterText`/`filter`.
+  const deferredFilterText = useDeferredValue(filterText);
+  const deferredFilter = useMemo(() => builder.build(deferredFilterText).filter, [deferredFilterText, builder]);
+
   // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
-  const selection = useMemo(() => buildMailboxSelection(filterText, filter), [filterText, filter]);
-  const searchQuery = useMemo(() => getSearchText(filter), [filter]);
+  const selection = useMemo(
+    () => buildMailboxSelection(deferredFilterText, deferredFilter),
+    [deferredFilterText, deferredFilter],
+  );
+  const searchQuery = useMemo(() => getSearchText(deferredFilter), [deferredFilter]);
   const source = feed && Query.select(selection).from(feed);
   const pagination = usePagination(
     db,
@@ -157,14 +168,19 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       }
     }
     // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
+    // During an active search, also drop messages that don't match in their plain/markdown body or
+    // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
+    // message can match the index yet have no matching (or any) plain/markdown text to display.
     return result.flatMap((item): MessageStackItem[] => {
+      const matches = (message: Message.Message) =>
+        !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
       if (isMessageGroup(item)) {
-        const messages = item.messages.filter((message) => !Mailbox.isFiltered(mailbox, message));
+        const messages = item.messages.filter(matches);
         return messages.length > 0 ? [{ ...item, messages }] : [];
       }
-      return Mailbox.isFiltered(mailbox, item) ? [] : [item];
+      return matches(item) ? [item] : [];
     });
-  }, [pagination.items, mailbox, mailbox.messageFilters]);
+  }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);

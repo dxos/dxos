@@ -12,11 +12,11 @@ import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
-import { Message } from '@dxos/types';
+import { type Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';
 
-import { getMessageProps } from '../../util';
+import { getMessageBodyText, getMessageProps } from '../../util';
 import { Row } from '../Row';
 import { Tile } from '../Tile';
 
@@ -307,7 +307,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
 
   const searchSnippet = useMemo(
-    () => (searchQuery && message.blocks?.length ? buildSnippet(Message.extractText(message), searchQuery) : undefined),
+    () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
     [message, searchQuery],
   );
 
@@ -525,7 +525,7 @@ const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: Conver
   const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
 
   const searchSnippet = useMemo(
-    () => (searchQuery && message.blocks?.length ? buildSnippet(Message.extractText(message), searchQuery) : undefined),
+    () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
     [message, searchQuery],
   );
 

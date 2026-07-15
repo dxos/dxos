@@ -5,7 +5,7 @@
 import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fns';
 
 import { Obj } from '@dxos/echo';
-import { type Message } from '@dxos/types';
+import { type ContentBlock, type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
 
 import { type Mailbox } from '#types';
@@ -161,21 +161,46 @@ type MessageProps = {
   hue: string;
 };
 
+/**
+ * The displayable/searchable body text of a message: prefers a `text/markdown` block, then
+ * `text/plain`, then any text block without a mimeType. Excludes `text/html` blocks so raw markup
+ * never leaks into display or search. Returns '' when there is no plain/markdown text.
+ */
+export const getMessageBodyText = (message: Message.Message): string => {
+  const textBlocks = (message.blocks ?? []).filter(
+    (block): block is ContentBlock.Text => block._tag === 'text' && block.mimeType !== 'text/html',
+  );
+  const markdownBlock = textBlocks.find((block) => block.mimeType === 'text/markdown');
+  const plainBlock = textBlocks.find((block) => block.mimeType === 'text/plain');
+  const untaggedBlock = textBlocks.find((block) => block.mimeType === undefined);
+  return (markdownBlock ?? plainBlock ?? untaggedBlock)?.text ?? '';
+};
+
+/** Whether a message's plain/markdown body or subject contains `query` (case-insensitive). */
+export const messageMatchesQuery = (message: Message.Message, query: string): boolean => {
+  const needle = query.trim().toLowerCase();
+  if (needle.length === 0) {
+    return true;
+  }
+  const subject = (message.properties?.subject ?? '').toLowerCase();
+  return subject.includes(needle) || getMessageBodyText(message).toLowerCase().includes(needle);
+};
+
 export const getMessageProps = (
   message: Message.Message,
   now: Date = new Date(),
   options?: FormatDateTimeOptions,
 ): MessageProps => {
   const id = message.id;
-  // Always use the first text block for display in the mailbox list. `blocks` may be absent on a
-  // partially-hydrated message (e.g. surfaced transiently by the full-text search query), so guard it.
-  const textBlocks = (message.blocks ?? []).filter((block) => 'text' in block);
-  const text = textBlocks[0]?.text || '';
+  // Use the plain/markdown body for display in the mailbox list, never the raw HTML block. `blocks`
+  // may be absent on a partially-hydrated message (e.g. surfaced transiently by the full-text search
+  // query), and `getMessageBodyText` already guards that.
+  const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
   const email = message.sender?.email;
   const subject = message.properties?.subject;
-  const snippet = message.properties?.snippet ?? textBlocks[0]?.text;
+  const snippet = message.properties?.snippet ?? getMessageBodyText(message);
   const hue = toHue(hashString(from));
   return { id, text, date, from, email, subject, snippet, hue };
 };

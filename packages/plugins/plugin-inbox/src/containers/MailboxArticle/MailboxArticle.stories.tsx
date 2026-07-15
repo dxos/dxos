@@ -55,6 +55,13 @@ const MockDeckOperationsPlugin = Plugin.define(
 /** Real term repeated across several `SAMPLE_MESSAGES` entries; used by `SearchFilter`'s play test. */
 const SEARCH_TERM = 'invoice';
 
+/**
+ * Term seeded ONLY inside a `text/html` block (never in plain/markdown text or the subject) — used by
+ * `SearchFilter`'s play test to confirm a match found solely in raw HTML markup is excluded from the
+ * mailbox's search results.
+ */
+const HTML_ONLY_TERM = 'htmlonlyterm';
+
 type StoryArgs = {
   /** Number of messages to seed. */
   count?: number;
@@ -115,7 +122,28 @@ const meta = {
                       ...(threadId ? { threadId } : {}),
                     }),
                   );
-                  yield* Feed.append(feed, messages).pipe(Effect.provide(Database.layer(personalSpace.db)));
+                  // A message whose ONLY occurrence of `HTML_ONLY_TERM` is inside a `text/html` block —
+                  // absent from the plain/markdown body and the subject — so a search for that term must
+                  // yield no matching card (bugs 2 & 3: HTML-only matches must not surface or blank-render).
+                  const htmlOnlyMessage = Message.make({
+                    created: new Date().toISOString(),
+                    sender: { email: 'notifications@example.com', name: 'Notifications' },
+                    blocks: [
+                      { _tag: 'text', text: `<div><span>${HTML_ONLY_TERM}</span></div>`, mimeType: 'text/html' },
+                      {
+                        _tag: 'text',
+                        text: 'This is a routine notification with no special terms.',
+                        mimeType: 'text/plain',
+                      },
+                    ],
+                    properties: {
+                      subject: 'Routine notification',
+                      snippet: 'This is a routine notification with no special terms.',
+                    },
+                  });
+                  yield* Feed.append(feed, [...messages, htmlOnlyMessage]).pipe(
+                    Effect.provide(Database.layer(personalSpace.db)),
+                  );
                 }
               } else {
                 yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
@@ -208,5 +236,14 @@ export const SearchFilter: Story = {
     const marks = canvasElement.querySelectorAll('mark');
     const matchingMark = Array.from(marks).find((mark) => mark.textContent?.toLowerCase().includes(SEARCH_TERM));
     await expect(matchingMark).toBeTruthy();
+
+    // Clear the query and search for a term seeded ONLY inside a raw `text/html` block (never in
+    // plain/markdown text or the subject). ECHO's full-text index still matches it (the index covers
+    // the whole object, including HTML blocks), but the mailbox must exclude HTML-only matches from
+    // what it shows — regression coverage for bugs 2 & 3 (blank cards / matches inside HTML markup).
+    await userEvent.type(editor, '{selectall}{backspace}');
+    await userEvent.type(editor, HTML_ONLY_TERM);
+
+    await waitFor(() => expect(getTileCount()).toBe(0), { timeout: 5_000 });
   },
 };
