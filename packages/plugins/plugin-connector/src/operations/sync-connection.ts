@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { Operation, RunAgainError } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
@@ -47,23 +47,36 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       });
       yield* Effect.all(
         cursors.map((cursor) =>
-          Operation.invoke(sync, { binding: Ref.make(cursor) }, { spaceId }).pipe(
-            // A nested `Operation.invoke` runs as a tracked child process; `Process.fromOperation`
-            // unconditionally promotes whatever the handler fails with to a defect (`Effect.orDie`)
-            // before it reaches the caller, so retagging 401s here must intercept the defect channel —
-            // `Effect.mapError` never sees it.
-            Effect.catchAllDefect((defect) =>
-              isUnauthorizedError(defect)
-                ? Effect.fail(
-                    new ConnectionAuthExpiredError({
-                      connectionId: connection.id,
-                      action: openConnection,
-                      cause: defect,
-                    }),
-                  )
-                : Effect.die(defect),
-            ),
-          ),
+          Effect.gen(function* () {
+            // A capped sync run requests `Operation.runAgain()` to pick up where it left off; that
+            // surfaces here as a `RunAgainError` defect (same promotion path as any other handler
+            // failure — see below), so loop until an invocation completes without requesting one.
+            while (true) {
+              const outcome = yield* Operation.invoke(sync, { binding: Ref.make(cursor) }, { spaceId }).pipe(
+                Effect.map((value) => ({ runAgain: false as const, value })),
+                // A nested `Operation.invoke` runs as a tracked child process; `Process.fromOperation`
+                // unconditionally promotes whatever the handler fails with to a defect (`Effect.orDie`)
+                // before it reaches the caller, so retagging 401s here must intercept the defect
+                // channel — `Effect.mapError` never sees it.
+                Effect.catchAllDefect((defect) =>
+                  RunAgainError.is(defect)
+                    ? Effect.succeed({ runAgain: true as const, value: undefined })
+                    : isUnauthorizedError(defect)
+                      ? Effect.fail(
+                          new ConnectionAuthExpiredError({
+                            connectionId: connection.id,
+                            action: openConnection,
+                            cause: defect,
+                          }),
+                        )
+                      : Effect.die(defect),
+                ),
+              );
+              if (!outcome.runAgain) {
+                return outcome.value;
+              }
+            }
+          }),
         ),
         { concurrency: 'unbounded' },
       );

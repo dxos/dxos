@@ -242,11 +242,11 @@ const resolveBots = (
  *
  * Pull-only:
  *  1. Resolve the binding's credential (`spec.source`) and local Channel (`spec.target`).
- *  2. Ask Slack for messages since the binding's `value` (or all history on first sync).
+ *  2. Ask Slack for messages since the binding's `high` (or all history on first sync).
  *  3. Resolve referenced user / bot ids in one batch (cached per sync).
  *  4. Map each Slack message → `@dxos/types` Message and append the batch to
  *     the channel's feed.
- *  5. Write the newest `ts` seen back onto the binding's `value` so the next
+ *  5. Write the newest `ts` seen back onto the binding's `high` so the next
  *     sync is incremental, plus `lastTick` / `lastError`.
  *
  * `Database.Service` is provided inside the handler.
@@ -295,7 +295,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           const externalId =
             binding.spec.externalId ?? Obj.getMeta(localRoot).keys.find((key) => key.source === SLACK_SOURCE)?.id;
 
-          // Captured on the success path so the cursor's value + run status advance in one atomic update.
+          // Captured on the success path so the cursor's high + run status advance in one atomic update.
           let newestTs: string | undefined;
           const syncResult = yield* Effect.either(
             Effect.gen(function* () {
@@ -312,7 +312,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               const allConversations = yield* SlackApi.fetchConversations();
               const conversation = allConversations.find((conv) => conv.id === externalId);
 
-              const messages = yield* SlackApi.fetchHistory(externalId, { oldest: binding.value });
+              const messages = yield* SlackApi.fetchHistory(externalId, { oldest: binding.high });
               if (messages.length === 0) {
                 return { added: 0 } satisfies PullResult;
               }
@@ -336,7 +336,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               invariant(feed, 'Channel is not feed-backed');
               yield* Feed.append(feed, mapped);
 
-              // Capture the newest `ts` seen; the cursor advances (value + status) after the sync
+              // Capture the newest `ts` seen; the cursor advances (high + status) after the sync
               // succeeds so the next sync is incremental.
               newestTs = sorted[sorted.length - 1].ts;
 
@@ -355,7 +355,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
             }),
           );
 
-          // Record per-binding sync status directly on the cursor (value + status in one atomic update).
+          // Record per-binding sync status directly on the cursor (high + status in one atomic update).
           if (syncResult._tag === 'Right') {
             Cursor.advance(binding, newestTs);
           } else {

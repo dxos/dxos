@@ -14,15 +14,24 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 
 import { GoogleCalendar } from '../../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
-import { Calendar } from '../../../../types';
+import { Calendar, type SyncStreamConfig } from '../../../../types';
 import { mapEvent } from '../mapper';
 import { type CalendarPageEffect, fetchEvents } from './fetch';
 
-const COMMIT_PAGE_SIZE = 10;
+/**
+ * Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig}. The Calendar events list returns
+ * full events (no separate per-item fetch) and is not capped/re-run, so it omits `fetchConcurrency`
+ * and `maxItemsPerRun`.
+ */
+const CALENDAR_SYNC_CONFIG = {
+  listPageSize: 100,
+  commitPageSize: 10,
+} as const satisfies SyncStreamConfig;
 
+// Default sync window (overridable via the binding's `spec.options`); distinct from the streaming
+// config above — it bounds *which* events sync (by start time), not how they page.
 const DEFAULT_SYNC_BACK_DAYS = 30;
 const DEFAULT_SYNC_FORWARD_DAYS = 365;
-const DEFAULT_PAGE_SIZE = 100;
 
 /** Maps a Google event to a commit unit (event → feed). Resolves attendees via `Resolver`; drops
  * cancelled/start-less events (mapEvent returns null). Events carry no tags or extracted objects. */
@@ -81,7 +90,7 @@ export const syncCalendar = ({
   googleCalendarId = 'primary',
   syncBackDays = DEFAULT_SYNC_BACK_DAYS,
   syncForwardDays = DEFAULT_SYNC_FORWARD_DAYS,
-  pageSize = DEFAULT_PAGE_SIZE,
+  pageSize = CALENDAR_SYNC_CONFIG.listPageSize,
 }: SyncCalendarProps): Effect.Effect<
   { newEvents: number },
   Effect.Effect.Error<CalendarPageEffect> | EntityNotFoundError,
@@ -108,7 +117,7 @@ export const syncCalendar = ({
 
     // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A missing
     // cursor means initial sync (window by start time); otherwise incremental (by `updatedMin`).
-    const cursorKey = typeof binding.value === 'string' ? Date.parse(binding.value) : 0;
+    const cursorKey = typeof binding.high === 'string' ? Date.parse(binding.high) : 0;
     const isInitialSync = cursorKey === 0;
     log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
@@ -126,14 +135,14 @@ export const syncCalendar = ({
       ),
       makeRecurringDedupStage(isInitialSync),
       mapEventStage,
-      Stream.grouped(COMMIT_PAGE_SIZE),
+      Stream.grouped(CALENDAR_SYNC_CONFIG.commitPageSize),
       Pipeline.run({ sink: Cursor.commit }),
       Effect.provide(
         Cursor.layer({
           cursor: binding,
           feed,
           foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
-          cursorKey,
+          highKey: cursorKey,
           // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
           formatCursor: (key) => new Date(key).toISOString(),
           stats,

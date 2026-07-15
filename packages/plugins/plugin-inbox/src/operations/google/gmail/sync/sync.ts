@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
@@ -26,7 +26,7 @@ import { Mailbox } from '../../../../types';
 import { onArrivalExtractors, readBindingOptions } from '../../../../util';
 import { parseFromHeader } from '../../../util';
 import { type DecodedMessage, decodeBody, mapToMessage } from '../mapper';
-import { STREAMING_CONFIG, fetchAttachments, fetchMessages } from './fetch';
+import { GMAIL_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
 
 /**
  * Progress-registry key for a mailbox's Gmail sync monitor — the mailbox URI with a `#sync` suffix so
@@ -40,36 +40,36 @@ export type SyncGmailProps = {
   userId?: string;
   /**
    * Default to all mail (every folder incl. Sent) so full conversations sync; a specific label
-   * restricts to that folder. See `fetchMessages` for how `'all'` maps to the query.
+   * restricts to that folder. See `fetchMessageIds` for how `'all'` maps to the query.
    */
   label?: string;
-  /** Lower (oldest) bound of the range to sync — unix ms or yyyy-MM-dd. Defaults to 30 days ago. */
-  after?: string | number;
-  /** Upper (newest) bound of the range — unix ms or yyyy-MM-dd. Defaults to today. Backfill passes the oldest-synced date here to cap a backward walk. */
-  before?: string | number;
   /**
-   * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
-   * sync, newest-first from today); a cursor → `forward` (incremental, from the cursor). Pass
-   * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
+   * Caps how many candidate messages this run considers before requesting `Operation.runAgain()` to
+   * pick up where it left off. Test-only override — production always uses the default.
    */
-  direction?: Cursor.Direction;
+  maxMessages?: number;
+  /** Reference "now" for window/horizon resolution. Test-only (pins the clock); defaults to `new Date()`. */
+  now?: Date;
 };
 
 /**
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
- * ambient operation services). It *requires* the service rather than providing HTTP/credentials
- * itself, so a test can drive the whole sync against a mock Gmail API + a real ECHO db — the
- * operation handler below wraps it with the Live layer. The return type is written out (not inferred)
- * so the module's emitted `.d.ts` can name it without the compiler expanding unnameable cross-package
- * types (TS2883); the deployed operation stays portable via `Operation.opaqueHandler`.
+ * ambient operation services). Every run is bidirectional: it syncs new mail since the cursor's `high`
+ * watermark (ascending) and continues backfilling from `low` down to the sync horizon (descending), so
+ * an interrupted or capped run always resumes both halves from exactly where it left off — the cursor
+ * is the only durable state (see `@dxos/link`'s `Cursor.resolveWindows`). It *requires* the service
+ * rather than providing HTTP/credentials itself, so a test can drive the whole sync against a mock
+ * Gmail API + a real ECHO db — the operation handler below wraps it with the Live layer. The return
+ * type is written out (not inferred) so the module's emitted `.d.ts` can name it without the compiler
+ * expanding unnameable cross-package types (TS2883); the deployed operation stays portable via
+ * `Operation.opaqueHandler`.
  */
 export const syncGmail = ({
   binding: bindingRef,
   userId = 'me',
   label = 'all',
-  after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-  before,
-  direction,
+  maxMessages = GMAIL_SYNC_CONFIG.maxItemsPerRun,
+  now = new Date(),
 }: SyncGmailProps): Effect.Effect<
   { newMessages: number },
   GoogleMailApiError | EntityNotFoundError,
@@ -91,30 +91,20 @@ export const syncGmail = ({
     }
 
     const targetOptions = readBindingOptions(binding);
-    const cursorKey = Cursor.parseKey(binding.value);
+    const horizon = Cursor.resolveHorizon({ now, syncBackDays: targetOptions.syncBackDays });
+    const highKey = Cursor.parseKey(binding.high);
+    const lowKey = Cursor.parseKey(binding.low);
+    const windows = Cursor.resolveWindows({ highKey, lowKey, now, horizon });
 
-    // Range + direction (shared resolver, so JMAP and future providers behave identically): no cursor →
-    // backward initial from today to the horizon; cursor → forward incremental; `direction: backward` +
-    // `before` = oldest-synced → backfill older gaps (never advances the monotonic cursor).
-    const {
-      direction: resolvedDirection,
-      start,
-      end: rangeEnd,
-    } = Cursor.resolveWindow({
-      cursorKey,
-      now: new Date(),
-      after,
-      before,
-      direction,
-      syncBackDays: targetOptions.syncBackDays,
-    });
+    const formatWindow = (window: Cursor.Window | undefined) =>
+      window && { start: format(window.start, 'yyyy-MM-dd'), end: format(window.end, 'yyyy-MM-dd') };
     log.info('syncing...', {
       mailbox: Obj.getURI(mailbox),
       userId,
-      cursorKey,
-      direction: resolvedDirection,
-      start: format(start, 'yyyy-MM-dd'),
-      end: format(rangeEnd, 'yyyy-MM-dd'),
+      highKey,
+      lowKey,
+      forward: formatWindow(windows.forward),
+      backward: formatWindow(windows.backward),
     });
 
     const feed = yield* Database.load(mailbox.feed);
@@ -221,9 +211,8 @@ export const syncGmail = ({
         durationMs: (finishedMs ?? Date.now()) - startMs,
         range: {
           syncBackDays: targetOptions.syncBackDays,
-          direction: resolvedDirection,
-          start: format(start, 'yyyy-MM-dd'),
-          end: format(rangeEnd, 'yyyy-MM-dd'),
+          forward: formatWindow(windows.forward),
+          backward: formatWindow(windows.backward),
         },
         processed,
         newMessages: stats.newMessages,
@@ -267,12 +256,17 @@ export const syncGmail = ({
     //
     // Start pipeline
     //
+    // `fetchMessages` covers both halves (new mail forward + backfill backward) as one unbounded stream;
+    // the per-run cap is applied *after* dedup so it counts only genuinely-new messages — the windows
+    // re-enumerate each boundary day's already-synced messages (newest-first), so capping before dedup
+    // would let a dense boundary day consume the whole budget and stall the cursor. `scanned` (new
+    // messages this run) then tells us whether the cap truncated the run (→ re-run) or both windows were
+    // exhausted (→ complete the backfill). `Stream.take` halts fetch once the quota is met.
+    let scanned = 0;
     yield* fetchMessages({
       userId,
       label,
-      direction: resolvedDirection,
-      start,
-      end: rangeEnd,
+      windows,
       searchFilter: targetOptions.filter,
       onEnumerated: addToTotal,
       // Advance at retrieval (one per fetched message) so `current` reaches `total`; dedup/decode drops
@@ -283,8 +277,9 @@ export const syncGmail = ({
         'dedup',
         (message) => message.id,
         (message) => Number.parseInt(message.internalDate),
-        { direction: resolvedDirection },
       ),
+      Stream.take(maxMessages),
+      Stream.tap(() => Effect.sync(() => (scanned += 1))),
       decodeBodyStage,
       // HTML→markdown (turndown) intentionally disabled: it was a measurable share of sync CPU and is
       // deferred pending benchmark-driven re-evaluation. Bodies stay raw HTML for now.
@@ -298,14 +293,16 @@ export const syncGmail = ({
       EmailStage.reconcileDrafts(draftPool),
       collectStats,
       EmailStage.toCommitUnit({ tagIndex }),
-      Stream.grouped(STREAMING_CONFIG.pageSize),
+      Stream.grouped(GMAIL_SYNC_CONFIG.commitPageSize),
       Pipeline.run({ sink: Cursor.commit }),
       Effect.provide(
         Cursor.layer({
           cursor: binding,
           feed,
           foreignKeySource: GMAIL_SOURCE,
-          cursorKey,
+          highKey,
+          lowKey,
+          trackRange: true,
           stats,
         }),
       ),
@@ -333,12 +330,24 @@ export const syncGmail = ({
 
     if (controller.signal.aborted) {
       progressMonitor.note('Cancelled');
+      progressMonitor.remove();
     } else {
       progressMonitor.done();
-    }
-    progressMonitor.remove();
+      progressMonitor.remove();
 
-    log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
+      if (scanned < maxMessages) {
+        // Both halves exhausted naturally (not just capped) — the backward half reached the horizon.
+        Cursor.completeBackfill(binding, horizon.getTime());
+      } else {
+        // Capped: there is more to sync. Requesting a re-run — rather than looping in-process — keeps
+        // this invocation's duration bounded and lets the durable runtime schedule the continuation
+        // (the trigger dispatcher re-queues it; `sync-connection` re-invokes it in-app). Progress is
+        // already committed and flushed above, so the next run picks up from the advanced cursor.
+        yield* Operation.runAgain().pipe(Effect.orDie);
+      }
+    }
+
+    log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted, scanned });
     return {
       newMessages: stats.newMessages,
     };

@@ -146,7 +146,7 @@ const handler = InboxOperation.GoogleContactsSync.pipe(
         // The group membership is the set of resource names to keep; the source streams all
         // connections (paginated) and we filter to the group.
         const memberNames = new Set(yield* fetchGroupMembers(groupResourceName));
-        const cursorKey = Cursor.parseKey(binding.value);
+        const cursorKey = Cursor.parseKey(binding.high);
 
         // Pipeline: stream connections → filter to group members → map → upsert into the space. It's a
         // DB target (no feed); the upsert sink is idempotent via the foreign key and advances the
@@ -164,7 +164,7 @@ const handler = InboxOperation.GoogleContactsSync.pipe(
           Stream.grouped(COMMIT_PAGE_SIZE),
           Pipeline.run({ sink: Cursor.upsertCommit(upsertPerson) }),
           Effect.provide(
-            Cursor.layer({ cursor: binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, cursorKey, stats }),
+            Cursor.layer({ cursor: binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, highKey: cursorKey, stats }),
           ),
         );
 

@@ -30,14 +30,17 @@ describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live 
     async () => {
       const builder = await new EchoTestBuilder().open();
       try {
-        const { db, mailbox, connection, binding } = await seedMailboxBinding(builder, { token: ACCESS_TOKEN! });
+        const syncBackDays = process.env.FETCH_SYNC_BACK_DAYS
+          ? Number.parseInt(process.env.FETCH_SYNC_BACK_DAYS, 10)
+          : undefined;
+        const { db, mailbox, connection, binding } = await seedMailboxBinding(builder, {
+          token: ACCESS_TOKEN!,
+          ...(syncBackDays !== undefined ? { options: { syncBackDays } } : {}),
+        });
 
         const messages = await EffectEx.runPromise(
           Effect.gen(function* () {
-            yield* syncGmail({
-              binding: Ref.make(binding),
-              ...(process.env.FETCH_AFTER ? { after: process.env.FETCH_AFTER } : {}),
-            });
+            yield* syncGmail({ binding: Ref.make(binding) });
             const feedUri = Feed.getFeedUri(mailbox.feed.target!)!;
             return yield* Effect.promise(() =>
               db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(feedUri))).run(),

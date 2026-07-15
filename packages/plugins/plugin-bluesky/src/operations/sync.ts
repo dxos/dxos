@@ -69,7 +69,7 @@ const syncBinding = ({
     const subscriptionFeed = localRoot;
 
     // Walk pages from newest backwards, stopping at the URI we last saw
-    // (`binding.value`) or after the per-target page budget. atproto returns
+    // (`binding.high`) or after the per-target page budget. atproto returns
     // newest first, so anything we collect can be appended in the order it
     // came back without an explicit reverse.
     //
@@ -78,7 +78,7 @@ const syncBinding = ({
     // custom feeds are algorithmic so we cap conservatively. Both honour
     // an explicit `binding.spec.options.maxPages` override, clamped to the
     // hard safety cap.
-    const lastSeen = binding.value;
+    const lastSeen = binding.high;
     const maxPages = resolveMaxPages(externalId, binding.spec.options as { maxPages?: number } | undefined);
     const collected: BlueskyApi.FeedViewPost[] = [];
     let pageCursor: string | undefined;

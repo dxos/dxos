@@ -98,7 +98,7 @@ export const runFactPipeline = (options: {
     // NOTE(workaround): the cursor key is `message.created` (epoch-ms) because ECHO's native feed
     // cursor is unimplemented (`Feed.cursor` is stubbed). Replace with the native queue sequence when
     // available.
-    let cursorKey = Cursor.parseKey(cursor.value);
+    let cursorKey = Cursor.parseKey(cursor.high);
 
     let processed = 0;
     let facts = 0;

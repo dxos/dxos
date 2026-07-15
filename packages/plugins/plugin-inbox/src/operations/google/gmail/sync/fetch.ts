@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { addDays, format, subDays } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -13,25 +13,90 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 
-import { GoogleMailApi, type GoogleMailApiService } from '../../../../services';
+import { GoogleMail } from '../../../../apis';
+import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '../../../../services';
+import { type SyncStreamConfig } from '../../../../types';
 import { type AttachmentMetadata } from '../mapper';
 
-// TODO(burdon): Reconcile with other config types.
-export const STREAMING_CONFIG = {
+/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+export const GMAIL_SYNC_CONFIG = {
+  listPageSize: 500,
+  fetchConcurrency: 5,
+  commitPageSize: 10,
+  maxItemsPerRun: 500,
   dateChunkDays: 7,
-  messageFetchConcurrency: 5,
-  maxResults: 500,
-  /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
-  pageSize: 10,
-  // TODO(burdon): Not yet wired up.
-  maxPages: 1,
-} as const;
+} as const satisfies SyncStreamConfig;
 
 //
 // Fetch messages
 //
 
 export type FetchMessagesProps = {
+  readonly userId: string;
+  readonly label: string;
+  /**
+   * The forward + backward windows this run covers (from `Cursor.resolveWindows`); either may be
+   * absent. Forward is walked oldest→newest (incremental resume), backward newest→oldest
+   * (initial/backfill). Both cover their `[start, end)` — direction only sets the walk order.
+   */
+  readonly windows: Cursor.Windows;
+  readonly searchFilter?: string;
+  /** Called with each date chunk's enumerated id count, to accumulate the retrieval total. */
+  readonly onEnumerated?: (count: number) => void;
+  /** Called once per message retrieved (full fetch), to advance progress. */
+  readonly onRetrieved?: () => void;
+};
+
+/**
+ * Streams the full Gmail messages for one bidirectional sync run: the forward window's ids (cheap
+ * `listMessages`) then the backward window's, concatenated, each fetched in full (`getMessage`).
+ *
+ * The stream is intentionally UNBOUNDED — the per-run cap belongs *downstream of dedup*, not here. The
+ * date-granular Gmail queries necessarily re-enumerate each boundary day's already-synced messages
+ * (the forward high-water day, the backward low-water day), and those sort first within their window;
+ * capping the raw id stream here would spend the whole per-run budget re-fetching messages that dedup
+ * then drops, so the cursor would never advance past a dense boundary day. The caller instead caps on
+ * genuinely-new (post-dedup) messages; `Stream.take` there halts this stream's enumeration and fetch
+ * once the quota is met, bounding the over-fetch to the two boundary days.
+ *
+ * `Cursor.skipCommitted` drops ids already in the run's dedup set *before* `getMessage`, so a re-listed
+ * boundary day's already-synced ids aren't downloaded at all (the post-fetch `Cursor.dedupStage` in the
+ * caller stays the authority for anything the bounded seed didn't cover).
+ */
+export const fetchMessages = (
+  config: FetchMessagesProps,
+): Stream.Stream<GoogleMail.Message, GoogleMailApiError, GoogleMailApi | Cursor.Service> => {
+  const idsFor = (window: Cursor.Window | undefined) =>
+    window
+      ? fetchMessageIds({
+          userId: config.userId,
+          label: config.label,
+          direction: window.direction,
+          start: window.start,
+          end: window.end,
+          searchFilter: config.searchFilter,
+          onEnumerated: config.onEnumerated,
+        })
+      : Stream.empty;
+
+  return Stream.concat(idsFor(config.windows.forward), idsFor(config.windows.backward)).pipe(
+    Cursor.skipCommitted('skip-committed', (messageId) => messageId),
+    Stream.mapEffect(
+      (messageId) =>
+        Effect.gen(function* () {
+          const api = yield* GoogleMailApi;
+          const message = yield* api
+            .getMessage(config.userId, messageId)
+            .pipe(Effect.withSpan('gmail-sync.fetch.message'));
+          config.onRetrieved?.();
+          return message;
+        }),
+      { concurrency: GMAIL_SYNC_CONFIG.fetchConcurrency },
+    ),
+  );
+};
+
+type FetchMessageIdsProps = {
   readonly userId: string;
   readonly label: string;
   readonly direction: Cursor.Direction;
@@ -41,52 +106,42 @@ export type FetchMessagesProps = {
   readonly searchFilter?: string;
   /** Called with each date chunk's enumerated id count, to accumulate the retrieval total. */
   readonly onEnumerated?: (count: number) => void;
-  /** Called once per message retrieved (full fetch), to advance progress. */
-  readonly onRetrieved?: () => void;
 };
 
-/**
- * Streams Gmail message ids over the [start, end) range in `direction` order (forward = oldest→newest
- * windows for incremental resume; backward = newest→oldest for initial/backfill), then fetches each
- * full message. Direction only changes the *order* windows are visited and messages within each
- * window are emitted; both cover the same range (see `fetchMessagesForDateRange`'s within-chunk
- * ordering).
- */
-export const fetchMessages = (config: FetchMessagesProps) =>
-  // Resolve the API service once, then build the stream (id fetch → per-message fetch) against it.
+/** Streams Gmail message ids over one window's `[start, end)` range in `direction` order. */
+const fetchMessageIds = (config: FetchMessageIdsProps) =>
   Stream.unwrap(
     Effect.gen(function* () {
       const api = yield* GoogleMailApi;
-      const rangeConfig: DateRange = {
-        start: config.start,
-        end: config.end,
-        chunkDays: STREAMING_CONFIG.dateChunkDays,
-        direction: config.direction,
-      };
 
-      const messageIds = Function.pipe(
-        generateDateRanges(rangeConfig),
+      // Only the forward walk chunks. It must emit its window oldest→newest so the cursor's high
+      // watermark advances gap-free under a per-run cap or crash — Gmail lists newest-first, so a
+      // naive walk would raise `high` past not-yet-fetched older messages and strand them inside the
+      // synced range forever. Chunking bounds the in-memory reversal that fixes this (a long-offline
+      // forward window isn't horizon-clamped and can be large). The backward walk (initial sync and
+      // all backfill) is a single un-chunked query: Gmail's native newest-first order already *is* the
+      // descending backward order, so `low` only moves down past fully-committed territory. Feed
+      // insertion order no longer constrains this — messages are read by the date index, not append
+      // order.
+      const chunks: Stream.Stream<DateChunk> =
+        config.direction === 'forward'
+          ? generateForwardChunks({
+              start: config.start,
+              end: config.end,
+              chunkDays: GMAIL_SYNC_CONFIG.dateChunkDays,
+            })
+          : Stream.make({ start: config.start, end: config.end });
+
+      return Function.pipe(
+        chunks,
         Stream.flatMap((dateChunk) => fetchMessagesForDateRange(api, dateChunk, config), {
           concurrency: 1,
         }),
       );
-
-      return messageIds.pipe(
-        Stream.mapEffect(
-          (messageId) =>
-            api.getMessage(config.userId, messageId).pipe(
-              Effect.withSpan('gmail-sync.fetch.message'),
-              Effect.tap(() => Effect.sync(() => config.onRetrieved?.())),
-            ),
-          {
-            concurrency: STREAMING_CONFIG.messageFetchConcurrency,
-          },
-        ),
-      );
     }),
   );
 
-const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChunk, config: FetchMessagesProps) =>
+const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChunk, config: FetchMessageIdsProps) =>
   Stream.unwrap(
     Effect.gen(function* () {
       const { userId, label, direction, searchFilter, onEnumerated } = config;
@@ -95,7 +150,18 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
       // any other value restricts to that Gmail label.
       const folderScope =
         label === 'all' ? 'in:anywhere -in:spam -in:trash -in:drafts -in:chats' : `in:anywhere label:${label}`;
-      const scope = `${folderScope} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
+      // `before:` is day-granular and excludes the whole day it names. A forward walk's *internal*
+      // chunk boundaries are safe: each is covered by the older-side chunk's `after:`, which day-rounds
+      // down and so is inclusive of that day (see `generateForwardChunks`'s contiguity doc). The
+      // exception is the *backward* walk — a single window `[horizon, low)` whose `end` is `low`'s exact
+      // timestamp when resuming backfill — where a mid-day `before:` boundary would silently drop every
+      // same-day message older than that moment once `low` clamps to it. Round that query up one day;
+      // per-message millisecond precision (`dedupStage`'s range check + dedup set) still filters out
+      // that day's already-committed messages.
+      const isBackwardWindow = direction === 'backward';
+      const after = format(dateChunk.start, 'yyyy/MM/dd');
+      const before = format(isBackwardWindow ? addDays(dateChunk.end, 1) : dateChunk.end, 'yyyy/MM/dd');
+      const scope = `${folderScope} after:${after} before:${before}`;
       const query = searchFilter ? `${scope} ${searchFilter}` : scope;
 
       // Gathers every page of the chunk's query into memory before ordering. Gmail paginates
@@ -111,7 +177,7 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
       do {
         log('fetching message IDs', { query, pageToken });
         const { messages, nextPageToken } = yield* api
-          .listMessages(userId, query, STREAMING_CONFIG.maxResults, pageToken)
+          .listMessages(userId, query, GMAIL_SYNC_CONFIG.listPageSize, pageToken)
           .pipe(Effect.withSpan('gmail-sync.fetch.list'));
         messageIds.push(...(messages ?? []).map((message) => message.id));
         log('fetched message IDs', { count: messages?.length ?? 0, done: !nextPageToken });
@@ -140,48 +206,34 @@ type DateChunk = {
   readonly end: Date;
 };
 
-type DateRange = {
-  /** Inclusive-ish lower bound (oldest) of the range to sync. */
+type ForwardChunks = {
+  /** Inclusive-ish lower bound (oldest) of the range to walk. */
   readonly start: Date;
-  /** Exclusive upper bound (newest) of the range to sync. */
+  /** Exclusive upper bound (newest) of the range to walk. */
   readonly end: Date;
   readonly chunkDays: number;
-  /** `forward` walks oldest→newest windows (incremental resume); `backward` walks newest→oldest (initial/backfill). */
-  readonly direction: Cursor.Direction;
 };
 
 /**
- * Emits contiguous `chunkDays`-wide date windows spanning [start, end). `forward` yields them
- * oldest-first; `backward` yields them newest-first. Windows are contiguous (day-granular `after:`/
- * `before:` is exclusive at the upper bound), so every day in the range is covered exactly once.
+ * Emits contiguous `chunkDays`-wide date windows spanning [start, end), oldest-first. Windows are
+ * contiguous (day-granular `after:`/`before:` is exclusive at the upper bound), so every day in the
+ * range is covered exactly once. Only the forward walk chunks — see {@link fetchMessageIds}.
  */
-const generateDateRanges = (config: DateRange): Stream.Stream<DateChunk> =>
-  Stream.unfoldChunkEffect(config.direction === 'forward' ? config.start : config.end, (position) =>
+const generateForwardChunks = (config: ForwardChunks): Stream.Stream<DateChunk> =>
+  Stream.unfoldChunkEffect(config.start, (position) =>
     Effect.gen(function* () {
-      if (config.direction === 'forward') {
-        if (position >= config.end) {
-          return Option.none();
-        }
-
-        const chunkEnd = addDays(position, config.chunkDays);
-        const end = chunkEnd > config.end ? config.end : chunkEnd;
-        const chunk: DateChunk = { start: position, end };
-        log('processing date chunk', {
-          start: format(chunk.start, 'yyyy-MM-dd'),
-          end: format(chunk.end, 'yyyy-MM-dd'),
-        });
-        return Option.some([Chunk.of(chunk), end]);
-      }
-
-      if (position <= config.start) {
+      if (position >= config.end) {
         return Option.none();
       }
 
-      const chunkStart = subDays(position, config.chunkDays);
-      const start = chunkStart < config.start ? config.start : chunkStart;
-      const chunk: DateChunk = { start, end: position };
-      log('processing date chunk', { start: format(chunk.start, 'yyyy-MM-dd'), end: format(chunk.end, 'yyyy-MM-dd') });
-      return Option.some([Chunk.of(chunk), start]);
+      const chunkEnd = addDays(position, config.chunkDays);
+      const end = chunkEnd > config.end ? config.end : chunkEnd;
+      const chunk: DateChunk = { start: position, end };
+      log('processing date chunk', {
+        start: format(chunk.start, 'yyyy-MM-dd'),
+        end: format(chunk.end, 'yyyy-MM-dd'),
+      });
+      return Option.some([Chunk.of(chunk), end]);
     }),
   );
 
@@ -224,7 +276,7 @@ export const fetchAttachments = (
             return Effect.succeed(undefined);
           }),
         ),
-      { concurrency: STREAMING_CONFIG.messageFetchConcurrency },
+      { concurrency: GMAIL_SYNC_CONFIG.fetchConcurrency },
     );
 
     return fetched.filter((attachment): attachment is EmailStage.Attachment => attachment !== undefined);

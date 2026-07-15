@@ -132,14 +132,14 @@ export const findChannelForDiscordChannel: (
  * Pull-only:
  *  1. Load the binding; its source is the `AccessToken`, its target the
  *     local `Channel`, and `binding.spec.externalId` is the Discord channel id.
- *  2. Ask Discord for messages with id greater than `binding.value` (or from
+ *  2. Ask Discord for messages with id greater than `binding.high` (or from
  *     "now minus maxDays" on first sync).
  *  3. Map each Discord message → `@dxos/types` Message and append the batch to
  *     the channel's feed.
- *  4. Advance `binding.value` to the largest id seen so the next sync is incremental.
+ *  4. Advance `binding.high` to the largest id seen so the next sync is incremental.
  *
  * Success/failure status is written back onto the binding via `Cursor.advance`/
- * `Cursor.recordError` (`value`/`lastTick`/`lastError`).
+ * `Cursor.recordError` (`high`/`lastTick`/`lastError`).
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel> =
   DiscordOperation.SyncDiscordChannel.pipe(
@@ -166,13 +166,13 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         invariant(externalId, 'Cursor is missing an externalId for Discord channel.');
         invariant(Channel.instanceOf(localRoot), 'Cursor target is not a Channel.');
 
-        // Captured on the success path so the cursor's value + run status advance in one atomic update.
+        // Captured on the success path so the cursor's high + run status advance in one atomic update.
         let newestId: string | undefined;
         const outcome = yield* Effect.either(
           Effect.gen(function* () {
             const rest = yield* DiscordREST;
 
-            const initialAfter = computeInitialCursor(binding.value, binding.spec.options);
+            const initialAfter = computeInitialCursor(binding.high, binding.spec.options);
 
             // Drain message pagination. Discord returns newest-first within a
             // page even when paging by `after`; sort each page ascending so the

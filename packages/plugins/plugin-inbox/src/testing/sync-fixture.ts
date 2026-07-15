@@ -47,13 +47,28 @@ export const seedMailboxBinding = async (
     source = GMAIL_SOURCE,
     connectorId = 'gmail',
     token = 'token',
-  }: { source?: string; connectorId?: string; token?: string } = {},
+    high,
+    low,
+    options,
+  }: {
+    source?: string;
+    connectorId?: string;
+    token?: string;
+    /** Seeds the cursor's high watermark, as if a prior run already synced up to this key. */
+    high?: string;
+    /** Seeds the cursor's low watermark, as if a prior run already backfilled down to this key. */
+    low?: string;
+    /** Seeds `spec.options` (e.g. `syncBackDays`, `filter`) — read via `readBindingOptions`. */
+    options?: Record<string, unknown>;
+  } = {},
 ) => {
   const { db } = await builder.createDatabase({ types: SYNC_TEST_TYPES });
   const mailbox = db.add(Mailbox.make({ name: 'Test' }));
   const accessToken = db.add(AccessToken.make({ source, token }));
   const connection = db.add(Connection.make({ connectorId, accessToken: Ref.make(accessToken) }));
-  const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }));
+  const binding = db.add(
+    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox), high, low, options }),
+  );
   await db.flush({ indexes: true });
   return { db, mailbox, connection, binding };
 };
@@ -66,8 +81,10 @@ export const seedMailboxBinding = async (
  * lifecycle needed) that always contributes a `ProgressRegistry` — `runGmailSync` resolves it as a
  * singleton via `Capability.get`, matching the always-loaded `plugin-progress` host in production. A
  * test may override the default with its own instance to observe the sync's live progress monitor.
+ * Exported (rather than folded into `inboxSyncTestServices`/`inboxJmapSyncTestServices` only) so a test
+ * that needs a non-default provider API layer — e.g. one that injects a fault — can compose its own.
  */
-const ambientSyncServices = (
+export const ambientSyncServices = (
   db: Database.Database,
   options: { progressRegistry?: AppCapabilities.ProgressRegistry } = {},
 ) => {
