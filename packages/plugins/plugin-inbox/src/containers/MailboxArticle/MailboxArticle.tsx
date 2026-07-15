@@ -48,6 +48,7 @@ import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/google/gmail/sync';
 import { InitializeMailbox } from './InitializeMailbox';
+import { buildMailboxSelection } from './mailbox-search';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -119,7 +120,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
-  const source = feed && Query.select(Filter.type(Message.Message)).from(feed);
+  const selection = useMemo(() => buildMailboxSelection(filterText, filter), [filterText, filter]);
+  const source = feed && Query.select(selection).from(feed);
   const pagination = usePagination(
     db,
     source

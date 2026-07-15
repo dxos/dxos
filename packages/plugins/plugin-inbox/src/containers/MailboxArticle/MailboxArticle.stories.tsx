@@ -6,13 +6,14 @@ import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Filter } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -50,6 +51,9 @@ const MockDeckOperationsPlugin = Plugin.define(
   Plugin.make,
 );
 
+/** Unique term absent from the builder's random lorem-ipsum bodies; used by `SearchFilter`'s play test. */
+const SEARCH_TERM = 'zzzqueryterm';
+
 type StoryArgs = {
   /** Number of messages to seed. */
   count?: number;
@@ -57,6 +61,8 @@ type StoryArgs = {
   threads?: number;
   /** Force conversation grouping on/off; when omitted, the persisted/product-default value applies. */
   conversations?: boolean;
+  /** Seed one extra message containing `SEARCH_TERM`, threadless, for the `SearchFilter` play test. */
+  seedSearchTerm?: boolean;
 };
 
 const DefaultStory = ({ conversations }: StoryArgs) => {
@@ -84,7 +90,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10 } }) => ({
+    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
@@ -93,7 +99,21 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
+              const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
+              if (seedSearchTerm) {
+                // Threadless (no `threadId`), so under conversation grouping it lands alone in the
+                // aggregate's null-key group and still renders as its own tile.
+                const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
+                if (feed) {
+                  yield* Feed.append(feed, [
+                    Message.make({
+                      sender: { email: 'search-term@example.com', name: 'Search Term Sender' },
+                      blocks: [{ _tag: 'text', text: `${SEARCH_TERM} body` }],
+                      properties: { subject: `${SEARCH_TERM} subject`, snippet: `${SEARCH_TERM} snippet` },
+                    }),
+                  ]).pipe(Effect.provide(Database.layer(personalSpace.db)));
+                }
+              }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -135,5 +155,42 @@ export const Conversations: Story = {
 export const Empty: Story = {
   args: {
     count: 0,
+  },
+};
+
+// Exercises the parsed search filter applied to the message query (`buildMailboxSelection`). A free-
+// text query routes to a full-text select feeding the conversation `.aggregate({...})`, so this
+// specifically covers that path (`conversations: true`) rather than the flat, ungrouped one.
+export const SearchFilter: Story = {
+  args: {
+    count: 20,
+    threads: 5,
+    conversations: true,
+    seedSearchTerm: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Each rendered message/conversation tile carries `data-object-id` (set by the shared `Mosaic.Tile`
+    // shell in `Tile.Root`) — the stack is virtualized and untagged with an ARIA list-item role, so this
+    // attribute is the only reliable way to count rendered tiles.
+    const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
+
+    // Wait for the seeded term message to render among the initial (conversation-grouped) tiles.
+    await canvas.findByText(`${SEARCH_TERM} subject`, undefined, { timeout: 12_000 });
+    await expect(getTileCount()).toBeGreaterThan(1);
+
+    // The search box is a CodeMirror `QueryEditor`, not an <input>/<textarea> — it's the only editor
+    // instance in the mailbox toolbar, so the first `.cm-content` on the canvas is unambiguous.
+    const editor = canvasElement.querySelector('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    if (!editor) {
+      throw new Error('Mailbox search editor not found.');
+    }
+    await userEvent.click(editor);
+    await userEvent.type(editor, SEARCH_TERM);
+
+    // The query narrows to the one seeded message; the aggregate still groups it (as a singleton)
+    // without erroring.
+    await waitFor(() => expect(getTileCount()).toBe(1), { timeout: 5_000 });
+    await expect(canvas.getByText(`${SEARCH_TERM} subject`)).toBeInTheDocument();
   },
 };
