@@ -15,15 +15,6 @@ import { Icon, IconButton } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 
-export type PreviewComponentProps = XmlWidgetProps<{
-  space?: Space;
-  label: string;
-  dxn: string;
-  block?: boolean;
-  suggest?: boolean;
-  onOpen?: (dxn: URI.URI) => void;
-}>;
-
 // Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](dxn)`.
 const HEIGHT_PATTERN = /^(.*)\|(\d+)$/;
 
@@ -65,12 +56,21 @@ const scrollTopIntoViewIfNeeded = (element: HTMLElement): void => {
   }
 };
 
+export type PreviewComponentProps = XmlWidgetProps<{
+  space?: Space;
+  dxn: string;
+  label: string;
+  block?: boolean;
+  suggest?: boolean;
+  onOpen?: (dxn: URI.URI) => void;
+}>;
+
 /**
  * Registry-backed block widget for URL-scheme preview slots.
  * Replaces the addBlockContainer callback pattern.
  * Used as the Component entry in a urlSchemes XmlWidgetDef.
  */
-export const PreviewComponent = ({ space, dxn, label: alt, onOpen, view, range }: PreviewComponentProps) => {
+export const PreviewComponent = ({ view, range, space, dxn, label: labelProp, onOpen }: PreviewComponentProps) => {
   const { invokePromise } = useOperationInvoker();
   const containerRef = useRef<HTMLDivElement>(null);
   const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
@@ -81,7 +81,7 @@ export const PreviewComponent = ({ space, dxn, label: alt, onOpen, view, range }
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
-  const { height } = parseEmbedLabel(alt);
+  const { height } = parseEmbedLabel(labelProp);
 
   // `min-content` keeps the embed at its intrinsic height until the user resizes it; the handle then
   // measures the rendered box and switches to an explicit height.
@@ -108,6 +108,7 @@ export const PreviewComponent = ({ space, dxn, label: alt, onOpen, view, range }
       if (!commit || typeof next !== 'number' || !view) {
         return;
       }
+
       const doc = view.state.doc.toString();
       const marker = `](${dxn})`;
       let open = -1;
@@ -122,6 +123,7 @@ export const PreviewComponent = ({ space, dxn, label: alt, onOpen, view, range }
       if (open < 0) {
         return;
       }
+
       const { baseLabel: currentBaseLabel } = parseEmbedLabel(doc.slice(open + 2, close));
       const insert = `![${formatEmbedLabel(currentBaseLabel, Math.round(next * remSize))}](${dxn})`;
       view.dispatch({ changes: { from: open, to: close + marker.length, insert } });
@@ -159,6 +161,17 @@ export const PreviewComponent = ({ space, dxn, label: alt, onOpen, view, range }
   const objectLabel = Obj.getLabel(subject);
   const objectIcon = Obj.getIcon(subject);
 
+  // TODO(burdon): Determine if card or entire document from annotation? GFM?
+  // TODO(burdon0: Different role: move wrapper below into role?
+  const simple = true;
+  if (simple) {
+    return (
+      <div className='flex justify-center'>
+        <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+      </div>
+    );
+  }
+
   // Frame transcluded block embeds so they read as a self-contained card within the document flow.
   // The clip/border live on an inner element so they don't clip the resize handle (which straddles the
   // bottom edge); the inner grid stretches the surface to fill the resizable box, overriding any
@@ -173,6 +186,8 @@ export const PreviewComponent = ({ space, dxn, label: alt, onOpen, view, range }
       <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
         <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
       </div>
+
+      {/* TODO(burdon): Config option. */}
       <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
         <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
           {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
