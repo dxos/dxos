@@ -250,6 +250,53 @@ describe('Cursor.layer', () => {
       expect(boundaryDropped).toBe(true);
     },
   );
+
+  test(
+    'a single-directional run drops a key === 0 item below an advanced high; a range run keeps it — ' +
+      'regression: trackRange gates the interior shortcut so the low bound never strands a fallback key',
+    async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+      const feed = db.add(Feed.make());
+      const target = db.add(Expando.make({ name: 'mailbox' }));
+      const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), high: '100' }));
+
+      // The dedup set is empty (empty feed), so the drop decision is purely the interior shortcut. A
+      // `key === 0` fallback (e.g. a dateless single-directional item) sits below the advanced `high`.
+      const dropUnder = (trackRange: boolean, lowKey: number) =>
+        Effect.gen(function* () {
+          const output: number[] = [];
+          yield* Stream.fromIterable([{ id: 'id-0', key: 0 }]).pipe(
+            Cursor.dedupStage(
+              'dedup',
+              (item: { id: string; key: number }) => item.id,
+              (item: { id: string; key: number }) => item.key,
+            ),
+            Stream.tap((item) => Effect.sync(() => output.push(item.key))),
+            Stream.runDrain,
+          );
+          return output.length === 0;
+        }).pipe(
+          Effect.provide(
+            Cursor.layer({
+              cursor,
+              feed,
+              foreignKeySource: 'test',
+              highKey: 100,
+              lowKey,
+              trackRange,
+              stats: { newMessages: 0 },
+            }),
+          ),
+          Effect.provide(Database.layer(db)),
+          EffectEx.runAndForwardErrors,
+        );
+
+      // Single-directional: `key < high` still drops the fallback (original semantics preserved).
+      expect(await dropUnder(false, 0)).toBe(true);
+      // Range: the strict interior `low < key < high` must NOT drop below `low` (the backfill region).
+      expect(await dropUnder(true, 0)).toBe(false);
+    },
+  );
 });
 
 describe('resolveHorizon', () => {

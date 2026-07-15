@@ -604,9 +604,9 @@ export const skipCommitted = <In>(
  * Reusable dedup stage: drops items already committed (`dedupSet`), and items strictly inside the run's
  * already-synced range (`lowKey < key < highKey`) — a cheap shortcut to skip the already-synced middle
  * without consulting `dedupSet`. Boundary keys (`key === lowKey` or `key === highKey`) fall through to
- * `dedupSet` instead, since multiple items can share a key and only some may have committed. For a
- * single-directional run (`lowKey` defaults to 0), this degenerates to the original `key < highKey`
- * shortcut. Also folds every considered item's key into {@link State.scanned} *before* the drop decision
+ * `dedupSet` instead, since multiple items can share a key and only some may have committed. A
+ * single-directional run (`trackRange` off) keeps the original `key < highKey` shortcut. Also folds
+ * every considered item's key into {@link State.scanned} *before* the drop decision
  * — including dropped items — so a capped range-tracking run can still shrink its window even when a
  * whole page is dropped (see {@link Scanned}). Reads the run state from {@link Service}; provider-agnostic
  * via the `getForeignId`/`getKey` accessors. Runs after the full-item fetch; pair it with
@@ -619,7 +619,7 @@ export const dedupStage = <In>(
 ): Stage.Stage<In, In, never, Service> =>
   Stage.map(id, (item: In) =>
     Effect.gen(function* () {
-      const { highKey, lowKey, dedupSet, scanned } = yield* Service;
+      const { highKey, lowKey, trackRange, dedupSet, scanned } = yield* Service;
       const key = getKey(item);
       if (key > 0) {
         scanned.maxKey = Math.max(scanned.maxKey, key);
@@ -628,7 +628,11 @@ export const dedupStage = <In>(
       if (dedupSet.has(getForeignId(item))) {
         return undefined;
       }
-      if (lowKey < key && key < highKey) {
+      // A range run drops only the strict interior `(low, high)` so the not-yet-backfilled region below
+      // `low` still commits; a single-directional run keeps the original `key < highKey` shortcut (which
+      // also drops a `key === 0` fallback below an advanced `high`, where the range form would not).
+      const interior = trackRange ? lowKey < key && key < highKey : key < highKey;
+      if (interior) {
         return undefined;
       }
       return item;

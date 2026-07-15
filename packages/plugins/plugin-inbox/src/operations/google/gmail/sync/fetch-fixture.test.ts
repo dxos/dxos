@@ -32,11 +32,14 @@ describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live 
       try {
         // The sync op takes a day-count horizon (`syncBackDays`), but an absolute start date reads
         // more naturally for a manual fixture pull — accept `FETCH_AFTER=yyyy-mm-dd` and translate it
-        // to the number of days back from today (at least one).
+        // to the number of days back from today (at least one). Fail loudly on an unparseable date
+        // rather than letting `NaN` flow through as the horizon.
         const fetchAfter = process.env.FETCH_AFTER;
-        const syncBackDays = fetchAfter
-          ? Math.max(1, Math.ceil((Date.now() - Date.parse(fetchAfter)) / 86_400_000))
-          : undefined;
+        const afterMs = fetchAfter ? Date.parse(fetchAfter) : Number.NaN;
+        if (fetchAfter && Number.isNaN(afterMs)) {
+          throw new Error(`Invalid FETCH_AFTER date: "${fetchAfter}" (expected yyyy-mm-dd)`);
+        }
+        const syncBackDays = fetchAfter ? Math.max(1, Math.ceil((Date.now() - afterMs) / 86_400_000)) : undefined;
         const { db, mailbox, connection, binding } = await seedMailboxBinding(builder, {
           token: ACCESS_TOKEN!,
           ...(syncBackDays !== undefined ? { options: { syncBackDays } } : {}),
