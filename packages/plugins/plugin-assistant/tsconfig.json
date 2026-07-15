@@ -73,6 +73,12 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
