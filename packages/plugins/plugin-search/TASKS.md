@@ -1,6 +1,6 @@
 # plugin-search — Tasks
 
-_Resume: Start Milestone 1 (real lexical search) per [`docs/M1-lexical-search-plan.md`](./docs/M1-lexical-search-plan.md). Uncommitted: docs + this ledger (commit with the audit). Last: AUDIT/DESIGN/ROADMAP + M1 plan authored._
+_Resume: Milestone 1 COMPLETE (commits 790c44e1..774b3e45) — real FTS search + ranking/highlight in plugin-search, free-text message search in MailboxArticle; final whole-branch review clean. Uncommitted: none. Next: open a PR, or start Milestone 2 (cross-space fan-out + RRF merge)._
 
 Work-stream: unify Composer search across lexical (FTS5), semantic (vector),
 structured/RDF, and agent planes; tiered client/EDGE vector index synced via feeds.
