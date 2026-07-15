@@ -377,17 +377,11 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
     throw new Error('Invalid reference field in ref schema');
   }
 
-  // Legacy backward-compat: JSON schemas persisted before the canonical-URI migration dropped the
-  // DXN `type:` segment store `dxn:type:<nsid>[:<version>]`; normalize to the canonical
-  // `dxn:<nsid>[:<version>]` before parsing. This affects any pre-migration persisted schema (a
-  // dynamic Type, a Table view, an Operation record, …), not just one kind of caller. Mirrors
-  // `ObjectMetaIndex`'s index-time normalization for the same legacy form.
   const ref = reference.schema.$ref;
-  const normalizedRef = ref.startsWith('dxn:type:') ? `dxn:${ref.slice('dxn:type:'.length)}` : ref;
-  const targetSchemaDXN = DXN.tryMake(normalizedRef);
+  const targetSchemaDXN = DXN.tryMake(ref);
   invariant(targetSchemaDXN, `Expected a type DXN, got: ${ref}`);
 
-  return createEchoReferenceSchema(normalizedRef, DXN.getName(targetSchemaDXN), reference.schemaVersion);
+  return createEchoReferenceSchema(ref, DXN.getName(targetSchemaDXN), reference.schemaVersion);
 };
 
 //

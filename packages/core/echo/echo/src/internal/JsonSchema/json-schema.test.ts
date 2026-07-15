@@ -805,28 +805,6 @@ describe('reference', () => {
     });
   });
 
-  test('parses a legacy `dxn:type:<nsid>` ref (pre-canonical-URI-migration data)', () => {
-    // Persisted JSON schemas from before the DXN `type:` segment was dropped (e.g. a deployed
-    // function's `inputSchema`, never regenerated since) still carry this form.
-    const jsonSchema: JsonSchemaType = {
-      $id: '/schemas/echo/ref',
-      $ref: '/schemas/echo/ref',
-      $schema: 'http://json-schema.org/draft-07/schema#',
-      reference: {
-        schema: {
-          $ref: 'dxn:type:com.example.type.person',
-        },
-        schemaVersion: '0.1.0',
-      },
-    };
-    const effectSchema = toEffectSchema(jsonSchema);
-    const refAst = getReferenceAst(effectSchema.ast);
-    expect(refAst).toEqual({
-      typename: Type.getTypename(TestSchema.Person),
-      version: Type.getVersion(TestSchema.Person),
-    });
-  });
-
   test('empty struct round-trips as TypeLiteral', () => {
     const schema = Schema.Struct({});
     const jsonSchema = toJsonSchema(schema);
