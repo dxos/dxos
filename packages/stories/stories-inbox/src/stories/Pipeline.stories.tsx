@@ -12,9 +12,10 @@ import { configPreset } from '@dxos/config';
 import { Database, Feed, Filter, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
+import { AccessToken, Cursor } from '@dxos/link';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -28,7 +29,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
-import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Person } from '@dxos/types';
 
 import { Module, StoryAiPlugin, StoryModulesPlugin, StorySyncPlugin, seedDemoMessages } from '../testing';
 
@@ -46,7 +47,6 @@ const SYNC_STORY_TYPES = [
   Message.Message,
   Organization.Organization,
   Person.Person,
-  SyncBinding.SyncBinding,
   Tag.Tag,
   TagIndex.TagIndex,
 ];

@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Trigger } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/link';
+import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { type Mailbox } from '@dxos/plugin-inbox';
 import { Message } from '@dxos/types';
 
@@ -80,8 +81,8 @@ export const replaceFeed = async (
  * in the Connect menu across reconnects.
  */
 export const resetMailbox = async (mailbox: Mailbox.Mailbox, db: Database.Database): Promise<void> => {
-  const bindings = await db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding)).run();
-  bindings.filter(SyncBinding.instanceOf).forEach((binding) => db.remove(binding));
+  const cursors = await db.query(Filter.type(Cursor.Cursor)).run();
+  cursors.filter((cursor) => isCursorForTarget(cursor, mailbox)).forEach((cursor) => db.remove(cursor));
 
   // Delete every sync trigger and its linking relation so a reset clears the scheduled sync wired up
   // for routine stories. Triggers are parented to the mailbox but survive a reset otherwise; delete by

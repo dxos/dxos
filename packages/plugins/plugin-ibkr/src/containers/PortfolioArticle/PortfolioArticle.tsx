@@ -67,7 +67,7 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
   const currentId = useSelection(id, 'single');
 
   const { invokePromise } = useOperationInvoker();
-  // IBKR has no SyncBinding, so the connection is detected space-wide by connectorId.
+  // IBKR has no external-sync Cursor, so the connection is detected space-wide by connectorId.
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connected = connections.some((connection) => connection.connectorId === IBKR_CONNECTOR_ID);
   // In-flight flag as an atom so the menu builder reads it reactively via `get`.

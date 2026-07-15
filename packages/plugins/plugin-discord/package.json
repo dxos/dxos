@@ -82,6 +82,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-discord": "workspace:*",

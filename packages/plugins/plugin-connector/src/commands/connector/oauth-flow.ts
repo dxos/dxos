@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type AccessToken } from '@dxos/link';
 import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult } from '@dxos/protocols';
-import { type AccessToken } from '@dxos/types';
 
 import { type OAuthPreset } from './util';
 

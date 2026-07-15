@@ -8,24 +8,19 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
-import { Database, DXN, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { AccessToken, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Cursor } from '@dxos/types';
 
-import {
-  Connection,
-  type ConnectorEntry,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-  SyncBinding,
-} from '../types';
-import { type SyncTargetSelection, reconcileSyncBindings } from './reconcile-sync-bindings';
+import { Connection, type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '../types';
+import { isCursorForConnection } from './cursor-predicates';
+import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors';
 
-describe('reconcileSyncBindings', () => {
+describe('reconcileCursors', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -76,13 +71,7 @@ describe('reconcileSyncBindings', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([
-      Connection.Connection,
-      Cursor.Cursor,
-      SyncBinding.SyncBinding,
-      AccessToken.AccessToken,
-      Expando.Expando,
-    ]);
+    graph.registry.add([Connection.Connection, Cursor.Cursor, AccessToken.AccessToken, Expando.Expando]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'me' }));
     const connection = db.add(
       Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }),
@@ -97,73 +86,84 @@ describe('reconcileSyncBindings', () => {
     selected: ReadonlyArray<SyncTargetSelection>,
     existingTarget?: Ref.Ref<Obj.Unknown>,
   ) =>
-    reconcileSyncBindings({ invoker, db, connection, connector, selected, existingTarget }).pipe(
+    reconcileCursors({ invoker, db, connection, connector, selected, existingTarget }).pipe(
       Effect.provide(Database.layer(db)),
       EffectEx.runAndForwardErrors,
     );
 
-  const queryBindings = (db: Database.Database, connection: Connection.Connection) =>
-    Database.query(Query.select(Filter.id(connection.id)).sourceOf(SyncBinding.SyncBinding)).run.pipe(
+  const queryCursors = (db: Database.Database, connection: Connection.Connection) =>
+    Database.query(Filter.type(Cursor.Cursor)).run.pipe(
       Effect.provide(Database.layer(db)),
+      Effect.map((cursors) => cursors.filter((cursor) => isCursorForConnection(cursor, connection))),
       EffectEx.runAndForwardErrors,
     );
 
-  test('materializes a binding for each newly-selected remote target', async ({ expect }) => {
+  const loadTarget = (db: Database.Database, target: Ref.Ref<Obj.Unknown>) =>
+    Database.load(target).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+
+  test('materializes a cursor for each newly-selected remote target', async ({ expect }) => {
     const { db, connection } = await setup();
 
-    const result = await reconcile(db, connection, makeConnector(), [{ remoteId: 'foo', name: 'Foo' }]);
+    const result = await reconcile(db, connection, makeConnector(), [{ externalId: 'foo', name: 'Foo' }]);
     expect(result.added).toBe(1);
     expect(result.removed).toBe(0);
 
-    const bindings = await queryBindings(db, connection);
-    expect(bindings.length).toBe(1);
-    expect(bindings[0].remoteId).toBe('foo');
-    expect(bindings[0].name).toBe('Foo');
-    // The target was materialized and the relation resolves to it.
-    expect(Relation.getTarget(bindings[0])).toBeDefined();
+    const cursors = await queryCursors(db, connection);
+    expect(cursors.length).toBe(1);
+    const [cursor] = cursors;
+    invariant(Cursor.isExternal(cursor));
+    expect(cursor.spec.externalId).toBe('foo');
+    expect(cursor.spec.label).toBe('Foo');
+    // The target was materialized and the ref resolves to it.
+    expect(await loadTarget(db, cursor.spec.target)).toBeDefined();
   });
 
-  test('removes bindings that drop out of the new submission', async ({ expect }) => {
+  test('removes cursors that drop out of the new submission', async ({ expect }) => {
     const { db, connection } = await setup();
     await reconcile(db, connection, makeConnector(), [
-      { remoteId: 'a', name: 'A' },
-      { remoteId: 'b', name: 'B' },
+      { externalId: 'a', name: 'A' },
+      { externalId: 'b', name: 'B' },
     ]);
 
-    const result = await reconcile(db, connection, makeConnector(), [{ remoteId: 'a', name: 'A' }]);
+    const result = await reconcile(db, connection, makeConnector(), [{ externalId: 'a', name: 'A' }]);
     expect(result.added).toBe(0);
     expect(result.removed).toBe(1);
 
-    const bindings = await queryBindings(db, connection);
-    expect(bindings.length).toBe(1);
-    expect(bindings[0].remoteId).toBe('a');
+    const cursors = await queryCursors(db, connection);
+    expect(cursors.length).toBe(1);
+    invariant(Cursor.isExternal(cursors[0]));
+    expect(cursors[0].spec.externalId).toBe('a');
   });
 
   test('preserves an already-bound target (and its sync state) when re-selected', async ({ expect }) => {
     const { db, connection } = await setup();
     const obj = db.add(Obj.make(Expando.Expando, { name: 'kept' }));
-    const lastRunAt = '2026-04-01T00:00:00.000Z';
-    // Sync state lives on the binding's cursor object (0.2.0); seed it to verify reconcile preserves it.
+    const lastTick = '2026-04-01T00:00:00.000Z';
     const existing = db.add(
-      SyncBinding.make({
-        [Relation.Source]: connection,
-        [Relation.Target]: obj,
-        remoteId: 'kept',
-        name: 'Kept',
-        cursor: { value: 'sentinel', lastRunAt },
+      Cursor.makeExternal({
+        source: connection.accessToken,
+        target: Ref.make(obj),
+        externalId: 'kept',
+        label: 'Kept',
+        value: 'sentinel',
       }),
     );
+    Obj.update(existing, (existing) => {
+      existing.lastTick = lastTick;
+    });
 
-    const result = await reconcile(db, connection, makeConnector(), [{ remoteId: 'kept', name: 'Kept' }]);
+    const result = await reconcile(db, connection, makeConnector(), [{ externalId: 'kept', name: 'Kept' }]);
     expect(result.added).toBe(0);
     expect(result.removed).toBe(0);
 
-    const bindings = await queryBindings(db, connection);
-    expect(bindings.length).toBe(1);
-    expect(bindings[0].id).toBe(existing.id);
-    expect(bindings[0].cursor.target?.value).toBe('sentinel');
-    expect(bindings[0].cursor.target?.lastRunAt).toBe(lastRunAt);
-    expect(Relation.getTarget(bindings[0]).id).toBe(obj.id);
+    const cursors = await queryCursors(db, connection);
+    expect(cursors.length).toBe(1);
+    expect(cursors[0].id).toBe(existing.id);
+    expect(cursors[0].value).toBe('sentinel');
+    expect(cursors[0].lastTick).toBe(lastTick);
+    invariant(Cursor.isExternal(cursors[0]));
+    const target = await loadTarget(db, cursors[0].spec.target);
+    expect(target.id).toBe(obj.id);
   });
 
   test('binds the supplied existingTarget for the first new selection instead of materializing', async ({ expect }) => {
@@ -174,53 +174,55 @@ describe('reconcileSyncBindings', () => {
       db,
       connection,
       makeConnector(),
-      [{ remoteId: 'inbox', name: 'Inbox' }],
+      [{ externalId: 'inbox', name: 'Inbox' }],
       Ref.make(mailbox),
     );
     expect(result.added).toBe(1);
 
-    const bindings = await queryBindings(db, connection);
-    expect(bindings.length).toBe(1);
-    expect(bindings[0].remoteId).toBe('inbox');
+    const cursors = await queryCursors(db, connection);
+    expect(cursors.length).toBe(1);
+    invariant(Cursor.isExternal(cursors[0]));
+    expect(cursors[0].spec.externalId).toBe('inbox');
     // The first new selection reuses the caller-supplied object, not a fresh one.
-    expect(Relation.getTarget(bindings[0]).id).toBe(mailbox.id);
+    const target = await loadTarget(db, cursors[0].spec.target);
+    expect(target.id).toBe(mailbox.id);
   });
 
   test('binds the connection itself for a targetless connector (no materializeTarget)', async ({ expect }) => {
     const { db, connection } = await setup();
-    // A targetless connector (e.g. Google Contacts) has no local root type, so
-    // the binding is a self-loop: source === target === the connection. The
-    // remote target is identified by `remoteId`.
+    // A targetless connector (e.g. Google Contacts) has no local root type, so the cursor's target is
+    // the connection itself. The remote target is identified by `externalId`.
     const connector = makeConnector({ materializeTarget: undefined });
 
     const result = await reconcile(db, connection, connector, [
-      { remoteId: 'contactGroups/myContacts', name: 'My Contacts' },
+      { externalId: 'contactGroups/myContacts', name: 'My Contacts' },
     ]);
     expect(result.added).toBe(1);
     expect(result.removed).toBe(0);
 
-    const bindings = await queryBindings(db, connection);
-    expect(bindings.length).toBe(1);
-    expect(bindings[0].remoteId).toBe('contactGroups/myContacts');
-    expect(bindings[0].name).toBe('My Contacts');
-    expect(Relation.getSource(bindings[0]).id).toBe(connection.id);
-    expect(Relation.getTarget(bindings[0]).id).toBe(connection.id);
+    const cursors = await queryCursors(db, connection);
+    expect(cursors.length).toBe(1);
+    invariant(Cursor.isExternal(cursors[0]));
+    expect(cursors[0].spec.externalId).toBe('contactGroups/myContacts');
+    expect(cursors[0].spec.label).toBe('My Contacts');
+    const target = await loadTarget(db, cursors[0].spec.target);
+    expect(target.id).toBe(connection.id);
   });
 
-  test('leaves single-target bindings (no remoteId) untouched on submit', async ({ expect }) => {
+  test('leaves single-target cursors (no externalId) untouched on submit', async ({ expect }) => {
     const { db, connection } = await setup();
-    // A single-target connector (e.g. Gmail) creates a binding with a target but
-    // no remoteId; reconciling remote-id selections must not delete it.
+    // A single-target connector (e.g. Gmail) creates a cursor with a target but no externalId;
+    // reconciling remote-id selections must not delete it.
     const auto = db.add(Obj.make(Expando.Expando, { name: 'auto' }));
-    db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: auto }));
+    db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(auto) }));
 
-    const result = await reconcile(db, connection, makeConnector(), [{ remoteId: 'new', name: 'New' }]);
+    const result = await reconcile(db, connection, makeConnector(), [{ externalId: 'new', name: 'New' }]);
     expect(result.added).toBe(1);
     expect(result.removed).toBe(0);
 
-    const bindings = await queryBindings(db, connection);
-    expect(bindings.length).toBe(2);
-    expect(bindings.find((binding) => binding.remoteId === undefined)).toBeDefined();
-    expect(bindings.find((binding) => binding.remoteId === 'new')).toBeDefined();
+    const cursors = await queryCursors(db, connection);
+    expect(cursors.length).toBe(2);
+    expect(cursors.some((cursor) => Cursor.isExternal(cursor) && cursor.spec.externalId === undefined)).toBe(true);
+    expect(cursors.some((cursor) => Cursor.isExternal(cursor) && cursor.spec.externalId === 'new')).toBe(true);
   });
 });

@@ -232,8 +232,8 @@ export const Portfolio = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--chart-line--regular', hue: 'green' }),
-  // Offer "Connect Interactive Brokers" in the portfolio toolbar. IBKR has no SyncBinding, so the
-  // connection is detected space-wide by connectorId (bindTarget omitted).
+  // Offer "Connect Interactive Brokers" in the portfolio toolbar. IBKR has no external-sync Cursor, so
+  // the connection is detected space-wide by connectorId (bindTarget omitted).
   ConnectorAuthAnnotation.set({ connectorIds: [IBKR_CONNECTOR_ID] }),
   Type.makeObject(DXN.make('org.dxos.type.ibkr.Portfolio', '0.1.0')),
 );

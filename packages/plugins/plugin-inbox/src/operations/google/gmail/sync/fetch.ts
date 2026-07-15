@@ -9,9 +9,9 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
-import { Cursor } from '@dxos/types';
 
 import { GoogleMailApi, type GoogleMailApiService } from '../../../../services';
 import { type AttachmentMetadata } from '../mapper';

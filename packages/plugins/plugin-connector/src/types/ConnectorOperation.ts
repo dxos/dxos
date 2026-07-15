@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref, Type } from '@dxos/echo';
-import { AccessToken } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
 
 import { meta } from '#meta';
 
@@ -18,7 +18,7 @@ import * as Connection from './Connection';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
- * Runs {@link ConnectorEntry.sync} for every SyncBinding sourced by a Connection.
+ * Runs {@link ConnectorEntry.sync} for every external-sync cursor authenticated by a Connection.
  * Centralises the fan-out so the graph-builder action and the React hook share
  * the same code path. `Capability.Service` is declared as a service so the
  * handler can resolve the connector entry at invocation time.

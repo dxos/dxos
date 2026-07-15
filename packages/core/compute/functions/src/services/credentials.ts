@@ -12,7 +12,7 @@ import * as Redacted from 'effect/Redacted';
 
 import { Credential } from '@dxos/compute';
 import { Database, Query } from '@dxos/echo';
-import { AccessToken } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
 
 export class ConfiguredCredentialsService implements Context.Tag.Service<Credential.CredentialsService> {
   constructor(private readonly credentials: Credential.ServiceCredential[] = []) {}
