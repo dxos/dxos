@@ -20,24 +20,31 @@ export type RunDedicatedWorkerOptions = {
   onBeforeStart?: (config: Config) => Promise<void>;
 };
 
+/**
+ * Probes whether OPFS is available in this worker (it is not, e.g., in private-browsing contexts),
+ * gating persistent indexing.
+ */
+const probeOpfsAvailable = async (): Promise<boolean> => {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
+      await navigator.storage.getDirectory();
+      return true;
+    }
+  } catch {
+    log.warn('OPFS not available, disabling persistent indexing');
+  }
+  return false;
+};
+
 /** Runs the dedicated worker loop. Exported so apps can use a custom worker entrypoint and inject setup (e.g. observability). */
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
   Worker.run({
     storageLockKey: STORAGE_LOCK_KEY,
     createRuntime: ({ config: configValues, requestShutdown }) =>
-      Effect.promise(async () => {
+      Effect.gen(function* () {
         const config = new Config(configValues ?? {});
         log('dedicated-worker: probing OPFS availability');
-        let opfsAvailable = false;
-        try {
-          if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
-            await navigator.storage.getDirectory();
-            opfsAvailable = true;
-          }
-        } catch {
-          log.warn('OPFS not available, disabling persistent indexing');
-          opfsAvailable = false;
-        }
+        const opfsAvailable = yield* Effect.promise(() => probeOpfsAvailable());
         log('dedicated-worker: OPFS probe complete', { opfsAvailable });
 
         const runtime = makeWorkerRuntime({
@@ -54,12 +61,12 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
 
         if (options.onBeforeStart) {
           log('dedicated-worker: running onBeforeStart');
-          await options.onBeforeStart(config);
+          yield* Effect.promise(() => options.onBeforeStart!(config));
           log('dedicated-worker: onBeforeStart complete');
         }
 
         log('dedicated-worker: starting WorkerRuntime');
-        await EffectEx.runPromise(runtime.start());
+        yield* runtime.start();
         log('dedicated-worker: WorkerRuntime started');
 
         return {
