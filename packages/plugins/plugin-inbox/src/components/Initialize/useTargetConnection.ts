@@ -120,11 +120,6 @@ export const useTargetSync = <T extends Obj.Any>(
     [Trigger.TriggerMonitorService, Database.Service],
     Effect.fnUntraced(
       function* () {
-        const database = yield* Effect.fromNullable(db);
-        // Reuse the existing sync trigger; otherwise resolve the connector's `sync` operation and the
-        // bound cursor and create one (the same path bind-time auto-creation and the properties-panel
-        // toggle use). Any missing value along either path (no db/connector/cursor/creation result)
-        // short-circuits via `Effect.fromNullable`'s `NoSuchElementException`, caught below as a no-op.
         const trigger = yield* Option.fromNullable(syncTrigger).pipe(
           Option.match({
             onSome: Effect.succeed,
@@ -132,7 +127,7 @@ export const useTargetSync = <T extends Obj.Any>(
               Effect.gen(function* () {
                 const sync = yield* Effect.fromNullable(connector?.sync);
                 const cursor = yield* Effect.fromNullable(yield* findBindingForTarget(target));
-                const created = yield* Effect.promise(() => createSyncRoutine({ db: database, target, cursor, sync }));
+                const created = yield* createSyncRoutine({ target, cursor, sync });
                 return yield* Effect.fromNullable(created);
               }),
           }),

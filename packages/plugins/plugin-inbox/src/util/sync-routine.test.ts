@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Operation, Trigger } from '@dxos/compute';
-import { type Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
@@ -68,7 +69,10 @@ describe('createSyncRoutine', () => {
 
     const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
     const cursor = makeCursor(db, mailbox);
-    const created = await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
+    const created = await createSyncRoutine({ target: mailbox, cursor, sync: TestSync }).pipe(
+      Effect.provide(Database.layer(db)),
+      EffectEx.runPromise,
+    );
     await db.flush();
 
     await expect.poll(() => findSyncRoutine(db, mailbox), { timeout: 5_000 }).toHaveLength(1);
@@ -88,7 +92,10 @@ describe('createSyncRoutine', () => {
 
     const calendar = db.add(Calendar.make({ name: 'Personal' }));
     const cursor = makeCursor(db, calendar);
-    await createSyncRoutine({ db, target: calendar, cursor, sync: TestSync });
+    await createSyncRoutine({ target: calendar, cursor, sync: TestSync }).pipe(
+      Effect.provide(Database.layer(db)),
+      EffectEx.runPromise,
+    );
     await db.flush();
 
     await expect.poll(() => findSyncRoutine(db, calendar), { timeout: 5_000 }).toHaveLength(1);
@@ -104,11 +111,16 @@ describe('createSyncRoutine', () => {
 
     const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
     const cursor = makeCursor(db, mailbox);
-    const first = await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
+    const run = () =>
+      createSyncRoutine({ target: mailbox, cursor, sync: TestSync }).pipe(
+        Effect.provide(Database.layer(db)),
+        EffectEx.runPromise,
+      );
+    const first = await run();
     await db.flush();
     await expect.poll(() => findSyncRoutine(db, mailbox), { timeout: 5_000 }).toHaveLength(1);
 
-    const second = await createSyncRoutine({ db, target: mailbox, cursor, sync: TestSync });
+    const second = await run();
     await db.flush();
 
     expect(await findSyncRoutine(db, mailbox)).toHaveLength(1);

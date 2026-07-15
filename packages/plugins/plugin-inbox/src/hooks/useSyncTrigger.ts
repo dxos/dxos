@@ -64,17 +64,20 @@ export const useSyncTrigger = ({
       return;
     }
 
-    if (!connection || !connector?.sync) {
+    const sync = connector?.sync;
+    if (!connection || !sync) {
       return;
     }
 
     setPending(true);
     try {
-      const cursor = await findBindingForTarget(subject).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
-      if (!cursor) {
-        return;
-      }
-      await createSyncRoutine({ db, target: subject, cursor, sync: connector.sync });
+      await Effect.gen(function* () {
+        const cursor = yield* findBindingForTarget(subject);
+        if (!cursor) {
+          return;
+        }
+        yield* createSyncRoutine({ target: subject, cursor, sync });
+      }).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
     } finally {
       setPending(false);
     }

@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 import {
   ConnectionTestError,
@@ -129,7 +129,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 const onCursorCreated =
   (sync: Operation.Definition<SyncInput, SyncOutput>): OnCursorCreated =>
   ({ target, cursor, db }) =>
-    Effect.promise(() => createSyncRoutine({ db, target, cursor, sync }));
+    createSyncRoutine({ target, cursor, sync }).pipe(Effect.provide(Database.layer(db)), Effect.asVoid);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

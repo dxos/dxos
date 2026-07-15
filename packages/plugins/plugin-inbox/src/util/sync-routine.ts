@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Operation, Trigger } from '@dxos/compute';
-import { type Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { type SyncInput, type SyncOutput } from '@dxos/plugin-connector';
 import { Routine, connectedRoutinesQuery } from '@dxos/plugin-routine';
@@ -19,15 +21,15 @@ const SYNC_ROUTINE_CRON = '*/10 * * * *';
  * in-code operation (e.g. `InboxOperation.GoogleMailSync`), the same one `ConnectorOperation.SyncConnection`
  * invokes directly; nothing is fetched from or deployed to Edge.
  */
-const ensureOperationRecord = async (
-  db: Database.Database,
+const ensureOperationRecord = (
   definition: Operation.Definition<SyncInput, SyncOutput>,
-): Promise<Operation.PersistentOperation> => {
-  const existing = await db
-    .query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(definition.meta.key)))
-    .run();
-  return existing[0] ?? db.add(Operation.serialize(definition));
-};
+): Effect.Effect<Operation.PersistentOperation, never, Database.Service> =>
+  Effect.gen(function* () {
+    const existing = yield* Database.query(
+      Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(definition.meta.key)),
+    ).run;
+    return existing[0] ?? (yield* Database.add(Operation.serialize(definition)));
+  });
 
 /**
  * Ensures a recurring sync {@link Routine} exists for `target` (a Mailbox or Calendar) and returns its
@@ -39,39 +41,39 @@ const ensureOperationRecord = async (
  * field on `target`; the trigger's `input` also carries a `mailbox`/`calendar` ref purely so that query
  * can find it.
  */
-export const createSyncRoutine = async ({
-  db,
+export const createSyncRoutine = ({
   target,
   cursor,
   sync,
 }: {
-  db: Database.Database;
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
   sync: Operation.Definition<SyncInput, SyncOutput>;
-}): Promise<Trigger.Trigger | undefined> => {
-  const connected = await db.query(connectedRoutinesQuery(target)).run();
-  for (const routine of connected) {
-    const existingTrigger = routine.triggers.find((ref) => ref.target?.spec?.kind === 'timer')?.target;
-    if (existingTrigger) {
-      return existingTrigger;
+}): Effect.Effect<Trigger.Trigger | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const connected = yield* Database.query(connectedRoutinesQuery(target)).run;
+    for (const routine of connected) {
+      const existingTrigger = routine.triggers.find((ref) => ref.target?.spec?.kind === 'timer')?.target;
+      if (existingTrigger) {
+        return existingTrigger;
+      }
     }
-  }
 
-  const operation = await ensureOperationRecord(db, sync);
-  const inputKey = Obj.getTypename(target) === Type.getTypename(Calendar.Calendar) ? 'calendar' : 'mailbox';
-  const trigger = Trigger.make({
-    enabled: true,
-    spec: Trigger.specTimer(SYNC_ROUTINE_CRON),
-    input: { binding: Ref.make(cursor), [inputKey]: db.makeRef(Obj.getURI(target)) },
+    const operation = yield* ensureOperationRecord(sync);
+    const inputKey = Obj.getTypename(target) === Type.getTypename(Calendar.Calendar) ? 'calendar' : 'mailbox';
+    const { db } = yield* Database.Service;
+    const trigger = Trigger.make({
+      enabled: true,
+      spec: Trigger.specTimer(SYNC_ROUTINE_CRON),
+      input: { binding: Ref.make(cursor), [inputKey]: db.makeRef(Obj.getURI(target)) },
+    });
+
+    const routine = Routine.make({
+      name: 'Sync',
+      spec: { kind: 'runnable', runnable: Ref.make(operation) },
+      trigger,
+    });
+
+    yield* Database.add(routine);
+    return trigger;
   });
-
-  const routine = Routine.make({
-    name: 'Sync',
-    spec: { kind: 'runnable', runnable: Ref.make(operation) },
-    trigger,
-  });
-
-  db.add(routine);
-  return trigger;
-};
