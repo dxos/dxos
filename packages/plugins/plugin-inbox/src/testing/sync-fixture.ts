@@ -22,8 +22,9 @@ import { GMAIL_SOURCE } from '../constants';
 import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
 import { Mailbox } from '../types';
 
-// Shared harness for the mock-provider sync tests: a real ECHO db seeded with a mailbox binding plus
-// the ambient services `runGmailSync`/`runJmapSync` require. Kept local (not exported) — pulls app-framework/compute.
+// Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded
+// with a mailbox binding, plus the ambient services `runGmailSync`/`runJmapSync` require. Not exported
+// from `@dxos/plugin-inbox/testing` — it pulls app-framework/compute, so it stays a local test helper.
 
 /** The ECHO types the sync writes: messages, contacts, tags, tag index, connection + cursor. */
 export const SYNC_TEST_TYPES = [
@@ -73,11 +74,13 @@ export const seedMailboxBinding = async (
 };
 
 /**
- * The db + resolver + operation ambient services shared by both providers' mock-sync tests. The seeded
- * mailbox has no on-arrival extractors, so `Operation` is provided (unavailable invoker) only to satisfy
- * the requirement channel. `Capability.Service` is a bare `CapabilityManager` contributing a
- * `ProgressRegistry` (resolved as a singleton via `Capability.get`); a test may override it to observe
- * the progress monitor. Exported so a test needing a non-default provider layer (e.g. a fault) can compose its own.
+ * The db + resolver + operation ambient services shared by both providers' mock-sync tests. The
+ * seeded mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and
+ * never touches `Operation` — it is provided (unavailable invoker) only to satisfy the requirement
+ * channel. `Capability.Service` is a bare `CapabilityManager` (no `PluginManager`/plugin-activation
+ * lifecycle needed) that always contributes a `ProgressRegistry` — `runGmailSync` resolves it as a
+ * singleton via `Capability.get`, matching the always-loaded `plugin-progress` host in production. A
+ * test may override the default with its own instance to observe the sync's live progress monitor.
  */
 export const ambientSyncServices = (
   db: Database.Database,
@@ -109,12 +112,13 @@ export const inboxSyncTestServices = (
 ) => Layer.mergeAll(GoogleMailApi.mock(dataset), ambientSyncServices(db, options));
 
 /**
- * The ambient services `runGmailSync` requires, backed by the REAL Gmail HTTP API authenticated from the
- * connection's `AccessToken`. Used by the fixture-fetch tool to sync a real account in-process.
+ * The ambient services `runGmailSync` requires, backed by the REAL Gmail HTTP API authenticated from
+ * the given connection's `AccessToken`. Used by the fixture-fetch tool to sync a real account in-process
+ * (no EDGE / function deployment). The connection's access token must carry a valid Gmail OAuth token.
  */
 export const inboxSyncLiveServices = (db: Database.Database, connectionRef: Ref.Ref<Connection.Connection>) => {
-  // `GoogleCredentials.fromConnection` uses the cached token, so CredentialsService is never called —
-  // a stub satisfies the requirement channel.
+  // `GoogleCredentials.fromConnection` short-circuits with the connection's cached token, so the
+  // CredentialsService is never called — but it stays in the requirement channel, so a stub satisfies it.
   const unusedCredentials = Layer.succeed(Credential.CredentialsService, {
     queryCredentials: () => Promise.reject(new Error('unused: connection carries a cached token')),
     getCredential: () => Promise.reject(new Error('unused: connection carries a cached token')),

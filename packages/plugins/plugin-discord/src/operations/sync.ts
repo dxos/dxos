@@ -23,15 +23,27 @@ import { formatDiscordSyncFailure } from '../errors';
 import { makeDiscordLayerFromToken } from '../services';
 import { DiscordOperation } from '../types';
 
-/** Hard cap on `maxDays` so a misconfigured value can't kick off a rate-limit-thrashing backfill. */
+/**
+ * Hard cap on `maxDays` to keep a misconfigured (or fat-fingered) value
+ * from kicking off a 10-year backfill that thrashes the rate limit. ~3 years
+ * is enough for any realistic "I want context" scenario.
+ */
 const MAX_DAYS = 365 * 3;
 
 const MESSAGE_PAGE_LIMIT = 100;
 
 /**
- * Computes the initial sync cursor. An existing `cursor` (previous sync's newest id) is used verbatim;
- * on first sync, derives a snowflake from "now minus `maxDays`" (clamped, default 30). `maxDays` is only
- * consulted while `cursor` is unset.
+ * Compute the initial sync cursor for a Discord channel.
+ *
+ * - If we already have a `cursor` (newest message id from the previous sync),
+ *   use it verbatim — every subsequent sync is incremental.
+ * - On first sync, derive a snowflake from "now minus N days" where N comes
+ *   from the user-provided `maxDays` option (clamped to a sane range,
+ *   default 30).
+ *
+ * The user can sync more history by re-creating the binding with a larger
+ * `maxDays` value, since the option is only consulted while `cursor`
+ * is unset.
  */
 const computeInitialCursor = (cursor: string | undefined, options: Record<string, unknown> | undefined): string => {
   if (cursor) {
@@ -50,12 +62,22 @@ export type PullResult = {
 /**
  * Maps a Discord message into a `@dxos/types` Message.
  *
- * - `created` from Discord's ISO `timestamp` (already ISO-8601).
- * - `sender.name` prefers `global_name`, falls back to `username`; bots carry the same fields.
- * - `threadId` from `referenced_message.id` so replies reconstruct on read (mirrors Slack's `thread_ts`).
- * - `blocks` is a single `Text` block; Discord's rich-embed shape is not mapped yet.
+ * - `created` from Discord's ISO `timestamp` (no conversion needed; Discord
+ *   already serializes as ISO-8601).
+ * - `sender.name` prefers `global_name` (Discord's display name, post 2023
+ *   username overhaul) and falls back to `username`. Bot-posted messages
+ *   carry the same fields so the bot's friendly name surfaces without a
+ *   special-case lookup.
+ * - `threadId` carries `referenced_message.id` for in-channel replies so the
+ *   client can reconstruct reply chains on read without a separate object
+ *   type — mirrors the Slack mapping which uses `thread_ts`.
+ * - `blocks` is a single `Text` block from `content`. Discord's rich-embed
+ *   shape (embeds, attachments, components) is NOT mapped yet — that would
+ *   need a Discord-embed → ContentBlock translator that's a separate piece
+ *   of work.
  *
- * Returns `undefined` for non-default messages (joins, pins, ...) so the feed isn't polluted.
+ * Returns `undefined` for non-default messages (joins, pins, calls, ...) so
+ * the chronological feed isn't polluted with system notices.
  */
 const mapDiscordMessage = (message: MessageResponse): Message.Message | undefined => {
   // Discord message type 0 is DEFAULT; 19 is REPLY (still a real chat message).
@@ -66,8 +88,9 @@ const mapDiscordMessage = (message: MessageResponse): Message.Message | undefine
   const text = message.content;
   const blocks: ContentBlock.Any[] = text.length > 0 ? [{ _tag: 'text', text } as ContentBlock.Text] : [];
 
-  // For replies, prefer `referenced_message.id`, fall back to `message_reference.message_id` — Discord
-  // omits the former when the parent is deleted.
+  // For replies (type 19), prefer `referenced_message.id`, but fall back to
+  // `message_reference.message_id` — Discord omits `referenced_message` when
+  // the parent has been deleted, while `message_reference` still carries the id.
   const referenced =
     message.type === 19
       ? (message.referenced_message?.id ?? message.message_reference?.message_id)
@@ -89,7 +112,9 @@ const mapDiscordMessage = (message: MessageResponse): Message.Message | undefine
   });
 };
 
-/** Finds an existing Channel whose foreign key matches the given Discord channel id. */
+/**
+ * Finds an existing Channel whose foreign key matches the given Discord channel id.
+ */
 export const findChannelForDiscordChannel: (
   discordChannelId: string,
 ) => Effect.Effect<Channel.Channel | undefined, never, Database.Service> = Effect.fn('findChannelForDiscordChannel')(
@@ -102,10 +127,19 @@ export const findChannelForDiscordChannel: (
 );
 
 /**
- * Reconciles messages for the Discord channel bound by a {@link Cursor.Cursor} (pull-only): fetch
- * messages with id greater than `binding.max` (or from "now minus maxDays" on first sync), map to
- * `@dxos/types` Messages, append to the channel's feed, and advance the cursor via `Cursor.advance`/
- * `Cursor.recordError` so the next sync is incremental.
+ * Reconciles messages for the single Discord channel bound by a {@link Cursor.Cursor}.
+ *
+ * Pull-only:
+ *  1. Load the binding; its source is the `AccessToken`, its target the
+ *     local `Channel`, and `binding.spec.externalId` is the Discord channel id.
+ *  2. Ask Discord for messages with id greater than `binding.max` (or from
+ *     "now minus maxDays" on first sync).
+ *  3. Map each Discord message → `@dxos/types` Message and append the batch to
+ *     the channel's feed.
+ *  4. Advance `binding.max` to the largest id seen so the next sync is incremental.
+ *
+ * Success/failure status is written back onto the binding via `Cursor.advance`/
+ * `Cursor.recordError` (`value`/`lastTick`/`lastError`).
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel> =
   DiscordOperation.SyncDiscordChannel.pipe(
@@ -121,8 +155,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
 
         const toastIdSuffix = EID.getEntityId(EID.parse(bindingRef.uri)) ?? 'unknown';
 
-        // Resolve the binding's endpoints up front: source access token → credential, target Channel,
-        // and `externalId` (the Discord channel to pull).
+        // Resolve the binding's endpoints up front: the source access token
+        // supplies the credential for the Discord layer, the target is the
+        // local Channel, and `externalId` is the Discord channel id to pull.
         const binding = yield* Database.load(bindingRef).pipe(Effect.provide(Database.layer(db)));
         invariant(Cursor.isExternal(binding), 'Cursor is missing an external-sync spec for Discord channel.');
         const accessToken = yield* Database.load(binding.spec.source).pipe(Effect.provide(Database.layer(db)));
@@ -131,7 +166,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         invariant(externalId, 'Cursor is missing an externalId for Discord channel.');
         invariant(Channel.instanceOf(localRoot), 'Cursor target is not a Channel.');
 
-        // Captured on the success path so the cursor's max + run status advance in one atomic update.
+        // Captured on the success path so the cursor's value + run status advance in one atomic update.
         let newestId: string | undefined;
         const outcome = yield* Effect.either(
           Effect.gen(function* () {
@@ -139,8 +174,10 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
 
             const initialAfter = computeInitialCursor(binding.max, binding.spec.options);
 
-            // Drain pagination. Discord returns newest-first even when paging by `after`; sort each page
-            // ascending so the list is chronological and the persisted cursor is the largest id seen.
+            // Drain message pagination. Discord returns newest-first within a
+            // page even when paging by `after`; sort each page ascending so the
+            // final list is chronological and the cursor we persist is the
+            // largest id seen.
             const messages: MessageResponse[] = [];
             let after = initialAfter;
             while (true) {

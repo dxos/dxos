@@ -429,14 +429,14 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
 };
 
 /**
- * Translatable label — a plain string or i18next-style `[key, options]` tuple. Defined locally to
- * avoid a core dependency on UI translation packages; structurally compatible with the app-level
- * `Label`.
+ * Translatable label — a plain string or an i18next-style `[key, options]` tuple.
+ * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
+ * the app-level `Label` type so values flow into UI toasts unchanged.
  */
 export const Label = Schema.Union(
   Schema.String,
-  // `Schema.mutable` mirrors the app-level `Label`'s mutable tuple, so decoded values are assignable to
-  // UI toast slots without a readonly/mutable mismatch.
+  // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
+  // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
   Schema.mutable(
     Schema.Tuple(
       Schema.String,
@@ -475,10 +475,11 @@ export const NotifyOptionsAnnotation = Annotation.make({
 });
 
 /**
- * A serializable reference to an operation invocation — the target key plus its input. For a
- * deferred/late-bound invocation that must survive a serialization boundary (e.g. on a process-failure
- * error, or persisted) where a live {@link Definition} cannot. Resolve the key with
- * `OperationHandlerSet.getHandlerByKey`. Carries no functions, so `input` must be serializable.
+ * A serializable reference to an operation invocation — the target operation's key plus its input.
+ * Describes a deferred/late-bound invocation that must survive a serialization boundary (e.g. riding
+ * on a process-failure error, or persisted) where a live {@link Definition} cannot. Resolve the key
+ * with `OperationHandlerSet.getHandlerByKey` and hand the result to the invoker. Carries no functions,
+ * so `input` must itself be serializable.
  */
 export interface SerializedInvocation {
   /** Target operation key as a URI (a DXN, e.g. `dxn:org.dxos.plugin.deck.operation.open`). */
@@ -489,8 +490,8 @@ export interface SerializedInvocation {
 
 /**
  * Builds a {@link SerializedInvocation} from a live {@link Definition} and its input — the serializable
- * counterpart to a direct `invoke`, for an invocation that must cross a serialization boundary. Resolve
- * later with `OperationHandlerSet.getHandlerByKey`.
+ * counterpart to a direct `invoke`, for describing an invocation that must cross a serialization
+ * boundary (e.g. a deferred toast action). Resolve it later with `OperationHandlerSet.getHandlerByKey`.
  */
 export const prepare = <I, O>(operation: Definition<I, O>, input: I): SerializedInvocation => ({
   operation: operation.meta.key,
@@ -510,9 +511,10 @@ export interface InvokeOptions {
    */
   notify?: NotifyOptions;
   /**
-   * URI of the conversation feed (queue) — today always an EID, typed as `URI.URI` for future
-   * entity-kind extensions; narrow with `EID.parse` at use. Passed to the process environment so
-   * nested operations can resolve HarnessService and related services.
+   * URI of the conversation feed (queue) — today always an EID, but typed as
+   * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EID.parse`
+   * at the point of use.
+   * Passed to the process environment so nested operations can resolve HarnessService and related services.
    */
   conversation?: URI.URI;
   /**
@@ -522,8 +524,9 @@ export interface InvokeOptions {
 }
 
 /**
- * Marks an operation idempotent — safe to retry after an interrupted handler. When absent the runtime
- * fails (rather than re-runs) an interrupted handler.
+ * Annotation that marks an operation as idempotent — safe to retry even if a previous execution
+ * was interrupted mid-handler. When absent the operation is treated as non-idempotent, and the
+ * process runtime will fail (rather than re-run) any handler that was interrupted.
  */
 export const IdempotentAnnotation = Annotation.make({
   id: 'org.dxos.operation.idempotent',
@@ -539,26 +542,30 @@ export const isIdempotent = (op: Definition.Any): boolean =>
     : false;
 
 /**
- * Attaches an annotation to a definition, returning a new definition. Combinators never mutate their
- * input — definitions are module-level singletons shared across handler sets, skills, and the registry,
- * so a fresh value keeps the annotated definition distinct.
+ * Attaches an annotation to an operation definition, returning a new definition.
+ * Combinators never mutate their input — operation definitions are module-level singletons
+ * shared across handler sets, skills, and the registry, so a fresh value keeps the
+ * annotated definition distinct from any other reference to the original.
  *
- * Type-preserving: an annotation doesn't change input/output/service types, so the result keeps `Def`.
+ * Type-preserving: an annotation does not change the operation's input/output/service types, so the
+ * returned definition keeps `Def` (preserving `withHandler` inference and downstream usage).
  */
 export const annotate =
   <T>(annotation: Annotation.Annotation<T>, value: T) =>
   <Def extends Definition.Any>(op: Def): Def => {
     const annotations = { ...(op.meta.annotations ?? {}) };
     Annotation.setDictionary(annotations, annotation, value);
-    // The spread only changes `meta.annotations`; the checker can't track the branded variance symbol
-    // through the untyped dictionary mutation, so reassert `Def`.
+    // The spread reconstructs the same shape with only `meta.annotations` changed; the checker can't
+    // track the branded variance symbol through the untyped dictionary mutation, so reassert `Def`.
     return { ...op, meta: { ...op.meta, annotations } } as Def;
   };
 
 /**
- * Marks an operation visible on user-facing surfaces (trigger/automation pickers, manual invocation).
- * Absent ⇒ internal: invoked programmatically and hidden from pickers. Polarity is inverted from the
- * schema-level `HiddenAnnotation` (default visible), since most operations are internal machinery.
+ * Marks an operation as visible on user-facing operation surfaces (trigger/automation pickers,
+ * manual invocation). Absent ⇒ internal: invoked programmatically by plugins and hidden from pickers.
+ *
+ * Polarity is inverted from the schema-level `HiddenAnnotation` (default visible): operations are
+ * hidden by default, since most are internal plugin machinery and only a minority are user-facing.
  */
 export const VisibleAnnotation = Annotation.make({
   id: 'org.dxos.operation.visible',
@@ -572,8 +579,8 @@ export const VisibleAnnotation = Annotation.make({
 export const visible = annotate(VisibleAnnotation, true);
 
 /**
- * Returns true when an operation is annotated visible on user-facing surfaces. Reads from the persisted
- * operation — the form every consumer holds.
+ * Returns true when an operation is annotated as visible on user-facing surfaces (trigger/automation
+ * pickers, manual invocation). Reads from the persisted operation — the form every consumer holds.
  */
 export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
@@ -677,9 +684,9 @@ export const schedule = <I, O>(
 
 /**
  * Call inside an operation to stop the current invocation and have the system re-run it (e.g. a capped
- * sync run with more work left). Surfaces as a {@link RunAgainError} defect: the trigger dispatcher
- * re-queues the same event FIFO; a caller using `Operation.invoke` directly must catch the defect and
- * re-invoke with the same input (see `plugin-connector`'s `sync-connection`).
+ * sync run with more work left). Surfaces as a {@link RunAgainError} defect; the trigger dispatcher
+ * re-queues the same event FIFO to continue. A caller invoking via `Operation.invoke` directly gets the
+ * defect and does not auto-continue.
  */
 export const runAgain = (): Effect.Effect<never, void> => Effect.failCauseSync(() => Cause.die(new RunAgainError()));
 

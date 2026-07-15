@@ -374,8 +374,8 @@ const decodeBodyStage: Stage.Stage<GoogleMail.Message, DecodedMessage, never, ne
 );
 
 /**
- * Syncs the Gmail label dictionary to `Tag` objects (one per label, keyed by the Gmail label-id).
- * Returns a `gmailLabelId -> Tag uri` map used to index messages by tag.
+ * Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
+ * a foreign key). Returns a `gmailLabelId -> Tag uri` map used to index messages by tag.
  */
 // TODO(wittjosiah): Migrate this label→Tag sync onto a pipeline too (source: labels; sink:
 //   find-or-create Tag), rather than the imperative loop below.

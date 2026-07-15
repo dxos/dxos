@@ -243,9 +243,10 @@ const generateForwardChunks = (config: ForwardChunks): Stream.Stream<DateChunk> 
 //
 
 /**
- * Downloads each attachment's bytes via `GoogleMailApi.getAttachment`, decoding the base64url `data`.
- * A failed download or decode is logged and dropped rather than failing the message — `Effect.try`
- * wraps the decode so a throw is caught by `catchAll` instead of becoming a run-aborting defect.
+ * Downloads each attachment's bytes via `GoogleMailApi.getAttachment`, decoding the base64url `data`
+ * field. One failed download or decode error is logged and dropped rather than failing the whole
+ * message — `Effect.try` wraps the decode step so a thrown error there is caught by `catchAll` below
+ * rather than becoming an uncatchable defect that aborts the whole sync run.
  */
 export const fetchAttachments = (
   userId: string,
@@ -259,7 +260,8 @@ export const fetchAttachments = (
       (attachment) =>
         api.getAttachment(userId, messageId, attachment.attachmentId).pipe(
           Effect.flatMap((body) =>
-            // Single-arg form suffices: `catchAll` below discards the error regardless of shape.
+            // The single-arg form suffices: `catchAll` below discards the error regardless of its
+            // shape, so there's no reason to map it to a specific type here.
             Effect.try(
               (): EmailStage.Attachment => ({
                 name: attachment.filename,
@@ -282,9 +284,10 @@ export const fetchAttachments = (
   });
 
 /**
- * Normalizes base64url (RFC 4648 §5, Gmail's encoding) to padded standard base64. The browser `Buffer`
- * polyfill (`@dxos/node-std`, client-side) doesn't accept the `'base64url'` encoding name Node's
- * `Buffer` does — it throws `Unknown encoding` — so normalize and use `'base64'`.
+ * Normalizes RFC 4648 §5 base64url (Gmail's attachment/body encoding) to standard base64 with
+ * padding. The browser `Buffer` polyfill (`@dxos/node-std`, used when this pipeline runs client-side)
+ * does not implement the `'base64url'` encoding name that Node's own `Buffer` accepts — decoding via
+ * `Buffer.from(data, 'base64url')` throws `Unknown encoding` there, so normalize and use `'base64'`.
  */
 const base64UrlToBase64 = (data: string): string => {
   const base64 = data.replace(/-/g, '+').replace(/_/g, '/');

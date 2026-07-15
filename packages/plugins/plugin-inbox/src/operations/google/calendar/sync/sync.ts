@@ -18,17 +18,12 @@ import { Calendar, type SyncStreamConfig } from '../../../../types';
 import { mapEvent } from '../mapper';
 import { type CalendarPageEffect, fetchEvents } from './fetch';
 
-/**
- * Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig}. The events list returns full
- * events and isn't capped/re-run, so it omits `fetchConcurrency` and `maxItemsPerRun`.
- */
+/** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
 const CALENDAR_SYNC_CONFIG = {
   listPageSize: 100,
   commitPageSize: 10,
 } as const satisfies SyncStreamConfig;
 
-// Default sync window (overridable via the binding's `spec.options`); distinct from the streaming
-// config above — it bounds *which* events sync (by start time), not how they page.
 const DEFAULT_SYNC_BACK_DAYS = 30;
 const DEFAULT_SYNC_FORWARD_DAYS = 365;
 
@@ -77,10 +72,12 @@ export type SyncCalendarProps = {
 };
 
 /**
- * Runs the Google Calendar sync pipeline for a binding: fetch → dedup → drop recurring repeats → map to
- * commit units → commit each page (advancing the cursor). Requires the ambient services rather than
- * providing them, so a test can drive it against a mock API. The return type is written out so the
- * emitted `.d.ts` can name it without expanding the Google API's `CredentialsService` (TS2883).
+ * Runs the Google Calendar sync pipeline for a binding: fetch events → dedup → drop recurring
+ * repeats → map to commit units → commit each page (advancing the cursor). Requires the ambient
+ * services (Google Calendar API credentials, `Resolver`, `Database`) rather than providing them, so a
+ * test can drive it against a mock API; the handler wraps it with the Live layers. The return type is
+ * written out so the emitted `.d.ts` can name it without expanding the Google API's `CredentialsService`
+ * (TS2883).
  */
 export const syncCalendar = ({
   binding: bindingRef,

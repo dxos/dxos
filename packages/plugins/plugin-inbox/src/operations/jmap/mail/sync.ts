@@ -230,8 +230,8 @@ const decodeBodyStage: Stage.Stage<JmapMail.Email, DecodedEmail, never, never> =
 );
 
 /**
- * Downloads each attachment's bytes. A failed download (incl. no `downloadUrl`) is logged and dropped
- * rather than failing the whole message.
+ * Downloads each attachment's bytes via `JmapMailApi.downloadBlob`. One failed download (including a
+ * session with no `downloadUrl`) is logged and dropped rather than failing the whole message.
  */
 const fetchAttachments = (
   target: JmapMail.Target,

@@ -21,9 +21,12 @@ import * as AccessToken from './AccessToken';
 //
 // Spec.
 //
-// What a cursor tracks progress against: `external` syncs a credentialed remote source into a local
-// target; `feed` processes an internal source into a local consumer. Both share `source`/`target`;
-// only `external` carries the remote-specific fields. Discriminated by `kind`.
+// What a cursor tracks progress against — a source-driven pipeline is either syncing an external,
+// credentialed remote source into a local target (`external`), or processing one internal source
+// into a local consumer (`feed`, e.g. a mailbox's message feed into a fact store). Both kinds share
+// `source`/`target`; only `external` carries the remote-specific fields (credential, foreign id,
+// merge state). Distinguished by `kind`, mirroring the canonical discriminated-spec pattern (see
+// `Kanban.Spec` in `@dxos/plugin-kanban`).
 //
 
 export const ExternalSpec = Schema.Struct({
@@ -158,8 +161,9 @@ export const recordError = (cursor: Cursor, message: string): void =>
   });
 
 /**
- * Reads `cursor.spec.snapshots[foreignId]` typed as `T` — the last-seen remote fields driving the
- * per-field three-way merge. Returns undefined if absent.
+ * Reads `cursor.spec.snapshots[foreignId]` typed as `T` — the last-seen remote fields an external
+ * sync recorded for a foreign id, driving the per-field three-way merge (see the `mergeField`/
+ * `mergeDeep` primitives in `@dxos/app-toolkit`'s `ConnectorSync`). Returns undefined if absent.
  */
 export const readSnapshot = <T extends object>(cursor: ExternalCursor, foreignId: string): T | undefined => {
   const snapshots = (cursor.spec.snapshots ?? {}) as Record<string, unknown>;
@@ -167,8 +171,8 @@ export const readSnapshot = <T extends object>(cursor: ExternalCursor, foreignId
 };
 
 /**
- * Writes `cursor.spec.snapshots[foreignId]`. Allocates a fresh map so the assignment is safe under
- * ECHO's structural-sharing semantics.
+ * Writes `cursor.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map so the assignment is
+ * safe under ECHO's structural-sharing semantics.
  */
 export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapshot: object): void => {
   Obj.update(cursor, (cursor) => {
@@ -197,9 +201,6 @@ export const formatKey = (key: number): string => String(key);
 
 //
 // Range APIs.
-//
-// Work with the `min`/`max` pair to resolve and extend a contiguous synced range `[min, max]` — opt-in
-// for bidirectional sync; a single-directional consumer never calls these and never sets `min`.
 //
 
 /** Which end of the [start, end) range a sync walk begins from. */
