@@ -2,10 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
-import * as Layer from 'effect/Layer';
-import React, { type PropsWithChildren, type Context as ReactContext, createContext, useContext, useMemo } from 'react';
+import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
 import { type Identity, type Space } from '@dxos/halo';
 
@@ -15,18 +13,16 @@ import { type Identity, type Space } from '@dxos/halo';
 export type HaloServices = Identity.Service | Space.Service;
 
 /**
- * The HALO {@link Atom} runtime from the nearest {@link HaloProvider}. Hooks build their atoms
- * from it (`runtime.atom(stream)`); it is not part of the public surface.
+ * React context carrying the HALO services. Hooks read it, provide it into a service stream, and
+ * surface the result through the default {@link Atom} runtime.
  */
-const HaloRuntimeContext: ReactContext<Atom.AtomRuntime<HaloServices> | undefined> = createContext<
-  Atom.AtomRuntime<HaloServices> | undefined
->(undefined);
+const HaloServicesContext = createContext<Context.Context<HaloServices> | undefined>(undefined);
 
 export type HaloProviderProps = PropsWithChildren<{
   /**
    * The HALO services context. Build it from a concrete backing — e.g. the client adapter's
    * `makeIdentityService` / `makeSpaceService` from `@dxos/halo-adapter-client` — and pass it
-   * here. It is wrapped in an {@link Atom} runtime so the hooks resolve against it.
+   * here.
    */
   services: Context.Context<HaloServices>;
 }>;
@@ -35,18 +31,17 @@ export type HaloProviderProps = PropsWithChildren<{
  * Provides the HALO services to the hook library. Wrap the application (or the subtree that uses
  * the hooks) in this provider. Replaces `ClientProvider` for HALO concerns.
  */
-export const HaloProvider = ({ services, children }: HaloProviderProps) => {
-  const runtime = useMemo(() => Atom.runtime(Layer.succeedContext(services)), [services]);
-  return <HaloRuntimeContext.Provider value={runtime}>{children}</HaloRuntimeContext.Provider>;
-};
+export const HaloProvider = ({ services, children }: HaloProviderProps) => (
+  <HaloServicesContext.Provider value={services}>{children}</HaloServicesContext.Provider>
+);
 
 /**
- * Returns the HALO atom runtime. Throws if no {@link HaloProvider} is above in the tree.
+ * Returns the HALO services context. Throws if no {@link HaloProvider} is above in the tree.
  */
-export const useHaloRuntime = (): Atom.AtomRuntime<HaloServices> => {
-  const runtime = useContext(HaloRuntimeContext);
-  if (!runtime) {
+export const useHaloServices = (): Context.Context<HaloServices> => {
+  const services = useContext(HaloServicesContext);
+  if (!services) {
     throw new Error('Missing HaloProvider.');
   }
-  return runtime;
+  return services;
 };

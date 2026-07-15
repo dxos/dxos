@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Result, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, Result, useAtomValue } from '@effect-atom/atom-react';
 import * as Stream from 'effect/Stream';
 import { useMemo } from 'react';
 
 import { Identity, type Invitation, Space } from '@dxos/halo';
 import { type SpaceId } from '@dxos/keys';
 
-import { useHaloRuntime } from './HaloProvider';
+import { useHaloServices } from './HaloProvider';
 
 const EMPTY: readonly Invitation.Flow[] = [];
 
@@ -19,8 +19,11 @@ const EMPTY: readonly Invitation.Flow[] = [];
  * `Invitation` verbs (`events` / `authenticate` / `cancel` / `code`).
  */
 export const useSpaceInvitations = (spaceId?: SpaceId): readonly Invitation.Flow[] => {
-  const runtime = useHaloRuntime();
-  const atom = useMemo(() => runtime.atom(spaceId ? Space.invitations(spaceId) : Stream.empty), [runtime, spaceId]);
+  const services = useHaloServices();
+  const atom = useMemo(
+    () => Atom.make((spaceId ? Space.invitations(spaceId) : Stream.empty).pipe(Stream.provideContext(services))),
+    [services, spaceId],
+  );
   return Result.getOrElse(useAtomValue(atom), () => EMPTY);
 };
 
@@ -29,7 +32,7 @@ export const useSpaceInvitations = (spaceId?: SpaceId): readonly Invitation.Flow
  * `useHaloInvitations`.
  */
 export const useHaloInvitations = (): readonly Invitation.Flow[] => {
-  const runtime = useHaloRuntime();
-  const atom = useMemo(() => runtime.atom(Identity.invitations), [runtime]);
+  const services = useHaloServices();
+  const atom = useMemo(() => Atom.make(Identity.invitations.pipe(Stream.provideContext(services))), [services]);
   return Result.getOrElse(useAtomValue(atom), () => EMPTY);
 };

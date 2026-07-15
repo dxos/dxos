@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Result, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, Result, useAtomValue } from '@effect-atom/atom-react';
 import * as Stream from 'effect/Stream';
 import { useMemo } from 'react';
 
 import { Space } from '@dxos/halo';
 import { type SpaceId } from '@dxos/keys';
 
-import { useHaloRuntime } from './HaloProvider';
+import { useHaloServices } from './HaloProvider';
 
 const EMPTY: readonly Space.Member[] = [];
 
@@ -19,7 +19,10 @@ const EMPTY: readonly Space.Member[] = [];
  * {@link SpaceId}).
  */
 export const useMembers = (spaceId?: SpaceId): readonly Space.Member[] => {
-  const runtime = useHaloRuntime();
-  const atom = useMemo(() => runtime.atom(spaceId ? Space.members(spaceId) : Stream.empty), [runtime, spaceId]);
+  const services = useHaloServices();
+  const atom = useMemo(
+    () => Atom.make((spaceId ? Space.members(spaceId) : Stream.empty).pipe(Stream.provideContext(services))),
+    [services, spaceId],
+  );
   return Result.getOrElse(useAtomValue(atom), () => EMPTY);
 };

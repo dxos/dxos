@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Result, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, Result, useAtomValue } from '@effect-atom/atom-react';
+import * as Stream from 'effect/Stream';
 import { useMemo } from 'react';
 
 import { Space } from '@dxos/halo';
 import { type SpaceId } from '@dxos/keys';
 
-import { useHaloRuntime } from './HaloProvider';
+import { useHaloServices } from './HaloProvider';
 
 const EMPTY: readonly Space.Info[] = [];
 
@@ -22,8 +23,8 @@ export type UseSpacesOptions = {
  * pass `{ all: true }` for every space. Reactive. Replaces `@dxos/react-client`'s `useSpaces`.
  */
 export const useSpaces = ({ all = false }: UseSpacesOptions = {}): readonly Space.Info[] => {
-  const runtime = useHaloRuntime();
-  const atom = useMemo(() => runtime.atom(Space.spaces), [runtime]);
+  const services = useHaloServices();
+  const atom = useMemo(() => Atom.make(Space.spaces.pipe(Stream.provideContext(services))), [services]);
   const spaces = Result.getOrElse(useAtomValue(atom), () => EMPTY);
   return useMemo(() => (all ? spaces : spaces.filter((space) => space.state === 'ready')), [spaces, all]);
 };
