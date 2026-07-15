@@ -9648,6 +9648,15 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/compute/functions
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-adapter-client':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-adapter-client
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
