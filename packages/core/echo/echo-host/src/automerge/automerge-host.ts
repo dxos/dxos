@@ -37,10 +37,10 @@ import * as Effect from 'effect/Effect';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
-import { type CollectionId, DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
+import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
@@ -61,6 +61,7 @@ import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { getHandleState } from './handle-state';
+import { getSpaceIdFromCollectionId } from './space-collection';
 import { SqliteHeadsStore } from './sqlite-heads-store';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter';
 
@@ -238,6 +239,7 @@ export class AutomergeHost extends Resource {
     });
     this._echoNetworkAdapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+      getContainingSpaceIdForDocument: this.getContainingSpaceIdForDocument.bind(this),
       isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
@@ -815,6 +817,36 @@ export class AutomergeHost extends Resource {
     }
 
     return null;
+  }
+
+  /**
+   * Resolve the space id owning a document for the share policy.
+   *
+   * Membership is answered first from the local collection state — the space root's document
+   * list (root + linked docs), maintained by `updateLocalCollectionState`. That mapping survives
+   * handle eviction and never blocks on the document loading, so a doc the node owns but whose
+   * handle is evicted or still `'loading'` resolves to its space instead of reading as "not in any
+   * space" and producing a spurious `authorizeFetch`/share-policy denial (logged by the peer as
+   * `not authorized to access sedimentree`). This must stay synchronous for the same reason
+   * `_getContainingSpaceForDocument` refuses to await the load: the network source's availability
+   * is itself gated on the share policy returning, so awaiting the document here would deadlock.
+   *
+   * Falls back to the document's own embedded space key (loaded handle) / the root-doc lookup for
+   * a doc not yet linked into any local collection (e.g. inbound during initial sync).
+   */
+  async getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null> {
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      // Only space collections (`space:<spaceId>:<root>`) carry a resolvable owner; guard against
+      // any other registered collection id so the parse invariant in `getSpaceIdFromCollectionId`
+      // cannot throw out of the share-policy path.
+      if (state && documentId in state.documents && SpaceId.isValid(collectionId.split(':')[1])) {
+        return getSpaceIdFromCollectionId(collectionId as CollectionId);
+      }
+    }
+
+    const spaceKey = await this._getContainingSpaceForDocument(documentId);
+    return spaceKey ? createIdFromSpaceKey(spaceKey) : null;
   }
 
   /**

@@ -9,13 +9,14 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { range } from '@dxos/util';
 
 import { createTestSqliteRuntime } from '../testing';
 import { TestReplicationNetwork } from '../testing';
 import { AutomergeHost } from './automerge-host';
 import { type EchoNetworkAdapter } from './echo-network-adapter';
+import { deriveCollectionIdFromSpaceId } from './space-collection';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -28,6 +29,30 @@ describe('AutomergeHost', () => {
     });
     await host.flush(Context.default());
     expect(handle.doc()!.text).toEqual('Hello world');
+  });
+
+  test('resolves a document space from collection membership without a loaded handle', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost(runtime);
+
+    // Regression: a document known to the space via the root's document list, but whose handle was
+    // never created (eviction / lazy load), must resolve to its space rather than reading as "not
+    // in any space" — the latter produced spurious share-policy (`authorizeFetch`) denials.
+    const spaceId = SpaceId.random();
+    const { documentId: rootId } = parseAutomergeUrl(generateAutomergeUrl());
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+    await host.updateLocalCollectionState(deriveCollectionIdFromSpaceId(spaceId, rootId), [documentId]);
+    expect(await host.getContainingSpaceIdForDocument(documentId)).toEqual(spaceId);
+
+    // A document in no registered collection (and with no loaded handle) stays unresolved.
+    const { documentId: unknownId } = parseAutomergeUrl(generateAutomergeUrl());
+    expect(await host.getContainingSpaceIdForDocument(unknownId)).toBeNull();
+
+    // A non-space collection id must not throw out of the resolver and must not resolve.
+    const { documentId: otherId } = parseAutomergeUrl(generateAutomergeUrl());
+    await host.updateLocalCollectionState('test-collection', [otherId]);
+    expect(await host.getContainingSpaceIdForDocument(otherId)).toBeNull();
   });
 
   test('changes are preserved in storage', async () => {
