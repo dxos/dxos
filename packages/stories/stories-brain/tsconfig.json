@@ -53,6 +53,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/compute/nlp"
     },
     {

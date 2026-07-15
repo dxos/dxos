@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
+import type { CleanupFn } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
@@ -223,6 +223,17 @@ export interface Database extends Queryable {
    * Returns a renderable URL for the blob, if one can be produced.
    */
   getBlobUrl(blob: Blob.Blob): Promise<string | undefined>;
+
+  /**
+   * Get the current combined (automerge documents + feed blocks) sync state, reported against a
+   * single remote peer.
+   */
+  getSyncState(options?: GetSyncStateOptions): Promise<SyncState>;
+
+  /**
+   * Subscribe to combined sync state changes.
+   */
+  subscribeToSyncState(cb: (state: SyncState) => void, options?: GetSyncStateOptions): CleanupFn;
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
@@ -395,4 +406,77 @@ export const query: {
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
     queryInternal.makeQueryResultEffect,
+  );
+
+/**
+ * Sync state of the database in relation to EDGE.
+ */
+export interface SyncState {
+  //
+  // Automerge
+  //
+
+  /**
+   * Total number of documents locally.
+   */
+  readonly localDocumentCount: number;
+  /**
+   * Total number of documents on the remote peer.
+   */
+  readonly remoteDocumentCount: number;
+  /**
+   * Total number of documents across this peer and the remote peer.
+   */
+  readonly totalDocumentCount: number;
+  /**
+   * Total number of documents that are not synced.
+   * Includes documents that are present only locally, only on the remote peer, or whether the peers have different versions.
+   */
+  readonly unsyncedDocumentCount: number;
+
+  //
+  // Feeds.
+  //
+
+  /**
+   * Blocks still to pull from remote. 0 when caught up.
+   */
+  readonly blocksToPull: string;
+  /**
+   * Unpositioned blocks still to push to remote. 0 when caught up.
+   */
+  readonly blocksToPush: string;
+  /**
+   * Total blocks stored locally for this namespace in the space.
+   */
+  readonly totalBlocks: string;
+}
+
+/**
+ * Options for reading combined sync state.
+ */
+export interface GetSyncStateOptions {
+  /**
+   * Peer to report the automerge document backlog against. Defaults to the EDGE peer.
+   * Provide explicitly in local/test topologies where there is no EDGE peer.
+   */
+  readonly peerId?: string;
+}
+
+/**
+ * Get the current sync state.
+ */
+export const getSyncState = (options?: GetSyncStateOptions): Effect.Effect<SyncState, never, Service> =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.getSyncState(options))));
+
+/**
+ * Subscribe to sync state changes.
+ */
+export const subscribeToSyncState = (options?: GetSyncStateOptions): Stream.Stream<SyncState, never, Service> =>
+  Stream.asyncScoped((emit) =>
+    Effect.gen(function* () {
+      const { db } = yield* Service;
+      const cleanup = db.subscribeToSyncState((state) => emit.single(state), options);
+      yield* Effect.addFinalizer(() => Effect.sync(cleanup));
+    }),
   );

@@ -7,11 +7,13 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 
 import { connectionDeckSubject } from '../constants';
 import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
-import { Connector, ConnectorOperation, SyncBinding } from '../types';
+import { Connector, ConnectorOperation } from '../types';
+import { isCursorForConnection } from '../util';
 
 const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> = ConnectorOperation.SyncConnection.pipe(
   Operation.withHandler(
@@ -29,12 +31,10 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
         return { synced: 0 };
       }
 
-      const bindings = yield* Database.query(
-        Query.select(Filter.id(connection.id)).sourceOf(SyncBinding.SyncBinding),
-      ).run.pipe(
+      const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run.pipe(
         Effect.provide(Database.layer(db)),
-        Effect.map((results) => [...results]),
-        Effect.orElseSucceed(() => [] as SyncBinding.SyncBinding[]),
+        Effect.map((results) => results.filter((cursor) => isCursorForConnection(cursor, connection))),
+        Effect.orElseSucceed(() => [] as Cursor.Cursor[]),
       );
 
       const sync = connector.sync;
@@ -46,8 +46,8 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
         navigation: 'immediate',
       });
       yield* Effect.all(
-        bindings.map((binding) =>
-          Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId }).pipe(
+        cursors.map((cursor) =>
+          Operation.invoke(sync, { binding: Ref.make(cursor) }, { spaceId }).pipe(
             // A nested `Operation.invoke` runs as a tracked child process; `Process.fromOperation`
             // unconditionally promotes whatever the handler fails with to a defect (`Effect.orDie`)
             // before it reaches the caller, so retagging 401s here must intercept the defect channel —
@@ -68,7 +68,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
         { concurrency: 'unbounded' },
       );
 
-      return { synced: bindings.length };
+      return { synced: cursors.length };
     }),
   ),
 );
