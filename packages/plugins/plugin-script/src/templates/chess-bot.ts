@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Obj } from '@dxos/echo';
 import { Chess } from '@dxos/plugin-chess';
-import { Game, GameRef, loadGame } from '@dxos/plugin-game';
+import { Game, loadGame } from '@dxos/plugin-game';
 
 const ChessBot = Operation.make({
   meta: {
@@ -18,7 +18,7 @@ const ChessBot = Operation.make({
     description: 'Plays a random move in a chess game.',
   },
   input: Schema.Struct({
-    game: GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotations({
       description: 'The chess game to comment on.',
     }),
     player: Schema.optional(Schema.Literal('white', 'black')).annotations({
@@ -30,7 +30,7 @@ const ChessBot = Operation.make({
       description: 'The state of the game as an ASCII art board.',
     }),
   }),
-  types: [Game, Chess.State],
+  types: [Game.Game, Chess.State],
   services: [Database.Service],
 });
 

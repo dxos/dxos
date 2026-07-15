@@ -58,6 +58,12 @@ const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.make,
 );
 
+type StoryArgs = {
+  title: string;
+  content: string;
+  objects?: boolean;
+};
+
 const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
   const [space] = useSpaces();
@@ -84,87 +90,75 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<Args>(
-      ({ args: { title = 'Testing', content = '', objects: showObjects = false, sketch: showSketch = false } }) => ({
-        // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
-        setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
-        plugins: [
-          ...corePlugins(),
-          StorybookPlugin({}),
-          MarkdownExtensionsPlugin(),
-          SketchPlugin(),
-          ClientPlugin({
-            types: [
-              Markdown.Document,
-              Text.Text,
-              Person.Person,
-              Organization.Organization,
-              Sketch.Sketch,
-              Sketch.Canvas,
-            ],
-            onClientInitialized: ({ client }) =>
-              Effect.gen(function* () {
-                const { personalSpace } = yield* initializeIdentity(client);
+    withPluginManager<StoryArgs>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
+      // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
+      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
+      plugins: [
+        ...corePlugins(),
+        StorybookPlugin({}),
+        MarkdownExtensionsPlugin(),
+        SketchPlugin(),
+        ClientPlugin({
+          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Sketch.Sketch, Sketch.Canvas],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              const { personalSpace } = yield* initializeIdentity(client);
 
+              let objects: Obj.Any[] = [];
+              if (showObjects) {
                 const createObjects = createObjectFactory(personalSpace.db, generator);
-                yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
+                objects = yield* Effect.promise(() =>
+                  createObjects([
+                    {
+                      type: Organization.Organization,
+                      count: 1,
+                    },
+                    {
+                      type: Person.Person,
+                      count: 1,
+                    },
+                  ]),
+                );
 
-                const kai = personalSpace.db.add(
-                  Obj.make(Person.Person, {
-                    fullName: 'Kai Bot',
-                    image: 'https://placehold.net/avatar.svg',
-                    emails: [
-                      {
-                        label: 'Email',
-                        value: 'kai@dxos.org',
-                      },
-                    ],
+                objects.push(
+                  Sketch.make({
+                    name: 'Test Sketch',
+                    canvas: {
+                      content: SKETCH_CONTENT,
+                    },
                   }),
                 );
-                const dxos = personalSpace.db.add(
-                  Obj.make(Organization.Organization, {
-                    name: 'DXOS',
-                    image: 'https://placehold.net/8.png',
-                    website: 'https://dxos.org',
-                  }),
-                );
+
+                objects.forEach((object) => personalSpace.db.add(object));
                 yield* Effect.promise(() => personalSpace.db.flush());
+              }
 
-                const objects = showObjects ? [kai, dxos] : [];
+              personalSpace.db.add(
+                Markdown.make({
+                  name: title,
+                  content: [
+                    `# ${title}`,
+                    content,
+                    objects
+                      .map((object, i) => [
+                        'This is object #' + (i + 1),
+                        `![${Obj.getLabel(object)}|300](${Obj.getURI(object)})`,
+                      ])
+                      .flat()
+                      .join('\n\n'),
+                    'This is the end of the document.',
+                  ].join('\n\n'),
+                }),
+              );
 
-                // The sketch renders inline as a block surface (transclusion) within the article.
-                const sketch = showSketch
-                  ? personalSpace.db.add(Sketch.make({ name: 'Test Sketch', canvas: { content: SKETCH_CONTENT } }))
-                  : undefined;
+              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+            }),
+        }),
 
-                personalSpace.db.add(
-                  Markdown.make({
-                    name: title,
-                    content: [
-                      `# ${title}`,
-                      content,
-                      ...(sketch ? [`![${sketch.name}](${Obj.getURI(sketch)})`] : []),
-                      objects
-                        .map((object, i) => [
-                          'This is object #' + (i + 1),
-                          `![${Obj.getLabel(object)}](${Obj.getURI(object)})`,
-                        ])
-                        .flat()
-                        .join('\n\n'),
-                      'This is the end of the document.',
-                    ].join('\n\n'),
-                  }),
-                );
-
-                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
-              }),
-          }),
-
-          MarkdownPlugin(),
-          PreviewPlugin(),
-        ],
-      }),
-    ),
+        MarkdownPlugin(),
+        PreviewPlugin(),
+      ],
+    })),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -175,20 +169,12 @@ const meta = {
 
 export default meta;
 
-type Args = {
-  title: string;
-  content: string;
-  objects: boolean;
-  sketch: boolean;
-};
-
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {
   args: {
     title: 'Testing',
     content: 'Hello, world!',
-    objects: false,
   },
 };
 
@@ -197,13 +183,5 @@ export const WithObjects: Story = {
     title: 'Testing with objects',
     content: 'Here are some inline objects:',
     objects: true,
-  },
-};
-
-export const WithEmbeddedSketch: Story = {
-  args: {
-    title: 'Test Document',
-    content: 'The sketch below renders inline as a block surface:',
-    sketch: true,
   },
 };

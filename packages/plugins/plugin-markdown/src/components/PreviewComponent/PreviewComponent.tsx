@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { URI } from '@dxos/keys';
 import { useResolveRef } from '@dxos/react-client/echo';
-import { Icon, IconButton } from '@dxos/react-ui';
+import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 
@@ -63,6 +63,8 @@ export type PreviewComponentProps = XmlWidgetProps<{
   block?: boolean;
   suggest?: boolean;
   onOpen?: (dxn: URI.URI) => void;
+  /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
+  isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
 }>;
 
 /**
@@ -70,8 +72,19 @@ export type PreviewComponentProps = XmlWidgetProps<{
  * Replaces the addBlockContainer callback pattern.
  * Used as the Component entry in a urlSchemes XmlWidgetDef.
  */
-export const PreviewComponent = ({ view, range, space, dxn, label: labelProp, onOpen }: PreviewComponentProps) => {
+export const PreviewComponent = ({
+  view,
+  range,
+  space,
+  dxn,
+  label: labelProp,
+  onOpen,
+  isSurfaceAvailable: isSurfaceAvailableProp,
+}: PreviewComponentProps) => {
   const { invokePromise } = useOperationInvoker();
+  // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
+  const defaultIsSurfaceAvailable = Surface.useIsAvailable();
+  const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
   const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
   // Resolve relative to the containing document's own space so space-relative embeds
@@ -161,46 +174,61 @@ export const PreviewComponent = ({ view, range, space, dxn, label: labelProp, on
   const objectLabel = Obj.getLabel(subject);
   const objectIcon = Obj.getIcon(subject);
 
-  // TODO(burdon): Determine if card or entire document from annotation? GFM?
-  // TODO(burdon): Different role: move wrapper below into role?
+  if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
+    return (
+      <div
+        className='relative grid scroll-mt-16'
+        style={sizeStyle(size, 'vertical')}
+        {...resizeAttributes}
+        ref={containerRef}
+      >
+        <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
+          <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+        </div>
 
-  // Frame transcluded block embeds so they read as a self-contained card within the document flow.
-  // The clip/border live on an inner element so they don't clip the resize handle (which straddles the
-  // bottom edge); the inner grid stretches the surface to fill the resizable box, overriding any
-  // intrinsic aspect.
-  return (
-    <div
-      className='relative grid scroll-mt-16'
-      style={sizeStyle(size, 'vertical')}
-      {...resizeAttributes}
-      ref={containerRef}
-    >
-      <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
-        <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
-      </div>
+        <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
+          <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
+            {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
+            {objectLabel}
+          </span>
+        </div>
+        <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
+          <IconButton
+            density='sm'
+            icon='ph--arrow-square-out--regular'
+            iconOnly
+            label='Open'
+            variant='ghost'
+            onClick={handleOpen}
+          />
+        </div>
 
-      {/* TODO(burdon): Config option. */}
-      <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-        <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
-          {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
-          {objectLabel}
-        </span>
-        <IconButton
-          density='sm'
-          icon='ph--arrow-square-out--regular'
-          iconOnly
-          label='Open'
-          variant='ghost'
-          onClick={handleOpen}
+        <ResizeHandle
+          side='block-end'
+          fallbackSize={FALLBACK_SIZE}
+          minSize={MIN_SIZE}
+          size={size}
+          onSizeChange={handleResize}
         />
       </div>
-      <ResizeHandle
-        side='block-end'
-        fallbackSize={FALLBACK_SIZE}
-        minSize={MIN_SIZE}
-        size={size}
-        onSizeChange={handleResize}
-      />
-    </div>
-  );
+    );
+  }
+
+  if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
+    return (
+      <div>
+        <Card.Root>
+          <Card.Header>
+            <Card.Block />
+            <Card.Title>{Obj.getLabel(data.subject)}</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+          </Card.Body>
+        </Card.Root>
+      </div>
+    );
+  }
+
+  return null;
 };
