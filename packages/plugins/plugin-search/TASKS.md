@@ -38,6 +38,35 @@ Wire `plugin-search` + `MailboxArticle` to the shipped FTS5 index with ranking a
   `packages/core/echo/echo-host/src/query/query-planner.ts` `case 'and'`.
 - FTS single-space, whole-object-JSON, no snippet — `index-core` `FtsIndex`.
 
+## Milestone 1.5: MailboxFilter extraction + search result surfaces
+
+Extract `MailboxFilter` from `MailboxArticle`; add a realistic shared message corpus;
+ship best-match search snippets in mailbox cards; add a `SearchResultList`
+(react-ui-list) with a plugin-search storybook over the corpus. Shared search-text
+utilities move to `@dxos/react-ui-search` so plugin-inbox can reuse them without
+depending on plugin-search.
+
+### Tasks
+
+- [ ] **Shared search-text utils** — move `computeMatchSpans` + `Highlighted` to
+  `@dxos/react-ui-search` (`src/util`, `src/components/Highlighted`); add pure
+  `buildSnippet(text, query)`; update plugin-search call sites (no shims).
+- [ ] **Shared sample corpus** — pure-data `SAMPLE_MESSAGES` (~18 realistic messages
+  across projects/invoices/meetings/hiring/incidents) in `@dxos/plugin-testing`.
+- [ ] **Best-match snippet in mailbox cards** — thread the active query to `MessageStack`
+  tiles; when searching, show `buildSnippet(Message.extractText(m), query)` highlighted
+  instead of the default preview.
+- [ ] **Extract MailboxFilter** — `MailboxFilter.tsx` + `MailboxFilter.stories.tsx`;
+  reseed `MailboxArticle.stories.tsx` with the corpus; play test exercises search + snippet.
+- [ ] **SearchResultList** — react-ui-list `Listbox` result list (icon + highlighted
+  title/snippet + metadata) + `SearchResultList.stories.tsx` over the corpus.
+
+### Follow-ups
+
+- [ ] **Reusable first-class test data** — promote the hand-authored corpus into a
+  shared, realistic message/object dataset + generator for stories and tests across
+  packages (beyond the single `SAMPLE_MESSAGES` fixture).
+
 ## Milestone 2: Global (cross-space) search
 
 Client fan-out across loaded spaces + RRF merge; scope toggle. See ROADMAP M2.
