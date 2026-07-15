@@ -8,10 +8,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { AccessToken } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { exportFeedMessages, replaceFeed, resetMailbox } from './archive';
 

@@ -11,10 +11,10 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { InboxOperation, Mailbox } from '../../../../types';
 
 /**
- * Eagerly materializes a local Mailbox so a {@link SyncBinding} can be created
- * (relations require both endpoints to exist). Gmail is a single-target connector
- * with no remote selection, so a fresh Mailbox is always created; the connection's
- * `accessToken.account` (the authenticated email) seeds the default name when available.
+ * Eagerly materializes a local Mailbox so the sync cursor's target exists before the cursor is
+ * created. Gmail is a single-target connector with no remote selection, so a fresh Mailbox is always
+ * created; the connection's `accessToken.account` (the authenticated email) seeds the default name
+ * when available.
  */
 const handler: Operation.WithHandler<typeof InboxOperation.MaterializeGmailTarget> =
   InboxOperation.MaterializeGmailTarget.pipe(

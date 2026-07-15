@@ -13,7 +13,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
 
 import { Connection } from '../../types';
 import { performOAuthFlow } from './oauth';

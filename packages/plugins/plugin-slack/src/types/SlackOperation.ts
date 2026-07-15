@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
-import { Connection, MaterializeTargetInput, MaterializeTargetOutput, SyncBinding } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/link';
+import { Connection, MaterializeTargetInput, MaterializeTargetOutput } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
@@ -51,9 +52,9 @@ export const GetSlackChannels = Operation.make({
 
 /**
  * Find-or-create the empty local `Channel` root for a selected Slack
- * conversation so a {@link SyncBinding} relation can be created eagerly
- * (relations require both endpoints to exist). Keyed by the conversation's
- * `remoteId` foreign key, so it is idempotent across re-selection.
+ * conversation so a {@link Cursor.Cursor} can be created eagerly against it.
+ * Keyed by the conversation's `externalId` foreign key, so it is idempotent
+ * across re-selection.
  */
 export const MaterializeSlackTarget = Operation.make({
   meta: {
@@ -69,12 +70,12 @@ export const MaterializeSlackTarget = Operation.make({
 /**
  * Pull-only sync of a single Slack channel binding.
  *
- * Resolves the binding's connection (source) and local `Channel` (target),
- * asks Slack for messages newer than the binding's `cursor`, and appends them
- * to the channel's feed as `@dxos/types` `Message` objects. `Message.threadId`
- * carries Slack's `thread_ts` so threaded replies are reconstructable on read
- * without a separate object type. The new cursor / `lastSyncAt` / `lastError`
- * are written back onto the binding.
+ * Resolves the binding's credential (`spec.source`) and local `Channel`
+ * (`spec.target`), asks Slack for messages newer than the binding's `value`,
+ * and appends them to the channel's feed as `@dxos/types` `Message` objects.
+ * `Message.threadId` carries Slack's `thread_ts` so threaded replies are
+ * reconstructable on read without a separate object type. The new cursor
+ * value / `lastTick` / `lastError` are written back onto the binding.
  */
 export const SyncSlackChannel = Operation.make({
   meta: {
@@ -85,7 +86,7 @@ export const SyncSlackChannel = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({

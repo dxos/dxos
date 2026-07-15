@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Database, type Feed } from '@dxos/echo';
+import { Database, type Feed, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type FeedCursorsApi, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { Expando } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { type ModelVariant } from '../models';
@@ -54,16 +56,6 @@ export const extractDocFactsForMessages = (
     }).pipe(Effect.provide(AiServiceTestingPreset(variant.preset))),
   );
 
-/** In-memory per-feed high-water cursor (mirrors the pipeline-rdf FeedCursors registry). */
-export const makeCursors = (): FeedCursorsApi => {
-  const map = new Map<string, number>();
-  return {
-    get: (feedId) => map.get(feedId) ?? 0,
-    advance: (feedId, key) => void map.set(feedId, Math.max(map.get(feedId) ?? 0, key)),
-    reset: (feedId) => void map.delete(feedId),
-  };
-};
-
 export type FactsRunResult = {
   readonly processed: number;
   readonly facts: readonly RDF.Fact[];
@@ -106,7 +98,11 @@ export const extractFactsForVariant = (
           ),
         );
 
-      const { processed } = yield* runFactPipeline({ feed, cursors: makeCursors(), extract, pageSize, concurrency });
+      // A fresh cursor per run (this harness doesn't test resume behavior across calls, so there is no
+      // need to find-or-create/persist across invocations — just a real db-backed target for it to point at).
+      const target = yield* Database.add(Expando.make({ name: 'facts-benchmark-target' }));
+      const cursor = yield* Database.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target) }));
+      const { processed } = yield* runFactPipeline({ feed, cursor, extract, pageSize, concurrency });
       const store = yield* FactStore;
       const facts = yield* store.query({});
       return { processed, facts } satisfies FactsRunResult;
