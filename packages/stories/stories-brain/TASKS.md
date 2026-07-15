@@ -408,6 +408,8 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       master/detail; companion vs deck-peer opening across layout modes.)
 - [ ] **track: Break `Topic` out into plugin-brain; consider renaming to `Project`; track threads (not
       just email); add a task list, etc.**
+- [ ] **track: Reconcile `Project` + `Task`; make a primary "nexus" type that brings together analysis —
+      Threads, Contacts, Summaries, Tasks, Agent.** Design captured in `plugin-brain/DESIGN.md`.
 - [x] **Audit current `Topic` usages → `plugin-brain/AUDIT.md`** — inventory of every importer + component
       (type def, operations, surfaces, app-graph, stories) + the existing `@dxos/types` `Project` model. (#8)
 - [x] **Move `Topic` type → `@dxos/types`, Project-style class** (#6/#7) — class with inline title/label/icon
