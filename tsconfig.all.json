@@ -238,6 +238,9 @@
       "path": "packages/core/halo/halo-e2e/tsconfig.json"
     },
     {
+      "path": "packages/core/halo/halo-react/tsconfig.json"
+    },
+    {
       "path": "packages/common/hypercore/tsconfig.json"
     },
     {

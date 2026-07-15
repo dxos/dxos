@@ -22,13 +22,16 @@ managers, import scripts).
 It is **not** enough to migrate the codebase wholesale. Four gaps remain, each
 with an agreed disposition:
 
-1. **React bindings — reuse the existing layer.** There are ~368 uses of
+1. **React bindings — `@dxos/halo-react`.** There are ~368 uses of
    `useIdentity` / `useDevices` / `useCredentials` / `useSpaces` / `useSpace` /
-   `useMembers` / `useSpaceInvitations` across 163 files. Rather than ship a new
-   binding package, `@dxos/react-client`'s existing hooks will be reimplemented
-   on top of the HALO services (bridging the `changes` / `memberChanges` /
-   `deviceChanges` streams to React state) so component call sites are unchanged.
-   Until that rewrite lands, component code stays on `@dxos/react-client`.
+   `useMembers` / `useSpaceInvitations` across 163 files — the bulk of the
+   consumer surface. The new [`@dxos/halo-react`](../halo-react) hook library
+   provides drop-in equivalents backed by the HALO services (bridging the
+   `changes` / `memberChanges` / `deviceChanges` streams to React state via
+   `useSyncExternalStore`-style subscriptions). Components migrate hook-by-hook
+   by swapping the import and wrapping the tree in `HaloProvider` instead of
+   `ClientProvider`; see [Migrating React hooks](#migrating-react-hooks). Hooks
+   with no service verb yet (`useCredentials`) stay on `@dxos/react-client`.
 2. **ECHO database access — a separate track, by design.** `Space.Info` is a
    plain snapshot, not a live proxy — it has no `.db`, `.crud`, `.properties`,
    or `.internal`. The heavy `space.db.*` / `space.internal.*` usage is ECHO,
@@ -76,6 +79,67 @@ await Effect.runPromise(program.pipe(Effect.provide(halo)));
 `layerClient` is the seam that replaces direct `@dxos/client` access for HALO
 concerns. The backend behind it (legacy client, EDGE shim, or Keyhive) can swap
 without touching consumers.
+
+## Migrating React hooks
+
+Most consumer usage is React hooks, not imperative calls. The
+[`@dxos/halo-react`](../halo-react) package mirrors `@dxos/react-client`'s
+HALO/space hooks, backed by the services. Migration is mechanical: swap the
+provider, then swap imports hook-by-hook.
+
+**1. Swap the provider.** `@dxos/halo-react` reads the services off a React
+context holding an Effect `Context.Context<Identity | Space | Invitation>`.
+Build that context once (from the client adapter, or any backing) and wrap the
+tree:
+
+```tsx
+import { Context } from 'effect';
+import { Identity, Invitation, Space } from '@dxos/halo';
+import { makeIdentityService, makeSpaceService, makeInvitationService } from '@dxos/halo-adapter-client';
+import { HaloProvider } from '@dxos/halo-react';
+
+const services = Context.empty().pipe(
+  Context.add(Identity.Service, makeIdentityService(client)),
+  Context.add(Space.Service, makeSpaceService(client)),
+  Context.add(Invitation.Service, makeInvitationService(client)),
+);
+
+// Replaces <ClientProvider> for HALO concerns.
+<HaloProvider services={services}>{children}</HaloProvider>;
+```
+
+In a plugin this context is built once at the `plugin-client` composition root
+(where the `Client` capability lives) and provided app-wide.
+
+**2. Swap the hooks.** Same names, same call shape; the returned values are the
+HALO snapshot types (`Identity.Info`, `Space.Info`, `Space.Member`,
+`Invitation.Flow`) instead of the client proxy types.
+
+| `@dxos/react-client` hook         | `@dxos/halo-react` hook                                         | Return type                       | Notes                                                         |
+| --------------------------------- | --------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------- |
+| `useIdentity(): Identity \| null` | `useIdentity(): Identity.Info \| undefined`                     | `{ did, displayName? }`           | `null` → `undefined`; `did` replaces `identityKey`/`spaceKey` |
+| `useDevices(): Device[]`          | `useDevices(): readonly Identity.DeviceInfo[]`                  | `{ key, kind?, label?, current }` | —                                                             |
+| `useSpaces({ all? }): Space[]`    | `useSpaces({ all? }): readonly Space.Info[]`                    | `{ id, name?, state }`            | same `all` option and `ready`-only default                    |
+| `useSpace(id \| key): Space`      | `useSpace(id?: SpaceId): Space.Info \| undefined`               | snapshot                          | `SpaceId` only — no `PublicKey`                               |
+| `useMembers(key): SpaceMember[]`  | `useMembers(id?: SpaceId): readonly Space.Member[]`             | `{ did?, role, online }`          | takes a `SpaceId`, not a key; `role` is `Space.Access`        |
+| `useSpaceInvitations(id \| key)`  | `useSpaceInvitations(id?: SpaceId): readonly Invitation.Flow[]` | `Invitation.Flow[]`               | drive each flow via the `Invitation` verbs                    |
+| `useHaloInvitations()`            | `useHaloInvitations(): readonly Invitation.Flow[]`              | `Invitation.Flow[]`               | —                                                             |
+| `useCredentials()`                | _not yet_                                                       | —                                 | no credential verb yet (§3) — stays on `@dxos/react-client`   |
+
+```tsx
+// Before
+import { useIdentity } from '@dxos/react-client/halo';
+import { useSpaces, useMembers } from '@dxos/react-client/echo';
+
+// After
+import { useIdentity, useSpaces, useMembers } from '@dxos/halo-react';
+```
+
+**3. ECHO stays put.** `useQuery` and other `@dxos/react-client/echo` database
+hooks are ECHO, not HALO — they do not move here (§2).
+
+For imperative call sites (operation handlers, CLI commands), use the service
+verbs directly rather than hooks — those patterns follow.
 
 ## Patterns
 
@@ -267,12 +331,12 @@ const flows = yield * Invitation.active({ spaceId }); // or { device: true }
 
 ## What stays on `@dxos/client` (for now)
 
-| Area                                                                                                       | Reason                                | Unblocks when                                                       |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------- |
-| `useIdentity` / `useDevices` / `useSpaces` / `useSpace` / `useMembers` / `useSpaceInvitations` (~368 uses) | Services are Effect/Stream, not hooks | `@dxos/react-client` hooks are reimplemented over the HALO services |
-| `space.db` / `space.crud` / `space.properties` / `space.internal.*` (except edge replication)              | ECHO, not HALO                        | migrate to the `@dxos/echo` `Database` service keyed by `SpaceId`   |
-| `halo.queryCredentials` / `writeCredentials`; recovery-credential _creation_                               | deferred verb                         | credential + recovery verbs added to `Identity`                     |
-| `createEdgeIdentity` / EDGE attestation                                                                    | deferred verb                         | EDGE verbs added to `Identity`                                      |
-| device _update_                                                                                            | deferred verb                         | `Identity` device-update verb added                                 |
-| `space.internal.migrate`                                                                                   | intentionally out of scope            | (revisit if needed)                                                 |
-| full `SpaceState` enum                                                                                     | `Space.State` is the consumer subset  | (by design)                                                         |
+| Area                                                                                          | Reason                               | Unblocks when                                                                              |
+| --------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `useCredentials`                                                                              | no service verb yet                  | credential verbs added to `Identity` (the other HALO hooks now live in `@dxos/halo-react`) |
+| `space.db` / `space.crud` / `space.properties` / `space.internal.*` (except edge replication) | ECHO, not HALO                       | migrate to the `@dxos/echo` `Database` service keyed by `SpaceId`                          |
+| `halo.queryCredentials` / `writeCredentials`; recovery-credential _creation_                  | deferred verb                        | credential + recovery verbs added to `Identity`                                            |
+| `createEdgeIdentity` / EDGE attestation                                                       | deferred verb                        | EDGE verbs added to `Identity`                                                             |
+| device _update_                                                                               | deferred verb                        | `Identity` device-update verb added                                                        |
+| `space.internal.migrate`                                                                      | intentionally out of scope           | (revisit if needed)                                                                        |
+| full `SpaceState` enum                                                                        | `Space.State` is the consumer subset | (by design)                                                                                |
