@@ -42,8 +42,8 @@ const JMAP_SYNC_CONFIG = {
 
 /**
  * Runs the JMAP sync pipeline for a binding against the {@link JmapMailApi} service (plus the ambient
- * operation services). Every run is bidirectional: it syncs new mail since the cursor's `high`
- * watermark (ascending) and continues backfilling from `low` down to the sync horizon (descending), so
+ * operation services). Every run is bidirectional: it syncs new mail since the cursor's `max`
+ * watermark (ascending) and continues backfilling from `min` down to the sync horizon (descending), so
  * an interrupted or capped run always resumes both halves from exactly where it left off — the cursor
  * is the only durable state (see `@dxos/link`'s `Cursor.resolveWindows`). It *requires* the service
  * rather than providing HTTP/credentials itself, so a test can drive the whole sync against a mock
@@ -112,12 +112,12 @@ export const runJmapSync = ({
     }
 
     const options = readBindingOptions(binding);
-    // `high`/`low` are the newest/oldest committed `receivedAt` (epoch-ms) — see `Cursor.resolveWindows`.
+    // `max`/`min` are the newest/oldest committed `receivedAt` (epoch-ms) — see `Cursor.resolveWindows`.
     const now = new Date();
     const horizon = Cursor.resolveHorizon({ now, syncBackDays: options.syncBackDays });
-    const highKey = Cursor.parseKey(binding.high);
-    const lowKey = Cursor.parseKey(binding.low);
-    const windows = Cursor.resolveWindows({ highKey, lowKey, now, horizon });
+    const maxKey = Cursor.parseKey(binding.max);
+    const minKey = Cursor.parseKey(binding.min);
+    const windows = Cursor.resolveWindows({ maxKey, minKey, now, horizon });
 
     // Resolve the sender contact, build the ECHO message, and resolve folder ids to tag URIs via the
     // (JMAP-specific) folder map captured here.
@@ -176,8 +176,8 @@ export const runJmapSync = ({
           cursor: binding,
           feed,
           foreignKeySource: JMAP_MESSAGE_SOURCE,
-          highKey,
-          lowKey,
+          maxKey,
+          minKey,
           trackRange: true,
           stats,
           dedupSeedTail,
@@ -276,12 +276,12 @@ const fetchAttachments = (
 /**
  * Streams JMAP email ids over the resolved {@link Cursor.Window}: build the query filter (folder scope
  * + `after`/`before` date bounds + optional user DSL), then paginate ids. Direction is realized via
- * both the window's bounds and the query's sort order — forward resumes from `high` and pages
- * oldest-first, so a capped run advances `high` gap-free instead of jumping straight to the newest key
- * and stranding the older, unprocessed middle; backward pages newest-first from `low` down to the
- * horizon. The backward window's upper bound is queried 1ms past `low` (`window.end`) so a message
+ * both the window's bounds and the query's sort order — forward resumes from `max` and pages
+ * oldest-first, so a capped run advances `max` gap-free instead of jumping straight to the newest key
+ * and stranding the older, unprocessed middle; backward pages newest-first from `min` down to the
+ * horizon. The backward window's upper bound is queried 1ms past `min` (`window.end`) so a message
  * sharing that exact millisecond is re-queried — and resolved by the dedup set — rather than silently
- * skipped now that `low` has advanced past it. Split from the full-email fetch so a caller syncing both
+ * skipped now that `min` has advanced past it. Split from the full-email fetch so a caller syncing both
  * halves of a bidirectional run can concatenate two id streams (one per window) and cap the combined
  * total *before* paying for a full-email fetch — see `runJmapSync`.
  */
@@ -312,8 +312,8 @@ const jmapIds = (
       if (!scopesMailbox && excludedFolderIds.length > 0) {
         conditions.push({ inMailboxOtherThan: excludedFolderIds });
       }
-      // Bound the query to the window: `after` (>= high/horizon) and `before` (< end). The backward
-      // window's `end` is `low` — extend it 1ms so the boundary millisecond is included (see doc above).
+      // Bound the query to the window: `after` (>= max/horizon) and `before` (< end). The backward
+      // window's `end` is `min` — extend it 1ms so the boundary millisecond is included (see doc above).
       const upperBound = window.direction === 'backward' ? new Date(window.end.getTime() + 1) : window.end;
       conditions.push({ after: window.start.toISOString() });
       conditions.push({ before: upperBound.toISOString() });
@@ -360,7 +360,7 @@ const jmapEmailsForIds = (
         // Drop an id that's gone by fetch time (in the query result, but `emailGet` returns nothing —
         // deleted between query and get) by filtering the null out. Do NOT recover the error channel:
         // a real `JmapApiError` (network/auth) must propagate and fail the run so the durable retry
-        // re-fetches, rather than silently dropping the message and stranding it once `high` advances.
+        // re-fetches, rather than silently dropping the message and stranding it once `max` advances.
         Stream.fromEffect(
           Effect.gen(function* () {
             const api = yield* JmapMailApi;

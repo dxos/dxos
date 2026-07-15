@@ -79,7 +79,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     await builder.close();
   });
 
-  const seed = (options?: { high?: string; low?: string; options?: Record<string, unknown> }) =>
+  const seed = (options?: { max?: string; min?: string; options?: Record<string, unknown> }) =>
     seedMailboxBinding(builder, { source: JMAP_MESSAGE_SOURCE, connectorId: JMAP_MAIL_CONNECTOR_ID, ...options });
   const jmapKeyIds = (message: Message.Message) =>
     Obj.getMeta(message)
@@ -125,9 +125,9 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(tags.length).toBe(dataset.folders.length);
 
     // Cursor advanced to the last synced key; backfill completed within the run (small dataset).
-    expect(binding.high).toBeDefined();
-    expect(Number.parseInt(binding.high!, 10)).toBeGreaterThan(0);
-    expect(binding.low).toBeDefined();
+    expect(binding.max).toBeDefined();
+    expect(Number.parseInt(binding.max!, 10)).toBeGreaterThan(0);
+    expect(binding.min).toBeDefined();
 
     // Re-running is a no-op: dedup + cursor prevent duplicate work.
     const rerun = await EffectEx.runPromise(
@@ -176,36 +176,36 @@ describe('runJmapSync against a mock JMAP API', () => {
       runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(inboxJmapSyncTestServices(db, mid))),
     );
     expect(r1.newMessages).toBe(mid.emails.length);
-    expect(Number.parseInt(binding.high!, 10)).toBe(maxKey(mid)); // high set to the newest synced.
-    const lowAfterInitial = Number.parseInt(binding.low!, 10);
-    expect(lowAfterInitial).toBeLessThan(minKey(mid)); // backfill completed: low clamped to the horizon.
+    expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(mid)); // max set to the newest synced.
+    const lowAfterInitial = Number.parseInt(binding.min!, 10);
+    expect(lowAfterInitial).toBeLessThan(minKey(mid)); // backfill completed: min clamped to the horizon.
 
-    // 2) Incremental: forward from `high`. A newer band has arrived; only it syncs, `low` unchanged.
+    // 2) Incremental: forward from `max`. A newer band has arrived; only it syncs, `min` unchanged.
     const r2 = await EffectEx.runPromise(
       runJmapSync({ binding: Ref.make(binding) }).pipe(
         Effect.provide(inboxJmapSyncTestServices(db, union(mid, recent))),
       ),
     );
     expect(r2.newMessages).toBe(recent.emails.length);
-    expect(Number.parseInt(binding.high!, 10)).toBe(maxKey(recent));
-    expect(Number.parseInt(binding.low!, 10)).toBe(lowAfterInitial);
+    expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(recent));
+    expect(Number.parseInt(binding.min!, 10)).toBe(lowAfterInitial);
 
-    // 3) Widen syncBackDays to 30 — the horizon moves below `low`, reopening backward. `older` is in
-    // range; `high` stays put (older keys don't exceed it).
+    // 3) Widen syncBackDays to 30 — the horizon moves below `min`, reopening backward. `older` is in
+    // range; `max` stays put (older keys don't exceed it).
     Obj.update(binding, (binding) => {
       if (binding.spec.kind === 'external') {
         binding.spec.options = { ...(binding.spec.options ?? {}), syncBackDays: 30 };
       }
     });
-    const highBeforeWiden = binding.high;
+    const highBeforeWiden = binding.max;
     const r3 = await EffectEx.runPromise(
       runJmapSync({ binding: Ref.make(binding) }).pipe(
         Effect.provide(inboxJmapSyncTestServices(db, union(mid, recent, older))),
       ),
     );
     expect(r3.newMessages).toBe(older.emails.length);
-    expect(binding.high).toBe(highBeforeWiden);
-    expect(Number.parseInt(binding.low!, 10)).toBeLessThan(minKey(older));
+    expect(binding.max).toBe(highBeforeWiden);
+    expect(Number.parseInt(binding.min!, 10)).toBeLessThan(minKey(older));
 
     // All three bands landed exactly once.
     const ids = await syncedIdsOf(db, mailbox);
@@ -229,7 +229,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(Exit.isFailure(exit)).toBe(true);
 
     // The committed page is durable and is a contiguous newest suffix of the dataset (backward walks
-    // newest-first); `low` reflects the oldest committed key, `high` the newest — no completion (the
+    // newest-first); `min` reflects the oldest committed key, `max` the newest — no completion (the
     // run errored, not merely exhausted).
     const committedAfterFault = await syncedIdsOf(db, mailbox);
     expect(committedAfterFault).toHaveLength(10);
@@ -237,10 +237,10 @@ describe('runJmapSync against a mock JMAP API', () => {
       (left, right) => new Date(right.receivedAt).getTime() - new Date(left.receivedAt).getTime(),
     );
     expect(new Set(committedAfterFault)).toEqual(new Set(sortedDesc.slice(0, 10).map((email) => email.id)));
-    expect(Number.parseInt(binding.high!, 10)).toBe(maxKey(dataset));
-    expect(Number.parseInt(binding.low!, 10)).toBe(new Date(sortedDesc[9].receivedAt).getTime());
+    expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(dataset));
+    expect(Number.parseInt(binding.min!, 10)).toBe(new Date(sortedDesc[9].receivedAt).getTime());
 
-    // Recovery: a healthy run resumes the backward half from `low` and picks up nothing new forward
+    // Recovery: a healthy run resumes the backward half from `min` and picks up nothing new forward
     // (no new mail arrived) — everything lands exactly once.
     await EffectEx.runPromise(
       runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(inboxJmapSyncTestServices(db, dataset))),
@@ -248,7 +248,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     const finalIds = await syncedIdsOf(db, mailbox);
     expect(new Set(finalIds).size).toBe(finalIds.length);
     expect(finalIds).toHaveLength(dataset.emails.length);
-    expect(Number.parseInt(binding.low!, 10)).toBeLessThan(minKey(dataset));
+    expect(Number.parseInt(binding.min!, 10)).toBeLessThan(minKey(dataset));
   });
 
   test('a capped run requests Operation.runAgain(), and repeated runs sync the whole mailbox', async ({ expect }) => {
@@ -296,7 +296,7 @@ describe('runJmapSync against a mock JMAP API', () => {
 
       // `dedupSeedTail` (5) < the number of messages backfilled after the newest one, so a newest-only
       // seed would drop the newest message from the dedup set on later runs and the forward
-      // `after: high` re-fetch would re-commit it — the production case with >500 backfilled messages.
+      // `after: max` re-fetch would re-commit it — the production case with >500 backfilled messages.
       const runOnce = () =>
         EffectEx.runPromise(
           Effect.exit(runJmapSync({ binding: Ref.make(binding), maxMessages: 10, dedupSeedTail: 5 })).pipe(
@@ -338,11 +338,11 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(backwardOrder).toEqual([...backwardOrder].sort((left, right) => right - left));
 
     // Forward (incremental resume): seed a cursor just below the dataset, with `syncBackDays` short
-    // enough that the horizon sits above `low` — so only the forward window is active. Oldest-first,
-    // so a run capped by `maxMessages` advances `high` gap-free instead of jumping to the newest key
+    // enough that the horizon sits above `min` — so only the forward window is active. Oldest-first,
+    // so a run capped by `maxMessages` advances `max` gap-free instead of jumping to the newest key
     // and stranding the older, unprocessed middle.
     const forwardCursor = String(minKey(dataset) - 1);
-    const forward = await seed({ high: forwardCursor, low: forwardCursor, options: { syncBackDays: 1 } });
+    const forward = await seed({ max: forwardCursor, min: forwardCursor, options: { syncBackDays: 1 } });
     await EffectEx.runPromise(
       runJmapSync({ binding: Ref.make(forward.binding) }).pipe(
         Effect.provide(inboxJmapSyncTestServices(forward.db, dataset)),

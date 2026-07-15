@@ -117,7 +117,7 @@ export const syncCalendar = ({
 
     // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A missing
     // cursor means initial sync (window by start time); otherwise incremental (by `updatedMin`).
-    const cursorKey = typeof binding.high === 'string' ? Date.parse(binding.high) : 0;
+    const cursorKey = typeof binding.max === 'string' ? Date.parse(binding.max) : 0;
     const isInitialSync = cursorKey === 0;
     log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
@@ -142,7 +142,7 @@ export const syncCalendar = ({
           cursor: binding,
           feed,
           foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
-          highKey: cursorKey,
+          maxKey: cursorKey,
           // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
           formatCursor: (key) => new Date(key).toISOString(),
           stats,

@@ -63,9 +63,9 @@ export const MaterializeDiscordTarget = Operation.make({
 /**
  * Pull-only sync of the single Discord channel bound by a {@link Cursor.Cursor}.
  *
- * Loads the binding, asks Discord for messages newer than `binding.high`,
+ * Loads the binding, asks Discord for messages newer than `binding.max`,
  * maps each into a `@dxos/types` `Message`, and appends them to the bound
- * Channel's feed. Updates the binding's `high`/`lastTick`/`lastError`.
+ * Channel's feed. Updates the binding's `max`/`lastTick`/`lastError`.
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {

@@ -147,9 +147,9 @@ describe('syncGmail against a mock Gmail API', () => {
     expect(tags.length).toBe(dataset.labels.length);
 
     // Cursor advanced to the last synced key; backfill completed within the run (small dataset).
-    expect(binding.high).toBeDefined();
-    expect(Number.parseInt(binding.high!, 10)).toBeGreaterThan(0);
-    expect(binding.low).toBeDefined();
+    expect(binding.max).toBeDefined();
+    expect(Number.parseInt(binding.max!, 10)).toBeGreaterThan(0);
+    expect(binding.min).toBeDefined();
 
     // Re-running is a no-op: dedup + cursor prevent duplicate work.
     const rerun = await EffectEx.runPromise(
@@ -294,34 +294,34 @@ describe('syncGmail against a mock Gmail API', () => {
       syncGmail({ binding: Ref.make(binding) }).pipe(Effect.provide(inboxSyncTestServices(db, mid))),
     );
     expect(r1.newMessages).toBe(mid.messages.length);
-    expect(Number.parseInt(binding.high!, 10)).toBe(maxKey(mid)); // high set to the newest synced.
-    const lowAfterInitial = Number.parseInt(binding.low!, 10);
-    expect(lowAfterInitial).toBeLessThan(minKey(mid)); // backfill completed: low clamped to the horizon.
+    expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(mid)); // max set to the newest synced.
+    const lowAfterInitial = Number.parseInt(binding.min!, 10);
+    expect(lowAfterInitial).toBeLessThan(minKey(mid)); // backfill completed: min clamped to the horizon.
 
-    // 2) Incremental: forward from `high`. A newer band has arrived; only it syncs, `low` unchanged.
+    // 2) Incremental: forward from `max`. A newer band has arrived; only it syncs, `min` unchanged.
     const r2 = await EffectEx.runPromise(
       syncGmail({ binding: Ref.make(binding) }).pipe(Effect.provide(inboxSyncTestServices(db, union(mid, recent)))),
     );
     expect(r2.newMessages).toBe(recent.messages.length);
-    expect(Number.parseInt(binding.high!, 10)).toBe(maxKey(recent));
-    expect(Number.parseInt(binding.low!, 10)).toBe(lowAfterInitial);
+    expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(recent));
+    expect(Number.parseInt(binding.min!, 10)).toBe(lowAfterInitial);
 
-    // 3) Widen syncBackDays to 30 — the horizon moves below `low`, reopening backward. `older` is in
-    // range; `high` stays put (older keys don't exceed it).
+    // 3) Widen syncBackDays to 30 — the horizon moves below `min`, reopening backward. `older` is in
+    // range; `max` stays put (older keys don't exceed it).
     Obj.update(binding, (binding) => {
       if (binding.spec.kind === 'external') {
         binding.spec.options = { ...(binding.spec.options ?? {}), syncBackDays: 30 };
       }
     });
-    const highBeforeWiden = binding.high;
+    const highBeforeWiden = binding.max;
     const r3 = await EffectEx.runPromise(
       syncGmail({ binding: Ref.make(binding) }).pipe(
         Effect.provide(inboxSyncTestServices(db, union(mid, recent, older))),
       ),
     );
     expect(r3.newMessages).toBe(older.messages.length);
-    expect(binding.high).toBe(highBeforeWiden);
-    expect(Number.parseInt(binding.low!, 10)).toBeLessThan(minKey(older));
+    expect(binding.max).toBe(highBeforeWiden);
+    expect(Number.parseInt(binding.min!, 10)).toBeLessThan(minKey(older));
 
     // All three bands landed exactly once.
     const ids = await syncedIdsOf(db, mailbox);
@@ -345,7 +345,7 @@ describe('syncGmail against a mock Gmail API', () => {
     expect(Exit.isFailure(exit)).toBe(true);
 
     // The committed page is durable and is a contiguous newest suffix of the dataset (backward walks
-    // newest-first); `low` reflects the oldest committed key, `high` the newest — no completion (the
+    // newest-first); `min` reflects the oldest committed key, `max` the newest — no completion (the
     // run errored, not merely exhausted).
     const committedAfterFault = await syncedIdsOf(db, mailbox);
     expect(committedAfterFault).toHaveLength(10);
@@ -353,10 +353,10 @@ describe('syncGmail against a mock Gmail API', () => {
       (left, right) => Number(right.internalDate) - Number(left.internalDate),
     );
     expect(new Set(committedAfterFault)).toEqual(new Set(sortedDesc.slice(0, 10).map((message) => message.id)));
-    expect(Number.parseInt(binding.high!, 10)).toBe(maxKey(dataset));
-    expect(Number.parseInt(binding.low!, 10)).toBe(Number(sortedDesc[9].internalDate));
+    expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(dataset));
+    expect(Number.parseInt(binding.min!, 10)).toBe(Number(sortedDesc[9].internalDate));
 
-    // Recovery: a healthy run resumes the backward half from `low` and picks up nothing new forward
+    // Recovery: a healthy run resumes the backward half from `min` and picks up nothing new forward
     // (no new mail arrived) — everything lands exactly once.
     await EffectEx.runPromise(
       syncGmail({ binding: Ref.make(binding) }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
@@ -364,7 +364,7 @@ describe('syncGmail against a mock Gmail API', () => {
     const finalIds = await syncedIdsOf(db, mailbox);
     expect(new Set(finalIds).size).toBe(finalIds.length);
     expect(finalIds).toHaveLength(dataset.messages.length);
-    expect(Number.parseInt(binding.low!, 10)).toBeLessThan(minKey(dataset));
+    expect(Number.parseInt(binding.min!, 10)).toBeLessThan(minKey(dataset));
   });
 
   test('a capped run requests Operation.runAgain(), and repeated runs sync the whole mailbox', async ({ expect }) => {
@@ -411,7 +411,7 @@ describe('syncGmail against a mock Gmail API', () => {
       // up with the cap). A dataset spread across several days within the horizon; with `maxMessages`
       // smaller than a single day's message count, every capped run re-enumerates the boundary day's
       // already-synced messages (newest-first) — before the fix, that consumed the entire per-run
-      // budget on dedup-dropped re-fetches, so `low` never advanced and the oldest messages were never
+      // budget on dedup-dropped re-fetches, so `min` never advanced and the oldest messages were never
       // reached (permanent loss / infinite re-run).
       const now = new Date('2026-07-16T12:00:00.000Z');
       const dataset = generateGmailDataset({ count: 25, seed: 29, start: subDays(now, 5), end: subDays(now, 1) });
@@ -512,12 +512,12 @@ describe('syncGmail against a mock Gmail API', () => {
     expect(backwardOrder).toEqual([...backwardOrder].sort((left, right) => right - left));
 
     // Forward (incremental resume): seed a cursor just below the dataset, with `syncBackDays` short
-    // enough that the horizon sits above `low` — so only the forward window is active. Within-chunk
+    // enough that the horizon sits above `min` — so only the forward window is active. Within-chunk
     // order reverses to oldest-first, matching the chunk-level walk direction.
     const forwardCursor = String(minKey(dataset) - 1);
     const forward = await seedMailboxBinding(builder, {
-      high: forwardCursor,
-      low: forwardCursor,
+      max: forwardCursor,
+      min: forwardCursor,
       options: { syncBackDays: 1 },
     });
     await EffectEx.runPromise(
@@ -555,8 +555,8 @@ describe('syncGmail against a mock Gmail API', () => {
     // just within each page. Seed a cursor below the dataset with a short horizon so only forward runs.
     const forwardCursor = String(minKey(dataset) - 1);
     const forward = await seedMailboxBinding(builder, {
-      high: forwardCursor,
-      low: forwardCursor,
+      max: forwardCursor,
+      min: forwardCursor,
       options: { syncBackDays: 1 },
     });
     await EffectEx.runPromise(

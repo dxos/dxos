@@ -54,8 +54,8 @@ export type SyncGmailProps = {
 
 /**
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
- * ambient operation services). Every run is bidirectional: it syncs new mail since the cursor's `high`
- * watermark (ascending) and continues backfilling from `low` down to the sync horizon (descending), so
+ * ambient operation services). Every run is bidirectional: it syncs new mail since the cursor's `max`
+ * watermark (ascending) and continues backfilling from `min` down to the sync horizon (descending), so
  * an interrupted or capped run always resumes both halves from exactly where it left off — the cursor
  * is the only durable state (see `@dxos/link`'s `Cursor.resolveWindows`). It *requires* the service
  * rather than providing HTTP/credentials itself, so a test can drive the whole sync against a mock
@@ -92,17 +92,17 @@ export const syncGmail = ({
 
     const targetOptions = readBindingOptions(binding);
     const horizon = Cursor.resolveHorizon({ now, syncBackDays: targetOptions.syncBackDays });
-    const highKey = Cursor.parseKey(binding.high);
-    const lowKey = Cursor.parseKey(binding.low);
-    const windows = Cursor.resolveWindows({ highKey, lowKey, now, horizon });
+    const maxKey = Cursor.parseKey(binding.max);
+    const minKey = Cursor.parseKey(binding.min);
+    const windows = Cursor.resolveWindows({ maxKey, minKey, now, horizon });
 
     const formatWindow = (window: Cursor.Window | undefined) =>
       window && { start: format(window.start, 'yyyy-MM-dd'), end: format(window.end, 'yyyy-MM-dd') };
     log.info('syncing...', {
       mailbox: Obj.getURI(mailbox),
       userId,
-      highKey,
-      lowKey,
+      maxKey,
+      minKey,
       forward: formatWindow(windows.forward),
       backward: formatWindow(windows.backward),
     });
@@ -300,8 +300,8 @@ export const syncGmail = ({
           cursor: binding,
           feed,
           foreignKeySource: GMAIL_SOURCE,
-          highKey,
-          lowKey,
+          maxKey,
+          minKey,
           trackRange: true,
           stats,
         }),

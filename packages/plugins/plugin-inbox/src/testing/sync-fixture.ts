@@ -47,17 +47,17 @@ export const seedMailboxBinding = async (
     source = GMAIL_SOURCE,
     connectorId = 'gmail',
     token = 'token',
-    high,
-    low,
+    max,
+    min,
     options,
   }: {
     source?: string;
     connectorId?: string;
     token?: string;
-    /** Seeds the cursor's high watermark, as if a prior run already synced up to this key. */
-    high?: string;
-    /** Seeds the cursor's low watermark, as if a prior run already backfilled down to this key. */
-    low?: string;
+    /** Seeds the cursor's `max` watermark, as if a prior run already synced up to this key. */
+    max?: string;
+    /** Seeds the cursor's `min` watermark, as if a prior run already backfilled down to this key. */
+    min?: string;
     /** Seeds `spec.options` (e.g. `syncBackDays`, `filter`) — read via `readBindingOptions`. */
     options?: Record<string, unknown>;
   } = {},
@@ -67,7 +67,7 @@ export const seedMailboxBinding = async (
   const accessToken = db.add(AccessToken.make({ source, token }));
   const connection = db.add(Connection.make({ connectorId, accessToken: Ref.make(accessToken) }));
   const binding = db.add(
-    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox), high, low, options }),
+    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox), max, min, options }),
   );
   await db.flush({ indexes: true });
   return { db, mailbox, connection, binding };
