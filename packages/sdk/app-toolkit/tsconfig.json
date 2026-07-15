@@ -42,9 +42,6 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/link"
-    },
-    {
       "path": "../../core/compute/progress"
     },
     {

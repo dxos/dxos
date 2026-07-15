@@ -9,7 +9,7 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
 import { type Connection, type ConnectorEntry } from '../types';
-import { isCursorForConnection } from './cursor-queries';
+import { isCursorForConnection } from './cursor-predicates';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
