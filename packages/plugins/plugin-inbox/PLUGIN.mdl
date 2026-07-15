@@ -290,12 +290,12 @@ op draftEmail
 op draftEmailAndOpen
   desc: draftEmail then opens the draft in EditMessage (UI convenience wrapper).
   input:
-    subject: string
-    to: string
-    body: string
-    mailbox: Ref<Mailbox>
-    replyTo?: Ref<Message>
-  output: string                # DXN of new draft Message
+    db: Database
+    mode?: compose | reply | reply-all | forward
+    message?: Message
+    subject?: string
+    body?: string
+    mailbox?: Ref<Mailbox>
   effects: [echo:write]
 ```
 
@@ -369,7 +369,7 @@ op jmapSync
     after?: number | string
     before?: number | string
     direction?: forward | backward
-  output: number                # newMessages count
+  output: { newMessages: number }
   effects: [echo:write, feed:write, http]
 ```
 

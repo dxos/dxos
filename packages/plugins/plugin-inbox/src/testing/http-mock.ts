@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Jmap } from '../apis';
 import { type GmailDataset, type JmapDataset } from '../services';
 import { generateGmailDataset } from './gmail-fixtures';
 import { generateJmapDataset } from './jmap-fixtures';
@@ -52,6 +53,13 @@ const json = (value: unknown, status = 200): MockResponse => ({
   body: JSON.stringify(value),
 });
 
+/**
+ * Creates an HTTP mock for the Gmail and JMAP provider APIs, backed by deterministic fixture data.
+ * Returns a synchronous `handle` function suitable for a Playwright `page.route` interceptor.
+ *
+ * @param options Fixture datasets to serve (generated deterministically when omitted) and the account
+ *   email surfaced by JMAP `Identity/get` / Gmail `userinfo`.
+ */
 export const createInboxHttpMock = (options: InboxHttpMockOptions = {}): InboxHttpMock => {
   const gmail = options.gmail ?? generateGmailDataset();
   const jmap = options.jmap ?? generateJmapDataset();
@@ -63,8 +71,7 @@ export const createInboxHttpMock = (options: InboxHttpMockOptions = {}): InboxHt
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
     if (method === 'POST' && request.body?.includes('methodCalls')) {
-      const parsed = JSON.parse(request.body) as { methodCalls?: JmapMethodCall[] };
-      for (const [name] of parsed.methodCalls ?? []) {
+      for (const [name] of parseJmapMethodCalls(request.body)) {
         calls.push(name);
       }
     } else {
@@ -201,14 +208,29 @@ const parseGmailDateWindow = (query: string): { after?: number; before?: number 
 // JMAP
 //
 
-type JmapMethodCall = [method: string, args: any, callId: string];
+/** Runtime guard for a single `[name, args, callId]` JMAP method-call tuple. */
+const isJmapMethodCall = (value: unknown): value is Jmap.MethodCall =>
+  Array.isArray(value) && value.length === 3 && typeof value[0] === 'string' && typeof value[2] === 'string';
+
+/**
+ * Parses and validates a JMAP request body once at the boundary, rejecting a malformed body instead
+ * of letting an unchecked cast pass invalid data to `invokeJmapMethod`/`matchesJmapFilter`.
+ */
+const parseJmapMethodCalls = (body: string): readonly Jmap.MethodCall[] => {
+  const parsed: unknown = JSON.parse(body);
+  const methodCalls = (parsed as { methodCalls?: unknown } | null)?.methodCalls;
+  if (!Array.isArray(methodCalls) || !methodCalls.every(isJmapMethodCall)) {
+    throw new Error('Malformed JMAP request body: expected { methodCalls: [name, args, callId][] }');
+  }
+  return methodCalls;
+};
 
 const handleJmap = (
   body: string | undefined,
   context: { jmap: JmapDataset; accountId: string; account: string },
 ): MockResponse => {
-  const request = body ? (JSON.parse(body) as { methodCalls: JmapMethodCall[] }) : { methodCalls: [] };
-  const methodResponses = request.methodCalls.map(([name, args, callId]): JmapMethodCall => {
+  const methodCalls = body ? parseJmapMethodCalls(body) : [];
+  const methodResponses = methodCalls.map(([name, args, callId]): Jmap.MethodCall => {
     const result = invokeJmapMethod(name, args, context);
     return [result ? name : 'error', result ?? { type: 'unknownMethod' }, callId];
   });
@@ -276,19 +298,18 @@ const invokeJmapMethod = (
 };
 
 /** Mirrors the in-memory mock's recursive filter: AND/OR/NOT + after/before/inMailbox(OtherThan) leaves. */
-const matchesJmapFilter = (email: JmapDataset['emails'][number], filter: any): boolean => {
+const matchesJmapFilter = (email: JmapDataset['emails'][number], filter: Jmap.Filter | undefined): boolean => {
   if (!filter) {
     return true;
   }
-  if (filter.operator) {
-    const conditions: any[] = filter.conditions ?? [];
+  if ('operator' in filter) {
     switch (filter.operator) {
       case 'AND':
-        return conditions.every((condition) => matchesJmapFilter(email, condition));
+        return filter.conditions.every((condition) => matchesJmapFilter(email, condition));
       case 'OR':
-        return conditions.some((condition) => matchesJmapFilter(email, condition));
+        return filter.conditions.some((condition) => matchesJmapFilter(email, condition));
       case 'NOT':
-        return !conditions.some((condition) => matchesJmapFilter(email, condition));
+        return !filter.conditions.some((condition) => matchesJmapFilter(email, condition));
       default:
         return true;
     }
@@ -306,7 +327,7 @@ const matchesJmapFilter = (email: JmapDataset['emails'][number], filter: any): b
     return false;
   }
   if (filter.inMailboxOtherThan !== undefined) {
-    const excluded: string[] = filter.inMailboxOtherThan;
+    const excluded: readonly string[] = filter.inMailboxOtherThan;
     if (!mailboxIds.some((id) => !excluded.includes(id))) {
       return false;
     }
