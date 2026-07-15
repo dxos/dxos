@@ -30,7 +30,7 @@ describe('sync', { timeout: 120_000, retry: 0, tags: ['sync-e2e'] }, async () =>
         },
         client: {
           edgeFeatures: {
-            echoReplicator: true,
+            subductionReplicator: true,
             feedReplicator: true,
           },
           storage: {

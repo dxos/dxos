@@ -6,7 +6,7 @@ runtime:
       persistent: true
     edgeFeatures:
       signaling: true
-      echoReplicator: true
+      subductionReplicator: true
       feedReplicator: true
       agents: true
 
