@@ -66,7 +66,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/progress": "workspace:*",
     "@dxos/react-client": "workspace:*",

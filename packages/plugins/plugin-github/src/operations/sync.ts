@@ -67,8 +67,8 @@ const ISSUE_CONCURRENCY = 4;
 
 /**
  * Snapshot shapes. Fields are required (not `?`) because every snapshot is
- * written in one shot via {@link writeCursorSnapshot} after a pull; absence-of-
- * snapshot is modeled by `readCursorSnapshot` returning `undefined`. `name` on a
+ * written in one shot via {@link Cursor.writeSnapshot} after a pull; absence-of-
+ * snapshot is modeled by `Cursor.readSnapshot` returning `undefined`. `name` on a
  * Project is recorded but not pushed — see {@link GitHubApi.updateRepo}.
  */
 type ProjectSnapshot = {
@@ -98,32 +98,6 @@ const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
     const results = yield* Database.query(Query.select(Filter.foreignKeys(type as never, [fkFor(id)]))).run;
     return results.length > 0 ? (results[0] as T) : undefined;
   });
-
-//
-// Cursor snapshot accessors
-//
-// `ConnectorSync.readSnapshot`/`writeSnapshot` operate on a relation's
-// top-level `.snapshots` field; `Cursor` is a flat object whose snapshots live
-// one level down at `spec.snapshots`, so this plugin keeps its own thin
-// accessors rather than reusing those helpers. `mergeField`/`snapshotField`
-// (generic over the snapshot value, not the container) are still reused as-is.
-//
-
-/** Reads `binding.spec.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
-const readCursorSnapshot = <T extends object>(binding: Cursor.ExternalCursor, foreignId: string): T | undefined => {
-  const snapshots = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
-  return snapshots[foreignId] as T | undefined;
-};
-
-/** Writes `binding.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map for structural sharing. */
-const writeCursorSnapshot = (binding: Cursor.ExternalCursor, foreignId: string, snapshot: object): void => {
-  Obj.update(binding, (binding) => {
-    if (binding.spec.kind === 'external') {
-      const existing = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
-      binding.spec.snapshots = { ...existing, [foreignId]: snapshot };
-    }
-  });
-};
 
 //
 // Field mappers (GitHub ↔ DXOS)
@@ -245,7 +219,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
   const existing = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
 
   if (existing) {
-    const snapshot = readCursorSnapshot<ProjectSnapshot>(binding, fid);
+    const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, fid);
     const nameResult = mergeField<string | undefined>(
       existing.name,
       remoteFields.name,
@@ -268,7 +242,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
         }
       });
     }
-    writeCursorSnapshot(binding, fid, remoteFields);
+    Cursor.writeSnapshot(binding, fid, remoteFields);
     return existing;
   }
 
@@ -278,7 +252,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
     description: repo.description ?? undefined,
   });
   const persisted = yield* Database.add(created);
-  writeCursorSnapshot(binding, fid, remoteFields);
+  Cursor.writeSnapshot(binding, fid, remoteFields);
   return persisted;
 });
 
@@ -302,7 +276,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
 
   if (existing) {
-    const snapshot = readCursorSnapshot<TaskSnapshot>(binding, fid);
+    const snapshot = Cursor.readSnapshot<TaskSnapshot>(binding, fid);
     // Task.title is required (non-optional) so the merge produces a string.
     const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshotField(snapshot, 'title'));
     const descriptionResult = mergeField<string | undefined>(
@@ -340,7 +314,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
         existing.project = Ref.make(project);
       }
     });
-    writeCursorSnapshot(binding, fid, remoteFields);
+    Cursor.writeSnapshot(binding, fid, remoteFields);
     return { task: existing, created: false };
   }
 
@@ -353,7 +327,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     project: Ref.make(project),
   });
   const persisted = yield* Database.add(created);
-  writeCursorSnapshot(binding, fid, remoteFields);
+  Cursor.writeSnapshot(binding, fid, remoteFields);
   return { task: persisted, created: true };
 });
 
@@ -412,7 +386,7 @@ export const pushRepoUpdates: <E, R>(
       const fid = String(repo.id);
       const local = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
       if (local && !Obj.isDeleted(local)) {
-        const snapshot = readCursorSnapshot<ProjectSnapshot>(binding, fid);
+        const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, fid);
         if (snapshot) {
           const localName = local.name ?? '';
           const localDescription = local.description ?? '';
@@ -433,7 +407,7 @@ export const pushRepoUpdates: <E, R>(
           }
           if (diverged) {
             yield* push.updateRepo(repo.owner.login, repo.name, input);
-            writeCursorSnapshot(binding, fid, {
+            Cursor.writeSnapshot(binding, fid, {
               ...snapshot,
               description: localDescription,
             });
@@ -449,7 +423,7 @@ export const pushRepoUpdates: <E, R>(
       if (!local || Obj.isDeleted(local)) {
         continue;
       }
-      const snapshot = readCursorSnapshot<TaskSnapshot>(binding, id);
+      const snapshot = Cursor.readSnapshot<TaskSnapshot>(binding, id);
       if (!snapshot) {
         continue;
       }
@@ -510,7 +484,7 @@ export const pushRepoUpdates: <E, R>(
       // for PRs we keep the snapshot's previous status, so the warning above
       // keeps firing until either the user reverts locally or the PR's state
       // changes on GitHub and a pull catches up.
-      writeCursorSnapshot(binding, id, {
+      Cursor.writeSnapshot(binding, id, {
         ...snapshot,
         title: localTitle,
         description: localDescription,

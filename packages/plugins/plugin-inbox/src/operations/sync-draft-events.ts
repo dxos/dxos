@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { findConnectionForAccessToken } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { Event } from '@dxos/types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
@@ -31,7 +31,12 @@ export default InboxOperation.SyncDraftEvents.pipe(
       if (!binding) {
         return { synced: 0 };
       }
-      const connection = yield* findConnectionForAccessToken(db, binding.spec.source);
+      // Finds the Connection whose access token is the binding's `spec.source` — fuzzy if an access
+      // token is ever shared across connections.
+      const connections = yield* Database.query(Filter.type(Connection.Connection)).run.pipe(
+        Effect.provide(Database.layer(db)),
+      );
+      const connection = connections.find((candidate) => candidate.accessToken.uri === binding.spec.source.uri);
       if (!connection) {
         return { synced: 0 };
       }

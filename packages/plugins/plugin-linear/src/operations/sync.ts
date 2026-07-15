@@ -68,8 +68,8 @@ import { LinearOperation } from '../types';
 
 /**
  * Snapshot shapes. Fields are typed `required` (not `?`) because every
- * snapshot is written in one shot via {@link writeSnapshot} after a pull;
- * the absence-of-snapshot case is modeled by `readSnapshot` returning
+ * snapshot is written in one shot via {@link Cursor.writeSnapshot} after a pull;
+ * the absence-of-snapshot case is modeled by `Cursor.readSnapshot` returning
  * `undefined`, not by partially-populated objects. `priority` and `estimate`
  * carry `undefined` as a valid recorded value ("no priority", "no estimate").
  */
@@ -86,31 +86,9 @@ type TaskSnapshot = {
   estimate: number | undefined;
 };
 
-// Per-field three-way merge primitives are shared with other integration plugins
-// (Trello, GitHub) and live in `@dxos/app-toolkit`. `readSnapshot`/`writeSnapshot` are NOT shared —
-// app-toolkit's versions are typed against a relation-shaped `.snapshots` field, but a Linear binding
-// is now a flat `Cursor.ExternalCursor` whose snapshots live one level down at `spec.snapshots`. These
-// local equivalents read/write that field directly.
-
-/** Reads `binding.spec.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
-const readSnapshot = <T extends object>(binding: Cursor.ExternalCursor, foreignId: string): T | undefined => {
-  const snapshots = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
-  return snapshots[foreignId] as T | undefined;
-};
-
-/**
- * Writes `binding.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map so the assignment is
- * safe under ECHO's structural-sharing semantics.
- */
-const writeSnapshot = (binding: Cursor.ExternalCursor, foreignId: string, snapshot: object): void => {
-  Obj.update(binding, (binding) => {
-    if (binding.spec.kind !== 'external') {
-      return;
-    }
-    const existing = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
-    binding.spec.snapshots = { ...existing, [foreignId]: snapshot };
-  });
-};
+// Per-field three-way merge primitives are shared with other integration plugins (Trello, GitHub)
+// and live in `@dxos/app-toolkit`. The snapshot storage accessors (`Cursor.readSnapshot`/
+// `Cursor.writeSnapshot`) live in `@dxos/link` instead, alongside `Cursor`'s other field helpers.
 
 //
 // Foreign-key + lookup helpers
@@ -158,7 +136,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
   const existing = yield* findByForeignId<Project.Project>(Project.Project, remote.id);
 
   if (existing) {
-    const snapshot = readSnapshot<ProjectSnapshot>(binding, remote.id);
+    const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, remote.id);
     const nameResult = mergeField<string | undefined>(
       existing.name,
       remoteFields.name,
@@ -181,7 +159,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
         }
       });
     }
-    writeSnapshot(binding, remote.id, remoteFields);
+    Cursor.writeSnapshot(binding, remote.id, remoteFields);
     return { project: existing, created: false };
   }
 
@@ -191,7 +169,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
     description: remote.description ?? undefined,
   });
   const persisted = yield* Database.add(created);
-  writeSnapshot(binding, remote.id, remoteFields);
+  Cursor.writeSnapshot(binding, remote.id, remoteFields);
   return { project: persisted, created: true };
 });
 
@@ -224,7 +202,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
 
   if (existing) {
-    const snapshot = readSnapshot<TaskSnapshot>(binding, issue.id);
+    const snapshot = Cursor.readSnapshot<TaskSnapshot>(binding, issue.id);
     // Task.title is required (non-optional), so widen the merge to plain string.
     const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshotField(snapshot, 'title'));
     const descriptionResult = mergeField<string | undefined>(
@@ -282,7 +260,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
         }
       }
     });
-    writeSnapshot(binding, issue.id, remoteFields);
+    Cursor.writeSnapshot(binding, issue.id, remoteFields);
     return { task: existing, created: false };
   }
 
@@ -296,7 +274,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     project: project ? Ref.make(project) : undefined,
   });
   const persisted = yield* Database.add(created);
-  writeSnapshot(binding, issue.id, remoteFields);
+  Cursor.writeSnapshot(binding, issue.id, remoteFields);
   return { task: persisted, created: true };
 });
 
@@ -359,7 +337,7 @@ export const pushTeamUpdates: <E, R>(
       if (!local || Obj.isDeleted(local)) {
         continue;
       }
-      const snapshot = readSnapshot<ProjectSnapshot>(binding, id);
+      const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, id);
       if (!snapshot) {
         continue;
       }
@@ -379,7 +357,7 @@ export const pushTeamUpdates: <E, R>(
         continue;
       }
       yield* push.updateProject(id, input);
-      writeSnapshot(binding, id, {
+      Cursor.writeSnapshot(binding, id, {
         ...snapshot,
         name: localName,
         description: localDescription,
@@ -392,7 +370,7 @@ export const pushTeamUpdates: <E, R>(
       if (!local || Obj.isDeleted(local)) {
         continue;
       }
-      const snapshot = readSnapshot<TaskSnapshot>(binding, id);
+      const snapshot = Cursor.readSnapshot<TaskSnapshot>(binding, id);
       if (!snapshot) {
         continue;
       }
@@ -447,7 +425,7 @@ export const pushTeamUpdates: <E, R>(
         continue;
       }
       yield* push.updateIssue(id, input);
-      writeSnapshot(binding, id, {
+      Cursor.writeSnapshot(binding, id, {
         ...snapshot,
         title: localTitle,
         description: localDescription,

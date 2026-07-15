@@ -13,7 +13,6 @@ import {
   BuiltinConnectors,
   Coordinator,
   CreateObject,
-  Migrations,
   OAuthRedirect,
   OperationHandler,
   ReactSurface,
@@ -35,10 +34,6 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.SetupMigration,
-    activate: Migrations,
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

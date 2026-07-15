@@ -153,6 +153,30 @@ export const recordError = (cursor: Cursor, message: string): void =>
   });
 
 /**
+ * Reads `cursor.spec.snapshots[foreignId]` typed as `T` — the last-seen remote fields an external
+ * sync recorded for a foreign id, driving the per-field three-way merge (see the `mergeField`/
+ * `mergeDeep` primitives in `@dxos/app-toolkit`'s `ConnectorSync`). Returns undefined if absent.
+ */
+export const readSnapshot = <T extends object>(cursor: ExternalCursor, foreignId: string): T | undefined => {
+  const snapshots = (cursor.spec.snapshots ?? {}) as Record<string, unknown>;
+  return snapshots[foreignId] as T | undefined;
+};
+
+/**
+ * Writes `cursor.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map so the assignment is
+ * safe under ECHO's structural-sharing semantics.
+ */
+export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapshot: object): void => {
+  Obj.update(cursor, (cursor) => {
+    if (cursor.spec.kind !== 'external') {
+      return;
+    }
+    const existing = (cursor.spec.snapshots ?? {}) as Record<string, unknown>;
+    cursor.spec.snapshots = { ...existing, [foreignId]: snapshot };
+  });
+};
+
+/**
  * Encodes a monotonic integer high-water mark into the opaque `value` string — the common convention
  * for a cursor that tracks an incrementing position (epoch timestamp, sequence number, offset).
  * Returns `0` for an absent or unparseable value.

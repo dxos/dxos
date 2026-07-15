@@ -4,20 +4,16 @@
 
 // @import-as-namespace
 
-import { Obj } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-
 /**
  * Three-way merge primitives shared by connector sync handlers (Trello, Linear,
  * GitHub, ...). Each external-sync cursor stores per-remote-id snapshots on its
- * `spec.snapshots` field so the next pull/push pass can decide, per field,
- * whether the local or the remote side has changed since the last successful
- * sync.
+ * `spec.snapshots` field (via `Cursor.readSnapshot`/`Cursor.writeSnapshot` in
+ * `@dxos/link`) so the next pull/push pass can decide, per field, whether the
+ * local or the remote side has changed since the last successful sync.
  *
- * The merge primitives are pure; the snapshot accessors operate on a
- * {@link Cursor.ExternalCursor} directly — `Cursor` is an infrastructure type in
- * the lower `@dxos/link` package (no dependency on app-toolkit), so there is
- * no import cycle to work around here.
+ * These primitives are pure value-merge math with no `Cursor` dependency — the
+ * snapshot storage accessors live in `@dxos/link` instead, alongside `Cursor`'s
+ * other field helpers (`advance`, `recordError`, ...).
  */
 
 /** Result of {@link mergeField} / {@link mergeDeep}. */
@@ -112,12 +108,6 @@ export const mergeDeep = <T>(local: T, remote: T, snapshot: Snapshot<T>): MergeR
   return { value: remote, source: 'remote' };
 };
 
-/** Reads `binding.spec.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
-export const readSnapshot = <T extends object>(binding: Cursor.ExternalCursor, foreignId: string): T | undefined => {
-  const snapshots = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
-  return snapshots[foreignId] as T | undefined;
-};
-
 /**
  * Build a {@link Snapshot} wrapper for one field of a snapshot object.
  *
@@ -133,17 +123,3 @@ export const snapshotField = <T extends object, K extends keyof T>(snapshot: T |
  * caller already has the conditional "do I have a snapshot" check.
  */
 export const snapshotOf = <T>(present: boolean, value: T): Snapshot<T> => (present ? { value } : undefined);
-
-/**
- * Writes `binding.spec.snapshots[foreignId] = snapshot` inside an `Obj.update`. Allocates
- * a fresh map so the assignment is safe under ECHO's structural-sharing semantics.
- */
-export const writeSnapshot = (binding: Cursor.ExternalCursor, foreignId: string, snapshot: object): void => {
-  Obj.update(binding, (binding) => {
-    if (binding.spec.kind !== 'external') {
-      return;
-    }
-    const existing = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
-    binding.spec.snapshots = { ...existing, [foreignId]: snapshot };
-  });
-};

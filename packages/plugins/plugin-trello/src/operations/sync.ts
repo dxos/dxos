@@ -56,37 +56,15 @@ type BoardSnapshot = {
    *
    * Fields are required (not `?`) because the snapshot is always written in
    * one shot at the end of a pull; the "no snapshot yet" state is modeled
-   * by `readSnapshot` returning `undefined`.
+   * by `Cursor.readSnapshot` returning `undefined`.
    */
   order: string[];
   columns: Record<string, { ids: string[] }>;
 };
 
-// Per-field three-way merge primitives are shared with other integration plugins
-// (Linear, GitHub) and live in `@dxos/app-toolkit`. `readSnapshot`/`writeSnapshot` are NOT shared —
-// app-toolkit's versions are typed against a relation-shaped `.snapshots` field, but a Trello binding
-// is now a flat `Cursor.ExternalCursor` whose snapshots live one level down at `spec.snapshots`. These
-// local equivalents read/write that field directly.
-
-/** Reads `binding.spec.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
-const readSnapshot = <T extends object>(binding: Cursor.ExternalCursor, foreignId: string): T | undefined => {
-  const snapshots = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
-  return snapshots[foreignId] as T | undefined;
-};
-
-/**
- * Writes `binding.spec.snapshots[foreignId] = snapshot`. Allocates a fresh map so the assignment is
- * safe under ECHO's structural-sharing semantics.
- */
-const writeSnapshot = (binding: Cursor.ExternalCursor, foreignId: string, snapshot: object): void => {
-  Obj.update(binding, (binding) => {
-    if (binding.spec.kind !== 'external') {
-      return;
-    }
-    const existing = (binding.spec.snapshots ?? {}) as Record<string, unknown>;
-    binding.spec.snapshots = { ...existing, [foreignId]: snapshot };
-  });
-};
+// Per-field three-way merge primitives are shared with other integration plugins (Linear, GitHub)
+// and live in `@dxos/app-toolkit`. The snapshot storage accessors (`Cursor.readSnapshot`/
+// `Cursor.writeSnapshot`) live in `@dxos/link` instead, alongside `Cursor`'s other field helpers.
 
 /**
  * Pull reconciler with snapshot-driven three-way merge.
@@ -175,7 +153,7 @@ export const reconcileBoardCards: (
           log.warn('trello pull: foreign-keyed local object is not an Expando; skipping', { cardId: card.id });
           continue;
         }
-        const snapshot = readSnapshot<CardSnapshot>(binding, card.id);
+        const snapshot = Cursor.readSnapshot<CardSnapshot>(binding, card.id);
 
         const merged: Record<MappedField, unknown> = { ...remoteFields };
         const writes: Partial<Record<MappedField, unknown>> = {};
@@ -199,7 +177,7 @@ export const reconcileBoardCards: (
         // Refresh the snapshot to remote-current. Even if no writes happened
         // (no-op or local-wins), the next sync should compare against what
         // Trello currently says.
-        writeSnapshot(binding, card.id, remoteFields);
+        Cursor.writeSnapshot(binding, card.id, remoteFields);
       } else {
         // First time we've seen this card: create + attach. Snapshot seeded from remote.
         const obj = Obj.make(Expando.Expando, {
@@ -209,7 +187,7 @@ export const reconcileBoardCards: (
         const persisted = yield* Database.add(obj);
         newRefs.push(Ref.make(persisted) as Ref.Ref<Obj.Unknown>);
         localByForeignId.set(card.id, persisted);
-        writeSnapshot(binding, card.id, remoteFields);
+        Cursor.writeSnapshot(binding, card.id, remoteFields);
         added++;
       }
     }
@@ -268,7 +246,7 @@ export const reconcileBoardCards: (
     // Board-level three-way merge: name + arrangement.order + arrangement.columns.
     // Local-wins outputs are left in place but currently NOT pushed back to
     // Trello — board rename and arrangement reorder push aren't implemented yet.
-    const boardSnapshot = readSnapshot<BoardSnapshot>(binding, remoteBoard.id);
+    const boardSnapshot = Cursor.readSnapshot<BoardSnapshot>(binding, remoteBoard.id);
     const nameMerge = mergeField<string | undefined>(
       kanban.name,
       remoteBoard.name,
@@ -319,7 +297,7 @@ export const reconcileBoardCards: (
     }
 
     // Refresh the board snapshot to what's currently on Trello (post-merge).
-    writeSnapshot(binding, remoteBoard.id, {
+    Cursor.writeSnapshot(binding, remoteBoard.id, {
       name: remoteBoard.name,
       order: orderedListNames,
       columns: remoteColumns,
@@ -421,7 +399,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
         });
         // Seed the snapshot with the values we just sent so the very next pull
         // (which will return this same card) is a no-op for these fields.
-        writeSnapshot(binding, result.id, {
+        Cursor.writeSnapshot(binding, result.id, {
           name,
           description: desc,
           listName: localListName ?? '',
@@ -438,7 +416,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
     // If the snapshot is missing a field (e.g. brand-new MAPPED_FIELDS entry,
     // or a corrupt snapshot), treat that as "no signal" and skip pushing the
     // field — we can't tell whether local was edited.
-    const snapshot = (readSnapshot<CardSnapshot>(binding, foreignId) ?? {}) as CardSnapshot;
+    const snapshot = (Cursor.readSnapshot<CardSnapshot>(binding, foreignId) ?? {}) as CardSnapshot;
     const updatePayload: { name?: string; desc?: string; listId?: string } = {};
     let diverged = false;
 
@@ -461,7 +439,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
 
     yield* push.update(foreignId, updatePayload);
     // Refresh the snapshot with the values just pushed.
-    writeSnapshot(binding, foreignId, {
+    Cursor.writeSnapshot(binding, foreignId, {
       ...snapshot,
       name,
       description: desc,
