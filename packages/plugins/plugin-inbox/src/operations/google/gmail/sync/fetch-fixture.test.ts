@@ -30,8 +30,12 @@ describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live 
     async () => {
       const builder = await new EchoTestBuilder().open();
       try {
-        const syncBackDays = process.env.FETCH_SYNC_BACK_DAYS
-          ? Number.parseInt(process.env.FETCH_SYNC_BACK_DAYS, 10)
+        // The sync op takes a day-count horizon (`syncBackDays`), but an absolute start date reads
+        // more naturally for a manual fixture pull — accept `FETCH_AFTER=yyyy-mm-dd` and translate it
+        // to the number of days back from today (at least one).
+        const fetchAfter = process.env.FETCH_AFTER;
+        const syncBackDays = fetchAfter
+          ? Math.max(1, Math.ceil((Date.now() - Date.parse(fetchAfter)) / 86_400_000))
           : undefined;
         const { db, mailbox, connection, binding } = await seedMailboxBinding(builder, {
           token: ACCESS_TOKEN!,

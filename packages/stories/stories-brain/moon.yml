@@ -13,7 +13,7 @@ tasks:
   # Research workflow (all interactive + network + write git-ignored fixtures — never cached / in CI):
   #   env   → render .env.tpl → .env via 1Password (`op inject`); provides DX_ANTHROPIC_API_KEY etc.
   #   auth  → Google OAuth helper: `-- --token` prints a token, `-- --force` re-consents, `-- --revoke` cancels.
-  #   sync  → one consent + in-process Gmail sync → fixtures/local/mailbox-feed.json (FETCH_SYNC_BACK_DAYS=N).
+  #   sync  → one consent + in-process Gmail sync → fixtures/local/mailbox-feed.json (FETCH_AFTER=yyyy-mm-dd).
   #   bench → run the bench suite (extract facts + all benches); `-- --models qwen --limit 10 --tests tags,facts`.
   #   stats → live table of the bench progress file (rate + ETA); `-- --once` for a single snapshot.
   # Resolve the git-ignored .env from the 1Password template (requires `op` signed in). Run once per

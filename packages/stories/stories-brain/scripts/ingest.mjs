@@ -10,7 +10,7 @@
 // Usage (from packages/stories/stories-brain):
 //   MODELS=claude-sonnet node scripts/ingest.mjs     # pick the extractor model set
 //   SKIP_FETCH=1 node scripts/ingest.mjs             # reuse the existing fixture (skip the sync)
-//   FETCH_SYNC_BACK_DAYS=90 node scripts/ingest.mjs  # override the sync-back horizon (days)
+//   FETCH_AFTER=2025-01-01 node scripts/ingest.mjs   # override the sync-back start
 //
 // Outputs: fixtures/local/mailbox-feed.json (feed) and fixtures/local/fact-store.json (facts).
 // Prereqs: the OAuth client (.env.tpl / GOOGLE_CLIENT_ID+SECRET), Ollama for local models and/or

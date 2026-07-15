@@ -10,7 +10,7 @@
 // Usage:
 //   export GOOGLE_CLIENT_ID=...  GOOGLE_CLIENT_SECRET=...   # one-time (see google-auth.mjs)
 //   node scripts/fetch-fixture.mjs                          # sync + write the fixture
-//   FETCH_SYNC_BACK_DAYS=90 node scripts/fetch-fixture.mjs  # override the sync-back horizon (days)
+//   FETCH_AFTER=2025-01-01 node scripts/fetch-fixture.mjs   # override the sync-back start date
 //
 //   or, using Moon:
 //   moon run stories-brain:fetch-fixture

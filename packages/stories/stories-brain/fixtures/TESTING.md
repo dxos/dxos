@@ -56,7 +56,7 @@ the git-ignored `fixtures/local/`.
 | Command                                                               | Does                                                                                                                                                                                                                                                                                    | Needs           |
 | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | `moon run stories-brain:auth -- --token` (also `--force`, `--revoke`) | Google OAuth helper — print an access token / re-consent / revoke + delete local token                                                                                                                                                                                                  | oauth           |
-| `moon run stories-brain:sync`                                         | One consent + in-process Gmail sync → `fixtures/local/mailbox-feed.json` (`FETCH_SYNC_BACK_DAYS=N` sets the horizon)                                                                                                                                                                    | oauth           |
+| `moon run stories-brain:sync`                                         | One consent + in-process Gmail sync → `fixtures/local/mailbox-feed.json` (`FETCH_AFTER=yyyy-mm-dd` sets the start)                                                                                                                                                                      | oauth           |
 | `moon run stories-brain:bench -- --models … --limit … --tests …`      | Run the bench suite (extract facts + all benches); `--tests <name>` for a subset (e.g. `extract-facts`, `feed-stats`, `list-questions`). Stats → `results/`; seeds `progress.json`; runs `analyze-results`. `--stats` renders the live table inline (vitest logs → `results/bench.log`) | fixture, models |
 | `moon run stories-brain:stats` (also `-- --once`)                     | Live table of `progress.json` — per-task bar, rate, and ETA (watch a run started elsewhere); `--once` prints one snapshot                                                                                                                                                               | —               |
 
@@ -88,18 +88,18 @@ the cheap response-only eval; `JUDGE=<name>` picks the grader (default `claude-s
 
 **Env knobs** (`bench` also accepts each as a `--flag`; CLI overrides env overrides `.env`):
 
-| Var                    | Effect                                                             |
-| ---------------------- | ------------------------------------------------------------------ |
-| `MODELS`               | Model set: `local` \| `remote` \| comma-separated name substrings  |
-| `LIMIT`                | Message cap; results go to `results/partial/`                      |
-| `CONCURRENCY`          | extract-facts in-flight parallelism (default 10 remote / 1 local)  |
-| `TESTS`                | Comma-separated bench names (subset of the suite)                  |
-| `SUBJECT`              | Subject for subject-facts / brain-vs-rag                           |
-| `SKILL_MODES`          | brain-vs-rag arms to run (subset of source,facts,rag,hybrid)       |
-| `JUDGE`                | brain-vs-rag grading model (name substring; default claude-sonnet) |
-| `EVAL_SCORE`           | `0` skips brain-vs-rag judge scoring (response-only)               |
-| `SAMPLES`              | Max per-variant result rows written to JSON                        |
-| `DRAFT_INSTRUCTIONS`   | User instructions steering the draft bench                         |
-| `FETCH_SYNC_BACK_DAYS` | Sync-back horizon (days) for `sync`                                |
+| Var                  | Effect                                                             |
+| -------------------- | ------------------------------------------------------------------ |
+| `MODELS`             | Model set: `local` \| `remote` \| comma-separated name substrings  |
+| `LIMIT`              | Message cap; results go to `results/partial/`                      |
+| `CONCURRENCY`        | extract-facts in-flight parallelism (default 10 remote / 1 local)  |
+| `TESTS`              | Comma-separated bench names (subset of the suite)                  |
+| `SUBJECT`            | Subject for subject-facts / brain-vs-rag                           |
+| `SKILL_MODES`        | brain-vs-rag arms to run (subset of source,facts,rag,hybrid)       |
+| `JUDGE`              | brain-vs-rag grading model (name substring; default claude-sonnet) |
+| `EVAL_SCORE`         | `0` skips brain-vs-rag judge scoring (response-only)               |
+| `SAMPLES`            | Max per-variant result rows written to JSON                        |
+| `DRAFT_INSTRUCTIONS` | User instructions steering the draft bench                         |
+| `FETCH_AFTER`        | `yyyy-mm-dd` sync-back start for `sync`                            |
 
 Results write to `fixtures/local/results/` (git-ignored): `<name>.json` (stats) + `<name>.md` (responses).
