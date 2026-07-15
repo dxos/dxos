@@ -2,21 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ServiceBundle } from '@dxos/rpc';
-
 /**
  * Registry of operational services.
  */
 export class ServiceRegistry<Services> {
-  // prettier-ignore
-  constructor (
-    private readonly _serviceBundle: ServiceBundle<Services>,
-    private _handlers: Partial<Services> = {}
-  ) {}
-
-  get descriptors() {
-    return this._serviceBundle;
-  }
+  constructor(private _handlers: Partial<Services> = {}) {}
 
   get services() {
     return this._handlers;

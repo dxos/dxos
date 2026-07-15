@@ -1,0 +1,31 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../halo"
+    },
+    {
+      "path": "../halo-adapter-client"
+    }
+  ]
+}

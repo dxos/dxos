@@ -7,17 +7,34 @@ import * as Registry from '@effect-atom/atom/Registry';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
-import { ClientProvider } from '@dxos/react-client';
+import { Config, defs } from '@dxos/config';
+import { ClientProvider, createClientServices } from '@dxos/react-client';
 
 import { getConfig } from '../config';
 import { Todo, TodoList, createTodoList } from '../types';
 import { Main } from './Main';
 
-const createWorker = () =>
-  new SharedWorker(new URL('../shared-worker', import.meta.url), {
-    type: 'module',
-    name: 'dxos-client-worker',
-  });
+// Dedicated-worker client services. A coordinator SharedWorker elects a single leader tab that owns
+// the dedicated Worker hosting the ECHO services; follower tabs proxy through it.
+const createServices = (config?: Config) =>
+  createClientServices(
+    new Config(
+      { runtime: { client: { servicesMode: defs.Runtime.Client.ServicesMode.DEDICATED_WORKER } } },
+      ...(config ? [config.values] : []),
+    ),
+    {
+      createDedicatedWorker: () =>
+        new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+          type: 'module',
+          name: 'dxos-client-worker',
+        }),
+      createCoordinatorWorker: () =>
+        new SharedWorker(new URL('@dxos/client/coordinator-worker', import.meta.url), {
+          type: 'module',
+          name: 'dxos-coordinator-worker',
+        }),
+    },
+  );
 
 export const Root = () => {
   const navigate = useNavigate();
@@ -26,7 +43,7 @@ export const Root = () => {
   return (
     <ClientProvider
       config={getConfig}
-      createWorker={createWorker}
+      services={createServices}
       shell='./shell.html'
       types={[TodoList, Todo]}
       onInitialized={async (client) => {

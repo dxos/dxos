@@ -45,7 +45,7 @@ const connectTab = (onConnect: (ev: MessageEvent) => void): Tab => {
     // must be transferred, everything else is a plain structured clone.
     send: (message) =>
       message.type === 'provide-port'
-        ? channel.port2.postMessage(message, { transfer: [message.appPort, message.systemPort] })
+        ? channel.port2.postMessage(message, { transfer: [message.clientToWorker, message.workerToClient] })
         : channel.port2.postMessage(message),
     received,
     waitFor: (predicate) => {
@@ -114,8 +114,8 @@ describe('coordinator worker routing', () => {
       type: 'provide-port',
       clientId: 'follower-client',
       leaderId: 'leader-1',
-      appPort: appChannel.port1,
-      systemPort: systemChannel.port1,
+      clientToWorker: appChannel.port1,
+      workerToClient: systemChannel.port1,
       livenessLockKey: 'liveness-1',
       isOwner: false,
     });
@@ -124,8 +124,8 @@ describe('coordinator worker routing', () => {
       type: 'provide-port';
     };
     expect(provided.clientId).toBe('follower-client');
-    expect(provided.appPort).toBeInstanceOf(MessagePort);
-    expect(provided.systemPort).toBeInstanceOf(MessagePort);
+    expect(provided.clientToWorker).toBeInstanceOf(MessagePort);
+    expect(provided.workerToClient).toBeInstanceOf(MessagePort);
 
     // The directed reply must not also broadcast to the leader.
     await sleep(20);
@@ -153,8 +153,8 @@ describe('coordinator worker routing', () => {
         type: 'provide-port',
         clientId: 'never-requested',
         leaderId: 'leader-1',
-        appPort: appChannel.port1,
-        systemPort: systemChannel.port1,
+        clientToWorker: appChannel.port1,
+        workerToClient: systemChannel.port1,
         livenessLockKey: 'liveness-1',
         isOwner: false,
       }),

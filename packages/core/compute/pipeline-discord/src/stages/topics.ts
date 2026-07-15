@@ -22,6 +22,7 @@ import { Topic } from '../types';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
+// TODO(burdon): Reconcile with Topic.
 export type TopicsOptions = {
   /** ECHO database to upsert {@link Topic.Topic} objects into; detection-only when absent. */
   readonly db?: Database.Database;

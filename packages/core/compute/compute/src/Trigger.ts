@@ -4,6 +4,10 @@
 
 // @import-as-namespace
 
+import type { Atom } from '@effect-atom/atom';
+import * as Context from 'effect/Context';
+import type * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
@@ -12,13 +16,14 @@ import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 
 import * as Runnable from './Runnable';
+import type * as TriggerEvent from './TriggerEvent';
 
 /**
  * Type discriminator for TriggerType.
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export const Kinds = ['email', 'feed', 'subscription', 'timer', 'webhook'] as const;
+export const Kinds = ['email', 'feed', 'direct', 'subscription', 'timer', 'webhook'] as const;
 export type Kind = (typeof Kinds)[number];
 
 const kindLiteralAnnotations = { title: 'Kind' };
@@ -91,6 +96,19 @@ export const specSubscription = (
 });
 
 /**
+ * Direct invocation only; never scheduled by the dispatcher (invoked on demand by a caller).
+ */
+export const DirectSpec = Schema.Struct({
+  kind: Schema.Literal('direct').annotations(kindLiteralAnnotations),
+});
+export type DirectSpec = Schema.Schema.Type<typeof DirectSpec>;
+
+/**
+ * Construct a Direct trigger spec.
+ */
+export const specDirect = (): DirectSpec => ({ kind: 'direct' });
+
+/**
  * Cron timer.
  */
 export const TimerSpec = Schema.Struct({
@@ -138,9 +156,11 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, FeedSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
-  title: 'Trigger',
-});
+export const Spec = Schema.Union(EmailSpec, FeedSpec, DirectSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations(
+  {
+    title: 'Trigger',
+  },
+);
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
@@ -212,3 +232,88 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);
+
+/**
+ * Checks if a trigger having this spec can be manually invoked (a `direct` or `timer` trigger).
+ */
+export const isManuallyInvokable = (spec?: Spec): boolean => spec?.kind === 'direct' || spec?.kind === 'timer';
+
+/**
+ * Runtime state of a trigger.
+ */
+export interface State {
+  /**
+   * Reference to the trigger object.
+   */
+  readonly trigger: Ref.Ref<Trigger>;
+
+  /**
+   * Where is this trigger running.
+   */
+  readonly environment: 'edge' | 'local';
+
+  /**
+   * Next scheduled cron execution. Set only for `timer` triggers.
+   */
+  readonly nextExecution?: Date;
+
+  /**
+   * Time until which scheduled invocations of this trigger are skipped after a genuine failure.
+   * Applies to all trigger kinds. Manual {@link TriggerDispatcher.invokeTrigger} calls bypass it.
+   */
+  readonly cooldownUntil?: Date;
+
+  /**
+   * Pending re-invocation requested via {@link Operation.runAgain} ({@link RunAgainError}).
+   * Retries are drained at the tail of the invocation queue, ordered by `enqueuedAt`.
+   */
+  readonly retry?: {
+    /**
+     * Event to replay on the retry. Re-running is assumed safe with the same input.
+     */
+    readonly event: TriggerEvent.TriggerEvent;
+
+    /**
+     * Monotonic sequence number used to order pending retries FIFO at the tail of the queue.
+     */
+    readonly enqueuedAt: number;
+  };
+
+  /**
+   * Result of the most recent invocation of this trigger.
+   */
+  readonly lastResult: Exit.Exit<unknown> | null;
+}
+
+export interface InvokeOptions {
+  trigger: Trigger;
+  event: TriggerEvent.TriggerEvent;
+}
+
+/**
+ * Service for monitoring trigger dispatcher state.
+ */
+export interface Monitor {
+  /**
+   * Triggers actively registered in the dispatcher.
+   * Could contain entries for both local and edge triggers, but only the edge ones are actually running.
+   */
+  readonly triggers: Atom.Atom<readonly State[]>;
+
+  readonly localDispatcherEnabled: boolean;
+
+  /**
+   * Invoke a trigger.
+   * Available only for direct and timer triggers.
+   * Invocation respects the trigger's concurrency limit.
+   */
+  readonly invokeTrigger: (options: InvokeOptions) => Effect.Effect<void>;
+}
+
+/**
+ * Service for monitoring trigger executions.
+ */
+export class TriggerMonitorService extends Context.Tag('@dxos/functions/TriggerMonitorService')<
+  TriggerMonitorService,
+  Monitor
+>() {}

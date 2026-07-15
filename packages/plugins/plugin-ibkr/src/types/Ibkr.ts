@@ -9,9 +9,10 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
 
 import { EdgarAdditionalFactsAnnotation, EdgarAsOfConceptsAnnotation, EdgarFieldAnnotation } from '../annotations';
-import { IBKR_FEED_KIND } from '../constants';
+import { IBKR_CONNECTOR_ID, IBKR_FEED_KIND } from '../constants';
 
 /** An open position parsed from a Flex report. */
 export const Position = Schema.Struct({
@@ -231,6 +232,9 @@ export const Portfolio = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--chart-line--regular', hue: 'green' }),
+  // Offer "Connect Interactive Brokers" in the portfolio toolbar. IBKR has no external-sync Cursor, so
+  // the connection is detected space-wide by connectorId (bindTarget omitted).
+  ConnectorAuthAnnotation.set({ connectorIds: [IBKR_CONNECTOR_ID] }),
   Type.makeObject(DXN.make('org.dxos.type.ibkr.Portfolio', '0.1.0')),
 );
 

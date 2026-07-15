@@ -13,7 +13,6 @@ import {
   type ClientServicesProvider,
   type ClientServicesRpc,
   type ClientServicesTransport,
-  clientServiceBundle,
   makeClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -38,10 +37,6 @@ export class ClientServicesProxy implements ClientServicesProvider {
     // TODO(dmaretskyi): Find better ways to detected when the worker has finished loading. It might take a while on slow connections.
     private readonly _timeout = 30_000,
   ) {}
-
-  get descriptors() {
-    return clientServiceBundle;
-  }
 
   get rpc() {
     invariant(this._rpc, 'Client services not open');

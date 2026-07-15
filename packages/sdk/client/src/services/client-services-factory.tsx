@@ -10,7 +10,6 @@ import * as Coordinator from '@dxos/worker-framework/Coordinator';
 
 import { DedicatedWorkerClientServices, type DedicatedWorkerClientServicesOptions } from './dedicated';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
-import { fromSocket } from './socket';
 
 export type CreateClientServicesOptions = {
   /** @deprecated The SHARED_WORKER services mode was removed; retained only for source compatibility. */
@@ -39,22 +38,14 @@ export const createClientServices = async (
 ): Promise<ClientServicesProvider> => {
   const { createDedicatedWorker, createCoordinatorWorker, createOpfsWorker, sqlitePath } = options;
 
-  // Remote services take precedence (proxy to a remote vault over a socket, etc.).
+  // The legacy protobuf byte-transport remote providers (websocket `fromSocket`, unix-socket
+  // `fromAgent`, iframe) have been removed; a `remote_source` endpoint is no longer supported until
+  // it is reintroduced over the effect-rpc transport.
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
-    const url = new URL(remote);
-    const protocol = url.protocol.slice(0, -1);
-    switch (protocol) {
-      case 'ws':
-      case 'wss': {
-        return fromSocket(remote, config.values.runtime?.client?.remoteSourceAuthenticationToken);
-      }
-
-      case 'http':
-      case 'https': {
-        throw new Error('IFrame services deprecated.');
-      }
-    }
+    throw new Error(
+      `createClientServices: runtime.client.remote_source (${remote}) is no longer supported; the legacy protobuf remote transports were removed.`,
+    );
   }
 
   // UNSPECIFIED_SERVICES_MODE == 0, so falsy check also catches it.

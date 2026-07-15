@@ -12,22 +12,22 @@ import * as Stream from 'effect/Stream';
 
 import { type Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Person } from '@dxos/types';
+import { EmailStage } from '@dxos/pipeline-email';
+import { Person } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
-import { EmailStage, type SyncDirection, type SyncWindow, resolveSyncWindow } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
-import { readBindingOptions } from '../../../util';
+import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
@@ -52,7 +52,7 @@ export const runJmapSync = ({
   before,
   direction,
 }: {
-  binding: Ref.Ref<SyncBinding.SyncBinding>;
+  binding: Ref.Ref<Cursor.Cursor>;
   /** Lower (oldest) bound of the range to sync — unix ms or yyyy-MM-dd. Defaults to the sync horizon. */
   after?: string | number;
   /** Upper (newest) bound of the range — unix ms or yyyy-MM-dd. Backfill passes the oldest-synced date here. */
@@ -61,7 +61,7 @@ export const runJmapSync = ({
    * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
    * sync); a cursor → `forward` (incremental). Pass `backward` (with `before` = oldest-synced) to backfill.
    */
-  direction?: SyncDirection;
+  direction?: Cursor.Direction;
 }): Effect.Effect<
   { newMessages: number },
   JmapApiError | EntityNotFoundError,
@@ -69,7 +69,10 @@ export const runJmapSync = ({
 > =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
-    const mailbox = Relation.getTarget(binding);
+    if (!Cursor.isExternal(binding)) {
+      return { newMessages: 0 };
+    }
+    const mailbox = yield* Database.load(binding.spec.target);
     if (!Mailbox.instanceOf(mailbox)) {
       log.warn('jmap sync skipped: binding target is not a Mailbox', { typename: Obj.getTypename(mailbox) });
       return { newMessages: 0 };
@@ -103,13 +106,12 @@ export const runJmapSync = ({
     }
 
     // The cursor is the high-water `receivedAt` (epoch-ms) of the last committed email.
-    const cursor = yield* Database.load(binding.cursor);
-    const cursorKey = Cursor.parseKey(cursor.value);
+    const cursorKey = Cursor.parseKey(binding.value);
     const options = readBindingOptions(binding);
 
     // Range + direction (shared with Gmail): no cursor → backward initial from today to the horizon;
     // cursor → forward incremental; `direction: backward` + `before` = oldest-synced → backfill.
-    const window = resolveSyncWindow({
+    const window = Cursor.resolveWindow({
       cursorKey,
       now: new Date(),
       after,
@@ -145,9 +147,9 @@ export const runJmapSync = ({
         }),
     );
 
-    const stats: SyncBinding.Stats = { newMessages: 0 };
+    const stats: Cursor.Stats = { newMessages: 0 };
     yield* jmapSource(target, folders, window, { filter: options.filter }).pipe(
-      SyncBinding.dedupStage<JmapMail.Email>(
+      Cursor.dedupStage<JmapMail.Email>(
         'dedup',
         (email) => email.id,
         (email) => new Date(email.receivedAt).getTime(),
@@ -156,19 +158,17 @@ export const runJmapSync = ({
       decodeBodyStage,
       mapToMessageStage,
       EmailStage.processAttachments(),
-      EmailStage.onArrivalExtractors(mailbox),
+      onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
-      EmailStage.toCommitUnit(),
+      EmailStage.toCommitUnit({ tagIndex }),
       Stream.grouped(COMMIT_PAGE_SIZE),
-      Pipeline.run({ sink: SyncBinding.commit }),
-      Effect.provide(
-        SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats }),
-      ),
+      Pipeline.run({ sink: Cursor.commit }),
+      Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats })),
     );
 
     // Flush indexes once at the end of the run (per-page commits no longer flush — see
-    // `SyncBinding.commit`) so cross-run dedup / contact resolution observe this run's writes.
+    // `Cursor.commit`) so cross-run dedup / contact resolution observe this run's writes.
     yield* Database.flush({ indexes: true });
 
     log('jmap sync complete', { newMessages: stats.newMessages });
@@ -180,7 +180,7 @@ export default InboxOperation.JmapSync.pipe(
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;
       const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-      if (!bindingObj || !db) {
+      if (!bindingObj || !db || !Cursor.isExternal(bindingObj)) {
         log.warn('jmap sync skipped: missing binding target or database', {
           hasBinding: Boolean(bindingObj),
           hasDatabase: Boolean(db),
@@ -188,13 +188,13 @@ export default InboxOperation.JmapSync.pipe(
         return { newMessages: 0 };
       }
 
-      const connectionRef = Ref.make(Relation.getSource(bindingObj));
+      const accessTokenRef = bindingObj.spec.source;
 
       return yield* runJmapSync({ binding: bindingRef, after, before, direction }).pipe(
         Effect.provide(
           Layer.mergeAll(
             JmapMailApi.Live.pipe(
-              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, JmapCredentials.fromConnection(connectionRef))),
+              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, JmapCredentials.fromAccessToken(accessTokenRef))),
             ),
             InboxResolver.Live,
           ),
@@ -245,15 +245,18 @@ const fetchAttachments = (
   });
 
 /**
- * Streams JMAP emails over the resolved {@link SyncWindow}: build the query filter (folder scope +
- * `after`/`before` date bounds + optional user DSL), paginate ids (newest-first within the window),
- * then fetch each email. Direction is realized via the window's bounds — forward resumes from the
- * cursor, backward/backfill bounds the range with `before` — while the query is always newest-first.
+ * Streams JMAP emails over the resolved {@link Cursor.Window}: build the query filter (folder scope +
+ * `after`/`before` date bounds + optional user DSL), paginate ids, then fetch each email. Direction is
+ * realized via both the window's bounds and the query's sort order — forward resumes from the cursor
+ * and pages oldest-first, so a run capped by {@link MAX_SCAN} advances the cursor gap-free instead of
+ * jumping straight to the newest key and stranding the older, unprocessed middle; backward/backfill
+ * bounds the range with `before` and pages newest-first, since it never advances the cursor and so has
+ * no gap to strand.
  */
 const jmapSource = (
   target: JmapMail.Target,
   folders: readonly JmapMail.Mailbox[],
-  window: SyncWindow,
+  window: Cursor.Window,
   options: { filter?: string },
 ) =>
   Stream.unwrap(
@@ -295,7 +298,7 @@ const jmapSource = (
         Effect.gen(function* () {
           const { ids } = yield* api.emailQuery(target, {
             filter,
-            sort: [{ property: 'receivedAt', isAscending: false }],
+            sort: [{ property: 'receivedAt', isAscending: window.direction === 'forward' }],
             position,
             limit: QUERY_PAGE_SIZE,
           });

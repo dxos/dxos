@@ -177,6 +177,16 @@ Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/c
 
 **Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
 
+Because these tags are force-moved on every deploy, a plain `git pull`/`git fetch` will reject them once your local clone has a stale copy (`! [rejected] composer/labs -> composer/labs (would clobber existing tag)`). Turn off automatic tag-following once per clone so routine fetches stay quiet:
+
+```bash
+git config remote.origin.tagOpt --no-tags
+```
+
+You can still pull a specific one on demand: `git fetch origin tag composer/labs --force` (still needs
+`--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
+check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
+
 | Env            | Trigger                | Apps               | Notes                                    |
 | -------------- | ---------------------- | ------------------ | ---------------------------------------- |
 | **main**       | auto on push to `main` | all `main`-enabled | rolling preview; no native build         |
@@ -210,6 +220,22 @@ gh run watch
 ```
 
 Handy as aliases — e.g. `gh alias set deploy-labs 'workflow run deploy-apps.yml -f environment=labs'`, then just `gh deploy-labs`.
+
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+
+```bash
+# Push secrets to the deployed composer-labs Worker.
+pnpm secrets remote labs
+
+# See what would be pushed without making any change.
+pnpm secrets remote main --dry-run
+
+# Write .dev.vars for local `wrangler dev`.
+pnpm secrets dev
+
+# Target a different 1Password item.
+pnpm secrets remote labs --item "some other item"
+```
 
 ### New npm packages
 

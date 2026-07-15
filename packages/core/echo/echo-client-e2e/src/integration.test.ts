@@ -445,14 +445,14 @@ describe('Integration tests', () => {
 
       await expect
         .poll(async () => {
-          const state = await db2.getSyncState();
+          const state = await db2.getAutomergeSyncState();
           return state.peers!.length;
         })
         .toBe(1);
 
       await expect
         .poll(async () => {
-          const state = await db2.getSyncState();
+          const state = await db2.getAutomergeSyncState();
           return state.peers![0].differentDocuments + state.peers![0].missingOnRemote + state.peers![0].missingOnLocal;
         })
         .toEqual(0);

@@ -15,7 +15,7 @@ import { mutableArray, protoTimestamp, publicKey } from './service-schemas.ts';
 //
 
 export const GetConfigResponse = Schema.Struct({
-  // JSON-encoded configuration object.
+  /** JSON-encoded configuration object. */
   config: Schema.String,
 });
 export interface GetConfigResponse extends Schema.Schema.Type<typeof GetConfigResponse> {}
@@ -70,6 +70,7 @@ export const SubscribeToItemsRequest = Schema.Struct({});
 export interface SubscribeToItemsRequest extends Schema.Schema.Type<typeof SubscribeToItemsRequest> {}
 
 export const SubscribeToItemsResponse = Schema.Struct({
+  /** JSON-encoded payload. */
   data: Schema.String,
 });
 export interface SubscribeToItemsResponse extends Schema.Schema.Type<typeof SubscribeToItemsResponse> {}
@@ -110,6 +111,7 @@ export interface GetNetworkPeersRequest extends Schema.Schema.Type<typeof GetNet
 
 export const PeerInfo = Schema.Struct({
   id: publicKey,
+  /** PeerState enum. */
   state: Schema.String,
   connections: Schema.optional(mutableArray(Schema.Uint8Array)),
 });
@@ -195,11 +197,13 @@ export interface ExportSqliteDatabaseResponse extends Schema.Schema.Type<typeof 
 
 export const RunSqliteQueryRequest = Schema.Struct({
   query: Schema.String,
+  /** JSON-encoded array of query parameters. */
   params: Schema.optional(Schema.String),
 });
 export interface RunSqliteQueryRequest extends Schema.Schema.Type<typeof RunSqliteQueryRequest> {}
 
 export const RunSqliteQueryResponse = Schema.Struct({
+  /** JSON-encoded array of row objects. */
   rows: Schema.String,
   error: Schema.optional(Schema.String),
 });
@@ -210,13 +214,13 @@ export interface RunSqliteQueryResponse extends Schema.Schema.Type<typeof RunSql
  * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
  */
 export class Rpcs extends RpcGroup.make(
-  // Subscribe to server-to-client events.
+  /** Subscribe to server-to-client events. */
   Rpc.make('events', {
     success: protoMessage('dxos.devtools.host.Event'),
     error: serviceError,
     stream: true,
   }),
-  // Get client config.
+  /** Get client config. */
   Rpc.make('getConfig', {
     success: GetConfigResponse,
     error: serviceError,

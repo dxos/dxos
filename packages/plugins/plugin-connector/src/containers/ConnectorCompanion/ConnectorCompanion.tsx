@@ -9,65 +9,56 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Relation } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
-import { Connection, SyncBinding } from '#types';
+import { Connection } from '#types';
 
 import { connectionDeckSubject } from '../../constants';
 
 const EMPTY_SCHEMA = Schema.Struct({});
 const EMPTY_VALUES = {};
 
-export type ConnectorCompanionProps = AppSurface.ArticleProps<SyncBinding.SyncBinding>;
+export type ConnectorCompanionProps = AppSurface.ArticleProps<Cursor.Cursor>;
 
 /**
- * Companion panel focused on the {@link SyncBinding} that connects the primary
- * plank's object to its external service. Shows the connection header (name and
- * account) and the sync status for that binding. The binding is resolved by the
- * app-graph matcher and handed in as the companion subject; when an object has
- * multiple bindings (unusual edge case) the matcher picks the first.
+ * Companion panel focused on the external-sync {@link Cursor} that connects the primary plank's
+ * object to its external service. Shows the connection header (name and account) and the sync status
+ * for that cursor. The cursor is resolved by the app-graph matcher (external cursors only) and handed
+ * in as the companion subject; when an object has multiple cursors (unusual edge case) the matcher
+ * picks the first.
  */
 export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
-  // The subject is an ECHO relation. Subscribe to it so its mutable fields
-  // (sync status, options) re-render; field reads use the live relation.
-  useAtomValue(useMemo(() => Relation.atom(subject), [subject]));
+  // Subscribe so mutable fields (sync status, options) re-render; field reads use the live object.
+  useAtomValue(useMemo(() => Obj.atom(subject), [subject]));
   const db = Obj.getDatabase(subject);
+  const externalSpec = Cursor.isExternal(subject) ? subject.spec : undefined;
 
-  // Source connection of the binding.
-  const connection = useMemo(() => {
-    try {
-      const source = Relation.getSource(subject);
-      return Connection.instanceOf(source) ? source : undefined;
-    } catch {
-      return undefined;
-    }
-  }, [subject]);
+  // The Connection whose access token authenticates this cursor. Cursor no longer relates to
+  // Connection directly (that coupling was removed), so it's found by matching access tokens —
+  // fuzzy if a token is ever shared across connections.
+  const connections = useQuery(db, Filter.type(Connection.Connection));
+  const connection = useMemo(
+    () => connections.find((candidate) => candidate.accessToken.uri === externalSpec?.source.uri),
+    [connections, externalSpec],
+  );
 
   const [connectionObj] = useObject(connection);
-  const [accessToken] = useObject(connection?.accessToken);
+  const [accessToken] = useObject(externalSpec?.source);
   const connector = useConnector(connectionObj?.connectorId);
 
-  // Detect whether the binding's target has been deleted so a cleanup option can be offered.
-  const target = useMemo(() => {
-    try {
-      return Relation.getTarget(subject);
-    } catch {
-      return undefined;
-    }
-  }, [subject]);
-  const [resolvedTarget] = useObject(target);
+  // Detect whether the cursor's target has been deleted so a cleanup option can be offered.
+  const [resolvedTarget] = useObject(externalSpec?.target);
   const targetMissing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
-  // Sync status lives on the binding's cursor object (0.2.0); resolve it to render last-run state.
-  const [cursor] = useObject(subject.cursor);
 
   const handleOpenConnection = useCallback(() => {
     if (!connection || !db) {
@@ -83,12 +74,14 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
     void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
   }, [invokePromise, subject]);
 
-  // Seed the options form from the binding's current options; changes persist via Relation.update.
-  const optionsDefaultValues = useMemo(() => ({ ...(subject.options ?? {}) }), [subject.options]);
+  // Seed the options form from the cursor's current options.
+  const optionsDefaultValues = useMemo(() => ({ ...(externalSpec?.options ?? {}) }), [externalSpec]);
   const handleOptionsChanged = useCallback(
     (values: Record<string, any>) => {
-      Relation.update(subject, (subject) => {
-        subject.options = { ...values };
+      Obj.update(subject, (subject) => {
+        if (subject.spec.kind === 'external') {
+          subject.spec.options = { ...values };
+        }
       });
     },
     [subject],
@@ -107,8 +100,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
     ? t('binding-source-missing.message')
     : targetMissing
       ? t('binding-target-missing.message')
-      : cursor?.lastRunAt
-        ? `${t('last-sync.label')}: ${new Date(cursor.lastRunAt).toLocaleString()}`
+      : subject.lastTick
+        ? `${t('last-sync.label')}: ${new Date(subject.lastTick).toLocaleString()}`
         : t('never-synced.label');
 
   return (
@@ -124,8 +117,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                       label={t('sync-target.label')}
                       description={status}
                       validation={
-                        !targetMissing && !sourceMissing && cursor?.lastError ? (
-                          <span className='text-sm text-error-text'>{cursor.lastError}</span>
+                        !targetMissing && !sourceMissing && subject.lastError ? (
+                          <span className='text-sm text-error-text'>{subject.lastError}</span>
                         ) : undefined
                       }
                     >

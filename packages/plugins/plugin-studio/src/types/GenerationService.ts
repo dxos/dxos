@@ -8,6 +8,7 @@ import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
+import { type FormFieldMap } from '@dxos/react-ui-form';
 
 import * as Generation from './Generation';
 
@@ -15,17 +16,16 @@ import * as Generation from './Generation';
  * Provider-agnostic, per-`kind` generation contract shared by plugin-studio and provider
  * implementations (e.g. plugin-ideogram). These are NOT ECHO objects — they are plain Effect
  * schemas / interfaces passed across the {@link StudioCapabilities.GenerationService} capability
- * boundary. The kind-specific request config is described by each provider's `requestSchema` and
- * validated by the provider itself; studio only merges the prompt in and renders the form.
+ * boundary. The kind-specific request config — including the prompt — is described by each provider's
+ * `requestSchema` and validated by the provider itself; studio just renders the form.
  */
 
 /**
- * The request passed to a provider's `generate`. `prompt` (from the artifact's Instructions) and
- * `count` are always present; all other keys come from the artifact's `config` and are described by
- * the provider's `requestSchema`.
+ * The request passed to a provider's `generate`. Every key (including the `prompt`) comes from the
+ * variant's `config` and is described by the provider's `requestSchema`; `count` is added by the
+ * generate op.
  */
 export interface GenerationRequest {
-  readonly prompt: string;
   readonly count?: number;
   readonly [key: string]: unknown;
 }
@@ -87,13 +87,16 @@ export interface GenerationService {
   readonly source?: string;
   /**
    * `Connection.connectorId` of the Connector that authenticates this provider — lets the UI render
-   * the connector's "Connect" button (via the `ConnectorAuth` surface) when no credential is present.
+   * the connector's "Connect" button (contributed to the app graph) when no credential is present.
    */
   readonly connectorId?: string;
-  /** Effect Schema of the kind-specific request config; drives the default GenerateForm. */
+  /** Effect Schema of the kind-specific request config; drives the schema-driven request form. */
   readonly requestSchema: Schema.Schema.AnyNoContext;
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;
+  /** Per-field renderers (keyed by JSON path) for the schema-driven form — customizes specific
+   * request fields (e.g. HeyGen's avatar/voice pickers) without replacing the whole form. */
+  readonly fieldMap?: FormFieldMap;
   /** One-shot generation (synchronous providers). Mutually exclusive with enqueue/awaitResult. */
   generate?(request: GenerationRequest, options: GenerateOptions): Promise<GenerationResult>;
   /** Submit a job; returns the provider job id to persist (asynchronous providers). */

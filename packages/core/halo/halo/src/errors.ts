@@ -24,3 +24,18 @@ export class InvalidSignatureError extends BaseError.extend('InvalidSignatureErr
  * A membership operation references causal predecessors that have not been received.
  */
 export class MissingDependencyError extends BaseError.extend('MissingDependencyError', 'Missing dependency') {}
+
+/**
+ * An identity/device operation (create, recover, profile/device update, device invitation) failed.
+ */
+export class IdentityError extends BaseError.extend('IdentityError', 'Identity operation failed') {}
+
+/**
+ * A space operation (create, query, membership, invitation, export/import) failed.
+ */
+export class SpaceError extends BaseError.extend('SpaceError', 'Space operation failed') {}
+
+/**
+ * An invitation-lifecycle operation (authenticate, cancel) failed.
+ */
+export class InvitationError extends BaseError.extend('InvitationError', 'Invitation operation failed') {}

@@ -64,6 +64,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -94,6 +97,9 @@
       "path": "../../ui/react-ui-masonry"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
@@ -107,6 +113,9 @@
     },
     {
       "path": "../plugin-file"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-preview"

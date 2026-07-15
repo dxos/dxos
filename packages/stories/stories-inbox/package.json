@@ -20,11 +20,15 @@
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/extractor": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/pipeline-email": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-brain": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -34,9 +38,11 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-trip": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -48,22 +54,14 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@storybook/react-vite": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@dxos/config": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
     "vite": "catalog:"
-  },
-  "peerDependencies": {
-    "@dxos/react-ui": "workspace:^",
-    "react": "catalog:",
-    "react-dom": "catalog:"
   }
 }

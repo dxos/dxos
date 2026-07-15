@@ -10,3 +10,5 @@ export * from './facts';
 export * from './stats';
 export * from './summarize';
 export * from './tag';
+
+export * as EmailStage from './EmailStage';

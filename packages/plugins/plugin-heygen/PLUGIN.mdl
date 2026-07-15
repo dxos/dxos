@@ -57,15 +57,28 @@ feat HeyGenGenerationService
     - non-2xx / status 'failed' / timeout → ProviderFailure
 ```
 
+## Avatar/voice picker
+
+```mdl
+feat HeyGenGenerateForm
+  desc: >
+    Overrides studio's default schema-driven GenerateForm for kind:'video' with a
+    provider-specific picker: `avatarId`/`voiceId` render as SelectFields populated
+    from listAvatars()/listVoices(). Contributed as a ReactSurface on the studio
+    `GenerateForm` role token (@dxos/plugin-studio/surfaces) with Position.first +
+    filter data.kind==='video'. The API key is read from the Connector AccessToken
+    (useQuery, source 'heygen.com'). Ported from the former plugin-generator
+    GenerationProperties.
+```
+
 ## Dependencies
 
-- `@dxos/plugin-studio` (workspace:\*) — `/types` for the `GenerationService` contract.
+- `@dxos/plugin-studio` (workspace:\*) — `/types` (GenerationService contract) + `/surfaces` (GenerateForm role token).
 - `@dxos/plugin-connector`, `@dxos/types` (AccessToken), `@dxos/edge-client`
   (CORS proxy), `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/echo`,
-  `@dxos/invariant`, `effect`. No `react`.
+  `@dxos/invariant`, `@dxos/log`, `@dxos/react-client`, `@dxos/react-ui-form`,
+  `react` (peer), `effect`.
 
 ## Out of scope (v1)
 
-- Avatar/voice **picker** UI (a custom `GenerateForm` surface driven by
-  `listAvatars`/`listVoices`); v1 accepts the ids via the schema-driven form.
 - Audio generation (HeyGen is video-only).

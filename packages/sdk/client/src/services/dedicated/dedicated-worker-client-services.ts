@@ -5,13 +5,7 @@
 import * as Runtime from 'effect/Runtime';
 
 import { Trigger } from '@dxos/async';
-import {
-  type ClientServices,
-  type ClientServicesProvider,
-  Rpc,
-  clientServiceBundle,
-  serveBridgeService,
-} from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, Rpc, serveBridgeService } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -20,7 +14,6 @@ import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
 import { createIceProvider } from '@dxos/network-manager';
 import { subscribeStream } from '@dxos/protocols';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
-import { type ServiceBundle } from '@dxos/rpc';
 import type { MaybePromise } from '@dxos/util';
 import { WorkerProtocol } from '@dxos/worker-framework';
 import * as Client from '@dxos/worker-framework/Client';
@@ -59,23 +52,24 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       leaderLockKey: LEADER_LOCK_KEY,
       config: options.config?.values,
       leaderTimeouts: options.leaderTimeouts,
-      onConnect: async ({ appPort, systemPort }) => {
+      onConnect: async ({ clientToWorker, workerToClient }) => {
         const config = options.config ?? new Config();
         const origin = typeof location !== 'undefined' ? location.origin : 'unknown';
 
-        // Serve the tab's WebRTC BridgeService (RtcTransportService) to the worker over the system
-        // port. Imported lazily so the RTC stack is only pulled in when a worker connection opens.
+        // Serve the tab's WebRTC BridgeService (RtcTransportService) to the worker over the
+        // worker→client port. Imported lazily so the RTC stack is only pulled in when a worker
+        // connection opens.
         const { RtcTransportService } = await import('@dxos/network-manager');
+        const iceProviders = config.get('runtime.services.iceProviders');
         const transportService = new RtcTransportService(
           { iceServers: [...(config.get('runtime.services.ice') ?? [])] },
-          config.get('runtime.services.iceProviders') &&
-            createIceProvider(config.get('runtime.services.iceProviders')!),
+          iceProviders ? createIceProvider(iceProviders) : undefined,
         );
-        this.#bridgeServer = serveBridgeService(systemPort, transportService);
+        this.#bridgeServer = serveBridgeService(workerToClient, transportService);
         await this.#bridgeServer.open();
 
-        // Client services (+ WorkerService control channel) over the app port.
-        this.#services = new ClientServicesProxy(appPort);
+        // Client services (+ WorkerService control channel) over the client→worker port.
+        this.#services = new ClientServicesProxy(clientToWorker);
         await this.#services.open();
 
         // Hold a tab-liveness lock and hand its key to the worker via WorkerService.start so the
@@ -148,10 +142,6 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   onReconnect = (callback: () => Promise<void>) => {
     this.#connection.onReconnect(callback);
   };
-
-  get descriptors(): ServiceBundle<ClientServices> {
-    return clientServiceBundle;
-  }
 
   get rpc() {
     invariant(this.#services, 'services not initialized');

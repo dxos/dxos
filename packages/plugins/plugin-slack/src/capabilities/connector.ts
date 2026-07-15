@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
@@ -44,6 +44,20 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   }).pipe(Effect.orDie);
 
 /**
+ * Slack `testConnection`: call `auth.test` with the stored token. A rejected
+ * token or transport failure surfaces as a user-facing error so the connection
+ * UI can offer to reauthenticate.
+ */
+const testConnection: TestConnection = ({ accessToken }) =>
+  SlackApi.fetchAuthTest().pipe(
+    Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token: accessToken.token })),
+    Effect.asVoid,
+    Effect.mapError(
+      () => new ConnectionTestError({ message: 'Slack rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
+  );
+
+/**
  * Contributes a single `Connector` entry that wires Slack's auth, discovery,
  * materialization and sync to the `'slack.com'` source.
  */
@@ -62,6 +76,7 @@ export default Capability.makeModule(
         materializeTarget: SlackOperation.MaterializeSlackTarget,
         sync: SlackOperation.SyncSlackChannel,
         onTokenCreated,
+        testConnection,
       },
     ]);
   }),

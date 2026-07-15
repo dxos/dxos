@@ -19,11 +19,8 @@ import {
   MessageModule,
   StatsModule,
   TopicsModule,
-} from '../components';
-
-// `ModuleProps` (space + attendableId) and the `withModuleProps` adapter now live in the shared
-// `@dxos/story-modules` package — the container owns space resolution and attention registration.
-export type { ModuleProps } from '@dxos/story-modules';
+  TriggersModule,
+} from '../modules';
 
 /**
  * Role tokens for the MailboxSync story columns. Each module is contributed as a dedicated
@@ -39,6 +36,7 @@ export const Module = {
   Connector: Role.make<Record<string, any>>('org.dxos.storybook.inbox.connector'),
   Archive: Role.make<Record<string, any>>('org.dxos.storybook.inbox.archive'),
   Stats: Role.make<Record<string, any>>('org.dxos.storybook.inbox.stats'),
+  Triggers: Role.make<Record<string, any>>('org.dxos.storybook.inbox.triggers'),
 };
 
 /** React surfaces for the MailboxSync story columns, one per `Module` role token. */
@@ -83,6 +81,11 @@ const moduleSurfaces: Surface.Definition[] = [
     id: 'inbox.stats',
     filter: Surface.makeFilter(Module.Stats),
     component: () => <StatsModule />,
+  }),
+  Surface.create({
+    id: 'inbox.triggers',
+    filter: Surface.makeFilter(Module.Triggers),
+    component: withModuleProps(TriggersModule),
   }),
 ];
 

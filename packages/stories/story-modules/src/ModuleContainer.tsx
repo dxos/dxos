@@ -27,8 +27,10 @@ export type ModuleLayout = ModuleSpec[][];
  * attendable id (registered with the attention system by the container's `AttendableContainer`).
  */
 export type ModuleProps = {
+  /** Active space. */
   space: Space;
-  attendableId: string;
+  /** Active component. */
+  attendableId?: string;
 };
 
 /**
