@@ -16,7 +16,6 @@ import { LayerSpec } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
-import { Topic } from '@dxos/pipeline-email';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { TopicsArticle } from '@dxos/plugin-inbox/containers';
@@ -27,7 +26,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { AnchoredTo, Message } from '@dxos/types';
+import { AnchoredTo, Message, Topic } from '@dxos/types';
 
 // Story-only mock AiService so `CreateTopicFromMessage`'s LLM summary step runs without a real provider.
 const MockAiServicePlugin = Plugin.define(
@@ -52,7 +51,7 @@ const MockAiServicePlugin = Plugin.define(
 const Story = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const topics = useQuery(space?.db, Filter.type(Topic));
+  const topics = useQuery(space?.db, Filter.type(Topic.Topic));
   const { invokePromise } = useOperationInvoker();
 
   const handleCreate = useCallback(() => {
@@ -97,7 +96,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Mailbox.Mailbox, Topic, AnchoredTo.AnchoredTo, Message.Message],
+          types: [Mailbox.Mailbox, Topic.Topic, AnchoredTo.AnchoredTo, Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);

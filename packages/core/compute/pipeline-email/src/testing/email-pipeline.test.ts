@@ -26,7 +26,7 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { FactPipeline, FactStore } from '@dxos/pipeline-rdf';
 import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/testing';
-import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
+import { type ContentBlock, Message, Organization, Person, Topic } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest';
@@ -38,7 +38,7 @@ import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index'
 import { buildThreads } from '../internal/threads';
 import { type FactIndexer, extractFactsStage } from '../stages/extract-facts';
 import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts';
-import { Thread, Topic } from '../types';
+import { Thread } from '../types';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
 
@@ -250,7 +250,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread, Topic] }));
+    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread, Topic.Topic] }));
     // Seed a known Organization so domain-matching can link a sender's Person to it.
     for (const org of TEST_ORGS) {
       db.add(Obj.make(Organization.Organization, org));
@@ -418,7 +418,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         db.add(topic);
       }
       await db.flush({ indexes: true });
-      const storedTopics = await db.query(Filter.type(Topic)).run();
+      const storedTopics = await db.query(Filter.type(Topic.Topic)).run();
       expect(storedTopics.length).toBe(topics.length);
 
       // Commitment ledger over the advisory fact store: rows (if any) must be grounded in a fact.

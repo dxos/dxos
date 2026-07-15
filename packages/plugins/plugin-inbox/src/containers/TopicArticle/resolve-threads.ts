@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Topic, deriveThreadId } from '@dxos/pipeline-email';
-import { type Message } from '@dxos/types';
+import { deriveThreadId } from '@dxos/pipeline-email';
+import { type Message, type Topic } from '@dxos/types';
 
 /** A topic's member thread resolved back to its mailbox messages (oldest first). */
 export type TopicThread = {
@@ -19,7 +19,7 @@ export type TopicThread = {
  * thread with no messages in the current feed. Pure.
  */
 export const resolveTopicThreads = (
-  topic: Pick<Topic, 'threadIds'>,
+  topic: Pick<Topic.Topic, 'threadIds'>,
   messages: readonly Message.Message[],
 ): TopicThread[] => {
   const wanted = new Set(topic.threadIds);

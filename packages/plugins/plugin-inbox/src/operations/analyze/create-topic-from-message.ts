@@ -10,15 +10,8 @@ import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import {
-  Topic,
-  buildThreads,
-  clusterThreads,
-  deriveThreadId,
-  resolveModel,
-  summarizeTopics,
-} from '@dxos/pipeline-email';
-import { AnchoredTo, Message } from '@dxos/types';
+import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';
+import { AnchoredTo, Message, Topic } from '@dxos/types';
 
 import { InboxOperation } from '../../types';
 
@@ -68,7 +61,7 @@ const handler = InboxOperation.CreateTopicFromMessage.pipe(
       }
 
       const topic = db.add(
-        Obj.make(Topic, {
+        Obj.make(Topic.Topic, {
           label: draft.label,
           summary: draft.summary,
           threadIds: [...draft.threadIds],

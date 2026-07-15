@@ -12,8 +12,8 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Topic, deriveThreadId, resolveModel, runTopicsPipeline, tagMessage } from '@dxos/pipeline-email';
-import { Message, Person } from '@dxos/types';
+import { deriveThreadId, resolveModel, runTopicsPipeline, tagMessage } from '@dxos/pipeline-email';
+import { Message, Person, Topic } from '@dxos/types';
 
 import { InboxOperation, Mailbox } from '../../types';
 import { orderSuggestions } from './suggestions';
@@ -61,7 +61,7 @@ const handler = InboxOperation.AnalyzeTopics.pipe(
       // Resumable-lite: skip already-tagged messages, and dedup suggestions against labels already
       // accepted (a `Topic`) or already suggested.
       const tagIndex = Mailbox.buildMessageTagsIndex(mailbox);
-      const existingTopics = yield* Effect.promise(() => db.query(Filter.type(Topic)).run());
+      const existingTopics = yield* Effect.promise(() => db.query(Filter.type(Topic.Topic)).run());
       const existingLabels = new Set([
         ...existingTopics.map((topic) => topic.label),
         ...(mailbox.topicSuggestions ?? []).map((suggestion) => suggestion.label),

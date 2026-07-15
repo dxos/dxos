@@ -5,10 +5,10 @@
 import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { Message } from '@dxos/types';
+import { Message, Topic } from '@dxos/types';
 
 import { buildThreads } from '../internal/threads';
-import { Thread, Topic } from '../types';
+import { Thread } from '../types';
 import { clusterThreads, materializeTopics, summarizeTopics } from './topics';
 
 const OWNER = 'me@enron.com';
@@ -117,7 +117,7 @@ describe('topics', () => {
 
   test('materializeTopics produces Topic ECHO objects', ({ expect }) => {
     const [first] = materializeTopics(clusterThreads(threads()));
-    expect(Obj.instanceOf(Topic, first)).toBe(true);
+    expect(Obj.instanceOf(Topic.Topic, first)).toBe(true);
     expect(first.threadIds.length).toBeGreaterThan(0);
   });
 });

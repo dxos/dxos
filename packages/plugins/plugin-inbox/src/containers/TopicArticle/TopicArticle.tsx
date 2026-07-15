@@ -4,15 +4,15 @@
 
 import React, { useMemo } from 'react';
 
-import { type Topic } from '@dxos/pipeline-email';
 import { Card, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Topic } from '@dxos/types';
 
 import { Row } from '#components';
 import { meta } from '#meta';
 
 export type TopicArticleProps = {
   role?: string;
-  subject: Topic;
+  subject: Topic.Topic;
 };
 
 /** A single labelled list section (questions / tasks / thread subjects); omitted when empty. */

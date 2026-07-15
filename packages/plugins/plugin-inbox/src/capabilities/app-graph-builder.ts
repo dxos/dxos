@@ -12,14 +12,13 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { Topic } from '@dxos/pipeline-email';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
-import { DraftMessage, Event, Message } from '@dxos/types';
+import { DraftMessage, Event, Message, Topic } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -405,7 +404,7 @@ export default Capability.makeModule(
               id: linkedSegment('topic'),
               label: ['topic.label', { ns: meta.profile.key }],
               icon: 'ph--stack--regular',
-              data: Obj.instanceOf(Topic, topic) ? topic : 'topic',
+              data: Obj.instanceOf(Topic.Topic, topic) ? topic : 'topic',
             }),
           ]);
         },

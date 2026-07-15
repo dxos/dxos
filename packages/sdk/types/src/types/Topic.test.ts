@@ -6,11 +6,11 @@ import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { Topic } from './Topic';
+import * as Topic from './Topic';
 
 describe('Topic', () => {
   test('constructs a Topic object with expected fields', ({ expect }) => {
-    const topic = Obj.make(Topic, {
+    const topic = Obj.make(Topic.Topic, {
       label: 'Q2 reporting',
       summary: 'Threads about the Q2 report and budget confirmation.',
       threadIds: ['q2 report', 'budget numbers'],
@@ -20,7 +20,7 @@ describe('Topic', () => {
       tasks: ['Confirm the Q2 numbers'],
     });
 
-    expect(Obj.instanceOf(Topic, topic)).toBe(true);
+    expect(Obj.instanceOf(Topic.Topic, topic)).toBe(true);
     expect(topic.threadIds).toHaveLength(2);
     expect(topic.label).toBe('Q2 reporting');
   });

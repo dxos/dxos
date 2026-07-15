@@ -397,6 +397,29 @@ trailing path segment + `Mailbox.instanceOf(data.subject)`. Props types live nex
       Test" pass). Verified by stashing all edits and re-running. Investigate the indexing/timing the topic
       query needs headlessly.
 
+## Topics → plugin-brain / Project refactor (2026-07-14 asks)
+
+**Direction:** promote `Topic` from the inbox stack into a first-class, reusable domain object. The type
+moves to `@dxos/types` (Project-style class), the UI moves to `plugin-brain`, and Topics get their own
+app-graph subtree (virtual root + a node per Topic) rendered via a regular object/article surface. Longer
+term Topic may be renamed `Project` and generalized beyond email (threads, task lists).
+
+- [ ] **track: Fix companions and master/detail for topics.** (`TopicsArticle` → `TopicArticle`
+      master/detail; companion vs deck-peer opening across layout modes.)
+- [ ] **track: Break `Topic` out into plugin-brain; consider renaming to `Project`; track threads (not
+      just email); add a task list, etc.**
+- [ ] **Audit current `Topic` usages → `plugin-brain/AUDIT.md`** — inventory every importer + component
+      (type def, operations, surfaces, app-graph, stories); reference the existing `@dxos/types` `Project`
+      as the target model. (#8)
+- [ ] **Move `Topic` type → `@dxos/types`, Project-style class** (#6/#7) — inline annotations
+      (`LabelAnnotation`/`IconAnnotation`, title), add a `make` factory. DECISION NEEDED: `TopicProps` is
+      shared with `Mailbox.topicSuggestions` (extends it) — keep exporting a shared props struct, or inline
+      + refactor the Mailbox field. High blast radius (~20 importers).
+- [ ] **Move `TopicArticle` + `TopicsArticle` → plugin-brain** (#5) — virtual app-graph root node for
+      Topics + a child node per `Topic`; change the surface binding to a regular object/article
+      (`AppSurface.object(Article, Topic)`), dropping the mailbox-folder wiring.
+- [ ] **`TopicArticle` storybook** (#3) — create in the new plugin-brain location (after the move).
+
 ## Bugs
 
 - [ ] **MailboxArticle search/filtering isn't working.** The filter/query editor in

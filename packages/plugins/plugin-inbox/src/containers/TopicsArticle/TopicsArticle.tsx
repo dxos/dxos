@@ -8,13 +8,12 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Topic } from '@dxos/pipeline-email';
 import { Card, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { AnchoredTo } from '@dxos/types';
+import { AnchoredTo, Topic } from '@dxos/types';
 
 import { meta } from '#meta';
 import { InboxOperation, type Mailbox } from '#types';
@@ -80,7 +79,7 @@ const SuggestionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Suggestio
 
 SuggestionTile.displayName = 'SuggestionTile';
 
-type TopicTileData = { readonly topic: Topic; readonly onDelete?: (topic: Topic) => void };
+type TopicTileData = { readonly topic: Topic.Topic; readonly onDelete?: (topic: Topic.Topic) => void };
 
 /** Mosaic tile for one `Topic`: label, summary, and a thread/participant count. */
 const TopicTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<TopicTileData>, 'data' | 'location' | 'current'>>(
@@ -150,10 +149,10 @@ export const TopicsArticle = ({ role, subject: mailbox, attendableId }: TopicsAr
   const id = String(attendableId ?? Obj.getURI(mailbox));
   const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
-  const topics = useQuery(db, Filter.type(Topic));
+  const topics = useQuery(db, Filter.type(Topic.Topic));
   const suggestions = mailbox.topicSuggestions ?? [];
   const showItem = useShowItem();
-  const handleDelete = useCallback((topic: Topic) => db?.remove(topic), [db]);
+  const handleDelete = useCallback((topic: Topic.Topic) => db?.remove(topic), [db]);
 
   // Open the selected topic's detail (`TopicArticle`) following the layout mode — companion in
   // simple mode, companion swap otherwise (deck-peer needs a topic path; a follow-up).
@@ -187,7 +186,7 @@ export const TopicsArticle = ({ role, subject: mailbox, attendableId }: TopicsAr
         return;
       }
       const topic = db.add(
-        Obj.make(Topic, {
+        Obj.make(Topic.Topic, {
           label: suggestion.label,
           summary: suggestion.summary,
           threadIds: [...suggestion.threadIds],

@@ -10,7 +10,6 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
-import { Topic } from '@dxos/pipeline-email';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { TopicsArticle } from '@dxos/plugin-inbox/containers';
@@ -20,12 +19,12 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { AnchoredTo } from '@dxos/types';
+import { AnchoredTo, Topic } from '@dxos/types';
 
 // Two accepted topics.
 const seedTopics = (space: Space) => {
   space.db.add(
-    Obj.make(Topic, {
+    Obj.make(Topic.Topic, {
       label: 'q2 report budget',
       summary: 'Alice circulated the Q2 report and budget.',
       threadIds: ['q2 report'],
@@ -36,7 +35,7 @@ const seedTopics = (space: Space) => {
     }),
   );
   space.db.add(
-    Obj.make(Topic, {
+    Obj.make(Topic.Topic, {
       label: 'launch planning',
       summary: 'Launch date and checklist under discussion.',
       threadIds: ['launch plan'],
@@ -77,7 +76,7 @@ const Story = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   // Subscribe so accept/dismiss re-render.
-  useQuery(space?.db, Filter.type(Topic));
+  useQuery(space?.db, Filter.type(Topic.Topic));
 
   if (!space?.db || !mailbox) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
@@ -97,7 +96,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Mailbox.Mailbox, Topic, AnchoredTo.AnchoredTo],
+          types: [Mailbox.Mailbox, Topic.Topic, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);

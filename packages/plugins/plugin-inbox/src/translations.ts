@@ -3,10 +3,9 @@
 //
 
 import { Type } from '@dxos/echo';
-import { Topic } from '@dxos/pipeline-email';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
-import { Message } from '@dxos/types';
+import { Message, Topic } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
@@ -36,7 +35,7 @@ export const translations = [
         'delete-object.label': 'Delete message',
         'object-deleted.label': 'Message deleted',
       },
-      [Type.getTypename(Topic)]: {
+      [Type.getTypename(Topic.Topic)]: {
         'typename.label': 'Topic',
         'typename.label_zero': 'Topics',
         'typename.label_one': 'Topic',

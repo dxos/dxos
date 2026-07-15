@@ -9,9 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Topic } from '@dxos/pipeline-email';
 import { getParentId, useNode } from '@dxos/plugin-graph';
-import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
+import { DraftMessage, Event, Message, Organization, Person, Topic } from '@dxos/types';
 
 import {
   CalendarArticle,
@@ -70,7 +69,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'topic',
-        filter: AppSurface.object(AppSurface.Article, Topic),
+        filter: AppSurface.object(AppSurface.Article, Topic.Topic),
         component: ({ data, role }) => <TopicArticle role={role} subject={data.subject} />,
       }),
       Surface.create({

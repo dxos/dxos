@@ -3,8 +3,9 @@
 //
 
 import { Obj } from '@dxos/echo';
+import { Topic } from '@dxos/types';
 
-import { type Thread, Topic } from '../types';
+import { type Thread } from '../types';
 import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';
 
 // Subject tokens that carry no topical signal; excluded from signatures and keywords.
@@ -238,9 +239,9 @@ export const summarizeTopics = async (
 };
 
 /** Materialize drafts as canonical Topic ECHO objects (done last; drafts stay freely mutable). */
-export const materializeTopics = (drafts: readonly TopicDraft[]): Topic[] =>
+export const materializeTopics = (drafts: readonly TopicDraft[]): Topic.Topic[] =>
   drafts.map((draft) =>
-    Obj.make(Topic, {
+    Obj.make(Topic.Topic, {
       label: draft.label,
       summary: draft.summary,
       threadIds: [...draft.threadIds],

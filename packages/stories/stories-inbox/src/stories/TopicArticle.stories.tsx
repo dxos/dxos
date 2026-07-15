@@ -10,7 +10,6 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
-import { Topic } from '@dxos/pipeline-email';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { TopicArticle } from '@dxos/plugin-inbox/containers';
@@ -20,6 +19,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
+import { Topic } from '@dxos/types';
 
 // A fully-populated topic and a bare one (only label + summary) to exercise the omitted-section paths.
 const FULL_TOPIC = 'q2 report budget';
@@ -27,7 +27,7 @@ const BARE_TOPIC = 'quick note';
 
 const seedTopics = (space: Space) => {
   space.db.add(
-    Obj.make(Topic, {
+    Obj.make(Topic.Topic, {
       label: FULL_TOPIC,
       summary: 'Alice circulated the Q2 report and budget for review.',
       threadIds: ['q2 report', 'q2 budget'],
@@ -38,7 +38,7 @@ const seedTopics = (space: Space) => {
     }),
   );
   space.db.add(
-    Obj.make(Topic, {
+    Obj.make(Topic.Topic, {
       label: BARE_TOPIC,
       summary: 'A short note with no threads, questions, or tasks.',
       threadIds: [],
@@ -52,7 +52,7 @@ const seedTopics = (space: Space) => {
 
 const DefaultStory = ({ label = FULL_TOPIC }: { label?: string }) => {
   const [space] = useSpaces();
-  const topics = useQuery(space?.db, Filter.type(Topic));
+  const topics = useQuery(space?.db, Filter.type(Topic.Topic));
   const topic = topics.find((entry) => entry.label === label);
 
   if (!space?.db || !topic) {
@@ -73,7 +73,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Mailbox.Mailbox, Topic],
+          types: [Mailbox.Mailbox, Topic.Topic],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
