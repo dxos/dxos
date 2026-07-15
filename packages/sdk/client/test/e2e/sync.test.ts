@@ -116,7 +116,7 @@ const waitForSync = async (db: Database.Database) => {
 
       interval = setInterval(async () => {
         try {
-          spaceSyncState = await db.getSyncState();
+          spaceSyncState = await db.getAutomergeSyncState();
           handleSyncState(spaceSyncState);
         } catch (error) {
           console.error(error);
@@ -124,7 +124,7 @@ const waitForSync = async (db: Database.Database) => {
       }, 500);
 
       try {
-        spaceSyncState = await db.getSyncState();
+        spaceSyncState = await db.getAutomergeSyncState();
         handleSyncState(spaceSyncState);
       } catch (error) {
         console.error(error);
