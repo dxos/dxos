@@ -22,8 +22,8 @@ export const Inbox = {
 
   /** Connect a JMAP account through the real credential form (host + fake token). */
   connectJmap: async (page: Page, { host, token, email }: { host: string; token: string; email?: string }) => {
-    await page.getByTestId('connector.connect').click();
-    await page.getByTestId('connector.connect.jmap-mail').click();
+    await page.getByTestId('connectorPlugin.connect').click();
+    await page.getByTestId('connectorPlugin.connect.jmap-mail').click();
     await page.getByLabel('Server').fill(host);
     if (email) {
       await page.getByLabel('Email').fill(email);

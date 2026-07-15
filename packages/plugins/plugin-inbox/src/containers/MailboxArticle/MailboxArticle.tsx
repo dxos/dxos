@@ -548,6 +548,7 @@ const useMailboxActions = (
             variant: 'primary',
             iconOnly: false,
             disabled: isSyncing,
+            testId: 'inbox.mailbox.sync',
           },
           () => {
             void sync();
