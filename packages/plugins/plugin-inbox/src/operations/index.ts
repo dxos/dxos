@@ -37,6 +37,7 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./read-email'),
   () => import('./rename-filter'),
   () => import('./sync-contacts'),
+  () => import('./sync-target'),
   () => import('./unsubscribe-sender'),
   () => import('./sync-draft-events'),
 );

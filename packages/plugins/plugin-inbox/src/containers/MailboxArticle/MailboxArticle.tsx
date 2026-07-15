@@ -19,14 +19,20 @@ import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import {
+  Menu,
+  MenuBuilder,
+  TOOLBAR_DISPOSITION,
+  graphActions,
+  isToolbarAction,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -38,7 +44,6 @@ import {
   isMessageGroup,
   useInjectedMailboxActions,
   useMailboxExtractorActions,
-  useTargetSync,
 } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
@@ -70,8 +75,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
   const runAction = useActionRunner();
-  // Pull "Sync" toolbar action once a connection is bound to this mailbox.
-  const { connection, sync } = useTargetSync(mailbox);
 
   // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
   // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
@@ -81,15 +84,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
-  // Derived from the same monitor atom the meter reads (not the already-subscribed `syncProgress`
-  // value above) so the menu builder can track it via `get()` — a plain boolean prop wouldn't be
-  // reactive within the builder's own atom-driven update path.
-  const syncProgressAtom = progressRegistry?.monitorAtom(createSyncProgressKey(mailbox));
-  const syncing = useMemo(
-    () =>
-      syncProgressAtom ? Atom.map(syncProgressAtom, (task) => task?.status === 'running') : Atom.make(() => false),
-    [syncProgressAtom],
-  );
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -315,16 +309,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     [db, tagMap, filterText, filter, setFilterText, handleSaveFilter, handleClear],
   );
 
-  const menuActions = useMailboxActions(mailbox, {
-    sortDescending,
-    nodeId: id,
-    filterElement,
-    connection,
-    sync,
-    // Same monitor as the statusbar meter (`syncProgress`, above): true for the whole duration of a
-    // sync, whether kicked off by this toolbar action or independently by the routine's timer trigger.
-    syncing,
-  });
+  const menuActions = useMailboxActions(mailbox, { sortDescending, nodeId: id, filterElement });
 
   return (
     <Panel.Root>
@@ -459,16 +444,11 @@ type MailboxActionsOptions = {
   nodeId: string;
   /** Search box, custom-rendered as a toolbar item so the connect group can sit to its right. */
   filterElement: ReactNode;
-  /** Bound connection (drives the own pull-"Sync" action). */
-  connection?: Connection.Connection;
-  sync: () => Promise<void>;
-  /** Derived from the mailbox's sync progress monitor (see `syncing` above); read via `get()`. */
-  syncing: Atom.Atom<boolean>;
 };
 
 const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
-  { sortDescending, nodeId, filterElement, connection, sync, syncing }: MailboxActionsOptions,
+  { sortDescending, nodeId, filterElement }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
@@ -545,36 +525,15 @@ const useMailboxActions = (
         () => {},
       );
 
-      // Own action: pull-sync from the provider once connected.
-      if (connection) {
-        const isSyncing = get(syncing);
-        builder.action(
-          'sync',
-          {
-            label: ['sync-mailbox.label', { ns: meta.profile.key }],
-            icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
-            variant: 'primary',
-            iconOnly: false,
-            disabled: isSyncing,
-          },
-          () => {
-            void sync();
-          },
-        );
-      }
-
       return builder
         .separator('gap')
-        .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }))
+        .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
         .build();
     },
     [
       graph,
       nodeId,
       filterElement,
-      connection,
-      sync,
-      syncing,
       sortDescending,
       loadRemoteImages,
       setSettings,
