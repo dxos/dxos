@@ -92,7 +92,7 @@ export const toSearchResults = <T extends Entity.Unknown>(objects: T[], text: st
       return acc;
     }
     // TODO(burdon): Use schema (matches the pre-existing pattern in sync.ts's filterObjectsSync).
-    const label = Obj.getLabel(object as any);
+    const label = Entity.getLabel(object);
     const fields = mapObjectToTextFields(object);
     const snippet = fields.content ?? fields.description ?? Object.values(fields).find((value) => value !== label);
     acc.push({

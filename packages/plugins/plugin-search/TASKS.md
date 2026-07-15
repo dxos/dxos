@@ -15,21 +15,21 @@ Wire `plugin-search` + `MailboxArticle` to the shipped FTS5 index with ranking a
 
 ### Tasks
 
-- [ ] **FTS query + ranking helpers** — `src/hooks/search-query.ts`
+- [x] **FTS query + ranking helpers** — `src/hooks/search-query.ts`
   (`buildSearchQuery`, `toSearchResults`, `byRelevance`, `computeMatchSpans`) + unit
   tests; export `getIcon` from `sync.ts`.
-- [ ] **Wire search containers to FTS** — `SearchDialog` / `SearchArticle` use
+- [x] **Wire search containers to FTS** — `SearchDialog` / `SearchArticle` use
   `Filter.text` + ranked results; drop stale regex-results path and deprecated web
   search; strengthen the storybook play test to assert real matches.
-- [ ] **Mailbox selection helper** — `MailboxArticle/mailbox-search.ts`
+- [x] **Mailbox selection helper** — `MailboxArticle/mailbox-search.ts`
   (`buildMailboxSelection`: free-text → FTS over feed; structural → AND with type) +
   unit tests.
-- [ ] **Apply the mailbox filter** — use `buildMailboxSelection` in the message
+- [x] **Apply the mailbox filter** — use `buildMailboxSelection` in the message
   query; verify threading/aggregate under a text query (fallback: bypass grouping
   while querying).
-- [ ] **(Optional) Highlighting** — `Highlighted` component used in
+- [x] **(Optional) Highlighting** — `Highlighted` component used in
   `SearchResultStack`.
-- [ ] **Reconcile copy** — fix `dx.config.ts` / `PLUGIN.mdl` overstated claims (no
+- [x] **Reconcile copy** — fix `dx.config.ts` / `PLUGIN.mdl` overstated claims (no
   working web search).
 
 ### References

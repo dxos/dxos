@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment } from 'react';
+import React, { Fragment, type ReactNode } from 'react';
 
 import { computeMatchSpans } from '#hooks';
 
@@ -14,7 +14,7 @@ export const Highlighted = ({ text, query }: HighlightedProps) => {
   if (spans.length === 0) {
     return <>{text}</>;
   }
-  const parts: React.ReactNode[] = [];
+  const parts: ReactNode[] = [];
   let cursor = 0;
   spans.forEach(({ start, end }, index) => {
     if (start > cursor) {
