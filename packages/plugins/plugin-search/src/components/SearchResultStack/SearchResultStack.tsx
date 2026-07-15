@@ -14,18 +14,21 @@ import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type SearchResult } from '@dxos/react-ui-search';
 
+import { Highlighted } from '../Highlighted';
+
 //
 // SearchResultStack
 //
 
 export type SearchResultStackProps = {
   results: SearchResult[];
+  query: string;
 };
 
 export const SearchResultStack = composable<HTMLDivElement, SearchResultStackProps>(
-  ({ results, ...props }, forwardedRef) => {
+  ({ results, query, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
-    const items = useMemo(() => results.map((result) => ({ result })), [results]);
+    const items = useMemo(() => results.map((result) => ({ result, query })), [results, query]);
 
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter') {
@@ -65,6 +68,7 @@ SearchResultStack.displayName = 'SearchResultStack';
 
 type SearchResultTileData = {
   result: SearchResult;
+  query: string;
 };
 
 type SearchResultTileProps = Pick<MosaicTileProps<SearchResultTileData>, 'location' | 'data' | 'current'>;
@@ -74,7 +78,8 @@ type SearchResultTileProps = Pick<MosaicTileProps<SearchResultTileData>, 'locati
  */
 const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { result } = data;
+    const { result, query } = data;
+    const label = result.label ?? (result.object && Entity.getLabel(result.object)) ?? '';
     const menuItems = useObjectMenuItems(result.object);
     const { setCurrentId } = useMosaicContainer('SearchResultTile');
 
@@ -95,7 +100,9 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
             <Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
               <Card.Header>
                 <Card.Block />
-                <Card.Title>{result.label ?? (result.object && Entity.getLabel(result.object))}</Card.Title>
+                <Card.Title>
+                  <Highlighted text={label} query={query} />
+                </Card.Title>
                 <Card.Block end>
                   <Menu.Trigger asChild disabled={!menuItems?.length}>
                     <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />

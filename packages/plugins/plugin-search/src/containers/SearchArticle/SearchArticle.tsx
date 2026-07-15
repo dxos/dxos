@@ -37,7 +37,7 @@ export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
         <Panel.Content asChild>
-          <SearchResultStack results={allResults} />
+          <SearchResultStack results={allResults} query={query ?? ''} />
         </Panel.Content>
         <Panel.Statusbar asChild>
           <Toolbar.Root>
