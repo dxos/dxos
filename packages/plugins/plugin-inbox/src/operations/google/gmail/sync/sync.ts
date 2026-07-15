@@ -309,25 +309,20 @@ export const syncGmail = ({
           stats,
         }),
       ),
-      Pipeline.abortWith(controller.signal),
+      Pipeline.abortWith(
+        controller.signal,
+        Effect.sync(() => {
+          log('gmail sync cancelled', { mailbox: Obj.getURI(mailbox) });
+          progressMonitor.note('Cancelled');
+          progressMonitor.remove();
+        }),
+      ),
       Effect.tapError((error) =>
         Effect.sync(() => {
           // Log the raw error for debugging; the meter shows only a short reason (the full exception —
           // provider errors, auth tokens — must not reach the UI).
           log.warn('gmail sync failed', { error });
           progressMonitor.fail('Sync failed');
-        }),
-      ),
-      // `Pipeline.abortWith` resolves a cancel as a genuine fiber interrupt (by design — see its own
-      // test), which skips every subsequent `yield*` in this generator, including the `note`/`remove`
-      // below. Without this, a cancelled run leaves the monitor stuck at its last `running` snapshot
-      // forever — freezing both the statusbar meter and anything (e.g. the toolbar sync button) that
-      // reads its status.
-      Effect.onInterrupt(() =>
-        Effect.sync(() => {
-          log('gmail sync cancelled', { mailbox: Obj.getURI(mailbox) });
-          progressMonitor.note('Cancelled');
-          progressMonitor.remove();
         }),
       ),
     );
