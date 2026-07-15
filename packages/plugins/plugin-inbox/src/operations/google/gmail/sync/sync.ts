@@ -8,7 +8,7 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
@@ -31,7 +31,8 @@ import { STREAMING_CONFIG, fetchAttachments, fetchMessages } from './fetch';
 /**
  * Progress-registry key for a mailbox's Gmail sync monitor — the mailbox URI with a `#sync` suffix so
  * distinct monitor types (e.g. `#topics`) can coexist for the same mailbox. Peer of
- * `createTopicsProgressKey`; `MailboxArticle` subscribes to it to show the sync meter.
+ * `createTopicsProgressKey`; a trace→registry reducer will key monitors by this name for
+ * `MailboxArticle` to subscribe.
  */
 export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
 
@@ -73,7 +74,7 @@ export const syncGmail = ({
 }: SyncGmailProps): Effect.Effect<
   { newMessages: number },
   GoogleMailApiError | EntityNotFoundError,
-  GoogleMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
+  GoogleMailApi | Database.Service | Resolver | Capability.Service | Operation.Service | Trace.TraceService
 > =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
@@ -174,21 +175,31 @@ export const syncGmail = ({
       store.compartment(meta.profile.key),
     );
 
-    // Cooperative cancellation: the meter's cancel control aborts the controller; the `cancelStage`
-    // below then drops all further messages so the stream drains and the run stops without error.
+    // Cooperative cancellation: a trace→registry reducer will wire the meter's cancel control to
+    // `controller.abort()`; until then the signal is only used for in-process abort paths.
     const controller = new AbortController();
 
-    // Live progress monitor. Keyed by the mailbox URI so MailboxArticle and the R0 popover can
-    // subscribe to this run. The registry is a singleton contributed by an always-loaded host
-    // (`plugin-progress`); tests contribute one via `inboxSyncTestServices`. Absence is a wiring
-    // bug, not a typed failure — `orDie` keeps the operation's error channel provider-scoped.
-    const progressRegistry = yield* Capability.get(AppCapabilities.ProgressRegistry).pipe(Effect.orDie);
-    const progressMonitor = progressRegistry.register(createSyncProgressKey(mailbox), {
-      label: mailbox.name ?? 'Mailbox',
-      onCancel: () => {
-        controller.abort();
-      },
-    });
+    // Live sync status via trace `status.update` events. A reducer will project these into the
+    // runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
+    const traceWriter = yield* Trace.TraceService;
+    const syncLabel = mailbox.name ?? 'Mailbox';
+    let progressCurrent = 0;
+    let progressTotal: number | undefined;
+    const reportStatus = (patch: Trace.PayloadType<typeof Trace.StatusUpdate>) => {
+      if (patch.progressCurrent !== undefined) {
+        progressCurrent = patch.progressCurrent;
+      }
+      if (patch.progressTotal !== undefined) {
+        progressTotal = patch.progressTotal;
+      }
+      traceWriter.write(Trace.StatusUpdate, {
+        message: patch.message ?? syncLabel,
+        progressCurrent: patch.progressCurrent ?? progressCurrent,
+        progressTotal: patch.progressTotal ?? progressTotal,
+        progressEstimate: patch.progressEstimate,
+      });
+    };
+    reportStatus({ progressCurrent: 0 });
 
     // Accumulate the exact retrieval total as each date chunk's id list is enumerated (known before any
     // full-message fetch), revising the meter's total so it renders a determinate bar even without a
@@ -197,7 +208,7 @@ export const syncGmail = ({
     let totalToRetrieve = 0;
     const addToTotal = (count: number) => {
       totalToRetrieve += count;
-      progressMonitor.total(totalToRetrieve);
+      reportStatus({ progressTotal: totalToRetrieve });
     };
 
     const startedAt = new Date().toISOString();
@@ -277,7 +288,10 @@ export const syncGmail = ({
       onEnumerated: addToTotal,
       // Advance at retrieval (one per fetched message) so `current` reaches `total`; dedup/decode drops
       // happen downstream of the source, so counting there would leave the bar short of 100%.
-      onRetrieved: () => progressMonitor.advance(1),
+      onRetrieved: () => {
+        progressCurrent += 1;
+        reportStatus({ progressCurrent });
+      },
     }).pipe(
       Cursor.dedupStage<GoogleMail.Message>(
         'dedup',
@@ -315,7 +329,7 @@ export const syncGmail = ({
           // Log the raw error for debugging; the meter shows only a short reason (the full exception —
           // provider errors, auth tokens — must not reach the UI).
           log.warn('gmail sync failed', { error });
-          progressMonitor.fail('Sync failed');
+          reportStatus({ message: 'Sync failed' });
         }),
       ),
     );
@@ -332,11 +346,8 @@ export const syncGmail = ({
     publishStats();
 
     if (controller.signal.aborted) {
-      progressMonitor.note('Cancelled');
-    } else {
-      progressMonitor.done();
+      reportStatus({ message: 'Cancelled' });
     }
-    progressMonitor.remove();
 
     log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
     return {
