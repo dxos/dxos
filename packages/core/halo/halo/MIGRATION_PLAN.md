@@ -6,8 +6,12 @@ does not need to be re-litigated.
 
 ## Settled preferences (do not re-ask)
 
-- **One big PR.** The entire migration lands in a single PR (#12229) on branch
-  `claude/halo-api-audit-migration-w5al1i`. Do not split into follow-ups.
+- **One big PR.** Land as much of the migration as cleanly possible in a single
+  PR (#12229) on branch `claude/halo-api-audit-migration-w5al1i`, rather than a
+  string of small follow-ups. The one acknowledged exception is the deferred
+  service verbs (see Phase 2 / Status below): the consumers that depend on them
+  cannot migrate until those verbs exist, so they remain outstanding regardless
+  of PR count.
 - **Extend the HALO API as needed.** Where a consumer needs something the
   DID-only `Identity.Info` dropped, extend the HALO service/adapter rather than
   leaving the consumer on `@dxos/client`. Planned extensions:
