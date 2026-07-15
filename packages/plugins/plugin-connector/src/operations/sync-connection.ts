@@ -39,44 +39,33 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
 
       const sync = connector.sync;
       const spaceId = db.spaceId;
-      // Serialized invocation the reauth toast runs on click — it rides on the error across the process
-      // failure boundary, so it's data (operation key + input), not a live callback.
+      // Serialized invocation the reauth toast runs on click — data (operation key + input), not a live
+      // callback, since it rides on the error across the process boundary.
       const openConnection = Operation.prepare(LayoutOperation.Open, {
         subject: [connectionDeckSubject(Paths.getSpacePath(spaceId), connection.id)],
         navigation: 'immediate',
       });
       yield* Effect.all(
         cursors.map((cursor) =>
-          Effect.gen(function* () {
-            // A capped sync run requests `Operation.runAgain()` to pick up where it left off; that
-            // surfaces here as a `RunAgainError` defect (same promotion path as any other handler
-            // failure — see below), so loop until an invocation completes without requesting one.
-            while (true) {
-              const outcome = yield* Operation.invoke(sync, { binding: Ref.make(cursor) }, { spaceId }).pipe(
-                Effect.map((value) => ({ runAgain: false as const, value })),
-                // A nested `Operation.invoke` runs as a tracked child process; `Process.fromOperation`
-                // unconditionally promotes whatever the handler fails with to a defect (`Effect.orDie`)
-                // before it reaches the caller, so retagging 401s here must intercept the defect
-                // channel — `Effect.mapError` never sees it.
-                Effect.catchAllDefect((defect) =>
-                  RunAgainError.is(defect)
-                    ? Effect.succeed({ runAgain: true as const, value: undefined })
-                    : isUnauthorizedError(defect)
-                      ? Effect.fail(
-                          new ConnectionAuthExpiredError({
-                            connectionId: connection.id,
-                            action: openConnection,
-                            cause: defect,
-                          }),
-                        )
-                      : Effect.die(defect),
-                ),
-              );
-              if (!outcome.runAgain) {
-                return outcome.value;
-              }
-            }
-          }),
+          Operation.invoke(sync, { binding: Ref.make(cursor) }, { spaceId }).pipe(
+            // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
+            // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
+            // TODO(wittjosiah): Invokes the sync once; does not drive `Operation.runAgain()` continuation,
+            //   so a capped run's remaining batches are not synced here (no durable execution).
+            Effect.catchAllDefect((defect) =>
+              RunAgainError.is(defect)
+                ? Effect.void
+                : isUnauthorizedError(defect)
+                  ? Effect.fail(
+                      new ConnectionAuthExpiredError({
+                        connectionId: connection.id,
+                        action: openConnection,
+                        cause: defect,
+                      }),
+                    )
+                  : Effect.die(defect),
+            ),
+          ),
         ),
         { concurrency: 'unbounded' },
       );
