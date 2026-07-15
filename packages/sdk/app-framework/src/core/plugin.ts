@@ -80,6 +80,18 @@ export const isPluginModule = (value: unknown): value is PluginModule => {
 /**
  * A unit of containment of modular functionality that can be provided to an application.
  * Activation of a module is async allowing for code to split and loaded lazily.
+ *
+ * Ordering between modules is expressed through shared activation events, not registration
+ * order: a module `activatesOn` an event, fires events *after* it activates via
+ * {@link PluginModule.firesAfterActivation} (publishing "I'm ready"), and forces prerequisites
+ * to complete *before* it activates via {@link PluginModule.firesBeforeActivation}. To run
+ * module B after module A, A declares `firesAfterActivation: [E]` and B declares
+ * `activatesOn: E`. See `plugin-client/src/ClientPlugin.ts` for a worked example.
+ *
+ * @idiom org.dxos.app-framework.moduleActivationOrdering
+ *   applies: sequencing one plugin module's activation before or after another
+ *   instead-of: assuming module registration order controls activation order
+ *   uses: {@link PluginModule.firesAfterActivation}, {@link PluginModule.firesBeforeActivation}
  */
 export interface PluginModule {
   readonly [PluginModuleTypeId]: PluginModuleTypeId;

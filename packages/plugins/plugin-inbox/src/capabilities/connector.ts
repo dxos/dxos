@@ -180,7 +180,7 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
-        // Targetless connector: no dedicated local root type. `reconcileSyncBindings`
+        // Targetless connector: no dedicated local root type. `reconcileCursors`
         // binds the connection itself; synced `Person` objects land directly in the
         // space keyed by foreign id.
         getSyncTargets: InboxOperation.GetGoogleContactGroups,

@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, Common, printList, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
-import { AccessToken } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
 
 import { Connection } from '../../types';
 import { printConnection } from './util';

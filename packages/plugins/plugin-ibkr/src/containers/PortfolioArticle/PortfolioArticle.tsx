@@ -4,19 +4,25 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Paths } from '@dxos/app-toolkit';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
+import { Connection } from '@dxos/plugin-connector';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useAtomState } from '@dxos/react-hooks';
+import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
+import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
+import { IBKR_CONNECTOR_ID } from '../../constants';
 import { meta } from '../../meta';
 import { parseCash, parsePositions, parseTrades } from '../../services';
-import { Ibkr } from '../../types';
+import { Ibkr, IbkrOperation } from '../../types';
 import { PortfolioImportAction } from './PortfolioImportAction';
-import { PortfolioSyncAction } from './PortfolioSyncAction';
 
 export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio>;
 
@@ -60,6 +66,71 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
   const id = attendableId ?? Obj.getURI(subject);
   const currentId = useSelection(id, 'single');
 
+  const { invokePromise } = useOperationInvoker();
+  // IBKR has no external-sync Cursor, so the connection is detected space-wide by connectorId.
+  const connections = useQuery(db, Filter.type(Connection.Connection));
+  const connected = connections.some((connection) => connection.connectorId === IBKR_CONNECTOR_ID);
+  // In-flight flag as an atom so the menu builder reads it reactively via `get`.
+  const { atom: syncing, set: setSyncing } = useAtomState(false);
+  const handleSync = useCallback(async () => {
+    setSyncing(true);
+    try {
+      // Report fetch is best-effort; lots sync runs from the latest stored report even when fetch fails.
+      try {
+        await invokePromise(IbkrOperation.SyncPortfolioReport, {}, { spaceId: db?.spaceId });
+      } catch (error) {
+        log.catch(error);
+      }
+      try {
+        await invokePromise(IbkrOperation.SyncLots, { account: Ref.make(subject) }, { spaceId: db?.spaceId });
+      } catch (error) {
+        log.catch(error);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  }, [invokePromise, db, subject, setSyncing]);
+
+  const { graph } = useAppGraph();
+  const runAction = useActionRunner();
+  const menuActions = useMenuBuilder(
+    (get) => {
+      // `MenuBuilder` mutates in place, so the conditional sync action is added without reassignment.
+      const builder = MenuBuilder.make()
+        .root({ label: ['portfolio-toolbar.menu', { ns: meta.profile.key }] })
+        .action(
+          'import',
+          {
+            variant: 'custom',
+            label: ['import.label', { ns: meta.profile.key }],
+            render: () => <PortfolioImportAction subject={subject} />,
+          },
+          () => {},
+        );
+      if (connected) {
+        const isSyncing = get(syncing);
+        builder.action(
+          'sync',
+          {
+            label: ['sync.label', { ns: meta.profile.key }],
+            icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+            variant: 'primary',
+            iconOnly: false,
+            disabled: isSyncing,
+          },
+          () => {
+            void handleSync();
+          },
+        );
+      }
+      return builder
+        .separator('gap')
+        .subgraph(graphActions(graph, get, id, { filter: isToolbarAction }))
+        .build();
+    },
+    [graph, id, subject, connected, syncing, handleSync],
+  );
+
   const handleNavigate = useCallback(
     (reportId: string) => {
       void showItem({
@@ -76,12 +147,11 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <PortfolioSyncAction subject={subject} />
-          <PortfolioImportAction subject={subject} />
-        </Toolbar.Root>
-      </Panel.Toolbar>
+      <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+      </Menu.Root>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>

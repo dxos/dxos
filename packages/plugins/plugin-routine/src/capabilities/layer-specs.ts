@@ -10,13 +10,14 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
+import { LayerSpec, Operation, OperationHandlerSet, Trigger } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Registry } from '@dxos/echo';
 import {
   FeedTraceSink,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
+  TriggerMonitorLayer,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
@@ -175,6 +176,19 @@ const TriggerDispatcherSpec = LayerSpec.make(
   () => TriggerDispatcher.layer({ timeControl: 'natural' }),
 );
 
+/**
+ * Derives a {@link Trigger.TriggerMonitorService} from the {@link TriggerDispatcher}.
+ * Provides a unified view of trigger state for monitoring purposes.
+ */
+const TriggerMonitorSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [TriggerDispatcher, Database.Service, AtomRegistry.AtomRegistry],
+    provides: [Trigger.TriggerMonitorService],
+  },
+  () => TriggerMonitorLayer,
+);
+
 export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
@@ -184,6 +198,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
     Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
+    Capability.contributes(Capabilities.LayerSpec, TriggerMonitorSpec),
     Capability.contributes(Capabilities.LayerSpec, RemoteFunctionExecutionSpec),
     Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),

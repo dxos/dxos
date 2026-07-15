@@ -12,9 +12,11 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
+import { Topic } from '@dxos/pipeline-email';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connector';
+import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
@@ -386,6 +388,31 @@ export default Capability.makeModule(
         },
       }),
 
+      GraphBuilder.createExtension({
+        id: 'mailboxTopics',
+        match: NodeMatcher.whenNodeType(MAILBOX_TOPICS_TYPE),
+        connector: (node, get) => {
+          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
+          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
+          if (!mailbox || !db) {
+            return Effect.succeed([]);
+          }
+
+          // The selected topic (Topics list → detail) becomes the companion's subject so `TopicArticle`
+          // renders it. Topics live in the space db (not a feed), so a plain id lookup resolves them.
+          const topicId = get(selectedId(node.id));
+          const topic = topicId ? get(db.query(Query.select(Filter.id(topicId))).atom)[0] : undefined;
+          return Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('topic'),
+              label: ['topic.label', { ns: meta.profile.key }],
+              icon: 'ph--stack--regular',
+              data: Obj.instanceOf(Topic, topic) ? topic : 'topic',
+            }),
+          ]);
+        },
+      }),
+
       createFeedObjectNodeExtension<Mailbox.Mailbox, Message.Message>({
         id: 'feedObjectNode',
         parentType: Mailbox.Mailbox,
@@ -569,14 +596,21 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when a SyncBinding's source Connection targets this mailbox.
-          // Delegate to the connector framework's `SyncConnection`, which resolves the connection's
-          // connector and runs its `sync` op — no provider-specific branching here. Resolved via the
-          // reverse-ref `.source()` query (reactive; loading it synchronously isn't reliable here).
-          const connections = get(
-            db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding).source()).atom,
+          // The sync action appears only when an external-sync cursor targets this mailbox. Delegate
+          // to the connector framework's `SyncConnection`, which resolves the connection's connector
+          // and runs its `sync` op — no provider-specific branching here. The cursor no longer relates
+          // to Connection directly, so the Connection is found by matching access tokens (reactive
+          // queries; loading synchronously isn't reliable here).
+          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
+          const cursor = cursors.find(
+            (candidate): candidate is Cursor.ExternalCursor =>
+              Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
           );
-          const connection = connections.find(Connection.instanceOf);
+          if (!cursor) {
+            return Effect.succeed([]);
+          }
+          const connections = get(db.query(Filter.type(Connection.Connection)).atom);
+          const connection = connections.find((candidate) => candidate.accessToken.uri === cursor.spec.source.uri);
           if (!connection) {
             return Effect.succeed([]);
           }
@@ -653,10 +687,13 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when a SyncBinding targets this calendar; the binding's
-          // source Connection authenticates the sync.
-          const bindings = get(db.query(Query.select(Filter.id(calendar.id)).targetOf(SyncBinding.SyncBinding)).atom);
-          const binding = bindings.find(SyncBinding.instanceOf);
+          // The sync action appears only when an external-sync cursor targets this calendar; the
+          // cursor's `spec.source` access token authenticates the sync.
+          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
+          const binding = cursors.find(
+            (candidate): candidate is Cursor.ExternalCursor =>
+              Cursor.isExternal(candidate) && isCursorForTarget(candidate, calendar),
+          );
           if (!binding) {
             return Effect.succeed([]);
           }

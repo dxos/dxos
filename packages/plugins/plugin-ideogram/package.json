@@ -59,9 +59,9 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-studio": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

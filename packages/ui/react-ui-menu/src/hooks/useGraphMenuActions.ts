@@ -68,6 +68,12 @@ export const buildGraphMenu = (
  * Read a node's contributed actions from the app-graph as menu `ActionGraphProps`, for splicing into a
  * hand-built toolbar via `MenuBuilder.subgraph(graphActions(graph, get, nodeId))`. Reactive: reads the
  * graph's action atoms through `get`, so contributed actions appear/disappear as extensions update.
+ *
+ * @idiom org.dxos.react-ui-menu.graphActionsToolbar
+ *   applies: Splicing a node's app-graph-contributed toolbar actions into a hand-built object toolbar
+ *   instead-of: Reading `graph.actions(nodeId)` and filtering/wiring `nodes`/`edges` by hand in every toolbar
+ *   uses: {@link graphActions}, {@link MenuBuilder}, {@link useMenuBuilder}
+ *   related: org.dxos.react-ui-menu.toolbarMenu
  */
 export const graphActions = (
   graph: Graph.ReadableGraph | undefined,

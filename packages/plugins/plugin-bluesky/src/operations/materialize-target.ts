@@ -15,10 +15,10 @@ import { MaterializeBlueskyTarget } from './definitions';
 
 /**
  * Find-or-create the empty local `Subscription.Feed` root for a Bluesky target
- * so a {@link SyncBinding} relation can be created eagerly (relations require
- * both endpoints to exist). Keyed by the target's `remoteId` foreign key, so
- * re-running on the same `(space, remoteId)` returns the same Subscription.
- * Idempotent. The feed starts empty; posts are appended on first sync.
+ * so the sync cursor's target exists before the cursor is created. Keyed by
+ * the target's `remoteId` foreign key, so re-running on the same
+ * `(space, remoteId)` returns the same Subscription. Idempotent. The feed
+ * starts empty; posts are appended on first sync.
  */
 const handler: Operation.WithHandler<typeof MaterializeBlueskyTarget> = MaterializeBlueskyTarget.pipe(
   Operation.withHandler(

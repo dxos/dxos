@@ -22,6 +22,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -32,9 +35,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../plugin-connector"

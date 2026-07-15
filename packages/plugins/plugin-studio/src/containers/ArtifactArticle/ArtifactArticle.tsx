@@ -7,16 +7,18 @@ import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useSt
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, DropdownMenu, Icon, IconButton, Input, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
+import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
@@ -39,7 +41,6 @@ type Selected = 'all' | 'draft' | number;
 export const ArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
-  const isSurfaceAvailable = Surface.useIsAvailable();
   const { invokePromise } = useOperationInvoker();
 
   const db = Obj.getDatabase(artifact);
@@ -99,16 +100,14 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   // "All" and "Draft" compose against the editable draft; a numbered tab inspects a frozen variant.
   const composing = !selectedVariant;
 
-  // Connector-managed credential: show the "Connect" button until the provider's connection exists.
+  // Connector-managed credential: the connector plugin contributes a "Connect" action (via the
+  // Artifact type's `ConnectorAuthAnnotation`) until a connection for the provider exists.
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connected = provider?.connectorId
     ? connections.some((connection) => connection.connectorId === provider.connectorId)
     : true;
-  const connectorData = useMemo(
-    () => (provider?.connectorId ? { connectorIds: [provider.connectorId] } : undefined),
-    [provider?.connectorId],
-  );
-  const showConnect = !!connectorData && !connected && isSurfaceAvailable({ type: ConnectorAuth, data: connectorData });
+  const { graph } = useAppGraph();
+  const runAction = useActionRunner();
 
   // The draft's request config (provider defaults overlaid with the draft's edits).
   const draftConfig = useMemo<Record<string, unknown>>(
@@ -237,87 +236,146 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     [artifact, selected],
   );
 
+  const menuActions = useMenuBuilder(
+    (get) => {
+      const builder = MenuBuilder.make().root({ label: ['artifact-toolbar.menu', { ns: meta.profile.key }] });
+
+      // Segmented tab strip (All / Draft / one per produced variant), custom-rendered to preserve
+      // the selection buttons.
+      builder.action(
+        'tabs',
+        {
+          variant: 'custom',
+          label: ['all.tab.label', { ns: meta.profile.key }],
+          render: () => (
+            <>
+              <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
+                {t('all.tab.label')}
+              </Button>
+              <IconButton
+                iconOnly
+                icon='ph--pencil-simple--regular'
+                label={t('draft.label')}
+                variant={selected === 'draft' ? 'primary' : 'ghost'}
+                onClick={() => setSelected('draft')}
+              />
+              {variants.map((variant, index) => (
+                <Button
+                  key={variant.id}
+                  variant={selected === index ? 'primary' : 'ghost'}
+                  onClick={() => setSelected(index)}
+                >
+                  {variant.jobId ? (
+                    <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />
+                  ) : (
+                    index + 1
+                  )}
+                </Button>
+              ))}
+            </>
+          ),
+        },
+        () => {},
+      );
+
+      // Generator selector (custom control).
+      if (providers.length > 0) {
+        builder.action(
+          'generator',
+          {
+            variant: 'custom',
+            label: ['generator.placeholder', { ns: meta.profile.key }],
+            render: () => (
+              <Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
+                <Select.TriggerButton placeholder={t('generator.placeholder')} />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {providers.map((candidate) => (
+                        <Select.Option key={candidate.id} value={candidate.id}>
+                          {candidate.label}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            ),
+          },
+          () => {},
+        );
+      }
+
+      // Gap pushes the connect/generate + overflow to the right end of the toolbar.
+      builder.separator('gap');
+
+      if (connected) {
+        builder.action(
+          'generate',
+          {
+            variant: 'primary',
+            iconOnly: false,
+            icon: busy ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular',
+            iconClassNames: busy ? 'animate-spin' : undefined,
+            label: busy ? ['generating.label', { ns: meta.profile.key }] : ['generate.label', { ns: meta.profile.key }],
+            disabled: !db || !provider || !hasAttention || busy || !composing || !canGenerate,
+          },
+          () => {
+            void handleGenerate();
+          },
+        );
+      } else {
+        builder.subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }));
+      }
+
+      // Overflow (object-level delete actions) at the end of the toolbar.
+      builder.menu('more', (overflow) => {
+        if (selectedVariant) {
+          overflow.action(
+            'delete-variant',
+            { label: ['delete-variant.label', { ns: meta.profile.key }], icon: 'ph--trash--regular' },
+            handleDeleteVariant,
+          );
+        }
+        overflow.action(
+          'delete',
+          { label: ['delete.label', { ns: meta.profile.key }], icon: 'ph--trash--regular' },
+          handleDelete,
+        );
+      });
+
+      return builder.build();
+    },
+    [
+      graph,
+      attendableId,
+      selected,
+      variants,
+      providers,
+      provider,
+      connected,
+      busy,
+      db,
+      hasAttention,
+      composing,
+      canGenerate,
+      selectedVariant,
+      t,
+      setSelected,
+      handleGeneratorChange,
+      handleGenerate,
+      handleDelete,
+      handleDeleteVariant,
+    ],
+  );
+
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        {/* TODO(burdon): Use toolbar idiom. */}
-        <Toolbar.Root classNames='dx-document'>
-          <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
-            {t('all.tab.label')}
-          </Button>
-          <IconButton
-            iconOnly
-            icon='ph--pencil-simple--regular'
-            label={t('draft.label')}
-            variant={selected === 'draft' ? 'primary' : 'ghost'}
-            onClick={() => setSelected('draft')}
-          />
-          {variants.map((variant, index) => (
-            <Button
-              key={variant.id}
-              variant={selected === index ? 'primary' : 'ghost'}
-              onClick={() => setSelected(index)}
-            >
-              {variant.jobId ? <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' /> : index + 1}
-            </Button>
-          ))}
-          <Toolbar.Separator />
-          {providers.length > 0 && (
-            <Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
-              <Select.TriggerButton placeholder={t('generator.placeholder')} />
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {providers.map((candidate) => (
-                      <Select.Option key={candidate.id} value={candidate.id}>
-                        {candidate.label}
-                      </Select.Option>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          )}
-          {showConnect && connectorData ? (
-            // TODO(burdon): Inject via capability.
-            <Surface.Surface type={ConnectorAuth} data={connectorData} limit={1} />
-          ) : (
-            <IconButton
-              variant='primary'
-              icon={busy ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
-              iconClassNames={busy ? 'animate-spin' : undefined}
-              label={busy ? t('generating.label') : t('generate.label')}
-              disabled={!db || !provider || !hasAttention || busy || !composing || !canGenerate}
-              onClick={() => {
-                void handleGenerate();
-              }}
-            />
-          )}
-          {/* Overflow menu at the end of the toolbar (object-level actions). */}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <IconButton variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label={t('more.label')} />
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content align='end'>
-                <DropdownMenu.Viewport>
-                  {selectedVariant && (
-                    <DropdownMenu.Item onClick={handleDeleteVariant}>
-                      <Icon icon='ph--trash--regular' size={4} />
-                      <span className='grow'>{t('delete-variant.label')}</span>
-                    </DropdownMenu.Item>
-                  )}
-                  <DropdownMenu.Item onClick={handleDelete}>
-                    <Icon icon='ph--trash--regular' size={4} />
-                    <span className='grow'>{t('delete.label')}</span>
-                  </DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        </Toolbar.Root>
-      </Panel.Toolbar>
+      <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar classNames='dx-document' />
+        </Panel.Toolbar>
+      </Menu.Root>
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
         <div className='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
           {/* A produced (frozen) variant can be designated the artifact's cover default. */}

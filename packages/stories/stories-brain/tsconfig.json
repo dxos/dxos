@@ -53,6 +53,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/compute/nlp"
     },
     {
@@ -96,6 +99,9 @@
     },
     {
       "path": "../../plugins/plugin-outliner"
+    },
+    {
+      "path": "../../plugins/plugin-progress"
     },
     {
       "path": "../../plugins/plugin-space"
@@ -153,6 +159,9 @@
     },
     {
       "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../story-modules"
     }
   ]
 }

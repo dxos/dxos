@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { DraftMessage } from '@dxos/types';
 
@@ -43,11 +43,11 @@ export default InboxOperation.DeleteEmail.pipe(
       if (gmailId || jmapId) {
         const binding = yield* findBindingForTarget(mailbox).pipe(Effect.provide(Database.layer(db)));
         if (binding) {
-          const connectionRef = Ref.make(Relation.getSource(binding));
+          const accessTokenRef = binding.spec.source;
           if (gmailId) {
             yield* GoogleMail.trashMessage('me', gmailId).pipe(
               Effect.provide(FetchHttpClient.layer),
-              Effect.provide(GoogleCredentials.fromConnection(connectionRef)),
+              Effect.provide(GoogleCredentials.fromAccessToken(accessTokenRef)),
               Effect.catchAll((error) => {
                 log.catch(error);
                 return Effect.void;
@@ -56,7 +56,7 @@ export default InboxOperation.DeleteEmail.pipe(
           } else if (jmapId) {
             yield* trashJmapMessage(jmapId).pipe(
               Effect.provide(FetchHttpClient.layer),
-              Effect.provide(JmapCredentials.fromConnection(connectionRef)),
+              Effect.provide(JmapCredentials.fromAccessToken(accessTokenRef)),
               Effect.catchAll((error) => {
                 log.catch(error);
                 return Effect.void;

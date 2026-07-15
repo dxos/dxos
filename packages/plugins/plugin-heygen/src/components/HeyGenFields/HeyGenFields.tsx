@@ -6,10 +6,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { type FormFieldMap, type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
-import { AccessToken } from '@dxos/types';
 
 import { HEYGEN_SOURCE } from '../../constants';
 import { type GenerationOption, makeHeyGenProvider } from '../../services';

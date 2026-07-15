@@ -44,6 +44,7 @@ export const translations = [
         'create.label': 'Create artifact',
         'generate-error.title': 'Generation failed',
         'close.label': 'Close',
+        'artifact-toolbar.menu': 'Artifact toolbar',
         'all.tab.label': 'All',
         'draft.label': 'Draft',
         'cover.label': 'Use as cover',
