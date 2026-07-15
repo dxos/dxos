@@ -110,6 +110,7 @@ catalog:
   '@fluentui/react-tabster': 9.26.11
   '@fontsource-variable/inter': 5.2.8
   '@fontsource-variable/jetbrains-mono': 5.0.21
+  '@fontsource-variable/nunito': 5.2.7
   '@fontsource/k2d': ^5.0.18
   '@fontsource/poiret-one': ^5.0.20
   '@hazae41/symbol-dispose-polyfill': ^1.0.2

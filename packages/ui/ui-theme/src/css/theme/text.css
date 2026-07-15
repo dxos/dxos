@@ -6,8 +6,9 @@
   /* 
    * Font families 
    * https://fonts.google.com/?preview.layout=grid&categoryFilters=Technology:%2FTechnology%2FVariable;Sans+Serif:%2FSans%2F*
+   * Nunito
    */
-  --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Nunito Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
 
   /* Font size scale (Tailwind v4 defaults — clean rem/px values) */
