@@ -408,17 +408,19 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       master/detail; companion vs deck-peer opening across layout modes.)
 - [ ] **track: Break `Topic` out into plugin-brain; consider renaming to `Project`; track threads (not
       just email); add a task list, etc.**
-- [ ] **Audit current `Topic` usages → `plugin-brain/AUDIT.md`** — inventory every importer + component
-      (type def, operations, surfaces, app-graph, stories); reference the existing `@dxos/types` `Project`
-      as the target model. (#8)
-- [ ] **Move `Topic` type → `@dxos/types`, Project-style class** (#6/#7) — inline annotations
-      (`LabelAnnotation`/`IconAnnotation`, title), add a `make` factory. DECISION NEEDED: `TopicProps` is
-      shared with `Mailbox.topicSuggestions` (extends it) — keep exporting a shared props struct, or inline
-      + refactor the Mailbox field. High blast radius (~20 importers).
-- [ ] **Move `TopicArticle` + `TopicsArticle` → plugin-brain** (#5) — virtual app-graph root node for
-      Topics + a child node per `Topic`; change the surface binding to a regular object/article
-      (`AppSurface.object(Article, Topic)`), dropping the mailbox-folder wiring.
-- [ ] **`TopicArticle` storybook** (#3) — create in the new plugin-brain location (after the move).
+- [x] **Audit current `Topic` usages → `plugin-brain/AUDIT.md`** — inventory of every importer + component
+      (type def, operations, surfaces, app-graph, stories) + the existing `@dxos/types` `Project` model. (#8)
+- [x] **Move `Topic` type → `@dxos/types`, Project-style class** (#6/#7) — class with inline title/label/icon
+      annotations + `make` factory; shared `Topic.Props` kept annotation-free (Mailbox serialization
+      unchanged); DXN preserved. All ~20 importers moved to `@dxos/types` (`Topic.Topic`/`Topic.Props`), no
+      compat shim. DECISION: kept the shared props struct (option A). Type test moved to `@dxos/types`.
+      Verified: types/pipeline-email/plugin-inbox builds + tests green (`6f904da7d3`).
+- [ ] **Move `TopicArticle` + `TopicsArticle` → plugin-brain** (#5) — virtual space-level Topics root node
+      + a child node per `Topic`; surface binding = regular object/article. Remove the mailbox Topics
+      folder. OPEN: where do the mailbox-scoped topic *suggestions* + Analyze/Accept UI live once the
+      Topics view is space-level? (ties into the companions/master-detail track.)
+- [ ] **`TopicArticle` storybook** (#3) — one exists in stories-inbox (`TopicArticle.stories.tsx`, with a
+      `Test` play); move + extend it in the new plugin-brain location.
 
 ## Bugs
 

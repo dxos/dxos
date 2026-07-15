@@ -9,18 +9,24 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
+// TODO(burdon): Model goals; base instructions.
+
 // The field shape shared by a persisted `Topic` and an unaccepted `Mailbox.topicSuggestions` entry —
 // extracted so promotion is `Obj.make(Topic, suggestion)` with no mapping. Kept free of annotations so
 // referencing it (e.g. from `Mailbox.topicSuggestions`) does not alter that schema's serialization.
 export const Props = Schema.Struct({
   label: Schema.String,
   summary: Schema.String,
+
+  // TODO(burdon): Uncouple from Email.
   // TODO(burdon): Model via Relations?
   threadIds: Schema.Array(Schema.String),
   participants: Schema.Array(Schema.String),
   keywords: Schema.Array(Schema.String),
+
   // Open questions and action items rolled up from the topic's member threads.
   questions: Schema.Array(Schema.String),
+  // TODO(burdon): Reconcile with plugin-outliner.
   tasks: Schema.Array(Schema.String),
 });
 
