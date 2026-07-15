@@ -10151,6 +10151,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -11667,6 +11670,15 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -11721,6 +11733,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -11733,6 +11748,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -12698,6 +12716,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -16259,6 +16280,9 @@ importers:
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -16531,6 +16555,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic

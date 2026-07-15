@@ -67,6 +67,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -77,6 +80,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-table"

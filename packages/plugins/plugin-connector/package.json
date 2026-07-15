@@ -124,6 +124,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",

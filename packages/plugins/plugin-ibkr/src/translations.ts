@@ -45,6 +45,7 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Interactive Brokers',
+        'portfolio-toolbar.menu': 'Portfolio toolbar',
         'sync.label': 'Sync',
         'syncing.label': 'Syncing…',
         'import.label': 'Import report XML',

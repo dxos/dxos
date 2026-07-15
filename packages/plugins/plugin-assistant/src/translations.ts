@@ -124,6 +124,7 @@ export const translations: Resource[] = [
         'summary.label': 'Summary',
         'thinking.label': 'Thinking',
 
+        'connect.label': 'Connect',
         'integration-prompt.title': 'Connect {{service}}',
         'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
