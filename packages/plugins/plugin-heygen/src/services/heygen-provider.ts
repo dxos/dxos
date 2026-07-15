@@ -98,34 +98,37 @@ export class HeyGenProvider implements GenerationProvider {
   }
 
   async listAvatars(options: ProviderCallOptions): Promise<GenerationOption[]> {
-    // Boundary cast of the untyped JSON body. `data` is a flat array on v3 (`{ data: [...] }`);
+    // Runtime-validate the untyped JSON body (no cast). `data` is a flat array on v3 (`{ data: [...] }`);
     // tolerate the v2 nesting (`data.avatars`) and both field conventions (v3 `id`/`name`, v2
     // `avatar_id`/`avatar_name`). `talking_photos` are omitted — they need a different
     // `character.type` when posting than the `avatar` we send.
-    type Entry = { id?: string; avatar_id?: string; name?: string; avatar_name?: string };
-    const body = (await this.#getList('listAvatars', AVATARS_URL, options)) as {
-      data?: Entry[] | { avatars?: Entry[] };
-    };
-    const container = body.data;
-    const entries = Array.isArray(container) ? container : (container?.avatars ?? []);
+    const body = await this.#getList('listAvatars', AVATARS_URL, options);
+    const container = isRecord(body) ? body.data : undefined;
+    const entries = Array.isArray(container)
+      ? container
+      : isRecord(container) && Array.isArray(container.avatars)
+        ? container.avatars
+        : [];
     return sortByName(
       entries
-        .map((entry) => ({ id: entry.id ?? entry.avatar_id, name: (entry.name ?? entry.avatar_name)?.trim() }))
+        .filter(isRecord)
+        .map((entry) => ({
+          id: firstString(entry.id, entry.avatar_id),
+          name: firstString(entry.name, entry.avatar_name)?.trim(),
+        }))
         .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && !!entry.name),
     );
   }
 
   async listVoices(options: ProviderCallOptions): Promise<GenerationOption[]> {
-    // Boundary cast of the untyped JSON body. v3 returns a flat `data` array (unlike v2 avatars,
-    // which nest under `data.voices`).
-    const body = (await this.#getList('listVoices', VOICES_URL, options)) as {
-      data?: Array<{ voice_id?: string; name?: string }>;
-    };
-    // Guard the array: an unexpected shape (e.g. `{ data: {} }`) must not throw on `.map`.
-    const entries = Array.isArray(body.data) ? body.data : [];
+    // Runtime-validate the untyped JSON body (no cast). v3 returns a flat `data` array (unlike v2
+    // avatars, which nest under `data.voices`). An unexpected shape (e.g. `{ data: {} }`) yields `[]`.
+    const body = await this.#getList('listVoices', VOICES_URL, options);
+    const entries = isRecord(body) && Array.isArray(body.data) ? body.data : [];
     return sortByName(
       entries
-        .map((entry) => ({ id: entry.voice_id, name: entry.name?.trim() }))
+        .filter(isRecord)
+        .map((entry) => ({ id: firstString(entry.voice_id), name: firstString(entry.name)?.trim() }))
         .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && !!entry.name),
     );
   }
@@ -273,6 +276,13 @@ export class HeyGenProvider implements GenerationProvider {
 /** Alphabetize picker options by display name (case-insensitive) so the selector is scannable. */
 const sortByName = (options: GenerationOption[]): GenerationOption[] =>
   [...options].sort((left, right) => left.name.localeCompare(right.name));
+
+/** Runtime guard for narrowing an untyped JSON value to an indexable object. */
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+/** First value that is a string, else undefined — used to coalesce version-specific field names. */
+const firstString = (...values: unknown[]): string | undefined =>
+  values.find((value): value is string => typeof value === 'string');
 
 /**
  * Non-secret fingerprint of the API key for diagnostics. Never logs the raw key — only its shape, so
