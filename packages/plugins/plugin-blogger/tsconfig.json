@@ -64,6 +64,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -76,7 +79,13 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-comments"
     },
     {
       "path": "../plugin-connector"

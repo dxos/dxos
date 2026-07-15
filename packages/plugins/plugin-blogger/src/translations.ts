@@ -41,6 +41,7 @@ export const translations = [
         'publish.label': 'Publish',
         'import.label': 'Import',
         'delete.label': 'Delete publication',
+        'comments.label': 'Comments',
       },
     },
   },

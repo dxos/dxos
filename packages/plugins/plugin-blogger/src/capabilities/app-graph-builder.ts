@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -10,9 +11,11 @@ import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolk
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { isNonNullable } from '@dxos/util';
+import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
@@ -38,6 +41,16 @@ const PUBLICATION_NODE_TYPE = `${meta.profile.key}.publication`;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    // Derive a single-mode selected id per context from the ViewStateManager selection slice, keyed by
+    // the plank node id (mirrors plugin-inbox's `selectedId` family).
+    const selectedId = Atom.family((nodeId: string) =>
+      Atom.make((get) => {
+        const selection = get(viewState.atom(selectionAspect, nodeId));
+        return selection.mode === 'single' ? selection.id : undefined;
+      }),
+    );
+
     const extensions = yield* Effect.all([
       // "Publications" section under each space's content group.
       GraphBuilder.createExtension({
@@ -145,6 +158,57 @@ export default Capability.makeModule(
                 disposition: 'list-item',
                 testId: 'bloggerPlugin.deletePublication',
               },
+            }),
+          ]);
+        },
+      }),
+
+      // Comments companion for the Post plank: anchors the comments panel to the currently-selected
+      // draft's `Markdown.Document`. PostArticle publishes that doc as the plank's single-selection
+      // (LayoutOperation.Select with contextId == the Post plank node id); this connector reads it back
+      // and contributes a companion whose data is the doc. The doc (not the Post) is where draft comments
+      // are anchored, so the panel and the in-editor comment creation stay in sync.
+      GraphBuilder.createExtension({
+        id: 'postComments',
+        match: (node) =>
+          Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data, nodeId: node.id }) : Option.none(),
+        connector: ({ post, nodeId }, get) => {
+          const snapshot = get(Obj.atom(post));
+          const drafts = (snapshot.drafts ?? [])
+            .map((ref) => {
+              // Subscribe so the connector re-runs once the draft target loads.
+              get(Obj.atom(ref));
+              return ref.target;
+            })
+            .filter(isNonNullable);
+          if (drafts.length === 0) {
+            return Effect.succeed([]);
+          }
+
+          const selection = get(selectedId(nodeId));
+          const selectedDraft = selection
+            ? drafts.find((draft) => {
+                // Subscribe so the connector re-runs once the doc target loads.
+                get(Obj.atom(draft.content));
+                const doc = draft.content.target;
+                return doc ? Obj.getURI(doc) === selection : false;
+              })
+            : undefined;
+          // Default to the last draft's doc so the companion always has a target.
+          const draft = selectedDraft ?? drafts[drafts.length - 1];
+          get(Obj.atom(draft.content));
+          const draftDoc = draft.content.target;
+          if (!draftDoc) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('comments'),
+              label: ['comments.label', { ns: meta.profile.key }],
+              icon: 'ph--chat-text--regular',
+              data: draftDoc,
+              position: Position.first,
             }),
           ]);
         },

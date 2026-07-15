@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
@@ -58,17 +59,38 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
         : undefined,
     [selectedDraftDoc, selectedDraftDocId],
   );
-  // Companion comments panel targeting the draft doc (not the Post): satisfies the plugin-comments
-  // react-surface filter `allOf(literal(Article, 'comments'), companion(Article))`, which requires
-  // `subject === 'comments'` plus a `companionTo` ECHO object — mirrors the data shape built by
-  // `plugin-deck`'s `Companion` component.
-  const commentsData = useMemo(
-    () =>
-      selectedDraftDoc && selectedDraftDocId
-        ? { subject: 'comments' as const, companionTo: selectedDraftDoc, attendableId: selectedDraftDocId }
-        : undefined,
-    [selectedDraftDoc, selectedDraftDocId],
+
+  // Publish the selected draft's doc as the Post plank's single-selection so the app-graph connector
+  // (see `postComments` in app-graph-builder) can anchor the comments companion to that doc. contextId
+  // is the Post plank node id (== `attendableId`), the id the connector reads its selection from.
+  const publishDraftSelection = useCallback(
+    (docId: string) => {
+      void invokePromise(LayoutOperation.Select, {
+        contextId: attendableId,
+        subject: { mode: 'single', id: docId },
+      });
+    },
+    [invokePromise, attendableId],
   );
+
+  const handleSelectDraft = useCallback(
+    (index: number) => {
+      setSelectedIndex(index);
+      const doc = drafts[index]?.content.target;
+      if (doc) {
+        publishDraftSelection(Obj.getURI(doc));
+      }
+    },
+    [drafts, publishDraftSelection],
+  );
+
+  // Publish the initial selection on mount (and whenever the resolved doc changes) so the companion
+  // has a target before the user touches the draft tabs.
+  useEffect(() => {
+    if (selectedDraftDocId) {
+      publishDraftSelection(selectedDraftDocId);
+    }
+  }, [selectedDraftDocId, publishDraftSelection]);
 
   const handleAddDraft = useCallback(async () => {
     const nextIndex = draftRefs.length;
@@ -141,7 +163,7 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
                   checked: index === clampedIndex,
                   testId: `post.toolbar.draft-${index}`,
                 },
-                () => setSelectedIndex(index),
+                () => handleSelectDraft(index),
               );
             });
           },
@@ -180,7 +202,7 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
           () => void handleImport(),
         )
         .build(),
-    [drafts, clampedIndex, canSync, handleAddDraft, handlePublish, handleImport],
+    [drafts, clampedIndex, canSync, handleSelectDraft, handleAddDraft, handlePublish, handleImport],
   );
 
   return (
@@ -194,13 +216,8 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
             <div className='min-bs-0 overflow-hidden'>
               <ObjectForm object={subject} type={Blog.Post} />
             </div>
-            <div className='min-bs-0 grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] overflow-hidden'>
-              <div className='min-is-0 overflow-hidden'>
-                {draftData && <Surface.Surface type={AppSurface.Article} data={draftData} limit={1} />}
-              </div>
-              <div className='min-is-0 overflow-hidden'>
-                {commentsData && <Surface.Surface type={AppSurface.Article} data={commentsData} limit={1} />}
-              </div>
+            <div className='min-bs-0 overflow-hidden'>
+              {draftData && <Surface.Surface type={AppSurface.Article} data={draftData} limit={1} />}
             </div>
           </div>
         </Panel.Content>
