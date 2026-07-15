@@ -31,7 +31,7 @@ Target `Project` (in `@dxos/types`), string arrays promoted to **Relations/Refs*
 | `name` / `label` | `Topic.label`            | `name` (reconcile the two)                                     |
 | `summary`        | string                   | string (pipeline-written)                                      |
 | threads          | `threadIds: string[]`    | `Ref<Thread>[]` / `AnchoredTo` relations to `Message`/`Thread` |
-| contacts         | `participants: string[]` | `Ref` to `Person` / `Organization` (entity-resolved)          |
+| contacts         | `participants: string[]` | `Ref` to `Person` / `Organization` (entity-resolved)           |
 | tasks            | `tasks: string[]`        | `Ref<Outline>` (Outliner task list)                            |
 | notes            | —                        | `Ref<Document>[]`                                              |
 | collections      | —                        | `Ref<Collection>` (Sketch/Sheet/Table/File)                    |
