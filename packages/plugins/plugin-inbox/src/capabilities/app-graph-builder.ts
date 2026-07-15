@@ -617,10 +617,11 @@ export default Capability.makeModule(
             // Progress registry is optional (absent when plugin-progress isn't loaded); the same
             // monitor `MailboxArticle`'s statusbar meter reads, so the action's spinner/disabled
             // state agrees with a sync kicked off from either surface or the background routine.
-            const progressRegistry = (yield* Capability.getAll(AppCapabilities.ProgressRegistry))[0];
-            const isSyncing = progressRegistry
-              ? get(progressRegistry.monitorAtom(createSyncProgressKey(mailbox)))?.status === 'running'
-              : false;
+            const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+            const isSyncing = Option.match(progressRegistry, {
+              onNone: () => false,
+              onSome: (registry) => get(registry.monitorAtom(createSyncProgressKey(mailbox)))?.status === 'running',
+            });
             return [
               {
                 id: 'sync',
