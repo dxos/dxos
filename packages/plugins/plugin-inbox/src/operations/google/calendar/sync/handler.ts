@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
+import { Cursor } from '@dxos/link';
 
 import { GoogleCredentials } from '../../../../services';
 import { InboxOperation } from '../../../../types';
@@ -19,19 +20,19 @@ const handler = InboxOperation.GoogleCalendarSync.pipe(
     Effect.gen(function* () {
       const bindingObj = props.binding.target;
       const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-      if (!bindingObj || !db) {
+      if (!bindingObj || !db || !Cursor.isExternal(bindingObj)) {
         return { newEvents: 0 };
       }
 
+      const accessTokenRef = bindingObj.spec.source;
       // Composer's invoker is wired without a `databaseResolver`, so derive the db from the binding's
       // target and provide `Database.layer(db)` ourselves (alongside the Google Calendar credentials).
-      const connectionRef = Ref.make(Relation.getSource(bindingObj));
       return yield* syncCalendar(props).pipe(
         Effect.provide(
           Layer.mergeAll(
             FetchHttpClient.layer,
             InboxResolver.Live,
-            GoogleCredentials.fromConnection(connectionRef),
+            GoogleCredentials.fromAccessToken(accessTokenRef),
             Database.layer(db),
           ),
         ),

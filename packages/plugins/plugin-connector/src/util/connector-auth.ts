@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppNode } from '@dxos/app-toolkit';
-import { Database, type Key, type Obj, type Ref, Relation } from '@dxos/echo';
+import { Database, type Key, type Obj, type Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { ConnectorCoordinator, type ConnectorEntry } from '../types';
 import * as Connection from '../types/Connection';
-import * as SyncBinding from '../types/SyncBinding';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';
@@ -99,8 +99,7 @@ export const connectorAuthActions = ({
           if (!existingTarget) {
             return;
           }
-          const target = yield* Database.load(existingTarget);
-          yield* Database.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: target }));
+          yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }));
         }).pipe(Effect.provide(Database.layer(db))),
     });
 

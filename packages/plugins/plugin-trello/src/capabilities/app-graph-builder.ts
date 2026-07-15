@@ -8,9 +8,9 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { EID } from '@dxos/keys';
-import { SyncBinding } from '@dxos/plugin-connector';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
+import { isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Kanban } from '@dxos/plugin-kanban';
 
@@ -43,12 +43,15 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The board's sync state lives on the `SyncBinding` relation whose
-          // target is this Kanban. Find it so the action can sync exactly that
-          // binding.
-          const bindings = get(db.query(Filter.type(SyncBinding.SyncBinding)).atom);
-          const binding = bindings.find(
-            (binding) => EID.getEntityId(EID.tryParse(Obj.getURI(Relation.getTarget(binding)))!) === kanban.id,
+          // The board's sync state lives on the external-sync `Cursor` whose
+          // `spec.target` is this Kanban. Find it so the action can sync exactly
+          // that binding. `Cursor` has no reverse-ref index on `spec.target`, so
+          // this scans every cursor in the space and filters (mirrors
+          // `@dxos/plugin-connector`'s own cursor lookups).
+          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
+          const binding = cursors.find(
+            (candidate): candidate is Cursor.ExternalCursor =>
+              Cursor.isExternal(candidate) && isCursorForTarget(candidate, kanban),
           );
           if (!binding) {
             return Effect.succeed([]);

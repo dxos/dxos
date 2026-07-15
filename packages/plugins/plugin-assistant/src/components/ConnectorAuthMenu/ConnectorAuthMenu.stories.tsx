@@ -13,8 +13,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection, Connector, type ConnectorEntry, SyncBinding, connectorAuthActions } from '@dxos/plugin-connector';
+import { Connection, Connector, type ConnectorEntry, connectorAuthActions } from '@dxos/plugin-connector';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { Graph, useActionRunner } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -22,7 +23,6 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Menu, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Cursor } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -135,7 +135,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Connection.Connection, Cursor.Cursor, Expando.Expando, SyncBinding.SyncBinding],
+          types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import {
@@ -18,7 +19,7 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection, Connector, ConnectorAnnotationId, SyncBinding } from '#types';
+import { Connection, Connector, ConnectorAnnotationId } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
@@ -40,7 +41,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'connectorCompanion',
         filter: AppSurface.allOf(
-          AppSurface.object(AppSurface.Article, SyncBinding.SyncBinding),
+          AppSurface.object(AppSurface.Article, Cursor.Cursor),
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data, role }) => <ConnectorCompanion {...data} role={role} />,

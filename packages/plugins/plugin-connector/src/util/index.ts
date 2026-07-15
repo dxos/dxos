@@ -3,4 +3,5 @@
 //
 
 export * from './connector-auth';
-export * from './reconcile-sync-bindings';
+export * from './cursor-predicates';
+export * from './reconcile-cursors';

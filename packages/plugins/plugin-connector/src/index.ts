@@ -7,3 +7,4 @@ export { CONNECTOR_AUTH_GROUP_ID, type ConnectorAuthActionsOptions, connectorAut
 export { ConnectionTestError } from './errors';
 export * from './meta';
 export * from './types';
+export { isCursorForConnection, isCursorForTarget } from './util';

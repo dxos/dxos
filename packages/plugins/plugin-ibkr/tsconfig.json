@@ -43,6 +43,9 @@
       "path": "../../core/compute/functions"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -62,9 +65,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"

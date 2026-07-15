@@ -12,16 +12,17 @@ import { type Space } from '@dxos/client/echo';
 import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Feed, Filter, Obj, Query, Ref, Relation, Scope } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
+import { AccessToken, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AccessToken, Cursor, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID } from '../../../../constants';
 import { Mailbox } from '../../../../types';
@@ -177,7 +178,6 @@ const setup = async () => {
       AccessToken.AccessToken,
       Connection.Connection,
       Cursor.Cursor,
-      SyncBinding.SyncBinding,
       Operation.PersistentOperation,
       Trigger.Trigger,
     ],
@@ -206,7 +206,7 @@ const setup = async () => {
       accessToken: Ref.make(accessToken),
     }),
   );
-  const binding = space.db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: mailbox }));
+  const binding = space.db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }));
 
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
   return { client, space, mailbox, binding, feed, functionsServiceClient };
