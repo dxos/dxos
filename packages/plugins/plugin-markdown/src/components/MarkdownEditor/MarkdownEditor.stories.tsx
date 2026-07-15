@@ -30,6 +30,8 @@ random.seed(1);
 const CONTENT = [
   '# Markdown editor',
   '',
+  '> Edit any column and watch the others update.',
+  '',
   'Renders **markdown** formatting inline, or as raw *source*.',
   '',
   '## Section One',
@@ -39,8 +41,6 @@ const CONTENT = [
   '- First item',
   '- Second item',
   '- Third item',
-  '',
-  '> Edit any column and watch the others update.',
   '',
   '## Section Two',
   '',
