@@ -12,9 +12,7 @@ import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { type SearchResult } from '@dxos/react-ui-search';
-
-import { Highlighted } from '../Highlighted';
+import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
 
 //
 // SearchResultStack

@@ -9,9 +9,6 @@ import { type SearchResult } from '#types';
 
 import { getIcon, mapObjectToTextFields } from './sync';
 
-/** A character span within a field value, for highlighting. */
-export type MatchSpan = { start: number; end: number };
-
 /** Full-text search filter over the FTS5 index. */
 export const buildSearchFilter = (text: string): Filter.Any => Filter.text(text, { type: 'full-text' });
 
@@ -23,26 +20,6 @@ export const buildSearchFilter = (text: string): Filter.Any => Filter.text(text,
 export const buildSearchQuery = (text: string | undefined): Query.Any => {
   const trimmed = text?.trim();
   return trimmed ? Query.select(buildSearchFilter(trimmed)) : Query.select(Filter.nothing());
-};
-
-/** Case-insensitive, non-overlapping occurrences of `query` within `value`. */
-export const computeMatchSpans = (value: string, query: string): MatchSpan[] => {
-  const spans: MatchSpan[] = [];
-  const needle = query.trim().toLowerCase();
-  if (needle.length === 0) {
-    return spans;
-  }
-  const haystack = value.toLowerCase();
-  let from = 0;
-  for (;;) {
-    const index = haystack.indexOf(needle, from);
-    if (index === -1) {
-      break;
-    }
-    spans.push({ start: index, end: index + needle.length });
-    from = index + needle.length;
-  }
-  return spans;
 };
 
 /**
