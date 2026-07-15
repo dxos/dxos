@@ -9,6 +9,7 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -59,6 +60,10 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
     }
 
     void invokePromise(BloggerOperation.AddPost, { publication: Ref.make(subject), target: db });
+  }, [invokePromise, subject]);
+
+  const handleDelete = useCallback(() => {
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
   }, [invokePromise, subject]);
 
   const postRefs = publication.posts;
@@ -115,21 +120,30 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           },
           () => handleAddPost(),
         )
+        .separator()
+        .action(
+          'delete',
+          {
+            label: ['delete.label', { ns: meta.profile.key }],
+            icon: 'ph--trash--regular',
+            disposition: 'toolbar',
+            testId: 'publication.toolbar.delete',
+          },
+          () => handleDelete(),
+        )
         .build(),
-    [mode, handleAddPost],
+    [mode, handleAddPost, handleDelete],
   );
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+        <Panel.Toolbar>
+          <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
           <div className='grid h-full grid-rows-[minmax(0,1fr)_minmax(0,2fr)] overflow-hidden'>
-            <div className='min-bs-0 overflow-hidden'>
-              <ObjectForm object={subject} type={Blog.Publication} />
-            </div>
+            <ObjectForm object={subject} type={Blog.Publication} />
             <div className='min-bs-0 overflow-hidden'>
               {mode === 'gallery' ? (
                 <Masonry.Root Tile={PostTile}>

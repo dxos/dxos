@@ -11,6 +11,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -133,6 +134,16 @@ export default Capability.makeModule(
                 label: ['add-object.label', { ns: Type.getTypename(Blog.Post) }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
+              },
+            }),
+            Node.makeAction({
+              id: SpaceOperation.RemoveObjects.meta.key,
+              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }),
+              properties: {
+                label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Blog.Publication)),
+                icon: 'ph--trash--regular',
+                disposition: 'list-item',
+                testId: 'bloggerPlugin.deletePublication',
               },
             }),
           ]);

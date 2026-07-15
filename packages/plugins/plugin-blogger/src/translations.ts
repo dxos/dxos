@@ -40,6 +40,7 @@ export const translations = [
         'add-draft.label': 'Add draft',
         'publish.label': 'Publish',
         'import.label': 'Import',
+        'delete.label': 'Delete publication',
       },
     },
   },

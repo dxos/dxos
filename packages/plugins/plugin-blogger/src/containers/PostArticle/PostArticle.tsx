@@ -186,8 +186,8 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+        <Panel.Toolbar>
+          <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
           <div className='grid h-full grid-rows-[minmax(0,1fr)_minmax(0,2fr)] overflow-hidden'>
