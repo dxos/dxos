@@ -317,7 +317,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     sync,
     // Same monitor as the statusbar meter (`syncProgress`, above): true for the whole duration of a
     // sync, whether kicked off by this toolbar action or independently by the routine's timer trigger.
-    syncRunning: syncProgress?.status === 'running',
+    syncing: syncProgress?.status === 'running',
   });
 
   return (
@@ -457,12 +457,12 @@ type MailboxActionsOptions = {
   connection?: Connection.Connection;
   sync: () => Promise<void>;
   /** Whether the mailbox's sync progress monitor is currently running (see `syncProgress` above). */
-  syncRunning: boolean;
+  syncing: boolean;
 };
 
 const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
-  { sortDescending, nodeId, filterElement, connection, sync, syncRunning }: MailboxActionsOptions,
+  { sortDescending, nodeId, filterElement, connection, sync, syncing }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
@@ -545,10 +545,10 @@ const useMailboxActions = (
           'sync',
           {
             label: ['sync-mailbox.label', { ns: meta.profile.key }],
-            icon: syncRunning ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+            icon: syncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
             variant: 'primary',
             iconOnly: false,
-            disabled: syncRunning,
+            disabled: syncing,
           },
           () => {
             void sync();
@@ -567,7 +567,7 @@ const useMailboxActions = (
       filterElement,
       connection,
       sync,
-      syncRunning,
+      syncing,
       sortDescending,
       loadRemoteImages,
       setSettings,
