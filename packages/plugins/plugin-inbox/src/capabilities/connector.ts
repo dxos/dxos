@@ -11,9 +11,18 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { type Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
-import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import {
+  ConnectionTestError,
+  Connector,
+  type OnCursorCreated,
+  type OnTokenCreated,
+  type SyncInput,
+  type SyncOutput,
+  type TestConnection,
+} from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -25,6 +34,7 @@ import {
   JMAP_MAIL_CONNECTOR_ID,
 } from '../constants';
 import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
+import { createSyncRoutine } from '../util';
 import { jmapCredentialForm } from './jmap-credential-form';
 
 const GoogleUserInfo = Schema.Struct({
@@ -110,6 +120,17 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     }
   }).pipe(Effect.orDie);
 
+/**
+ * Sets up recurring background sync for a newly-bound target: a Routine wrapping an every-10-minute
+ * local timer Trigger wired to `sync` — the same operation `ConnectorOperation.SyncConnection` invokes
+ * directly — with `binding` bound to the newly-created cursor (see `createSyncRoutine`). No-op if a
+ * sync routine is already connected to the target.
+ */
+const onCursorCreated =
+  (sync: Operation.Definition<SyncInput, SyncOutput>): OnCursorCreated =>
+  ({ target, cursor, db }) =>
+    createSyncRoutine({ target, cursor, sync }).pipe(Effect.provide(Database.layer(db)), Effect.asVoid);
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Connector, [
@@ -133,6 +154,7 @@ export default Capability.makeModule(
         materializeTarget: InboxOperation.MaterializeGmailTarget,
         sync: InboxOperation.GoogleMailSync,
         onTokenCreated,
+        onCursorCreated: onCursorCreated(InboxOperation.GoogleMailSync),
         testConnection: testGoogleConnection,
       },
       {
@@ -147,6 +169,7 @@ export default Capability.makeModule(
         // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
         materializeTarget: InboxOperation.MaterializeJmapTarget,
         sync: InboxOperation.JmapSync,
+        onCursorCreated: onCursorCreated(InboxOperation.JmapSync),
       },
       {
         id: GOOGLE_CALENDAR_CONNECTOR_ID,
@@ -167,6 +190,7 @@ export default Capability.makeModule(
         materializeTarget: InboxOperation.MaterializeCalendarTarget,
         sync: InboxOperation.GoogleCalendarSync,
         onTokenCreated,
+        onCursorCreated: onCursorCreated(InboxOperation.GoogleCalendarSync),
         testConnection: testGoogleConnection,
       },
       {
@@ -180,7 +204,7 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
-        // Targetless connector: no dedicated local root type. `reconcileSyncBindings`
+        // Targetless connector: no dedicated local root type. `reconcileCursors`
         // binds the connection itself; synced `Person` objects land directly in the
         // space keyed by foreign id.
         getSyncTargets: InboxOperation.GetGoogleContactGroups,

@@ -11,10 +11,10 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { InboxOperation, Mailbox } from '../../../types';
 
 /**
- * Eagerly materializes a local Mailbox so a {@link SyncBinding} can be created (relations require
- * both endpoints to exist). JMAP is a single-target connector (the account inbox), so a fresh
- * Mailbox is always created; the connection's `accessToken.account` seeds the default name. Mirrors
- * the Gmail materialize-target.
+ * Eagerly materializes a local Mailbox so the sync cursor's target exists before the cursor is
+ * created. JMAP is a single-target connector (the account inbox), so a fresh Mailbox is always
+ * created; the connection's `accessToken.account` seeds the default name. Mirrors the Gmail
+ * materialize-target.
  */
 const handler: Operation.WithHandler<typeof InboxOperation.MaterializeJmapTarget> =
   InboxOperation.MaterializeJmapTarget.pipe(

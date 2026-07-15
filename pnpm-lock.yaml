@@ -3265,9 +3265,6 @@ importers:
       vite-plugin-solid:
         specifier: 'catalog:'
         version: 2.11.12(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
-      vite-plugin-top-level-await:
-        specifier: 'catalog:'
-        version: 1.6.0(@swc/helpers@0.5.17)(rollup@4.61.1)(vite@8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       vite-plugin-wasm:
         specifier: 'catalog:'
         version: 3.6.0(vite@8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -5466,6 +5463,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5478,9 +5478,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../../sdk/types
       '@effect-atom/atom':
         specifier: 'catalog:'
         version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
@@ -5763,6 +5760,34 @@ importers:
         specifier: 'catalog:'
         version: 0.96.2(effect@3.21.4)
 
+  packages/core/compute/link:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../pipeline
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
+    devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/core/compute/mcp-client:
     dependencies:
       '@dxos/ai':
@@ -5836,6 +5861,9 @@ importers:
 
   packages/core/compute/pipeline:
     dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5919,6 +5947,9 @@ importers:
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../extractor-lib
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5934,6 +5965,9 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../pipeline-rdf
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
@@ -6738,6 +6772,92 @@ importers:
       json-stable-stringify:
         specifier: 'catalog:'
         version: 1.3.0
+
+  packages/core/halo/halo:
+    dependencies:
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+
+  packages/core/halo/halo-adapter-client:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../../sdk/client-protocol
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../halo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+
+  packages/core/halo/halo-e2e:
+    dependencies:
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../halo
+      '@dxos/halo-adapter-client':
+        specifier: workspace:*
+        version: link:../halo-adapter-client
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+    devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.4)(vitest@4.1.10)
+
+  packages/core/halo/halo-react:
+    dependencies:
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../halo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)(react@19.2.7)(scheduler@0.27.0)
+    devDependencies:
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
 
   packages/core/halo/keyring:
     dependencies:
@@ -8514,6 +8634,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
@@ -8792,6 +8915,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9652,6 +9778,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9679,9 +9808,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -10115,6 +10241,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10148,12 +10277,12 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10919,6 +11048,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11529,6 +11661,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11639,6 +11774,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11654,9 +11792,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11664,6 +11799,15 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -11697,6 +11841,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11718,6 +11865,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -11730,12 +11880,12 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11800,15 +11950,15 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
       '@dxos/plugin-studio':
         specifier: workspace:*
         version: link:../plugin-studio
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11893,6 +12043,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
@@ -11932,6 +12085,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-routine':
+        specifier: workspace:*
+        version: link:../plugin-routine
       '@dxos/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -12286,6 +12442,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12695,6 +12854,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -13380,6 +13542,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14201,6 +14366,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14225,9 +14393,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14579,6 +14744,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14700,6 +14868,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15632,6 +15803,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -16256,6 +16430,9 @@ importers:
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -16528,6 +16705,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -17187,6 +17367,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17205,9 +17388,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -19287,6 +19467,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -19306,9 +19489,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/pipeline':
-        specifier: workspace:*
-        version: link:../../core/compute/pipeline
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client
@@ -19475,6 +19655,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
@@ -19716,6 +19899,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -19761,6 +19947,9 @@ importers:
       '@dxos/plugin-outliner':
         specifier: workspace:*
         version: link:../../plugins/plugin-outliner
+      '@dxos/plugin-progress':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-progress
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
@@ -19800,6 +19989,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
+      '@dxos/story-modules':
+        specifier: workspace:*
+        version: link:../story-modules
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -19894,6 +20086,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -70295,12 +70490,12 @@ snapshots:
       es-module-lexer: 2.0.0
       expect-type: 1.3.0
       magic-string: 0.30.21
-      obug: 2.1.1
+      obug: 2.1.3
       pathe: 2.0.3
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       std-env: 4.1.0
       tinybench: 2.9.0
-      tinyexec: 1.1.1
+      tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
       vite: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -70339,12 +70534,12 @@ snapshots:
       es-module-lexer: 2.0.0
       expect-type: 1.3.0
       magic-string: 0.30.21
-      obug: 2.1.1
+      obug: 2.1.3
       pathe: 2.0.3
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       std-env: 4.1.0
       tinybench: 2.9.0
-      tinyexec: 1.1.1
+      tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
       vite: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)

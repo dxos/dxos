@@ -23,14 +23,14 @@ import {
   getKindIcon,
 } from '../constants';
 
-/**
- * Contributes the Studio navtree entry: a "Studio" section under the `content` group (always
- * present, so it is the create hub) with a virtual "Artifacts" child node that opens the
- * ArtifactsArticle. Mirrors plugin-inbox's Mailboxes section + virtual Drafts/Topics nodes.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
+      /**
+       * Contributes the Studio navtree entry: a "Studio" section under the `content` group (always
+       * present, so it is the create hub) with a virtual "Artifacts" child node that opens the
+       * ArtifactsArticle. Mirrors plugin-inbox's Mailboxes section + virtual Drafts/Topics nodes.
+       */
       GraphBuilder.createExtension({
         id: 'studioSection',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
@@ -85,6 +85,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

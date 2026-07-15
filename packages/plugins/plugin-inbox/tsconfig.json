@@ -77,6 +77,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/compute/pipeline"
     },
     {
@@ -192,6 +195,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-settings"

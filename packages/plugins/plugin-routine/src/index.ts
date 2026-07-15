@@ -5,3 +5,4 @@
 export * from './meta';
 export * from './paths';
 export * from './types';
+export * from './util';

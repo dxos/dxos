@@ -19,7 +19,7 @@ export const memoryConfig = new Config({
   runtime: {
     client: {
       edgeFeatures: {
-        echoReplicator: true,
+        subductionReplicator: true,
         feedReplicator: true,
         signaling: true,
         agents: true,
@@ -32,7 +32,7 @@ export const defaultConfig = new Config({
   runtime: {
     client: {
       edgeFeatures: {
-        echoReplicator: true,
+        subductionReplicator: true,
         feedReplicator: true,
         signaling: true,
         agents: true,
@@ -101,7 +101,7 @@ const profileBuiltinDefaults = (profile: string) => {
     runtime: {
       client: {
         edgeFeatures: {
-          echoReplicator: true,
+          subductionReplicator: true,
           feedReplicator: true,
           signaling: true,
           agents: true,

@@ -3,11 +3,12 @@
 //
 
 import { Type } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { Connection, SyncBinding } from './types';
+import { Connection } from './types';
 
 export const translations = [
   {
@@ -79,7 +80,7 @@ export const translations = [
         'delete-object.label': 'Delete connection',
         'object-deleted.label': 'Connection deleted',
       },
-      [Type.getTypename(SyncBinding.SyncBinding)]: {
+      [Type.getTypename(Cursor.Cursor)]: {
         'typename.label': 'Sync binding',
         'typename.label_zero': 'Sync bindings',
         'typename.label_one': 'Sync binding',

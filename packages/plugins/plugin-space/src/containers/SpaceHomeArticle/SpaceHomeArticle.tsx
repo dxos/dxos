@@ -14,6 +14,7 @@ import {
   Menu,
   MenuBuilder,
   graphActions,
+  isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
@@ -81,9 +82,7 @@ const useMenuActions = (
         return MenuBuilder.make().build();
       }
       return MenuBuilder.make()
-        .subgraph(
-          graphActions(graph, get, attendableId, { filter: (action) => action.properties.disposition === 'toolbar' }),
-        )
+        .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
         .build();
     },
     [graph, attendableId],
