@@ -283,7 +283,7 @@ export const resolveWindows = ({ maxKey, minKey, now, horizon }: ResolveWindowsO
  * {@link advance}). Raises `max` on a new high-water mark; lowers `min` on a new low-water mark
  * (`minKey: 0` leaves `min` untouched). `format` defaults to the decimal {@link formatKey}.
  *
- * Also folds a capped run's *scanned* extent in before deciding to end or continue — see {@link Scanned}.
+ * Also the run-end seam for folding the run's observed key {@link Extent} in (stall-proofing).
  */
 export const extendRange = (
   cursor: Cursor,
@@ -339,14 +339,14 @@ export type Stats = { newMessages: number };
 /**
  * Mutable run-observed key extent, folded by {@link dedupStage} for *every* item considered, even
  * dropped ones. So a capped run whose page is entirely dropped still shrinks its window next pass: the
- * caller extends the cursor by `scanned` before deciding to end or continue, guaranteeing forward
+ * caller extends the cursor by `extent` before deciding to end or continue, guaranteeing forward
  * progress even when nothing newly commits. Read back by the caller after the run.
  */
-export type Scanned = { maxKey: number; minKey: number };
+export type Extent = { maxKey: number; minKey: number };
 
 /**
  * Per-run state provided to the pipeline stages and commit sink. Mutable fields (`dedupSet`, `stats`,
- * `scanned`) accumulate across the run; the caller reads them back afterward.
+ * `extent`) accumulate across the run; the caller reads them back afterward.
  */
 export type State = {
   /** The cursor being advanced as pages commit. */
@@ -367,8 +367,8 @@ export type State = {
   readonly formatCursor: (key: number) => string;
   /** Mutable run tally, read back by the caller after the run. */
   readonly stats: Stats;
-  /** Mutable run-observed key extent — see {@link Scanned}. */
-  readonly scanned: Scanned;
+  /** Mutable run-observed key extent — see {@link Extent}. */
+  readonly extent: Extent;
 };
 
 /** Terminal unit produced by the pipeline for one source item: everything the commit needs to write. */
@@ -395,16 +395,16 @@ export class Service extends Context.Tag('@dxos/link/Cursor')<Service, State>() 
 
 /**
  * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor`,
- * `minKey`, `trackRange`, `scanned` for a single-directional caller unaware of range-tracking.
+ * `minKey`, `trackRange`, `extent` for a single-directional caller unaware of range-tracking.
  */
-export type LayerOptions = Omit<State, 'dedupSet' | 'formatCursor' | 'minKey' | 'trackRange' | 'scanned'> & {
+export type LayerOptions = Omit<State, 'dedupSet' | 'formatCursor' | 'minKey' | 'trackRange' | 'extent'> & {
   readonly formatCursor?: (key: number) => string;
   /** Low-water key at run start. Only relevant with `trackRange: true`. Defaults to 0 (unset). */
   readonly minKey?: number;
   /** Opt into maintaining `cursor.min` alongside `cursor.max`. Defaults to `false`. */
   readonly trackRange?: boolean;
-  /** Caller-supplied accumulator to read the run's scanned extent back afterward — see {@link Scanned}. */
-  readonly scanned?: Scanned;
+  /** Caller-supplied accumulator to read the run's observed key {@link Extent} back afterward. */
+  readonly extent?: Extent;
   /** Overrides {@link DEFAULT_DEDUP_SEED_TAIL} — set per pipeline when its commit page size warrants it. */
   readonly dedupSeedTail?: number;
 };
@@ -428,7 +428,7 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
         minKey: options.minKey ?? 0,
         trackRange: options.trackRange ?? false,
         formatCursor: options.formatCursor ?? formatKey,
-        scanned: options.scanned ?? { maxKey: 0, minKey: 0 },
+        extent: options.extent ?? { maxKey: 0, minKey: 0 },
         dedupSet,
       };
     }),
@@ -569,9 +569,9 @@ export const skipCommitted = <In>(
  * Reusable dedup stage: drops items already committed (`dedupSet`) and items strictly inside the synced
  * range (`minKey < key < maxKey`) — a cheap shortcut past the already-synced middle. Boundary keys fall
  * through to `dedupSet`, since items can share a key. A single-directional run keeps the original
- * `key < maxKey` shortcut. Folds every considered item's key into {@link State.scanned} *before* the
+ * `key < maxKey` shortcut. Folds every considered item's key into {@link State.extent} *before* the
  * drop decision, so a capped range-tracking run shrinks its window even when a whole page drops (see
- * {@link Scanned}). Reads {@link Service}; provider-agnostic via `getForeignId`/`getKey`. Pair with
+ * {@link Extent}). Reads {@link Service}; provider-agnostic via `getForeignId`/`getKey`. Pair with
  * {@link skipCommitted} to avoid fetching already-committed items.
  */
 export const dedupStage = <In>(
@@ -581,11 +581,11 @@ export const dedupStage = <In>(
 ): Stage.Stage<In, In, never, Service> =>
   Stage.map(id, (item: In) =>
     Effect.gen(function* () {
-      const { maxKey, minKey, trackRange, dedupSet, scanned } = yield* Service;
+      const { maxKey, minKey, trackRange, dedupSet, extent } = yield* Service;
       const key = getKey(item);
       if (key > 0) {
-        scanned.maxKey = Math.max(scanned.maxKey, key);
-        scanned.minKey = scanned.minKey === 0 ? key : Math.min(scanned.minKey, key);
+        extent.maxKey = Math.max(extent.maxKey, key);
+        extent.minKey = extent.minKey === 0 ? key : Math.min(extent.minKey, key);
       }
       if (dedupSet.has(getForeignId(item))) {
         return undefined;

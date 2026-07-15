@@ -132,7 +132,7 @@ describe('Cursor.layer', () => {
   });
 
   test(
-    'dedupStage folds every considered key into state.scanned, even when dropped by the dedup set — ' +
+    'dedupStage folds every considered key into state.extent, even when dropped by the dedup set — ' +
       'the stall-proofing seam for a crash that landed items in the feed before the cursor min advance persisted',
     async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
@@ -151,7 +151,7 @@ describe('Cursor.layer', () => {
         ]).pipe(Effect.provide(Database.layer(db))),
       );
 
-      const scanned = await Effect.gen(function* () {
+      const extent = await Effect.gen(function* () {
         yield* Stream.fromIterable([
           { id: 'orphaned-a', key: 30 },
           { id: 'orphaned-b', key: 20 },
@@ -163,7 +163,7 @@ describe('Cursor.layer', () => {
           ),
           Stream.runDrain,
         );
-        return (yield* Cursor.Service).scanned;
+        return (yield* Cursor.Service).extent;
       }).pipe(
         Effect.provide(
           Cursor.layer({
@@ -180,15 +180,15 @@ describe('Cursor.layer', () => {
         EffectEx.runAndForwardErrors,
       );
 
-      expect(scanned).toEqual({ maxKey: 30, minKey: 20 });
+      expect(extent).toEqual({ maxKey: 30, minKey: 20 });
       // Both items were dropped via the dedup set — nothing committed, so `min` hasn't moved yet.
       expect(cursor.min).toBe('50');
 
-      // Stall-proofing: fold in the scanned extent though nothing committed, so a re-run's backward
+      // Stall-proofing: fold in the extent extent though nothing committed, so a re-run's backward
       // window shrinks instead of re-scanning the same items forever.
-      Cursor.extendRange(cursor, scanned);
+      Cursor.extendRange(cursor, extent);
       expect(cursor.min).toBe('20');
-      expect(cursor.max).toBe('100'); // Unaffected — scanned.maxKey (30) doesn't exceed `max`.
+      expect(cursor.max).toBe('100'); // Unaffected — extent.maxKey (30) doesn't exceed `max`.
     },
   );
 

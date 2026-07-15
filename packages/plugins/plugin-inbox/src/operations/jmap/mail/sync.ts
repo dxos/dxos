@@ -136,9 +136,11 @@ export const runJmapSync = ({
     const stats: Cursor.Stats = { newMessages: 0 };
 
     // The per-run cap is applied *after* dedup so it counts only genuinely-new messages — capping before
-    // dedup would let re-fetched boundary messages stall the cursor. `scanned` distinguishes a truncated
-    // run (→ re-run) from both windows exhausted (→ complete backfill).
-    let scanned = 0;
+    // dedup would let re-fetched boundary messages stall the cursor. `taken` distinguishes a truncated
+    // run (→ re-run) from both windows exhausted (→ complete backfill); `extent` (the observed key range,
+    // folded via dedupStage) lets a run that commits nothing still advance.
+    let taken = 0;
+    const extent: Cursor.Extent = { maxKey: 0, minKey: 0 };
     yield* jmapEmails(target, folders, { windows, filter: options.filter }).pipe(
       Cursor.dedupStage<JmapMail.Email>(
         'dedup',
@@ -146,7 +148,7 @@ export const runJmapSync = ({
         (email) => new Date(email.receivedAt).getTime(),
       ),
       Stream.take(maxMessages),
-      Stream.tap(() => Effect.sync(() => (scanned += 1))),
+      Stream.tap(() => Effect.sync(() => (taken += 1))),
       decodeBodyStage,
       mapToMessageStage,
       EmailStage.processAttachments(),
@@ -165,6 +167,7 @@ export const runJmapSync = ({
           minKey,
           trackRange: true,
           stats,
+          extent,
           dedupSeedTail,
         }),
       ),
@@ -173,7 +176,11 @@ export const runJmapSync = ({
     // Flush indexes once at run end so cross-run dedup / contact resolution observe this run's writes.
     yield* Database.flush({ indexes: true });
 
-    if (scanned < maxMessages) {
+    // Fold the run's observed key extent so the window advances even if every scanned message was
+    // dedup-dropped (crash-orphaned appends) — prevents an identical re-scan / infinite re-run.
+    Cursor.extendRange(binding, extent);
+
+    if (taken < maxMessages) {
       // Both halves exhausted (not capped) — backward reached the horizon.
       Cursor.completeBackfill(binding, horizon.getTime());
     } else {
@@ -182,7 +189,7 @@ export const runJmapSync = ({
       yield* Operation.runAgain().pipe(Effect.orDie);
     }
 
-    log('jmap sync complete', { newMessages: stats.newMessages, scanned });
+    log('jmap sync complete', { newMessages: stats.newMessages, taken });
     return { newMessages: stats.newMessages };
   }).pipe(Effect.withSpan('jmap-sync'));
 

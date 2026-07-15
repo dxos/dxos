@@ -188,10 +188,15 @@ export const syncGmail = ({
     const senders = new Set<string>();
     const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
 
+    // Per-run funnel counts, each stage narrower than the last: `taken` (post-dedup candidates — the
+    // cap gauge) → `processed` (post-decode/map) → `stats.newMessages` (committed). `extent` is the
+    // observed key range, folded into the cursor at run end so a run that commits nothing still advances.
+    let taken = 0;
     let processed = 0;
     let attachmentCount = 0;
     let finishedAt: string | undefined;
     let finishedMs: number | undefined;
+    const extent: Cursor.Extent = { maxKey: 0, minKey: 0 };
     const publishStats = () => {
       if (statsCompartments.length === 0) {
         return;
@@ -206,6 +211,7 @@ export const syncGmail = ({
           forward: formatWindow(windows.forward),
           backward: formatWindow(windows.backward),
         },
+        taken,
         processed,
         newMessages: stats.newMessages,
         threads: threads.size,
@@ -250,9 +256,8 @@ export const syncGmail = ({
     //
     // `fetchMessages` covers both halves as one unbounded stream; the per-run cap is applied after dedup
     // so it counts only genuinely-new messages — capping before would let a dense boundary day's
-    // re-enumerated messages consume the budget and stall the cursor. `scanned` then tells us whether
-    // the cap truncated the run (→ re-run) or both windows were exhausted (→ complete backfill).
-    let scanned = 0;
+    // re-enumerated messages consume the budget and stall the cursor. `taken` then tells us whether the
+    // cap truncated the run (→ re-run) or both windows were exhausted (→ complete backfill).
     yield* fetchMessages({
       userId,
       label,
@@ -269,7 +274,7 @@ export const syncGmail = ({
         (message) => Number.parseInt(message.internalDate),
       ),
       Stream.take(maxMessages),
-      Stream.tap(() => Effect.sync(() => (scanned += 1))),
+      Stream.tap(() => Effect.sync(() => (taken += 1))),
       decodeBodyStage,
       // HTML→markdown (turndown) disabled: measurable sync CPU, deferred pending benchmarking. Bodies
       // stay raw HTML for now.
@@ -294,6 +299,7 @@ export const syncGmail = ({
           minKey,
           trackRange: true,
           stats,
+          extent,
         }),
       ),
       Pipeline.abortWith(
@@ -331,10 +337,14 @@ export const syncGmail = ({
       progressMonitor.done();
       progressMonitor.remove();
 
-      const capped = scanned >= maxMessages;
+      // Fold the run's observed key extent so the window advances even if every scanned message was
+      // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
+      Cursor.extendRange(binding, extent);
+
+      const capped = taken >= maxMessages;
       log('gmail sync run finished', {
         mailbox: Obj.getURI(mailbox),
-        scanned,
+        taken,
         maxMessages,
         capped,
         newMessages: stats.newMessages,
@@ -351,7 +361,7 @@ export const syncGmail = ({
       }
     }
 
-    log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted, scanned });
+    log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted, taken });
     return {
       newMessages: stats.newMessages,
     };
