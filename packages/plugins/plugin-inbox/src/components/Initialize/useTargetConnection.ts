@@ -117,7 +117,7 @@ export const useTargetSync = <T extends Obj.Any>(
 
   const ensureAndInvokeSyncTrigger = useSpaceCallback(
     db?.spaceId,
-    [Trigger.TriggerMonitorService],
+    [Trigger.TriggerMonitorService, Database.Service],
     Effect.fnUntraced(
       function* () {
         const database = yield* Effect.fromNullable(db);
@@ -129,18 +129,12 @@ export const useTargetSync = <T extends Obj.Any>(
           Option.match({
             onSome: Effect.succeed,
             onNone: () =>
-              Effect.fromNullable(connector?.sync).pipe(
-                Effect.flatMap((sync) =>
-                  findBindingForTarget(target).pipe(
-                    Effect.provide(Database.layer(database)),
-                    Effect.flatMap(Effect.fromNullable),
-                    Effect.flatMap((cursor) =>
-                      Effect.promise(() => createSyncRoutine({ db: database, target, cursor, sync })),
-                    ),
-                    Effect.flatMap(Effect.fromNullable),
-                  ),
-                ),
-              ),
+              Effect.gen(function* () {
+                const sync = yield* Effect.fromNullable(connector?.sync);
+                const cursor = yield* Effect.fromNullable(yield* findBindingForTarget(target));
+                const created = yield* Effect.promise(() => createSyncRoutine({ db: database, target, cursor, sync }));
+                return yield* Effect.fromNullable(created);
+              }),
           }),
         );
         const monitor = yield* Trigger.TriggerMonitorService;
