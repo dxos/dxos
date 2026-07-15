@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { Operation, RunAgainError } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
@@ -39,8 +39,8 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
 
       const sync = connector.sync;
       const spaceId = db.spaceId;
-      // Serialized invocation the reauth toast runs on click — it rides on the error across the process
-      // failure boundary, so it's data (operation key + input), not a live callback.
+      // Serialized invocation the reauth toast runs on click — data (operation key + input), not a live
+      // callback, since it rides on the error across the process boundary.
       const openConnection = Operation.prepare(LayoutOperation.Open, {
         subject: [connectionDeckSubject(Paths.getSpacePath(spaceId), connection.id)],
         navigation: 'immediate',
@@ -48,20 +48,22 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       yield* Effect.all(
         cursors.map((cursor) =>
           Operation.invoke(sync, { binding: Ref.make(cursor) }, { spaceId }).pipe(
-            // A nested `Operation.invoke` runs as a tracked child process; `Process.fromOperation`
-            // unconditionally promotes whatever the handler fails with to a defect (`Effect.orDie`)
-            // before it reaches the caller, so retagging 401s here must intercept the defect channel —
-            // `Effect.mapError` never sees it.
+            // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
+            // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
+            // TODO(wittjosiah): Invokes the sync once; does not drive `Operation.runAgain()` continuation,
+            //   so a capped run's remaining batches are not synced here (no durable execution).
             Effect.catchAllDefect((defect) =>
-              isUnauthorizedError(defect)
-                ? Effect.fail(
-                    new ConnectionAuthExpiredError({
-                      connectionId: connection.id,
-                      action: openConnection,
-                      cause: defect,
-                    }),
-                  )
-                : Effect.die(defect),
+              RunAgainError.is(defect)
+                ? Effect.void
+                : isUnauthorizedError(defect)
+                  ? Effect.fail(
+                      new ConnectionAuthExpiredError({
+                        connectionId: connection.id,
+                        action: openConnection,
+                        cause: defect,
+                      }),
+                    )
+                  : Effect.die(defect),
             ),
           ),
         ),

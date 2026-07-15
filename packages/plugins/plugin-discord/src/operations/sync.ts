@@ -132,11 +132,11 @@ export const findChannelForDiscordChannel: (
  * Pull-only:
  *  1. Load the binding; its source is the `AccessToken`, its target the
  *     local `Channel`, and `binding.spec.externalId` is the Discord channel id.
- *  2. Ask Discord for messages with id greater than `binding.value` (or from
+ *  2. Ask Discord for messages with id greater than `binding.max` (or from
  *     "now minus maxDays" on first sync).
  *  3. Map each Discord message → `@dxos/types` Message and append the batch to
  *     the channel's feed.
- *  4. Advance `binding.value` to the largest id seen so the next sync is incremental.
+ *  4. Advance `binding.max` to the largest id seen so the next sync is incremental.
  *
  * Success/failure status is written back onto the binding via `Cursor.advance`/
  * `Cursor.recordError` (`value`/`lastTick`/`lastError`).
@@ -172,7 +172,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           Effect.gen(function* () {
             const rest = yield* DiscordREST;
 
-            const initialAfter = computeInitialCursor(binding.value, binding.spec.options);
+            const initialAfter = computeInitialCursor(binding.max, binding.spec.options);
 
             // Drain message pagination. Discord returns newest-first within a
             // page even when paging by `after`; sort each page ascending so the
