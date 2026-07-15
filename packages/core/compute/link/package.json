@@ -1,7 +1,6 @@
 {
   "name": "@dxos/link",
   "version": "0.10.0",
-  "private": true,
   "description": "Durable progress cursor and credential primitives for source-driven pipelines (external sync and feed-to-feed).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,5 +38,8 @@
   },
   "peerDependencies": {
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
