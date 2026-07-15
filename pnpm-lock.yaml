@@ -15918,6 +15918,12 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -17006,6 +17012,12 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
