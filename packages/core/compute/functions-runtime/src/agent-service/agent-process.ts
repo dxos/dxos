@@ -46,9 +46,10 @@ interface AgentProcessOptions {
   provider?: DXN.DXN;
 
   /**
-   * Provider for space-level MCP server configs, called on each turn.
+   * Resolves the space-level MCP server configs for this agent's space, called on each turn so
+   * that servers added or toggled at runtime take effect without respawning the process.
    */
-  getMcpServers?: () => McpServer.McpServer[];
+  getMcpServers?: () => Promise<McpServer.McpServer[]>;
 
   /**
    * If true, long-running tool calls are moved to the background after `backgroundThreshold`
@@ -264,6 +265,15 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('begin request', { prompt });
               log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
+              // Never let MCP resolution fail the turn: a rejected resolver falls back to no servers.
+              const mcpServers = options.getMcpServers
+                ? yield* Effect.tryPromise(() => options.getMcpServers!()).pipe(
+                    Effect.tapError((error) =>
+                      Effect.sync(() => log.warn('failed to resolve space MCP servers; continuing without', { error })),
+                    ),
+                    Effect.orElseSucceed(() => undefined),
+                  )
+                : undefined;
               yield* session
                 .createRequest({
                   prompt,
@@ -272,7 +282,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // The alarm tools (set-alarm/get-current-date) now arrive as a bound blueprint whose
                   // operations reach this host's AlarmManager over HarnessService Tier B.
                   system: options.systemPrompt,
-                  mcpServers: options.getMcpServers?.(),
+                  mcpServers,
                 })
                 .pipe(
                   Effect.onExit((exit) =>
