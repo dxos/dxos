@@ -15,12 +15,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/node/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./idioms": {
       "source": "./src/idioms/index.ts",
       "types": "./dist/types/src/idioms/index.d.ts",
-      "default": "./dist/lib/node-esm/idioms/index.mjs"
+      "import": "./dist/lib/idioms.mjs"
     }
   },
   "files": [

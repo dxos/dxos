@@ -76,5 +76,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "vite": "catalog:"
-  }
+  },
+  "exports": {}
 }
