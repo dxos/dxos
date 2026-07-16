@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Feed, Filter, Key, Obj, Order, Query, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
