@@ -17,10 +17,10 @@ PR: [#12237](https://github.com/dxos/dxos/pull/12237) (branch `claude/document-r
 
 ## Landing blockers (PR #12237)
 
-- [ ] `@dxos/versioning` first npm publish + trusted publishing (OIDC) — **user**; then flip the
-      package public (`private` off, restore `publishConfig`) to clear both package CI gates.
-- [ ] Regenerate 3 stale `assistant-e2e` memoized fixtures (markdown draft/append, crm-mailbox) —
-      needs 1Password unlocked; script pattern: `scratchpad/regen-toolkit4.sh` (reset-per-attempt).
+- [x] `@dxos/versioning` first npm publish (0.10.0) + public flip — done (user).
+- [x] Regenerate stale `assistant-e2e` memoized fixtures — done; pass on CI.
+- [x] Fix `@dxos/versioning` exports map for the vite build output (CLI tests failed at runtime
+      resolution) — done (05571b25a5). Awaiting green Check.
 
 ## Next (after landing — fresh session)
 
