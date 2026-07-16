@@ -132,9 +132,14 @@ const makeMemoizedAiServiceMiddleware = (
       TestAiService({
         preset: options.inferenceProvider ?? 'direct',
         disableMemoization: options.disableLlmMemoization ?? false,
-        // Space keys and entity IDs differ across runs; canonicalize for matching and
+        // Space keys, entity IDs, and ids minted by external services on every live tool call
+        // (e.g. an image-hosting upload id) differ across runs; canonicalize for matching and
         // substitute live values back into memoized responses on a cache hit.
-        dynamicValuePatterns: [MemoizedLanguageModel.SPACE_ID_PATTERN, MemoizedLanguageModel.ENTITY_ID_PATTERN],
+        dynamicValuePatterns: [
+          MemoizedLanguageModel.SPACE_ID_PATTERN,
+          MemoizedLanguageModel.ENTITY_ID_PATTERN,
+          MemoizedLanguageModel.UUID_PATTERN,
+        ],
       }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
     Effect.map((service) => (_upstream: AiService.Service) => service),
