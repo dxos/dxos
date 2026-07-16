@@ -5,43 +5,43 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, Icon, IconButton, Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { Button, IconButton, Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type Commit, Timeline } from '@dxos/react-ui-components';
 
 import { meta } from '#meta';
 
 import { useVersioning } from '../../hooks';
 import {
-  contentAt,
+  MAIN_BRANCH,
+  commitToSelection,
   createBranch,
   createCheckpoint,
-  diffSpans,
-  diffStats,
+  createTimelineModel,
   discardBranch,
   mergeBranch,
 } from '../../model';
-import { type Markdown, type Versioning } from '../../types';
+import { type Markdown } from '../../types';
 
 export type DocumentHistoryProps = AppSurface.ObjectArticleProps<Markdown.Document>;
 
 /**
- * Companion panel: branch list + checkpoint timeline for the selected branch.
- * Clicking a checkpoint time-travels the editor; clicking a branch switches the editor to it.
+ * Companion panel: git-graph timeline of the document's checkpoints, branch forks, and merges.
+ * Clicking a checkpoint time-travels the editor; clicking a branch fork switches the editor to it.
  */
 export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(({ role, subject }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
   const versioning = useVersioning(subject);
-  const { document, history, selection, setSelection, activeBranch } = versioning;
+  const { document, selection, setSelection, activeBranch } = versioning;
   const [naming, setNaming] = useState<'checkpoint' | 'branch' | undefined>(undefined);
 
-  const rootText = document?.content.target;
-  const branches = (history?.branches ?? []).filter((branch) => branch.status === 'active');
+  // Recomputed per render: the hook subscribes to history mutations and the model is
+  // cheap at panel scale (a handful of records).
+  const { commits, branches } = document
+    ? createTimelineModel(document, { nowLabel: t('now.label') })
+    : { commits: [], branches: [] };
+
   // Timeline for the Text the user is currently viewing (root or selected branch).
-  const timelineTarget = activeBranch?.content.target ?? rootText;
-  const versions = (history?.versions ?? [])
-    .filter((version) => version.target.target?.id === timelineTarget?.id)
-    .slice()
-    .reverse();
+  const timelineTarget = activeBranch?.content.target ?? document?.content.target;
 
   const handleCreate = useCallback(
     (name: string) => {
@@ -63,37 +63,32 @@ export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(
     [document, naming, timelineTarget, setSelection],
   );
 
-  const handleSelectBranch = useCallback(
-    (branch?: Versioning.Branch) =>
-      setSelection(branch ? { kind: 'branch', branchId: branch.id } : { kind: 'current' }),
-    [setSelection],
-  );
-
-  const handleSelectVersion = useCallback(
-    (version?: Versioning.Version) =>
-      setSelection(version ? { kind: 'checkpoint', versionId: version.id } : { kind: 'current' }),
-    [setSelection],
-  );
-
-  const handleMerge = useCallback(
-    (branch: Versioning.Branch) => {
-      if (document) {
-        mergeBranch(document, branch);
-        setSelection({ kind: 'current' });
+  const handleSelect = useCallback(
+    (commit: Commit | undefined) => {
+      if (!document || !commit) {
+        return;
+      }
+      const next = commitToSelection(document, commit);
+      if (next) {
+        setSelection(next);
       }
     },
     [document, setSelection],
   );
 
-  const handleDiscard = useCallback(
-    (branch: Versioning.Branch) => {
-      if (document) {
-        discardBranch(document, branch);
-        setSelection({ kind: 'current' });
-      }
-    },
-    [document, setSelection],
-  );
+  const handleMerge = useCallback(() => {
+    if (document && activeBranch) {
+      mergeBranch(document, activeBranch);
+      setSelection({ kind: 'current' });
+    }
+  }, [document, activeBranch, setSelection]);
+
+  const handleDiscard = useCallback(() => {
+    if (document && activeBranch) {
+      discardBranch(document, activeBranch);
+      setSelection({ kind: 'current' });
+    }
+  }, [document, activeBranch, setSelection]);
 
   if (!document) {
     return null;
@@ -113,6 +108,17 @@ export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(
             label={t('create-branch.label')}
             onClick={() => setNaming('branch')}
           />
+          {activeBranch && (
+            <>
+              <IconButton icon='ph--git-merge--regular' iconOnly label={t('merge.label')} onClick={handleMerge} />
+              <IconButton
+                icon='ph--archive--regular'
+                iconOnly
+                label={t('discard-branch.label')}
+                onClick={handleDiscard}
+              />
+            </>
+          )}
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='overflow-y-auto'>
@@ -123,120 +129,18 @@ export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(
             onCancel={() => setNaming(undefined)}
           />
         )}
-
-        <SectionTitle title={t('branches.title')} />
-        <Row
-          icon='ph--git-branch--regular'
-          label={t('main-branch.label')}
-          detail={selection.kind === 'current' ? t('current.label') : undefined}
-          selected={selection.kind === 'current'}
-          onClick={() => handleSelectBranch(undefined)}
+        <Timeline
+          commits={commits}
+          branches={branches}
+          currentBranch={selection.kind === 'branch' ? (activeBranch?.name ?? null) : MAIN_BRANCH}
+          onSelect={handleSelect}
         />
-        <div role='none' className='ms-3 border-is border-separator'>
-          {branches.map((branch) => (
-            <BranchRow
-              key={branch.id}
-              branch={branch}
-              selected={selection.kind === 'branch' && selection.branchId === branch.id}
-              onSelect={() => handleSelectBranch(branch)}
-              onMerge={() => handleMerge(branch)}
-              onDiscard={() => handleDiscard(branch)}
-              mergeLabel={t('merge.label')}
-              discardLabel={t('discard-branch.label')}
-            />
-          ))}
-        </div>
-
-        <SectionTitle title={t('checkpoints.title')} />
-        <Row
-          icon='ph--record--regular'
-          label={t('now.label')}
-          selected={selection.kind !== 'checkpoint'}
-          onClick={() => handleSelectVersion(undefined)}
-        />
-        {versions.map((version) => (
-          <Row
-            key={version.id}
-            icon='ph--bookmark-simple--regular'
-            label={version.name}
-            detail={new Date(version.createdAt).toLocaleString()}
-            selected={selection.kind === 'checkpoint' && selection.versionId === version.id}
-            onClick={() => handleSelectVersion(version)}
-          />
-        ))}
       </Panel.Content>
     </Panel.Root>
   );
 });
 
 DocumentHistory.displayName = 'DocumentHistory';
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <h3 className='pli-2 plb-1 mbs-2 text-xs uppercase tracking-wide text-description'>{title}</h3>
-);
-
-type RowProps = {
-  icon: string;
-  label: string;
-  detail?: string;
-  selected?: boolean;
-  onClick: () => void;
-};
-
-const Row = ({ icon, label, detail, selected, onClick }: RowProps) => (
-  <button
-    type='button'
-    className={mx(
-      'flex items-center gap-2 is-full pli-2 plb-1 text-sm text-start rounded hover:bg-hoverSurface',
-      selected && 'bg-hoverSurface',
-    )}
-    onClick={onClick}
-  >
-    <Icon icon={icon} size={4} classNames='shrink-0' />
-    <span className='truncate'>{label}</span>
-    {detail && <span className='ms-auto shrink-0 text-xs text-description'>{detail}</span>}
-  </button>
-);
-
-type BranchRowProps = {
-  branch: Versioning.Branch;
-  selected?: boolean;
-  onSelect: () => void;
-  onMerge: () => void;
-  onDiscard: () => void;
-  mergeLabel: string;
-  discardLabel: string;
-};
-
-const BranchRow = ({ branch, selected, onSelect, onMerge, onDiscard, mergeLabel, discardLabel }: BranchRowProps) => {
-  const branchText = branch.content.target;
-  const parentText = branch.parent.target;
-  // Branch Texts are strong children of the document, so targets are normally loaded.
-  const stats =
-    branchText && parentText
-      ? diffStats(diffSpans(contentAt(parentText, branch.anchor), branchText.content))
-      : undefined;
-
-  return (
-    <div role='none' className={mx('flex items-center rounded hover:bg-hoverSurface', selected && 'bg-hoverSurface')}>
-      <button
-        type='button'
-        className='flex flex-1 items-center gap-2 pli-2 plb-1 text-sm text-start min-w-0'
-        onClick={onSelect}
-      >
-        <Icon icon='ph--git-branch--regular' size={4} classNames='shrink-0' />
-        <span className='truncate'>{branch.name}</span>
-        {stats && (
-          <span className='ms-auto shrink-0 text-xs text-description'>
-            +{stats.insertions} −{stats.deletions}
-          </span>
-        )}
-      </button>
-      <IconButton variant='ghost' icon='ph--git-merge--regular' iconOnly label={mergeLabel} onClick={onMerge} />
-      <IconButton variant='ghost' icon='ph--archive--regular' iconOnly label={discardLabel} onClick={onDiscard} />
-    </div>
-  );
-};
 
 type NameInputProps = {
   placeholder: string;

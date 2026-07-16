@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
 import { meta } from '#meta';
@@ -71,4 +72,5 @@ export const translations = [
     },
   },
   ...editorTranslations,
+  ...componentsTranslations,
 ] as const satisfies Resource[];

@@ -50,7 +50,10 @@ export const createCheckpoint = (doc: Markdown.Document, props: CreateCheckpoint
   Obj.update(doc, () => {
     history.versions.push(version);
   });
-  return version;
+  // Return the stored record (the pushed plain object is detached from the database).
+  const stored = history.versions.find(({ id }) => id === version.id);
+  invariant(stored, 'checkpoint not stored');
+  return stored;
 };
 
 /** Find the branch record owning a given Text (undefined for the root). */
@@ -94,7 +97,10 @@ export const createBranch = (doc: Markdown.Document, props: CreateBranchProps): 
       history.versions.push(version);
     });
   }
-  return branch;
+  // Return the stored record (the pushed plain object is detached from the database).
+  const stored = history.branches.find(({ id }) => id === branch.id);
+  invariant(stored, 'branch not stored');
+  return stored;
 };
 
 /** Applies the checkpoint's content to the tip as a new forward edit — history is never rewritten. */
@@ -114,29 +120,38 @@ export type MergeResult = { conflicts: number };
  * Conflicting hunks are left in the document with git-style markers for manual cleanup.
  */
 export const mergeBranch = (doc: Markdown.Document, branch: Versioning.Branch): MergeResult => {
-  invariant(branch.status === 'active', 'branch is not active');
-  const parent = branch.parent.target;
-  const branchText = branch.content.target;
+  // Callers may hold a detached copy of the record — mutate the stored one.
+  const stored = resolveBranch(doc, branch);
+  invariant(stored.status === 'active', 'branch is not active');
+  const parent = stored.parent.target;
+  const branchText = stored.content.target;
   invariant(parent && branchText, 'branch refs not loaded');
 
-  const base = contentAt(parent, branch.anchor);
+  const base = contentAt(parent, stored.anchor);
   const { text, conflicts } = merge3({ base, ours: parent.content, theirs: branchText.content });
   Obj.update(parent, () => {
     EchoText.update(parent, 'content', text);
   });
   Obj.update(doc, () => {
-    branch.status = 'merged';
-    branch.mergedAt = new Date().toISOString();
+    stored.status = 'merged';
+    stored.mergedAt = new Date().toISOString();
   });
-  createCheckpoint(doc, { name: `merge: ${branch.name}`, target: parent });
+  createCheckpoint(doc, { name: `merge: ${stored.name}`, target: parent });
   return { conflicts };
 };
 
 /** Archives the branch; its Text is retained for recovery. */
 export const discardBranch = (doc: Markdown.Document, branch: Versioning.Branch): void => {
+  const stored = resolveBranch(doc, branch);
   Obj.update(doc, () => {
-    branch.status = 'archived';
+    stored.status = 'archived';
   });
+};
+
+const resolveBranch = (doc: Markdown.Document, branch: Versioning.Branch): Versioning.Branch => {
+  const stored = doc.history?.branches.find(({ id }) => id === branch.id);
+  invariant(stored, `branch not found: ${branch.id}`);
+  return stored;
 };
 
 const sameHeads = (a: readonly string[], b: readonly string[]) =>

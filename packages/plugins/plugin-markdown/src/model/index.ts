@@ -3,4 +3,5 @@
 //
 
 export * from './diff';
+export * from './timeline';
 export * from './versioning';

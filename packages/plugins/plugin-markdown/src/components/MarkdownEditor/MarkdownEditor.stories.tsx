@@ -29,11 +29,6 @@ import { Markdown } from '#types';
 
 import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
 
-// A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
-const SKETCH_CONTENT = new SketchBuilder()
-  .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
-  .build();
-
 type StoryArgs = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
 
 const DefaultStory = (props: StoryArgs) => {
@@ -69,6 +64,48 @@ const DefaultStory = (props: StoryArgs) => {
   );
 };
 
+const seedPlainDocument = (client: Client) =>
+  Effect.gen(function* () {
+    const { personalSpace } = yield* initializeIdentity(client);
+    personalSpace.db.add(Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }));
+  });
+
+const seedEmbeddedSketch = (client: Client) =>
+  Effect.gen(function* () {
+    const { personalSpace } = yield* initializeIdentity(client);
+    const sketch = personalSpace.db.add(
+      Sketch.make({
+        name: 'Test Sketch',
+        canvas: {
+          content: new SketchBuilder()
+            .rectangle({
+              id: 'rect',
+              x: 0,
+              y: 0,
+              text: 'DXOS',
+              color: 'blue',
+              fill: 'solid',
+              size: 'l',
+            })
+            .build(),
+        },
+      }),
+    );
+
+    personalSpace.db.add(
+      Markdown.make({
+        content: [
+          '# Test Document',
+          '',
+          'The sketch below renders inline as a block surface:',
+          '',
+          `![${sketch.name}](${Obj.getURI(sketch)})`,
+          '',
+        ].join('\n'),
+      }),
+    );
+  });
+
 const withClient = (seed: (client: Client) => Effect.Effect<void>): Decorator =>
   withPluginManager({
     // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
@@ -81,31 +118,6 @@ const withClient = (seed: (client: Client) => Effect.Effect<void>): Decorator =>
         onClientInitialized: ({ client }) => seed(client),
       }),
     ],
-  });
-
-const seedPlainDocument = (client: Client) =>
-  Effect.gen(function* () {
-    const { personalSpace } = yield* initializeIdentity(client);
-    personalSpace.db.add(Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }));
-  });
-
-const seedEmbeddedSketch = (client: Client) =>
-  Effect.gen(function* () {
-    const { personalSpace } = yield* initializeIdentity(client);
-    const sketch = personalSpace.db.add(Sketch.make({ name: 'Test Sketch', canvas: { content: SKETCH_CONTENT } }));
-    const uri = Obj.getURI(sketch);
-    personalSpace.db.add(
-      Markdown.make({
-        content: [
-          '# Test Document',
-          '',
-          'The sketch below renders inline as a block surface:',
-          '',
-          `![${sketch.name}](${uri})`,
-          '',
-        ].join('\n'),
-      }),
-    );
   });
 
 const meta: Meta<typeof DefaultStory> = {
