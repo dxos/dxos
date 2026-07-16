@@ -8,10 +8,10 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
-import { Jmap, JmapMail } from '../../../apis';
-import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors';
-import { JmapCredentials } from '../../../services';
-import { InboxOperation, Mailbox } from '../../../types';
+import { Jmap, JmapMail } from '../../../../apis';
+import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../../errors';
+import { JmapCredentials } from '../../../../services';
+import { InboxOperation, Mailbox } from '../../../../types';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 

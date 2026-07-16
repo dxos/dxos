@@ -1,6 +1,6 @@
-# Gmail sync and progress reporting
+# Mail sync and progress reporting
 
-Gmail sync publishes live progress via trace `status.update` events.
+Mail sync publishes live progress via trace `status.update` events.
 `plugin-progress` contributes a parallel {@link Capabilities.TraceSink} that projects
 those events into `AppCapabilities.ProgressRegistry` (alongside the feed trace sink
 from `plugin-routine`).
@@ -8,7 +8,7 @@ from `plugin-routine`).
 ## Architecture
 
 ```
-syncGmail (producer)
+runMailSync (shared harness; gmail/jmap providers)
   │  Trace.TraceService
   │  status.update { message, progress: { key, current, total } }
   ▼
@@ -29,7 +29,7 @@ Consumers
 | Trace API | `@dxos/compute` / `Trace` | `StatusUpdate` events via `Trace.TraceService` |
 | Capability | `@dxos/app-toolkit` | `createProgressRegistry` (future reducer target) |
 | Host | `@dxos/plugin-progress` | Contributes `AppCapabilities.ProgressRegistry` |
-| Producer | `plugin-inbox` / `syncGmail` | Emits `status.update` with progress fields |
+| Producer | `plugin-inbox` / `runMailSync` | Emits `status.update` with progress fields |
 | Consumer | `MailboxArticle` | Subscribes via `useProgress(createSyncProgressKey(mailbox))` |
 
 ## Progress key
@@ -43,14 +43,17 @@ export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) =>
 
 The `#sync` suffix lets other mailbox-scoped monitors coexist (e.g. `#topics`).
 
-## Producer lifecycle (`syncGmail`)
+## Producer lifecycle (`runMailSync`)
 
-1. **Resolve writer** — `yield* Trace.TraceService` (declared on
-   `InboxOperation.GoogleMailSync.services`).
+The shared harness (`operations/mail/mail-sync.ts`) drives every provider (gmail,
+jmap), so progress reporting lives here once rather than per provider.
+
+1. **Resolve writer** — `yield* Trace.TraceService` (declared on `runMailSync`'s
+   requirement channel).
 
 2. **Report status** — a local `reportStatus` helper calls
-   `traceWriter.write(Trace.StatusUpdate, …)` so sync callbacks in `fetchMessages`
-   can emit without wrapping in `Effect`:
+   `traceWriter.write(Trace.StatusUpdate, …)` so the source's `onEnumerated` /
+   `onRetrieved` callbacks can emit without wrapping in `Effect`:
 
    ```ts
    reportStatus({ current: 0 });
@@ -61,8 +64,9 @@ The `#sync` suffix lets other mailbox-scoped monitors coexist (e.g. `#topics`).
    reportStatus({ message: PROGRESS_STATUS_COMPLETE });
    ```
 
-3. **Set total** — each date chunk's enumerated id count (before full fetches)
-   revises `progress.total`. Chunks enumerate serially, so `total` leads `current`.
+3. **Set total** — each enumeration page/chunk's id count (before full fetches)
+   revises `progress.total`. Enumeration runs ahead of the full fetch, so `total`
+   leads `current`.
 
 4. **Advance** — once per retrieved message via `onRetrieved`, incrementing
    `progress.current`.

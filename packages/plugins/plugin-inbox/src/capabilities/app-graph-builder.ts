@@ -35,7 +35,7 @@ import {
   MAILBOX_TOPICS_TYPE,
   MAILBOXES_SECTION_TYPE,
 } from '../constants';
-import { createSyncProgressKey } from '../operations/google/gmail/sync';
+import { createSyncProgressKey } from '../operations/mail/mail-sync';
 import {
   getCalendarsPath,
   getDraftsId,

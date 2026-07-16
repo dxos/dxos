@@ -10,9 +10,9 @@ import * as Predicate from 'effect/Predicate';
 
 import * as InboxResolver from '@dxos/extractor-lib';
 
-import { Jmap, JmapMail } from '../../../apis';
-import { JmapCredentials } from '../../../services';
-import { mapEmail } from './mapper';
+import { Jmap, JmapMail } from '../../../../apis';
+import { JmapCredentials } from '../../../../services';
+import { mapEmail } from '../mapper';
 
 /**
  * Live JMAP test against a real server (Fastmail by default). Gated on `JMAP_TOKEN`, mirroring the
