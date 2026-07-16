@@ -385,7 +385,7 @@ const migrate = (pkgRel) => {
     // `?url` / `?raw` / `?inline` asset imports — let the base config emit them as
     // separate files instead of base64-inlining them into the JS bundle.
     hasRawAssetImports = !!execSync(
-      `grep -rEl "from ['\\\"][^'\\\"]+\\?(url|raw|inline)['\\\"]" "${srcDir}" 2>/dev/null || true`,
+      `grep -rEl "from ['\\\"][^'\\\"]+\\?(url|inline)['\\\"]" "${srcDir}" 2>/dev/null || true`,
       { encoding: 'utf8' },
     ).trim();
   }

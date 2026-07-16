@@ -99,8 +99,9 @@ export const DxNodeStdPlugin = (): Plugin => ({
 });
 
 /**
- * Emits `?url` / `?raw` / `?inline` asset imports as separate files in `dist/lib/assets/`
- * instead of base64-inlining them into the JS bundle.
+ * Emits `?url` / `?inline` asset imports as separate files in `dist/lib/assets/` instead of
+ * base64-inlining them into the JS bundle. Leaves `?raw` alone — those import the file's
+ * text content as a string literal and are handled by vite's built-in `?raw` loader.
  *
  * Vite's library mode (`build.lib`) ignores `assetsInlineLimit` for `?url` imports and
  * always returns a base64 data URI — fine for small icons, ruinous for the 50 MB of
@@ -110,7 +111,7 @@ export const DxNodeStdPlugin = (): Plugin => ({
  * resolves to the relative path of the emitted asset at consumer-bundling time.
  */
 export const DxRawAssetsPlugin = (): Plugin => {
-  const ASSET_QUERY = /\?(url|raw|inline)(?:$|&)/;
+  const ASSET_QUERY = /\?(url|inline)(?:$|&)/;
   return {
     name: 'DxRawAssets',
     enforce: 'pre',
