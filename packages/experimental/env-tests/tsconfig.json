@@ -33,9 +33,6 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

@@ -16,7 +16,7 @@ import { CommandConfig, Common, spaceIdWithDefault, spaceLayer, withTypes } from
 import { ClientService, ConfigService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Feed, Filter, type Key } from '@dxos/echo';
-import { InvocationTraceEndEvent, InvocationTraceStartEvent, TriggerDispatcher } from '@dxos/functions-runtime';
+import { InvocationTraceEndEvent, InvocationTraceStartEvent, TriggerDispatcher } from '@dxos/compute-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

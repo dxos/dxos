@@ -17,7 +17,7 @@ import { type ClientService } from '@dxos/client';
 import { type Credential, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { type Database, type Key, Registry } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
-import { credentialsLayerFromDatabase } from '@dxos/functions';
+import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 
 export type AiChatServices =
   | AiService.AiService

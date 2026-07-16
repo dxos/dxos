@@ -13,7 +13,7 @@ import { addEventListener } from '@dxos/async';
 import { Process, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Feed, Filter, Query } from '@dxos/echo';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { FeedTraceSink } from '@dxos/compute-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';

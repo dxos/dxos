@@ -16,7 +16,7 @@ import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
-import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
+import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { DXN, EntityId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';

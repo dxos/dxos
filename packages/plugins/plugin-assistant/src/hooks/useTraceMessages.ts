@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 
 import { Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { FeedTraceSink } from '@dxos/compute-runtime';
 import { type Space } from '@dxos/react-client/echo';
 
 const atomEmpty = Atom.make(() => [] as const);

@@ -15,7 +15,7 @@ import { Operation } from '@dxos/compute';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { registryLayerNoop } from '@dxos/echo/testing';
-import { configuredCredentialsLayer } from '@dxos/functions';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';

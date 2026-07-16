@@ -15,7 +15,7 @@ import { Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { configuredCredentialsLayer } from '@dxos/functions';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { URI } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';

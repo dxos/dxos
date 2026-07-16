@@ -6,7 +6,7 @@ import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import { Credential, Operation, StorageService, Trace } from '@dxos/compute';
 import { Database, Filter, Obj, Registry } from '@dxos/echo';
-import { FunctionInvocationService } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/compute-runtime';
 
 import { meta } from '#meta';
 

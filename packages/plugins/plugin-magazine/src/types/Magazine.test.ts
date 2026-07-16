@@ -8,7 +8,7 @@ import { test } from 'vitest';
 
 import { Database, Feed, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 

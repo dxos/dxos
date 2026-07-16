@@ -10,7 +10,7 @@ import { AiContext } from '@dxos/assistant';
 import { Instructions, Skill } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Text } from '@dxos/schema';
 
 import { WebSearchSkill } from '../skills';

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';

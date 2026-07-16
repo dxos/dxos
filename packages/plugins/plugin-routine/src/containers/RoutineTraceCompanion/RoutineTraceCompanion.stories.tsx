@@ -9,7 +9,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Trace, Trigger } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { FeedTraceSink } from '@dxos/compute-runtime';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';

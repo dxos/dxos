@@ -9,9 +9,9 @@ import { ClientService } from '@dxos/client';
 import { Operation, Script } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { bundleFunction, initializeBundler } from '@dxos/functions-runtime/bundler';
-import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
+import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import { bundleFunction, initializeBundler } from '@dxos/edge-compute/bundler';
+import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { getSpace } from '@dxos/react-client/echo';
 

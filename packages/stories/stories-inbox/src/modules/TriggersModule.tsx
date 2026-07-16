@@ -9,7 +9,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { TriggerDispatcher } from '@dxos/functions-runtime';
+import { TriggerDispatcher } from '@dxos/compute-runtime';
 import { Cursor } from '@dxos/link';
 import { isCursorForTarget } from '@dxos/plugin-connector';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';

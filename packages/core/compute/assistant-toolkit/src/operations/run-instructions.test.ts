@@ -10,7 +10,7 @@ import { AiContext } from '@dxos/assistant';
 import { Instructions, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';

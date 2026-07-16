@@ -10,7 +10,7 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession } from '@dxos/compute/AgentService';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 

@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { ServiceResolver } from '@dxos/compute';
 import { Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { TriggerDispatcher } from '@dxos/functions-runtime';
+import { TriggerDispatcher } from '@dxos/compute-runtime';
 import type { SpaceId } from '@dxos/keys';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Operation, Skill } from '@dxos/compute';
 import { Blob, Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestContextService } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { File } from '@dxos/types';
 

@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { configuredCredentialsLayer } from '@dxos/functions';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 
 import { ValueBag } from './compute';
 

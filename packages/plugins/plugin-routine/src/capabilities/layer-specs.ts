@@ -13,13 +13,8 @@ import { ClientService } from '@dxos/client';
 import { LayerSpec, Operation, OperationHandlerSet, Trigger } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Registry } from '@dxos/echo';
-import {
-  FeedTraceSink,
-  RemoteFunctionExecutionService,
-  TriggerDispatcher,
-  TriggerMonitorLayer,
-  TriggerStateStore,
-} from '@dxos/functions-runtime';
+import { FeedTraceSink, TriggerDispatcher, TriggerMonitorLayer, TriggerStateStore } from '@dxos/compute-runtime';
+import { RemoteFunctionExecutionService } from '@dxos/edge-compute';
 import { invariant } from '@dxos/invariant';
 
 //

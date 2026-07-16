@@ -9,7 +9,7 @@ import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type FunctionExecutor } from '@dxos/functions-runtime';
+import { type FunctionExecutor } from '@dxos/compute-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 

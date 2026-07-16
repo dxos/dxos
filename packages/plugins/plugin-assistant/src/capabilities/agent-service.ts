@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AgentService, LayerSpec } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
+import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 
 //

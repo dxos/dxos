@@ -6,8 +6,8 @@ import { useCallback, useMemo } from 'react';
 
 import { Operation, Script } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { type InvocationSpan } from '@dxos/functions-runtime';
+import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import { type InvocationSpan } from '@dxos/compute-runtime';
 import { type URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 

@@ -17,7 +17,7 @@ import { type Space } from '@dxos/client/echo';
 import { type OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { FunctionImplementationResolver } from '@dxos/functions-runtime';
+import { FunctionImplementationResolver } from '@dxos/compute-runtime';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';

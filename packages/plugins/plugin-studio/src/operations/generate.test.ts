@@ -13,7 +13,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { configuredCredentialsLayer } from '@dxos/functions';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 
 import { Artifact, type GenerationService, StudioCapabilities, Variant } from '../types';
 import generateHandler from './generate';

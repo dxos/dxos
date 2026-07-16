@@ -11,7 +11,7 @@ import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type Delegation, type DelegationStrategy } from '@dxos/functions-runtime';
+import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';

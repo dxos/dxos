@@ -12,7 +12,7 @@ import { Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId, type URI } from '@dxos/keys';
 
 import { DatabaseSkill, DiscordSkill, MemorySkill } from '../index';

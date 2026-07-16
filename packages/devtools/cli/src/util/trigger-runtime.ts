@@ -22,7 +22,7 @@ import { DX_DATA } from '@dxos/client-protocol';
 import { OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, type Key } from '@dxos/echo';
-import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/compute-runtime';
 
 import { type AiChatServices, chatLayer } from './runtime';
 import { operationHandlers as skillOperationHandlers, toolkits } from './skills';

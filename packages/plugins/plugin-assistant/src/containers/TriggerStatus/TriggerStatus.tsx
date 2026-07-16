@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type InvocationsState } from '@dxos/functions-runtime';
+import { type InvocationsState } from '@dxos/compute-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';

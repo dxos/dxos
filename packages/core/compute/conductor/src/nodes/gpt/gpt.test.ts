@@ -9,8 +9,8 @@ import { Trace } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { type ServiceContainer } from '@dxos/functions-runtime';
-import { createTestServices } from '@dxos/functions-runtime/testing';
+import { type ServiceContainer } from '@dxos/compute-runtime';
+import { createTestServices } from '@dxos/edge-compute/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 

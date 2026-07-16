@@ -9,7 +9,7 @@ import { afterEach, beforeEach, vi } from 'vitest';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 
 import { FeedOperation, Subscription } from '../types';

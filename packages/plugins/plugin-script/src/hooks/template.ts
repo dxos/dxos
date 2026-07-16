@@ -4,7 +4,7 @@
 
 import { Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { FUNCTIONS_PRESET_META_KEY } from '@dxos/functions';
+import { FUNCTIONS_PRESET_META_KEY } from '@dxos/compute-runtime';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
 import { templates } from '../templates';

@@ -50,8 +50,6 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -89,6 +87,8 @@
     "yargs": "catalog:"
   },
   "devDependencies": {
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/js-yaml": "catalog:",
     "@types/seedrandom": "catalog:",

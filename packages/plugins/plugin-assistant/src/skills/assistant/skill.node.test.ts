@@ -9,8 +9,8 @@ import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
 import { Skill } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AgentService } from '@dxos/agent-runtime';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 

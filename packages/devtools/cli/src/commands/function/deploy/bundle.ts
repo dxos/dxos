@@ -9,7 +9,7 @@ import { type Message } from 'esbuild';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { BaseError } from '@dxos/errors';
-import { bundleFunction } from '@dxos/functions-runtime/native';
+import { bundleFunction } from '@dxos/edge-compute/native';
 
 type BundleOptions = {
   entryPoint: string;

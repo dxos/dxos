@@ -37,8 +37,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/functions-runtime-cloudflare": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -48,6 +46,10 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/edge-compute": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

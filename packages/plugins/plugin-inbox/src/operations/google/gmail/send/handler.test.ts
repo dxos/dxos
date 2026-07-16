@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Obj } from '@dxos/echo';
-import { credentialsLayerConfig } from '@dxos/functions';
+import { credentialsLayerConfig } from '@dxos/compute-runtime';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../../apis';

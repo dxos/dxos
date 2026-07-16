@@ -13,7 +13,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { configuredCredentialsLayer } from '@dxos/functions';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 

@@ -9,9 +9,9 @@ import { type Space, getSpace } from '@dxos/client/echo';
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { TraceEvent } from '@dxos/functions-runtime';
-import { InvocationOutcome } from '@dxos/functions-runtime';
+import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/compute-runtime';
+import { TraceEvent } from '@dxos/compute-runtime';
+import { InvocationOutcome } from '@dxos/compute-runtime';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 

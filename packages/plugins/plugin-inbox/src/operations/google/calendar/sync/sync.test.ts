@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as InboxResolver from '@dxos/extractor-lib';
-import { credentialsLayerConfig } from '@dxos/functions';
+import { credentialsLayerConfig } from '@dxos/compute-runtime';
 
 import { GoogleCalendar } from '../../../../apis';
 import { GoogleCredentials } from '../../../../services';

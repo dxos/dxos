@@ -25,7 +25,7 @@ import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
-import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
+import { traceFeedPrettyPrintSubscription } from '@dxos/agent-runtime/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
