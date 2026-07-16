@@ -4,20 +4,22 @@
 
 import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Filter } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
@@ -50,6 +52,16 @@ const MockDeckOperationsPlugin = Plugin.define(
   Plugin.make,
 );
 
+/** Real term repeated across several `SAMPLE_MESSAGES` entries; used by `SearchFilter`'s play test. */
+const SEARCH_TERM = 'invoice';
+
+/**
+ * Term seeded ONLY inside a `text/html` block (never in plain/markdown text or the subject) — used by
+ * `SearchFilter`'s play test to confirm a match found solely in raw HTML markup is excluded from the
+ * mailbox's search results.
+ */
+const HTML_ONLY_TERM = 'htmlonlyterm';
+
 type StoryArgs = {
   /** Number of messages to seed. */
   count?: number;
@@ -57,6 +69,8 @@ type StoryArgs = {
   threads?: number;
   /** Force conversation grouping on/off; when omitted, the persisted/product-default value applies. */
   conversations?: boolean;
+  /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
+  seedSearchTerm?: boolean;
 };
 
 const DefaultStory = ({ conversations }: StoryArgs) => {
@@ -84,7 +98,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10 } }) => ({
+    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
@@ -93,7 +107,47 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
+              if (seedSearchTerm) {
+                // Seed the realistic shared corpus (not the lorem builder) so the `SearchFilter` play
+                // test exercises full-text search over real, topic-coherent message bodies.
+                const mailbox = personalSpace.db.add(Mailbox.make());
+                const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
+                if (feed) {
+                  const messages = SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }) =>
+                    Message.make({
+                      created: subDays(new Date(), daysAgo ?? 0).toISOString(),
+                      sender: { email: from.email, name: from.name },
+                      blocks: [{ _tag: 'text', text: body }],
+                      properties: { subject, snippet: body.slice(0, 120) },
+                      ...(threadId ? { threadId } : {}),
+                    }),
+                  );
+                  // A message whose ONLY occurrence of `HTML_ONLY_TERM` is inside a `text/html` block —
+                  // absent from the plain/markdown body and the subject — so a search for that term must
+                  // yield no matching card (bugs 2 & 3: HTML-only matches must not surface or blank-render).
+                  const htmlOnlyMessage = Message.make({
+                    created: new Date().toISOString(),
+                    sender: { email: 'notifications@example.com', name: 'Notifications' },
+                    blocks: [
+                      { _tag: 'text', text: `<div><span>${HTML_ONLY_TERM}</span></div>`, mimeType: 'text/html' },
+                      {
+                        _tag: 'text',
+                        text: 'This is a routine notification with no special terms.',
+                        mimeType: 'text/plain',
+                      },
+                    ],
+                    properties: {
+                      subject: 'Routine notification',
+                      snippet: 'This is a routine notification with no special terms.',
+                    },
+                  });
+                  yield* Feed.append(feed, [...messages, htmlOnlyMessage]).pipe(
+                    Effect.provide(Database.layer(personalSpace.db)),
+                  );
+                }
+              } else {
+                yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
+              }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -135,5 +189,61 @@ export const Conversations: Story = {
 export const Empty: Story = {
   args: {
     count: 0,
+  },
+};
+
+// Exercises the parsed search filter applied to the message query (`buildMailboxSelection`). A free-
+// text query routes to a full-text select feeding the conversation `.aggregate({...})`, so this
+// specifically covers that path (`conversations: true`) rather than the flat, ungrouped one.
+export const SearchFilter: Story = {
+  args: {
+    conversations: true,
+    seedSearchTerm: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Each rendered message/conversation tile carries `data-object-id` (set by the shared `Mosaic.Tile`
+    // shell in `Tile.Root`) — the stack is virtualized and untagged with an ARIA list-item role, so this
+    // attribute is the only reliable way to count rendered tiles.
+    const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
+
+    // Wait for the seeded corpus to render (conversation-grouped) before recording the baseline count.
+    await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
+    const initialCount = getTileCount();
+
+    // The search box is a CodeMirror `QueryEditor`, not an <input>/<textarea> — it's the only editor
+    // instance in the mailbox toolbar, so the first `.cm-content` on the canvas is unambiguous.
+    const editor = canvasElement.querySelector('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    if (!editor) {
+      throw new Error('Mailbox search editor not found.');
+    }
+    await userEvent.click(editor);
+    await userEvent.type(editor, SEARCH_TERM);
+
+    // The query narrows to the corpus messages mentioning the term (spread across several topics and
+    // one shared thread), so the match count is a proper, non-trivial subset of the initial tiles.
+    await waitFor(
+      async () => {
+        const matchedCount = getTileCount();
+        await expect(matchedCount).toBeGreaterThanOrEqual(2);
+        await expect(matchedCount).toBeLessThan(initialCount);
+      },
+      { timeout: 5_000 },
+    );
+
+    // At least one narrowed tile's snippet is now the best-match window with the query term
+    // highlighted (`Highlighted` wraps matches in `<mark>`), replacing the default snippet preview.
+    const marks = canvasElement.querySelectorAll('mark');
+    const matchingMark = Array.from(marks).find((mark) => mark.textContent?.toLowerCase().includes(SEARCH_TERM));
+    await expect(matchingMark).toBeTruthy();
+
+    // Clear the query and search for a term seeded ONLY inside a raw `text/html` block (never in
+    // plain/markdown text or the subject). ECHO's full-text index still matches it (the index covers
+    // the whole object, including HTML blocks), but the mailbox must exclude HTML-only matches from
+    // what it shows — regression coverage for bugs 2 & 3 (blank cards / matches inside HTML markup).
+    await userEvent.type(editor, '{selectall}{backspace}');
+    await userEvent.type(editor, HTML_ONLY_TERM);
+
+    await waitFor(() => expect(getTileCount()).toBe(0), { timeout: 5_000 });
   },
 };

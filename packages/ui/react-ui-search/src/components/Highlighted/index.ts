@@ -3,5 +3,3 @@
 //
 
 export * from './Highlighted';
-export * from './SearchList';
-export * from './SearchPanel';
