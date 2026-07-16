@@ -9,9 +9,9 @@ import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { ServiceResolver } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
 
 import { ClientCapabilities } from '#types';
 
@@ -65,18 +65,25 @@ export default Capability.makeModule(
       }
     };
 
+    // A space that has not finished initializing throws from its `properties` getter, and the
+    // spaces subscription fires before initialization completes (startup, space creation) — so
+    // the name is read lazily per sync-state update, and only once the space is SPACE_READY.
+    const getSpaceName = (space: Space): string | undefined =>
+      space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
+
     const runtime = yield* Effect.runtime<Scope.Scope>();
-    const subscribeSpace = (spaceId: SpaceId, name?: string): void =>
+    const subscribeSpace = (space: Space): void =>
       void Effect.gen(function* () {
         const fiber = processManagerRuntime.runFork(
           Database.subscribeToSyncState().pipe(
             Stream.runForEach(
               Effect.fnUntraced(function* (state) {
-                applyMonitor(createSpaceReplicationProgressKey(spaceId), toDocumentUpdate(name, state));
-                applyMonitor(createSpaceFeedReplicationProgressKey(spaceId), toFeedUpdate(name, state));
+                const name = getSpaceName(space);
+                applyMonitor(createSpaceReplicationProgressKey(space.id), toDocumentUpdate(name, state));
+                applyMonitor(createSpaceFeedReplicationProgressKey(space.id), toFeedUpdate(name, state));
               }),
             ),
-            Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
+            Effect.provide(ServiceResolver.provide({ space: space.id }, Database.Service)),
           ),
         );
 
@@ -85,12 +92,12 @@ export default Capability.makeModule(
 
     const spacesSubscription = client.spaces.subscribe((spaces) => {
       for (const space of spaces) {
-        subscribeSpace(space.id, space.properties.name);
+        subscribeSpace(space);
       }
     });
     yield* Effect.addFinalizer(() => Effect.sync(() => spacesSubscription.unsubscribe()));
     for (const space of client.spaces.get()) {
-      subscribeSpace(space.id, space.properties.name);
+      subscribeSpace(space);
     }
   }),
 );
