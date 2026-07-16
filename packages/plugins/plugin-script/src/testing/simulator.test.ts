@@ -6,7 +6,7 @@ import * as Record from 'effect/Record';
 import { readFile } from 'node:fs/promises';
 import { describe, expect, test } from 'vitest';
 
-import { bundleFunction } from '@dxos/functions-runtime/bundler';
+import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { FunctionWorker } from '@dxos/functions-simulator-cloudflare';
 import { ErrorCodec } from '@dxos/protocols';
 

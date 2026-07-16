@@ -13,9 +13,9 @@ import { IconButton, Panel, SystemIconButton, type ThemedClassName, Toolbar } fr
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 export const CrawlOptions = Schema.Struct({
-  token: Schema.String.annotations({ title: 'Discord bot token' }).pipe(
-    Format.FormatAnnotation.set(Format.TypeFormat.Password),
-  ),
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+    title: 'Discord bot token',
+  }),
   channel: Schema.String.annotations({ title: 'Channel' }),
   maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
   descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),

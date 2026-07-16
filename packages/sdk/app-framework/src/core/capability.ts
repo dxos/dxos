@@ -6,6 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
 
 import type { DXN } from '@dxos/keys';
@@ -49,6 +50,16 @@ export const get = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Error, S
  */
 export const getAll = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T[], never, Service> =>
   Effect.map(Service, (manager) => manager.getAll(interfaceDef));
+
+/**
+ * Get a single capability from the capability manager, if one is contributed.
+ * Never fails — use this over {@link get} when the capability's absence (e.g. an optional plugin
+ * isn't loaded) is a legitimate case to handle rather than an error.
+ * @param interfaceDef The interface definition of the capability.
+ * @returns The first capability implementation, or `Option.none()` if none is contributed.
+ */
+export const getOption = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Option.Option<T>, never, Service> =>
+  Effect.map(getAll(interfaceDef), (all) => Option.fromNullable(all[0]));
 
 /**
  * Wait for a capability to be available.

@@ -5,12 +5,12 @@
 import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Operation, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession } from '@dxos/compute/AgentService';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 

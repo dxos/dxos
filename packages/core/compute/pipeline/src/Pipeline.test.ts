@@ -159,4 +159,33 @@ describe('Pipeline.run overflow', () => {
       invariant(Cause.isInterrupted(result.cause), 'pipeline should be interrupted');
     }),
   );
+
+  it.live(
+    'abortWith runs onCancel on abort',
+    Effect.fnUntraced(function* ({ expect }) {
+      const controller = new AbortController();
+      let cancelled = false;
+      const { sink } = captureSink<number>();
+      const pipeline = yield* Effect.fork(
+        Stream.fromIterable(Array.from({ length: 100 }, (_, index) => index)).pipe(
+          Stage.map('sleep', (n) => Effect.sleep('10 millis').pipe(Effect.as(n)), {
+            overflow: 'suspend',
+            bufferSize: 4,
+          }),
+          Pipeline.run({ sink, overflow: 'suspend', bufferSize: 4 }),
+          Pipeline.abortWith(
+            controller.signal,
+            Effect.sync(() => {
+              cancelled = true;
+            }),
+          ),
+          Effect.exit,
+        ),
+      );
+
+      controller.abort();
+      yield* Fiber.join(pipeline);
+      expect(cancelled).toBe(true);
+    }),
+  );
 });

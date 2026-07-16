@@ -9,6 +9,7 @@ import React, { type MouseEvent, type PropsWithChildren, createContext, useCallb
 
 import { log } from '@dxos/log';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type AddMenuItemsProps,
@@ -257,7 +258,13 @@ const MenuContentItem = ({
       disabled={action.properties?.disabled}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
-      {action.properties?.icon && <Icon icon={action.properties!.icon} size={iconSize} />}
+      {action.properties?.icon && (
+        <Icon
+          icon={action.properties.icon}
+          size={iconSize}
+          classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)}
+        />
+      )}
       <ActionLabel action={action} />
     </NaturalDropdownMenu.Item>
   );

@@ -6,6 +6,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { type MenuAction, type MenuItem, type MenuItemGroup, isSeparator } from '../types';
 import { executeMenuAction } from '../util';
@@ -37,7 +38,13 @@ const DropdownMenuItem = ({
       disabled={action.properties?.disabled}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
-      {action.properties?.icon && <Icon icon={action.properties!.icon} size={iconSize} />}
+      {action.properties?.icon && (
+        <Icon
+          icon={action.properties.icon}
+          size={iconSize}
+          classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)}
+        />
+      )}
       <ActionLabel action={action} />
     </NaturalDropdownMenu.Item>
   );

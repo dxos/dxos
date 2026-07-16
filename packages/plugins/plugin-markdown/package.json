@@ -137,7 +137,6 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -168,6 +167,7 @@
     "react-dropzone": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
