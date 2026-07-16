@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { LayerSpec, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
-import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
+import { LayerStack, ProcessManager, ProcessMonitor, RemoteProcessManager } from '@dxos/compute-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -124,7 +124,14 @@ export default Capability.makeModule(
       Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer)),
     );
 
-    const runtimeLayer = Layer.mergeAll(baseLayer, processManagerLayer, operationInvokerLayer);
+    // App-framework has no EDGE runtime, so the remote process view is empty;
+    // the aggregate monitor therefore equals the local process tree.
+    const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
+    const processMonitorLayer = ProcessMonitor.layer.pipe(
+      Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, baseLayer)),
+    );
+
+    const runtimeLayer = Layer.mergeAll(baseLayer, processManagerLayer, operationInvokerLayer, processMonitorLayer);
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 

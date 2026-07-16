@@ -4,8 +4,8 @@
 
 import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
 
-import { type InvocationSpan } from '@dxos/functions-runtime';
-import { type TraceEvent } from '@dxos/functions-runtime';
+import { type InvocationSpan } from '@dxos/compute-runtime';
+import { type TraceEvent } from '@dxos/compute-runtime';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
