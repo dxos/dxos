@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { make as makeGame } from '@dxos/plugin-game';
+import { Game } from '@dxos/plugin-game';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -20,7 +20,7 @@ const SAMPLE_PGN =
 const CardStory = () => {
   const { game, state } = useMemo(() => {
     const state = Chess.make({ pgn: SAMPLE_PGN });
-    const game = makeGame({ name: 'Story game', variant: state });
+    const game = Game.make({ name: 'Story game', variant: state });
     return { game, state };
   }, []);
   return (

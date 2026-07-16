@@ -50,7 +50,7 @@ const DefaultStory = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoZoom />
+        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoCenter />
       </Panel.Content>
     </Panel.Root>
   );
@@ -92,7 +92,7 @@ const BuilderStory = () => {
   return (
     <Panel.Root>
       <Panel.Content asChild>
-        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoZoom />
+        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoCenter />
       </Panel.Content>
     </Panel.Root>
   );

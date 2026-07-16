@@ -78,7 +78,7 @@ describe('runFactPipeline', () => {
       const store = yield* FactStore;
       const storedFacts = yield* store.query({});
       const second = yield* runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 10 });
-      return { first, second, storedFacts, cursorValue: Cursor.parseKey(cursor.value) };
+      return { first, second, storedFacts, cursorValue: Cursor.parseKey(cursor.max) };
     }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FactStore.layerMemory), EffectEx.runAndForwardErrors);
 
     expect(result.first.processed).toBe(2);

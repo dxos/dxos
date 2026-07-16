@@ -18,10 +18,6 @@ const DEFAULT_INSTRUCTIONS = trim`
 
 export type AssistantOptions = {
   /**
-   * Invoke the language model with the given prompt and return the raw text response.
-   */
-  generate: (request: { instructions: string; content: string }) => Promise<string>;
-  /**
    * Instructions to use for the language model.
    */
   instructions?: string;
@@ -33,16 +29,10 @@ export type AssistantOptions = {
    * Debounce delay.
    */
   delay?: number;
-};
-
-const underline = (color: string) => {
-  const svg = trim`
-    <svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">
-      <path d="m0 3 l2 -2 l1 0 l2 2 l1 0" stroke="${color}" fill="none" stroke-width="1"/>
-    </svg>
-  `;
-
-  return `url('data:image/svg+xml;base64,${btoa(svg)}') !important`;
+  /**
+   * Invoke the language model with the given prompt and return the raw text response.
+   */
+  generate: (request: { instructions: string; content: string }) => Promise<string>;
 };
 
 export const assistant = (options: AssistantOptions): Extension[] => {
@@ -72,7 +62,6 @@ export const assistant = (options: AssistantOptions): Extension[] => {
       '.cm-panel-lint .cm-panel': {
         outline: 'none !important',
       },
-      /** @apply dx-button */
       '.cm-panel button': {
         color: 'var(--color-base-fg) !important',
       },
@@ -105,6 +94,16 @@ export const assistant = (options: AssistantOptions): Extension[] => {
       },
     }),
   ];
+};
+
+const underline = (color: string) => {
+  const svg = trim`
+    <svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">
+      <path d="m0 3 l2 -2 l1 0 l2 2 l1 0" stroke="${color}" fill="none" stroke-width="1"/>
+    </svg>
+  `;
+
+  return `url('data:image/svg+xml;base64,${btoa(svg)}') !important`;
 };
 
 //

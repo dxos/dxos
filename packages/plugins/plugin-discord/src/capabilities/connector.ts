@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import {
   Connection,
@@ -40,7 +40,7 @@ import { DiscordOperation, DiscordTargetOptions } from '../types';
  * in `constants.ts` surfaces the invite link.
  */
 const DiscordTokenForm = Schema.Struct({
-  token: Schema.String.annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
     title: 'Bot Token',
     description:
       'Bot token from your application\'s "Bot" page in the Discord developer portal. ' +

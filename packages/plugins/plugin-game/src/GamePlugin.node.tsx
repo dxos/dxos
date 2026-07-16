@@ -16,7 +16,7 @@ import { Game } from '#types';
  * downstream bundlers don't resolve cleanly under nested pnpm symlinks.
  */
 export const GamePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Game] }),
+  AppPlugin.addSchemaModule({ schema: [Game.Game] }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

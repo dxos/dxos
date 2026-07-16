@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { Connection, type CredentialForm } from '@dxos/plugin-connector';
 
@@ -30,7 +30,7 @@ const JmapCredentialFormSchema = Schema.Struct({
     title: 'Email',
     description: 'Your email address / username on the JMAP server.',
   }),
-  token: Schema.String.annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
     title: 'API token',
     description: 'A JMAP API token, sent as a Bearer credential.',
   }),

@@ -37,18 +37,15 @@ export const WithChess: Story = {
       ]);
       return {
         plugins: [GamePlugin(), ChessPlugin()],
-        types: [Game, Chess.State],
+        types: [Game.Game, Chess.State],
       };
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const [{ Chess }, { make: makeGame }] = await Promise.all([
-        import('@dxos/plugin-chess'),
-        import('@dxos/plugin-game'),
-      ]);
+      const [{ Chess }, { Game }] = await Promise.all([import('@dxos/plugin-chess'), import('@dxos/plugin-game')]);
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        makeGame({
+        Game.make({
           name: 'The Game',
           variant: Chess.make({
             pgn: [
@@ -73,7 +70,7 @@ export const WithChess: Story = {
     },
     onChatCreated: async ({ space, binder }) => {
       const { Game } = await import('@dxos/plugin-game');
-      const objects = await space.db.query(Filter.type(Game)).run();
+      const objects = await space.db.query(Filter.type(Game.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),

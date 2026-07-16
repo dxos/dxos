@@ -167,6 +167,9 @@
       "path": "../../ui/react-ui-rdf"
     },
     {
+      "path": "../../ui/react-ui-search"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
@@ -195,6 +198,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-settings"

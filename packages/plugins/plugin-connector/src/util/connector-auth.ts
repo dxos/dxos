@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppNode } from '@dxos/app-toolkit';
 import { Database, type Key, type Obj, type Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
 
@@ -99,7 +100,16 @@ export const connectorAuthActions = ({
           if (!existingTarget) {
             return;
           }
-          yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }));
+          const target = yield* Database.load(existingTarget);
+          const cursor = yield* Database.add(
+            Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }),
+          );
+          invariant(Cursor.isExternal(cursor));
+          // Sets up recurring background sync for the target, if the connector declares it. Not
+          // specially protected — a failure here propagates like any other step in this action
+          // (e.g. a `Database.load` failure above); this action has no blanket catch of its own.
+          const connector = allConnectors.find((entry) => entry.id === connection.connectorId);
+          yield* connector?.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
         }).pipe(Effect.provide(Database.layer(db))),
     });
 

@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { type ReactNode, type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -22,9 +22,8 @@ import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
-import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
@@ -40,6 +39,7 @@ import {
   useMailboxExtractorActions,
   useTargetSync,
 } from '#components';
+import { useDebouncedValue } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
@@ -47,7 +47,10 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/google/gmail/sync';
+import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
+import { buildMailboxSelection, getSearchText } from './mailbox-search';
+import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -71,10 +74,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const showItem = useShowItem();
   const runAction = useActionRunner();
   // Pull "Sync" toolbar action once a connection is bound to this mailbox.
-  const { connection, sync, syncing } = useTargetSync(mailbox, {
-    success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
-    error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
-  });
+  const { connection, sync } = useTargetSync(mailbox);
 
   // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
   // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
@@ -84,6 +84,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  // Derived from the same monitor atom the meter reads (not the already-subscribed `syncProgress`
+  // value above) so the menu builder can track it via `get()` — a plain boolean prop wouldn't be
+  // reactive within the builder's own atom-driven update path.
+  const syncProgressAtom = progressRegistry?.monitorAtom(createSyncProgressKey(mailbox));
+  const syncing = useMemo(
+    () =>
+      syncProgressAtom ? Atom.map(syncProgressAtom, (task) => task?.status === 'running') : Atom.make(() => false),
+    [syncProgressAtom],
+  );
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -115,11 +124,25 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const conversations = settings.conversations ?? true;
   const direction = sortDescending.value ? 'desc' : 'asc';
 
+  // The ECHO query (and the `searchQuery` that drives highlighting) is driven by a DEBOUNCED value so
+  // typing in the filter editor doesn't rebuild the paginated store and flash the list empty on every
+  // keystroke — the query's AST only changes once typing pauses. The editor itself, and the
+  // save-filter gating below, stay bound to the immediate `filterText`/`filter`. (`useDeferredValue`
+  // is insufficient here: it still commits every intermediate keystroke, just at a lower priority, so
+  // the query AST — and thus `usePagination`'s store — still changes on each keypress.)
+  const debouncedFilterText = useDebouncedValue(filterText, 300);
+  const debouncedFilter = useMemo(() => builder.build(debouncedFilterText).filter, [debouncedFilterText, builder]);
+
   // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
-  const source = feed && Query.select(Filter.type(Message.Message)).from(feed);
+  const selection = useMemo(
+    () => buildMailboxSelection(debouncedFilterText, debouncedFilter),
+    [debouncedFilterText, debouncedFilter],
+  );
+  const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
+  const source = feed && Query.select(selection).from(feed);
   const pagination = usePagination(
     db,
     source
@@ -154,14 +177,19 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       }
     }
     // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
+    // During an active search, also drop messages that don't match in their plain/markdown body or
+    // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
+    // message can match the index yet have no matching (or any) plain/markdown text to display.
     return result.flatMap((item): MessageStackItem[] => {
+      const matches = (message: Message.Message) =>
+        !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
       if (isMessageGroup(item)) {
-        const messages = item.messages.filter((message) => !Mailbox.isFiltered(mailbox, message));
+        const messages = item.messages.filter(matches);
         return messages.length > 0 ? [{ ...item, messages }] : [];
       }
-      return Mailbox.isFiltered(mailbox, item) ? [] : [item];
+      return matches(item) ? [item] : [];
     });
-  }, [pagination.items, mailbox, mailbox.messageFilters]);
+  }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
@@ -315,6 +343,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     filterElement,
     connection,
     sync,
+    // Same monitor as the statusbar meter (`syncProgress`, above): true for the whole duration of a
+    // sync, whether kicked off by this toolbar action or independently by the routine's timer trigger.
     syncing,
   });
 
@@ -340,6 +370,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             pagination={feed ? pagination : undefined}
             enableIgnoreSender
             enableCreateTopic
+            searchQuery={searchQuery}
             onAction={handleAction}
           />
         )}
@@ -358,55 +389,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 };
 
 MailboxArticle.displayName = 'MailboxArticle';
-
-type MailboxFilterProps = {
-  db?: Database.Database;
-  tags: Tag.Map;
-  value: string;
-  /** Parsed filter; save is enabled only when the text parses. */
-  filter?: Filter.Any;
-  onChange: (value: string) => void;
-  onSave: () => void;
-  onClear: () => void;
-  editorRef: Ref<EditorController>;
-  saveButtonRef: Ref<HTMLButtonElement>;
-};
-
-/** Filter row slotted into the mailbox toolbar (query editor + save/clear actions). */
-const MailboxFilter = ({
-  db,
-  tags,
-  value,
-  filter,
-  onChange,
-  onSave,
-  onClear,
-  editorRef,
-  saveButtonRef,
-}: MailboxFilterProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  return (
-    <>
-      <QueryEditor
-        classNames='grow min-w-0 ps-1'
-        db={db}
-        tags={tags}
-        value={value}
-        onChange={onChange}
-        ref={editorRef}
-      />
-      <IconButton
-        disabled={!filter}
-        icon='ph--folder-plus--regular'
-        iconOnly
-        label={t('mailbox-toolbar-save-button.label')}
-        onClick={onSave}
-        ref={saveButtonRef}
-      />
-      <IconButton icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
-    </>
-  );
-};
 
 /** One thread's worth of results from the conversation-aggregated message query (see the query above). */
 type ThreadGroup = {
@@ -454,7 +436,7 @@ type MailboxActionsOptions = {
   /** Bound connection (drives the own pull-"Sync" action). */
   connection?: Connection.Connection;
   sync: () => Promise<void>;
-  /** In-flight sync flag, read reactively in the builder. */
+  /** Derived from the mailbox's sync progress monitor (see `syncing` above); read via `get()`. */
   syncing: Atom.Atom<boolean>;
 };
 
