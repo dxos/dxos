@@ -31,6 +31,10 @@ DX_EDGE_ECHO_REPLICATOR:
   path: runtime.client.edgeFeatures.echoReplicator
   type: boolean
 
+DX_EDGE_SUBDUCTION_REPLICATOR:
+  path: runtime.client.edgeFeatures.subductionReplicator
+  type: boolean
+
 DX_EDGE_FEED_REPLICATOR:
   path: runtime.client.edgeFeatures.feedReplicator
   type: boolean

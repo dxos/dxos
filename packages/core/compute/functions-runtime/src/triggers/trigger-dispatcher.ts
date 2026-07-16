@@ -532,6 +532,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         runtimeState.retry = { event, enqueuedAt: this._retrySequence++ };
         log('trigger requested re-invocation', { triggerId: trigger.id });
       } else {
+        // TODO(wittjosiah): A fiber interrupt (e.g. a scheduled timer fire colliding with an in-flight
+        //   `runAgain` retry, or the dispatcher stopping) reaches here and arms a failure cooldown. An
+        //   interrupt is not a genuine failure — distinguish `Cause.isInterrupted(result.cause)` and
+        //   treat it as neutral (re-schedulable, no cooldown) instead.
         const cooldownMs = Duration.toMillis(this._failureCooldown);
         const until = new Date(this.getCurrentTime().getTime() + cooldownMs);
         runtimeState.cooldownUntil = until;
@@ -798,6 +802,11 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           break;
         }
         pending.sort((a, b) => a.enqueuedAt - b.enqueuedAt);
+        log('draining run-again retries', {
+          count: pending.length,
+          triggerIds: pending.map(({ trigger }) => trigger.id),
+          untilExhausted,
+        });
 
         // Clear the pending flags before invoking; `invokeTrigger` re-sets `retry` (with a fresh
         // sequence number) if the trigger requests yet another re-run.

@@ -60,18 +60,24 @@ export const Spec = Schema.Union(ExternalSpec, FeedSpec);
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
- * Tracks progress consuming data from (or exchanging data with) a source — the durable position a
- * pipeline resumes from across runs. `spec` describes what is being consumed (external sync or
- * internal feed-to-feed); `value`/`lastTick`/`lastError` describe how far it got.
+ * Durable position a source-driven pipeline resumes from across runs. `spec` describes what is
+ * consumed; `max`/`min`/`lastTick`/`lastError` describe progress.
  *
- * `value` is opaque and provider-defined (a timestamp high-water mark, a provider change token, an
- * offset, …).
+ * `max` is the primary opaque provider position and all a single-directional consumer reads or writes.
+ * `min` is an optional lower bound, only meaningful to consumers that opted into the range-tracking
+ * APIs (`extendRange`, `resolveWindows`, `completeBackfill`, `layer`'s `trackRange`).
  */
 export class Cursor extends Type.makeObject<Cursor>(DXN.make('org.dxos.type.cursor', '0.2.0'))(
   Schema.Struct({
-    value: Schema.String.annotations({
-      title: 'Value',
-      description: 'Opaque, provider-defined high-water mark identifying the last consumed position.',
+    max: Schema.String.annotations({
+      title: 'Max',
+      description: 'Opaque, provider-defined high-water mark identifying the newest consumed position.',
+    }).pipe(Schema.optional),
+    min: Schema.String.annotations({
+      title: 'Min',
+      description:
+        'Opaque, provider-defined low-water mark some consumers maintain alongside `max`; unused by ' +
+        'single-directional consumers.',
     }).pipe(Schema.optional),
     lastTick: Format.DateTime.pipe(Schema.annotations({ title: 'Last tick' }), Schema.optional),
     lastError: Schema.String.pipe(Schema.annotations({ title: 'Last error' }), Schema.optional),
@@ -104,13 +110,15 @@ export type MakeExternalProps = {
   readonly label?: string;
   readonly snapshots?: Record<string, any>;
   readonly options?: Record<string, any>;
-  readonly value?: string;
+  readonly max?: string;
+  readonly min?: string;
 };
 
 /** Creates an external-sync cursor: a local target kept in sync from a credentialed remote source. */
 export const makeExternal = (props: MakeExternalProps): Cursor =>
   make({
-    value: props.value,
+    max: props.max,
+    min: props.min,
     spec: {
       kind: 'external',
       source: props.source,
@@ -125,28 +133,28 @@ export const makeExternal = (props: MakeExternalProps): Cursor =>
 export type MakeFeedProps = {
   readonly source: Ref.Ref<Feed.Feed>;
   readonly target: Ref.Ref<Obj.Unknown>;
-  readonly value?: string;
+  readonly max?: string;
+  readonly min?: string;
 };
 
 /** Creates a feed-to-feed cursor: an internal source processed into a local consumer. */
 export const makeFeed = (props: MakeFeedProps): Cursor =>
-  make({ value: props.value, spec: { kind: 'feed', source: props.source, target: props.target } });
+  make({ max: props.max, min: props.min, spec: { kind: 'feed', source: props.source, target: props.target } });
 
 /**
- * Records a successful run: advances `value` when a new high-water mark is provided, stamps
- * `lastTick`, and clears `lastError`. Pass no `value` to record a run that produced nothing new
- * (status refreshed, position unchanged). The single write seam any pipeline uses on success.
+ * Records a successful run: advances `max` (when provided), stamps `lastTick`, clears `lastError`. The
+ * single-directional write seam; a range-tracking consumer uses {@link extendRange} instead.
  */
-export const advance = (cursor: Cursor, value?: string): void =>
+export const advance = (cursor: Cursor, max?: string): void =>
   Obj.update(cursor, (cursor) => {
-    if (value !== undefined) {
-      cursor.value = value;
+    if (max !== undefined) {
+      cursor.max = max;
     }
     cursor.lastTick = new Date().toISOString();
     cursor.lastError = undefined;
   });
 
-/** Records a failed run: stamps `lastError`, leaving `value` and `lastTick` untouched. */
+/** Records a failed run: stamps `lastError`, leaving `max`/`min`/`lastTick` untouched. */
 export const recordError = (cursor: Cursor, message: string): void =>
   Obj.update(cursor, (cursor) => {
     cursor.lastError = message;
@@ -177,9 +185,8 @@ export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapsho
 };
 
 /**
- * Encodes a monotonic integer high-water mark into the opaque `value` string — the common convention
- * for a cursor that tracks an incrementing position (epoch timestamp, sequence number, offset).
- * Returns `0` for an absent or unparseable value.
+ * Decodes an opaque monotonic integer key (epoch timestamp, sequence number, offset). Returns `0` for
+ * an absent or unparseable value. Works on either {@link Cursor.max} or {@link Cursor.min}.
  */
 export const parseKey = (value: string | undefined): number => {
   if (!value) {
@@ -189,8 +196,12 @@ export const parseKey = (value: string | undefined): number => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 };
 
-/** Serializes a monotonic integer high-water mark for storage in {@link Cursor.value}. */
+/** Serializes a monotonic integer key for storage in {@link Cursor.max} or {@link Cursor.min}. */
 export const formatKey = (key: number): string => String(key);
+
+//
+// Range APIs.
+//
 
 /** Which end of the [start, end) range a sync walk begins from. */
 export type Direction = 'forward' | 'backward';
@@ -204,23 +215,6 @@ export type Window = {
   readonly end: Date;
 };
 
-export type ResolveWindowOptions = {
-  /** High-water cursor key (epoch-ms), or 0 when the source hasn't synced yet. */
-  readonly cursorKey: number;
-  /** Reference "now" (injected for testability). */
-  readonly now: Date;
-  /** Oldest bound (the horizon) — epoch-ms or a `Date`-parseable string. */
-  readonly after?: string | number;
-  /** Newest bound — epoch-ms or a `Date`-parseable string. Backfill passes the oldest-synced date. */
-  readonly before?: string | number;
-  /** Override the walk direction; otherwise inferred from the cursor. */
-  readonly direction?: Direction;
-  /** Horizon expressed as days-before-now (from binding options); takes precedence over `after`. */
-  readonly syncBackDays?: number;
-  /** Horizon used when neither `syncBackDays` nor `after` is given. */
-  readonly defaultSyncBackDays?: number;
-};
-
 /** Calendar-day arithmetic (not fixed 24h increments), matching `date-fns`'s `addDays`/`subDays`. */
 const addCalendarDays = (date: Date, days: number): Date => {
   const result = new Date(date);
@@ -228,58 +222,132 @@ const addCalendarDays = (date: Date, days: number): Date => {
   return result;
 };
 
-/**
- * Resolves the range and direction a sync should cover, shared across providers so their
- * bidirectional/backfill behavior stays identical:
- *  - no cursor → `backward`: initial sync, newest-first from `end` (today) down to the horizon.
- *  - cursor → `forward`: incremental, from the cursor up to `end`.
- *  - `direction: 'backward'` + `before` = oldest-synced → backfill older gaps (the monotonic cursor
- *    guard means these older keys never advance it).
- * Direction sets the walk order; both cover the same `[start, end)` range.
- */
-export const resolveWindow = ({
-  cursorKey,
+export type ResolveHorizonOptions = {
+  /** Reference "now" (injected for testability). */
+  readonly now: Date;
+  /** Horizon expressed as days-before-now (from binding options). */
+  readonly syncBackDays?: number;
+  /** Horizon used when `syncBackDays` is absent. */
+  readonly defaultSyncBackDays?: number;
+};
+
+/** Resolves how far back a sync should reach: `syncBackDays` (or the default) before `now`. */
+export const resolveHorizon = ({
   now,
-  after,
-  before,
-  direction,
   syncBackDays,
   defaultSyncBackDays = 30, // TODO(burdon): Should be 90
-}: ResolveWindowOptions): Window => {
-  const resolved: Direction = direction ?? (cursorKey > 0 ? 'forward' : 'backward');
-  // A backward backfill's horizon is `syncBackDays` before `before` (the anchor it walks back from),
-  // not before `now` — else a `before` far in the past would leave the horizon after it, inverting
-  // the range.
-  const horizonAnchor = resolved === 'backward' && before !== undefined ? new Date(before) : now;
-  const horizon =
-    syncBackDays !== undefined
-      ? addCalendarDays(horizonAnchor, -syncBackDays)
-      : after !== undefined
-        ? new Date(after)
-        : addCalendarDays(now, -defaultSyncBackDays);
-  const end = before !== undefined ? new Date(before) : addCalendarDays(now, 1);
-  // Forward resumes from the cursor (else the horizon); backward covers the whole [horizon, end).
-  const start = resolved === 'forward' && cursorKey > 0 ? new Date(cursorKey) : horizon;
-  return { direction: resolved, start, end };
+}: ResolveHorizonOptions): Date => addCalendarDays(now, -(syncBackDays ?? defaultSyncBackDays));
+
+/** The two halves of a bidirectional run; either may be absent (nothing to do on that side). */
+export type Windows = {
+  /** `(max, now]`, ascending: new mail since the last run. Absent only for a never-synced cursor. */
+  readonly forward?: Window;
+  /** `[horizon, min)`, descending: continued backfill. Absent once backfill has reached the horizon. */
+  readonly backward?: Window;
+};
+
+export type ResolveWindowsOptions = {
+  /** High-water key (epoch-ms), or 0 when the source hasn't synced yet. */
+  readonly maxKey: number;
+  /** Low-water key (epoch-ms), or 0 when unset. */
+  readonly minKey: number;
+  /** Reference "now" (injected for testability). */
+  readonly now: Date;
+  /** The sync horizon — see {@link resolveHorizon}. */
+  readonly horizon: Date;
+};
+
+/**
+ * Resolves the forward and backward windows a bidirectional run covers this pass:
+ *  - never synced (`maxKey === 0`): backward-only over `[horizon, end)`, walked newest-first.
+ *  - synced before: forward covers `(max, end)`, walked oldest-first so an interrupted run advances
+ *    `max` gap-free; backward covers `[horizon, min)` (newest-first — it never advances `max`, so no
+ *    gap to strand) only while the horizon hasn't reached `min` (unset `min` treated as `max`).
+ * {@link completeBackfill} clamps `min` to the horizon once the backward half exhausts, stopping the
+ * backward window until a wider `syncBackDays` moves the horizon below `min` again.
+ */
+export const resolveWindows = ({ maxKey, minKey, now, horizon }: ResolveWindowsOptions): Windows => {
+  const end = addCalendarDays(now, 1);
+  if (maxKey === 0) {
+    return { backward: { direction: 'backward', start: horizon, end } };
+  }
+  const forward: Window = { direction: 'forward', start: new Date(maxKey), end };
+  const effectiveLowKey = minKey > 0 ? minKey : maxKey;
+  if (horizon.getTime() < effectiveLowKey) {
+    return { forward, backward: { direction: 'backward', start: horizon, end: new Date(effectiveLowKey) } };
+  }
+  return { forward };
+};
+
+/**
+ * Extends the synced range and stamps run status — the range-tracking write seam (in place of
+ * {@link advance}). Raises `max` on a new high-water mark; lowers `min` on a new low-water mark
+ * (`minKey: 0` leaves `min` untouched). `format` defaults to the decimal {@link formatKey}.
+ *
+ * Also the run-end seam for folding the run's observed key {@link Extent} in (stall-proofing).
+ */
+export const extendRange = (
+  cursor: Cursor,
+  extent: { readonly maxKey: number; readonly minKey: number },
+  format: (key: number) => string = formatKey,
+): void =>
+  Obj.update(cursor, (cursor) => {
+    const maxKey = parseKey(cursor.max);
+    if (extent.maxKey > maxKey) {
+      cursor.max = format(extent.maxKey);
+    }
+    if (extent.minKey > 0) {
+      const minKey = parseKey(cursor.min);
+      if (minKey === 0 || extent.minKey < minKey) {
+        cursor.min = format(extent.minKey);
+      }
+    }
+    cursor.lastTick = new Date().toISOString();
+    cursor.lastError = undefined;
+  });
+
+/**
+ * Records that a run's backward half exhausted to the horizon: clamps `min` down to `horizonKey`, never
+ * up, so repeated calls and a daily-advancing horizon are no-ops. A wider `syncBackDays` reopens the
+ * backward window via {@link resolveWindows}. No-op when `max` is unset (nothing synced, no floor).
+ */
+export const completeBackfill = (cursor: Cursor, horizonKey: number): void => {
+  const maxKey = parseKey(cursor.max);
+  if (maxKey === 0) {
+    return;
+  }
+  const minKey = parseKey(cursor.min) || maxKey;
+  const clamped = Math.min(minKey, horizonKey);
+  if (clamped === parseKey(cursor.min)) {
+    return;
+  }
+  Obj.update(cursor, (cursor) => {
+    cursor.min = formatKey(clamped);
+  });
 };
 
 //
 // Run machinery.
 //
-// Shared machinery for running a cursor's pipeline: a Layer providing the per-run state, and a
-// commit sink that appends a page of output to the target feed. The `db` is taken from
-// `Database.Service` in the Requirements channel, so the run's stages/sink and this Layer are all
-// provided at the pipeline edge. Provider-specific stages (fetch, decode, map, extract) live in the
-// consumer (connector plugins, fact pipelines, …). Reads only the cursor's progress fields — never
+// Shared machinery for running a cursor's pipeline: a Layer providing per-run state and a commit sink
+// appending a page of output to the target feed. `db` comes from `Database.Service` in Requirements.
+// Provider-specific stages live in the consumer. Reads only the cursor's progress fields — never
 // `spec` — so it runs identically for `external` and `feed` cursors.
 //
 
 export type Stats = { newMessages: number };
 
 /**
- * Per-run state provided to the pipeline stages and the commit sink. Mutable fields (`dedupSet`,
- * `stats`) accumulate across the run; a caller that needs the result (e.g. `stats.newMessages`)
- * constructs those objects and reads them back after the run.
+ * Mutable run-observed key extent, folded by {@link dedupStage} for *every* item considered, even
+ * dropped ones. So a capped run whose page is entirely dropped still shrinks its window next pass: the
+ * caller extends the cursor by `extent` before deciding to end or continue, guaranteeing forward
+ * progress even when nothing newly commits. Read back by the caller after the run.
+ */
+export type Extent = { maxKey: number; minKey: number };
+
+/**
+ * Per-run state provided to the pipeline stages and commit sink. Mutable fields (`dedupSet`, `stats`,
+ * `extent`) accumulate across the run; the caller reads them back afterward.
  */
 export type State = {
   /** The cursor being advanced as pages commit. */
@@ -289,13 +357,19 @@ export type State = {
   /** Foreign-key source stamped on committed items (dedup key namespace). */
   readonly foreignKeySource: string;
   /** High-water key at run start; items at/below it are already committed. */
-  readonly cursorKey: number;
+  readonly maxKey: number;
+  /** Low-water key at run start, or 0 when unset — only meaningful when {@link trackRange}. */
+  readonly minKey: number;
+  /** Whether this run maintains `cursor.min` alongside `cursor.max` (opt-in; see {@link Cursor.min}). */
+  readonly trackRange: boolean;
   /** Foreign ids already committed (seeded from the feed, extended as pages commit). */
   readonly dedupSet: Set<string>;
   /** Serializes the advanced cursor key for storage on the cursor. */
   readonly formatCursor: (key: number) => string;
   /** Mutable run tally, read back by the caller after the run. */
   readonly stats: Stats;
+  /** Mutable run-observed key extent — see {@link Extent}. */
+  readonly extent: Extent;
 };
 
 /** Terminal unit produced by the pipeline for one source item: everything the commit needs to write. */
@@ -312,8 +386,8 @@ export type CommitUnit = {
 
 /**
  * A deferred commit write recorded on a {@link CommitUnit} by a stage (which stays idempotent) and run
- * inside the commit flush. `commit` invokes each *distinct* function (by identity) once with every unit
- * that attached it, so a run-scoped closure reused across units batches into one call.
+ * inside the commit flush. `commit` invokes each distinct function once with every unit that attached
+ * it, batching a run-scoped closure reused across units into one call.
  */
 export type CommitEffect = (units: readonly CommitUnit[]) => Effect.Effect<void, never, Database.Service>;
 
@@ -321,20 +395,25 @@ export type CommitEffect = (units: readonly CommitUnit[]) => Effect.Effect<void,
 export class Service extends Context.Tag('@dxos/link/Cursor')<Service, State>() {}
 
 /**
- * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor` to the
- * decimal high-water key.
+ * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor`,
+ * `minKey`, `trackRange`, `extent` for a single-directional caller unaware of range-tracking.
  */
-export type LayerOptions = Omit<State, 'dedupSet' | 'formatCursor'> & {
+export type LayerOptions = Omit<State, 'dedupSet' | 'formatCursor' | 'minKey' | 'trackRange' | 'extent'> & {
   readonly formatCursor?: (key: number) => string;
+  /** Low-water key at run start. Only relevant with `trackRange: true`. Defaults to 0 (unset). */
+  readonly minKey?: number;
+  /** Opt into maintaining `cursor.min` alongside `cursor.max`. Defaults to `false`. */
+  readonly trackRange?: boolean;
+  /** Caller-supplied accumulator to read the run's observed key {@link Extent} back afterward. */
+  readonly extent?: Extent;
   /** Overrides {@link DEFAULT_DEDUP_SEED_TAIL} — set per pipeline when its commit page size warrants it. */
   readonly dedupSeedTail?: number;
 };
 
 /**
  * Builds the run Layer, seeding the committed-id dedup set from a bounded tail read of the feed (see
- * {@link DEFAULT_DEDUP_SEED_TAIL}) — this closes the append→advance crash window without decoding the
- * whole feed. The queue and space-db are separate stores with no shared transaction, so a page can
- * land in the feed before its cursor advance persists.
+ * {@link DEFAULT_DEDUP_SEED_TAIL}) — closes the append→advance crash window without decoding the whole
+ * feed, since the queue and space-db share no transaction.
  *
  * TODO(wittjosiah): Drop the seed entirely once feed + cursor writes can commit transactionally.
  */
@@ -343,39 +422,18 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
     Service,
     Effect.gen(function* () {
       const { feed, dedupSeedTail = DEFAULT_DEDUP_SEED_TAIL } = options;
-      // DB-target runs (no feed) rely on the cursor + idempotent write for dedup; there is no feed to seed.
+      // DB-target runs (no feed) dedup via the cursor + idempotent write; nothing to seed.
       const dedupSet = feed ? yield* seedDedupSet(feed, options.foreignKeySource, dedupSeedTail) : new Set<string>();
       return {
         ...options,
+        minKey: options.minKey ?? 0,
+        trackRange: options.trackRange ?? false,
         formatCursor: options.formatCursor ?? formatKey,
+        extent: options.extent ?? { maxKey: 0, minKey: 0 },
         dedupSet,
       };
     }),
   );
-
-/**
- * Advances the cursor to `maxKey` and stamps the run status. Called from the write commit so the
- * write and the cursor advance land together — the seam the single-transaction TODO below wraps.
- *
- * Monotonic: the cursor is a *newest-seen* high-water mark, so it only ever moves forward. This is
- * what makes direction-agnostic sync correct with one cursor: a forward (incremental) run raises it;
- * an initial backward-from-today run sets it from its first (newest) page and later, older pages
- * leave it untouched; a backfill run (older-than-cursor only) never moves it — it just fills gaps.
- *
- * TODO(wittjosiah): Make the page write and this cursor advance atomic. Today they are separate
- *   stores (feed queue / space-db for {@link commit}, or two space-db mutations for
- *   {@link upsertCommit}) flushed together but not transactionally, so a crash between them can
- *   re-land a page (idempotency + the {@link layer} dedup set cover this until then). Once ECHO can
- *   commit the write and the cursor together, wrap both here and drop the dedup set.
- */
-const advanceCursor = (state: State, maxKey: number): void => {
-  if (maxKey > parseKey(state.cursor.value)) {
-    advance(state.cursor, state.formatCursor(maxKey));
-  } else {
-    // Older-than-cursor page (backward/backfill): record the run, leave the high-water mark in place.
-    advance(state.cursor);
-  }
-};
 
 /** Appends the page's objects to the feed — the durable write that must precede the space-db mutations. */
 const appendObjects = Effect.fn('cursor.commit.appendToFeed')(function* (
@@ -389,8 +447,8 @@ const appendObjects = Effect.fn('cursor.commit.appendToFeed')(function* (
 });
 
 // TODO(wittjosiah): Remove — bound the reactive cascade instead of forcing a paint gap per page.
-// Yields a macrotask so the browser paints the just-appended objects before this page's space-db
-// mutations run; otherwise the append + reactive cascade run as one synchronous burst that blocks paint.
+// Yields a macrotask so the browser paints the appended objects before this page's space-db mutations
+// run; otherwise append + reactive cascade run as one synchronous burst that blocks paint.
 const paintYield = Effect.fn('cursor.commit.paintYield')(function* () {
   yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0)));
 });
@@ -413,12 +471,22 @@ const runCommitEffects = Effect.fn('cursor.commit.commitEffects')(function* (uni
   }
 });
 
-/** Advances the cursor to the page's high-water key and records the units as committed. */
-const recordCommitted = Effect.fn('cursor.commit.advanceCursor')(function* (
+/**
+ * Extends the cursor to the page's key extent and records the units as committed. Raises `max`
+ * unconditionally; lowers `min` only when range-tracking — so a single-directional run never touches
+ * `min`, and a range-tracking run gets the symmetric watermark rule regardless of which half the page
+ * came from (see {@link resolveWindows}).
+ */
+const recordCommitted = Effect.fn('cursor.commit.recordCommitted')(function* (
   state: State,
   units: readonly CommitUnit[],
 ) {
-  advanceCursor(state, Math.max(...units.map((unit) => unit.key)));
+  const keys = units.map((unit) => unit.key);
+  extendRange(
+    state.cursor,
+    { maxKey: Math.max(...keys), minKey: state.trackRange ? Math.min(...keys) : 0 },
+    state.formatCursor,
+  );
   for (const unit of units) {
     state.dedupSet.add(unit.foreignId);
   }
@@ -427,13 +495,13 @@ const recordCommitted = Effect.fn('cursor.commit.advanceCursor')(function* (
 
 /**
  * Commits one page of pipeline output — the single place non-idempotent writes happen. Use as the
- * `Pipeline.run` sink after `Stream.grouped(pageSize)` (which also emits the trailing partial page).
+ * `Pipeline.run` sink after `Stream.grouped(pageSize)`.
  *
- * The feed append runs first, then the space-db mutations; the two stores share no transaction, so a
- * crash between them leaves the page in the feed with the cursor un-advanced — the next run re-fetches
- * it and the feed-seeded dedup set drops it (advancing first would lose items). No mid-run flush:
- * the feed append is separately durable and the caller flushes once at the end (per-page flushes were
- * O(n²) over a run), so a crash only loses this run's in-memory cursor advance + space mutations.
+ * The feed append runs first, then space-db mutations; the two share no transaction, so a crash
+ * between them leaves the page in the feed with the cursor un-advanced — the next run re-fetches it and
+ * the feed-seeded dedup set drops it (advancing first would lose items). No mid-run flush (per-page
+ * flushes were O(n²)); the caller flushes once at the end, so a crash only loses this run's in-memory
+ * cursor advance + space mutations.
  */
 export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
   Effect.gen(function* () {
@@ -456,12 +524,10 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
 export type UpsertUnit<T> = { readonly item: T; readonly foreignId: string; readonly key: number };
 
 /**
- * Commits a page to a DB target (no feed) via an idempotent upsert. `write` performs the
- * provider-specific find-by-foreign-key → update-or-create and returns whether a new object was
- * created (counted into `stats`). The cursor advance + run status land in the same `Relation.update`-
- * style write as the writes — the same commit-co-located seam as {@link commit}, so the future
- * single-transaction TODO covers both. Idempotent, so a crash before the flush is safe: the next run
- * re-upserts.
+ * Commits a page to a DB target (no feed) via an idempotent upsert. `write` does the provider-specific
+ * find-by-foreign-key → update-or-create and returns whether a new object was created (counted into
+ * `stats`). Cursor advance + run status land in the same write, like {@link commit}. Idempotent, so a
+ * crash before the flush is safe: the next run re-upserts.
  */
 export const upsertCommit =
   <T>(write: (item: T) => Effect.Effect<boolean, never, Database.Service>) =>
@@ -478,7 +544,7 @@ export const upsertCommit =
           state.stats.newMessages += 1;
         }
       }
-      advanceCursor(state, Math.max(...units.map((unit) => unit.key)));
+      extendRange(state.cursor, { maxKey: Math.max(...units.map((unit) => unit.key)), minKey: 0 }, state.formatCursor);
       yield* Effect.promise(() => db.flush({ indexes: true }));
       for (const unit of units) {
         state.dedupSet.add(unit.foreignId);
@@ -486,25 +552,50 @@ export const upsertCommit =
     });
 
 /**
- * Reusable dedup stage: drops items already committed (`dedupSet`), and — for a *forward* run — items
- * at/below the run's high-water cursor (`key < cursorKey`), a cheap shortcut to skip the already-synced
- * tail when resuming forwards. A *backward* run (initial backward-from-today or backfill) deliberately
- * fetches keys below the cursor, so it must NOT apply that shortcut and relies on `dedupSet` alone.
- * Reads the run state from {@link Service}; provider-agnostic via the `getForeignId` / `getKey` accessors.
+ * The set half of {@link dedupStage}, keyed only by foreign id. Runs on the raw id/handle stream
+ * *before* the expensive full-item fetch, so a run never downloads an already-committed item: the
+ * boundary days a bidirectional run re-lists are mostly covered by the seeded `dedupSet`. Only a
+ * fast-path filter — {@link dedupStage} runs after the fetch as the backstop and does the key-range
+ * check. Reads {@link Service}; provider-agnostic via `getForeignId`.
+ */
+export const skipCommitted = <In>(
+  id: string,
+  getForeignId: (item: In) => string,
+): Stage.Stage<In, In, never, Service> =>
+  Stage.map(id, (item: In) =>
+    Effect.map(Service, (state) => (state.dedupSet.has(getForeignId(item)) ? undefined : item)),
+  );
+
+/**
+ * Reusable dedup stage: drops items already committed (`dedupSet`) and items strictly inside the synced
+ * range (`minKey < key < maxKey`) — a cheap shortcut past the already-synced middle. Boundary keys fall
+ * through to `dedupSet`, since items can share a key. A single-directional run keeps the original
+ * `key < maxKey` shortcut. Folds every considered item's key into {@link State.extent} *before* the
+ * drop decision, so a capped range-tracking run shrinks its window even when a whole page drops (see
+ * {@link Extent}). Reads {@link Service}; provider-agnostic via `getForeignId`/`getKey`. Pair with
+ * {@link skipCommitted} to avoid fetching already-committed items.
  */
 export const dedupStage = <In>(
   id: string,
   getForeignId: (item: In) => string,
   getKey: (item: In) => number,
-  { direction = 'forward' }: { direction?: 'forward' | 'backward' } = {},
 ): Stage.Stage<In, In, never, Service> =>
   Stage.map(id, (item: In) =>
     Effect.gen(function* () {
-      const { cursorKey, dedupSet } = yield* Service;
+      const { maxKey, minKey, trackRange, dedupSet, extent } = yield* Service;
+      const key = getKey(item);
+      if (key > 0) {
+        extent.maxKey = Math.max(extent.maxKey, key);
+        extent.minKey = extent.minKey === 0 ? key : Math.min(extent.minKey, key);
+      }
       if (dedupSet.has(getForeignId(item))) {
         return undefined;
       }
-      if (direction === 'forward' && getKey(item) < cursorKey) {
+      // A range run drops only the strict interior `(min, max)` so the region below `min` still
+      // commits; a single-directional run keeps `key < maxKey` (also dropping a `key === 0` fallback
+      // below an advanced `max`, which the range form would not).
+      const interior = trackRange ? minKey < key && key < maxKey : key < maxKey;
+      if (interior) {
         return undefined;
       }
       return item;
@@ -512,28 +603,38 @@ export const dedupStage = <In>(
   );
 
 /**
- * Default bound on the dedup seed. The set only needs feed items whose key is at/after the cursor
- * high-water: the last committed page plus at most one crash-orphaned page (append and cursor-advance
- * flush per page, so a crash leaves ≤1 un-cursored page). Everything older is dropped by
- * {@link dedupStage}'s `key < cursorKey` check, so the newest N (by insertion order) suffice. Sized
- * with generous headroom over a typical provider's commit page size — override via
- * {@link LayerOptions.dedupSeedTail} for a pipeline whose page size warrants a different bound.
+ * Default dedup-seed bound, applied to *each* end of the feed's insertion order (see
+ * {@link seedDedupSet}). Only the two re-fetched boundaries (`key === max`, `key === min`) plus a
+ * crash-orphaned page need seeding; the strict interior is dropped by {@link dedupStage}'s range check.
+ * Sized with headroom over a typical commit page size — override via {@link LayerOptions.dedupSeedTail}.
  */
 const DEFAULT_DEDUP_SEED_TAIL = 500;
 
-/** Seeds the dedup set of recently-committed foreign ids from the newest `tail` feed items. */
+/**
+ * Seeds the dedup set of recently-committed foreign ids from BOTH ends of the feed's insertion order.
+ *
+ * The `key === max` and `key === min` boundaries both re-fetch inclusively and aren't dropped by the
+ * strict-interior range check, so both must be seeded. They sit at *opposite* ends of insertion order:
+ * a backfill commits `max` first and walks older, so `max`'s item is the OLDEST insertion while `min`'s
+ * (plus any crash-orphaned page) is the newest — a newest-only tail would age `max` out and re-commit
+ * the newest message every run. Seeding both ends covers both boundaries however forward/backward
+ * interleave.
+ */
 const seedDedupSet = (
   feed: Feed.Feed,
   foreignKeySource: string,
   tail: number,
 ): Effect.Effect<Set<string>, never, Database.Service> =>
-  // `Order.natural('desc')` + `limit` selects the newest N by insertion order (a limited feed query
-  // still decodes the whole feed to apply the limit — a query-engine limitation tracked separately).
-  Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(tail)).run.pipe(
+  // `limit` selects the newest/oldest N by insertion order (a limited feed query still decodes the
+  // whole feed to apply the limit — a query-engine limitation tracked separately).
+  Effect.all([
+    Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(tail)).run,
+    Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('asc')).limit(tail)).run,
+  ]).pipe(
     Effect.map(
-      (items) =>
+      ([newest, oldest]) =>
         new Set(
-          items.flatMap((item) =>
+          [...newest, ...oldest].flatMap((item) =>
             Obj.getMeta(item)
               .keys.filter((key) => key.source === foreignKeySource)
               .map((key) => key.id),

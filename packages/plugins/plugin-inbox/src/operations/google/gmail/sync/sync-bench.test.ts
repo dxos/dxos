@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { format, subDays } from 'date-fns';
+import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
@@ -66,14 +66,13 @@ describe.runIf(process.env.DX_BENCH)('syncGmail benchmark', () => {
       const end = subDays(new Date(), 2);
       const start = subDays(new Date(), 27);
       const dataset = generateGmailDataset({ count: size, seed: 7, start, end });
-      const after = format(subDays(new Date(), 29), 'yyyy-MM-dd');
 
-      const { db, binding } = await seedMailboxBinding(builder);
+      const { db, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 29 } });
       harness.reset();
 
       const startedAt = performance.now();
       const { newMessages } = await EffectEx.runPromise(
-        syncGmail({ binding: Ref.make(binding), after }).pipe(
+        syncGmail({ binding: Ref.make(binding) }).pipe(
           Effect.provide(inboxSyncTestServices(db, dataset)),
           Effect.provide(harness.layer),
         ),
