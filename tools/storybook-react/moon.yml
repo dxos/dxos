@@ -12,6 +12,8 @@ tasks:
       # Ensure that all packages are built to run storybook.
       - '#ts-build:build'
       - '#ts-compile:compile'
+      # See `serve` — plugin-sketch static assets must exist before storybook builds.
+      - plugin-sketch:prebuild
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -25,7 +27,16 @@ tasks:
       - --port=9009
       - --no-open
     deps:
-      - ^:compile
+      # Build the full package closure the stories need, mirroring `bundle`. `^:compile` alone only
+      # covers storybook-react's own project deps, so on a fresh worktree it omits artifacts that
+      # stories import transitively — e.g. `@dxos/vendor-hyperformula`'s bundle (Vite's dep-scan then
+      # aborts and no story loads).
+      - '#ts-build:build'
+      - '#ts-compile:compile'
+      # `.storybook/main.ts` serves `plugin-sketch/dist/assets` as a staticDir; storybook aborts if it
+      # is missing. It hangs off plugin-sketch's `build`, which the tag deps above do not run, so a
+      # fresh worktree has no assets. Generate them explicitly.
+      - plugin-sketch:prebuild
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -42,7 +53,10 @@ tasks:
     env:
       DX_FASTBUNDLE: '1'
     deps:
-      - ^:compile
+      # See `serve` — build the full closure so a fresh worktree has every artifact stories import.
+      - '#ts-build:build'
+      - '#ts-compile:compile'
+      - plugin-sketch:prebuild
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
