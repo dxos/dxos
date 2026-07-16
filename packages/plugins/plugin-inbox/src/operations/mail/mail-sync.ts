@@ -19,7 +19,6 @@ import { EmailStage } from '@dxos/pipeline-email';
 import { type ContentBlock } from '@dxos/types';
 
 import { MailSyncError } from '../../errors';
-import { meta } from '../../meta';
 import { Mailbox, type SyncStreamConfig } from '../../types';
 import { readBindingOptions } from '../../util';
 
@@ -182,13 +181,6 @@ export const runMailSync = (
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // Coarse sync telemetry written to the transient stats store (keyed by mailbox) for a live debug
-    // surface. Optional — `getAll` yields nothing without a host plugin, so a no-op in production.
-    // Write only this plugin's compartment; other plugins own their own slots.
-    const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
-      store.compartment(meta.profile.key),
-    );
-
     // Cooperative cancellation: the meter's cancel control aborts the controller, which drains the
     // stream so the run stops without error.
     const controller = new AbortController();
@@ -213,8 +205,6 @@ export const runMailSync = (
       progressMonitor.total(totalToRetrieve);
     };
 
-    const startedAt = new Date().toISOString();
-    const startMs = Date.now();
     const threads = new Set<string>();
     const senders = new Set<string>();
     const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
@@ -225,37 +215,44 @@ export const runMailSync = (
     let taken = 0;
     let processed = 0;
     let attachmentCount = 0;
-    let finishedAt: string | undefined;
-    let finishedMs: number | undefined;
     const extent: Cursor.Extent = { maxKey: 0, minKey: 0 };
-    const publishStats = () => {
-      if (statsCompartments.length === 0) {
-        return;
-      }
+    // Stats PUBLISHING is disabled: it wrote each run's snapshot to the `AppCapabilities.StatsPanel`
+    // capability, which isn't available on edge compute. Collection (below, via `collectStats`) is kept.
+    // TODO(wittjosiah): Publish stats through the trace feed instead — the way progress is being made
+    //   isomorphic across host/edge in #12225 — then re-enable the publish.
+    // const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
+    //   store.compartment(meta.profile.key),
+    // );
+    // const startedAt = new Date().toISOString();
+    // const startMs = Date.now();
+    // let finishedAt: string | undefined;
+    // let finishedMs: number | undefined;
+    // const publishStats = () => {
+    //   if (statsCompartments.length === 0) {
+    //     return;
+    //   }
+    //   const snapshot = {
+    //     startedAt,
+    //     ...(finishedAt ? { finishedAt } : {}),
+    //     durationMs: (finishedMs ?? Date.now()) - startMs,
+    //     range: {
+    //       syncBackDays: targetOptions.syncBackDays,
+    //       forward: formatWindow(windows.forward),
+    //       backward: formatWindow(windows.backward),
+    //     },
+    //     taken,
+    //     processed,
+    //     newMessages: stats.newMessages,
+    //     threads: threads.size,
+    //     senders: senders.size,
+    //     coverage,
+    //     attachments: attachmentCount,
+    //   };
+    //   statsCompartments.forEach((compartment) => compartment.set(snapshot));
+    // };
 
-      const snapshot = {
-        startedAt,
-        ...(finishedAt ? { finishedAt } : {}),
-        durationMs: (finishedMs ?? Date.now()) - startMs,
-        range: {
-          syncBackDays: targetOptions.syncBackDays,
-          forward: formatWindow(windows.forward),
-          backward: formatWindow(windows.backward),
-        },
-        taken,
-        processed,
-        newMessages: stats.newMessages,
-        threads: threads.size,
-        senders: senders.size,
-        coverage,
-        attachments: attachmentCount,
-      };
-
-      statsCompartments.forEach((compartment) => compartment.set(snapshot));
-    };
-
-    // Pass-through stage: accumulates telemetry per mapped message, publishing a snapshot so a
-    // subscribed surface ticks up live.
+    // Pass-through stage: collects per-message telemetry into the run counters. Publishing a live
+    // snapshot from these is disabled (see the TODO above) until it goes through the trace feed.
     const collectStats = Stage.map('collect-stats', (mapped: EmailStage.Mapped) =>
       Effect.sync(() => {
         processed += 1;
@@ -277,7 +274,6 @@ export const runMailSync = (
           coverage.none += 1;
         }
         attachmentCount += mapped.attachments?.length ?? 0;
-        publishStats();
         return mapped;
       }),
     );
@@ -354,11 +350,11 @@ export const runMailSync = (
     // (per-page commits no longer flush — see `Cursor.commit`).
     yield* Database.flush({ indexes: true });
 
-    // Final publish so the committed `newMessages` count and the run's end time / duration are recorded
-    // after the last mid-stream snapshot.
-    finishedMs = Date.now();
-    finishedAt = new Date(finishedMs).toISOString();
-    publishStats();
+    // Final stats publish (disabled — see the TODO above) recorded the committed `newMessages` count and
+    // the run's end time / duration after the last mid-stream snapshot.
+    // finishedMs = Date.now();
+    // finishedAt = new Date(finishedMs).toISOString();
+    // publishStats();
 
     // On cancel, `Pipeline.abortWith`'s onAbort already noted 'Cancelled' and removed the monitor, so
     // only the completed path has post-run work.
