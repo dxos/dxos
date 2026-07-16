@@ -161,6 +161,9 @@ Operations (see `operations` skill) so agents can draft and propose changes:
 
 ## Phase 2: upstreaming
 
+See [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md)
+for the staged convergence with PR #11829's ECHO-core branching (true CRDT forks).
+
 Not built now; the phase-1 shapes are chosen to make this a lift, not a migration:
 
 - DONE: `Version`/`Branch` and the model now live in `@dxos/versioning`. Remaining: generalize
