@@ -47,11 +47,6 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
-    },
-    "./worker": {
-      "source": "./src/worker.ts",
-      "types": "./dist/types/src/worker.d.ts",
-      "import": "./dist/lib/worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -13,7 +13,6 @@ export default defineConfig({
     invitations: 'src/invitations/index.ts',
     mesh: 'src/mesh/index.ts',
     testing: 'src/testing/index.ts',
-    worker: 'src/worker.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },

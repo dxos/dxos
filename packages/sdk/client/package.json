@@ -66,11 +66,6 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./worker": {
-      "source": "./src/worker/index.ts",
-      "types": "./dist/types/src/worker/index.d.ts",
-      "import": "./dist/lib/worker.mjs"
-    },
     "./opfs-worker": {
       "source": "./src/worker/opfs-worker.ts",
       "types": "./dist/types/src/worker/opfs-worker.d.ts",
