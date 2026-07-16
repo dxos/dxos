@@ -47,13 +47,28 @@ export const seedMailboxBinding = async (
     source = GMAIL_SOURCE,
     connectorId = 'gmail',
     token = 'token',
-  }: { source?: string; connectorId?: string; token?: string } = {},
+    max,
+    min,
+    options,
+  }: {
+    source?: string;
+    connectorId?: string;
+    token?: string;
+    /** Seeds the cursor's `max` watermark, as if a prior run already synced up to this key. */
+    max?: string;
+    /** Seeds the cursor's `min` watermark, as if a prior run already backfilled down to this key. */
+    min?: string;
+    /** Seeds `spec.options` (e.g. `syncBackDays`, `filter`) — read via `readBindingOptions`. */
+    options?: Record<string, unknown>;
+  } = {},
 ) => {
   const { db } = await builder.createDatabase({ types: SYNC_TEST_TYPES });
   const mailbox = db.add(Mailbox.make({ name: 'Test' }));
   const accessToken = db.add(AccessToken.make({ source, token }));
   const connection = db.add(Connection.make({ connectorId, accessToken: Ref.make(accessToken) }));
-  const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }));
+  const binding = db.add(
+    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox), max, min, options }),
+  );
   await db.flush({ indexes: true });
   return { db, mailbox, connection, binding };
 };
@@ -67,7 +82,7 @@ export const seedMailboxBinding = async (
  * singleton via `Capability.get`, matching the always-loaded `plugin-progress` host in production. A
  * test may override the default with its own instance to observe the sync's live progress monitor.
  */
-const ambientSyncServices = (
+export const ambientSyncServices = (
   db: Database.Database,
   options: { progressRegistry?: AppCapabilities.ProgressRegistry } = {},
 ) => {
