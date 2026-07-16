@@ -171,6 +171,102 @@ const runDxBuild = async (): Promise<void> => {
 };
 
 /**
+ * Rewrites bare specifiers in `new Worker(new URL('@dxos/...', import.meta.url))` /
+ * `new SharedWorker(...)` patterns to absolute file paths so vite's built-in
+ * `vite:worker-import-meta-url` plugin can resolve them.
+ *
+ * Vite's worker plugin treats the URL argument as a filesystem path relative to
+ * the importer, not as a module specifier. Bare specifiers like
+ * `@dxos/client/dedicated-worker` end up interpreted as
+ * `src/testing/@dxos/client/dedicated-worker` and fail to resolve. This plugin
+ * pre-resolves such specifiers through vite's normal module resolver and
+ * substitutes the resolved absolute path into the source before the worker
+ * plugin scans it.
+ */
+export const DxWorkerResolvePlugin = (): Plugin => {
+  const NEW_WORKER =
+    /new\s+(?:Shared)?Worker\s*\(\s*new\s+URL\s*\(\s*['"](@dxos\/[^'"]+)['"]\s*,\s*import\.meta\.url\s*\)/g;
+  // Cache resolved (packageDir, source-relative) per package to avoid re-reading package.json.
+  const pkgSourceCache = new Map<string, Record<string, string>>();
+  return {
+    name: 'DxWorkerResolve',
+    enforce: 'pre',
+    async transform(code, id) {
+      if (!/\.(?:ts|tsx|js|jsx|mjs)$/.test(id)) {
+        return null;
+      }
+      if (!code.includes('new URL(') || !code.includes('@dxos/')) {
+        return null;
+      }
+      const matches = Array.from(code.matchAll(NEW_WORKER));
+      if (matches.length === 0) {
+        return null;
+      }
+      const nodePath = await import('node:path');
+      const nodeFs = await import('node:fs/promises');
+      const readPkgSources = async (pkgDir: string): Promise<Record<string, string>> => {
+        if (pkgSourceCache.has(pkgDir)) {
+          return pkgSourceCache.get(pkgDir)!;
+        }
+        const out: Record<string, string> = {};
+        try {
+          const raw = await nodeFs.readFile(nodePath.join(pkgDir, 'package.json'), 'utf8');
+          const pkg = JSON.parse(raw) as { name?: string; exports?: unknown };
+          const walk = (node: unknown, key: string) => {
+            if (typeof node === 'string') {
+              if (key.endsWith('.source') && node.startsWith('./')) {
+                const subpath = key.split('.').slice(1, -1).join('.') || '.';
+                out[subpath] = node.slice(2);
+              }
+            } else if (node && typeof node === 'object') {
+              for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+                walk(v, `${key}.${k}`);
+              }
+            }
+          };
+          walk(pkg.exports ?? {}, '');
+        } catch {}
+        pkgSourceCache.set(pkgDir, out);
+        return out;
+      };
+
+      let out = code;
+      for (const m of matches) {
+        const specifier = m[1];
+        // Only rewrite self-references (`@dxos/<current-package>/<sub>`); external `@dxos/*`
+        // workers are handled by the consuming app's bundler.
+        const [, pkgName, ...subParts] = specifier.split('/');
+        const subpath = './' + subParts.join('/');
+        // Walk up from the source file to find the nearest package.json whose name matches.
+        let dir = nodePath.dirname(id);
+        let pkgDir: string | null = null;
+        while (dir !== nodePath.dirname(dir)) {
+          try {
+            const pkg = JSON.parse(await nodeFs.readFile(nodePath.join(dir, 'package.json'), 'utf8'));
+            if (pkg.name === `@dxos/${pkgName}`) {
+              pkgDir = dir;
+              break;
+            }
+          } catch {}
+          dir = nodePath.dirname(dir);
+        }
+        if (!pkgDir) {
+          continue;
+        }
+        const sources = await readPkgSources(pkgDir);
+        const srcRel = sources[subpath];
+        if (!srcRel) {
+          continue;
+        }
+        const abs = nodePath.join(pkgDir, srcRel);
+        out = out.replace(m[0], m[0].replace(specifier, abs));
+      }
+      return out === code ? null : { code: out, map: null };
+    },
+  };
+};
+
+/**
  * Kicks off `dx-build` (tsgo wrapper) at build start so declaration emit runs in
  * parallel with the JS bundle. Generates per-file `.d.ts` files in `dist/types/src/`.
  */
@@ -663,6 +759,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     worker: {
       format: 'es',
       plugins: () => [
+        DxWorkerResolvePlugin(),
         ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
         ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
         WasmPlugin(),
@@ -711,6 +808,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       },
     },
     plugins: [
+      DxWorkerResolvePlugin(),
       ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
       ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
       ...jsxPlugin,
