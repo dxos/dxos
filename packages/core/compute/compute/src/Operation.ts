@@ -586,6 +586,12 @@ export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
 
 /**
+ * Pipeable combinator that marks an operation idempotent — see {@link IdempotentAnnotation}. Apply at
+ * the definition site: `Operation.make({ ... }).pipe(Operation.idempotent)`.
+ */
+export const idempotent = annotate(IdempotentAnnotation, true);
+
+/**
  * Operation service interface - provides unified access to operation invocation and scheduling.
  * This service is automatically provided to operation handlers.
  */
@@ -677,8 +683,10 @@ export const schedule = <I, O>(
   );
 
 /**
- * Call this inside an operation to stop the current invocation and have the system re-run it.
- * Currently only supported for operations running as a result of a trigger.
+ * Call inside an operation to stop the current invocation and have the system re-run it (e.g. a capped
+ * sync run with more work left). Surfaces as a {@link RunAgainError} defect; the trigger dispatcher
+ * re-queues the same event FIFO to continue. A caller invoking via `Operation.invoke` directly gets the
+ * defect and does not auto-continue.
  */
 export const runAgain = (): Effect.Effect<never, void> => Effect.failCauseSync(() => Cause.die(new RunAgainError()));
 

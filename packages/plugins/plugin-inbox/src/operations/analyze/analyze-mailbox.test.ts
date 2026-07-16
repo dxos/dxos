@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type FeedCursorsApi, type RDF } from '@dxos/pipeline-rdf';
-import { Cursor, Message } from '@dxos/types';
+import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { Message } from '@dxos/types';
 
 import { Mailbox } from '../../types';
 
@@ -43,16 +44,6 @@ const makeFact = (source: string, id: string, object = 'paris'): RDF.Fact => ({
 const stubExtract: FactExtractor = (message) =>
   Promise.resolve([makeFact(messageSource(message), `fact-${message.id}`, `dest-${message.id}`)]);
 
-// In-memory per-feed cursor (mirrors the FeedCursors registry).
-const makeCursors = (): FeedCursorsApi => {
-  const map = new Map<string, number>();
-  return {
-    get: (feedId) => map.get(feedId) ?? 0,
-    advance: (feedId, key) => void map.set(feedId, Math.max(map.get(feedId) ?? 0, key)),
-    reset: (feedId) => void map.delete(feedId),
-  };
-};
-
 describe('runFactPipeline', () => {
   let builder: EchoTestBuilder;
 
@@ -79,15 +70,15 @@ describe('runFactPipeline', () => {
     await db.flush();
 
     const maxKey = Math.max(...messages.map((message) => Date.parse(message.created)));
-    const cursors = makeCursors();
+    const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
 
     // Both runs share ONE provided Effect chain so the memoized FactStore instance is reused.
     const result = await Effect.gen(function* () {
-      const first = yield* runFactPipeline({ feed, cursors, extract: stubExtract, pageSize: 10 });
+      const first = yield* runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 10 });
       const store = yield* FactStore;
       const storedFacts = yield* store.query({});
-      const second = yield* runFactPipeline({ feed, cursors, extract: stubExtract, pageSize: 10 });
-      return { first, second, storedFacts, cursorValue: cursors.get(feed.id) };
+      const second = yield* runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 10 });
+      return { first, second, storedFacts, cursorValue: Cursor.parseKey(cursor.max) };
     }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FactStore.layerMemory), EffectEx.runAndForwardErrors);
 
     expect(result.first.processed).toBe(2);

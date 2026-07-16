@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 import { Connection, Connector } from '@dxos/plugin-connector';
-import { AccessToken } from '@dxos/types';
 
 import { IBKR_CONNECTOR_ID, IBKR_SOURCE } from '../constants';
 

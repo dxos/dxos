@@ -3,6 +3,7 @@
 //
 
 export * from './SyncOptions';
+export * from './SyncStreamConfig';
 
 export * as Calendar from './Calendar';
 export * as ExtractedFrom from './ExtractedFrom';

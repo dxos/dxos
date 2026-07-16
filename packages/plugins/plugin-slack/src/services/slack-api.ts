@@ -16,6 +16,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
+import { type AccessToken } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector';
 
 import { SLACK_API_BASE } from '../constants';
@@ -119,13 +120,24 @@ const SlackUsersInfoResponseSchema = Schema.Struct({
 /**
  * Layer-based credentials service. Every API call pulls creds from this service
  * rather than threading them through, so callers compose
- * `Effect.provide(SlackApi.SlackCredentials.fromConnection(ref))` once at the
- * operation boundary.
+ * `Effect.provide(SlackApi.SlackCredentials.fromConnection(ref))` (discovery, given a
+ * `Connection` directly) or `Effect.provide(SlackApi.SlackCredentials.fromAccessToken(ref))`
+ * (sync, given an external-sync cursor's `spec.source`) once at the operation boundary.
  */
 export class SlackCredentials extends Context.Tag('@dxos/plugin-slack/SlackCredentials')<
   SlackCredentials,
   SlackCredentialsValue
 >() {
+  /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
+  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+    Layer.effect(
+      SlackCredentials,
+      Effect.gen(function* () {
+        const accessToken = yield* Database.load(accessTokenRef);
+        return { token: accessToken.token };
+      }),
+    );
+
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       SlackCredentials,

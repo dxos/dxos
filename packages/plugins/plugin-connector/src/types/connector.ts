@@ -10,12 +10,11 @@ import { Capability } from '@dxos/app-framework';
 import type { Client } from '@dxos/client';
 import type { Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
-import type { AccessToken } from '@dxos/types';
 
 import { type ConnectionTestError } from '../errors';
 import * as Connection from './Connection';
-import * as SyncBinding from './SyncBinding';
 
 /** Descriptor for one remote target returned by discovery operations. */
 export const RemoteTarget = Schema.Struct({
@@ -62,9 +61,9 @@ export const MaterializeTargetOutput = Schema.Struct({
 });
 export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof MaterializeTargetOutput> {}
 
-/** Minimum input for provider {@link ConnectorEntry.sync} operations: one binding to reconcile. */
+/** Minimum input for provider {@link ConnectorEntry.sync} operations: one cursor to reconcile. */
 export type SyncInput = {
-  binding: Ref.Ref<SyncBinding.SyncBinding>;
+  binding: Ref.Ref<Cursor.Cursor>;
 };
 
 /**
@@ -85,6 +84,20 @@ export type OnTokenCreated = (input: {
    */
   existingTarget?: Ref.Ref<Obj.Unknown>;
 }) => Effect.Effect<void, never, HttpClient.HttpClient>;
+
+/**
+ * Hook fired after an external-sync {@link Cursor.Cursor} is created for a target — a single-target
+ * bind (Gmail, JMAP) or one newly-selected multi-target row (Calendar). Connectors use this to set up
+ * recurring background sync (a Routine wrapping a timer Trigger, invoking the same {@link sync}
+ * operation `ConnectorOperation.SyncConnection` invokes directly) for the target; unlike
+ * {@link OnTokenCreated}, this runs once per bound target rather than once per connection.
+ */
+export type OnCursorCreated = (input: {
+  connection: Connection.Connection;
+  cursor: Cursor.ExternalCursor;
+  target: Obj.Unknown;
+  db: Database.Database;
+}) => Effect.Effect<void, never>;
 
 /**
  * Probe whether a connection's stored credential is still valid.
@@ -198,6 +211,8 @@ export type ConnectorEntry = {
    * declares {@link oauth} — the user is offered a reauthenticate action on failure.
    */
   testConnection?: TestConnection;
+  /** Set up recurring background sync for a newly-bound target (see {@link OnCursorCreated}). */
+  onCursorCreated?: OnCursorCreated;
 };
 
 /**

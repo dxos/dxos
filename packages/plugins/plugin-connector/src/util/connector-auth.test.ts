@@ -2,13 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
+import { AccessToken, Cursor } from '@dxos/link';
 import { Node } from '@dxos/plugin-graph';
 import { OAuthProvider } from '@dxos/protocols';
-import { AccessToken } from '@dxos/types';
 
 import { Connection, type ConnectorEntry } from '../types';
 import { connectorAuthActions } from './connector-auth';
@@ -36,7 +39,7 @@ describe('connectorAuthActions', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Connection.Connection, AccessToken.AccessToken]);
+    graph.registry.add([Connection.Connection, AccessToken.AccessToken, Cursor.Cursor]);
     const addConnection = (connectorId: string) => {
       const token = db.add(Obj.make(AccessToken.AccessToken, { source: `${connectorId}.example`, token: 'tok' }));
       return db.add(Obj.make(Connection.Connection, { connectorId, accessToken: Ref.make(token) }));
@@ -91,5 +94,37 @@ describe('connectorAuthActions', () => {
       'connect-a',
       'connect-b',
     ]);
+  });
+
+  test('reuse binds a cursor to the existing target and fires onCursorCreated', async ({ expect }) => {
+    const { db, addConnection } = await setup();
+    const connection = addConnection('b');
+    const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
+    const onCursorCreated = vi.fn(
+      (_input: Parameters<NonNullable<ConnectorEntry['onCursorCreated']>>[0]) => Effect.void,
+    );
+    const connector: ConnectorEntry = makeConnector('b', { onCursorCreated });
+
+    const actions = connectorAuthActions({
+      connectorIds: ['b'],
+      db,
+      spaceId: db.spaceId,
+      existingTarget: Ref.make(target),
+      allConnectors: [connector],
+      allConnections: [connection],
+    });
+    const [reuse] = actions[0].actions ?? [];
+    invariant(Node.isAction(reuse));
+    await EffectEx.runAndForwardErrors(reuse.data());
+
+    const cursors = await db.query(Filter.type(Cursor.Cursor)).run();
+    expect(cursors).toHaveLength(1);
+    expect(cursors[0].spec.kind).toBe('external');
+
+    expect(onCursorCreated).toHaveBeenCalledTimes(1);
+    const [input] = onCursorCreated.mock.calls[0];
+    expect(input.connection.id).toBe(connection.id);
+    expect(input.target.id).toBe(target.id);
+    expect(input.cursor.id).toBe(cursors[0].id);
   });
 });

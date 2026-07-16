@@ -45,10 +45,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const calendarRef = useRef<CalendarController>(null);
   const eventStackRef = useRef<MosaicScrollController>(null);
   // Syncing drafts (and the pull "Sync" toolbar action) require a connection bound to this calendar.
-  const { connection, sync, syncing } = useTargetSync(subject, {
-    success: ['sync-calendar-success.title', { ns: meta.profile.key }],
-    error: ['sync-calendar-error.title', { ns: meta.profile.key }],
-  });
+  const { connection, sync } = useTargetSync(subject);
 
   const feed = calendar.feed?.target;
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented
@@ -203,17 +200,15 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           handleSyncDraft,
         );
       }
-      // Own action: pull-sync from Google once connected (a `SyncBinding` exists).
+      // Own action: pull-sync from Google once connected (an external-sync `Cursor` exists).
       if (connection) {
-        const isSyncing = get(syncing);
         builder.action(
           'sync',
           {
             label: ['sync-calendar.label', { ns: meta.profile.key }],
-            icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+            icon: 'ph--arrows-clockwise--regular',
             variant: 'primary',
             iconOnly: false,
-            disabled: isSyncing,
           },
           () => {
             void sync();
@@ -225,7 +220,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         .subgraph(graphActions(graph, get, id, { filter: isToolbarAction }))
         .build();
     },
-    [graph, id, handleCreate, handleSyncDraft, draftEvents.length, connection, sync, syncing],
+    [graph, id, handleCreate, handleSyncDraft, draftEvents.length, connection, sync],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });

@@ -12,8 +12,9 @@ import { persistentClientServices } from '@dxos/client/testing';
 import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -29,7 +30,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
-import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Person } from '@dxos/types';
 
 import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
 
@@ -44,7 +45,6 @@ const TYPES = [
   Operation.PersistentOperation,
   Organization.Organization,
   Person.Person,
-  SyncBinding.SyncBinding,
   Tag.Tag,
   TagIndex.TagIndex,
   Trigger.Trigger,
@@ -54,11 +54,7 @@ const TYPES = [
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
 const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
 
-type DecoratorOptions = {
-  trigger?: boolean;
-};
-
-const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
+const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
@@ -85,7 +81,7 @@ const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
       DebugPlugin({}),
       PreviewPlugin(),
       ProgressPlugin(),
-      ...(trigger ? [RoutinePlugin()] : []),
+      RoutinePlugin(),
       StorySyncPlugin(),
       StoryModulesPlugin(),
       StorybookPlugin({}),
@@ -107,7 +103,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
   component: DefaultStory,
-  decorators: createDecorators(),
+  decorators: DECORATORS,
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -121,12 +117,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: DefaultStory,
-};
-
-export const WithSyncTrigger: Story = {
-  render: DefaultStory,
-  decorators: createDecorators({ trigger: true }),
-  args: {
-    batch: 10,
-  },
 };

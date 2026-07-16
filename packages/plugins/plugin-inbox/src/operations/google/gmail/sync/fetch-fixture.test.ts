@@ -30,14 +30,23 @@ describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live 
     async () => {
       const builder = await new EchoTestBuilder().open();
       try {
-        const { db, mailbox, connection, binding } = await seedMailboxBinding(builder, { token: ACCESS_TOKEN! });
+        // The sync op takes a day-count horizon, but an absolute date reads better for a manual pull —
+        // accept `FETCH_AFTER=yyyy-mm-dd` and translate to days-back (at least one). Fail loudly on an
+        // unparseable date rather than letting `NaN` flow through.
+        const fetchAfter = process.env.FETCH_AFTER;
+        const afterMs = fetchAfter ? Date.parse(fetchAfter) : Number.NaN;
+        if (fetchAfter && Number.isNaN(afterMs)) {
+          throw new Error(`Invalid FETCH_AFTER date: "${fetchAfter}" (expected yyyy-mm-dd)`);
+        }
+        const syncBackDays = fetchAfter ? Math.max(1, Math.ceil((Date.now() - afterMs) / 86_400_000)) : undefined;
+        const { db, mailbox, connection, binding } = await seedMailboxBinding(builder, {
+          token: ACCESS_TOKEN!,
+          ...(syncBackDays !== undefined ? { options: { syncBackDays } } : {}),
+        });
 
         const messages = await EffectEx.runPromise(
           Effect.gen(function* () {
-            yield* syncGmail({
-              binding: Ref.make(binding),
-              ...(process.env.FETCH_AFTER ? { after: process.env.FETCH_AFTER } : {}),
-            });
+            yield* syncGmail({ binding: Ref.make(binding) });
             const feedUri = Feed.getFeedUri(mailbox.feed.target!)!;
             return yield* Effect.promise(() =>
               db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(feedUri))).run(),

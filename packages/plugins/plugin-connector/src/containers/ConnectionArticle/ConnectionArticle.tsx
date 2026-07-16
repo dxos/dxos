@@ -2,24 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
 
-import { type Connection, SyncBinding } from '../../types';
+import { type Connection } from '../../types';
+import { isCursorForConnection } from '../../util';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;
 
 /**
  * Container for the {@link Connection} article surface. Resolves the connection's
- * connector capability, sync state, and bindings, then hands resolved values and
+ * connector capability, sync state, and cursors, then hands resolved values and
  * handlers to the presentational {@link ConnectionView} (the capability hooks live
  * here so the view stays storybook-mountable).
  */
@@ -29,7 +31,11 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   const [accessToken] = useObject(subject.accessToken);
   const connector = useConnector(connection?.connectorId);
   const db = Obj.getDatabase(subject);
-  const bindings = useQuery(db, Query.select(Filter.id(subject.id)).sourceOf(SyncBinding.SyncBinding));
+  const allCursors = useQuery(db, Filter.type(Cursor.Cursor));
+  const bindings = useMemo(
+    () => allCursors.filter((cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, subject)),
+    [allCursors, subject],
+  );
   const { invokePromise } = useOperationInvoker();
 
   const { available: syncTargetsAvailable, loading, openChecklist } = useSyncTargetsChecklist(subject);
@@ -42,7 +48,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   }, [invokePromise, subject]);
 
   const handleRemoveBinding = useCallback(
-    (binding: SyncBinding.SyncBinding) => {
+    (binding: Cursor.ExternalCursor) => {
       void invokePromise(SpaceOperation.RemoveObjects, { objects: [binding] });
     },
     [invokePromise],

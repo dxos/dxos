@@ -493,10 +493,6 @@ export default defineConfig((env) => ({
       },
     }),
 
-    // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // Open: http://localhost:5173/__inspect
-    isTrue(process.env.DX_INSPECT) && inspect(),
-
     isTrue(process.env.DX_STATS) && [
       visualizer({
         emitFile: true,

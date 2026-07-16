@@ -160,6 +160,7 @@
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",

@@ -10,7 +10,8 @@ import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
-import { SyncBinding } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/link';
+import { isCursorForTarget } from '@dxos/plugin-connector';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { useQuery } from '@dxos/react-client/echo';
@@ -28,13 +29,15 @@ export const TriggersModule = ({ space }: ModuleProps) => {
   );
   const { state, start, stop } = useTriggerRuntimeControls(space.db);
 
-  // The mailbox's sync binding is the trigger's input; a trigger can only be created once it exists.
+  // The mailbox's sync cursor is the trigger's input; a trigger can only be created once it exists.
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
-  const bindings = useQuery(
-    space.db,
-    mailbox ? Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding) : Query.select(Filter.nothing()),
-  );
-  const binding = bindings.find(SyncBinding.instanceOf);
+  const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
+  const binding = mailbox
+    ? cursors.find(
+        (candidate): candidate is Cursor.ExternalCursor =>
+          Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
+      )
+    : undefined;
 
   // Wire a manual trigger to the Gmail sync operation, linked to the mailbox via `MailboxTriggerRelation`.
   const handleCreateTrigger = useCallback(() => {

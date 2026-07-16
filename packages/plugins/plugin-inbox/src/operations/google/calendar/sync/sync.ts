@@ -5,38 +5,40 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver } from '@dxos/extractor';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { SyncBinding } from '@dxos/plugin-connector';
 
 import { GoogleCalendar } from '../../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
-import { Calendar } from '../../../../types';
+import { Calendar, type SyncStreamConfig } from '../../../../types';
 import { mapEvent } from '../mapper';
 import { type CalendarPageEffect, fetchEvents } from './fetch';
 
-const COMMIT_PAGE_SIZE = 10;
+/** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+const CALENDAR_SYNC_CONFIG = {
+  listPageSize: 100,
+  commitPageSize: 10,
+} as const satisfies SyncStreamConfig;
 
 const DEFAULT_SYNC_BACK_DAYS = 30;
 const DEFAULT_SYNC_FORWARD_DAYS = 365;
-const DEFAULT_PAGE_SIZE = 100;
 
 /** Maps a Google event to a commit unit (event → feed). Resolves attendees via `Resolver`; drops
  * cancelled/start-less events (mapEvent returns null). Events carry no tags or extracted objects. */
-export const mapEventStage: Stage.Stage<GoogleCalendar.Event, SyncBinding.CommitUnit, never, Resolver> = Stage.map(
+export const mapEventStage: Stage.Stage<GoogleCalendar.Event, Cursor.CommitUnit, never, Resolver> = Stage.map(
   'map-event',
   (event: GoogleCalendar.Event) =>
     mapEvent(event).pipe(
       Effect.map((mapped) =>
         mapped
           ? {
-              message: mapped,
+              object: mapped,
               foreignId: event.id,
               key: event.updated ? Date.parse(event.updated) : 0,
-              tagUris: [],
             }
           : undefined,
       ),
@@ -62,7 +64,7 @@ export const makeRecurringDedupStage = (enabled: boolean): Stage.Stage<GoogleCal
 };
 
 export type SyncCalendarProps = {
-  binding: Ref.Ref<SyncBinding.SyncBinding>;
+  binding: Ref.Ref<Cursor.Cursor>;
   googleCalendarId?: string;
   syncBackDays?: number;
   syncForwardDays?: number;
@@ -82,7 +84,7 @@ export const syncCalendar = ({
   googleCalendarId = 'primary',
   syncBackDays = DEFAULT_SYNC_BACK_DAYS,
   syncForwardDays = DEFAULT_SYNC_FORWARD_DAYS,
-  pageSize = DEFAULT_PAGE_SIZE,
+  pageSize = CALENDAR_SYNC_CONFIG.listPageSize,
 }: SyncCalendarProps): Effect.Effect<
   { newEvents: number },
   Effect.Effect.Error<CalendarPageEffect> | EntityNotFoundError,
@@ -90,7 +92,10 @@ export const syncCalendar = ({
 > =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
-    const calendar = Relation.getTarget(binding);
+    if (!Cursor.isExternal(binding)) {
+      return { newEvents: 0 };
+    }
+    const calendar = yield* Database.load(binding.spec.target);
     if (!Calendar.instanceOf(calendar)) {
       // The integration mechanism only ever binds Calendars for Google Calendar.
       return { newEvents: 0 };
@@ -98,41 +103,40 @@ export const syncCalendar = ({
 
     const feed = yield* Database.load(calendar.feed);
     const fk = Obj.getMeta(calendar).keys?.find((key) => key.source === GOOGLE_INTEGRATION_SOURCE);
-    const calendarId = fk?.id ?? binding.remoteId ?? googleCalendarId;
-    const optRecord = binding.options ?? {};
+    const calendarId = fk?.id ?? binding.spec.externalId ?? googleCalendarId;
+    const optRecord = binding.spec.options ?? {};
     const syncBack = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : syncBackDays;
     const syncForward = typeof optRecord.syncForwardDays === 'number' ? optRecord.syncForwardDays : syncForwardDays;
     const searchFilter = typeof optRecord.filter === 'string' ? optRecord.filter : undefined;
 
     // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A missing
     // cursor means initial sync (window by start time); otherwise incremental (by `updatedMin`).
-    const cursor = yield* Database.load(binding.cursor);
-    const cursorKey = typeof cursor.value === 'string' ? Date.parse(cursor.value) : 0;
+    const cursorKey = typeof binding.max === 'string' ? Date.parse(binding.max) : 0;
     const isInitialSync = cursorKey === 0;
     log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
-    const stats: SyncBinding.Stats = { newMessages: 0 };
+    const stats: Cursor.Stats = { newMessages: 0 };
     yield* fetchEvents(calendarId, cursorKey, {
       syncBackDays: syncBack,
       syncForwardDays: syncForward,
       pageSize,
       searchFilter,
     }).pipe(
-      SyncBinding.dedupStage<GoogleCalendar.Event>(
+      Cursor.dedupStage<GoogleCalendar.Event>(
         'dedup',
         (event) => event.id,
         (event) => (event.updated ? Date.parse(event.updated) : 0),
       ),
       makeRecurringDedupStage(isInitialSync),
       mapEventStage,
-      Stream.grouped(COMMIT_PAGE_SIZE),
-      Pipeline.run({ sink: SyncBinding.commit }),
+      Stream.grouped(CALENDAR_SYNC_CONFIG.commitPageSize),
+      Pipeline.run({ sink: Cursor.commit }),
       Effect.provide(
-        SyncBinding.layer({
-          binding,
+        Cursor.layer({
+          cursor: binding,
           feed,
           foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
-          cursorKey,
+          maxKey: cursorKey,
           // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
           formatCursor: (key) => new Date(key).toISOString(),
           stats,
@@ -141,7 +145,7 @@ export const syncCalendar = ({
     );
 
     // Flush indexes once at the end of the run (per-page commits no longer flush — see
-    // `SyncBinding.commit`) so cross-run dedup / resolution observe this run's writes.
+    // `Cursor.commit`) so cross-run dedup / resolution observe this run's writes.
     yield* Database.flush({ indexes: true });
 
     log('calendar sync complete', { newEvents: stats.newMessages, isInitialSync });

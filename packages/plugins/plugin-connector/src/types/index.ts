@@ -9,4 +9,3 @@ export * from './create-connection-form';
 
 export * as Connection from './Connection';
 export * as ConnectorOperation from './ConnectorOperation';
-export * as SyncBinding from './SyncBinding';
