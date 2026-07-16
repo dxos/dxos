@@ -55,8 +55,8 @@ and the legacy API is deleted (Phase 8).
 
 ## Phase 6 — Testing utils + docs
 
-- [ ] `testing/withPluginManager.tsx`, `harness.ts`, `service.ts` accept new-style modules
-- [ ] Rewrite `org.dxos.app-framework.moduleActivationOrdering` idiom doc (plugin.ts)
+- [x] `testing/withPluginManager.tsx`, `harness.ts`, `service.ts` — no changes needed: they route through `activate(Startup)` → `start()` and accept typed modules via the builder (fixture internals go new-style in Phase 8)
+- [x] `org.dxos.app-framework.moduleActivationOrdering` idiom doc rewritten (done in Phase 2 with the PluginModule JSDoc)
 
 ## Phase 7 — Migrate all remaining plugins (~180)
 

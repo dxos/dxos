@@ -37,6 +37,6 @@ projects:
     tasks: .agents/projects/app-framework-capability-activation/TASKS.md
     design: .agents/projects/app-framework-capability-activation/DESIGN.md
     prs: []
-    resume: 'Phases 1-2 done (tags/arity/contributions/errors + typed module authoring). Next: Phase 3 — PluginManager dependency pass + start() coexistence.'
+    resume: 'Phases 1-6 done + mixed-coexistence Composer boot e2e green (TASKS Phase-5 findings: warn-on-missing-provides, routine LayerSpecs migrated, graph-extension atom-read pattern, contribute memoization). Next: Phase 7 — migrate ~180 plugins (foundational wave: plugin-space, plugin-graph, plugin-settings, plugin-deck, plugin-attention; then parallel leaf batches via Sonnet subagents). Boot check: moon run composer-app:serve, headless chromium localhost:5173, wait testid treeView.userAccount.'
 
 ended: []
