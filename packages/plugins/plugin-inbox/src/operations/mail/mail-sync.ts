@@ -21,7 +21,7 @@ import { type ContentBlock } from '@dxos/types';
 import { MailSyncError } from '../../errors';
 import { meta } from '../../meta';
 import { Mailbox, type SyncStreamConfig } from '../../types';
-import { onArrivalExtractors, readBindingOptions } from '../../util';
+import { readBindingOptions } from '../../util';
 
 /**
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect
@@ -307,7 +307,11 @@ export const runMailSync = (
         Stream.tap(() => Effect.sync(() => (taken += 1))),
         Stage.map('process', (item: MailSyncItem) => item.process),
         EmailStage.processAttachments(),
-        onArrivalExtractors(mailbox),
+        // TODO(wittjosiah): Not compatible with edge compute — reaches `Capability.Service`
+        //   (`InboxCapabilities.ObjectExtractor`) and invokes `Operation.ExtractMessage`, neither of
+        //   which is available off-host. Factor on-arrival extraction into a separate pipeline that runs
+        //   where those services exist, rather than inline in the sync.
+        // onArrivalExtractors(mailbox),
         EmailStage.extractContacts(),
         EmailStage.reconcileDrafts(draftPool),
         collectStats,
