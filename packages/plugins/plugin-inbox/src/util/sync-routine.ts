@@ -14,9 +14,14 @@ import { Routine, connectedRoutinesQuery } from '@dxos/plugin-routine';
 /** How often an auto-created sync routine's timer trigger fires. */
 const SYNC_ROUTINE_CRON = '*/10 * * * *';
 
-/** The entity id a `Ref` points at, independent of bare vs space-qualified encoding. */
-const refEntityId = (ref: unknown): string | undefined =>
-  Ref.isRef(ref) ? (EID.getEntityId(EID.parse(ref.uri)) ?? undefined) : undefined;
+/** The entity id a `Ref` points at, independent of bare vs space-qualified encoding; `undefined` for a non-object (e.g. type) ref. */
+const refEntityId = (ref: unknown): string | undefined => {
+  if (!Ref.isRef(ref)) {
+    return undefined;
+  }
+  const eid = EID.tryParse(ref.uri);
+  return eid ? (EID.getEntityId(eid) ?? undefined) : undefined;
+};
 
 /**
  * Whether `trigger` is a timer sync trigger bound to `target`: its `input.binding` references an external-sync
