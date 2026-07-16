@@ -9,7 +9,6 @@ import { meta } from '#meta';
 import { Mailbox } from '#types';
 
 import { deleteAction, openGroup } from '../Toolbar';
-import { type ViewMode, viewModeGroup } from '../ViewMode';
 import { useExtractorActions } from './useExtractorActions';
 
 export type UseMessageToolbarActionsProps = {
@@ -18,13 +17,6 @@ export type UseMessageToolbarActionsProps = {
   /** Graph node id of the message (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
   message: Mailbox.MessageLike;
-  /** Whether remote images are currently loaded inline. */
-  loadRemoteImages: boolean;
-  viewMode: ViewMode;
-  /** Omit to hide the view-mode switcher (read-only body). */
-  setViewMode?: (mode: ViewMode) => void;
-  /** Toggle the remote-image loading setting. */
-  onToggleLoadImages: () => void;
   onOpen?: () => void;
   onDelete?: () => void;
   onReply?: () => void;
@@ -34,14 +26,13 @@ export type UseMessageToolbarActionsProps = {
   onAiReply?: () => void;
 };
 
+// Body view controls (view-mode switch, load-images) apply to the whole conversation, so they live on
+// the thread toolbar (see {@link useThreadViewActions}), not here — this builds only the per-message
+// actions (reply/forward/…) that target the individual message.
 export const useMessageActions = ({
   graph,
   nodeId,
   message,
-  loadRemoteImages,
-  viewMode,
-  setViewMode,
-  onToggleLoadImages,
   onOpen,
   onDelete,
   onReply,
@@ -55,41 +46,12 @@ export const useMessageActions = ({
     (get) =>
       MenuBuilder.make()
         .root({ label: ['message-toolbar.label', { ns: meta.profile.key }] })
-        .subgraph(onOpen && openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen }))
-        .subgraph(
-          // Only offer the view-mode switcher when the body is controllable (a setter was provided).
-          // Messages offer all view modes (the group's default); markdown/plain derive in-memory.
-          setViewMode && viewModeGroup({ ns: meta.profile.key, viewMode, setViewMode }),
-        )
-        .subgraph((b) =>
-          b.action(
-            'load-images',
-            {
-              label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
-              icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
-              iconOnly: true,
-              checked: loadRemoteImages,
-            },
-            onToggleLoadImages,
-          ),
-        )
-        .separator('gap')
-        .subgraph(
-          onReply &&
-            ((b) =>
-              b.action(
-                'reply',
-                {
-                  label: ['message-toolbar-reply.menu', { ns: meta.profile.key }],
-                  icon: 'ph--arrow-bend-up-left--regular',
-                },
-                onReply,
-              )),
-        )
+        // Gmail pattern: Reply All is the single visible action; everything else lives in the
+        // overflow menu so the per-message toolbar stays compact. (The tile right-aligns the toolbar.)
         .subgraph(
           onReplyAll &&
-            ((b) =>
-              b.action(
+            ((builder) =>
+              builder.action(
                 'replyAll',
                 {
                   label: ['message-toolbar-reply-all.menu', { ns: meta.profile.key }],
@@ -98,72 +60,64 @@ export const useMessageActions = ({
                 onReplyAll,
               )),
         )
-        .subgraph(
-          onForward &&
-            ((b) =>
-              b.action(
-                'forward',
-                {
-                  label: ['message-toolbar-forward.menu', { ns: meta.profile.key }],
-                  icon: 'ph--arrow-bend-up-right--regular',
-                },
-                onForward,
-              )),
-        )
-        .subgraph(
-          onAiReply &&
-            ((b) =>
-              b.action(
-                'ai-reply',
-                {
-                  label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }],
-                  icon: 'ph--sparkle--regular',
-                },
-                onAiReply,
-              )),
-        )
-        .separator()
-        .subgraph((b) => {
-          if (extractorActions.length > 0) {
-            return b.group(
-              'extract',
+        // Overflow menu grouped into sections (reply · extract · open/plugin · delete) separated by
+        // dividers. Each divider is guarded on its section having content so no stray dividers appear.
+        .menu('more', (builder) => {
+          // Reply / Forward / AI reply.
+          if (onReply) {
+            builder.action(
+              'reply',
               {
-                label: ['message-toolbar-extract.menu', { ns: meta.profile.key }],
-                icon: 'ph--magic-wand--regular',
-                iconOnly: true,
-                variant: 'dropdownMenu',
+                label: ['message-toolbar-reply.menu', { ns: meta.profile.key }],
+                icon: 'ph--arrow-bend-up-left--regular',
               },
-              (group) => {
-                for (const item of extractorActions) {
-                  group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
-                }
-              },
+              onReply,
             );
           }
-        })
-        .menu('more', (b) => {
-          // Actions contributed by other plugins.
-          b.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
+          if (onForward) {
+            builder.action(
+              'forward',
+              {
+                label: ['message-toolbar-forward.menu', { ns: meta.profile.key }],
+                icon: 'ph--arrow-bend-up-right--regular',
+              },
+              onForward,
+            );
+          }
+          if (onAiReply) {
+            builder.action(
+              'ai-reply',
+              { label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }], icon: 'ph--sparkle--regular' },
+              onAiReply,
+            );
+          }
 
+          // Extraction actions (trips, people, …) contributed for this message.
+          if (extractorActions.length > 0) {
+            builder.separator('line');
+            for (const item of extractorActions) {
+              builder.action(
+                `extract-${item.id}`,
+                { label: item.label, icon: 'ph--magic-wand--regular' },
+                item.onSelect,
+              );
+            }
+          }
+
+          // Open, plus actions contributed by other plugins.
+          if (onOpen) {
+            builder.separator('line');
+            openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen })(builder);
+          }
+          builder.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
+
+          // Destructive.
           if (onDelete) {
-            deleteAction(b, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
+            builder.separator('line');
+            deleteAction(builder, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
           }
         })
         .build(),
-    [
-      graph,
-      nodeId,
-      viewMode,
-      setViewMode,
-      loadRemoteImages,
-      extractorActions,
-      onToggleLoadImages,
-      onOpen,
-      onReply,
-      onReplyAll,
-      onForward,
-      onAiReply,
-      onDelete,
-    ],
+    [graph, nodeId, extractorActions, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete],
   );
 };

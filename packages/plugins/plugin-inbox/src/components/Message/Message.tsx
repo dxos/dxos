@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer } from 'react';
 
@@ -38,9 +38,8 @@ import { useMessageActions } from './useToolbar';
 // TODO(burdon): Create pattern for 1-up.
 type MessageContextValue = {
   attendableId?: string;
+  /** Body render mode; owned by the conversation and switched from the thread toolbar. */
   viewMode: ViewMode;
-  /** Omit to make the body read-only: the toolbar then hides its view-mode switcher. */
-  setViewMode?: (mode: ViewMode) => void;
   message: Mailbox.MessageLike;
   /** Owning mailbox; enables starring (the message's tag association lives in the mailbox's tag index). */
   mailbox?: Mailbox.Mailbox;
@@ -77,7 +76,6 @@ type MessageRootProps = PropsWithChildren<
 const MessageRoot = ({
   children,
   viewMode = 'markdown',
-  setViewMode,
   onOpen,
   onReply,
   onReplyAll,
@@ -89,7 +87,6 @@ const MessageRoot = ({
   return (
     <MessageContextProvider
       viewMode={viewMode}
-      setViewMode={setViewMode}
       onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
@@ -112,19 +109,8 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete } =
+  const { attendableId, message, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-
-  // Settings capability is optional (see MessageBody); fall back to safe defaults outside the plugin.
-  const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
-  const settingsAtom = settingsAtoms[0] ?? FALLBACK_SETTINGS_ATOM;
-  const settings = useAtomValue(settingsAtom);
-  const setSettings = useAtomSet(settingsAtom);
-  const loadRemoteImages = settings.loadRemoteImages ?? false;
-  const onToggleLoadImages = useCallback(
-    () => setSettings((prev) => ({ ...prev, loadRemoteImages: !(prev.loadRemoteImages ?? false) })),
-    [setSettings],
-  );
 
   // Optional: the graph capability isn't present in standalone (no-graph-plugin) stories.
   const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
@@ -132,10 +118,6 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     graph,
     nodeId: attendableId,
     message,
-    loadRemoteImages,
-    viewMode,
-    setViewMode,
-    onToggleLoadImages,
     onOpen,
     onReply,
     onReplyAll,
