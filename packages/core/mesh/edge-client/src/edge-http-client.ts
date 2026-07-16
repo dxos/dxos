@@ -8,6 +8,7 @@ import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 
 import { type Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -587,3 +588,11 @@ const getFileMimeType = (filename: string) =>
     : filename.endsWith('.wasm')
       ? 'application/wasm'
       : 'application/octet-stream';
+
+/**
+ * Layer constructing an {@link EdgeHttpClient} for the edge worker API.
+ */
+export const EdgeHttpClientLayer = (
+  baseUrl: string,
+  options?: EdgeHttpClientOptions,
+): Layer.Layer<EdgeHttpClientService> => Layer.sync(EdgeHttpClientService, () => new EdgeHttpClient(baseUrl, options));

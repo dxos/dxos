@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as Layer from 'effect/Layer';
+
 import { Event, sleep, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -21,7 +23,7 @@ import {
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
-import { type SignalManager } from './signal-manager';
+import { type SignalManager, SignalManagerService } from './signal-manager';
 import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 
 const MAX_SERVER_FAILURES = 5;
@@ -186,3 +188,11 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
     );
   }
 }
+
+/**
+ * Layer providing {@link SignalManagerService}, backed by a {@link WebsocketSignalManager} constructed
+ * from the configured signaling servers. The manager's open/close lifecycle is driven by the consuming
+ * service context, not by the layer scope.
+ */
+export const WebsocketSignalManagerLayer = (hosts: Runtime.Services.Signal[]): Layer.Layer<SignalManagerService> =>
+  Layer.sync(SignalManagerService, () => new WebsocketSignalManager(hosts));

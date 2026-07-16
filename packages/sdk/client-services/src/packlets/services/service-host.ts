@@ -19,32 +19,68 @@ import {
 } from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
-import { EffectEx, RuntimeProvider } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  SwarmNetworkManager,
+  EchoEdgeReplicatorLayer,
+  EchoEdgeSubductionReplicatorLayer,
+  EchoHostLayer,
+  EchoHostService,
+  MeshEchoReplicatorLayer,
+} from '@dxos/echo-host';
+import {
+  EdgeConnectionLayer,
+  EdgeConnectionService,
+  EdgeHttpClientLayer,
+  EdgeHttpClientService,
+} from '@dxos/edge-client';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import { FeedFactoryLayer, FeedStoreLayer } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
+import { SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
+import { log } from '@dxos/log';
+import {
+  EdgeSignalManagerLayer,
+  type SignalManager,
+  SignalManagerService,
+  WebsocketSignalManagerLayer,
+} from '@dxos/messaging';
+import {
+  RtcTransportFactoryLayer,
+  SwarmNetworkManagerLayer,
   SwarmNetworkManagerService,
   type TransportFactory,
-  createIceProvider,
-  createRtcTransportFactory,
+  TransportFactoryService,
 } from '@dxos/network-manager';
+import { FeedProtocol } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime as RuntimeConfig } from '@dxos/protocols/proto/dxos/config';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
+import { SqliteBlobStore, SqliteBlobStoreLayer } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+import { EdgeAgentManagerLayer } from '../agents';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
   type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
 } from '../diagnostics';
+import {
+  IdentityManagerLayer,
+  type IdentityManagerProps,
+  IdentityManagerService,
+  IdentityProviderService,
+  identityProviderFromManager,
+} from '../identity';
+import { EdgeIdentityRecoveryManagerLayer } from '../identity/identity-recovery-manager';
+import { type InvitationConnectionProps, InvitationsHandlerLayer, InvitationsManagerLayer } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
+import { SqliteMetadataStore, SqliteMetadataStoreLayer } from '../metadata';
+import { valueEncoding } from '../pipeline';
+import { SpaceManagerLayer, SpaceManagerService } from '../space';
+import { DataSpaceManagerLayer, type DataSpaceManagerRuntimeProps, SigningContextProviderLayer } from '../spaces';
 import { SystemServiceImpl } from '../system';
 import {
   type ClientServicesRpcContext,
@@ -60,13 +96,35 @@ import {
   QueryServiceRpc,
   SpacesServiceRpc,
 } from './client-services-layer';
+import { CrossDeviceSpaceSynchronizerLayer } from './cross-device-space-synchronizer';
+import { FeedSyncerLayer } from './feed-syncer';
 import {
-  ServiceContext,
-  ServiceContextLayer,
-  type ServiceContextRuntimeProps,
-  ServiceContextService,
-} from './service-context';
+  type ClientLifecycle,
+  ClientLifecycleService,
+  type ServiceContext,
+  type ServiceContextComponents,
+  StorageMigrationService,
+  makeServiceContext,
+} from './service-lifecycle';
 import { ServiceRegistry } from './service-registry';
+import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage';
+
+// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
+type SqlTransactionTag = SqlTransaction.SqlTransaction;
+
+export type ServiceContextRuntimeProps = Pick<
+  IdentityManagerProps,
+  'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval'
+> &
+  DataSpaceManagerRuntimeProps & {
+    invitationConnectionDefaultProps?: InvitationConnectionProps;
+    disableP2pReplication?: boolean;
+    enableVectorIndexing?: boolean;
+  };
+
+export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
+  edgeFeatures?: RuntimeConfig.Client.EdgeFeatures;
+};
 
 export type ClientServicesHostProps = {
   /**
@@ -94,6 +152,22 @@ export type InitializeOptions = {
 };
 
 /**
+ * Runtime built by the host: the composed component stack plus the client RPC handlers and the
+ * lifecycle surface. The concrete runtime provides a superset (transport factory, and edge clients
+ * when configured); {@link ManagedRuntime}'s `ROut` is contravariant, so it is assignable here.
+ */
+type StackRuntime = ManagedRuntime.ManagedRuntime<
+  | ClientServicesRpcContext
+  | ClientLifecycleService
+  | ServiceContextComponents
+  | SwarmNetworkManagerService
+  | SignalManagerService
+  | SqlClient.SqlClient
+  | SqlTransaction.SqlTransaction,
+  never
+>;
+
+/**
  * Remote service implementation.
  */
 export class ClientServicesHost {
@@ -104,15 +178,27 @@ export class ClientServicesHost {
   private readonly _statusUpdate = new Event<void>();
 
   private _config?: Config;
-  private _signalManager?: SignalManager;
-  private _networkManager?: SwarmNetworkManager;
+  // Optional test overrides for the base services (otherwise constructed from config via layers).
+  #signalManagerOverride?: SignalManager;
+  #transportFactoryOverride?: TransportFactory;
+  #connectionLog = true;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
-  private _edgeConnection?: EdgeConnection = undefined;
-  private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
-  #stackRuntime?: ManagedRuntime.ManagedRuntime<ServiceContextService | ClientServicesRpcContext, never>;
+
+  // Lifecycle surface provided into the stack so RPC handlers can drive identity creation and
+  // readiness gates. Delegates to the resolved {@link ServiceContext} handle, which is populated
+  // during `open` before any RPC call can arrive.
+  readonly #lifecycle: ClientLifecycle = {
+    createIdentity: (params, ctx) => this._serviceContext.createIdentity(params, ctx),
+    whenInitialized: () => this._serviceContext.whenInitialized(),
+    broadcastProfileUpdate: (profile) => this._serviceContext.broadcastProfileUpdate(profile),
+    whenDataSpaceManagerReady: () => this._serviceContext.whenDataSpaceManagerReady(),
+    whenEdgeAgentManagerReady: () => this._serviceContext.whenEdgeAgentManagerReady(),
+  };
+
+  #stackRuntime?: StackRuntime;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
   >;
@@ -260,45 +346,91 @@ export class ClientServicesHost {
       this._config = config;
     }
 
-    // TODO(wittjosiah): This is quite noisy during tests. Make configurable? Remove?
-    if (!options.signalManager) {
-      // log.warn('running signaling without telemetry metadata.');
-    }
-
-    const endpoint = config?.get('runtime.services.edge.url');
-    if (endpoint) {
-      const clientTag = resolveTelemetryTag(config);
-      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
-      this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
-    }
-
-    const {
-      connectionLog = true,
-      transportFactory = createRtcTransportFactory(
-        { iceServers: this._config?.get('runtime.services.ice') },
-        this._config?.get('runtime.services.iceProviders') &&
-          createIceProvider(this._config!.get('runtime.services.iceProviders')!),
-      ),
-      signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures')?.signaling
-        ? new EdgeSignalManager({ edgeConnection: this._edgeConnection })
-        : new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
-    } = options;
-    this._signalManager = signalManager;
-
-    invariant(!this._networkManager, 'network manager already set');
-    this._networkManager = new SwarmNetworkManager({
-      enableDevtoolsLogging: connectionLog,
-      transportFactory,
-      signalManager,
-      peerInfo: this._edgeConnection
-        ? {
-            identityDid: this._edgeConnection.identityDid,
-            peerKey: this._edgeConnection.peerKey,
-          }
-        : undefined,
-    });
+    // Retain any explicit overrides (e.g. memory transport / signaling in tests). The base services
+    // (edge clients, signal manager, transport factory, network manager) are otherwise constructed
+    // from config via layers when the host opens.
+    this.#transportFactoryOverride = options.transportFactory;
+    this.#signalManagerOverride = options.signalManager;
+    this.#connectionLog = options.connectionLog ?? true;
 
     log('initialized');
+  }
+
+  /**
+   * Composes the runtime for the service stack. The base services (network / signal / transport, and
+   * — when an edge endpoint is configured — the edge clients) are constructed by layers merged
+   * beneath the component stack. Edge clients sit at the base so the edge signal manager, edge
+   * replicator and feed syncer all share the single connection.
+   */
+  #buildStackRuntime(config: Config): StackRuntime {
+    const edgeFeatures = config.get('runtime.client.edgeFeatures');
+    const endpoint = config.get('runtime.services.edge.url');
+    const serviceContextOptions = { ...this._runtimeProps, edgeFeatures };
+
+    const lifecycleLayer = Layer.succeed(ClientLifecycleService, this.#lifecycle);
+    const runtimeProviderLayer = RuntimeProvider.toLayer(this._runtime);
+    const networkManagerLayer = SwarmNetworkManagerLayer({ enableDevtoolsLogging: this.#connectionLog });
+    const transportFactoryLayer = this.#transportFactoryOverride
+      ? Layer.succeed(TransportFactoryService, this.#transportFactoryOverride)
+      : RtcTransportFactoryLayer({
+          webrtcConfig: { iceServers: config.get('runtime.services.ice') },
+          iceProviders: config.get('runtime.services.iceProviders'),
+        });
+
+    // The edge and non-edge stacks cannot collapse into a single parameterized stack (the layer style
+    // guide's "one stack, variations as options"): the edge-only layers — edge clients, edge
+    // replicator, feed syncer and the edge signal manager — genuinely *require* the edge-client
+    // services, and `Layer`'s `ROut` is contravariant, so a `Layer.empty` in those slots cannot stand
+    // in as their provider without `EdgeConnectionService` leaking into the runtime's requirements.
+    // The two stacks are therefore built from the same shared layer bindings (above) and diverge only
+    // in the edge-only insertions below. Edge clients sit at the base so the edge signal manager, edge
+    // replicator and feed syncer share the single connection; the feed syncer sits above the core for
+    // its `EchoHostService`.
+    if (endpoint) {
+      const clientTag = resolveTelemetryTag(config);
+      const edgeClientsLayer = Layer.mergeAll(
+        EdgeConnectionLayer({ socketEndpoint: endpoint, clientTag }),
+        EdgeHttpClientLayer(endpoint, { clientTag }),
+      );
+      const signalManagerLayer = this.#signalManagerOverride
+        ? Layer.succeed(SignalManagerService, this.#signalManagerOverride)
+        : edgeFeatures?.signaling
+          ? EdgeSignalManagerLayer()
+          : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
+
+      return ManagedRuntime.make(
+        Layer.empty.pipe(
+          Layer.provideMerge(ClientServicesRpcLayer),
+          Layer.provideMerge(lifecycleLayer),
+          Layer.provideMerge(feedSyncerLayer),
+          Layer.provideMerge(ServiceContextLayer(serviceContextOptions)),
+          Layer.provideMerge(edgeReplicatorLayer(serviceContextOptions)),
+          Layer.provideMerge(networkManagerLayer),
+          Layer.provideMerge(signalManagerLayer),
+          Layer.provideMerge(transportFactoryLayer),
+          Layer.provideMerge(edgeClientsLayer),
+          Layer.provideMerge(runtimeProviderLayer),
+          Layer.orDie,
+        ),
+      );
+    }
+
+    const signalManagerLayer = this.#signalManagerOverride
+      ? Layer.succeed(SignalManagerService, this.#signalManagerOverride)
+      : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
+
+    return ManagedRuntime.make(
+      Layer.empty.pipe(
+        Layer.provideMerge(ClientServicesRpcLayer),
+        Layer.provideMerge(lifecycleLayer),
+        Layer.provideMerge(ServiceContextLayer(serviceContextOptions)),
+        Layer.provideMerge(networkManagerLayer),
+        Layer.provideMerge(signalManagerLayer),
+        Layer.provideMerge(transportFactoryLayer),
+        Layer.provideMerge(runtimeProviderLayer),
+        Layer.orDie,
+      ),
+    );
   }
 
   @synchronized
@@ -311,11 +443,7 @@ export class ClientServicesHost {
     log('opening service host');
 
     invariant(this._config, 'config not set');
-    invariant(this._signalManager, 'signal manager not set');
-    invariant(this._networkManager, 'network manager not set');
     const config = this._config;
-    const signalManager = this._signalManager;
-    const networkManager = this._networkManager;
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
@@ -324,94 +452,96 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    // Build a single runtime from the ServiceContext layer stack plus the client RPC service
-    // handlers layered on top, then resolve the orchestrator and every handler from it.
-    const stackLayer = ClientServicesRpcLayer.pipe(
-      Layer.provideMerge(
-        ServiceContextLayer({
-          ...this._runtimeProps,
-          edgeFeatures: config.get('runtime.client.edgeFeatures'),
-          edgeConnection: this._edgeConnection,
-          edgeHttpClient: this._edgeHttpClient,
+    try {
+      // Build the runtime from the component layer stack plus the client RPC service handlers and the
+      // lifecycle surface layered on top. The base services (network / signal / transport, and — when
+      // configured — edge clients) are constructed by layers merged beneath the stack.
+      this.#stackRuntime = this.#buildStackRuntime(config);
+      const resolved = await this.#stackRuntime.runPromise(
+        Effect.all({
+          identityService: IdentityServiceRpc,
+          contactsService: ContactsServiceRpc,
+          invitationsService: InvitationsServiceRpc,
+          devicesService: DevicesServiceRpc,
+          spacesService: SpacesServiceRpc,
+          networkService: NetworkServiceRpc,
+          edgeAgentService: EdgeAgentServiceRpc,
+          dataService: DataServiceRpc,
+          queryService: QueryServiceRpc,
+          feedService: FeedServiceRpc,
         }),
-      ),
-      Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
-      Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
-      Layer.provideMerge(RuntimeProvider.toLayer(this._runtime)),
-      Layer.orDie,
-    );
-    this.#stackRuntime = ManagedRuntime.make(stackLayer);
-    const resolved = await this.#stackRuntime.runPromise(
-      Effect.all({
-        serviceContext: ServiceContextService,
-        identityService: IdentityServiceRpc,
-        contactsService: ContactsServiceRpc,
-        invitationsService: InvitationsServiceRpc,
-        devicesService: DevicesServiceRpc,
-        spacesService: SpacesServiceRpc,
-        networkService: NetworkServiceRpc,
-        edgeAgentService: EdgeAgentServiceRpc,
-        dataService: DataServiceRpc,
-        queryService: QueryServiceRpc,
-        feedService: FeedServiceRpc,
-      }),
-    );
-    this._serviceContext = resolved.serviceContext;
-    const identityService = resolved.identityService;
+      );
 
-    this._serviceRegistry.setServices({
-      SystemService: this._systemService,
-      IdentityService: identityService,
-      ContactsService: resolved.contactsService,
+      // Assemble the service context handle from the resolved component stack; `#lifecycle` delegates
+      // to it once populated here, before any RPC handler can be invoked (host opens below).
+      this._serviceContext = await makeServiceContext(this.#stackRuntime);
+      const identityService = resolved.identityService;
 
-      InvitationsService: resolved.invitationsService,
+      this._serviceRegistry.setServices({
+        SystemService: this._systemService,
+        IdentityService: identityService,
+        ContactsService: resolved.contactsService,
 
-      DevicesService: resolved.devicesService,
+        InvitationsService: resolved.invitationsService,
 
-      SpacesService: resolved.spacesService,
+        DevicesService: resolved.devicesService,
 
-      DataService: resolved.dataService,
-      QueryService: resolved.queryService,
-      FeedService: resolved.feedService,
+        SpacesService: resolved.spacesService,
 
-      NetworkService: resolved.networkService,
+        DataService: resolved.dataService,
+        QueryService: resolved.queryService,
+        FeedService: resolved.feedService,
 
-      LoggingService: this._loggingService,
+        NetworkService: resolved.networkService,
 
-      // TODO(burdon): Move to new protobuf definitions.
-      DevtoolsHost: new DevtoolsServiceImpl({
-        events: new DevtoolsHostEvents(),
-        config: this._config,
-        context: this._serviceContext,
-        exportSqliteDatabase: () => this.exportSqliteDatabase(),
-        runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
-      }),
+        LoggingService: this._loggingService,
 
-      EdgeAgentService: resolved.edgeAgentService,
-    });
+        // TODO(burdon): Move to new protobuf definitions.
+        DevtoolsHost: new DevtoolsServiceImpl({
+          events: new DevtoolsHostEvents(),
+          config: this._config,
+          context: this._serviceContext,
+          exportSqliteDatabase: () => this.exportSqliteDatabase(),
+          runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
+        }),
 
-    log('service-host: opening service context...');
-    await this._serviceContext.open(ctx);
-    log('service-host: service context opened');
+        EdgeAgentService: resolved.edgeAgentService,
+      });
 
-    log('service-host: opening identity service...');
-    await identityService.open();
-    log('service-host: identity service opened');
+      log('service-host: opening service context...');
+      await this._serviceContext.open(ctx);
+      log('service-host: service context opened');
 
-    const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
-    if (devtoolsProxy) {
-      // TODO(dxos): The devtools websocket proxy serves the protobuf service bundle, which is
-      // incompatible with the effect-rpc Handlers the host now provides. Re-enable once this legacy
-      // transport is migrated to effect-rpc (or bridged via makeInProcessClient + a proto adapter).
-      log.warn('devtoolsProxy is not supported with effect-rpc services; skipping', { devtoolsProxy });
+      log('service-host: opening identity service...');
+      await identityService.open();
+      log('service-host: identity service opened');
+
+      const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
+      if (devtoolsProxy) {
+        // TODO(dxos): The devtools websocket proxy serves the protobuf service bundle, which is
+        // incompatible with the effect-rpc Handlers the host now provides. Re-enable once this legacy
+        // transport is migrated to effect-rpc (or bridged via makeInProcessClient + a proto adapter).
+        log.warn('devtoolsProxy is not supported with effect-rpc services; skipping', { devtoolsProxy });
+      }
+      this.diagnosticsBroadcastHandler.start();
+
+      this._opening = false;
+      this._open = true;
+      this._statusUpdate.emit();
+      const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+      log('opened', { deviceKey });
+    } catch (err) {
+      // A partially-opened stack still owns scoped resources (e.g. EchoHost); dispose it so a failed
+      // open cannot leak them or leave background work running (`close` bails out while `_open` is false).
+      // The resource lock and logging service are acquired before the try, so release them here too —
+      // otherwise a failed open holds the lock (blocking retries) and leaves the log processor installed.
+      await this.#stackRuntime?.dispose().catch(() => {});
+      this.#stackRuntime = undefined;
+      await this._loggingService.close().catch(() => {});
+      await this._resourceLock?.release().catch(() => {});
+      this._opening = false;
+      throw err;
     }
-    this.diagnosticsBroadcastHandler.start();
-
-    this._opening = false;
-    this._open = true;
-    this._statusUpdate.emit();
-    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
-    log('opened', { deviceKey });
   }
 
   @synchronized
@@ -442,6 +572,11 @@ export class ClientServicesHost {
     this._resetting = true;
     this._statusUpdate.emit();
     await this._serviceContext?.close();
+    // Dispose the managed stack (releasing layer-scoped resources such as EchoHost and stopping any
+    // background work) before wiping storage, so nothing writes to SQLite mid-deletion.
+    await this.#stackRuntime?.dispose().catch(() => {});
+    this.#stackRuntime = undefined;
+    this._open = false;
     // Wipe all SQLite tables so next open starts fresh.
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {
@@ -476,3 +611,155 @@ export class ClientServicesHost {
     await this._callbacks?.onReset?.();
   }
 }
+
+/**
+ * Effect Layer composing the dormant service components, constructed before identity is ready.
+ * Exposes the component tags in {@link ServiceContextComponents}; the service lifecycle (see
+ * `service-lifecycle.ts`) drives migrate/open, identity creation and readiness on top of them.
+ *
+ * Network, signal, transport and (when configured) edge clients are provided beneath this layer by
+ * the host; the edge-only {@link feedSyncerLayer} / {@link edgeReplicatorLayer} are composed around
+ * it by the host in edge mode (they resolve the edge clients from that base).
+ */
+export const ServiceContextLayer = (
+  options: ServiceContextLayerOptions,
+): Layer.Layer<
+  ServiceContextComponents,
+  never,
+  SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
+> => coreLayers(options);
+
+/**
+ * Composes the non-optional core layers into a single stack that callers merge beneath their top layer.
+ */
+const coreLayers = (options: ServiceContextLayerOptions) =>
+  Layer.empty.pipe(
+    Layer.provideMerge(CrossDeviceSpaceSynchronizerLayer),
+    Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
+    Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
+    Layer.provideMerge(SigningContextProviderLayer),
+    Layer.provideMerge(identityProviderLayer),
+    Layer.provideMerge(meshReplicatorLayer(options)),
+    Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
+    Layer.provideMerge(InvitationsManagerLayer()),
+    Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
+    Layer.provideMerge(EdgeIdentityRecoveryManagerLayer()),
+    Layer.provideMerge(
+      IdentityManagerLayer({
+        devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
+        devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
+        edgeFeatures: options.edgeFeatures,
+      }),
+    ),
+    Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
+    Layer.provideMerge(storageLayer),
+  );
+
+/**
+ * Optional mesh replicator: read via `serviceOption`, so its `ROut` is hidden (`Layer<never>`) —
+ * absence when p2p is disabled is modelled by not providing it, not by a null value.
+ */
+const meshReplicatorLayer = (options: ServiceContextLayerOptions): Layer.Layer<never, never, never> =>
+  options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer();
+
+/**
+ * Optional edge replicator (subduction / echo / none) — `ROut` hidden, read via `serviceOption`.
+ * Composed beneath {@link ServiceContextLayer} by the host in edge mode; resolves the edge clients
+ * from the base of the stack.
+ */
+const edgeReplicatorLayer = (
+  options: ServiceContextLayerOptions,
+): Layer.Layer<never, never, EdgeConnectionService | EdgeHttpClientService> =>
+  options.edgeFeatures?.subductionReplicator
+    ? EchoEdgeSubductionReplicatorLayer()
+    : options.edgeFeatures?.echoReplicator
+      ? EchoEdgeReplicatorLayer()
+      : Layer.empty;
+
+/**
+ * Feed syncer, composed above {@link ServiceContextLayer} by the host in edge mode: it needs
+ * `EchoHostService` from the core (below it) and the `EdgeConnectionService` from the base.
+ */
+const feedSyncerLayer = FeedSyncerLayer({
+  peerId: '',
+  syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+});
+
+/**
+ * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
+ */
+const identityProviderLayer = Layer.effect(
+  IdentityProviderService,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    return identityProviderFromManager(identityManager);
+  }),
+);
+
+/**
+ * Combined storage migration effect. Storage migrations are idempotent `CREATE TABLE` effects that
+ * do not depend on store instance state, so they are extracted from throwaway instances to keep the
+ * store layers individual. Run in stage 2 by the service lifecycle open sequence.
+ */
+const storageMigrationLayer = Layer.effect(
+  StorageMigrationService,
+  Effect.gen(function* () {
+    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+    return Effect.all(
+      [
+        new SqliteMetadataStore({ runtime }).migrate,
+        new SqliteBlobStore({ runtime }).migrate,
+        new SqliteKeyring({ runtime }).migrate,
+        new SqliteStorage({ runtime }).migrate,
+      ],
+      { discard: true },
+    );
+  }),
+);
+
+/**
+ * Storage / feed layers composed from the individual store layers plus the combined migration.
+ */
+const storageLayer = Layer.empty.pipe(
+  Layer.provideMerge(FeedStoreLayer()),
+  Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
+  Layer.provideMerge(FeedStorageDirectoryLayer()),
+  Layer.provideMerge(SqliteMetadataStoreLayer()),
+  Layer.provideMerge(SqliteBlobStoreLayer()),
+  Layer.provideMerge(SqliteKeyringLayer()),
+  Layer.provideMerge(SqliteStorageLayer()),
+  Layer.provideMerge(storageMigrationLayer),
+);
+
+/**
+ * Constructs the {@link EchoHost}, resolving the identity/space callbacks that point down the stack.
+ * The feed sync handlers (which point up) are wired later via `EchoHost.setFeedSyncHandlers`.
+ *
+ * The host is self-contained (runs its own migrations, owns its feed/automerge stores), so its
+ * open/close is owned by the layer scope: it opens when the stack is built and closes when the
+ * runtime is disposed. Identity-, network-, and storage-bound lifecycle stays in the service lifecycle.
+ */
+const echoHostLayer = (options: { useSubduction?: boolean }) =>
+  Layer.scopedDiscard(
+    Effect.gen(function* () {
+      const echoHost = yield* EchoHostService;
+      yield* Effect.acquireRelease(
+        Effect.promise(() => echoHost.open()),
+        () => Effect.promise(() => echoHost.close()),
+      );
+    }),
+  ).pipe(
+    Layer.provideMerge(
+      Layer.unwrapEffect(
+        Effect.gen(function* () {
+          const identityManager = yield* IdentityManagerService;
+          const spaceManager = yield* SpaceManagerService;
+          return EchoHostLayer({
+            peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),
+            getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
+            useSubduction: options.useSubduction,
+          });
+        }),
+      ),
+    ),
+  );

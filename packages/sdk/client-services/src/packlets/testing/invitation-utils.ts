@@ -9,7 +9,14 @@ import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { ServiceContext } from '../services';
+import { type ServiceContext } from '../services';
+
+/**
+ * Structural discriminator for a {@link ServiceContext} handle vs. a lightweight invitation
+ * host/guest (`ServiceContext` is now an interface, so `instanceof` is unavailable).
+ */
+const isServiceContext = (peer: ServiceContext | InvitationHost | InvitationGuest): peer is ServiceContext =>
+  'invitationsManager' in peer;
 
 /**
  * Strip secrets from invitation before giving it to the peer.
@@ -229,7 +236,7 @@ export const createInvitation = async (
     ...(options ?? {}),
   };
 
-  if (host instanceof ServiceContext) {
+  if (isServiceContext(host)) {
     return host.invitationsManager.createInvitation(new Context(), {
       kind: Invitation.Kind.SPACE,
       ...options,
@@ -246,7 +253,7 @@ export const acceptInvitation = (
 ): AuthenticatingInvitation => {
   invitation = sanitizeInvitation(invitation);
 
-  if (guest instanceof ServiceContext) {
+  if (isServiceContext(guest)) {
     return guest.invitationsManager.acceptInvitation(new Context(), {
       invitation,
       deviceProfile: guestDeviceProfile,

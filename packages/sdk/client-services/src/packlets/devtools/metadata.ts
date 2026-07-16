@@ -5,9 +5,9 @@
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { type ServiceContext } from '../services';
+import { type IMetadataStore } from '../metadata';
 
-export const subscribeToMetadata = ({ context }: { context: ServiceContext }) =>
+export const subscribeToMetadata = ({ context }: { context: { metadataStore: IMetadataStore } }) =>
   new Stream<SubscribeToMetadataResponse>(({ next, ctx }) => {
     context.metadataStore.update.on(ctx, (data) => next({ metadata: data }));
     next({ metadata: context.metadataStore.metadata });

@@ -3,6 +3,7 @@
 //
 
 import * as EffectContext from 'effect/Context';
+import * as Layer from 'effect/Layer';
 
 import {
   Event,
@@ -18,6 +19,7 @@ import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 
+import { createStubEdgeIdentity } from './auth';
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
@@ -362,3 +364,10 @@ const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string
   const encodedToken = Buffer.from(encodedPresentation).toString('base64').replace(/=*$/, '').replaceAll('/', '|');
   return `base64url.bearer.authorization.dxos.org.${encodedToken}`;
 };
+
+/**
+ * Layer constructing an {@link EdgeClient} (with a stub identity, replaced once identity is ready)
+ * from the messenger config.
+ */
+export const EdgeConnectionLayer = (config: MessengerConfig): Layer.Layer<EdgeConnectionService> =>
+  Layer.sync(EdgeConnectionService, () => new EdgeClient(createStubEdgeIdentity(), config));

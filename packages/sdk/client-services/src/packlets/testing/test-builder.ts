@@ -36,7 +36,7 @@ import {
   type ServiceContext,
   ServiceContextLayer,
   type ServiceContextRuntimeProps,
-  ServiceContextService,
+  makeServiceContext,
 } from '../services';
 import { SqliteStorage } from '../services/sqlite-storage';
 import { SpaceManager } from '../space';
@@ -52,9 +52,12 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
     runtime: ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
+      Layer.empty.pipe(
+        Layer.provideMerge(SqlTransaction.layer),
+        Layer.provideMerge(sqliteLayerMemory),
+        Layer.provideMerge(Reactivity.layer),
+        Layer.orDie,
+      ),
     ).runtimeEffect,
   });
 };
@@ -75,29 +78,34 @@ export const createServiceContext = async ({
     transportFactory: MemoryTransportFactory,
   });
 
-  const stackLayer = ServiceContextLayer({
-    invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
-    ...runtimeProps,
-  }).pipe(
+  const stackLayer = Layer.empty.pipe(
+    Layer.provideMerge(
+      ServiceContextLayer({
+        invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
+        ...runtimeProps,
+      }),
+    ),
     Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
     Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
-    Layer.provideMerge(
-      SqlTransaction.layer.pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer)),
-    ),
+    Layer.provideMerge(SqlTransaction.layer),
+    Layer.provideMerge(sqliteLayerMemory),
+    Layer.provideMerge(Reactivity.layer),
     Layer.orDie,
   );
 
   const runtime = ManagedRuntime.make(stackLayer);
-  const serviceContext = await runtime.runPromise(ServiceContextService);
+  const serviceContext = await makeServiceContext(runtime);
 
   // The runtime owns the layer-scoped component finalizers (e.g. EchoHost close), so dispose it once
   // the context is closed to avoid leaking those resources across tests. `ClientServicesHost` owns
   // this disposal in production; here the test builder is the runtime owner.
   const closeServiceContext = serviceContext.close.bind(serviceContext);
   serviceContext.close = async (ctx) => {
-    await closeServiceContext(ctx);
-    await runtime.dispose();
-    return serviceContext;
+    try {
+      await closeServiceContext(ctx);
+    } finally {
+      await runtime.dispose();
+    }
   };
 
   return serviceContext;
@@ -159,9 +167,12 @@ export type TestPeerProps = {
 export class TestPeer {
   private _props: TestPeerProps = {};
   private readonly _runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
+    Layer.empty.pipe(
+      Layer.provideMerge(SqlTransaction.layer),
+      Layer.provideMerge(sqliteLayerMemory),
+      Layer.provideMerge(Reactivity.layer),
+      Layer.orDie,
+    ),
   );
   private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.runtimeEffect });
 
