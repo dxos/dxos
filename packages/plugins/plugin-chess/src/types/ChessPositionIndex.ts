@@ -16,7 +16,7 @@ export type Side = Schema.Schema.Type<typeof Side>;
 
 /** Games that reached a normalized FEN while the reviewed player was on this side. */
 export const PositionEntry = Schema.Struct({
-  games: Schema.mutable(Schema.Array(Ref.Ref(Game))).pipe(FormInputAnnotation.set(false)),
+  games: Schema.mutable(Schema.Array(Ref.Ref(Game.Game))).pipe(FormInputAnnotation.set(false)),
 });
 
 export type PositionEntry = Schema.Schema.Type<typeof PositionEntry>;

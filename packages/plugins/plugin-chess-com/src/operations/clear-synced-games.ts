@@ -17,7 +17,7 @@ export default ChessComOperation.ClearSyncedGames.pipe(
       const account = yield* Database.load(accountRef);
       const oldFeed = yield* Database.load(account.games);
 
-      const games = yield* Feed.query(oldFeed, Filter.type(Game)).run;
+      const games = yield* Feed.query(oldFeed, Filter.type(Game.Game)).run;
       if (games.length === 0) {
         return { removed: 0 };
       }

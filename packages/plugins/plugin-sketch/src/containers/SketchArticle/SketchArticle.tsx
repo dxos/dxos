@@ -29,10 +29,7 @@ export const SketchArticle = ({ role, attendableId, subject: sketch, settings, e
 
   const props = {
     readonly: role === AppSurface.Slide.role,
-    autoZoom: section ? true : undefined,
-    // An extrinsically-sized embed fills its box: lift the zoom cap so the content scales up to fit
-    // (zoomToFit also centers the content, and re-fits as the box resizes).
-    maxZoom: extrinsic ? Number.POSITIVE_INFINITY : role === AppSurface.Slide.role ? 1.5 : undefined,
+    autoCenter: section ? true : undefined,
   };
 
   // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.

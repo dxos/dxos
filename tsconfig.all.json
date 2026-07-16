@@ -349,6 +349,9 @@
       "path": "packages/plugins/plugin-attention/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-blogger/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-bluesky/tsconfig.json"
     },
     {
@@ -596,6 +599,9 @@
     },
     {
       "path": "packages/plugins/plugin-trip/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-typefully/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-video/tsconfig.json"

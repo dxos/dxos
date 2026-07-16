@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Database, DXN } from '@dxos/echo';
-import { GameRef } from '@dxos/plugin-game/types';
+import { Game } from '@dxos/plugin-game/types';
 
 import { TicTacToe } from '#types';
 
@@ -20,7 +20,7 @@ export const MakeMove = Operation.make({
     icon: 'ph--x--regular',
   },
   input: Schema.Struct({
-    game: GameRef(TicTacToe.State).annotations({
+    game: Game.GameRef(TicTacToe.State).annotations({
       description: 'The ID of the game object (variant must be Tic-Tac-Toe).',
     }),
     position: Schema.String.annotations({
@@ -46,7 +46,7 @@ export const AiMove = Operation.make({
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
-    game: GameRef(TicTacToe.State).annotations({
+    game: Game.GameRef(TicTacToe.State).annotations({
       description: 'The ID of the game object (variant must be Tic-Tac-Toe).',
     }),
     level: Schema.optional(
