@@ -27,6 +27,8 @@ export type UseVersioningResult = {
   activeVersion?: Versioning.Version;
   /** Read-only content at the selected checkpoint. */
   checkpointContent?: string;
+  /** Parent content at the active branch's anchor (the compare/merge base). */
+  branchBaseContent?: string;
 };
 
 /**
@@ -80,6 +82,16 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   useObject(activeBranch?.content);
   const activeText = activeBranch?.content.target ?? rootText;
 
+  // The compare/merge base: parent content at the branch anchor.
+  useObject(activeBranch?.parent);
+  const branchParent = activeBranch?.parent.target;
+  const branchBaseContent = useMemo(() => {
+    if (!activeBranch || !branchParent) {
+      return undefined;
+    }
+    return contentAt(branchParent, activeBranch.anchor);
+  }, [activeBranch, branchParent]);
+
   const versionTarget = activeVersion?.target.target;
   useObject(activeVersion?.target);
   const checkpointContent = useMemo(() => {
@@ -100,5 +112,6 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     activeText,
     activeVersion,
     checkpointContent,
+    branchBaseContent,
   };
 };

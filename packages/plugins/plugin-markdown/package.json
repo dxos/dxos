@@ -123,6 +123,7 @@
   ],
   "dependencies": {
     "@automerge/automerge": "catalog:",
+    "@codemirror/merge": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",

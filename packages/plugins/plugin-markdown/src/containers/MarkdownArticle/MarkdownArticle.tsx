@@ -28,7 +28,9 @@ import {
 import { useLinkQuery, useVersioning } from '#hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
+import { versionDiff } from '../../extensions';
 import { createBranch, mergeBranch, restore } from '../../model';
+import { DiffView } from '../DiffView';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
@@ -53,19 +55,20 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // Version selection: swap the editor's subject to the active branch Text, or show a
     // read-only snapshot when viewing a checkpoint. Selection is per-user session state.
     const versioning = useVersioning(object);
-    const { document, activeBranch, activeVersion, checkpointContent, setSelection, setCompare } = versioning;
+    const { document, activeBranch, activeVersion, checkpointContent, branchBaseContent, setSelection, setCompare } =
+      versioning;
+    const diffViewMode = settings.diffView ?? 'inline';
+    const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
     const branchText = activeBranch?.content.target;
     const editorObject = activeVersion
       ? { id: `${id}--${activeVersion.id}`, text: checkpointContent ?? '' }
       : (branchText ?? object);
     const initialValue = activeVersion ? checkpointContent : (branchText?.content ?? docContent ?? textContent);
     const effectiveViewMode = activeVersion ? 'readonly' : viewMode;
-    // Remount the editor when the selection changes so CodeMirror state rebinds cleanly.
-    const editorKey = activeVersion
-      ? `checkpoint-${activeVersion.id}`
-      : activeBranch
-        ? `branch-${activeBranch.id}`
-        : 'current';
+    // Remount the editor when the selection or compare overlay changes so CodeMirror state rebinds cleanly.
+    const editorKey = `${
+      activeVersion ? `checkpoint-${activeVersion.id}` : activeBranch ? `branch-${activeBranch.id}` : 'current'
+    }${compareActive ? `--compare-${diffViewMode}` : ''}`;
 
     const handleRestore = useCallback(() => {
       if (document && activeVersion) {
@@ -119,6 +122,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         }, []);
     }, [extensionProviders, otherExtensionProviders, object, viewMode]);
 
+    // Diff overlay (inline/gutter variants render inside the editor; sideBySide replaces it).
+    const combinedExtensions = useMemo<Extension[]>(() => {
+      if (compareActive && branchBaseContent !== undefined && diffViewMode !== 'sideBySide') {
+        return [...extensions, versionDiff({ base: branchBaseContent, variant: diffViewMode })];
+      }
+      return extensions;
+    }, [extensions, compareActive, branchBaseContent, diffViewMode]);
+
     // Toolbar actions from app graph.
     const { graph } = useAppGraph();
     const runAction = useActionRunner();
@@ -164,7 +175,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         attendableId={attendableId}
         object={editorObject}
         compact={role !== AppSurface.Article.role}
-        extensions={extensions}
+        extensions={combinedExtensions}
         settings={settings}
         viewMode={effectiveViewMode}
         onAction={runAction}
@@ -202,8 +213,17 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                 />
               )}
               <Panel.Content>
-                <MarkdownEditor.Content initialValue={initialValue} />
-                <MarkdownEditor.Blocks />
+                {versioning.compare &&
+                diffViewMode === 'sideBySide' &&
+                branchText &&
+                branchBaseContent !== undefined ? (
+                  <DiffView before={branchBaseContent} after={branchText.content} />
+                ) : (
+                  <>
+                    <MarkdownEditor.Content initialValue={initialValue} />
+                    <MarkdownEditor.Blocks />
+                  </>
+                )}
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>
