@@ -40,6 +40,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -48,6 +49,7 @@
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-host": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -87,8 +89,6 @@
     "yargs": "catalog:"
   },
   "devDependencies": {
-    "@dxos/compute-runtime": "workspace:*",
-    "@dxos/edge-compute": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/js-yaml": "catalog:",
     "@types/seedrandom": "catalog:",

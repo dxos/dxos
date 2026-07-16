@@ -13,7 +13,6 @@ import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { type RuntimeServices, ServiceContainer } from '@dxos/compute-runtime';
-import { RemoteFunctionExecutionService } from '@dxos/edge-compute';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -239,7 +238,8 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
         },
       },
       database: Database.makeService(space.db),
-      functionCallService: RemoteFunctionExecutionService.mock(),
+      // Local execution context: remote invocation should not occur.
+      functionCallService: { invoke: () => Effect.die('No remote operation invoker configured') },
     })
     .createLayer();
 };
