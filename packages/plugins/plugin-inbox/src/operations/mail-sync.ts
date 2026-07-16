@@ -3,6 +3,7 @@
 //
 
 import { format } from 'date-fns';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
@@ -11,13 +12,13 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
-import { type Resolver } from '@dxos/extractor';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { type ContentBlock } from '@dxos/types';
 
+import { MailSyncError } from '../errors';
 import { meta } from '../meta';
 import { Mailbox, type SyncStreamConfig } from '../types';
 import { onArrivalExtractors, readBindingOptions } from '../util';
@@ -27,10 +28,13 @@ import { onArrivalExtractors, readBindingOptions } from '../util';
  * syncs new mail above the cursor's `max` (ascending) and backfills from `min` down to the horizon
  * (descending), so an interrupted or capped run resumes both halves from where it left off; the cursor
  * is the only durable state (`Cursor.resolveWindows`). The harness owns everything that is not
- * provider-specific — binding/mailbox/feed loads, window resolution, the dedup→cap→decode→map→commit
- * pipeline, the live progress monitor, cooperative cancellation, and stats telemetry — while the
- * provider adapters (`syncGmail`, `runJmapSync`) supply the source stream and mapping stages via
- * {@link MailSyncHooks}.
+ * provider-specific — binding/mailbox/feed loads, window resolution, the dedup→cap→process→commit
+ * pipeline, the live progress monitor, cooperative cancellation, and stats telemetry.
+ *
+ * The provider is supplied as an Effect service ({@link MailSyncProvider}) rather than an argument, so
+ * the two operations are literally one effect with different services provided: each handler provides
+ * a provider layer that captures its own API + resolver (see `syncGmail` / `runJmapSync`). Adding a
+ * third provider (Outlook, an IMAP bridge, …) is "write a {@link MailSyncProvider} layer".
  */
 
 /**
@@ -40,7 +44,7 @@ import { onArrivalExtractors, readBindingOptions } from '../util';
  */
 export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
 
-/** Options the harness passes to {@link MailSyncProvider.buildSource} for one run. */
+/** Options the harness passes to a provider's {@link MailSyncSource.buildSource} for one run. */
 export type MailSyncSourceOptions = {
   /**
    * Forward/backward windows this run covers (from `Cursor.resolveWindows`); either may be absent.
@@ -57,76 +61,95 @@ export type MailSyncSourceOptions = {
 };
 
 /**
- * The provider-specific pieces of one sync run, produced by {@link MailSyncHooks.prepare} once the
- * session/target and tag map are resolved. Generic over the provider's raw item type (`Raw`), its
- * decoded form (`Decoded`), and its error/service channel.
+ * One candidate message the provider emits: its dedup key fields plus a self-contained `process`
+ * effect. The harness dedups on `foreignId`/`key` *before* running `process`, so those are cheap
+ * field reads and never trigger the (potentially expensive) decode/map/attachment work. `process`
+ * fuses the provider's decode + map stages into a single per-item effect that is fully provided (the
+ * provider layer has already captured its API + resolver), returning the generic `EmailStage.Mapped`
+ * the shared stages consume — or `undefined` to drop the item (no body, filtered sender, unmappable).
  */
-export type MailSyncProvider<Raw, Decoded, ProviderError, ProviderApi> = {
-  /**
-   * Streams raw provider items for one bidirectional run: forward window then backward, concatenated.
-   * Must be UNBOUNDED — the harness caps *after* dedup so the budget counts only genuinely-new
-   * messages (capping before would let re-enumerated boundary items stall the cursor), and must pipe
-   * through `Cursor.skipCommitted` so already-committed ids aren't re-downloaded.
-   */
-  readonly buildSource: (
-    options: MailSyncSourceOptions,
-  ) => Stream.Stream<Raw, ProviderError, ProviderApi | Cursor.Service>;
-  /** Provider foreign id (the dedup key; matches `Obj.Meta.keys[].id`). */
-  readonly getForeignId: (raw: Raw) => string;
-  /** Monotonic provider key (epoch-ms) used to advance the cursor. */
-  readonly getKey: (raw: Raw) => number;
-  /** Decodes the raw item's body; drops items with no body (undefined removes the item). */
-  readonly decodeBodyStage: Stage.Stage<Raw, Decoded, never, never>;
-  /** Resolves the sender contact, builds the ECHO message, and maps provider labels/folders to tag URIs. */
-  readonly mapToMessageStage: Stage.Stage<Decoded, EmailStage.Mapped, never, Resolver | ProviderApi>;
+export type MailSyncItem = {
+  readonly foreignId: string;
+  readonly key: number;
+  readonly process: Effect.Effect<EmailStage.Mapped | undefined, MailSyncError, never>;
 };
 
-/** Everything a provider adapter supplies to {@link runMailSync}. */
-export type MailSyncHooks<Raw, Decoded, ProviderError, ProviderApi> = {
+/** The run's message source, produced by {@link MailSyncProviderService.prepare} once ready. */
+export type MailSyncSource = {
+  /**
+   * Streams candidate messages for one bidirectional run: forward window then backward, concatenated.
+   * Must be UNBOUNDED — the harness caps *after* dedup so the budget counts only genuinely-new
+   * messages (capping before would let re-enumerated boundary items stall the cursor), and must pipe
+   * its raw ids through `Cursor.skipCommitted` so already-committed ids aren't re-downloaded. Requires
+   * only `Cursor.Service` (provided by the harness); the provider's own API is already captured.
+   */
+  readonly buildSource: (options: MailSyncSourceOptions) => Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
+};
+
+/** Resolved run context the harness hands a provider's {@link MailSyncProviderService.prepare}. */
+export type MailSyncPreparation = {
+  readonly db: Database.Database;
+  readonly binding: Cursor.ExternalCursor;
+  readonly mailbox: Mailbox.Mailbox;
+  /** Reference "now" for provider filters with relative dates (pinned by tests). */
+  readonly now: Date;
+};
+
+/** The provider-specific surface the shared harness runs against. */
+export interface MailSyncProviderService {
   /** Provider tag for spans and logs (`gmail`, `jmap`); the run's span is `<name>-sync`. */
   readonly name: string;
-  /** The provider's streaming-pipeline tuning (commit page size etc.). */
+  /** The provider's streaming-pipeline tuning (commit page size, per-run cap, …). */
   readonly config: SyncStreamConfig;
   /** Foreign-key source stamped on committed items (dedup key namespace). */
   readonly foreignKeySource: string;
-  readonly binding: Ref.Ref<Cursor.Cursor>;
-  /** Candidate messages this run considers before requesting `Operation.runAgain()`. */
-  readonly maxMessages: number;
-  /** Reference "now" for window/horizon resolution (pinned by tests). */
-  readonly now: Date;
-  /** Overrides the dedup-set seed bound (see `Cursor.layer`). Test-only. */
-  readonly dedupSeedTail?: number;
   /**
    * Provider-specific setup: resolve the session/target, build the label/folder→tag map, and return
-   * the run's source + stages. Returning undefined skips the run (e.g. a session without a mail
-   * account) — the harness then returns `{ newMessages: 0 }`.
+   * the run's source. Returning undefined skips the run (e.g. a session without a mail account) — the
+   * harness then returns `{ newMessages: 0 }`. Any provider error is wrapped into {@link MailSyncError}.
    */
-  readonly prepare: (context: {
-    db: Database.Database;
-    binding: Cursor.ExternalCursor;
-    mailbox: Mailbox.Mailbox;
-    now: Date;
-  }) => Effect.Effect<
-    MailSyncProvider<Raw, Decoded, ProviderError, ProviderApi> | undefined,
-    ProviderError,
-    ProviderApi | Database.Service
-  >;
+  readonly prepare: (
+    preparation: MailSyncPreparation,
+  ) => Effect.Effect<MailSyncSource | undefined, MailSyncError, never>;
+}
+
+/**
+ * Effect service carrying the provider a mail-sync run drives. A handler provides a layer whose
+ * implementation captures the provider's API + resolver, so the shared harness never names them.
+ */
+export class MailSyncProvider extends Context.Tag('@dxos/plugin-inbox/MailSyncProvider')<
+  MailSyncProvider,
+  MailSyncProviderService
+>() {}
+
+export type RunMailSyncOptions = {
+  readonly binding: Ref.Ref<Cursor.Cursor>;
+  /** Candidate messages this run considers before requesting `Operation.runAgain()`. */
+  readonly maxMessages?: number;
+  /** Reference "now" for window/horizon resolution (pinned by tests); defaults to `new Date()`. */
+  readonly now?: Date;
+  /** Overrides the dedup-set seed bound (see `Cursor.layer`). Test-only. */
+  readonly dedupSeedTail?: number;
 };
 
 /**
- * Runs the shared mail-sync pipeline for a binding against the provider described by `hooks`. The
- * return type is written out (not inferred) so a caller's emitted `.d.ts` can name it without
+ * Runs the shared mail-sync pipeline for a binding against the {@link MailSyncProvider} in context.
+ * The return type is written out (not inferred) so a caller's emitted `.d.ts` can name it without
  * expanding unnameable cross-package types (TS2883).
  */
-export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
-  hooks: MailSyncHooks<Raw, Decoded, ProviderError, ProviderApi>,
+export const runMailSync = (
+  options: RunMailSyncOptions,
 ): Effect.Effect<
   { newMessages: number },
-  ProviderError | EntityNotFoundError,
-  ProviderApi | Database.Service | Resolver | Capability.Service | Operation.Service
+  MailSyncError | EntityNotFoundError,
+  MailSyncProvider | Database.Service | Capability.Service | Operation.Service
 > =>
   Effect.gen(function* () {
-    const binding = yield* Database.load(hooks.binding);
+    const provider = yield* MailSyncProvider;
+    const now = options.now ?? new Date();
+    const maxMessages = options.maxMessages ?? provider.config.maxItemsPerRun ?? Number.POSITIVE_INFINITY;
+
+    const binding = yield* Database.load(options.binding);
     // The integration mechanism only ever creates external-sync cursors for mail providers.
     if (!Cursor.isExternal(binding)) {
       return { newMessages: 0 };
@@ -134,7 +157,7 @@ export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
     const mailbox = yield* Database.load(binding.spec.target);
     if (!Mailbox.instanceOf(mailbox)) {
       log.warn('mail sync skipped: binding target is not a Mailbox', {
-        provider: hooks.name,
+        provider: provider.name,
         typename: Obj.getTypename(mailbox),
       });
       return { newMessages: 0 };
@@ -146,15 +169,15 @@ export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
 
     const targetOptions = readBindingOptions(binding);
     // `max`/`min` are the newest/oldest committed provider key (epoch-ms) — see `Cursor.resolveWindows`.
-    const horizon = Cursor.resolveHorizon({ now: hooks.now, syncBackDays: targetOptions.syncBackDays });
+    const horizon = Cursor.resolveHorizon({ now, syncBackDays: targetOptions.syncBackDays });
     const maxKey = Cursor.parseKey(binding.max);
     const minKey = Cursor.parseKey(binding.min);
-    const windows = Cursor.resolveWindows({ maxKey, minKey, now: hooks.now, horizon });
+    const windows = Cursor.resolveWindows({ maxKey, minKey, now, horizon });
 
     const formatWindow = (window: Cursor.Window | undefined) =>
       window && { start: format(window.start, 'yyyy-MM-dd'), end: format(window.end, 'yyyy-MM-dd') };
     log.info('syncing...', {
-      provider: hooks.name,
+      provider: provider.name,
       mailbox: Obj.getURI(mailbox),
       maxKey,
       minKey,
@@ -172,8 +195,8 @@ export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
     const draftPool = yield* EmailStage.queryDraftPool(mailbox);
 
     // Session/target discovery + the provider's label/folder→tag map; undefined skips the run.
-    const provider = yield* hooks.prepare({ db, binding, mailbox, now: hooks.now });
-    if (!provider) {
+    const source = yield* provider.prepare({ db, binding, mailbox, now });
+    if (!source) {
       return { newMessages: 0 };
     }
 
@@ -285,8 +308,9 @@ export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
     // `buildSource` covers both halves as one unbounded stream; the per-run cap is applied after dedup
     // so it counts only genuinely-new messages — capping before would let a dense boundary's
     // re-enumerated messages consume the budget and stall the cursor. `taken` then tells us whether the
-    // cap truncated the run (→ re-run) or both windows were exhausted (→ complete backfill).
-    yield* provider
+    // cap truncated the run (→ re-run) or both windows were exhausted (→ complete backfill). Each
+    // provider fuses its decode + map into `item.process`, run here as the single `process` stage.
+    yield* source
       .buildSource({
         windows,
         filter: targetOptions.filter,
@@ -296,37 +320,40 @@ export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
         onRetrieved: () => progressMonitor.advance(1),
       })
       .pipe(
-        Cursor.dedupStage<Raw>('dedup', provider.getForeignId, provider.getKey),
-        Stream.take(hooks.maxMessages),
+        Cursor.dedupStage<MailSyncItem>(
+          'dedup',
+          (item) => item.foreignId,
+          (item) => item.key,
+        ),
+        Stream.take(maxMessages),
         Stream.tap(() => Effect.sync(() => (taken += 1))),
-        provider.decodeBodyStage,
-        provider.mapToMessageStage,
+        Stage.map('process', (item: MailSyncItem) => item.process),
         EmailStage.processAttachments(),
         onArrivalExtractors(mailbox),
         EmailStage.extractContacts(),
         EmailStage.reconcileDrafts(draftPool),
         collectStats,
         EmailStage.toCommitUnit({ tagIndex }),
-        Stream.grouped(hooks.config.commitPageSize),
+        Stream.grouped(provider.config.commitPageSize),
         Pipeline.run({ sink: Cursor.commit }),
         Effect.provide(
           Cursor.layer({
             cursor: binding,
             feed,
-            foreignKeySource: hooks.foreignKeySource,
+            foreignKeySource: provider.foreignKeySource,
             maxKey,
             minKey,
             trackRange: true,
             stats,
             extent,
-            dedupSeedTail: hooks.dedupSeedTail,
+            dedupSeedTail: options.dedupSeedTail,
           }),
         ),
         Pipeline.abortWith(
           controller.signal,
           // TODO(wittjosiah): Could this note+remove pairing be upstreamed into abortWith itself?
           Effect.sync(() => {
-            log('mail sync cancelled', { provider: hooks.name, mailbox: Obj.getURI(mailbox) });
+            log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
             progressMonitor.note('Cancelled');
             progressMonitor.remove();
           }),
@@ -335,7 +362,7 @@ export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
           Effect.sync(() => {
             // Log the raw error; the meter shows only a short reason (the full exception — provider
             // errors, auth tokens — must not reach the UI).
-            log.warn('mail sync failed', { provider: hooks.name, error });
+            log.warn('mail sync failed', { provider: provider.name, error });
             progressMonitor.fail('Sync failed');
           }),
         ),
@@ -361,12 +388,12 @@ export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
       // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
       Cursor.extendRange(binding, extent);
 
-      const capped = taken >= hooks.maxMessages;
+      const capped = taken >= maxMessages;
       log('mail sync run finished', {
-        provider: hooks.name,
+        provider: provider.name,
         mailbox: Obj.getURI(mailbox),
         taken,
-        maxMessages: hooks.maxMessages,
+        maxMessages,
         capped,
         newMessages: stats.newMessages,
         action: capped ? 'runAgain' : 'completeBackfill',
@@ -383,10 +410,12 @@ export const runMailSync = <Raw, Decoded, ProviderError, ProviderApi>(
     }
 
     log('sync complete', {
-      provider: hooks.name,
+      provider: provider.name,
       newMessages: stats.newMessages,
       cancelled: controller.signal.aborted,
       taken,
     });
     return { newMessages: stats.newMessages };
-  }).pipe(Effect.withSpan(`${hooks.name}-sync`));
+    // The run span is added by each provider wrapper (`gmail-sync` / `jmap-sync`) so the per-provider
+    // trace name and its children (`<provider>-sync.labels`, `.fetch.*`) stay stable.
+  });

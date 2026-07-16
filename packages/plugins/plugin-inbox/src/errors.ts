@@ -75,6 +75,13 @@ export class JmapApiError extends BaseError.extend('JmapApiError', 'JMAP API req
   }
 }
 
+/**
+ * A mail-sync run failed. The shared `runMailSync` harness is provider-agnostic, so it wraps each
+ * provider's own error (`GoogleMailApiError`, `JmapApiError`, …) at the source boundary into this one
+ * type — the harness's single, nameable error channel. The original provider error is the `cause`.
+ */
+export class MailSyncError extends BaseError.extend('MailSyncError', 'Mail sync failed.') {}
+
 /** JMAP send payload missing required fields (`to` or body text). */
 export class JmapSendMessageInvalidError extends BaseError.extend(
   'JmapSendMessageInvalidError',

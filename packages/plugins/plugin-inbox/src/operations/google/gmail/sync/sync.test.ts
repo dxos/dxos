@@ -433,7 +433,10 @@ describe('syncGmail against a mock Gmail API', () => {
     'the newest message is not re-committed across backfill runs once it ages out of the dedup seed — ' +
       'regression: the forward high-boundary re-fetch duplicated it every run',
     async ({ expect }) => {
-      const now = new Date();
+      // Pinned clock: Gmail's queries are day-granular, so an unpinned `now` shifts the day boundaries
+      // with wall-clock time and can strand a boundary-day message under this small a cap — pin it (like
+      // the boundary-day test above) so the multi-run backfill is deterministic.
+      const now = new Date('2026-07-16T12:00:00.000Z');
       const dataset = generateGmailDataset({ count: 30, seed: 31, start: subDays(now, 5), end: subDays(now, 1) });
       const { db, mailbox, binding } = await seedMailboxBinding(builder);
 
@@ -441,7 +444,7 @@ describe('syncGmail against a mock Gmail API', () => {
       // newest from the dedup set and the forward high-boundary-day re-fetch would re-commit it (prod: >500).
       const runOnce = () =>
         EffectEx.runPromise(
-          Effect.exit(syncGmail({ binding: Ref.make(binding), maxMessages: 10, dedupSeedTail: 5 })).pipe(
+          Effect.exit(syncGmail({ binding: Ref.make(binding), maxMessages: 10, dedupSeedTail: 5, now })).pipe(
             Effect.provide(inboxSyncTestServices(db, dataset)),
           ),
         );

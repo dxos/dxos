@@ -18,17 +18,16 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { Person } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
-import { type JmapApiError } from '../../../errors';
+import { type JmapApiError, MailSyncError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
 import { InboxOperation, Mailbox, type SyncStreamConfig } from '../../../types';
-import { runMailSync } from '../../mail-sync';
-import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../../mail-sync';
+import { type AttachmentMetadata, decodeBody, mapToMessage } from './mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -51,90 +50,119 @@ export type RunJmapSyncProps = {
 };
 
 /**
- * JMAP adapter for the shared mail-sync harness (`runMailSync` in `mail-sync.ts`, which owns the
- * bidirectional/capped/resumable pipeline); this module supplies only the JMAP-specific hooks: the
- * session/account discovery, the email source (`jmapEmails`), the folder→tag map, and the decode/map
- * stages. Mirror of the Gmail adapter (`syncGmail`). Requires `JmapMailApi` rather than providing it,
- * so a test can drive the sync against a mock API; the handler below wraps it with the Live layer.
- * Return type is written out (not inferred) so the `.d.ts` can name it without expanding unnameable
- * cross-package types (TS2883).
+ * JMAP's implementation of the shared {@link MailSyncProvider} service — session/account discovery,
+ * the email source (`jmapEmails`), the folder→tag map, and the fused decode+map step. Captures
+ * {@link JmapMailApi} and the {@link Resolver} from the layer's context, so the harness never names
+ * them (a run is just `runMailSync` with this layer provided). Mirror of the Gmail provider
+ * (`gmailMailSyncProvider`).
+ */
+export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, JmapMailApi | Resolver> =>
+  Layer.effect(
+    MailSyncProvider,
+    Effect.gen(function* () {
+      // Captured once; the API is provided into the source stream (which still needs `Cursor.Service`
+      // from the harness), the full context into each item's `process` (whose only requirements are the
+      // API + resolver) — so both carry no requirements the harness would have to name.
+      const context = yield* Effect.context<JmapMailApi | Resolver>();
+      const providerApi = yield* JmapMailApi;
+      return {
+        name: 'jmap',
+        config: JMAP_SYNC_CONFIG,
+        foreignKeySource: JMAP_MESSAGE_SOURCE,
+        prepare: ({ db, now }) =>
+          Effect.gen(function* () {
+            const api = yield* JmapMailApi;
+            const session = yield* api.getSession;
+            const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
+            if (!accountId) {
+              log.warn('jmap sync: session has no mail account', { username: session.username });
+              return undefined;
+            }
+            const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId, downloadUrl: session.downloadUrl };
+            log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
+
+            // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline (source: folders; sink: find-or-create Tag).
+            // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`.
+            const { list: folders } = yield* api.mailboxGet(target);
+            const folderTagMap = new Map<string, string>();
+            for (const folder of folders) {
+              const tag = yield* Effect.promise(() =>
+                Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }),
+              );
+              folderTagMap.set(folder.id, Mailbox.tagUri(tag));
+            }
+
+            // Fused decode + map: extract the body (drop no-body), resolve the sender contact, build
+            // the ECHO message, and map folder ids to tag URIs. `undefined` drops the item.
+            const toMapped = (
+              email: JmapMail.Email,
+            ): Effect.Effect<EmailStage.Mapped | undefined, never, JmapMailApi | Resolver> =>
+              Effect.gen(function* () {
+                const decoded = decodeBody(email);
+                if (!decoded) {
+                  return undefined;
+                }
+                const fromAddress = decoded.raw.from?.[0];
+                const contact = fromAddress ? yield* resolve(Person.Person, { email: fromAddress.email }) : undefined;
+                const mapped = mapToMessage(decoded, contact ?? undefined);
+                if (!mapped) {
+                  return undefined;
+                }
+                const tagUris = mapped.mailboxIds.flatMap((folderId) => {
+                  const uri = folderTagMap.get(folderId);
+                  return uri ? [uri] : [];
+                });
+                const attachments = yield* fetchAttachments(target, decoded.attachments);
+                return {
+                  message: mapped.message,
+                  foreignId: decoded.raw.id,
+                  key: new Date(decoded.raw.receivedAt).getTime(),
+                  tagUris,
+                  attachments,
+                };
+              });
+
+            const source: MailSyncSource = {
+              buildSource: ({ windows, filter, onEnumerated, onRetrieved }) =>
+                jmapEmails(target, folders, { windows, filter, now, onEnumerated, onRetrieved }).pipe(
+                  Stream.map(
+                    (email): MailSyncItem => ({
+                      foreignId: email.id,
+                      key: new Date(email.receivedAt).getTime(),
+                      process: toMapped(email).pipe(Effect.provide(context)),
+                    }),
+                  ),
+                  Stream.provideService(JmapMailApi, providerApi),
+                  Stream.mapError(MailSyncError.wrap()),
+                ),
+            };
+            return source;
+          }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
+      };
+    }),
+  );
+
+/**
+ * Runs the JMAP sync: the shared {@link runMailSync} harness with the JMAP provider layer supplied.
+ * Requires `JmapMailApi` (+ {@link Resolver}) rather than providing it, so a test can drive the sync
+ * against a mock API; the handler below wraps it with the Live layers. Return type is written out (not
+ * inferred) so the `.d.ts` can name it without expanding unnameable cross-package types (TS2883).
+ * Mirror of the Gmail adapter (`syncGmail`).
  */
 export const runJmapSync = ({
   binding,
-  maxMessages = JMAP_SYNC_CONFIG.maxItemsPerRun,
-  now = new Date(),
+  maxMessages,
+  now,
   dedupSeedTail,
 }: RunJmapSyncProps): Effect.Effect<
   { newMessages: number },
-  JmapApiError | EntityNotFoundError,
-  JmapMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
+  MailSyncError | EntityNotFoundError,
+  JmapMailApi | Resolver | Database.Service | Capability.Service | Operation.Service
 > =>
-  runMailSync<JmapMail.Email, DecodedEmail, JmapApiError, JmapMailApi>({
-    name: 'jmap',
-    config: JMAP_SYNC_CONFIG,
-    foreignKeySource: JMAP_MESSAGE_SOURCE,
-    binding,
-    maxMessages,
-    now,
-    dedupSeedTail,
-    prepare: ({ db, now }) =>
-      Effect.gen(function* () {
-        const api = yield* JmapMailApi;
-        const session = yield* api.getSession;
-        const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
-        if (!accountId) {
-          log.warn('jmap sync: session has no mail account', { username: session.username });
-          return undefined;
-        }
-        const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId, downloadUrl: session.downloadUrl };
-        log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
-
-        // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline (source: folders; sink: find-or-create Tag).
-        // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`.
-        const { list: folders } = yield* api.mailboxGet(target);
-        const folderTagMap = new Map<string, string>();
-        for (const folder of folders) {
-          const tag = yield* Effect.promise(() =>
-            Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }),
-          );
-          folderTagMap.set(folder.id, Mailbox.tagUri(tag));
-        }
-
-        // Resolve the sender contact, build the ECHO message, and map folder ids to tag URIs.
-        const mapToMessageStage: Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver | JmapMailApi> =
-          Stage.map('map-to-message', (decoded: DecodedEmail) =>
-            Effect.gen(function* () {
-              const fromAddress = decoded.raw.from?.[0];
-              const contact = fromAddress ? yield* resolve(Person.Person, { email: fromAddress.email }) : undefined;
-              const mapped = mapToMessage(decoded, contact ?? undefined);
-              if (!mapped) {
-                return undefined;
-              }
-              const tagUris = mapped.mailboxIds.flatMap((folderId) => {
-                const uri = folderTagMap.get(folderId);
-                return uri ? [uri] : [];
-              });
-              const attachments = yield* fetchAttachments(target, decoded.attachments);
-              return {
-                message: mapped.message,
-                foreignId: decoded.raw.id,
-                key: new Date(decoded.raw.receivedAt).getTime(),
-                tagUris,
-                attachments,
-              };
-            }),
-          );
-
-        return {
-          buildSource: ({ windows, filter, onEnumerated, onRetrieved }) =>
-            jmapEmails(target, folders, { windows, filter, now, onEnumerated, onRetrieved }),
-          getForeignId: (email: JmapMail.Email) => email.id,
-          getKey: (email: JmapMail.Email) => new Date(email.receivedAt).getTime(),
-          decodeBodyStage,
-          mapToMessageStage,
-        };
-      }),
-  });
+  runMailSync({ binding, maxMessages, now, dedupSeedTail }).pipe(
+    Effect.provide(jmapMailSyncProvider()),
+    Effect.withSpan('jmap-sync'),
+  );
 
 export default InboxOperation.JmapSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
@@ -164,12 +192,6 @@ export default InboxOperation.JmapSync.pipe(
     }),
   ),
   Operation.opaqueHandler,
-);
-
-/** JMAP-specific decode stage: extract the body text; drop emails with no body. */
-const decodeBodyStage: Stage.Stage<JmapMail.Email, DecodedEmail, never, never> = Stage.map(
-  'decode-body',
-  (email: JmapMail.Email) => Effect.sync(() => decodeBody(email) ?? undefined),
 );
 
 /**
@@ -313,7 +335,7 @@ const jmapEmailsForIds = (
 
 /**
  * Streams full JMAP emails for one bidirectional run: forward window's ids then backward's, concatenated
- * and fetched in full. Intentionally UNBOUNDED — the caller caps after dedup (see `runMailSync`).
+ * and fetched in full. Intentionally UNBOUNDED — the harness caps after dedup (see `runMailSync`).
  *
  * `Cursor.skipCommitted` drops ids already in the dedup set before `emailGet`, so re-queried boundary
  * ids aren't downloaded; the harness's post-fetch `Cursor.dedupStage` stays the authority.
