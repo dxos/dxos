@@ -22,11 +22,11 @@ CodeMirror syncs bidirectionally with the automerge doc via
 
 Automerge primitives used (installed build `@automerge/automerge@3.3.0-fragments.2`):
 
-| Primitive | Use |
-| --- | --- |
-| `A.getHeads(doc)` → `Hash[]` | Checkpoint identity. Content-addressed change hashes, stable across peers. |
-| `A.view(doc, heads)` | Cheap read-only time travel (shared memory, no copy). |
-| `A.diff(doc, before, after)` | Patches between two checkpoints of the same doc. |
+| Primitive                    | Use                                                                               |
+| ---------------------------- | --------------------------------------------------------------------------------- |
+| `A.getHeads(doc)` → `Hash[]` | Checkpoint identity. Content-addressed change hashes, stable across peers.        |
+| `A.view(doc, heads)`         | Cheap read-only time travel (shared memory, no copy).                             |
+| `A.diff(doc, before, after)` | Patches between two checkpoints of the same doc.                                  |
 | `handle.changeAt(heads, fn)` | Used internally by the editor sync; not used for branches (see constraint below). |
 
 ECHO already wraps these: `getVersion` (heads), `checkoutVersion` (view at heads),
@@ -34,7 +34,7 @@ ECHO already wraps these: `getVersion` (heads), `checkoutVersion` (view at heads
 
 ### Constraint: drafts cannot hide inside one automerge doc
 
-The tip of an automerge doc is the merge of *all* lineages, and ECHO materializes objects
+The tip of an automerge doc is the merge of _all_ lineages, and ECHO materializes objects
 at tip. A draft made with `changeAt` therefore leaks into the canonical `Text.content`
 immediately. Consequently **branches are separate `Text` objects** (their own leaf docs),
 anchored to the parent by `(parent ref, parent heads)`. Merge-back is a textual 3-way
@@ -49,11 +49,11 @@ New module `src/types/Versioning.ts`. The types are deliberately **not markdown-
 ```ts
 /** Named pointer to a state of a Text's automerge doc. Zero-copy. */
 const Version = Schema.Struct({
-  id: Schema.String,                    // Unique id; stable row identity for UI/ops.
+  id: Schema.String, // Unique id; stable row identity for UI/ops.
   name: Schema.String,
-  target: Ref.Ref(Text.Text),           // Which Text this checkpoint addresses.
-  heads: Schema.Array(Schema.String),   // A.getHeads at checkpoint time.
-  createdAt: Schema.String,             // ISO timestamp.
+  target: Ref.Ref(Text.Text), // Which Text this checkpoint addresses.
+  heads: Schema.Array(Schema.String), // A.getHeads at checkpoint time.
+  createdAt: Schema.String, // ISO timestamp.
   creator: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
 });
@@ -62,9 +62,9 @@ const Version = Schema.Struct({
 const Branch = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-  content: Ref.Ref(Text.Text),          // The branch's own Text (own leaf doc).
-  parent: Ref.Ref(Text.Text),           // Root Text or another branch's Text (tree).
-  anchor: Schema.Array(Schema.String),  // Parent doc heads at fork point.
+  content: Ref.Ref(Text.Text), // The branch's own Text (own leaf doc).
+  parent: Ref.Ref(Text.Text), // Root Text or another branch's Text (tree).
+  anchor: Schema.Array(Schema.String), // Parent doc heads at fork point.
   status: Schema.Literal('active', 'merged', 'archived'),
   createdAt: Schema.String,
   creator: Schema.optional(Schema.String),
@@ -101,7 +101,7 @@ Plain UI-free module `src/model/versioning.ts`, unit-testable against real ECHO 
   the anchor (`checkoutVersion`), create a new `Text` seeded with it, append a `Branch`,
   auto-checkpoint the parent at the anchor.
 - `contentAt(text, heads)` — read-only content string at a historical point (`A.view`).
-- `restore(doc, version)` — apply the historical content to the tip as a *new* change via
+- `restore(doc, version)` — apply the historical content to the tip as a _new_ change via
   `Text.apply`/`updateText`. History is never rewritten.
 - `diffVersions(a, b)` — produces a shared diff-span format (`{ from, to, kind, text }`)
   consumed by all three diff renderings. Same-doc comparisons use `A.diff`; cross-doc
@@ -137,8 +137,8 @@ Validated via brainstorm mocks (`.superpowers/brainstorm/`, session 2026-07-15).
      delete) over the branch text.
    - `sideBySide` — `@codemirror/merge` MergeView (new catalog dependency).
    - `gutter` — colored change bars with popovers showing base text.
-   All variants consume the shared diff-span format. The same view doubles as the
-   merge-review step (banner with Merge action).
+     All variants consume the shared diff-span format. The same view doubles as the
+     merge-review step (banner with Merge action).
 
 Every new component ships with a storybook story.
 

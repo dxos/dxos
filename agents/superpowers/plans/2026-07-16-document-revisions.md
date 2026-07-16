@@ -19,7 +19,7 @@
 - Single test file: `pnpm --filter @dxos/plugin-markdown exec vitest run --project=node <file>` (NOT `moon :test -- <file>` — it runs the whole suite). Do NOT launch full `moon :test` or LLM/memoized suites; targeted files + build + lint only.
 - `moon run plugin-markdown:build` for type-checking (NOT just `compile`).
 - New deps: `pnpm add --filter "@dxos/plugin-markdown" --save-catalog "<pkg>"` for external; `workspace:*` for `@dxos` packages.
-- Comments say *why*, end with a period, never narrate this conversation. No casts to silence types. No wrapper divs. `withTheme()` called with parens in stories + `parameters: { translations }`.
+- Comments say _why_, end with a period, never narrate this conversation. No casts to silence types. No wrapper divs. `withTheme()` called with parens in stories + `parameters: { translations }`.
 - Run `pnpm format` before each commit (oxfmt; lint --fix does not format).
 - Commit messages: `plugin-markdown: <imperative description>` + Claude co-author trailer.
 
@@ -28,10 +28,10 @@
 ```ts
 // Heads of a persisted object's automerge doc:
 import { Obj } from '@dxos/echo';
-const { versioned, automergeHeads } = Obj.version(text);        // Obj.ts:941; unversioned if not in db
+const { versioned, automergeHeads } = Obj.version(text); // Obj.ts:941; unversioned if not in db
 
 // Object data at historical heads (returns raw data snapshot):
-import { checkoutVersion, getEditHistory } from '@dxos/echo-client';  // echo-handler/edit-history.ts
+import { checkoutVersion, getEditHistory } from '@dxos/echo-client'; // echo-handler/edit-history.ts
 const snapshot = checkoutVersion(text, heads) as { content?: string };
 
 // CRDT-minimal full-string replace (inside Obj.update):
@@ -40,7 +40,7 @@ Obj.update(text, () => EchoText.update(text, 'content', newContent)); // echo/sr
 
 // Ids for embedded records:
 import { Key } from '@dxos/echo';
-Key.EntityId.random()
+Key.EntityId.random();
 
 // Text objects: import { Text } from '@dxos/schema'; Text.make({ content })
 // Document factory: Markdown.make in src/types/Markdown.ts (sets Obj.setParent(text, doc)).
@@ -52,6 +52,7 @@ Key.EntityId.random()
 ## File map
 
 Create:
+
 - `packages/plugins/plugin-markdown/src/types/Versioning.ts` — Version/Branch/History schemas.
 - `packages/plugins/plugin-markdown/src/model/versioning.ts` — checkpoint/branch/restore/merge model.
 - `packages/plugins/plugin-markdown/src/model/diff.ts` — diff spans + 3-way text merge (pure).
@@ -67,9 +68,11 @@ Create:
 - `.changeset/<name>.md`.
 
 Modify:
+
 - `src/types/Markdown.ts` (history field), `src/types/Settings.ts` (diffView), `src/types/MarkdownOperation.ts`, `src/types/index.ts`, `src/operations/index.ts`, `src/capabilities/{index.ts,react-surface.tsx,state.ts}`, `src/MarkdownPlugin.tsx`, `src/containers/MarkdownArticle/MarkdownArticle.tsx`, `src/containers/index.ts`, `src/components/index.ts`, `src/hooks/index.ts`, `src/translations.ts`, `package.json`, `pnpm-workspace.yaml` (catalog: `@codemirror/merge`).
 
 Pattern files to read before the relevant task (do not skip):
+
 - Companion tab: `packages/plugins/plugin-thread/src/capabilities/app-graph-builder.ts` + `react-surface.tsx:27`.
 - ObjectProperties section: `packages/plugins/plugin-script/src/capabilities/react-surface.tsx:90` + `containers/ScriptProperties/ScriptProperties.tsx`.
 - Panel layout/primitives: `packages/plugins/plugin-space/src/containers/DefaultProperties/DefaultProperties.tsx`; `composer-ui` skill.
@@ -82,6 +85,7 @@ Pattern files to read before the relevant task (do not skip):
 ### Task 1: Versioning schema types
 
 **Files:**
+
 - Create: `src/types/Versioning.ts`
 - Modify: `src/types/Markdown.ts`, `src/types/index.ts`
 - Test: `src/types/Versioning.test.ts`
@@ -222,6 +226,7 @@ In `src/types/index.ts`, add `export * as Versioning from './Versioning';` (matc
 ### Task 2: Model — checkpoints & time travel
 
 **Files:**
+
 - Create: `src/model/versioning.ts`, `src/model/index.ts`
 - Test: `src/model/versioning.test.ts`
 
@@ -355,6 +360,7 @@ Create `src/model/index.ts` re-exporting both model modules; wire `#model` alias
 ### Task 3: Model — diff spans & 3-way merge (pure)
 
 **Files:**
+
 - Create: `src/model/diff.ts`
 - Test: `src/model/diff.test.ts`
 - Modify: `package.json` (add `"diff": "catalog:"`)
@@ -566,14 +572,17 @@ This merge is subtle — iterate against the tests until green; add regression t
 ### Task 4: Model — branches, restore, merge
 
 **Files:**
+
 - Modify: `src/model/versioning.ts`
 - Test: extend `src/model/versioning.test.ts`
 
 - [ ] **Step 1: Write failing tests** (same TestLayer harness as Task 2)
 
 ```ts
-  it.effect('createBranch forks content at anchor; edits stay isolated', /* harness */
-    Effect.fnUntraced(function* (_) {
+it.effect(
+  'createBranch forks content at anchor; edits stay isolated' /* harness */,
+  Effect.fnUntraced(
+    function* (_) {
       const doc = Markdown.make({ name: 'Doc', content: 'one two three' });
       yield* Database.add(doc);
       const root = yield* Database.load(doc.content);
@@ -584,51 +593,73 @@ This merge is subtle — iterate against the tests until green; add regression t
       // Fork point auto-checkpointed on the parent.
       expect(doc.history?.versions.some((version) => version.name === 'fork: draft')).toBe(true);
 
-      Obj.update(branchText, () => { branchText.content = 'one two three four'; });
+      Obj.update(branchText, () => {
+        branchText.content = 'one two three four';
+      });
       expect(root.content).toBe('one two three');
-    }, /* … */));
+    } /* … */,
+  ),
+);
 
-  it.effect('mergeBranch applies branch changes to parent as one edit', /* harness */
-    Effect.fnUntraced(function* (_) {
+it.effect(
+  'mergeBranch applies branch changes to parent as one edit' /* harness */,
+  Effect.fnUntraced(
+    function* (_) {
       const doc = Markdown.make({ name: 'Doc', content: 'alpha\nbravo\n' });
       yield* Database.add(doc);
       const root = yield* Database.load(doc.content);
 
       const branch = createBranch(doc, { name: 'draft' });
       const branchText = yield* Database.load(branch.content);
-      Obj.update(branchText, () => { branchText.content = 'alpha\nbravo\ncharlie\n'; });
+      Obj.update(branchText, () => {
+        branchText.content = 'alpha\nbravo\ncharlie\n';
+      });
       // Concurrent parent edit after the fork.
-      Obj.update(root, () => { root.content = 'alpha edited\nbravo\n'; });
+      Obj.update(root, () => {
+        root.content = 'alpha edited\nbravo\n';
+      });
 
       const result = mergeBranch(doc, branch);
       expect(result.conflicts).toBe(0);
       expect(root.content).toBe('alpha edited\nbravo\ncharlie\n');
       expect(branch.status).toBe('merged');
       expect(doc.history?.versions.some((version) => version.name === 'merge: draft')).toBe(true);
-    }, /* … */));
+    } /* … */,
+  ),
+);
 
-  it.effect('restore applies historical content as a new forward edit', /* harness */
-    Effect.fnUntraced(function* (_) {
+it.effect(
+  'restore applies historical content as a new forward edit' /* harness */,
+  Effect.fnUntraced(
+    function* (_) {
       const doc = Markdown.make({ name: 'Doc', content: 'first' });
       yield* Database.add(doc);
       const root = yield* Database.load(doc.content);
       const checkpoint = createCheckpoint(doc, { name: 'v1' });
-      Obj.update(root, () => { root.content = 'second'; });
+      Obj.update(root, () => {
+        root.content = 'second';
+      });
 
       restore(doc, checkpoint);
       expect(root.content).toBe('first');
       // History retained: heads advanced, not rewound.
       expect(Obj.version(root).automergeHeads).not.toEqual(checkpoint.heads);
-    }, /* … */));
+    } /* … */,
+  ),
+);
 
-  it.effect('discardBranch archives without touching parent', /* … */);
+it.effect('discardBranch archives without touching parent' /* … */);
 ```
 
 - [ ] **Step 2: Run, verify fails**
 - [ ] **Step 3: Implement** (append to `src/model/versioning.ts`)
 
 ```ts
-export type CreateBranchProps = { name: string; from?: { target: Text.Text; heads?: readonly string[] }; creator?: string };
+export type CreateBranchProps = {
+  name: string;
+  from?: { target: Text.Text; heads?: readonly string[] };
+  creator?: string;
+};
 
 export const createBranch = (doc: Markdown.Document, props: CreateBranchProps): Versioning.Branch => {
   const parent = props.from?.target ?? doc.content.target;
@@ -714,6 +745,7 @@ Add imports: `Text as EchoText` from `@dxos/echo`, `merge3` from `./diff`. NOTE:
 ### Task 5: Operations (agent surface)
 
 **Files:**
+
 - Modify: `src/types/MarkdownOperation.ts`, `src/operations/index.ts`
 - Create: `src/operations/create-checkpoint.ts`, `create-branch.ts`, `merge-branch.ts`, `get-history.ts`
 - Test: `src/operations/versioning.test.ts`
@@ -741,7 +773,8 @@ export const CreateBranch = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.markdown.create-branch'),
     name: 'Create Branch',
-    description: 'Creates a draft branch of the document. Edit the branch with the update operation using the returned branch document id, then merge it back for review.',
+    description:
+      'Creates a draft branch of the document. Edit the branch with the update operation using the returned branch document id, then merge it back for review.',
     icon: 'ph--git-branch--regular',
   },
   input: Schema.Struct({
@@ -760,7 +793,8 @@ export const MergeBranch = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.markdown.merge-branch'),
     name: 'Merge Branch',
-    description: 'Merges an active branch back into its parent document content (3-way merge; conflicts are marked in the text).',
+    description:
+      'Merges an active branch back into its parent document content (3-way merge; conflicts are marked in the text).',
     icon: 'ph--git-merge--regular',
   },
   input: Schema.Struct({
@@ -799,6 +833,7 @@ export const GetHistory = Operation.make({
 ### Task 6: Settings — diffView
 
 **Files:**
+
 - Modify: `src/types/Settings.ts`, `src/containers/MarkdownSettings/MarkdownSettings.tsx` (read it first — if it renders fields from the schema automatically, only the schema changes)
 
 - [ ] **Step 1: Add to the `Settings` struct:**
@@ -820,6 +855,7 @@ export const GetHistory = Operation.make({
 ### Task 7: Versioning view state + hook
 
 **Files:**
+
 - Modify: `src/capabilities/state.ts` (read first — `MarkdownPluginState` currently holds `viewMode` keyed by editor id)
 - Create: `src/hooks/useVersioning.ts`; modify `src/hooks/index.ts`
 
@@ -850,6 +886,7 @@ export type CompareSelection = { versionId?: string; branchId?: string } | undef
 ### Task 8: Editor wiring — banner, subject swap, checkpoint mode
 
 **Files:**
+
 - Create: `src/components/VersionBanner/VersionBanner.tsx`, `VersionBanner.stories.tsx`, `index.ts`
 - Modify: `src/containers/MarkdownArticle/MarkdownArticle.tsx`, `src/components/index.ts`, `src/translations.ts`
 
@@ -884,6 +921,7 @@ Layout: single row, `Icon` (`ph--bookmark-simple--regular` / `ph--git-branch--re
 ### Task 9: Diff extensions (inline + gutter) and DiffView (side-by-side)
 
 **Files:**
+
 - Create: `src/extensions/version-diff.ts`, `src/containers/DiffView/{DiffView.tsx,DiffView.stories.tsx,index.ts}`
 - Modify: `pnpm-workspace.yaml` (catalog `@codemirror/merge`), `package.json`, MarkdownArticle wiring, `src/containers/index.ts`
 
@@ -891,11 +929,13 @@ Layout: single row, `Icon` (`ph--bookmark-simple--regular` / `ph--git-branch--re
 
 ```ts
 export type VersionDiffConfig = { spans: DiffSpan[]; variant: 'inline' | 'gutter' };
-export const versionDiff = (config: VersionDiffConfig): Extension => { /* ... */ };
+export const versionDiff = (config: VersionDiffConfig): Extension => {
+  /* ... */
+};
 ```
 
-  - `inline`: `Decoration.mark({ class: 'cm-version-insert' })` over insert spans; `Decoration.widget` rendering deleted text with `cm-version-delete` (line-through) at delete offsets. Define classes via `EditorView.baseTheme` with theme tokens (`--dx-*` vars used elsewhere in ui-editor themes — copy the pattern from comments.ts theme).
-  - `gutter`: `gutter()` + `GutterMarker` subclass emitting a 3px colored bar per changed line (insert=green token, delete=red token, both=amber token).
+- `inline`: `Decoration.mark({ class: 'cm-version-insert' })` over insert spans; `Decoration.widget` rendering deleted text with `cm-version-delete` (line-through) at delete offsets. Define classes via `EditorView.baseTheme` with theme tokens (`--dx-*` vars used elsewhere in ui-editor themes — copy the pattern from comments.ts theme).
+- `gutter`: `gutter()` + `GutterMarker` subclass emitting a 3px colored bar per changed line (insert=green token, delete=red token, both=amber token).
 - [ ] **Step 2: side-by-side** — `pnpm add --filter "@dxos/plugin-markdown" --save-catalog "@codemirror/merge"`. `DiffView.tsx`: renders a read-only `MergeView` (from `@codemirror/merge`) with `a` = base content, `b` = branch content, using the repo's editor theme extension (find how stories create a themed bare EditorView — `packages/ui/react-ui-editor` exports the base theme/useTextEditor; reuse rather than hand-rolling). Props: `{ before: string; after: string }` only.
 - [ ] **Step 3: Compare wiring** — in the container: when `compare` is set and setting is `inline`/`gutter`, append `versionDiff({ spans: diffSpans(base, current), variant })` to the `extensions` array passed to `MarkdownArticle` (compare targets: branch→base = `contentAt(parent, branch.anchor)` vs branch text; checkpoint compare = checkpoint content vs current). When `sideBySide`, render `DiffView` INSTEAD of `MarkdownEditor.Content` (conditional in `MarkdownArticle` via a `diff?: { before: string; after: string }` prop).
 - [ ] **Step 4: Stories** for both (fixture texts with insertions/deletions/moves); verify rendering + console in the worktree storybook; screenshot each variant to `./temp/`.
@@ -906,6 +946,7 @@ export const versionDiff = (config: VersionDiffConfig): Extension => { /* ... */
 ### Task 10: DocumentHistory companion panel
 
 **Files:**
+
 - Create: `src/containers/DocumentHistory/{DocumentHistory.tsx,DocumentHistory.stories.tsx,index.ts}`, `src/capabilities/app-graph-builder.ts`
 - Modify: `src/capabilities/{index.ts,react-surface.tsx}`, `src/MarkdownPlugin.tsx`, `src/containers/index.ts`
 
@@ -956,6 +997,7 @@ Surface.create({
 ### Task 11: ObjectProperties section
 
 **Files:**
+
 - Create: `src/containers/MarkdownProperties/{MarkdownProperties.tsx,MarkdownProperties.stories.tsx,index.ts}`
 - Modify: `src/capabilities/react-surface.tsx`, `src/containers/index.ts`
 
@@ -988,6 +1030,7 @@ Surface.create({
 ### Task 12: Toolbar switcher
 
 **Files:**
+
 - Modify: `src/containers/MarkdownArticle/MarkdownArticle.tsx` (or the container in react-surface.tsx where versioning state lives)
 
 - [ ] **Step 1:** Add a versions dropdown to the editor toolbar via the existing `customActions` atom (`MarkdownArticle.tsx:74` composes graph actions — compose additional menu actions with `useMenuActions`/menu builder per the `feedback_toolbar_menu_actions` memory and `composer-ui` skill): menu lists `main` + active branches (check = current selection) + `New branch…`. Selecting switches `setSelection`; New branch prompts name then `createBranch`.

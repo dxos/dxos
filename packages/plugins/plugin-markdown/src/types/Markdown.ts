@@ -9,6 +9,8 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation, CollectionItemAnnotation, Text } from '@dxos/schema';
 
+import * as Versioning from './Versioning';
+
 export const SKILL_KEY = 'org.dxos.skill.markdown';
 
 // Re-export Settings as merged const/type (not as namespace).
@@ -25,6 +27,7 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     description: Schema.optional(Schema.String),
     fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    history: Versioning.History.pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name', 'fallbackName']),
     DescriptionAnnotation.set('description'),
