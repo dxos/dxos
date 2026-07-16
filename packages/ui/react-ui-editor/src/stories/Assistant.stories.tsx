@@ -13,13 +13,18 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import {
+  type AssistantOptions,
+  assistant,
+  compactSlots,
+  createBasicExtensions,
+  createThemeExtensions,
+} from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
 import { Editor, type EditorViewProps } from '../components';
-import { type AssistantOptions, assistant } from './assistant-extension';
 
 // TODO(burdon): Factor out.
 const useTestGenerate = () => {

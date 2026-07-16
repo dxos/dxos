@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
@@ -13,14 +14,23 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { translationKey } from '#translations';
 import { type FormFieldMap } from '#types';
 
+import { omitId } from '../../util';
 import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
 
 export type ObjectFormProps = {
   type: Type.AnyEntity;
   object: Obj.Unknown;
+  /**
+   * Optional schema override for the rendered fields, e.g. a projection of `type`'s schema
+   * (`Type.getSchema(T).pipe(Schema.pick(...))`). Values are still read from and written back to
+   * `object` by path, so the picked fields must be paths on `object`. Defaults to `type`'s schema.
+   */
+  schema?: Schema.Schema.AnyNoContext;
+  /** Render the meta-tags field. Defaults to `true`. */
+  showTags?: boolean;
 };
 
-export const ObjectForm = ({ object, type }: ObjectFormProps) => {
+export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectFormProps) => {
   const db = Obj.getDatabase(object);
   // Subscribe to the object so external/remote mutations re-render the form: ECHO reactivity is atom-based, so
   // reading the raw object during render does not establish a subscription. `snapshot` is a fresh value on change.
@@ -29,7 +39,11 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
   // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
   const tags = [...meta.tags];
   const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...snapshot }), [snapshot, tags]);
-  const formSchema = useMemo(() => withMetaTags(Type.getSchema(type)), [type]);
+  const formSchema = useMemo(() => {
+    const base = schema ?? Type.getSchema(type);
+    // `withMetaTags` also drops `id`; keep it dropped when tags are omitted.
+    return showTags ? withMetaTags(base) : omitId(base);
+  }, [schema, type, showTags]);
 
   const handleCreate = useCallback((type: Type.AnyEntity, values: any) => {
     invariant(db);

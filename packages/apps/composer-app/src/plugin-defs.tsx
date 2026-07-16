@@ -11,6 +11,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
+import { BloggerPlugin } from '@dxos/plugin-blogger/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
 import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
@@ -91,6 +92,7 @@ import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
+import { TypefullyPlugin } from '@dxos/plugin-typefully/plugin';
 import { VideoPlugin } from '@dxos/plugin-video/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
@@ -143,6 +145,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Labs
     (isDev || isLabs) && [
+      BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
       MeetingPlugin.meta.profile.key,
@@ -164,6 +167,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       SandboxPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
+      TypefullyPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
       ZenPlugin.meta.profile.key,
     ],
@@ -285,6 +289,7 @@ export const getPlugins = ({
     OnboardingPlugin({ generateExemplarSpace: !isLocal }),
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
+    BloggerPlugin(),
     BlueskyPlugin(),
     FreeqPlugin(),
     GitHubPlugin(),
@@ -296,6 +301,7 @@ export const getPlugins = ({
     TicTacToePlugin(),
     TrelloPlugin(),
     TripPlugin(),
+    TypefullyPlugin(),
     VideoPlugin(),
     VoxelPlugin(),
     FilePlugin(),
