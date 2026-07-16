@@ -43,9 +43,11 @@ and the legacy API is deleted (Phase 8).
 
 ## Phase 5 — plugin-client migration (worked example)
 
-- [ ] ClientPlugin module list → new API (Client provides [Client, Layer] + compatFires [ClientReady]; ClientReady listeners → requires; allOf → activatesOn + requires; Schema/Migration multi)
-- [ ] Capability bodies: `Capability.get` → `yield*`; `contributes` → `provide`
-- [ ] Gate: plugin-client build + test; e2e Composer check (mixed coexistence)
+- [x] ClientPlugin(.node/.workerd) → new API: lazyModule specs; Client provides [Client, Layer] + compatFires [ClientReady]; ClientReady listeners → requires [Client]; allOf(SpacesReady, ProgressRegistryReady) → activatesOn SpacesReady + requires [ProgressRegistry]; Schema/Migration → makeMulti; SchemaDefs/Migrations compatFires the legacy Setup* windows (bodies subscribe reactively); Plugin.addLazyModule sugar added
+- [x] Capability bodies: `Capability.get` → `yield*`; `contributes` → `provide`/`provideAll`; Null-contribution deactivate → Scope finalizers
+- [x] Fallout fixes: legacy fires* fields → readonly (const-inference of literals); helper legacy activate arm regained Scope.Scope in R; TS2883 type-naming imports (+ @dxos/operation, @dxos/progress deps); stray makeModule type-arg in operation-handler
+- [x] **Gate integrity fix: earlier "full-repo build passed" results for Phases 2–4 were pipe-masked exit codes.** Re-ran honestly after Phase 5: EXIT=0, zero TS errors repo-wide. app-framework 197 / app-toolkit 82 / plugin-client tests green.
+- [ ] e2e Composer check (mixed coexistence) — do together with Phase 6
 
 ## Phase 6 — Testing utils + docs
 
