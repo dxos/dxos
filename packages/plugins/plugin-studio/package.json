@@ -130,8 +130,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo-client": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

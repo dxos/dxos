@@ -40,8 +40,6 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -59,7 +57,8 @@
     "jsonpath-plus": "catalog:"
   },
   "devDependencies": {
-    "@dxos/functions-runtime": "workspace:*"
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/edge-compute": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

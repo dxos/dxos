@@ -66,6 +66,9 @@
       "path": "../../mesh/edge-client"
     },
     {
+      "path": "../agent-runtime"
+    },
+    {
       "path": "../ai"
     },
     {
@@ -76,12 +79,6 @@
     },
     {
       "path": "../compute-runtime"
-    },
-    {
-      "path": "../functions"
-    },
-    {
-      "path": "../functions-runtime"
     }
   ]
 }

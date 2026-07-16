@@ -5,13 +5,13 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AgentService } from '@dxos/agent-runtime';
+import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { OperationHandlerSet, Skill } from '@dxos/compute';
 import { Collection, Database, Feed, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
-import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
