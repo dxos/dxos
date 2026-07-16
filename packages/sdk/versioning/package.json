@@ -1,0 +1,43 @@
+{
+  "name": "@dxos/versioning",
+  "version": "0.10.0",
+  "description": "Checkpoints, draft branches, and 3-way merge for automerge-backed ECHO objects.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "diff": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/typings": "workspace:*",
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

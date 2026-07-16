@@ -161,11 +161,11 @@
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/versioning": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "diff": "catalog:",
     "react-dropzone": "catalog:"
   },
   "devDependencies": {

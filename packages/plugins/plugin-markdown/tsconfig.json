@@ -89,6 +89,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../sdk/versioning"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

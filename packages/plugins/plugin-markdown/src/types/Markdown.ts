@@ -8,8 +8,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation, CollectionItemAnnotation, Text } from '@dxos/schema';
-
-import * as Versioning from './Versioning';
+import * as Versioning from '@dxos/versioning';
 
 export const SKILL_KEY = 'org.dxos.skill.markdown';
 

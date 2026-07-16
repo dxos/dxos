@@ -43,8 +43,9 @@ shared-history forks are phase 2 (requires core ECHO work).
 
 ## Data model
 
-New module `src/types/Versioning.ts`. The types are deliberately **not markdown-specific**
-(they reference `Text`, not `Document`) so they can lift into `@dxos/schema` in phase 2.
+The `Version`/`Branch`/`History` schemas and the checkpoint/branch/merge model live in the
+dedicated **`@dxos/versioning`** package (`packages/sdk/versioning`) — generic over any ECHO
+object carrying a `history` field; only the Timeline mapping and UI wiring are plugin-local.
 
 ```ts
 /** Named pointer to a state of a Text's automerge doc. Zero-copy. */
@@ -162,8 +163,8 @@ Operations (see `operations` skill) so agents can draft and propose changes:
 
 Not built now; the phase-1 shapes are chosen to make this a lift, not a migration:
 
-- Move `Version`/`Branch` to `@dxos/schema`, generalized over `Ref(Obj.Any)` targets so
-  any automerge-backed object (sketches, sheets) can be versioned; keep field names.
+- DONE: `Version`/`Branch` and the model now live in `@dxos/versioning`. Remaining: generalize
+  record refs over `Ref(Obj.Any)` targets so non-Text objects (sketches, sheets) can be versioned.
 - True CRDT forks: core ECHO API to fork a leaf doc with shared history (object-id
   rewrite or fragment surgery) enabling `A.merge`-quality merge-back; replaces the
   textual 3-way merge behind the same `mergeBranch` signature.

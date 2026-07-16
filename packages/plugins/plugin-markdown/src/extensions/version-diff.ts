@@ -5,7 +5,7 @@
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, GutterMarker, WidgetType, gutter } from '@codemirror/view';
 
-import { type DiffSpan, diffSpans } from '../model';
+import { type DiffSpan, diffSpans } from '@dxos/versioning';
 
 export type VersionDiffOptions = {
   /** Content the current doc is compared against (branch anchor or checkpoint). */

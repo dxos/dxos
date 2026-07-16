@@ -8,9 +8,9 @@ import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { type Text } from '@dxos/schema';
+import * as Versioning from '@dxos/versioning';
 
-import { contentAt } from '../model';
-import { Markdown, MarkdownCapabilities, type Versioning } from '../types';
+import { Markdown, MarkdownCapabilities } from '../types';
 
 export type UseVersioningResult = {
   document?: Markdown.Document;
@@ -89,7 +89,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     if (!activeBranch || !branchParent) {
       return undefined;
     }
-    return contentAt(branchParent, activeBranch.anchor);
+    return Versioning.contentAt(branchParent, activeBranch.anchor);
   }, [activeBranch, branchParent]);
 
   const versionTarget = activeVersion?.target.target;
@@ -98,7 +98,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     if (!activeVersion || !versionTarget) {
       return undefined;
     }
-    return contentAt(versionTarget, activeVersion.heads);
+    return Versioning.contentAt(versionTarget, activeVersion.heads);
   }, [activeVersion, versionTarget]);
 
   return {

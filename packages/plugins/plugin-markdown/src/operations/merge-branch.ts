@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { mergeBranch } from '@dxos/versioning';
 
-import { mergeBranch } from '../model';
 import { MarkdownOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.MergeBranch> = MarkdownOperation.MergeBranch.pipe(

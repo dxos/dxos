@@ -12,13 +12,13 @@ import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
+import { createBranch, createCheckpoint, mergeBranch } from '@dxos/versioning';
 
 import { WithProperties } from '#testing';
 
 import { MarkdownOperationHandlerSet } from '../operations';
 import { Markdown } from '../types';
 import { MAIN_BRANCH, NOW_COMMIT_ID, commitToSelection, createTimelineModel } from './timeline';
-import { createBranch, createCheckpoint, mergeBranch } from './versioning';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
@@ -35,8 +35,8 @@ describe('timeline model', () => {
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const v1 = createCheckpoint(doc, { name: 'v1' });
-        const branch = createBranch(doc, { name: 'draft' });
+        const v1 = createCheckpoint(doc, { name: 'v1', target: root });
+        const branch = createBranch(doc, { name: 'draft', parent: root });
         const branchText = yield* Database.load(branch.content);
         Obj.update(branchText, (branchText) => {
           branchText.content = 'alpha\nbravo\n';
@@ -45,7 +45,7 @@ describe('timeline model', () => {
         Obj.update(root, (root) => {
           root.content = 'alpha\nbravo\ncharlie\n';
         });
-        createCheckpoint(doc, { name: 'v2' });
+        createCheckpoint(doc, { name: 'v2', target: root });
 
         const { commits, branches } = createTimelineModel(doc);
 
@@ -96,8 +96,9 @@ describe('timeline model', () => {
       function* (_) {
         const doc = Markdown.make({ name: 'Doc', content: 'alpha\n' });
         yield* Database.add(doc);
+        const root = yield* Database.load(doc.content);
 
-        const branch = createBranch(doc, { name: 'draft' });
+        const branch = createBranch(doc, { name: 'draft', parent: root });
         const branchText = yield* Database.load(branch.content);
         Obj.update(branchText, (branchText) => {
           branchText.content = 'alpha\nbravo\n';

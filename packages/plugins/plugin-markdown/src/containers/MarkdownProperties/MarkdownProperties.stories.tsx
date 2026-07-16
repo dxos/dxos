@@ -17,12 +17,12 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { createBranch, createCheckpoint } from '@dxos/versioning';
 
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
-import { createBranch, createCheckpoint } from '../../model';
 import { MarkdownProperties } from './MarkdownProperties';
 
 const MarkdownExtensionsPlugin = Plugin.define(
@@ -75,8 +75,11 @@ const meta = {
               const { personalSpace } = yield* initializeIdentity(client);
               const doc = personalSpace.db.add(Markdown.make({ name: 'Project Plan', content: 'alpha\nbravo\n' }));
               yield* Effect.promise(() => personalSpace.db.flush());
-              createCheckpoint(doc, { name: 'first draft' });
-              createBranch(doc, { name: 'agent-draft' });
+              const root = doc.content.target;
+              if (root) {
+                createCheckpoint(doc, { name: 'first draft', target: root });
+                createBranch(doc, { name: 'agent-draft', parent: root });
+              }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),

@@ -7,21 +7,13 @@ import React, { forwardRef, useCallback, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
+import * as Versioning from '@dxos/versioning';
 
 import { meta } from '#meta';
 
 import { NamePopover } from '../../components';
 import { useVersioning } from '../../hooks';
-import {
-  MAIN_BRANCH,
-  branchLabel,
-  commitToSelection,
-  createBranch,
-  createCheckpoint,
-  createTimelineModel,
-  discardBranch,
-  mergeBranch,
-} from '../../model';
+import { MAIN_BRANCH, commitToSelection, createTimelineModel } from '../../model';
 import { type Markdown } from '../../types';
 
 export type DocumentHistoryProps = AppSurface.ObjectArticleProps<Markdown.Document>;
@@ -51,14 +43,14 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
       if (!document) {
         return;
       }
+      if (!timelineTarget) {
+        return;
+      }
       if (naming === 'checkpoint') {
         // Unnamed revisions are allowed; they display as their formatted creation time.
-        createCheckpoint(document, { name: name.trim(), target: timelineTarget });
+        Versioning.createCheckpoint(document, { name: name.trim(), target: timelineTarget });
       } else if (naming === 'branch') {
-        const branch = createBranch(document, {
-          name: name.trim(),
-          ...(timelineTarget ? { from: { target: timelineTarget } } : {}),
-        });
+        const branch = Versioning.createBranch(document, { name: name.trim(), parent: timelineTarget });
         setSelection({ kind: 'branch', branchId: branch.id });
       }
     },
@@ -80,14 +72,14 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
 
   const handleMerge = useCallback(() => {
     if (document && activeBranch) {
-      mergeBranch(document, activeBranch);
+      Versioning.mergeBranch(document, activeBranch);
       setSelection({ kind: 'current' });
     }
   }, [document, activeBranch, setSelection]);
 
   const handleDiscard = useCallback(() => {
     if (document && activeBranch) {
-      discardBranch(document, activeBranch);
+      Versioning.discardBranch(document, activeBranch);
       setSelection({ kind: 'current' });
     }
   }, [document, activeBranch, setSelection]);
@@ -142,7 +134,9 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
         <Timeline
           commits={commits}
           branches={branches}
-          currentBranch={selection.kind === 'branch' ? (activeBranch ? branchLabel(activeBranch) : null) : MAIN_BRANCH}
+          currentBranch={
+            selection.kind === 'branch' ? (activeBranch ? Versioning.branchLabel(activeBranch) : null) : MAIN_BRANCH
+          }
           onSelect={handleSelect}
         />
       </Panel.Content>

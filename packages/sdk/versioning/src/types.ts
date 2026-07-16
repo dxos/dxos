@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Schema from 'effect/Schema';
 
 import { Key, Ref } from '@dxos/echo';
@@ -12,8 +10,7 @@ import { Text } from '@dxos/schema';
 /**
  * Named checkpoint: a pointer to the automerge heads of a Text's backing document.
  * Heads are content-addressed change hashes, stable across peers, so a checkpoint is zero-copy.
- * NOTE: Deliberately not markdown-specific (targets Text, not Document) so these types can lift
- * into @dxos/schema in phase 2. See DESIGN.md.
+ * Generic over any object holding a `history` field (see model.ts).
  */
 export const Version = Schema.mutable(
   Schema.Struct({

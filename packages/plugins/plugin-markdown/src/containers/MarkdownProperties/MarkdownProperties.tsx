@@ -7,11 +7,11 @@ import React, { useCallback } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Versioning from '@dxos/versioning';
 
 import { meta } from '#meta';
 
 import { useVersioning } from '../../hooks';
-import { createCheckpoint } from '../../model';
 import { type Markdown } from '../../types';
 
 export type MarkdownPropertiesProps = AppSurface.ObjectPropertiesProps<Markdown.Document>;
@@ -26,8 +26,9 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
   const { document, history, selection, activeBranch } = versioning;
 
   const handleCheckpoint = useCallback(() => {
-    if (document) {
-      createCheckpoint(document, { name: new Date().toLocaleString() });
+    const target = document?.content.target;
+    if (document && target) {
+      Versioning.createCheckpoint(document, { name: '', target });
     }
   }, [document]);
 

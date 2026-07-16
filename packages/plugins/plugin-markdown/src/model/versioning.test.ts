@@ -11,11 +11,6 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
-
-import { WithProperties } from '#testing';
-
-import { MarkdownOperationHandlerSet } from '../operations';
-import { Markdown } from '../types';
 import {
   contentAt,
   createBranch,
@@ -24,7 +19,12 @@ import {
   ensureHistory,
   mergeBranch,
   restore,
-} from './versioning';
+} from '@dxos/versioning';
+
+import { WithProperties } from '#testing';
+
+import { MarkdownOperationHandlerSet } from '../operations';
+import { Markdown } from '../types';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
@@ -58,7 +58,7 @@ describe('versioning model', () => {
         yield* Database.add(doc);
         const text = yield* Database.load(doc.content);
 
-        const checkpoint = createCheckpoint(doc, { name: 'v1' });
+        const checkpoint = createCheckpoint(doc, { name: 'v1', target: text });
         expect(checkpoint.heads.length).toBeGreaterThan(0);
         expect(doc.history?.versions).toHaveLength(1);
 
@@ -83,7 +83,7 @@ describe('versioning model', () => {
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const branch = createBranch(doc, { name: 'draft' });
+        const branch = createBranch(doc, { name: 'draft', parent: root });
         const branchText = yield* Database.load(branch.content);
         expect(branchText.content).toBe('one two three');
         expect(doc.history?.versions.some((version) => version.name === 'fork: draft')).toBe(true);
@@ -106,13 +106,13 @@ describe('versioning model', () => {
         const doc = Markdown.make({ name: 'Doc', content: 'first' });
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
-        const checkpoint = createCheckpoint(doc, { name: 'v1' });
+        const checkpoint = createCheckpoint(doc, { name: 'v1', target: root });
 
         Obj.update(root, (root) => {
           root.content = 'second';
         });
 
-        const branch = createBranch(doc, { name: 'from-v1', from: { target: root, heads: checkpoint.heads } });
+        const branch = createBranch(doc, { name: 'from-v1', parent: root, heads: checkpoint.heads });
         const branchText = yield* Database.load(branch.content);
         expect(branchText.content).toBe('first');
       },
@@ -130,7 +130,7 @@ describe('versioning model', () => {
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const branch = createBranch(doc, { name: 'draft' });
+        const branch = createBranch(doc, { name: 'draft', parent: root });
         const branchText = yield* Database.load(branch.content);
         Obj.update(branchText, (branchText) => {
           branchText.content = 'alpha\nbravo\ncharlie\n';
@@ -159,7 +159,7 @@ describe('versioning model', () => {
         const doc = Markdown.make({ name: 'Doc', content: 'first' });
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
-        const checkpoint = createCheckpoint(doc, { name: 'v1' });
+        const checkpoint = createCheckpoint(doc, { name: 'v1', target: root });
 
         Obj.update(root, (root) => {
           root.content = 'second';
@@ -184,7 +184,7 @@ describe('versioning model', () => {
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const branch = createBranch(doc, { name: 'draft' });
+        const branch = createBranch(doc, { name: 'draft', parent: root });
         const branchText = yield* Database.load(branch.content);
         Obj.update(branchText, (branchText) => {
           branchText.content = 'alpha theirs\nbravo\n';
@@ -214,13 +214,13 @@ describe('versioning model', () => {
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const parentBranch = createBranch(doc, { name: 'draft' });
+        const parentBranch = createBranch(doc, { name: 'draft', parent: root });
         const parentText = yield* Database.load(parentBranch.content);
         Obj.update(parentText, (parentText) => {
           parentText.content = 'alpha\nbravo\n';
         });
 
-        const childBranch = createBranch(doc, { name: 'nested', from: { target: parentText } });
+        const childBranch = createBranch(doc, { name: 'nested', parent: parentText });
         const childText = yield* Database.load(childBranch.content);
         expect(childText.content).toBe('alpha\nbravo\n');
 
@@ -248,7 +248,7 @@ describe('versioning model', () => {
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const branch = createBranch(doc, { name: 'draft' });
+        const branch = createBranch(doc, { name: 'draft', parent: root });
         yield* Database.load(branch.content);
         discardBranch(doc, branch);
 

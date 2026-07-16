@@ -16,12 +16,12 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { createBranch, createCheckpoint } from '@dxos/versioning';
 
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
-import { createBranch, createCheckpoint } from '../../model';
 import { DocumentHistory } from './DocumentHistory';
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
@@ -71,21 +71,21 @@ const meta = {
               );
               yield* Effect.promise(() => personalSpace.db.flush());
 
-              createCheckpoint(doc, { name: 'first draft' });
               const root = doc.content.target;
               if (root) {
+                createCheckpoint(doc, { name: 'first draft', target: root });
                 Obj.update(root, (root) => {
                   root.content = 'alpha\nbravo\ncharlie\ndelta\n';
                 });
-              }
-              createCheckpoint(doc, { name: 'v2 outline' });
+                createCheckpoint(doc, { name: 'v2 outline', target: root });
 
-              const branch = createBranch(doc, { name: 'agent-draft' });
-              const branchText = branch.content.target;
-              if (branchText) {
-                Obj.update(branchText, (branchText) => {
-                  branchText.content = 'alpha edited\nbravo\ncharlie\ndelta\nepsilon\n';
-                });
+                const branch = createBranch(doc, { name: 'agent-draft', parent: root });
+                const branchText = branch.content.target;
+                if (branchText) {
+                  Obj.update(branchText, (branchText) => {
+                    branchText.content = 'alpha edited\nbravo\ncharlie\ndelta\nepsilon\n';
+                  });
+                }
               }
 
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
