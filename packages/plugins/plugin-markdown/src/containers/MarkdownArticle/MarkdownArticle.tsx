@@ -15,7 +15,13 @@ import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
-import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
+import {
+  type ToolbarMenuActionGroupProperties,
+  createMenuAction,
+  createMenuItemGroup,
+  graphActions,
+  isToolbarAction,
+} from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
 
 import {
@@ -26,6 +32,7 @@ import {
   VersionBanner,
 } from '#components';
 import { useLinkQuery, useVersioning } from '#hooks';
+import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { versionDiff } from '../../extensions';
@@ -130,12 +137,53 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return extensions;
     }, [extensions, compareActive, branchBaseContent, diffViewMode]);
 
-    // Toolbar actions from app graph.
+    // Toolbar actions from app graph, plus the branch switcher dropdown.
     const { graph } = useAppGraph();
     const runAction = useActionRunner();
+    const activeBranches = document?.history?.branches.filter((branch) => branch.status === 'active') ?? [];
+    const branchesKey = activeBranches.map((branch) => `${branch.id}:${branch.name}`).join(',');
     const customActions = useMemo(() => {
-      return Atom.make((get) => graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction }));
-    }, [graph, attendableId, id]);
+      return Atom.make((get) => {
+        const base = graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction });
+        if (!document || activeBranches.length === 0) {
+          return base;
+        }
+
+        const groupId = 'versions';
+        const group = createMenuItemGroup(groupId, {
+          label: ['versions.title', { ns: meta.profile.key }],
+          icon: 'ph--git-branch--regular',
+          iconOnly: true,
+          variant: 'dropdownMenu',
+          applyActive: false,
+          selectCardinality: 'single',
+        } as ToolbarMenuActionGroupProperties);
+        const actions = [
+          createMenuAction('versions--current', () => setSelection({ kind: 'current' }), {
+            label: ['main-branch.label', { ns: meta.profile.key }],
+            icon: 'ph--git-branch--regular',
+            checked: !activeBranch && !activeVersion,
+          }),
+          ...activeBranches.map((branch) =>
+            createMenuAction(`versions--${branch.id}`, () => setSelection({ kind: 'branch', branchId: branch.id }), {
+              label: branch.name,
+              icon: 'ph--git-branch--regular',
+              checked: activeBranch?.id === branch.id,
+            }),
+          ),
+        ];
+
+        return {
+          nodes: [...base.nodes, group, ...actions],
+          edges: [
+            ...base.edges,
+            { source: 'root', target: groupId, relation: 'child' as const },
+            ...actions.map((action) => ({ source: groupId, target: action.id, relation: 'child' as const })),
+          ],
+        };
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [graph, attendableId, id, document, branchesKey, activeBranch?.id, activeVersion?.id, setSelection]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);
