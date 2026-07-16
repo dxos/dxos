@@ -8,6 +8,8 @@ import { describe, test } from 'vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { EffectEx } from '@dxos/effect';
+
 import * as RemoteTriggerManager from './RemoteTriggerManager';
 
 describe('RemoteTriggerManager', () => {
@@ -17,7 +19,7 @@ describe('RemoteTriggerManager', () => {
       const manager = yield* RemoteTriggerManager.Service;
       return registry.get(manager.triggers);
     });
-    const result = await Effect.runPromise(
+    const result = await EffectEx.runPromise(
       program.pipe(
         Effect.provide(RemoteTriggerManager.layerNoop),
         Effect.provide(Layer.succeed(Registry.AtomRegistry, registry)),
