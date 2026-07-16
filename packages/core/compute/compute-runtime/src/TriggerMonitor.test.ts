@@ -12,17 +12,18 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Operation, OperationHandlerSet, ServiceResolver, Trace, Trigger, type TriggerEvent } from '@dxos/compute';
-import * as ProcessManager from '../ProcessManager';
+import * as ProcessManager from './ProcessManager';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { credentialsLayerConfig } from '../services/credentials';
+import { credentialsLayerConfig } from './services/credentials';
 import { invariant } from '@dxos/invariant';
 import { Person } from '@dxos/types';
 
-import { TriggerDispatcher } from './trigger-dispatcher';
-import { TriggerMonitorLayer } from './trigger-monitor';
-import { TriggerStateStore } from './trigger-state-store';
+import { TriggerDispatcher } from './triggers/trigger-dispatcher';
+import * as RemoteTriggerManager from './RemoteTriggerManager';
+import * as TriggerMonitor from './TriggerMonitor';
+import { TriggerStateStore } from './triggers/trigger-state-store';
 
 /**
  * Environment providing the {@link TriggerMonitorLayer}'s dependencies
@@ -39,6 +40,7 @@ const TestLayer = (options: { timeControl?: 'natural' | 'manual'; startingTime?:
       }),
     ),
     Layer.provide(TriggerStateStore.layerMemory),
+    Layer.provideMerge(RemoteTriggerManager.layerNoop),
     Layer.provideMerge(AiService.notAvailable),
     Layer.provideMerge(credentialsLayerConfig([])),
     Layer.provideMerge(FetchHttpClient.layer),
@@ -81,7 +83,7 @@ const withMonitor = <A, E, R>(body: (monitor: Trigger.Monitor) => Effect.Effect<
       (unsubscribe) => Effect.sync(unsubscribe),
     );
     return yield* body(monitor);
-  }).pipe(Effect.provide(TriggerMonitorLayer), Effect.scoped);
+  }).pipe(Effect.provide(TriggerMonitor.layer), Effect.scoped);
 
 describe('TriggerMonitor', () => {
   it.effect(

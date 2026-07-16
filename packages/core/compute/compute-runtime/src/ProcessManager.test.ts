@@ -40,6 +40,8 @@ import { Organization } from '@dxos/types';
 
 import { ProcessStore } from './process-store';
 import * as ProcessManager from './ProcessManager';
+import * as ProcessMonitor from './ProcessMonitor';
+import * as RemoteProcessManager from './RemoteProcessManager';
 import { TestDatabaseLayer } from './testing';
 
 //
@@ -285,8 +287,9 @@ const ProcessWithRpcs = Process.make(
     }),
 );
 
-const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provideMerge(RemoteProcessManager.layerNoop),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
   Layer.provide(
     TestDatabaseLayer({
@@ -748,8 +751,12 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     }),
   );
 
-  const InheritanceTestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+  const InheritanceTestLayer = Layer.mergeAll(
+    ProcessManager.ProcessOperationInvoker.layer,
+    ProcessMonitor.layer,
+  ).pipe(
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(SpaceAwareResolverLayer),
     Layer.provideMerge(
       TestDatabaseLayer({

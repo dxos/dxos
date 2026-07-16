@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -10,27 +12,35 @@ import { Trigger, TriggerEvent } from '@dxos/compute';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { TriggerDispatcher, type TriggerRuntimeStatus } from './trigger-dispatcher';
+import * as RemoteTriggerManager from './RemoteTriggerManager';
+import { TriggerDispatcher, type TriggerRuntimeStatus } from './triggers/trigger-dispatcher';
 
 /**
- * Derives a {@link Trigger.TriggerMonitorService} from the local {@link TriggerDispatcher}.
- * Provides a unified view of triggers across local and edge environments.
+ * Aggregate {@link Trigger.TriggerMonitorService} that merges the local
+ * {@link TriggerDispatcher} view with the remote
+ * ({@link RemoteTriggerManager.Service}) one, providing a unified view of
+ * triggers across local and edge environments. Provide
+ * {@link RemoteTriggerManager.layerNoop} for local-only deployments.
+ *
+ * `invokeTrigger` routes by the trigger's `remote` flag: remote triggers are
+ * dispatched via the remote manager, local ones via the local dispatcher.
  */
-export const TriggerMonitorLayer: Layer.Layer<
+export const layer: Layer.Layer<
   Trigger.TriggerMonitorService,
   never,
-  TriggerDispatcher | Database.Service | Registry.AtomRegistry
+  TriggerDispatcher | Database.Service | Registry.AtomRegistry | RemoteTriggerManager.Service
 > = Layer.scoped(
   Trigger.TriggerMonitorService,
   Effect.gen(function* () {
     const dispatcher = yield* TriggerDispatcher;
     const database = yield* Database.Service;
     const registry = yield* Registry.AtomRegistry;
+    const remote = yield* RemoteTriggerManager.Service;
 
-    const triggersAtom: Atom.Writable<readonly Trigger.State[]> = Atom.make<readonly Trigger.State[]>([]);
+    const localTriggersAtom: Atom.Writable<readonly Trigger.State[]> = Atom.make<readonly Trigger.State[]>([]);
 
     /**
-     * Derive state from dispatcher and database.
+     * Derive local state from dispatcher and database.
      * This runs every time either the dispatcher state or the database query results change.
      */
     const deriveState = Effect.gen(function* () {
@@ -40,7 +50,7 @@ export const TriggerMonitorLayer: Layer.Layer<
       );
 
       const allTriggers = yield* Database.query(
-        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerMonitorService.deriveState'),
+        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerMonitor.deriveState'),
       ).run;
 
       const states: Trigger.State[] = allTriggers
@@ -66,7 +76,7 @@ export const TriggerMonitorLayer: Layer.Layer<
           };
         });
 
-      registry.update(triggersAtom, () => states);
+      registry.update(localTriggersAtom, () => states);
     });
 
     // Subscribe to dispatcher state changes to update the derived atom.
@@ -78,6 +88,10 @@ export const TriggerMonitorLayer: Layer.Layer<
     // Perform initial derivation.
     yield* deriveState;
 
+    // Aggregate local + remote trigger views.
+    const triggersAtom = Atom.make((get) => [...get(localTriggersAtom), ...get(remote.triggers)]);
+    registry.mount(triggersAtom);
+
     const monitor: Trigger.Monitor = {
       triggers: triggersAtom,
 
@@ -86,12 +100,9 @@ export const TriggerMonitorLayer: Layer.Layer<
       },
 
       invokeTrigger: (options: Trigger.InvokeOptions) =>
-        Effect.gen(function* () {
-          yield* dispatcher.invokeTrigger({
-            trigger: options.trigger,
-            event: options.event,
-          });
-        }).pipe(Effect.asVoid),
+        options.trigger.remote === true
+          ? remote.invokeTrigger(options)
+          : dispatcher.invokeTrigger({ trigger: options.trigger, event: options.event }).pipe(Effect.asVoid),
     };
 
     return monitor;

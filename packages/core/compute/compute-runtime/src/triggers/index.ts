@@ -3,5 +3,4 @@
 //
 
 export * from './trigger-dispatcher';
-export * from './trigger-monitor';
 export * from './trigger-state-store';
