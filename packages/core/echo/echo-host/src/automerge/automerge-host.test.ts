@@ -8,13 +8,14 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { range } from '@dxos/util';
 
 import { createTestSqliteRuntime } from '../testing';
 import { TestReplicationNetwork } from '../testing';
-import { AutomergeHost } from './automerge-host';
+import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host';
 import { type EchoNetworkAdapter } from './echo-network-adapter';
 import { deriveCollectionIdFromSpaceId } from './space-collection';
 
@@ -53,6 +54,26 @@ describe('AutomergeHost', () => {
     const { documentId: otherId } = parseAutomergeUrl(generateAutomergeUrl());
     await host.updateLocalCollectionState('test-collection', [otherId]);
     expect(await host.getContainingSpaceIdForDocument(otherId)).toBeNull();
+  });
+
+  test('resolves a document space from the embedded root-doc space key when not in any collection', async ({
+    expect,
+  }) => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+
+    // Fallback path: a document in no local collection resolves its space via the loaded-handle /
+    // root-doc space-key provider, then derives the space id. Exercises the `createIdFromSpaceKey`
+    // composition this method owns (relocated here from the network adapter).
+    const spaceKey = PublicKey.random();
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+    const host = await setupAutomergeHost(runtime, (id) => (id === documentId ? spaceKey : undefined));
+
+    expect(await host.getContainingSpaceIdForDocument(documentId)).toEqual(await createIdFromSpaceKey(spaceKey));
+
+    // A document the provider does not recognize (and in no collection) stays unresolved.
+    const { documentId: unknownId } = parseAutomergeUrl(generateAutomergeUrl());
+    expect(await host.getContainingSpaceIdForDocument(unknownId)).toBeNull();
   });
 
   test('changes are preserved in storage', async () => {
@@ -284,8 +305,8 @@ describe('AutomergeHost', () => {
 
 type RuntimeArg = ReturnType<typeof createTestSqliteRuntime>['runtime'];
 
-const setupAutomergeHost = async (runtime: RuntimeArg) => {
-  const host = new AutomergeHost({ runtime });
+const setupAutomergeHost = async (runtime: RuntimeArg, getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider) => {
+  const host = new AutomergeHost({ runtime, getSpaceKeyByRootDocumentId });
   await host.open();
   onTestFinished(async () => {
     if (host.isOpen) {

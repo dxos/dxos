@@ -40,7 +40,7 @@ import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
@@ -61,7 +61,7 @@ import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { getHandleState } from './handle-state';
-import { getSpaceIdFromCollectionId } from './space-collection';
+import { tryGetSpaceIdFromCollectionId } from './space-collection';
 import { SqliteHeadsStore } from './sqlite-heads-store';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter';
 
@@ -837,11 +837,15 @@ export class AutomergeHost extends Resource {
   async getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null> {
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
-      // Only space collections (`space:<spaceId>:<root>`) carry a resolvable owner; guard against
-      // any other registered collection id so the parse invariant in `getSpaceIdFromCollectionId`
-      // cannot throw out of the share-policy path.
-      if (state && documentId in state.documents && SpaceId.isValid(collectionId.split(':')[1])) {
-        return getSpaceIdFromCollectionId(collectionId as CollectionId);
+      if (!state || !(documentId in state.documents)) {
+        continue;
+      }
+      // Only space collections (`space:<spaceId>[:<root>]`) carry a resolvable owner; a non-space
+      // collection id yields null (rather than throwing on the share-policy path) and the scan
+      // continues to the next registered collection.
+      const spaceId = tryGetSpaceIdFromCollectionId(collectionId);
+      if (spaceId) {
+        return spaceId;
       }
     }
 
