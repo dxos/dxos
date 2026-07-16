@@ -164,6 +164,19 @@ export interface EchoDatabase extends Database.Database {
   deleteBranch(rootObjectId: string, name: string): void;
 
   /**
+   * Create a caller-owned, writable binding to one branch of one object — a live object whose reads
+   * resolve the branch document and whose writes land on the branch document only. Multiple bindings
+   * to different branches of the same object may coexist in a process; the device-global current
+   * branch ({@link switchBranch}) and other bindings are unaffected. Binding to `'main'` returns the
+   * canonical live object. Bindings are ephemeral and never persisted — the caller must `dispose()`
+   * (releases the doc-handle listener; never deletes the branch doc).
+   *
+   * NOTE: Refs on the bound object resolve to canonical (device-current) targets; bind each subtree
+   * member separately to read/write children on the branch.
+   */
+  branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>>;
+
+  /**
    * Insert new objects.
    * @deprecated Use `add` instead.
    */
@@ -187,6 +200,19 @@ export interface EchoDatabase extends Database.Database {
 
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
 }
+
+/**
+ * A caller-owned, writable per-surface binding to one branch of one object.
+ * @see EchoDatabase.branch
+ */
+export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
+  /** Live object bound to the branch document (`'main'` -> the canonical live object). */
+  readonly object: T;
+  /** The branch this binding resolves. */
+  readonly branch: string;
+  /** Release the binding (drops the doc-handle listener; never deletes the branch document). */
+  dispose(): void;
+};
 
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
@@ -878,6 +904,17 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   deleteBranch(rootObjectId: string, name: string): void {
     this._entityManager.deleteBranch(rootObjectId, name);
+  }
+
+  async branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>> {
+    assertArgument(isEchoObject(obj), 'obj', 'expected ECHO object stored in the database');
+    if (name === 'main') {
+      // The live object IS the main binding; nothing to release.
+      return { object: obj, branch: 'main', dispose: () => {} };
+    }
+    const { core, dispose } = await this._entityManager.bindCoreToBranch(getObjectCore(obj).id, name);
+    const object = initEchoReactiveObjectRootProxy(core, this) as T;
+    return { object, branch: name, dispose };
   }
 
   getObjectCoreById(id: string, opts?: Parameters<EntityManager['getObjectCoreById']>[1]) {

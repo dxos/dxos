@@ -998,6 +998,50 @@ export class EntityManager implements IDatabaseBinding {
     return handle;
   }
 
+  /**
+   * Core-level per-surface branch binding: an ephemeral `ObjectCore` bound to the branch document
+   * of one object, independent of the device-global selection (`switchBranch`) and of other
+   * bindings. The caller owns the returned core and must call `dispose` — bindings are never
+   * persisted (the {@link BranchStore} records only the device default, which bindings override
+   * locally and never mutate). Reads resolve the branch doc; writes land on the branch doc only.
+   */
+  async bindCoreToBranch(objectId: string, name: string): Promise<{ core: ObjectCore; dispose: () => void }> {
+    invariant(name !== 'main', "binding to 'main' resolves the live object; no core binding needed");
+    const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
+    const record = rootId ? this.getBranchRegistry(rootId)?.[name] : undefined;
+    invariant(record, `branch not found: ${name}`);
+    const url = record.members[objectId]?.toString();
+    invariant(url, `object is not a member of branch: ${name}`);
+    const handle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
+    await handle.whenReady();
+
+    const core = new ObjectCore();
+    core.id = objectId as EntityId;
+    core.bind({ db: this, docHandle: handle, path: ['objects', objectId], assignFromLocalState: false });
+
+    // Route branch-doc changes to this binding's core directly: the id-keyed `_objects` routing
+    // (`_onDocumentUpdate` -> `_emitObjectUpdateEvent`) serves the device-global binding only, and
+    // this handle may not carry `_onDocumentUpdate` at all while the device views another branch.
+    const onChange = (event: ChangeEvent<DatabaseDirectory>) => {
+      if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objectId)) {
+        core.notifyUpdate();
+      }
+    };
+    handle.on('change', onChange);
+
+    return {
+      core,
+      dispose: () => {
+        // Releases the binding's listeners only — the branch document itself stays (it is referenced
+        // by the synced registry and keeps replicating).
+        handle.off('change', onChange);
+        for (const unsubscribe of core.subscriptions) {
+          unsubscribe();
+        }
+      },
+    };
+  }
+
   private async _rebindMemberToBranch(
     memberId: string,
     name: string,
