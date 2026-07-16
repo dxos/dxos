@@ -410,7 +410,7 @@ export const SqlitePanel = () => {
 const SERVICES_MODE_LABELS: Record<Runtime.Client.ServicesMode, string> = {
   [Runtime.Client.ServicesMode.UNSPECIFIED_SERVICES_MODE]: 'Unspecified',
   [Runtime.Client.ServicesMode.HOST]: 'Host (in-process)',
-  [Runtime.Client.ServicesMode.SHARED_WORKER]: 'Shared worker',
+  [Runtime.Client.ServicesMode.SHARED_WORKER]: 'Shared worker (deprecated)',
   [Runtime.Client.ServicesMode.DEDICATED_WORKER]: 'Dedicated worker',
 };
 
