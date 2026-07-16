@@ -22,7 +22,7 @@ import { type GmailDataset, GoogleMailApi } from '../../../../services';
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
 import { ambientSyncServices, inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
 import { InboxOperation, Mailbox } from '../../../../types';
-import { createSyncProgressKey } from '../../../mail-sync';
+import { createSyncProgressKey } from '../../mail-sync';
 import { syncGmail } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */

@@ -18,10 +18,10 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { type ContentBlock } from '@dxos/types';
 
-import { MailSyncError } from '../errors';
-import { meta } from '../meta';
-import { Mailbox, type SyncStreamConfig } from '../types';
-import { onArrivalExtractors, readBindingOptions } from '../util';
+import { MailSyncError } from '../../errors';
+import { meta } from '../../meta';
+import { Mailbox, type SyncStreamConfig } from '../../types';
+import { onArrivalExtractors, readBindingOptions } from '../../util';
 
 /**
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync (Gmail, JMAP). Every run

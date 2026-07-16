@@ -26,7 +26,7 @@ import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError, MailSyncError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
 import { InboxOperation, Mailbox, type SyncStreamConfig } from '../../../types';
-import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../../mail-sync';
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from './mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';

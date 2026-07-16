@@ -21,8 +21,8 @@ import { GMAIL_SOURCE } from '../../../../constants';
 import { MailSyncError } from '../../../../errors';
 import { GoogleMailApi } from '../../../../services';
 import { Mailbox } from '../../../../types';
-import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../../../mail-sync';
 import { parseFromHeader } from '../../../util';
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../../mail-sync';
 import { decodeBody, mapToMessage } from '../mapper';
 import { GMAIL_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
 
