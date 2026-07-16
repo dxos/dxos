@@ -36,7 +36,7 @@ on:
         # (GitHub requires a choice default to be a listed option, hence `all` is the first entry.)
         description: App to deploy (default `all` = the whole environment)
         type: choice
-        options: [all, composer, docs, storybook, todomvc, tasks, testbench]
+        options: [all, composer, docs, storybook-react, todomvc, tasks, testbench]
         default: all
       bump:
         # Only used by the production `release` job (the Composer version bump); ignored otherwise.
@@ -227,7 +227,7 @@ jobs:
           lfs: true
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
-      # Catches e.g. `app=storybook` on an environment storybook doesn't define (no env.staging/labs) —
+      # Catches e.g. `app=storybook-react` on an environment it doesn't define (no env.staging/labs) —
       # before this existed, bundle-env.mjs/deploy-env.mjs silently no-op'd and the job still went green
       # with a false "deploying"/"succeeded" Discord ping despite deploying nothing. Runs before the
       # "started" notification so an invalid combo never posts to Discord at all.
