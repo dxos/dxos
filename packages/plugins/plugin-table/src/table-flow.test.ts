@@ -50,7 +50,7 @@ const createTable = async (db: Db) => {
 };
 
 const rowCount = async (db: Db, type: Type.AnyEntity): Promise<number> =>
-  (await db.query(Filter.type(type)).run()).filter((row: Obj.Any) => !Obj.isDeleted(row)).length;
+  (await db.query(Filter.type(Type.assertObject(type))).run()).filter((row) => !Obj.isDeleted(row)).length;
 
 const makeProjection = (registry: Registry.Registry, view: View.View, type: Type.AnyEntity) =>
   new ProjectionModel({
@@ -93,7 +93,7 @@ describe('table flow', () => {
     }
     expect(await rowCount(db, type)).toBe(5);
 
-    const rows = await db.query(Filter.type(type)).run();
+    const rows = await db.query(Filter.type(Type.assertObject(type))).run();
     db.remove(rows[0]);
     db.remove(rows[1]);
     expect(await rowCount(db, type)).toBe(3);
