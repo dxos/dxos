@@ -24,8 +24,8 @@ export type TranslatorModuleOptions = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ appName, resourceExtensions = [] }: TranslatorModuleOptions = {}) {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const translationsAtom = yield* Capability.atom(AppCapabilities.Translations);
+    const registry = yield* Capabilities.AtomRegistry;
+    const translationsAtom = (yield* AppCapabilities.Translations).atom;
 
     // Static resources owned by the theme plugin and the embedding app.
     addResources([
@@ -34,11 +34,12 @@ export default Capability.makeModule(
       ...(appName ? [{ 'en-US': { [osTranslations]: { 'current-app.name': appName } } }] : []),
     ]);
 
-    // Plugin-contributed translations, registered reactively as plugins are enabled and disabled.
+    // Plugin-contributed translations, registered reactively as plugins are enabled and disabled —
+    // the live contributions view means late (legacy-window) contributions still land.
     const register = () => addResources(registry.get(translationsAtom).flat());
     register();
     const unsubscribe = registry.subscribe(translationsAtom, register);
 
-    return Capability.contributes(AppCapabilities.Translator, translator, () => Effect.sync(() => unsubscribe()));
+    return [Capability.provide(AppCapabilities.Translator, translator, () => Effect.sync(() => unsubscribe()))];
   }),
 );

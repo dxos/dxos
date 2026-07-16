@@ -19,7 +19,7 @@ export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCach
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ tx: propsTx = defaultTx, noCache, platform }: ThemePluginOptions = {}) {
-    const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
 
     const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
@@ -31,30 +31,32 @@ export default Capability.makeModule(
     setTheme({ matches: modeQuery.matches });
     modeQuery.addEventListener('change', setTheme);
 
-    return Capability.contributes(
-      Capabilities.ReactContext,
-      {
-        id: meta.profile.key,
-        context: ({ children }: { children?: ReactNode }) => {
-          const { themeMode } = useAtomValue(themeAtom);
-          // Translations are registered in the shared i18next instance by the Translator module; the
-          // theme provider only exposes that instance to React.
-          return (
-            <ThemeProvider {...{ tx: propsTx, themeMode, platform, noCache }}>
-              <Toast.Provider>
-                <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
-                  {children}
-                </Tooltip.Provider>
-                <Toast.Viewport />
-              </Toast.Provider>
-            </ThemeProvider>
-          );
+    return [
+      Capability.provide(
+        Capabilities.ReactContext,
+        {
+          id: meta.profile.key,
+          context: ({ children }: { children?: ReactNode }) => {
+            const { themeMode } = useAtomValue(themeAtom);
+            // Translations are registered in the shared i18next instance by the Translator module; the
+            // theme provider only exposes that instance to React.
+            return (
+              <ThemeProvider {...{ tx: propsTx, themeMode, platform, noCache }}>
+                <Toast.Provider>
+                  <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
+                    {children}
+                  </Tooltip.Provider>
+                  <Toast.Viewport />
+                </Toast.Provider>
+              </ThemeProvider>
+            );
+          },
         },
-      },
-      () =>
-        Effect.sync(() => {
-          modeQuery.removeEventListener('change', setTheme);
-        }),
-    );
+        () =>
+          Effect.sync(() => {
+            modeQuery.removeEventListener('change', setTheme);
+          }),
+      ),
+    ];
   }),
 );

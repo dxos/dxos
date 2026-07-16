@@ -12,13 +12,13 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ProgressStatusIndicator } from '#components';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'progressStatusIndicator',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => <ProgressStatusIndicator />,
       }),
     ]),
-  ),
+  ]),
 );

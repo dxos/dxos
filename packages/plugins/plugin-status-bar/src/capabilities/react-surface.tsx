@@ -12,8 +12,8 @@ import { StatusBar, StatusBarFooter, VersionInfo } from '@dxos/plugin-deck';
 import { StatusBarActions, StatusBarPanel, VersionNumber } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'statusBar',
         filter: Surface.makeFilter(StatusBar),
@@ -30,5 +30,5 @@ export default Capability.makeModule(() =>
         component: () => <VersionNumber />,
       }),
     ]),
-  ),
+  ]),
 );

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 
 import { ProgressRegistry, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -12,13 +12,16 @@ import { translations } from '#translations';
 export const ProgressPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'progress-registry',
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [AppActivationEvents.ProgressRegistryReady],
+    requires: [Capabilities.AtomRegistry],
+    provides: [AppCapabilities.ProgressRegistry],
+    // Migration bridge for unmigrated ProgressRegistryReady listeners.
+    compatFires: [AppActivationEvents.ProgressRegistryReady],
     activate: () => ProgressRegistry(),
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    requires: [],
+    provides: [Capabilities.ReactSurface],
     activate: () => ReactSurface(),
   }),
   AppPlugin.addTranslationsModule({ translations }),

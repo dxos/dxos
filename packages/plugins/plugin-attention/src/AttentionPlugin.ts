@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { AttentionManager, ViewStateManager, createDefaultBackends } from '@dxos/react-ui-attention';
 
 import { Keyboard, OperationHandler, ReactContext } from '#capabilities';
@@ -14,31 +14,32 @@ import { AttentionEvents } from '#types';
 import { AttentionCapabilities } from '#types';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   Plugin.addModule({
     id: 'attention',
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [AttentionEvents.AttentionReady],
+    requires: [Capabilities.AtomRegistry],
+    provides: [AttentionCapabilities.Attention, AttentionCapabilities.ViewState],
+    // Migration bridge for unmigrated AttentionReady listeners (space, markdown, trip, commerce,
+    // inbox, ibkr, magazine, files).
+    compatFires: [AttentionEvents.AttentionReady],
     activate: () =>
       Effect.gen(function* () {
-        const registry = yield* Capability.get(Capabilities.AtomRegistry);
+        const registry = yield* Capabilities.AtomRegistry;
         const attention = new AttentionManager(registry);
         const viewState = new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
         setupDevtools(attention);
         return [
-          Capability.contributes(AttentionCapabilities.Attention, attention),
-          Capability.contributes(AttentionCapabilities.ViewState, viewState),
+          Capability.provide(AttentionCapabilities.Attention, attention),
+          Capability.provide(AttentionCapabilities.ViewState, viewState),
         ];
       }),
   }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
-    activate: ReactContext,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, AttentionEvents.AttentionReady),
-    activate: Keyboard,
-  }),
+  Plugin.addLazyModule(ReactContext),
+  Plugin.addLazyModule(Keyboard),
   Plugin.make,
 );
 

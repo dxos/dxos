@@ -10,9 +10,21 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const SettingsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: SettingsAppGraphBuilder }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addAppGraphModule({
+    requires: SettingsAppGraphBuilder.requires,
+    provides: SettingsAppGraphBuilder.provides,
+    activate: SettingsAppGraphBuilder,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
