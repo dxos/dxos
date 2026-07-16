@@ -6,17 +6,16 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
-    StackPlugin: 'src/StackPlugin.ts',
-    capabilities: 'src/capabilities/index.ts',
-    components: 'src/components/index.ts',
-    containers: 'src/containers/index.ts',
-    meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
-    translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
+    'index': 'src/index.ts',
+    'StackPlugin': 'src/StackPlugin.ts',
+    'capabilities/index': 'src/capabilities/index.ts',
+    'components/index': 'src/components/index.ts',
+    'containers/index': 'src/containers/index.ts',
+    'meta': 'src/meta.ts',
+    'plugin': 'src/plugin.ts',
+    'translations': 'src/translations.ts',
+    'types/index': 'src/types/index.ts',
   },
   jsx: 'react',
-  assetsAsFiles: true,
   test: { node: true },
 });

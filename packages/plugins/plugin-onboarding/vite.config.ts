@@ -12,6 +12,5 @@ export default defineConfig({
     translations: 'src/translations.ts',
   },
   jsx: 'react',
-  assetsAsFiles: true,
   test: { node: true },
 });

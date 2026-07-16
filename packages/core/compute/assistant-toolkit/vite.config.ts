@@ -10,6 +10,5 @@ export default defineConfig({
     testing: 'src/testing/index.ts',
   },
   jsx: 'react',
-  assetsAsFiles: true,
   test: { node: true },
 });

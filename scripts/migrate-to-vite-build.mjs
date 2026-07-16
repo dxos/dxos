@@ -39,6 +39,15 @@ const entryNameFromPath = (srcPath) => {
   return noExt.replace(/\/index$/, '') || 'index';
 };
 
+/**
+ * Un-stripped entry name — used when the default-stripped name collides with another
+ * entry (e.g. `src/testing.ts` → `testing` and `src/testing/index.ts` → `testing/index`).
+ */
+const entryNameUnstrippedFromPath = (srcPath) => {
+  const noSrc = srcPath.replace(/^src\//, '');
+  return noSrc.replace(/\.tsx?$/, '') || 'index';
+};
+
 const parseEntryPoints = (moonYmlText) => {
   // Crude but sufficient: pull `'--entryPoint=src/...'` lines from the file.
   const lines = moonYmlText.split('\n');
@@ -134,9 +143,18 @@ const rewriteMoonYml = (text, buildExtraDeps = []) => {
 const buildEntryRecord = (entryPoints) => {
   if (entryPoints.length === 0) return undefined;
   if (entryPoints.length === 1 && entryPoints[0] === 'src/index.ts') return undefined; // default
+  // Detect collisions like `src/testing.ts` + `src/testing/index.ts` (both default to
+  // `testing`) and disambiguate the dir entry so both survive in the vite entry map.
+  const nameCount = new Map();
+  for (const ep of entryPoints) {
+    const n = entryNameFromPath(ep);
+    nameCount.set(n, (nameCount.get(n) ?? 0) + 1);
+  }
   const record = {};
   for (const ep of entryPoints) {
-    record[entryNameFromPath(ep)] = ep;
+    const short = entryNameFromPath(ep);
+    const name = nameCount.get(short) > 1 ? entryNameUnstrippedFromPath(ep) : short;
+    record[name] = ep;
   }
   return record;
 };
@@ -187,9 +205,29 @@ const rewriteExports = (pkgJson, entryPoints) => {
   // Map entry name (e.g. "playwright") → source path ("src/playwright.ts" or "src/playwright/index.ts").
   // Determines the .d.ts location: tsgo mirrors the src layout, so `src/playwright.ts` →
   // `dist/types/src/playwright.d.ts`, `src/playwright/index.ts` → `dist/types/src/playwright/index.d.ts`.
+  // Two-pass build to disambiguate collisions between `src/foo.ts` and `src/foo/index.ts`
+  // (both would default to `foo`, silently overwriting each other in the map).
   const entrySourceByName = new Map();
-  for (const ep of entryPoints.length === 0 ? ['src/index.ts'] : entryPoints) {
+  const inputs = entryPoints.length === 0 ? ['src/index.ts'] : entryPoints;
+  for (const ep of inputs) {
     entrySourceByName.set(entryNameFromPath(ep), ep);
+  }
+  if (entrySourceByName.size < inputs.length) {
+    // Rebuild, preserving `/index` suffixes to disambiguate. Colliding pairs get
+    // `foo` (the file) and `foo/index` (the dir).
+    entrySourceByName.clear();
+    const stripped = new Map();
+    const nameCount = new Map();
+    for (const ep of inputs) {
+      const short = entryNameFromPath(ep);
+      nameCount.set(short, (nameCount.get(short) ?? 0) + 1);
+    }
+    for (const ep of inputs) {
+      const short = entryNameFromPath(ep);
+      const unique = nameCount.get(short) > 1 ? entryNameUnstrippedFromPath(ep) : short;
+      entrySourceByName.set(unique, ep);
+      stripped.set(ep, unique);
+    }
   }
   // For exports like `./icons` whose `source` condition points to a deeper file
   // (e.g. `./src/components/IconPicker/icons.ts`), match by source path rather
@@ -252,10 +290,12 @@ const rewriteImports = (pkgJson) => {
   const required = new Set();
   const visit = (node) => {
     if (typeof node === 'string') {
-      const m = node.match(
-        /^\.\/dist\/lib\/(?:browser|node|node-esm|node-cjs|neutral)\/(.+?)(?:\/index)?\.(?:mjs|cjs)$/,
-      );
+      const m = node.match(/^\.\/dist\/lib\/(?:browser|node|node-esm|node-cjs|neutral)\/(.+?)\.(?:mjs|cjs)$/);
       if (m) {
+        // Preserve `/index` in the entry name — if the package has both `src/foo.ts` and
+        // `src/foo/index.ts`, the entry keys are `foo` and `foo/index` and the output
+        // files are `dist/lib/foo.mjs` and `dist/lib/foo/index.mjs`; stripping `/index`
+        // conflates the two.
         const entry = m[1];
         required.add(entry);
         return `./dist/lib/${entry}.mjs`;
@@ -403,6 +443,19 @@ const migrate = (pkgRel) => {
   }
 
   const entryPoints = parseEntryPoints(moonText);
+  // When re-running on an already-migrated package, moon.yml no longer carries `--entryPoint=`
+  // args. Fall back to the pre-migration copy on origin/main so we recover the authoritative
+  // entry list (necessary to disambiguate `src/foo.ts` vs `src/foo/index.ts` collisions:
+  // once the current package.json only references one of them, we've lost the other).
+  if (entryPoints.length === 0 && alreadyMigrated) {
+    try {
+      const fromMain = execSync(`git show "origin/main:${pkgRel}/moon.yml" 2>/dev/null || true`, {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+      });
+      for (const ep of parseEntryPoints(fromMain)) entryPoints.push(ep);
+    } catch {}
+  }
   // Pull additional entries out of the existing package.json `exports` and `imports`.
   // Necessary when main added a new sub-path export (e.g. `./types`) but the local
   // moon.yml + vite.config.ts haven't picked it up yet (post-merge state).

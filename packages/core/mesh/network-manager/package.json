@@ -26,10 +26,10 @@
     "#tcp-transport": {
       "source": "./src/transport/tcp/index.ts",
       "types": "./dist/types/src/transport/tcp/index.d.ts",
-      "browser": "./dist/lib/transport/tcp.mjs",
-      "node": "./dist/lib/transport/tcp.mjs",
-      "import": "./dist/lib/transport/tcp.mjs",
-      "require": "./dist/lib/transport/tcp.mjs"
+      "browser": "./dist/lib/transport/tcp/index.mjs",
+      "node": "./dist/lib/transport/tcp/index.mjs",
+      "import": "./dist/lib/transport/tcp/index.mjs",
+      "require": "./dist/lib/transport/tcp/index.mjs"
     },
     "#tcp-transport-impl": {
       "source": {

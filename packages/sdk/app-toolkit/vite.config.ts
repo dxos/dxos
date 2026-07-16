@@ -12,6 +12,5 @@ export default defineConfig({
     'ui': 'src/ui/index.ts',
   },
   jsx: 'react',
-  assetsAsFiles: true,
   test: { node: true },
 });

@@ -7,11 +7,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'loaders': 'src/loaders/index.ts',
+    'loaders/index': 'src/loaders/index.ts',
     'loaders/browser': 'src/loaders/browser.ts',
-    'savers': 'src/savers/index.ts',
+    'savers/index': 'src/savers/index.ts',
     'savers/browser': 'src/savers/browser.ts',
-    'plugin': 'src/plugin/index.ts',
+    'plugin/index': 'src/plugin/index.ts',
     'plugin/browser': 'src/plugin/browser.ts',
     'plugin/esbuild-plugin': 'src/plugin/esbuild-plugin.ts',
     'plugin/rollup-plugin': 'src/plugin/rollup-plugin.ts',

@@ -9,6 +9,5 @@ export default defineConfig({
     index: 'src/index.ts',
     extraction: 'src/extraction/index.ts',
   },
-  assetsAsFiles: true,
   test: { node: true },
 });

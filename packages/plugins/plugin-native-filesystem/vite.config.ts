@@ -6,18 +6,17 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
-    NativeFilesystemPlugin: 'src/NativeFilesystemPlugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
-    containers: 'src/containers/index.ts',
-    hooks: 'src/hooks/index.ts',
-    meta: 'src/meta.ts',
-    operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
-    translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
+    'index': 'src/index.ts',
+    'NativeFilesystemPlugin': 'src/NativeFilesystemPlugin.tsx',
+    'capabilities/index': 'src/capabilities/index.ts',
+    'containers/index': 'src/containers/index.ts',
+    'hooks/index': 'src/hooks/index.ts',
+    'meta': 'src/meta.ts',
+    'operations/index': 'src/operations/index.ts',
+    'plugin': 'src/plugin.ts',
+    'translations': 'src/translations.ts',
+    'types/index': 'src/types/index.ts',
   },
   jsx: 'react',
-  assetsAsFiles: true,
   test: { node: true },
 });

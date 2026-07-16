@@ -17,7 +17,7 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "default": "./dist/lib/capabilities/index.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",

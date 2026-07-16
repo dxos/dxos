@@ -9,6 +9,5 @@ export default defineConfig({
     index: 'src/index.ts',
     sandbox: 'src/sandbox/index.ts',
   },
-  assetsAsFiles: true,
   test: { node: true },
 });

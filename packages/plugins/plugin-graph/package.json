@@ -16,7 +16,7 @@
     "#hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
-      "default": "./dist/lib/hooks.mjs"
+      "default": "./dist/lib/hooks/index.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",

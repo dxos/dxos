@@ -11,5 +11,4 @@ export default defineConfig({
     types: 'src/types.ts',
   },
   jsx: 'react',
-  assetsAsFiles: true,
 });

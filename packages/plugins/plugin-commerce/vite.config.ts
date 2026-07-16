@@ -12,6 +12,5 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
   },
   jsx: 'react',
-  assetsAsFiles: true,
   test: { node: true, storybook: true },
 });

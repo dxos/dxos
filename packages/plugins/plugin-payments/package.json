@@ -17,12 +17,12 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
+      "default": "./dist/lib/capabilities/index.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/containers.mjs"
+      "default": "./dist/lib/containers/index.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -37,7 +37,7 @@
     "#services": {
       "source": "./src/services/index.ts",
       "types": "./dist/types/src/services/index.d.ts",
-      "default": "./dist/lib/services.mjs"
+      "default": "./dist/lib/services/index.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -47,7 +47,7 @@
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
+      "default": "./dist/lib/types/index.mjs"
     }
   },
   "exports": {

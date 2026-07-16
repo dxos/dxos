@@ -9,6 +9,5 @@ export default defineConfig({
     index: 'src/index.ts',
     types: 'src/types/index.ts',
   },
-  assetsAsFiles: true,
   test: { node: { environment: 'happy-dom' } },
 });
