@@ -23,7 +23,6 @@ import * as Project from './Project';
 import * as Provider from './Provider';
 import * as Task from './Task';
 import * as Thread from './Thread';
-import * as Topic from './Topic';
 import * as Transcript from './Transcript';
 
 /**
@@ -65,7 +64,6 @@ export {
   Provider,
   Task,
   Thread,
-  Topic,
   Transcript,
 };
 

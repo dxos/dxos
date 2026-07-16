@@ -4,7 +4,7 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Topic } from '@dxos/types';
+import { Topic } from '@dxos/compute';
 
 import {
   AppGraphBuilder,

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, TypeSection } from '@dxos/app-toolkit';
-import { Topic } from '@dxos/types';
+import { Topic } from '@dxos/compute';
 
 /**
  * Resolves `root/<spaceId>/<topic-typename>/<objectId>` paths (deep links / reloads into the Topics

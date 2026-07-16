@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Topic } from '@dxos/types';
+import { Topic } from '@dxos/compute';
 
 import { FactsCompanion, TopicArticle } from '#containers';
 import { BrainSurface } from '#types';

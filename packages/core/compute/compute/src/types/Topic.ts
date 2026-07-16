@@ -12,7 +12,7 @@ import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 //
 // PRIORITIES
 //
-// TODO(burdon): Move type to plugin-brain; keep Project as generic/low-level.
+// TODO(burdon): Move type to compute; keep Project as generic/low-level.
 //
 // - Reconcile with Project (linear/github use cases).
 // - Model goals via instructions (ISSUE: Dependency on compute).
@@ -38,10 +38,9 @@ export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.topic'
   Schema.Struct({
     label: Schema.String,
 
-    // Untyped ref to an agent-instructions object (created + linked at the plugin layer, e.g. plugin-brain,
-    // which can depend on `@dxos/compute`). FLAG: should be `Ref<Instructions.Instructions>`, but typing it
-    // here would pull `@dxos/compute` into `@dxos/types` and cycle (`types → compute → ai → types`); revisit
-    // when Topic moves to its nexus home. See plugin-brain/DESIGN.md.
+    // Ref to an agent-instructions object (created + linked at the plugin layer, e.g. plugin-brain).
+    // TODO(burdon): Now that Topic lives in `@dxos/compute` alongside `Instructions` (no more
+    // `types → compute → ai → types` cycle), tighten this to `Ref.Ref(Instructions.Instructions)`.
     instructions: Ref.Ref(Obj.Unknown).pipe(FormInlineAnnotation.set(true), Schema.optional),
 
     // TODO(burdon): Uncouple from Email; Model via Refs?

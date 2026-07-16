@@ -8,13 +8,13 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { Topic } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { Topic } from '@dxos/types';
 
 import { translations } from '../../translations';
 import { TopicArticle } from './TopicArticle';

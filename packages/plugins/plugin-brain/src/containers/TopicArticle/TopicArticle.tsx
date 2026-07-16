@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { Topic } from '@dxos/compute';
 import { Card, Icon, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
-import { Topic } from '@dxos/types';
 
 import { meta } from '#meta';
 

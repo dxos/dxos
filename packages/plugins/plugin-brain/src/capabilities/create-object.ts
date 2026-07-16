@@ -8,9 +8,9 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Paths } from '@dxos/app-toolkit';
 import { Instructions, Operation } from '@dxos/compute';
+import { Topic } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
-import { Topic } from '@dxos/types';
 
 /** Default brief seeded into a new Topic's agent instructions. */
 const DEFAULT_TOPIC_INSTRUCTIONS =

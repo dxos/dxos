@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import * as Trigger from './Trigger';
+import * as Trigger from './types/Trigger';
 
 /**
  * Writes ephemeral or persistent events to the trace.

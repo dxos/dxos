@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Topic } from '@dxos/compute';
 import { deriveThreadId } from '@dxos/pipeline-email';
-import { type Message, type Topic } from '@dxos/types';
+import { type Message } from '@dxos/types';
 
 /** A topic's member thread resolved back to its mailbox messages (oldest first). */
 export type TopicThread = {

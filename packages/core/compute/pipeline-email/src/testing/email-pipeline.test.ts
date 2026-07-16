@@ -18,6 +18,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { AiService, Provider } from '@dxos/ai';
 import { OllamaAiServiceLayer } from '@dxos/ai/testing';
+import { Topic } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -26,7 +27,7 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { FactPipeline, FactStore } from '@dxos/pipeline-rdf';
 import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/testing';
-import { type ContentBlock, Message, Organization, Person, Topic } from '@dxos/types';
+import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest';

@@ -4,8 +4,9 @@
 
 import { describe, test } from 'vitest';
 
+import { Topic } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Message, Topic } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { buildThreads } from '../internal/threads';
 import { Thread } from '../types';

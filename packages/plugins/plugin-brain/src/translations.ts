@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Topic } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Topic } from '@dxos/types';
 
 import { meta } from '#meta';
 

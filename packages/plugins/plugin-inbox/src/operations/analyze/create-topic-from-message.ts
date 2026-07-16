@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import { Operation, Topic } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';
-import { AnchoredTo, Message, Topic } from '@dxos/types';
+import { AnchoredTo, Message } from '@dxos/types';
 
 import { InboxOperation } from '../../types';
 

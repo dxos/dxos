@@ -13,6 +13,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
+import { Topic } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
@@ -25,7 +26,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { AnchoredTo, Message, Topic } from '@dxos/types';
+import { AnchoredTo, Message } from '@dxos/types';
 
 // Story-only mock AiService so `CreateTopicFromMessage`'s LLM summary step runs without a real provider.
 const MockAiServicePlugin = Plugin.define(

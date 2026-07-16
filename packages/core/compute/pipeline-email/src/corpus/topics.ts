@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Topic } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Topic } from '@dxos/types';
 
 import { type Thread } from '../types';
 import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';

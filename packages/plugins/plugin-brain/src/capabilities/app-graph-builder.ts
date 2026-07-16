@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, Paths, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { Topic } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Topic } from '@dxos/types';
 
 /**
  * Surfaces all `Topic` objects in a space as a dedicated sidebar section — a root node plus a child per
