@@ -13,7 +13,7 @@ import { type ModuleProps } from '@dxos/story-modules';
 
 export const ChessModule = ({ space }: ModuleProps) => {
   // TODO(burdon): Fix.
-  const objects = useQuery(space.db, Filter.type(Game));
+  const objects = useQuery(space.db, Filter.type(Game.Game));
   const game = objects.at(-1);
 
   return <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: game, attendableId: 'story' }} />;

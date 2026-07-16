@@ -32,8 +32,7 @@ const gridComponents: Record<Settings.SketchGridType, FC<TLGridProps>> = {
 export type SketchProps = {
   sketch: Sketch.Sketch;
   readonly?: boolean;
-  autoZoom?: boolean;
-  maxZoom?: number;
+  autoCenter?: boolean;
   hideUi?: boolean;
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
@@ -45,8 +44,7 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
     {
       sketch,
       readonly = false,
-      autoZoom = true,
-      maxZoom = 1,
+      autoCenter = true,
       hideUi = false,
       assetsBaseUrl = '/assets/plugin-sketch',
       settings,
@@ -123,7 +121,7 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
     // Zoom to fit.
     const { ref: resizeRef, width = 0, height } = useResizeDetector();
     const containerRef = useMergeRefs([forwardedRef, resizeRef]);
-    const [ready, setReady] = useState(!autoZoom);
+    const [ready, setReady] = useState(!autoCenter);
     useEffect(() => {
       if (!editor || !adapter || width === undefined || height === undefined) {
         return;
@@ -139,13 +137,13 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
       editor.resetZoom();
 
       setReady(true);
-      if (!autoZoom) {
+      if (!autoCenter) {
         editor.setCameraOptions({ isLocked: isLocked });
         return;
       }
 
       const zoom = () => {
-        zoomToFit(editor, width, height, maxZoom, false);
+        centerContent(editor, width, height, false);
       };
 
       zoom();
@@ -165,7 +163,7 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
         clearTimeout(timer);
         subscription?.();
       };
-    }, [editor, adapter, width, height, autoZoom, maxZoom, readonly, hideUi]);
+    }, [editor, adapter, width, height, autoCenter, readonly, hideUi]);
 
     // NOTE: Currently copying assets to composer-app public/assets/tldraw.
     // https://tldraw.dev/installation#Self-hosting-static-assets
@@ -262,18 +260,16 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
 );
 
 /**
- * Zoom to fit content.
+ * Center content in the viewport at 100% zoom (auto-center only — never auto-fits/zooms the content).
  */
-const zoomToFit = (editor: Editor, width: number, height: number, maxZoom: number, animate = true) => {
+const centerContent = (editor: Editor, width: number, height: number, animate = true) => {
   const commonBounds = editor.getCurrentPageBounds();
   if (width && height && commonBounds?.width && commonBounds?.height) {
-    const padding = 60;
-    // NOTE: Objects are "culled" (un-styled) if outside of bounds.
-    const zoom = Math.min(maxZoom, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
+    // Fixed zoom of 1: only the camera position is derived from the content bounds.
     const center = {
-      x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
-      y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
-      z: zoom,
+      x: (width - commonBounds.width) / 2 - commonBounds.minX,
+      y: (height - commonBounds.height) / 2 - commonBounds.minY,
+      z: 1,
     };
 
     editor.setCamera(center, animate ? { animation: { duration: 250 } } : undefined);

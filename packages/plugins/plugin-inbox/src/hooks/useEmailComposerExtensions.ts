@@ -11,8 +11,8 @@ import { AiService } from '@dxos/ai';
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { ServiceResolver } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { type AssistantOptions, assistant } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
+import { type AssistantOptions, assistant } from '@dxos/ui-editor';
 
 import { type EditMessageProps } from '#components';
 

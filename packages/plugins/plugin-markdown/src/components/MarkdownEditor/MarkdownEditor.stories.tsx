@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { createObject } from '@dxos/echo-client';
-import { random } from '@dxos/random';
 import { Panel } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -25,8 +24,6 @@ import {
   type MarkdownEditorProviderProps,
 } from './MarkdownEditor';
 
-random.seed(1);
-
 const CONTENT = [
   '# Markdown editor',
   '',
@@ -44,9 +41,11 @@ const CONTENT = [
   '',
   '## Section Two',
   '',
-  Array.from({ length: 3 })
-    .map(() => random.lorem.paragraphs())
-    .join('\n\n'),
+  'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+  '',
+  'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+  '',
+  'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
   '',
 ].join('\n');
 

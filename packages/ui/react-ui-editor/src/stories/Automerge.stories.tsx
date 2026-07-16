@@ -160,9 +160,13 @@ export const WithEcho: Story = {
 
     const [contentA, contentB] = editors.map((editor) => editor.querySelector<HTMLElement>('.cm-content')!);
 
-    // Initial content replicated from the host's space to the guest.
-    await expect(contentA).toHaveTextContent(initialContent);
-    await expect(contentB).toHaveTextContent(initialContent);
+    // Initial content replicated from the host's space to the guest. CodeMirror concatenates its
+    // per-line elements without newline separators, so the multiline `initialContent` (with literal
+    // `\n`s) never matches as substring text content; assert on each non-empty line instead.
+    for (const line of initialContent.split('\n').filter(Boolean)) {
+      await expect(contentA).toHaveTextContent(line);
+      await expect(contentB).toHaveTextContent(line);
+    }
 
     // Focusing peer A broadcasts its cursor position over the gossip channel; peer B renders it
     // as a `.cm-collab-selectionInfo` decoration.

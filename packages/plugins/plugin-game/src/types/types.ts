@@ -8,7 +8,7 @@ import type { ComponentType } from 'react';
 
 import type { Database, Obj, Type } from '@dxos/echo';
 
-import type { Game } from './Game';
+import * as Game from './Game';
 
 /**
  * Contribution from a variant plugin (e.g. plugin-chess, plugin-tictactoe).
@@ -43,7 +43,7 @@ export type GameVariant = {
 
 export type GameVariantSurfaceProps = {
   /** The base Game object (may be a snapshot from useObject/Surface). */
-  game: Obj.Snapshot<Game> | Game;
+  game: Obj.Snapshot<Game.Game> | Game.Game;
   /** The resolved variant state object (may be a snapshot from useObject). */
   variant: Obj.Snapshot<Obj.Unknown> | Obj.Unknown;
   /** Surface role passed through from the host. */

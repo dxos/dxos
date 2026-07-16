@@ -9,26 +9,11 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Card } from '@dxos/react-ui';
 import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-
-const CardWrapper = ({ data }: { data: AppSurface.ObjectCardData<any> }) => (
-  <div>
-    <Card.Root>
-      <Card.Header>
-        <Card.Block />
-        <Card.Title>{Obj.getLabel(data.subject)}</Card.Title>
-      </Card.Header>
-      <Card.Body>
-        <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-      </Card.Body>
-    </Card.Root>
-  </div>
-);
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -38,18 +23,6 @@ export default Capability.makeModule(() =>
       // TODO(burdon): Create helpers and factor out.
       //
 
-      //
-      // Organization
-      //
-
-      Surface.create<{ subject: Person.Person }>({
-        id: 'organizationSection',
-        position: Position.first,
-        filter: AppSurface.object(AppSurface.Section, Organization.Organization),
-        component: ({ data }) => {
-          return <CardWrapper data={data} />;
-        },
-      }),
       Surface.create({
         id: 'organizationContent',
         position: Position.first,
@@ -61,19 +34,6 @@ export default Capability.makeModule(() =>
               <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
             </>
           );
-        },
-      }),
-
-      //
-      // Person
-      //
-
-      Surface.create<{ subject: Person.Person }>({
-        id: 'contactSection',
-        position: Position.first,
-        filter: AppSurface.object(AppSurface.Section, Person.Person),
-        component: ({ data }) => {
-          return <CardWrapper data={data} />;
         },
       }),
       Surface.create<{ subject: Person.Person }>({
@@ -169,22 +129,22 @@ export default Capability.makeModule(() =>
         },
       }),
 
-      Surface.create({
-        id: 'section',
-        position: Position.last,
-        filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
-        component: ({ data }) => {
-          return (
-            <div className='flex w-full justify-center'>
-              <div className='py-2 dx-card-min-width dx-card-max-width'>
-                <Card.Root>
-                  <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-                </Card.Root>
-              </div>
-            </div>
-          );
-        },
-      }),
+      // Surface.create({
+      //   id: 'fallbackSection',
+      //   position: Position.last,
+      //   filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
+      //   component: ({ data }) => {
+      //     return (
+      //       <div className='flex w-full justify-center'>
+      //         <div className='py-2 dx-card-min-width dx-card-max-width'>
+      //           <Card.Root>
+      //             <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+      //           </Card.Root>
+      //         </div>
+      //       </div>
+      //     );
+      //   },
+      // }),
     ]),
   ),
 );

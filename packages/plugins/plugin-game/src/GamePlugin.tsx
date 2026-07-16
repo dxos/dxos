@@ -15,7 +15,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const GamePlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSchemaModule({ schema: [Game] }),
+  AppPlugin.addSchemaModule({ schema: [Game.Game] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
