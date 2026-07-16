@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
 import { subDays } from 'date-fns';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -10,8 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { createProgressRegistry } from '@dxos/app-toolkit';
-import { Operation, RunAgainError } from '@dxos/compute';
+import { Operation, RunAgainError, Trace } from '@dxos/compute';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -188,74 +186,44 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(fetched).toEqual([]);
   });
 
-  test('advances a live progress monitor keyed by the mailbox URI, and removes it on success', async ({ expect }) => {
+  test('emits trace status updates with advancing progress during sync', async ({ expect }) => {
     const end = subDays(new Date(), 3);
     const start = subDays(new Date(), 12);
     const dataset = generateGmailDataset({ count: 20, seed: 17, start, end });
 
     const { db, mailbox, binding } = await seedMailboxBinding(builder);
 
-    const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    // Removed on success, so subscribe to capture `current` as the run advances it rather than reading
-    // the final snapshot.
-    const seen: number[] = [];
-    const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
-      const task = snapshot.tasks.find((task) => task.name === createSyncProgressKey(mailbox));
-      if (task) {
-        seen.push(task.current);
-      }
-    });
+    const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+    const traceLayer = Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            for (const event of Trace.flatten(message)) {
+              if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                statusUpdates.push(event.data);
+              }
+            }
+          },
+        }),
+      ),
+    );
 
     await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding) }).pipe(
-        Effect.provide(inboxSyncTestServices(db, dataset, { progressRegistry: progress })),
+        Effect.provide(inboxSyncTestServices(db, dataset, { traceLayer })),
       ),
     );
-    unsubscribe();
 
-    expect(seen.length).toBeGreaterThan(0);
-    expect(Math.max(...seen)).toBeGreaterThan(0);
-    // Removed on success, so the mailbox's task is gone from the final snapshot.
-    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
-  });
-
-  test('cancelling mid-sync clears the monitor instead of leaving it stuck running', async ({ expect }) => {
-    const end = subDays(new Date(), 3);
-    const start = subDays(new Date(), 12);
-    const dataset = generateGmailDataset({ count: 30, seed: 29, start, end });
-
-    const { db, mailbox, binding } = await seedMailboxBinding(builder);
-
-    const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
-    const key = createSyncProgressKey(mailbox);
-
-    // Cancel as soon as the monitor shows progress, so the run is genuinely mid-flight — the
-    // subscription fires synchronously from `advance`, so it races ahead of completion.
-    let cancelled = false;
-    const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
-      const task = snapshot.tasks.find((task) => task.name === key);
-      if (task && task.current > 0 && !cancelled) {
-        cancelled = true;
-        progress.cancel(key);
-      }
-    });
-
-    // Cancelling aborts as a fiber interrupt (not a typed failure), so `runPromise` rejects. Cleanup
-    // runs via the abort's `onCancel`, not the skipped post-run code, so the monitor is still removed.
-    await expect(
-      EffectEx.runPromise(
-        runGoogleSync({ binding: Ref.make(binding) }).pipe(
-          Effect.provide(inboxSyncTestServices(db, dataset, { progressRegistry: progress })),
-        ),
-      ),
-    ).rejects.toThrow();
-    unsubscribe();
-
-    expect(cancelled).toBe(true);
-    // Not stuck at 'running' — the abort-path cleanup removes the monitor like the success path.
-    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
+    const progressCurrents = statusUpdates
+      .map((update) => update.progress?.current)
+      .filter((current): current is number => current !== undefined);
+    expect(progressCurrents.length).toBeGreaterThan(0);
+    expect(Math.max(...progressCurrents)).toBeGreaterThan(0);
+    expect(statusUpdates.some((update) => update.progress?.total !== undefined && update.progress.total > 0)).toBe(
+      true,
+    );
+    expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
+    expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
   });
 
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
