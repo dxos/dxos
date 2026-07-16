@@ -396,6 +396,16 @@ const migrate = (pkgRel) => {
     return;
   }
 
+  // Explicit skips: packages whose ts-build → ts-vite-build migration surfaces a
+  // dependency that can't run under vitest's node environment (lit-ui's
+  // reactive-element evaluates `HTMLElement` at module load). `plugin-map-solid`
+  // hits this via `@dxos/app-framework/testing → @dxos/react-ui → @dxos/lit-ui`.
+  const EXPLICIT_SKIP = new Set(['packages/plugins/plugin-map-solid']);
+  if (EXPLICIT_SKIP.has(pkgRel)) {
+    console.warn(`SKIP ${pkgRel}: explicit-skip list`);
+    return;
+  }
+
   // Skip packages tagged `vite` (they have a bespoke app-style bundle config —
   // e.g. `@dxos/shell` with its `dist/bundle/` output). Their existing
   // vite.config.ts is hand-crafted and must not be overwritten.
