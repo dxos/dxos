@@ -28,4 +28,15 @@ projects:
     prs: [12174]
     resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
 
+  - name: composer-search
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-07-14
+    summary: Unify Composer search (lexical/semantic/structured/agent) + tiered client↔EDGE vector index synced via feeds.
+    tasks: packages/plugins/plugin-search/TASKS.md
+    design: packages/plugins/plugin-search/docs/DESIGN.md
+    prs: []
+    resume: 'Audit + design + roadmap + M1 implementation plan authored in packages/plugins/plugin-search/docs. Next: execute Milestone 1 (real lexical search) per docs/M1-lexical-search-plan.md.'
+
 ended: []
