@@ -74,8 +74,8 @@ const meta = {
               createCheckpoint(doc, { name: 'first draft' });
               const root = doc.content.target;
               if (root) {
-                Obj.update(root, (mutableRoot) => {
-                  mutableRoot.content = 'alpha\nbravo\ncharlie\ndelta\n';
+                Obj.update(root, (root) => {
+                  root.content = 'alpha\nbravo\ncharlie\ndelta\n';
                 });
               }
               createCheckpoint(doc, { name: 'v2 outline' });
@@ -83,8 +83,8 @@ const meta = {
               const branch = createBranch(doc, { name: 'agent-draft' });
               const branchText = branch.content.target;
               if (branchText) {
-                Obj.update(branchText, (mutableText) => {
-                  mutableText.content = 'alpha edited\nbravo\ncharlie\ndelta\nepsilon\n';
+                Obj.update(branchText, (branchText) => {
+                  branchText.content = 'alpha edited\nbravo\ncharlie\ndelta\nepsilon\n';
                 });
               }
 

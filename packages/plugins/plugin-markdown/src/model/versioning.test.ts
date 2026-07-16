@@ -177,6 +177,70 @@ describe('versioning model', () => {
   );
 
   it.effect(
+    'mergeBranch leaves conflict markers when both sides edit the same line',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({ name: 'Doc', content: 'alpha\nbravo\n' });
+        yield* Database.add(doc);
+        const root = yield* Database.load(doc.content);
+
+        const branch = createBranch(doc, { name: 'draft' });
+        const branchText = yield* Database.load(branch.content);
+        Obj.update(branchText, (branchText) => {
+          branchText.content = 'alpha theirs\nbravo\n';
+        });
+        Obj.update(root, (root) => {
+          root.content = 'alpha ours\nbravo\n';
+        });
+
+        const result = mergeBranch(doc, branch);
+        expect(result.conflicts).toBe(1);
+        expect(root.content).toContain('<<<<<<< branch');
+        expect(root.content).toContain('alpha theirs');
+        expect(root.content).toContain('alpha ours');
+        expect(branch.status).toBe('merged');
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'branch of a branch forks from and merges into its parent branch',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({ name: 'Doc', content: 'alpha\n' });
+        yield* Database.add(doc);
+        const root = yield* Database.load(doc.content);
+
+        const parentBranch = createBranch(doc, { name: 'draft' });
+        const parentText = yield* Database.load(parentBranch.content);
+        Obj.update(parentText, (parentText) => {
+          parentText.content = 'alpha\nbravo\n';
+        });
+
+        const childBranch = createBranch(doc, { name: 'nested', from: { target: parentText } });
+        const childText = yield* Database.load(childBranch.content);
+        expect(childText.content).toBe('alpha\nbravo\n');
+
+        Obj.update(childText, (childText) => {
+          childText.content = 'alpha\nbravo\ncharlie\n';
+        });
+
+        // Merging the child lands on the parent BRANCH, not the root.
+        const result = mergeBranch(doc, childBranch);
+        expect(result.conflicts).toBe(0);
+        expect(parentText.content).toBe('alpha\nbravo\ncharlie\n');
+        expect(root.content).toBe('alpha\n');
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'discardBranch archives without touching parent',
     Effect.fnUntraced(
       function* (_) {

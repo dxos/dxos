@@ -17,7 +17,9 @@ export const ensureHistory = (doc: Markdown.Document): Versioning.History => {
       doc.history = { branches: [], versions: [] };
     });
   }
-  return doc.history!;
+  const history = doc.history;
+  invariant(history, 'history not initialized');
+  return history;
 };
 
 const getHeads = (text: Text.Text): string[] => {

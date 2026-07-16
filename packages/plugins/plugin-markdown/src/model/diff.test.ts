@@ -16,8 +16,10 @@ describe('diffSpans', () => {
   it('offsets index into the after text', () => {
     const spans = diffSpans('one three', 'one two three');
     const insert = spans.find((span) => span.kind === 'insert');
-    expect(insert).toBeDefined();
-    expect('one two three'.slice(insert!.from, insert!.to)).toBe(insert!.text);
+    if (!insert) {
+      throw new Error('expected an insert span');
+    }
+    expect('one two three'.slice(insert.from, insert.to)).toBe(insert.text);
   });
 
   it('handles empty inputs', () => {

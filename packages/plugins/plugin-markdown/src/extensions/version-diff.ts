@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension, type EditorState, RangeSetBuilder, StateField } from '@codemirror/state';
+import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, GutterMarker, WidgetType, gutter } from '@codemirror/view';
 
 import { type DiffSpan, diffSpans } from '../model';
