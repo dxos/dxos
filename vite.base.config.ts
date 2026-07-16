@@ -406,7 +406,7 @@ const createBrowserProject = ({
       // Solid packages running browser tests need vite-plugin-solid here so
       // `*.test.tsx` gets the Solid client transform before the browser harness
       // loads it.
-      ...(jsx === 'solid' ? [solid()] : []),
+      ...(jsx === 'solid' ? [solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` })] : []),
       ...plugins,
       // Resolve `@dxos/*` to their `source` export (src/*.ts) so browser tests exercise source
       // instead of stale `dist/` build artifacts (mirrors the node project).
@@ -524,7 +524,7 @@ const createNodeProject = ({
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
       DxosLogPlugin({ logToFile: false }),
-      jsx === 'solid' ? solid() : react(),
+      jsx === 'solid' ? solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` }) : react(),
     ],
   });
 
@@ -749,7 +749,8 @@ const buildTestConfig = (
 export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
   const { entry = 'src/index.ts', outDir = 'dist/lib', nodeTarget = false, jsx, assetsAsFiles = false, test } = options;
   // Solid: ssr-aware client transform.
-  const jsxPlugin: Plugin[] = jsx === 'react' ? [react()] : jsx === 'solid' ? [solid()] : [];
+  const jsxPlugin: Plugin[] =
+    jsx === 'react' ? [react()] : jsx === 'solid' ? [solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` })] : [];
   return viteDefineConfig({
     // Worker output config. Library packages that use `new Worker(new URL('#x',
     // import.meta.url))` rely on vite's worker bundler to lift the referenced source
