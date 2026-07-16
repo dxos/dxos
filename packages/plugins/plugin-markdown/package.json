@@ -163,6 +163,7 @@
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@radix-ui/react-context": "catalog:",
+    "diff": "catalog:",
     "react-dropzone": "catalog:"
   },
   "devDependencies": {
