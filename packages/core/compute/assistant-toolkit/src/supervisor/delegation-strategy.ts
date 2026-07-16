@@ -6,12 +6,12 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
+import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
 import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type Delegation, type DelegationStrategy } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';

@@ -9,11 +9,11 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { configuredCredentialsLayer } from '@dxos/functions';
 
 import { Artifact, type GenerationService, StudioCapabilities, Variant } from '../types';
 import generateHandler from './generate';

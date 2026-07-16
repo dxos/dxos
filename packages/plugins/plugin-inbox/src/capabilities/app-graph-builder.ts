@@ -26,7 +26,7 @@ import { meta } from '#meta';
 import { Calendar, InboxOperation, Mailbox } from '#types';
 
 import { MAILBOX_DRAFTS_TYPE, MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
-import { createSyncProgressKey } from '../operations/google/gmail/sync';
+import { createSyncProgressKey } from '../operations/mail/mail-sync';
 import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId, getSubscriptionsId } from '../paths';
 import { syncTarget } from '../util';
 
