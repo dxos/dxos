@@ -132,6 +132,9 @@ catalogs:
     '@codemirror/lint':
       specifier: 6.9.7
       version: 6.9.7
+    '@codemirror/merge':
+      specifier: ^6.12.2
+      version: 6.12.2
     '@codemirror/search':
       specifier: ^6.7.1
       version: 6.7.1
@@ -12836,6 +12839,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.3.0-fragments.2
         version: 3.3.0-fragments.2
+      '@codemirror/merge':
+        specifier: 'catalog:'
+        version: 6.12.2
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.0
@@ -12911,6 +12917,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
@@ -12941,6 +12950,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@dxos/versioning':
+        specifier: workspace:*
+        version: link:../../sdk/versioning
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)(react@19.2.7)(scheduler@0.27.0)
@@ -19632,6 +19644,34 @@ importers:
         specifier: '>=8.1.4'
         version: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
+  packages/sdk/versioning:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../schema
+      diff:
+        specifier: '>=5.2.2'
+        version: 8.0.3
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+    devDependencies:
+      '@dxos/typings':
+        specifier: workspace:*
+        version: link:../../common/typings
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/sdk/worker-framework:
     dependencies:
       '@dxos/async':
@@ -26149,6 +26189,9 @@ packages:
 
   '@codemirror/lint@6.9.7':
     resolution: {integrity: sha512-28/+iWLYxKxsvGYhSYL7zaCZqLz5+FFFDq9tVsvGv9kv8RY4fFAchJ5WX9M3YrrRlTIsECjsXPqeNgnSmNP2dg==}
+
+  '@codemirror/merge@6.12.2':
+    resolution: {integrity: sha512-V8JvyAPjHbPupqP7BeMcsdsYCbyPij74jxIbaIJDORI+VZzW44zFmon8bF+oxGWvOKhcRmkiUMXd8MxHr3YA2w==}
 
   '@codemirror/search@6.5.11':
     resolution: {integrity: sha512-KmWepDE6jUdL6n8cAAqIpRmLPBZ5ZKnicE8oGU/s3QrAVID+0VhLFrzUucVKHG5035/BSykhExDL/Xm7dHthiA==}
@@ -46738,6 +46781,14 @@ snapshots:
       '@codemirror/state': 6.7.0
       '@codemirror/view': 6.43.6
       crelt: 1.0.6
+
+  '@codemirror/merge@6.12.2':
+    dependencies:
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.6
+      '@lezer/highlight': 1.2.3
+      style-mod: 4.1.0
 
   '@codemirror/search@6.5.11':
     dependencies:

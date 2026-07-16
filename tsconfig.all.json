@@ -883,6 +883,9 @@
       "path": "vendor/quickjs/tsconfig.json"
     },
     {
+      "path": "packages/sdk/versioning/tsconfig.json"
+    },
+    {
       "path": "tools/vite-plugin-icons/tsconfig.json"
     },
     {

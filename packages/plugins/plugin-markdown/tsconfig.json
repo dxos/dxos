@@ -89,10 +89,16 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../sdk/versioning"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-dnd"
