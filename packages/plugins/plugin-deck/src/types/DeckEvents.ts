@@ -11,11 +11,17 @@ import { meta } from '#meta';
 
 import * as DeckCapabilities from './DeckCapabilities';
 
+/**
+ * @deprecated Declare `requires: [DeckCapabilities.State]` instead.
+ */
 export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
   `${meta.profile.key}.state-ready`,
 );
 
-/** Fired when DeckSettings capability is ready. */
+/**
+ * Fired when DeckSettings capability is ready.
+ * @deprecated Declare `requires: [DeckCapabilities.Settings]` instead.
+ */
 export const SettingsReady: ActivationEvent.ActivationEvent = AppActivationEvents.createSettingsEvent(
   DeckCapabilities.Settings.identifier,
 );

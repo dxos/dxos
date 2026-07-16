@@ -65,10 +65,19 @@ plugin-attention), then leaf batches (parallel Sonnet subagents, worktree-isolat
 Per-plugin pattern + custom-event audit: DESIGN.md Phase 7. Gate per batch: `moon run <pkg>:build`
 + `:test`; full build after each wave.
 
-- [ ] Call-site inventory + batch assignment (Explore agent)
-- [ ] Foundational wave
-- [ ] Leaf batches (track per-batch below as assigned)
-- [ ] app-framework/app-toolkit stragglers, stories, ui-editor
+Docs: [PHASE7-WORKLIST.md](./PHASE7-WORKLIST.md) (inventory + batches + event classification),
+[MIGRATION-BRIEF.md](./MIGRATION-BRIEF.md) (per-plugin recipe given to every batch agent).
+Gate recipe per wave: per-package build+test → framework suites → Composer boot check
+(warm run, fresh context, `treeView.userAccount`, zero failed plugins).
+
+- [x] Call-site inventory + batch assignment → PHASE7-WORKLIST.md (~89 packages; 5 runtime events stay; 8 graph-extension atom-pattern files flagged)
+- [x] Foundational wave 1: attention, graph, theme, settings, status-bar, progress (Sonnet agent; committed 2c3ce4db59; boot check stable)
+- [ ] Foundational wave 2: spotlight, simple-layout, testing (layout role), deck (careful), navtree — agent running
+- [ ] Foundational wave 3: plugin-space (careful, after wave 2), plugin-registry, plugin-markdown (before Batch 5)
+- [ ] Leaf batches 1-10 (parallelize after foundational; see work-list)
+- [ ] Special cases: assistant, brain, observability (architectural call), code (imperative SetupPluginAssets fire)
+- [ ] Scaffolding: app-toolkit playground, stories-*, story-modules
+- [ ] ui-editor: confirmed out of scope (CodeMirror ViewPlugin, not app-framework)
 
 ## Phase 8 — Delete legacy API + scaffolding
 

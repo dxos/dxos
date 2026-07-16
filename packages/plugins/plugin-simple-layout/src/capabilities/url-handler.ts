@@ -8,6 +8,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
+// Explicit import so the emitted `.d.ts` references the package via its public alias instead of a
+// relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 import { isTauri } from '@dxos/util';
 
 import { SimpleLayoutCapabilities } from '#types';
@@ -21,18 +24,15 @@ import { SimpleLayoutCapabilities } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const capabilities = yield* Capability.Service;
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
+    const navigationHandlers = yield* AppCapabilities.NavigationHandler;
 
     /** Dispatch all NavigationHandler contributions with a given URL. */
     const dispatchNavigationHandlers = (url: URL) =>
-      Effect.gen(function* () {
-        const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-        yield* Effect.all(
-          handlers.map((handler) => handler(url)),
-          { concurrency: 'unbounded' },
-        );
-      }).pipe(Effect.provideService(Capability.Service, capabilities), EffectEx.runAndForwardErrors);
+      Effect.all(
+        navigationHandlers.get().map((handler) => handler(url)),
+        { concurrency: 'unbounded' },
+      ).pipe(EffectEx.runAndForwardErrors);
 
     /**
      * Handle navigation from a URL.
@@ -116,13 +116,14 @@ export default Capability.makeModule(
       },
     );
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
         unsubscribe();
         unlistenDeepLink?.();
       }),
     );
+    return [];
   }),
 );
 

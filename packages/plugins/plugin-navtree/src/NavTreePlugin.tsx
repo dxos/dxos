@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Graph } from '@dxos/plugin-graph';
 
 import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
@@ -17,28 +17,38 @@ import { NavTreeEvents } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    id: 'state',
-    activatesOn: AppActivationEvents.LayoutReady,
-    firesAfterActivation: [NavTreeEvents.StateReady],
+    id: Capability.getModuleTag(State),
+    requires: State.requires,
+    provides: State.provides,
+    // Migration bridge for unmigrated StateReady listeners.
+    compatFires: [NavTreeEvents.StateReady],
     activate: State,
   }),
   Plugin.addModule({
     id: 'expose',
-    activatesOn: ActivationEvent.allOf(
-      ActivationEvents.ProcessManagerReady,
-      AppActivationEvents.AppGraphReady,
-      AppActivationEvents.LayoutReady,
-      NavTreeEvents.StateReady,
-    ),
+    requires: [AppCapabilities.AppGraph, AppCapabilities.Layout, Capabilities.OperationInvoker],
+    provides: [],
     activate: Effect.fnUntraced(function* () {
       const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
-      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+      const { invokePromise } = yield* Capabilities.OperationInvoker;
+      const { graph } = yield* AppCapabilities.AppGraph;
       if (invokePromise && layout.active.length === 1) {
         // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
         //   That is the point at which the graph is expanded and the path should be available.
@@ -50,11 +60,7 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
       return [];
     }),
   }),
-  Plugin.addModule({
-    id: 'keyboard',
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, ActivationEvents.ProcessManagerReady),
-    activate: Keyboard,
-  }),
+  Plugin.addLazyModule(Keyboard),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

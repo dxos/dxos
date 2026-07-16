@@ -44,8 +44,8 @@ export default Capability.makeModule(({ initialState }: SimpleLayoutStateOptions
     });
 
     return [
-      Capability.contributes(SimpleLayoutCapabilities.State, stateAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.provide(SimpleLayoutCapabilities.State, stateAtom),
+      Capability.provide(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

@@ -2,16 +2,50 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+// Explicit imports so the emitted `.d.ts` references the packages via their public aliases
+// instead of relative `node_modules` paths (TS2883).
+import type { OperationHandlerSet } from '@dxos/compute';
+import type { OperationInvoker } from '@dxos/operation';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+import { SimpleLayoutCapabilities } from '#types';
+
+export const AppGraphBuilder = Capability.lazyModule(
+  'AppGraphBuilder',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  () => import('./app-graph-builder'),
+);
+export const OperationHandler = Capability.lazyModule(
   'OperationHandler',
+  { provides: [Capabilities.OperationHandler] },
   () => import('./operation-handler'),
 );
-export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const SpotlightDismiss = Capability.lazy('SpotlightDismiss', () => import('./spotlight-dismiss'));
-export const State = Capability.lazy('State', () => import('./state'));
-export const UrlHandler = Capability.lazy('UrlHandler', () => import('./url-handler'));
+export const ReactRoot = Capability.lazyModule(
+  'ReactRoot',
+  { provides: [Capabilities.ReactRoot] },
+  () => import('./react-root'),
+);
+export const ReactSurface = Capability.lazyModule(
+  'ReactSurface',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./react-surface'),
+);
+export const SpotlightDismiss = Capability.lazyModule(
+  'SpotlightDismiss',
+  { provides: [] },
+  () => import('./spotlight-dismiss'),
+);
+export const State = Capability.lazyModule(
+  'State',
+  { provides: [SimpleLayoutCapabilities.State, AppCapabilities.Layout] },
+  () => import('./state'),
+);
+export const UrlHandler = Capability.lazyModule(
+  'UrlHandler',
+  {
+    requires: [Capabilities.OperationInvoker, AppCapabilities.NavigationHandler, SimpleLayoutCapabilities.State],
+    provides: [],
+  },
+  () => import('./url-handler'),
+);

@@ -9,7 +9,10 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 
 import * as SimpleLayoutCapabilities from './SimpleLayoutCapabilities';
 
-/** Fired when State capability is ready. */
+/**
+ * Fired when State capability is ready.
+ * @deprecated Declare `requires: [SimpleLayoutCapabilities.State]` instead.
+ */
 export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
   SimpleLayoutCapabilities.State.identifier,
 );

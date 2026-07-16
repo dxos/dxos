@@ -11,12 +11,12 @@ import { SimpleLayout } from '#components';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactRoot, {
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
         return <SimpleLayout />;
       },
     }),
-  ),
+  ]),
 );

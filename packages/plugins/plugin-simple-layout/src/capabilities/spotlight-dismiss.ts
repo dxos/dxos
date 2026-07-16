@@ -7,7 +7,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -37,50 +37,56 @@ export type SpotlightDismissOptions = {
  * When running in Tauri popover mode, listens for focus loss and Escape key
  * to dismiss the spotlight panel. Runs at startup before React renders.
  */
-export default Capability.makeModule(({ isPopover = false }: SpotlightDismissOptions = {}) =>
-  Effect.promise(async () => {
-    if (!isPopover || !isTauri()) {
-      return [];
-    }
-
-    // Set up focus listener.
-    let focusCleanup: (() => void) | undefined;
-    try {
-      const tauriWindow = getTauriWindow();
-      const tauriCore = getTauriCore();
-      if (tauriWindow && tauriCore) {
-        const win = tauriWindow.getCurrentWindow();
-        focusCleanup = await win.onFocusChanged(async ({ payload }: { payload: boolean }) => {
-          if (!payload) {
-            await tauriCore.invoke('hide_spotlight');
-          }
-        });
+export default Capability.makeModule(
+  Effect.fnUntraced(function* ({ isPopover = false }: SpotlightDismissOptions = {}) {
+    const cleanup = yield* Effect.promise(async () => {
+      if (!isPopover || !isTauri()) {
+        return undefined;
       }
-    } catch (err) {
-      log.catch(err);
-    }
 
-    // Set up Escape key listener.
-    const handleKeyDown = async (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        try {
-          const tauriCore = getTauriCore();
-          if (tauriCore) {
-            await tauriCore.invoke('hide_spotlight');
-          }
-        } catch (err) {
-          log.catch(err);
+      // Set up focus listener.
+      let focusCleanup: (() => void) | undefined;
+      try {
+        const tauriWindow = getTauriWindow();
+        const tauriCore = getTauriCore();
+        if (tauriWindow && tauriCore) {
+          const win = tauriWindow.getCurrentWindow();
+          focusCleanup = await win.onFocusChanged(async ({ payload }: { payload: boolean }) => {
+            if (!payload) {
+              await tauriCore.invoke('hide_spotlight');
+            }
+          });
         }
+      } catch (err) {
+        log.catch(err);
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
 
-    return Capability.contributes(Capabilities.Null, null, () =>
-      Effect.sync(() => {
+      // Set up Escape key listener.
+      const handleKeyDown = async (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          try {
+            const tauriCore = getTauriCore();
+            if (tauriCore) {
+              await tauriCore.invoke('hide_spotlight');
+            }
+          } catch (err) {
+            log.catch(err);
+          }
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
         focusCleanup?.();
         window.removeEventListener('keydown', handleKeyDown);
-      }),
-    );
+      };
+    });
+
+    if (cleanup) {
+      yield* Effect.addFinalizer(() => Effect.sync(cleanup));
+    }
+
+    return [];
   }),
 );

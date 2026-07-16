@@ -36,8 +36,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(SpotlightCapabilities.State, stateAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.provide(SpotlightCapabilities.State, stateAtom),
+      Capability.provide(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

@@ -5,11 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+// Explicit imports so the emitted `.d.ts` references the packages via their public aliases
+// instead of relative `node_modules` paths (TS2883).
+import { type Graph, type GraphBuilder } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation, NotFound, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import type { OperationInvoker } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 
@@ -19,28 +23,24 @@ import { updateActiveDeck } from '../operations/helpers';
 import { deserializePlanks, serializePlanks, stripPlanks } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
-/** Dispatch all NavigationHandler contributions with a given URL. */
-const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
-  const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-  yield* Effect.all(
-    handlers.map((handler) => handler(url)),
-    { concurrency: 'unbounded' },
-  );
-});
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-    const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const stateAtom = yield* Capability.get(DeckCapabilities.State);
-    const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
+    const operationService = yield* Capabilities.OperationInvoker;
+    const navigationHandlers = yield* AppCapabilities.NavigationHandler;
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* DeckCapabilities.State;
+    const settingsAtom = yield* DeckCapabilities.Settings;
+    const { graph } = yield* AppCapabilities.AppGraph;
 
-    const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
-      effect.pipe(
-        Effect.provideService(Capability.Service, capabilities),
-        Effect.provideService(Operation.Service, operationService),
+    /** Dispatch all NavigationHandler contributions with a given URL. */
+    const dispatchNavigationHandlers = (url: URL) =>
+      Effect.all(
+        navigationHandlers.get().map((handler) => handler(url)),
+        { concurrency: 'unbounded' },
       );
+
+    const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
+      effect.pipe(Effect.provideService(Operation.Service, operationService));
 
     // Helper to get state.
     const getState = () => registry.get(stateAtom);
@@ -59,7 +59,6 @@ export default Capability.makeModule(
     };
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
-      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
       // to prevent one-time tokens from being consumed before the native app can use them.
@@ -207,7 +206,7 @@ export default Capability.makeModule(
       }
     });
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
         if ('navigation' in window) {
@@ -217,6 +216,7 @@ export default Capability.makeModule(
         unlistenDeepLink?.();
       }),
     );
+    return [];
   }),
 );
 

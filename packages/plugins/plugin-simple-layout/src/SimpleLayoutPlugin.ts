@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import {
@@ -24,35 +24,34 @@ export type SimpleLayoutPluginOptions = {
 };
 
 export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ isPopover = false }) => ({
     id: Capability.getModuleTag(State),
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
+    requires: State.requires,
+    provides: State.provides,
+    // Migration bridge for unmigrated StateReady/LayoutReady listeners.
+    compatFires: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
     activate: () => State({ initialState: { isPopover } }),
   })),
   Plugin.addModule(({ isPopover = false }) => ({
     id: Capability.getModuleTag(SpotlightDismiss),
-    activatesOn: ActivationEvents.Startup,
+    requires: SpotlightDismiss.requires,
+    provides: SpotlightDismiss.provides,
     activate: () => SpotlightDismiss({ isPopover }),
   })),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ReactRoot),
-    activatesOn: ActivationEvents.Startup,
-    activate: ReactRoot,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ReactSurface),
-    activatesOn: ActivationEvents.Startup,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(UrlHandler),
-    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, SimpleLayoutEvents.StateReady),
-    activate: UrlHandler,
-  }),
+  Plugin.addLazyModule(ReactRoot),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(UrlHandler),
   Plugin.make,
 );
 

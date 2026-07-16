@@ -45,7 +45,7 @@ const defaultDeckEphemeralState: EphemeralDeckState = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
@@ -83,9 +83,9 @@ export default Capability.makeModule(
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(DeckCapabilities.State, stateAtom),
-      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.provide(DeckCapabilities.State, stateAtom),
+      Capability.provide(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.provide(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

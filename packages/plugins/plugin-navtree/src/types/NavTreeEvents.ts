@@ -9,4 +9,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
+/**
+ * @deprecated Declare `requires: [NavTreeCapabilities.State]` instead.
+ */
 export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(meta.profile.key);

@@ -43,8 +43,8 @@ const getInitialState = (): Map<string, NavTreeCapabilities.NavTreeItemState> =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
+    const registry = yield* Capabilities.AtomRegistry;
+    const layoutAtom = yield* AppCapabilities.Layout;
 
     // Backing state for persistence (not reactive).
     const backingState = getInitialState();
@@ -140,14 +140,16 @@ export default Capability.makeModule(
       }
     }).pipe(Effect.forkDaemon);
 
-    return Capability.contributes(
-      NavTreeCapabilities.State,
-      {
-        getItem,
-        getItemAtom,
-        setItem,
-      },
-      () => Effect.sync(() => unsubscribe()),
-    );
+    return [
+      Capability.provide(
+        NavTreeCapabilities.State,
+        {
+          getItem,
+          getItemAtom,
+          setItem,
+        },
+        () => Effect.sync(() => unsubscribe()),
+      ),
+    ];
   }),
 );

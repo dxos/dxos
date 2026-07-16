@@ -13,6 +13,9 @@ import { type Operation, OperationHandlerSet, Process } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
+// Explicit import so the emitted `.d.ts` references the package via its public alias instead of a
+// relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -31,12 +34,15 @@ const UNDO_TOAST_DURATION = 10_000;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Captured so the forked undo fiber (a separate root effect; `Effect.runFork` does not
+    // inherit the current fiber's context) can still resolve capabilities via `Capability.waitFor`.
     const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
-    const monitor = yield* Capability.get(Capabilities.ProcessMonitor);
-    const manager = yield* Capability.get(Capabilities.PluginManager);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const registry = yield* Capabilities.AtomRegistry;
+    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
+    const monitor = yield* Capabilities.ProcessMonitor;
+    const manager = yield* Capabilities.PluginManager;
+    const invoker = yield* Capabilities.OperationInvoker;
+    const operationHandlers = yield* Capabilities.OperationHandler;
 
     const addToast = (toast: LayoutOperation.Toast) => {
       const state = registry.get(ephemeralAtom);
@@ -49,7 +55,7 @@ export default Capability.makeModule(
     const runInvocation = (action: Operation.SerializedInvocation) =>
       void EffectEx.runPromise(
         Effect.gen(function* () {
-          const handlers = OperationHandlerSet.merge(...capabilities.getAll(Capabilities.OperationHandler));
+          const handlers = OperationHandlerSet.merge(...operationHandlers.get());
           const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
           yield* invoker.invoke(operation, action.input);
         }),
@@ -191,12 +197,13 @@ export default Capability.makeModule(
     );
 
     // Track all subscriptions so they are torn down when the module deactivates.
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
         unsubscribeMonitor();
         unsubscribeFailures();
         yield* Fiber.interrupt(undoFiber);
       }),
     );
+    return [];
   }),
 );

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
@@ -44,20 +44,14 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
       Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
         Plugin.addModule(({ isPopover = false }) => ({
           id: Capability.getModuleTag(State),
-          activatesOn: ActivationEvents.Startup,
-          firesAfterActivation: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
+          requires: State.requires,
+          provides: State.provides,
+          // Migration bridge for unmigrated StateReady/LayoutReady listeners.
+          compatFires: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
           activate: () => State({ initialState: { isPopover } }),
         })),
-        Plugin.addModule({
-          id: Capability.getModuleTag(ReactRoot),
-          activatesOn: ActivationEvents.Startup,
-          activate: ReactRoot,
-        }),
-        Plugin.addModule({
-          id: Capability.getModuleTag(ReactSurface),
-          activatesOn: ActivationEvents.Startup,
-          activate: ReactSurface,
-        }),
+        Plugin.addLazyModule(ReactRoot),
+        Plugin.addLazyModule(ReactSurface),
         Plugin.make,
       )({ isPopover }),
     ],

@@ -9,6 +9,9 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 
 import * as SpotlightCapabilities from './SpotlightCapabilities';
 
+/**
+ * @deprecated Declare `requires: [SpotlightCapabilities.State]` instead.
+ */
 export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
   SpotlightCapabilities.State.identifier,
 );

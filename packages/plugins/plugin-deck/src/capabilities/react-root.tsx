@@ -12,8 +12,8 @@ import { useDeckState } from '#hooks';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactRoot, {
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
         const { state, updateEphemeral } = useDeckState();
@@ -48,5 +48,5 @@ export default Capability.makeModule(() =>
         return <DeckLayout onDismissToast={handleDismissToast} />;
       },
     }),
-  ),
+  ]),
 );
