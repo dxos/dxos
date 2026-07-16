@@ -12,6 +12,7 @@
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
+  "exports": {},
   "dependencies": {
     "@codemirror/state": "catalog:",
     "@dxos/ai": "workspace:*",
@@ -76,6 +77,5 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "vite": "catalog:"
-  },
-  "exports": {}
+  }
 }
