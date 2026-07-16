@@ -2183,25 +2183,45 @@ describe('PluginManager', () => {
       }),
     );
 
-    it.effect('records ProvidesMismatchError when the return does not match the declaration', () =>
+    it.effect('records ProvidesMismatchError for undeclared contributions', () =>
       Effect.gen(function* () {
         // Authored through the erased ModuleEntry escape hatch: the typed addModule overload
         // rejects this shape at compile time; the runtime validator is the backstop under test.
-        const missingEntry: Plugin.ModuleEntry = {
-          id: 'missing',
-          provides: [String, Number],
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'only' })]),
+        const undeclaredEntry: Plugin.ModuleEntry = {
+          id: 'undeclared',
+          provides: [],
+          activate: () => Effect.succeed([Capability.provide(String, { string: 'sneaky' })]),
         };
         const builder = Plugin.define(testMeta);
-        builder.addModule(missingEntry);
-        const Missing = Plugin.make(builder);
+        builder.addModule(undeclaredEntry);
+        const Undeclared = Plugin.make(builder);
 
-        const manager = makeManagerWith(Missing);
+        const manager = makeManagerWith(Undeclared);
         assert.isFalse(yield* manager.start());
         const failures = manager.getFailed();
         assert.strictEqual(failures.length, 1);
         assert.instanceOf(failures[0].error, ProvidesMismatchError);
-        assert.deepStrictEqual(failures[0].error.context.missing, [Number.identifier]);
+        assert.deepStrictEqual(failures[0].error.context.undeclared, [String.identifier]);
+      }),
+    );
+
+    it.effect('a conditional provider may skip a declared capability (warn only)', () =>
+      Effect.gen(function* () {
+        // Erased entry: an always-empty return is a static coverage error (see plugin.test.ts);
+        // the runtime warn-only behavior for conditional providers is what is under test.
+        const conditionalEntry: Plugin.ModuleEntry = {
+          id: 'conditional',
+          provides: [String],
+          activate: () => Effect.succeed([]),
+        };
+        const builder = Plugin.define(testMeta);
+        builder.addModule(conditionalEntry);
+        const Conditional = Plugin.make(builder);
+
+        const manager = makeManagerWith(Conditional);
+        assert.isTrue(yield* manager.start());
+        assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.conditional']);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), []);
       }),
     );
 

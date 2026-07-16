@@ -2043,7 +2043,10 @@ class ManagerImpl implements PluginManager {
 
           // Runtime provides validation (the authoritative check; the type-level one is
           // best-effort). Validated on the raw items so an empty provideAll still counts
-          // as covering its capability.
+          // as covering its capability. Undeclared contributions fail (they would bypass
+          // dependency ordering); missing ones only warn — a provider may legitimately
+          // decide at runtime not to contribute (consumers then surface a bounded
+          // CapabilityNotFoundError instead of silently proceeding).
           if (module.activation.mode !== 'legacy') {
             const declared = new Set(module.activation.provides.map((capability) => capability.identifier));
             const returned = new Set(
@@ -2053,8 +2056,11 @@ class ManagerImpl implements PluginManager {
             );
             const missing = [...declared].filter((identifier) => !returned.has(identifier));
             const undeclared = [...returned].filter((identifier) => !declared.has(identifier));
-            if (missing.length > 0 || undeclared.length > 0) {
+            if (undeclared.length > 0) {
               return yield* Effect.fail(new ProvidesMismatchError({ module: module.id, missing, undeclared }));
+            }
+            if (missing.length > 0) {
+              log.warn('module did not contribute all declared capabilities', { module: module.id, missing });
             }
           }
 
@@ -2135,6 +2141,11 @@ class ManagerImpl implements PluginManager {
     capabilities: Capability.Any[],
   ): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
+      // A module may be reached by more than one activation path (dependency pass, event
+      // wave, on-demand provider pull); the load is memoized, so contribution is too.
+      if (this._capabilities.has(module.id)) {
+        return;
+      }
       capabilities.forEach((capability) => {
         this.capabilities.contribute({ module: module.id, ...capability });
       });

@@ -16,13 +16,19 @@ import { SearchOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Reactive read: the connector may evaluate before the client module finishes
+    // activating; the atom dependency re-evaluates it when the client lands.
+    const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'spaceSearch',
         match: NodeMatcher.whenRoot,
         connector: (node, get) =>
           Effect.gen(function* () {
-            const client = yield* Capability.get(ClientCapabilities.Client);
+            const [client] = get(clientAtom);
+            if (!client) {
+              return [];
+            }
             const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
             const layout = layoutAtom ? get(layoutAtom) : undefined;
             const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;

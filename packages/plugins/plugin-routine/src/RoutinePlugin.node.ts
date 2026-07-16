@@ -30,10 +30,7 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
   // CreateRoutine (in OperationHandler) resolves RoutineCapabilities.Template, so the template
   // provider must be present wherever the handler is exported.
   Plugin.addModule({ id: 'automation-templates', activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: LayerSpecs,
-  }),
+  Plugin.addLazyModule(LayerSpecs),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
     activate: RegistrySync,

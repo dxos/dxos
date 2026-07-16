@@ -16,6 +16,10 @@ import { Account, ClientCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Read the client through its atom so the extension establishes a reactive dependency:
+    // the connector may evaluate before the client module finishes activating (dependency
+    // modules contribute individually, not batched per wave) and re-evaluates when it lands.
+    const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
     const extensions = yield* GraphBuilder.createExtension({
       id: 'root',
       match: NodeMatcher.whenRoot,
@@ -39,7 +43,10 @@ export default Capability.makeModule(
         ]),
       connector: (node, get) =>
         Effect.gen(function* () {
-          const client = yield* Capability.get(ClientCapabilities.Client);
+          const [client] = get(clientAtom);
+          if (!client) {
+            return [];
+          }
           const identity = get(CreateAtom.fromObservable(client.halo.identity));
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 

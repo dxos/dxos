@@ -38,11 +38,10 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
-    activate: LayerSpecs,
-  }),
+  // Dependency-mode: the specs resolve services (client, database, ...) lazily at
+  // slice-materialisation time, so activation needs nothing — and providing
+  // Capabilities.LayerSpec soft-orders this module before the process-manager snapshot.
+  Plugin.addLazyModule(LayerSpecs),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
     activate: RegistrySync,

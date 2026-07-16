@@ -47,7 +47,11 @@ and the legacy API is deleted (Phase 8).
 - [x] Capability bodies: `Capability.get` → `yield*`; `contributes` → `provide`/`provideAll`; Null-contribution deactivate → Scope finalizers
 - [x] Fallout fixes: legacy fires* fields → readonly (const-inference of literals); helper legacy activate arm regained Scope.Scope in R; TS2883 type-naming imports (+ @dxos/operation, @dxos/progress deps); stray makeModule type-arg in operation-handler
 - [x] **Gate integrity fix: earlier "full-repo build passed" results for Phases 2–4 were pipe-masked exit codes.** Re-ran honestly after Phase 5: EXIT=0, zero TS errors repo-wide. app-framework 197 / app-toolkit 82 / plugin-client tests green.
-- [ ] e2e Composer check (mixed coexistence) — do together with Phase 6
+- [x] e2e Composer check (mixed coexistence) — **PASSED after fixes** (headless chromium against dev server; `treeView.userAccount` gate, stable across fresh contexts; A/B-verified against base commit ea1708639b by in-place file restore). Findings → fixes:
+  1. Strict runtime ProvidesMismatch broke conditional providers (HubHttpClient returns [] without DX_HUB_URL) and auto-disabled plugin-client → **missing declared provides now warns; undeclared still fails** (static coverage check unchanged — conditional bodies pass via return-type union).
+  2. PM LayerStack snapshot raced legacy routine LayerSpecs (baseline relied on Client riding oneOf(Startup, SetupAppGraph) so the ClientReady cascade beat the slow Startup wave) → **migrated plugin-routine LayerSpecs to dependency mode** (provides [LayerSpec, TraceSink]; specs resolve services at slice time, no requires) — multi soft-ordering now lands it before PM.
+  3. Graph extensions using sync `Capability.get(Client)` inside atoms cached a defect-fallback with no reactive dep (baseline masked it via batched wave-end contributions; dependency pass contributes per-module) → **atom-read pattern** (`get(clientAtom)[0]` + empty fallback) in plugin-client root (userAccount!) + plugin-search spaceSearch. **This is a mandatory Phase-7 body pattern: graph-extension `Capability.get` → `Capability.atom` reads.**
+  4. Modules reached by two activation paths double-contributed (active 519 > modules 419) → `_contributeCapabilities` is now memoized per module.
 
 ## Phase 6 — Testing utils + docs
 
