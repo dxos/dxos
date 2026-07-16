@@ -33,13 +33,13 @@ and the legacy API is deleted (Phase 8).
 
 ## Phase 4 — Core migrations (app-framework common, process-manager, app-toolkit)
 
-- [ ] `common/capabilities.ts` arity flips (multi: ReactContext, ReactRoot, ReactSurface, Command, Layer, LayerSpec, TraceSink, OperationHandler, UndoMapping)
-- [ ] `AppCapabilities.ts` arity flips (multi: Translations, Schema, AppGraphBuilder, Settings, PluginAsset, SkillDefinition, Toolkit, TextContent, CommentConfig, Navigation*, AnchorSort)
-- [ ] `AppPlugin.addXModule` helpers emit dependency-mode modules (legacy opt-out kept)
-- [ ] process-manager-capability → dependency mode (+ SetupProcessManager window shim, Scope-finalizer TODO)
-- [ ] app-toolkit Setup*-window consumers (translator, app-graph, settings, progress registry) → requires/Contributions
-- [ ] Deprecate ordering events (still exported + fired for legacy)
-- [ ] Gate: full-repo build; app-framework + app-toolkit tests
+- [x] `common/capabilities.ts` arity flips (9 multi: ReactContext, ReactRoot, ReactSurface, Command, Layer, LayerSpec, TraceSink, OperationHandler, UndoMapping)
+- [x] `AppCapabilities.ts` arity flips (15 multi incl. Translations, Schema, AppGraphBuilder, Settings, PluginAsset, SkillDefinition, AiModelResolver, FileUploader, AnchorSort, TextContent, CommentConfig, Navigation*)
+- [x] `AppPlugin.addXModule` rewrite: shared `addCapabilityModule` factory; **policy — body-bearing helpers emit dependency mode only when the caller declares `requires`/`provides`** (body-only calls stay legacy until their Phase-7 batch; avoids runtime ProvidesMismatch for bodies contributing extra/foreign capabilities — found: settings bodies also contribute plugin-local Settings; create-object contributes SpaceCapabilities.CreateObjectEntry, so that helper has no default provides). Value-bearing helpers (translations/schema/plugin-asset/command) always dependency-mode via provide/provideAll.
+- [x] process-manager: ProcessManagerPlugin → lazyModule specs + dependency mode (compatFires ProcessManagerReady); capability body → yield* tags, contributions snapshots, reactive OperationHandler atom, Scope finalizer (runtime dispose + layerStack.destroy — resolves TODO); history module → yield* + provide
+- [x] app-toolkit window consumers: none in-toolkit (real consumers live in plugins → Phase 7 foundational wave)
+- [x] Deprecated ordering events (core ActivationEvents + all app-toolkit Setup*/Ready; createStateEvent/createSettingsEvent kept)
+- [x] Gate: app-framework (197) + app-toolkit (82) tests green; full-repo build passed
 
 ## Phase 5 — plugin-client migration (worked example)
 

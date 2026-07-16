@@ -76,7 +76,7 @@ export const Layout = Capability$.make<Atom.Atom<Layout>>(LAYOUT_CAPABILITY_ID);
 /**
  * @category Capability
  */
-export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>(
+export const Translations = Capability$.makeMulti<Readonly<Translations$.Resource[]>>(
   'org.dxos.app-framework.capability.translations',
 );
 
@@ -148,7 +148,7 @@ export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capab
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.make<BuilderExtensions>('org.dxos.app-framework.capability.appGraphBuilder');
+export const AppGraphBuilder = Capability$.makeMulti<BuilderExtensions>('org.dxos.app-framework.capability.appGraphBuilder');
 
 export type Settings = {
   prefix: string;
@@ -173,26 +173,26 @@ export const isSettings = (value: unknown): value is Settings =>
 /**
  * @category Capability
  */
-export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
+export const Settings = Capability$.makeMulti<Settings>('org.dxos.app-framework.capability.settings');
 
 export type Schema = ReadonlyArray<Type.AnyEntity>;
 
 /**
  * @category Capability
  */
-export const Schema = Capability$.make<Schema>('org.dxos.app-framework.capability.schema');
+export const Schema = Capability$.makeMulti<Schema>('org.dxos.app-framework.capability.schema');
 
 export type Toolkit = OpaqueToolkit.OpaqueToolkit;
 
 /**
  * @category Capability
  */
-export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.aiToolkit');
+export const Toolkit = Capability$.makeMulti<Toolkit>('org.dxos.app-framework.capability.aiToolkit');
 
 /**
  * @category Capability
  */
-export const SkillDefinition = Capability$.make<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
+export const SkillDefinition = Capability$.makeMulti<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
 
 /**
  * A static asset bundled with a plugin's published package, exposed for
@@ -217,14 +217,14 @@ export type PluginAsset = Readonly<{
 /**
  * @category Capability
  */
-export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.pluginAsset');
+export const PluginAsset = Capability$.makeMulti<PluginAsset>('org.dxos.app-framework.capability.pluginAsset');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
  * supplied by the active-space resolver — BYOK-aware resolvers wrap their HTTP client with
  * `Header.byokLayer(...)`; the rest carry it through unused.
  */
-export const AiModelResolver = Capability$.make<
+export const AiModelResolver = Capability$.makeMulti<
   Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
 >('org.dxos.app-framework.capability.aiModelResolver');
 
@@ -233,7 +233,7 @@ export type FileUploader = (db: Database.Database, file: File) => Promise<FileIn
 /**
  * @category Capability
  */
-export const FileUploader = Capability$.make<FileUploader>('org.dxos.app-framework.capability.fileUploader');
+export const FileUploader = Capability$.makeMulti<FileUploader>('org.dxos.app-framework.capability.fileUploader');
 
 export type AnchorSort = {
   key: string;
@@ -243,7 +243,7 @@ export type AnchorSort = {
 /**
  * @category Capability
  */
-export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
+export const AnchorSort = Capability$.makeMulti<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
 
 /** Text content extractor contributed per typename by plugins that support text extraction. */
 export type TextContent = Readonly<{
@@ -254,7 +254,7 @@ export type TextContent = Readonly<{
 /**
  * @category Capability
  */
-export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.textContent');
+export const TextContent = Capability$.makeMulti<TextContent>('org.dxos.app-framework.capability.textContent');
 
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = Readonly<{
@@ -268,7 +268,7 @@ export type CommentConfig = Readonly<{
 /**
  * @category Capability
  */
-export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
+export const CommentConfig = Capability$.makeMulti<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
 
 export type NavigationTarget = {
   /** Navigation path usable with the Open operation. */
@@ -291,7 +291,7 @@ export type NavigationQuery = {
  */
 export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
 
-export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
+export const NavigationTargetResolver = Capability$.makeMulti<NavigationTargetResolver>(
   'org.dxos.app-framework.capability.navigationTargetResolver',
 );
 
@@ -303,7 +303,7 @@ export const NavigationTargetResolver = Capability$.make<NavigationTargetResolve
  */
 export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 
-export const NavigationHandler = Capability$.make<NavigationHandler>(
+export const NavigationHandler = Capability$.makeMulti<NavigationHandler>(
   'org.dxos.app-toolkit.capability.navigationHandler',
 );
 
@@ -316,7 +316,7 @@ export const NavigationHandler = Capability$.make<NavigationHandler>(
  */
 export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
 
-export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
+export const NavigationPathResolver = Capability$.makeMulti<NavigationPathResolver>(
   'org.dxos.app-framework.capability.navigationPathResolver',
 );
 

@@ -58,14 +58,14 @@ export type ReactContext = Readonly<{
 /**
  * @category Capability
  */
-export const ReactContext = Capability$.make<ReactContext>('org.dxos.app-framework.capability.reactContext');
+export const ReactContext = Capability$.makeMulti<ReactContext>('org.dxos.app-framework.capability.reactContext');
 
 export type ReactRoot = Readonly<{ id: string; root: FC<PropsWithChildren> }>;
 
 /**
  * @category Capability
  */
-export const ReactRoot = Capability$.make<ReactRoot>('org.dxos.app-framework.capability.reactRoot');
+export const ReactRoot = Capability$.makeMulti<ReactRoot>('org.dxos.app-framework.capability.reactRoot');
 
 /**
  * Surface definitions that can be either React components or Web Components.
@@ -75,19 +75,19 @@ export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
 /**
  * @category Capability
  */
-export const ReactSurface = Capability$.make<ReactSurface>('org.dxos.app-framework.capability.reactSurface');
+export const ReactSurface = Capability$.makeMulti<ReactSurface>('org.dxos.app-framework.capability.reactSurface');
 
 export type AnyCommand = Command$.Command<any, any, any, any>;
 
 /**
  * @category Capability
  */
-export const Command = Capability$.make<AnyCommand>('org.dxos.app-framework.capability.command');
+export const Command = Capability$.makeMulti<AnyCommand>('org.dxos.app-framework.capability.command');
 
 /**
  * @category Capability
  */
-export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app-framework.capability.layer');
+export const Layer = Capability$.makeMulti<Layer$.Layer<any, any, any>>('org.dxos.app-framework.capability.layer');
 
 /**
  * Layer specification contributed by plugins.
@@ -98,7 +98,7 @@ export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app
  *
  * @category Capability
  */
-export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layerSpec');
+export const LayerSpec = Capability$.makeMulti<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layerSpec');
 
 /**
  * Context passed to {@link TraceSinkFactory} implementations when the
@@ -133,7 +133,7 @@ export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace$.Sink;
  *
  * @category Capability
  */
-export const TraceSink = Capability$.make<TraceSinkFactory>('org.dxos.app-framework.capability.traceSink');
+export const TraceSink = Capability$.makeMulti<TraceSinkFactory>('org.dxos.app-framework.capability.traceSink');
 
 /**
  * Service resolver backing the shared {@link ProcessManagerRuntime}.
@@ -221,7 +221,7 @@ export const ManagedRuntime = Capability$.make<ManagedRuntime>('org.dxos.app-fra
 // Operation System Capabilities
 //
 
-export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHandlerSet>(
+export const OperationHandler = Capability$.makeMulti<OperationHandlerSet.OperationHandlerSet>(
   'org.dxos.app-framework.capability.operationHandler',
 );
 
@@ -231,7 +231,7 @@ export type UndoMapping = UndoMapping$.UndoMapping;
  * Undo mapping registration - contributed by plugins.
  * @category Capability
  */
-export const UndoMapping = Capability$.make<UndoMapping[]>('org.dxos.app-framework.capability.undoMapping');
+export const UndoMapping = Capability$.makeMulti<UndoMapping[]>('org.dxos.app-framework.capability.undoMapping');
 
 /**
  * Operation invoker backed by the process manager. Spawns a process per

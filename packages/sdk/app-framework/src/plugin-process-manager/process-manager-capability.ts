@@ -44,12 +44,19 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
     const pluginManager = yield* Plugin.Service;
-    const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
+    const atomRegistry = yield* Capabilities.AtomRegistry;
 
+    // Legacy contribution window: unmigrated plugins still contribute LayerSpec /
+    // OperationHandler entries via this event. Removed with the legacy API.
     yield* Plugin.activate(ActivationEvents.SetupProcessManager);
 
-    const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
-    const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
+    const layerSpecContributions = yield* Capabilities.LayerSpec;
+    const traceSinkContributions = yield* Capabilities.TraceSink;
+    const operationHandlerContributions = yield* Capabilities.OperationHandler;
+    // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
+    // contributed by plugins enabled later do not join the stack (same as the event window).
+    const layerSpecs = layerSpecContributions.get();
+    const traceSinkFactories = traceSinkContributions.get();
 
     // Forward reference to `ProcessManager.ProcessManagerService`. The runtime
     // that owns the manager depends transitively on `ServiceResolver` (which is
@@ -92,10 +99,7 @@ export default Capability.makeModule(
     const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
-    const handlerSet = OperationHandlerSet.reactive(
-      atomRegistry,
-      capabilityManager.atom(Capabilities.OperationHandler),
-    );
+    const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
 
     const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
     const mergedTraceSink = Trace.mergeSinks(traceSinks);
@@ -125,11 +129,13 @@ export default Capability.makeModule(
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
-    // TODO(dmaretskyi): Capability modules don't currently expose a teardown
-    // hook (`makeModule` only allows `Service | Plugin.Service` in the effect's
-    // requirements, ruling out `Effect.addFinalizer`). Once the plugin
-    // framework grows a shutdown lifecycle, dispose `managedRuntime` and then
-    // call `layerStack.destroy()` to tear down keep-alive slices.
+    // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
+    // down the stack's keep-alive slices.
+    yield* Effect.addFinalizer(() =>
+      Effect.promise(() => managedRuntime.dispose()).pipe(
+        Effect.andThen(Effect.promise(() => layerStack.destroy())),
+      ),
+    );
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {
       runPromise: (effect, options) => managedRuntime.runPromise(effect as Effect.Effect<any, any, any>, options),
@@ -169,10 +175,10 @@ export default Capability.makeModule(
     );
 
     return [
-      Capability.contributes(Capabilities.ProcessManagerRuntime, processManagerRuntime),
-      Capability.contributes(Capabilities.ServiceResolver, serviceResolver),
-      Capability.contributes(Capabilities.ProcessMonitor, processMonitor),
-      Capability.contributes(Capabilities.OperationInvoker, operationInvoker),
+      Capability.provide(Capabilities.ProcessManagerRuntime, processManagerRuntime),
+      Capability.provide(Capabilities.ServiceResolver, serviceResolver),
+      Capability.provide(Capabilities.ProcessMonitor, processMonitor),
+      Capability.provide(Capabilities.OperationInvoker, operationInvoker),
     ];
   }),
 );

@@ -16,6 +16,7 @@ export const Startup = ActivationEvent$.Startup;
 
 /**
  * Fired to load any newly available surfaces.
+ * @deprecated Contribute `Capabilities.ReactSurface` from a dependency-mode module instead.
  */
 export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.event.setupReactSurface');
 
@@ -25,6 +26,7 @@ export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.e
  * {@link Capabilities.OperationHandler} sets before this event fires so the
  * process manager's {@link ServiceResolver} and {@link OperationInvoker} pick
  * them up at construction time.
+ * @deprecated Contribute `Capabilities.LayerSpec` / `Capabilities.OperationHandler` from a dependency-mode module instead.
  */
 export const SetupProcessManager = ActivationEvent$.make('org.dxos.app-framework.event.setupProcessManager');
 
@@ -36,5 +38,6 @@ export const SetupProcessManager = ActivationEvent$.make('org.dxos.app-framework
  * Fired after the process manager runtime is ready and its derived capabilities
  * (`ProcessManagerRuntime`, `ServiceResolver`, `ProcessMonitor`, `OperationInvoker`)
  * have been contributed.
+ * @deprecated Declare `requires` on the process-manager capabilities (e.g. `Capabilities.OperationInvoker`) instead.
  */
 export const ProcessManagerReady = ActivationEvent$.make('org.dxos.app-framework.event.processManagerReady');

@@ -2,22 +2,49 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents } from '../common';
+import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { meta } from './meta';
 
-const ProcessManagerCapability = Capability.lazy('ProcessManager', () => import('./process-manager-capability'));
-const HistoryCapabilities = Capability.lazy('HistoryCapabilities', () => import('./history/capability'));
+const ProcessManagerCapability = Capability.lazyModule(
+  'ProcessManager',
+  {
+    requires: [
+      Capabilities.AtomRegistry,
+      Capabilities.LayerSpec,
+      Capabilities.TraceSink,
+      Capabilities.OperationHandler,
+    ],
+    provides: [
+      Capabilities.ProcessManagerRuntime,
+      Capabilities.ServiceResolver,
+      Capabilities.ProcessMonitor,
+      Capabilities.OperationInvoker,
+    ],
+  },
+  () => import('./process-manager-capability'),
+);
+
+const HistoryCapabilities = Capability.lazyModule(
+  'HistoryCapabilities',
+  {
+    requires: [Capabilities.UndoMapping, Capabilities.OperationInvoker],
+    provides: [Capabilities.UndoRegistry, Capabilities.HistoryTracker],
+  },
+  () => import('./history/capability'),
+);
 
 export const ProcessManagerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
-    firesAfterActivation: [ActivationEvents.ProcessManagerReady],
+    requires: ProcessManagerCapability.requires,
+    provides: ProcessManagerCapability.provides,
+    // Migration bridge for unmigrated ProcessManagerReady listeners.
+    compatFires: [ActivationEvents.ProcessManagerReady],
     activate: ProcessManagerCapability,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvents.ProcessManagerReady,
+    requires: HistoryCapabilities.requires,
+    provides: HistoryCapabilities.provides,
     activate: HistoryCapabilities,
   }),
   Plugin.make,
