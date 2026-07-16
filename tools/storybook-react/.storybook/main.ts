@@ -115,7 +115,15 @@ const repairTopLevelAwait = async (code: string): Promise<string | null> => {
     return null;
   }
   const { parse } = await import('@babel/parser');
-  const ast = parse(code, { sourceType: 'module', errorRecovery: true });
+  // `errorRecovery` still throws on unrecoverable syntax; a single such chunk must not
+  // fail the whole build, so leave it unmodified rather than propagating out of renderChunk.
+  let program: unknown;
+  try {
+    program = parse(code, { sourceType: 'module', errorRecovery: true }).program;
+  } catch (error) {
+    console.warn('[dxos:repair-top-level-await] Skipping unparseable chunk.', error);
+    return null;
+  }
   const positions: number[] = [];
   const walk = (node: AstNode) => {
     if (FUNCTION_NODES.has(node.type) && node.async === false && typeof node.start === 'number' && ownsAwait(node)) {
@@ -133,8 +141,8 @@ const repairTopLevelAwait = async (code: string): Promise<string | null> => {
       }
     }
   };
-  if (isAstNode(ast.program)) {
-    walk(ast.program);
+  if (isAstNode(program)) {
+    walk(program);
   }
   if (positions.length === 0) {
     return null;
