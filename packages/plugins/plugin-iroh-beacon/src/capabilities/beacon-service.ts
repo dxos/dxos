@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { Identity } from '@dxos/halo';
+import { HaloServicesLayer } from '@dxos/plugin-client';
 
 import { meta } from '#meta';
 
@@ -28,13 +29,14 @@ const INITIAL_STATE: BeaconState = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
 
     const stateAtom = Atom.make<BeaconState>(INITIAL_STATE).pipe(Atom.keepAlive);
 
-    const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
-    const currentDevice = haloIdentity.getDevicesSnapshot().find((device) => device.current);
+    const identity = Option.getOrUndefined(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServicesLayer)));
+    const currentDevice = (yield* Identity.getDevicesSnapshot.pipe(Effect.provide(HaloServicesLayer))).find(
+      (device) => device.current,
+    );
 
     if (identity?.identityKey && currentDevice) {
       const transport = new BroadcastChannelTransport();

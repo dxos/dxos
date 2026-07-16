@@ -12287,6 +12287,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
