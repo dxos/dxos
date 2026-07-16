@@ -5,15 +5,22 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
-import { trim } from '@dxos/util';
+import {
+  blocks,
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+} from '@dxos/ui-editor';
 
 import { translations } from '#translations';
 
 import { Editor, type EditorViewProps } from '../components';
-import { paragraphBoxes } from './paragraph-boxes';
+
+random.seed(123);
 
 type StoryArgs = Pick<EditorViewProps, 'value'>;
 
@@ -24,7 +31,8 @@ const DefaultStory = (props: StoryArgs) => {
       createBasicExtensions({ placeholder: 'Type here...' }),
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
-      paragraphBoxes(),
+      decorateMarkdown(),
+      blocks(),
     ],
     [themeMode],
   );
@@ -37,7 +45,7 @@ const DefaultStory = (props: StoryArgs) => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-editor/ParagraphBoxes',
+  title: 'ui/react-ui-editor/Blocks',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
@@ -52,23 +60,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    value: trim`
-      # Paragraph boxes
-
-      Each paragraph is drawn inside a non-interactive box behind the text; the document stays fully
-      editable. Edit any paragraph, add or remove lines, and the boxes re-measure to fit.
-
-      A paragraph is a run of consecutive non-blank lines, so a single blank line starts a new box.
-      This second paragraph spans multiple lines to show that the box grows to enclose all of them,
-      wrapping included.
-
-      Scroll the editor to confirm the boxes track their paragraphs across viewport changes.
-
-      - List items are lines too, so a tight list reads as one paragraph.
-      - Second item.
-      - Third item.
-
-      The final paragraph sits on its own.
-    `,
+    value: Array.from({ length: 30 }, (_, i) => {
+      const n = random.number.int(10);
+      if (i == 0 || n < 2) {
+        return `# Header ${i + 1}`;
+      }
+      if (n > 8) {
+        return Array.from({ length: random.number.int({ min: 2, max: 8 }) }, (_, i) => `- Item ${i + 1}`).join('\n');
+      }
+      return random.lorem.paragraph();
+    }).join('\n\n'),
   },
 };
