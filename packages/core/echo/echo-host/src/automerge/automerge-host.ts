@@ -278,7 +278,7 @@ export class AutomergeHost extends Resource {
     await initSubduction();
 
     if (this._useSubduction) {
-      const { MemorySigner } = await import('@automerge/automerge-subduction');
+      const { MemorySigner, setSubductionLogLevel } = await import('@automerge/automerge-subduction');
       this._signer ??= MemorySigner.generate();
 
       this._repo = new Repo({
@@ -307,6 +307,21 @@ export class AutomergeHost extends Resource {
           this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
         }
       });
+
+      // Quiet subduction_core's console WARNs: every per-sedimentree sync round fans out to all
+      // space-scoped edge peers, and each correct cross-space `authorizeFetch` denial is logged by
+      // the WASM at WARN ("not authorized to access sedimentree"), flooding the console. Must run
+      // after `new Repo(...)` — the SubductionSource constructor resets the level to 'warn' on
+      // every startup. Skipped when subduction debugging is requested, mirroring the constructor's
+      // own escape hatch (`localStorage.debug` / `__SUBDUCTION_DEBUG`).
+      const subductionDebugRequested =
+        (typeof localStorage !== 'undefined' &&
+          typeof localStorage.getItem === 'function' &&
+          /subduction/i.test(localStorage.getItem('debug') ?? '')) ||
+        Boolean(Reflect.get(globalThis, '__SUBDUCTION_DEBUG'));
+      if (!subductionDebugRequested) {
+        setSubductionLogLevel('error');
+      }
     } else {
       // Classical automerge-repo wiring: the EchoNetworkAdapter is registered as a
       // network adapter and document bytes flow through the standard sync protocol.
