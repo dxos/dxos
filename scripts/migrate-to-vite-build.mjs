@@ -48,6 +48,28 @@ const entryNameUnstrippedFromPath = (srcPath) => {
   return noSrc.replace(/\.tsx?$/, '') || 'index';
 };
 
+/**
+ * Build a Map<sourcePath, entryName> mirroring buildEntryRecord's disambiguation.
+ * Entries with unique stripped names use the stripped form ("skills"); colliding
+ * ones (src/foo.ts + src/foo/index.ts) fall back to the unstripped form.
+ * Used to keep rewriteExports, rewriteImports, and buildEntryRecord in sync.
+ */
+const resolveEntryNames = (entryPoints) => {
+  const inputs = entryPoints.length === 0 ? ['src/index.ts'] : [...new Set(entryPoints)];
+  const nameCount = new Map();
+  for (const ep of inputs) {
+    const short = entryNameFromPath(ep);
+    nameCount.set(short, (nameCount.get(short) ?? 0) + 1);
+  }
+  const bySource = new Map();
+  for (const ep of inputs) {
+    const short = entryNameFromPath(ep);
+    const name = nameCount.get(short) > 1 ? entryNameUnstrippedFromPath(ep) : short;
+    bySource.set(ep, name);
+  }
+  return bySource;
+};
+
 const parseEntryPoints = (moonYmlText) => {
   // Crude but sufficient: pull `'--entryPoint=src/...'` lines from the file.
   const lines = moonYmlText.split('\n');
@@ -143,18 +165,10 @@ const rewriteMoonYml = (text, buildExtraDeps = []) => {
 const buildEntryRecord = (entryPoints) => {
   if (entryPoints.length === 0) return undefined;
   if (entryPoints.length === 1 && entryPoints[0] === 'src/index.ts') return undefined; // default
-  // Detect collisions like `src/testing.ts` + `src/testing/index.ts` (both default to
-  // `testing`) and disambiguate the dir entry so both survive in the vite entry map.
-  const nameCount = new Map();
-  for (const ep of entryPoints) {
-    const n = entryNameFromPath(ep);
-    nameCount.set(n, (nameCount.get(n) ?? 0) + 1);
-  }
+  const nameMap = resolveEntryNames(entryPoints);
   const record = {};
-  for (const ep of entryPoints) {
-    const short = entryNameFromPath(ep);
-    const name = nameCount.get(short) > 1 ? entryNameUnstrippedFromPath(ep) : short;
-    record[name] = ep;
+  for (const [source, name] of nameMap) {
+    record[name] = source;
   }
   return record;
 };
@@ -207,27 +221,10 @@ const rewriteExports = (pkgJson, entryPoints) => {
   // `dist/types/src/playwright.d.ts`, `src/playwright/index.ts` → `dist/types/src/playwright/index.d.ts`.
   // Two-pass build to disambiguate collisions between `src/foo.ts` and `src/foo/index.ts`
   // (both would default to `foo`, silently overwriting each other in the map).
+  const nameBySource = resolveEntryNames(entryPoints);
   const entrySourceByName = new Map();
-  const inputs = entryPoints.length === 0 ? ['src/index.ts'] : entryPoints;
-  for (const ep of inputs) {
-    entrySourceByName.set(entryNameFromPath(ep), ep);
-  }
-  if (entrySourceByName.size < inputs.length) {
-    // Rebuild, preserving `/index` suffixes to disambiguate. Colliding pairs get
-    // `foo` (the file) and `foo/index` (the dir).
-    entrySourceByName.clear();
-    const stripped = new Map();
-    const nameCount = new Map();
-    for (const ep of inputs) {
-      const short = entryNameFromPath(ep);
-      nameCount.set(short, (nameCount.get(short) ?? 0) + 1);
-    }
-    for (const ep of inputs) {
-      const short = entryNameFromPath(ep);
-      const unique = nameCount.get(short) > 1 ? entryNameUnstrippedFromPath(ep) : short;
-      entrySourceByName.set(unique, ep);
-      stripped.set(ep, unique);
-    }
+  for (const [source, name] of nameBySource) {
+    entrySourceByName.set(name, source);
   }
   // For exports like `./icons` whose `source` condition points to a deeper file
   // (e.g. `./src/components/IconPicker/icons.ts`), match by source path rather
@@ -282,34 +279,44 @@ const rewriteExports = (pkgJson, entryPoints) => {
  * `./dist/lib/{browser,node,node-esm,node-cjs}/<rest>(/index)?.mjs|.cjs`
  * layout to the single-bundle `./dist/lib/<rest>.mjs` layout.
  *
- * Types paths and `source` conditions are preserved verbatim. Returns the set
- * of additional entry names that must be present in the vite entry record so
- * the `imports` field's output paths exist on disk.
+ * When the enclosing object has a `source: "./src/x.ts"` condition, use it to
+ * resolve the entry name from the shared entryPoints map — keeps the output
+ * consistent with rewriteExports/buildEntryRecord when only `src/x/index.ts`
+ * exists (imports had `.../neutral/x/index.mjs`; exports wants `.../x.mjs`).
+ * Types paths and `source` conditions are preserved verbatim.
  */
-const rewriteImports = (pkgJson) => {
-  const required = new Set();
-  const visit = (node) => {
+const rewriteImports = (pkgJson, entryPoints) => {
+  const nameBySource = resolveEntryNames(entryPoints);
+  const nameForSource = (srcRel) => nameBySource.get(srcRel.replace(/^\.\//, ''));
+
+  // Resolve the entry name for a given condition (`browser`, `default`, ...) using
+  // the enclosing node's `source` field. Handles both flat sources (`source: "./src/x.ts"`)
+  // and per-condition source objects (`source: {browser: "./src/a.ts", default: "./src/b.ts"}`).
+  const resolveNameForCondition = (source, condition) => {
+    if (typeof source === 'string') return nameForSource(source);
+    if (source && typeof source === 'object') {
+      const value = source[condition] ?? source.default;
+      if (typeof value === 'string') return nameForSource(value);
+    }
+    return undefined;
+  };
+
+  const visit = (node, source, condition) => {
     if (typeof node === 'string') {
+      const resolvedName = source !== undefined ? resolveNameForCondition(source, condition) : undefined;
+      if (resolvedName) return `./dist/lib/${resolvedName}.mjs`;
       const m = node.match(/^\.\/dist\/lib\/(?:browser|node|node-esm|node-cjs|neutral)\/(.+?)\.(?:mjs|cjs)$/);
-      if (m) {
-        // Preserve `/index` in the entry name — if the package has both `src/foo.ts` and
-        // `src/foo/index.ts`, the entry keys are `foo` and `foo/index` and the output
-        // files are `dist/lib/foo.mjs` and `dist/lib/foo/index.mjs`; stripping `/index`
-        // conflates the two.
-        const entry = m[1];
-        required.add(entry);
-        return `./dist/lib/${entry}.mjs`;
-      }
+      if (m) return `./dist/lib/${m[1].replace(/\/index$/, '')}.mjs`;
       return node;
     }
     if (node && typeof node === 'object') {
+      const childSource = node.source ?? source;
       const out = {};
       for (const [k, v] of Object.entries(node)) {
         if (k === 'source' || k === 'types' || k === 'typings') {
-          // `source` points to .ts; `types` to .d.ts — both stay as-is.
           out[k] = v;
         } else {
-          out[k] = visit(v);
+          out[k] = visit(v, childSource, k);
         }
       }
       return out;
@@ -320,7 +327,6 @@ const rewriteImports = (pkgJson) => {
   if (pkgJson.imports) {
     pkgJson.imports = visit(pkgJson.imports);
   }
-  return required;
 };
 
 const migrate = (pkgRel) => {
@@ -636,25 +642,8 @@ const migrate = (pkgRel) => {
   writeFileSync(moonPath, newMoon);
 
   rewriteExports(pkgJson, entryPoints);
-  const importEntries = rewriteImports(pkgJson);
+  rewriteImports(pkgJson, entryPoints);
   writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
-
-  // Ensure every entry the `imports` field now references has a matching
-  // source file in the vite entry record. The script reads source paths from
-  // the `source` condition when available; otherwise it falls back to
-  // `src/<entry>.ts` or `src/<entry>/index.ts`.
-  const entryNames = new Set(entryPoints.map(entryNameFromPath));
-  for (const required of importEntries) {
-    if (entryNames.has(required)) continue;
-    const candidates = [`src/${required}.ts`, `src/${required}/index.ts`];
-    const found = candidates.find((c) => existsSync(resolve(pkgDir, c)));
-    if (!found) {
-      console.warn(`  warn: ${pkgRel}: imports references "${required}" but no source file found`);
-      continue;
-    }
-    entryPoints.push(found);
-    entryNames.add(required);
-  }
 
   writeFileSync(
     viteConfigPath,

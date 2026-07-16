@@ -17,12 +17,12 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -37,7 +37,7 @@
     "#services": {
       "source": "./src/services/index.ts",
       "types": "./dist/types/src/services/index.d.ts",
-      "default": "./dist/lib/services/index.mjs"
+      "default": "./dist/lib/services.mjs"
     }
   },
   "exports": {

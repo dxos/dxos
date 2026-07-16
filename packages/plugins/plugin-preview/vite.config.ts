@@ -10,7 +10,7 @@ export default defineConfig({
     'PreviewPlugin': 'src/PreviewPlugin.tsx',
     'PreviewPlugin.node': 'src/PreviewPlugin.node.ts',
     'PreviewPlugin.workerd': 'src/PreviewPlugin.workerd.ts',
-    'capabilities/index': 'src/capabilities/index.ts',
+    'capabilities': 'src/capabilities/index.ts',
     'meta': 'src/meta.ts',
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing.ts',

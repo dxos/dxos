@@ -13,7 +13,7 @@ export default defineConfig({
     'FreeqPlugin': 'src/FreeqPlugin.ts',
     'meta': 'src/meta.ts',
     'plugin': 'src/plugin.ts',
-    'capabilities/index': 'src/capabilities/index.ts',
+    'capabilities': 'src/capabilities/index.ts',
     'capabilities/channel-backend': 'src/capabilities/channel-backend.ts',
     'services/ConnectionManager': 'src/services/ConnectionManager.ts',
     'services/CredentialProvider': 'src/services/CredentialProvider.ts',

@@ -17,12 +17,12 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/containers/index.mjs"
+      "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -32,7 +32,7 @@
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/operations/index.mjs"
+      "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": "./src/CrxPlugin.tsx",
@@ -47,7 +47,7 @@
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {

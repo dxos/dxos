@@ -20,7 +20,7 @@
       },
       "types": "./dist/types/src/loaders/index.d.ts",
       "browser": "./dist/lib/loaders/browser.mjs",
-      "default": "./dist/lib/loaders/index.mjs"
+      "default": "./dist/lib/loaders.mjs"
     },
     "#savers": {
       "source": {
@@ -29,7 +29,7 @@
       },
       "types": "./dist/types/src/savers/index.d.ts",
       "browser": "./dist/lib/savers/browser.mjs",
-      "default": "./dist/lib/savers/index.mjs"
+      "default": "./dist/lib/savers.mjs"
     },
     "#plugin": {
       "source": {
@@ -38,7 +38,7 @@
       },
       "types": "./dist/types/src/plugin/index.d.ts",
       "browser": "./dist/lib/plugin/browser.mjs",
-      "default": "./dist/lib/plugin/index.mjs"
+      "default": "./dist/lib/plugin.mjs"
     }
   },
   "exports": {

@@ -16,12 +16,12 @@
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
-      "default": "./dist/lib/hooks/index.mjs"
+      "default": "./dist/lib/hooks.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",

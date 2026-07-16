@@ -19,8 +19,8 @@
         "default": "./src/platform/node/index.ts"
       },
       "types": "./dist/types/src/platform/node/index.d.ts",
-      "browser": "./dist/lib/platform/browser/index.mjs",
-      "default": "./dist/lib/platform/node/index.mjs"
+      "browser": "./dist/lib/platform/browser.mjs",
+      "default": "./dist/lib/platform/node.mjs"
     },
     "#console-processor": {
       "source": {

@@ -17,12 +17,12 @@
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills/index.mjs"
+      "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -37,7 +37,7 @@
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
