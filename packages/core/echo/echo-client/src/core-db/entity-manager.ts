@@ -42,7 +42,7 @@ import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';
-import { forkDump, referencedObjectIds } from './branching';
+import { type BranchStore, forkDump, referencedObjectIds } from './branching';
 import { type IDatabaseBinding, ObjectCore } from './object-core';
 import {
   type AddCoreOptions,
@@ -85,6 +85,8 @@ export type EntityManagerProps = {
   runtime: Runtime.Runtime<never>;
   spaceId: SpaceId;
   spaceKey: PublicKey;
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
 };
 
 /**
@@ -107,8 +109,12 @@ export class EntityManager implements IDatabaseBinding {
 
   /**
    * Device-local, non-synced: object id -> currently-selected branch name (`'main'` omitted).
+   * Hydrated from {@link _branchStore} on open (if provided) and persisted on switch.
    */
   private readonly _currentBranches = new Map<string, string>();
+
+  /** Optional device-local persistence for {@link _currentBranches} (survives reload, never syncs). */
+  private readonly _branchStore?: BranchStore;
 
   /**
    * Object ids whose backing document was determined to be not on local disk
@@ -171,6 +177,7 @@ export class EntityManager implements IDatabaseBinding {
     this._dataService = options.dataService;
     this._queryService = options.queryService;
     this._runtime = options.runtime;
+    this._branchStore = options.branchStore;
     this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
   }
@@ -239,6 +246,40 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     this.opened.wake();
+
+    // Restore device-local branch selections (e.g. after a reload) and re-bind each branched subtree
+    // to its selected branch — objects otherwise load on `main`.
+    if (this._branchStore) {
+      await this._hydrateCurrentBranches();
+    }
+  }
+
+  private async _hydrateCurrentBranches(): Promise<void> {
+    try {
+      const entries = await this._branchStore!.load();
+      for (const [objectId, name] of Object.entries(entries)) {
+        this._currentBranches.set(objectId, name);
+      }
+      const reapplied = new Set<string>();
+      for (const [objectId, name] of Object.entries(entries)) {
+        if (name === 'main' || reapplied.has(objectId) || !this.getBranchRegistry(objectId)?.[name]) {
+          continue;
+        }
+        reapplied.add(objectId);
+        await this.switchBranch(objectId, name);
+      }
+    } catch (err) {
+      log.warn('failed to hydrate current branches', { err });
+    }
+  }
+
+  private _persistCurrentBranches(): void {
+    if (!this._branchStore) {
+      return;
+    }
+    void this._branchStore
+      .save(Object.fromEntries(this._currentBranches))
+      .catch((err) => log.warn('failed to persist current branches', { err }));
   }
 
   /**
@@ -868,6 +909,7 @@ export class EntityManager implements IDatabaseBinding {
         this._currentBranches.set(memberId, name);
       }
     }
+    this._persistCurrentBranches();
     this._scheduleThrottledDbUpdate([...memberIds]);
     this.branchesChanged.emit();
   }

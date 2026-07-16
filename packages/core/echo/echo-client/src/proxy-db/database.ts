@@ -52,7 +52,7 @@ import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { EntityManager } from '../core-db';
+import { type BranchStore, EntityManager } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -196,6 +196,9 @@ export type EchoDatabaseProps = {
   runtime: Runtime.Runtime<never>;
   spaceId: SpaceId;
 
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
+
   /**
    * Run a reactive query for dynamic schemas.
    * @default true
@@ -306,6 +309,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       runtime: params.runtime,
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
+      branchStore: params.branchStore,
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;

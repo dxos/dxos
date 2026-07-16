@@ -8,6 +8,19 @@ import { EncodedReference, EntityStructure } from '@dxos/echo-protocol';
 import { EID } from '@dxos/keys';
 
 /**
+ * Device-local, non-synced persistence for the current-branch selection of a single space.
+ * The current branch a device views an object on must survive a client reload but never replicate
+ * to peers, so it is stored outside the synced documents. Provided by the embedding layer (the
+ * browser client backs it with the worker's metadata store; tests back it with a per-peer store).
+ */
+export interface BranchStore {
+  /** Load the persisted selections: object id -> branch name (`'main'` is omitted). */
+  load(): Promise<Record<string, string>>;
+  /** Persist the full current selection map (replacing any prior value). */
+  save(entries: Record<string, string>): Promise<void>;
+}
+
+/**
  * Serialize an object's document into a branch fork. Forking via `A.save`/`A.load` (the `repo.import`
  * path) preserves the source's change ancestry, so the branch shares history with the main document
  * and `A.merge` later is a true CRDT 3-way merge rather than an unrelated "two roots" conflict.
