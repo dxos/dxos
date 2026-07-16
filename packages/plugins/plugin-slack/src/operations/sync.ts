@@ -312,7 +312,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               const allConversations = yield* SlackApi.fetchConversations();
               const conversation = allConversations.find((conv) => conv.id === externalId);
 
-              const messages = yield* SlackApi.fetchHistory(externalId, { oldest: binding.value });
+              const messages = yield* SlackApi.fetchHistory(externalId, { oldest: binding.max });
               if (messages.length === 0) {
                 return { added: 0 } satisfies PullResult;
               }

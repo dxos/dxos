@@ -46,13 +46,28 @@ export const seedMailboxBinding = async (
     source = GMAIL_SOURCE,
     connectorId = 'gmail',
     token = 'token',
-  }: { source?: string; connectorId?: string; token?: string } = {},
+    max,
+    min,
+    options,
+  }: {
+    source?: string;
+    connectorId?: string;
+    token?: string;
+    /** Seeds the cursor's `max` watermark, as if a prior run already synced up to this key. */
+    max?: string;
+    /** Seeds the cursor's `min` watermark, as if a prior run already backfilled down to this key. */
+    min?: string;
+    /** Seeds `spec.options` (e.g. `syncBackDays`, `filter`) — read via `readBindingOptions`. */
+    options?: Record<string, unknown>;
+  } = {},
 ) => {
   const { db } = await builder.createDatabase({ types: SYNC_TEST_TYPES });
   const mailbox = db.add(Mailbox.make({ name: 'Test' }));
   const accessToken = db.add(AccessToken.make({ source, token }));
   const connection = db.add(Connection.make({ connectorId, accessToken: Ref.make(accessToken) }));
-  const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }));
+  const binding = db.add(
+    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox), max, min, options }),
+  );
   await db.flush({ indexes: true });
   return { db, mailbox, connection, binding };
 };
@@ -64,7 +79,10 @@ export const seedMailboxBinding = async (
  * channel. `Trace.TraceService` defaults to a noop writer; pass a custom trace layer to observe
  * `status.update` events from the sync.
  */
-const ambientSyncServices = (db: Database.Database, options: { traceLayer?: Layer.Layer<Trace.TraceService> } = {}) =>
+export const ambientSyncServices = (
+  db: Database.Database,
+  options: { traceLayer?: Layer.Layer<Trace.TraceService> } = {},
+) =>
   Layer.mergeAll(
     Database.layer(db),
     InboxResolver.Live.pipe(Layer.provide(Database.layer(db))),

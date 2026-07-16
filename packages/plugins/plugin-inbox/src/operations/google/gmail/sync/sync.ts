@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
@@ -31,7 +31,7 @@ import { Mailbox } from '../../../../types';
 import { onArrivalExtractors, readBindingOptions } from '../../../../util';
 import { parseFromHeader } from '../../../util';
 import { type DecodedMessage, decodeBody, mapToMessage } from '../mapper';
-import { STREAMING_CONFIG, fetchAttachments, fetchMessages } from './fetch';
+import { GMAIL_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
 
 /**
  * Progress-registry key for a mailbox's Gmail sync monitor — the mailbox URI with a `#sync` suffix so
@@ -45,37 +45,34 @@ export type SyncGmailProps = {
   binding: Ref.Ref<Cursor.Cursor>;
   userId?: string;
   /**
-   * Default to all mail (every folder incl. Sent) so full conversations sync; a specific label
-   * restricts to that folder. See `fetchMessages` for how `'all'` maps to the query.
+   * Defaults to all mail (every folder incl. Sent) so full conversations sync; a label restricts to
+   * that folder. See `fetchMessageIds` for how `'all'` maps to the query.
    */
   label?: string;
-  /** Lower (oldest) bound of the range to sync — unix ms or yyyy-MM-dd. Defaults to 30 days ago. */
-  after?: string | number;
-  /** Upper (newest) bound of the range — unix ms or yyyy-MM-dd. Defaults to today. Backfill passes the oldest-synced date here to cap a backward walk. */
-  before?: string | number;
   /**
-   * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
-   * sync, newest-first from today); a cursor → `forward` (incremental, from the cursor). Pass
-   * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
+   * Candidate messages this run considers before requesting `Operation.runAgain()`. Test-only
+   * override — production uses the default.
    */
-  direction?: Cursor.Direction;
+  maxMessages?: number;
+  /** Reference "now" for window/horizon resolution. Test-only (pins the clock); defaults to `new Date()`. */
+  now?: Date;
 };
 
 /**
- * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
- * ambient operation services). It *requires* the service rather than providing HTTP/credentials
- * itself, so a test can drive the whole sync against a mock Gmail API + a real ECHO db — the
- * operation handler below wraps it with the Live layer. The return type is written out (not inferred)
- * so the module's emitted `.d.ts` can name it without the compiler expanding unnameable cross-package
- * types (TS2883); the deployed operation stays portable via `Operation.opaqueHandler`.
+ * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service. Every run is
+ * bidirectional — syncs new mail above the cursor's `max` (ascending) and backfills from `min` down to
+ * the horizon (descending) — so an interrupted or capped run resumes both halves from where it left
+ * off; the cursor is the only durable state (`Cursor.resolveWindows`). Requires the service rather than
+ * providing it, so a test can drive the sync against a mock API + real ECHO db. The return type is
+ * written out (not inferred) so the emitted `.d.ts` can name it without expanding unnameable
+ * cross-package types (TS2883).
  */
 export const syncGmail = ({
   binding: bindingRef,
   userId = 'me',
   label = 'all',
-  after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-  before,
-  direction,
+  maxMessages = GMAIL_SYNC_CONFIG.maxItemsPerRun,
+  now = new Date(),
 }: SyncGmailProps): Effect.Effect<
   { newMessages: number },
   GoogleMailApiError | EntityNotFoundError,
@@ -97,30 +94,20 @@ export const syncGmail = ({
     }
 
     const targetOptions = readBindingOptions(binding);
-    const cursorKey = Cursor.parseKey(binding.value);
+    const horizon = Cursor.resolveHorizon({ now, syncBackDays: targetOptions.syncBackDays });
+    const maxKey = Cursor.parseKey(binding.max);
+    const minKey = Cursor.parseKey(binding.min);
+    const windows = Cursor.resolveWindows({ maxKey, minKey, now, horizon });
 
-    // Range + direction (shared resolver, so JMAP and future providers behave identically): no cursor →
-    // backward initial from today to the horizon; cursor → forward incremental; `direction: backward` +
-    // `before` = oldest-synced → backfill older gaps (never advances the monotonic cursor).
-    const {
-      direction: resolvedDirection,
-      start,
-      end: rangeEnd,
-    } = Cursor.resolveWindow({
-      cursorKey,
-      now: new Date(),
-      after,
-      before,
-      direction,
-      syncBackDays: targetOptions.syncBackDays,
-    });
+    const formatWindow = (window: Cursor.Window | undefined) =>
+      window && { start: format(window.start, 'yyyy-MM-dd'), end: format(window.end, 'yyyy-MM-dd') };
     log.info('syncing...', {
       mailbox: Obj.getURI(mailbox),
       userId,
-      cursorKey,
-      direction: resolvedDirection,
-      start: format(start, 'yyyy-MM-dd'),
-      end: format(rangeEnd, 'yyyy-MM-dd'),
+      maxKey,
+      minKey,
+      forward: formatWindow(windows.forward),
+      backward: formatWindow(windows.backward),
     });
 
     const feed = yield* Database.load(mailbox.feed);
@@ -128,8 +115,8 @@ export const syncGmail = ({
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
     const tagIndex = yield* Database.load(mailbox.tags);
 
-    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
-    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    // Pool already-sent drafts once; `EmailStage.reconcileDrafts` matches incoming messages so a
+    // canonical copy's arrival removes its now-redundant draft during commit.
     const draftPool = yield* EmailStage.queryDraftPool(mailbox);
     const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
@@ -138,15 +125,14 @@ export const syncGmail = ({
       }),
     );
 
-    // Resolve the sender contact, build the ECHO message, and resolve label ids to tag URIs via the
-    // (Gmail-specific) label map captured here.
+    // Resolve the sender contact, build the ECHO message, and map label ids to tag URIs via the
+    // Gmail-specific label map.
     const mapToMessageStage: Stage.Stage<DecodedMessage, EmailStage.Mapped, never, Resolver | GoogleMailApi> =
       Stage.map('map-to-message', (decoded: DecodedMessage) =>
         Effect.gen(function* () {
           const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
           const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
-          // Drop messages excluded by the mailbox's filters before the costly attachment fetch;
-          // returning undefined removes the item from the pipeline (see `decodeBodyStage`).
+          // Drop filtered messages before the costly attachment fetch; undefined removes the item.
           if (Mailbox.isFiltered(mailbox, { sender: from })) {
             return undefined;
           }
@@ -171,11 +157,9 @@ export const syncGmail = ({
     // record-threads → commit each page. The Cursor layer advances the binding cursor per page.
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // Coarse sync telemetry (message/thread/sender counts + body-part coverage) written to the
-    // transient stats store, keyed by mailbox, so a surface (plugin-debug) can display it live. The
-    // store is optional — `getAll` yields nothing without a host plugin, so this is a no-op in
-    // production; only body-part coverage (which parts each message carried) is Gmail-specific.
-    // Write only this plugin's compartment (indexed by plugin key); other plugins own their own slots.
+    // Coarse sync telemetry written to the transient stats store (keyed by mailbox) for a live debug
+    // surface. Optional — `getAll` yields nothing without a host plugin, so a no-op in production.
+    // Write only this plugin's compartment; other plugins own their own slots.
     const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
       store.compartment(meta.profile.key),
     );
@@ -216,10 +200,9 @@ export const syncGmail = ({
     };
     reportStatus({ current: 0 });
 
-    // Accumulate the exact retrieval total as each date chunk's id list is enumerated (known before any
-    // full-message fetch), revising the meter's total so it renders a determinate bar even without a
-    // time estimate. Chunks enumerate serially and always before their ids reach the fetch stage, so
-    // `total` leads `current`.
+    // Accumulate the retrieval total as each chunk's ids are enumerated (before any full fetch), so the
+    // meter renders a determinate bar. Chunks enumerate before their ids reach fetch, so `total` leads
+    // `current`.
     let totalToRetrieve = 0;
     const addToTotal = (count: number) => {
       totalToRetrieve += count;
@@ -232,10 +215,15 @@ export const syncGmail = ({
     const senders = new Set<string>();
     const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
 
+    // Per-run funnel counts, each stage narrower than the last: `taken` (post-dedup candidates — the
+    // cap gauge) → `processed` (post-decode/map) → `stats.newMessages` (committed). `extent` is the
+    // observed key range, folded into the cursor at run end so a run that commits nothing still advances.
+    let taken = 0;
     let processed = 0;
     let attachmentCount = 0;
     let finishedAt: string | undefined;
     let finishedMs: number | undefined;
+    const extent: Cursor.Extent = { maxKey: 0, minKey: 0 };
     const publishStats = () => {
       if (statsCompartments.length === 0) {
         return;
@@ -247,10 +235,10 @@ export const syncGmail = ({
         durationMs: (finishedMs ?? Date.now()) - startMs,
         range: {
           syncBackDays: targetOptions.syncBackDays,
-          direction: resolvedDirection,
-          start: format(start, 'yyyy-MM-dd'),
-          end: format(rangeEnd, 'yyyy-MM-dd'),
+          forward: formatWindow(windows.forward),
+          backward: formatWindow(windows.backward),
         },
+        taken,
         processed,
         newMessages: stats.newMessages,
         threads: threads.size,
@@ -262,8 +250,8 @@ export const syncGmail = ({
       statsCompartments.forEach((compartment) => compartment.set(snapshot));
     };
 
-    // Pass-through stage: accumulates telemetry as each mapped message flows by, publishing a fresh
-    // snapshot so a subscribed surface ticks up live during the sync.
+    // Pass-through stage: accumulates telemetry per mapped message, publishing a snapshot so a
+    // subscribed surface ticks up live.
     const collectStats = Stage.map('collect-stats', (mapped: EmailStage.Mapped) =>
       Effect.sync(() => {
         processed += 1;
@@ -293,12 +281,14 @@ export const syncGmail = ({
     //
     // Start pipeline
     //
+    // `fetchMessages` covers both halves as one unbounded stream; the per-run cap is applied after dedup
+    // so it counts only genuinely-new messages — capping before would let a dense boundary day's
+    // re-enumerated messages consume the budget and stall the cursor. `taken` then tells us whether the
+    // cap truncated the run (→ re-run) or both windows were exhausted (→ complete backfill).
     yield* fetchMessages({
       userId,
       label,
-      direction: resolvedDirection,
-      start,
-      end: rangeEnd,
+      windows,
       searchFilter: targetOptions.filter,
       onEnumerated: addToTotal,
       // Advance at retrieval (one per fetched message) so `current` reaches `total`; dedup/decode drops
@@ -312,11 +302,12 @@ export const syncGmail = ({
         'dedup',
         (message) => message.id,
         (message) => Number.parseInt(message.internalDate),
-        { direction: resolvedDirection },
       ),
+      Stream.take(maxMessages),
+      Stream.tap(() => Effect.sync(() => (taken += 1))),
       decodeBodyStage,
-      // HTML→markdown (turndown) intentionally disabled: it was a measurable share of sync CPU and is
-      // deferred pending benchmark-driven re-evaluation. Bodies stay raw HTML for now.
+      // HTML→markdown (turndown) disabled: measurable sync CPU, deferred pending benchmarking. Bodies
+      // stay raw HTML for now.
       // TODO(wittjosiah): Re-enable (or replace with a cheaper HTML→text) once the benchmark
       //   (docs/superpowers/specs/2026-07-04-mail-sync-performance-exploration.md) quantifies it.
       // EmailStage.htmlToMarkdown,
@@ -327,46 +318,77 @@ export const syncGmail = ({
       EmailStage.reconcileDrafts(draftPool),
       collectStats,
       EmailStage.toCommitUnit({ tagIndex }),
-      Stream.grouped(STREAMING_CONFIG.pageSize),
+      Stream.grouped(GMAIL_SYNC_CONFIG.commitPageSize),
       Pipeline.run({ sink: Cursor.commit }),
       Effect.provide(
         Cursor.layer({
           cursor: binding,
           feed,
           foreignKeySource: GMAIL_SOURCE,
-          cursorKey,
+          maxKey,
+          minKey,
+          trackRange: true,
           stats,
+          extent,
         }),
       ),
-      Pipeline.abortWith(controller.signal),
+      Pipeline.abortWith(
+        controller.signal,
+        Effect.sync(() => {
+          log('gmail sync cancelled', { mailbox: Obj.getURI(mailbox) });
+        }),
+      ),
       Effect.tapError((error) =>
         Effect.sync(() => {
-          // Log the raw error for debugging; the meter shows only a short reason (the full exception —
-          // provider errors, auth tokens — must not reach the UI).
+          // Log the raw error; the meter shows only a short reason (the full exception — provider
+          // errors, auth tokens — must not reach the UI).
           log.warn('gmail sync failed', { error });
           reportStatus({ message: PROGRESS_STATUS_FAILED });
         }),
       ),
     );
 
-    // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
-    // run's writes (per-page commits no longer flush — see `Cursor.commit`).
+    // Flush indexes once at end of run so cross-run dedup / contact resolution observe this run's writes
+    // (per-page commits no longer flush — see `Cursor.commit`).
     yield* Database.flush({ indexes: true });
 
-    // Final publish so the committed `newMessages` count (advanced per page by the commit sink) is
-    // reflected after the last item's mid-stream snapshot, and the run's end time / total duration
-    // are recorded.
+    // Final publish so the committed `newMessages` count and the run's end time / duration are recorded
+    // after the last mid-stream snapshot.
     finishedMs = Date.now();
     finishedAt = new Date(finishedMs).toISOString();
     publishStats();
 
+    // On cancel, only the status event differs; the completed path also has cursor post-run work.
     if (controller.signal.aborted) {
       reportStatus({ message: PROGRESS_STATUS_CANCELLED });
     } else {
       reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+
+      // Fold the run's observed key extent so the window advances even if every scanned message was
+      // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
+      Cursor.extendRange(binding, extent);
+
+      const capped = taken >= maxMessages;
+      log('gmail sync run finished', {
+        mailbox: Obj.getURI(mailbox),
+        taken,
+        maxMessages,
+        capped,
+        newMessages: stats.newMessages,
+        action: capped ? 'runAgain' : 'completeBackfill',
+      });
+      if (!capped) {
+        // Both halves exhausted naturally (not just capped) — the backward half reached the horizon.
+        Cursor.completeBackfill(binding, horizon.getTime());
+      } else {
+        // Capped: more to sync. A re-run (rather than an in-process loop) keeps this invocation bounded
+        // and lets the durable runtime schedule the continuation. Progress is already committed, so the
+        // next run resumes from the advanced cursor.
+        yield* Operation.runAgain().pipe(Effect.orDie);
+      }
     }
 
-    log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
+    log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted, taken });
     return {
       newMessages: stats.newMessages,
     };

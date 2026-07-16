@@ -160,32 +160,12 @@ export const GoogleMailSync = Operation.make({
       }),
       Schema.optional,
     ),
-    after: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or yyyy-MM-dd string.',
-      }),
-      Schema.optional,
-    ),
-    before: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description:
-          'Newest bound of the range to sync, a unix timestamp or yyyy-MM-dd string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
-      }),
-      Schema.optional,
-    ),
-    direction: Schema.Literal('forward', 'backward').pipe(
-      Schema.annotations({
-        description:
-          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
-      }),
-      Schema.optional,
-    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
-}).pipe(Operation.visible);
+}).pipe(Operation.visible, Operation.idempotent);
 
 /**
  * Eagerly materializes the local Mailbox bound to a Gmail connection so the sync cursor's target
@@ -214,26 +194,6 @@ export const JmapSync = Operation.make({
     binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
-    after: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or ISO string.',
-      }),
-      Schema.optional,
-    ),
-    before: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description:
-          'Newest bound of the range to sync, a unix timestamp or ISO string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
-      }),
-      Schema.optional,
-    ),
-    direction: Schema.Literal('forward', 'backward').pipe(
-      Schema.annotations({
-        description:
-          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
-      }),
-      Schema.optional,
-    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
@@ -241,7 +201,7 @@ export const JmapSync = Operation.make({
   // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
   // HTTP client and JMAP credentials are provided by the handler from the connection.
   services: [Capability.Service, Database.Service, Trace.TraceService],
-}).pipe(Operation.visible);
+}).pipe(Operation.visible, Operation.idempotent);
 
 /**
  * Eagerly materializes the local Mailbox bound to a JMAP connection so the sync cursor's target

@@ -9,25 +9,22 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type Operation } from '@dxos/compute';
-import { Context as DxContext } from '@dxos/context';
 import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';
 
-import {
-  PROVIDER_FORM_DIALOG,
-  SYNC_TARGETS_DIALOG,
-  connectionDeckSubject,
-  pendingConnectionStorageKey,
-} from '../constants';
-import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../errors';
-import { reconcileCursors } from '../util';
+import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
+import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
+import { createSingleCursor } from './create-single-cursor';
+import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
+import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
+import { reconcileCursors } from './reconcile-cursors';
 
 /**
  * Pending connection awaiting an OAuth callback.
@@ -43,34 +40,6 @@ type Pending = {
   db: Database.Database;
   connector: ConnectorEntry;
   existingTarget?: Ref.Ref<Obj.Any>;
-};
-
-/**
- * Parses `postMessage` payload from the OAuth relay into a narrow result.
- * Unknown shapes are ignored so arbitrary messages do not reach domain logic.
- */
-const decodeOAuthMessageData = (
-  data: unknown,
-):
-  | { tag: 'success'; accessTokenId: string; accessToken: string }
-  | { tag: 'failure'; reason: string }
-  | { tag: 'invalid' } => {
-  if (data === null || data === undefined || typeof data !== 'object') {
-    return { tag: 'invalid' };
-  }
-  const record = data as Record<string, unknown>;
-  if (record.success === true) {
-    const accessTokenId = record.accessTokenId;
-    const accessToken = record.accessToken;
-    if (typeof accessTokenId === 'string' && typeof accessToken === 'string') {
-      return { tag: 'success', accessTokenId, accessToken };
-    }
-    return { tag: 'invalid' };
-  }
-  if (record.success === false && typeof record.reason === 'string') {
-    return { tag: 'failure', reason: record.reason };
-  }
-  return { tag: 'invalid' };
 };
 
 const resolveConnector = (
@@ -166,46 +135,6 @@ const openSyncTargetsDialogAfterConnectionCreated = (
     Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
-/**
- * Create exactly one binding for a single-target connector (no `getSyncTargets`):
- * bind a supplied `existingTarget` or materialize a fresh local root. Replaces
- * the old `onTokenCreated`-creates-the-target path (e.g. Gmail's Mailbox).
- */
-const createSingleCursor = (
-  invoker: Operation.OperationService,
-  db: Database.Database,
-  connector: ConnectorEntry,
-  connection: Connection.Connection,
-  existingTarget: Ref.Ref<Obj.Any> | undefined,
-): Effect.Effect<void, never> =>
-  Effect.gen(function* () {
-    let target: Obj.Unknown | undefined;
-    if (existingTarget) {
-      target = yield* Database.load(existingTarget);
-      const accessToken = yield* Database.load(connection.accessToken);
-      const name = accessToken.account;
-      if (name) {
-        Obj.update(target, (target) => Obj.setLabel(target, name));
-      }
-    } else if (connector.materializeTarget) {
-      const { target: materialized } = yield* invoker.invoke(
-        connector.materializeTarget,
-        { connection: Ref.make(connection) },
-        { spaceId: db.spaceId },
-      );
-      target = yield* Database.load(materialized);
-    }
-    if (!target) {
-      log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
-      return;
-    }
-    yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }));
-  }).pipe(
-    Effect.provide(Database.layer(db)),
-    Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
-    Effect.catchAllDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
-  );
-
 const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pending): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const { token, connection, db, connector, existingTarget } = entry;
@@ -243,79 +172,6 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
       }
     }
   });
-
-const initiateOAuthFlow = (
-  edge: EdgeHttpClient,
-  spaceId: Key.SpaceId,
-  oauth: NonNullable<ConnectorEntry['oauth']>,
-  accessTokenId: string,
-  loginHint: string | undefined,
-): Effect.Effect<{ authUrl: string }, Error> =>
-  Effect.tryPromise({
-    try: () =>
-      edge.initiateOAuthFlow(DxContext.default(), {
-        provider: oauth.provider,
-        scopes: [...oauth.scopes],
-        spaceId,
-        accessTokenId,
-        ...(loginHint ? { loginHint } : {}),
-      }),
-    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-  });
-
-const openOAuthPopupWindow = (authUrl: string): Effect.Effect<void, never> =>
-  Effect.sync(() => {
-    window.open(authUrl, 'oauthPopup', 'width=500,height=600');
-  });
-
-/**
- * Open the auth URL in a new top-level browser tab. Used for
- * `useRedirectFlow` connectors (e.g. atproto) where the auth server
- * nullifies `window.opener` and rejects popups.
- */
-const openOAuthRedirectWindow = (authUrl: string): Effect.Effect<void, never> =>
-  Effect.sync(() => {
-    window.open(authUrl, '_blank');
-  });
-
-/** Snapshot of an in-flight OAuth flow persisted in `localStorage` for redirect-flow connectors. */
-type PendingSnapshot = {
-  /** Absent snapshots (and legacy rows) default to `'create'`. */
-  mode?: 'create' | 'reauth';
-  spaceId: Key.SpaceId;
-  connectorId: string;
-  tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
-  connectionSnapshot: { name: string; connectorId: string };
-  /** Serialized DXN of the existing target to bind the first new selection to. */
-  existingTargetDxn?: string;
-  /** `mode: 'reauth'` only — serialized DXN of the existing AccessToken to refresh in place. */
-  reauthAccessTokenDxn?: string;
-};
-
-const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {
-  try {
-    localStorage.setItem(pendingConnectionStorageKey(accessTokenId), JSON.stringify(snapshot));
-  } catch (error) {
-    log.warn('failed to persist pending connection snapshot', { error });
-  }
-};
-
-const readPendingSnapshot = (accessTokenId: string): PendingSnapshot | undefined => {
-  const raw = localStorage.getItem(pendingConnectionStorageKey(accessTokenId));
-  if (!raw) {
-    return undefined;
-  }
-  try {
-    return JSON.parse(raw) as PendingSnapshot;
-  } catch (error) {
-    log.warn('failed to parse pending connection snapshot', { error });
-    return undefined;
-  }
-};
-
-const deletePendingSnapshot = (accessTokenId: string): void => {
-  localStorage.removeItem(pendingConnectionStorageKey(accessTokenId));
-};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

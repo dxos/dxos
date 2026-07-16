@@ -56,18 +56,15 @@ export const WithChessTrigger: Story = {
       ]);
       return {
         plugins: [GamePlugin(), ChessPlugin()],
-        types: [Game, Chess.State],
+        types: [Game.Game, Chess.State],
       };
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const [{ Chess }, { Game, make: makeGame }] = await Promise.all([
-        import('@dxos/plugin-chess'),
-        import('@dxos/plugin-game'),
-      ]);
+      const [{ Chess }, { Game }] = await Promise.all([import('@dxos/plugin-chess'), import('@dxos/plugin-game')]);
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        makeGame({
+        Game.make({
           name: 'Challenge',
           variant: Chess.make({
             pgn: [
@@ -93,7 +90,7 @@ export const WithChessTrigger: Story = {
         Trigger.make({
           runnable: Ref.make(Operation.serialize(ChessOperation.Play)),
           enabled: true,
-          spec: Trigger.specSubscription(Query.select(Filter.type(Game))),
+          spec: Trigger.specSubscription(Query.select(Filter.type(Game.Game))),
           input: {
             id: '{{event.changedObjectId}}',
             side: 'black', // NOTE: Removing it makes the bot play itself.

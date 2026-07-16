@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import { type Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 
-import { type Connection, type ConnectorEntry } from '../types';
-import { isCursorForConnection } from './cursor-predicates';
+import { Connection, type ConnectorEntry } from '#types';
+
+import { isCursorForConnection } from '../../util';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
@@ -100,7 +102,7 @@ export const reconcileCursors = ({
         //   a good pattern or an anti-pattern; consider a dedicated marker/null target instead.
         target = connection;
       }
-      yield* Database.add(
+      const cursor = yield* Database.add(
         Cursor.makeExternal({
           source: connection.accessToken,
           target: Ref.make(target),
@@ -108,7 +110,18 @@ export const reconcileCursors = ({
           ...(sel.name ? { label: sel.name } : {}),
         }),
       );
+      invariant(Cursor.isExternal(cursor));
+      // Sets up recurring background sync for the target, if the connector declares it. Not
+      // specially protected — a failure here propagates like any other step in this loop (e.g. a
+      // `materializeTarget` failure); this function has no blanket catch of its own today.
+      yield* connector.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
       added++;
+    }
+
+    // Flush index updates for the adds/removes so a caller that queries cursors right after observes a
+    // state consistent with the returned counts (otherwise index lag can still resolve a removed cursor).
+    if (added > 0 || removed > 0) {
+      yield* Database.flush({ indexes: true });
     }
 
     return { added, removed };

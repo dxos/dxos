@@ -63,7 +63,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source
 const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen', classNames: 'bg-sidebar-surface' })],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
