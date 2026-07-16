@@ -28,7 +28,7 @@ const INITIAL_STATE: BeaconState = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const haloIdentity = yield* Capability.get(ClientCapabilities.HaloIdentity);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
 
     const stateAtom = Atom.make<BeaconState>(INITIAL_STATE).pipe(Atom.keepAlive);

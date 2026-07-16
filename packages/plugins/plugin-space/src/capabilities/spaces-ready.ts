@@ -45,7 +45,7 @@ export default Capability.makeModule(
     const stateAtom = yield* Capability.get(SpaceCapabilities.State);
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
-    const haloIdentity = yield* Capability.get(ClientCapabilities.HaloIdentity);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
 
     //
     // Personal space initialization — deferred until found.

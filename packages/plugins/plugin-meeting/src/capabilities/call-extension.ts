@@ -31,7 +31,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
-        const haloIdentity = capabilities.get(ClientCapabilities.HaloIdentity);
+        const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         invariant(identity);
 

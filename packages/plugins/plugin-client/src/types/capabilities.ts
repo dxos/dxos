@@ -29,11 +29,11 @@ export namespace ClientCapabilities {
    * The HALO Identity service instance, for imperative (non-React, non-Effect-layer) consumers
    * that need identity access without depending on `@dxos/client`.
    */
-  export const HaloIdentity: Capability.InterfaceDef<Context.Tag.Service<Identity.Service>> = Capability.make(
-    `${meta.profile.key}.capability.haloIdentity`,
+  export const IdentityService: Capability.InterfaceDef<Context.Tag.Service<Identity.Service>> = Capability.make(
+    `${meta.profile.key}.capability.identityService`,
   );
   /** The HALO Space service instance, for imperative consumers. */
-  export const HaloSpace: Capability.InterfaceDef<Context.Tag.Service<Space.Service>> = Capability.make(
-    `${meta.profile.key}.capability.haloSpace`,
+  export const SpaceService: Capability.InterfaceDef<Context.Tag.Service<Space.Service>> = Capability.make(
+    `${meta.profile.key}.capability.spaceService`,
   );
 }

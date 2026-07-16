@@ -87,8 +87,8 @@ export default Capability.makeModule(
       Capability.contributes(Capabilities.Layer, ClientService.fromClient(client)),
       // HALO service instances for imperative consumers (so plugins read identity/spaces
       // through @dxos/halo instead of the client directly).
-      Capability.contributes(ClientCapabilities.HaloIdentity, makeIdentityService(client)),
-      Capability.contributes(ClientCapabilities.HaloSpace, makeSpaceService(client)),
+      Capability.contributes(ClientCapabilities.IdentityService, makeIdentityService(client)),
+      Capability.contributes(ClientCapabilities.SpaceService, makeSpaceService(client)),
     ];
   }),
 );

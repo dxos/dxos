@@ -37,7 +37,7 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
       if (!edgeClient) {
         const [client] = manager.getAll(ClientCapabilities.Client);
         invariant(client, 'Client capability is required for edge AI requests.');
-        const [haloIdentity] = manager.getAll(ClientCapabilities.HaloIdentity);
+        const [haloIdentity] = manager.getAll(ClientCapabilities.IdentityService);
         invariant(haloIdentity, 'HALO identity capability is required for edge AI requests.');
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         invariant(edgeUrl, 'EDGE services are not configured.');

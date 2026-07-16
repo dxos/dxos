@@ -25,7 +25,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ invitationProp = 'spaceInvitationCode' }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-    const haloIdentity = yield* Capability.get(ClientCapabilities.HaloIdentity);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
 
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {

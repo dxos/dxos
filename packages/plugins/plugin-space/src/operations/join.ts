@@ -18,7 +18,7 @@ import { SpaceOperation } from './definitions';
 const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const haloIdentity = yield* Capability.get(ClientCapabilities.HaloIdentity);
+      const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
       if (Option.isNone(haloIdentity.getSnapshot())) {
         // Space invitations authenticate against a local identity; there is nothing to redeem without one.
         yield* Effect.ignore(

@@ -27,7 +27,7 @@ export default Capability.makeModule(
       messageEnricher,
     }) => {
       const client = capabilities.get(ClientCapabilities.Client);
-      const haloIdentity = capabilities.get(ClientCapabilities.HaloIdentity);
+      const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
       const transcriptionManager = new TranscriptionManagerImpl({
         edgeClient: client.edge.http,
         messageEnricher,
