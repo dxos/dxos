@@ -390,6 +390,54 @@ export const fetchIssueComments = (
     GitHubCommentSchema,
   );
 
+/**
+ * GET /repos/{owner}/{repo}/pulls/{number} with `Accept: application/vnd.github.v3.diff`.
+ *
+ * Returns the raw, multi-file unified diff as text (not JSON), suitable for
+ * feeding directly to a patch renderer. Uses the same auth + retry pipeline as
+ * {@link githubRequest} but decodes the body as text rather than a schema.
+ */
+export const fetchPullRequestDiff = (
+  owner: string,
+  repo: string,
+  pullNumber: number,
+): Effect.Effect<
+  string,
+  HttpClientError.HttpClientError | Cause.TimeoutException,
+  HttpClient.HttpClient | GitHubCredentials
+> =>
+  Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
+    const httpClient = yield* HttpClient.HttpClient;
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.filterStatusOk,
+    );
+    const request = HttpClientRequest.get(
+      `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullNumber}`,
+    ).pipe(
+      // Override the JSON Accept header from `withAuth` with the diff media type.
+      HttpClientRequest.setHeader('Authorization', `Bearer ${creds.token}`),
+      HttpClientRequest.setHeader('Accept', 'application/vnd.github.v3.diff'),
+      HttpClientRequest.setHeader('X-GitHub-Api-Version', API_VERSION),
+      HttpClientRequest.setHeader('User-Agent', USER_AGENT),
+    );
+    return yield* clientNoTracer.execute(request).pipe(
+      Effect.flatMap((res) => res.text),
+      Effect.timeout('15 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        while: (error) =>
+          Cause.isTimeoutException(error) ||
+          error._tag === 'RequestError' ||
+          error.reason !== 'StatusCode' ||
+          error.response.status === 429 ||
+          (error.response.status >= 500 && error.response.status <= 599),
+      }),
+      Effect.scoped,
+    );
+  });
+
 //
 // Mutations (push)
 //

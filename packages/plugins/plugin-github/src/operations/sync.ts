@@ -4,10 +4,11 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -18,7 +19,7 @@ import { meta } from '#meta';
 import { GITHUB_SOURCE } from '../constants';
 import { formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
-import { GitHubOperation } from '../types';
+import { GitHubOperation, PullRequestAnnotation } from '../types';
 
 const { mergeField, snapshotField } = ConnectorSync;
 
@@ -609,10 +610,35 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
                   const assigneeUser = issue.assignees?.[0];
                   const assignedPerson = assigneeUser ? yield* ensurePerson(assigneeUser, undefined) : undefined;
 
-                  const { created } = yield* upsertTask(binding, issue, assignedPerson, localProject);
+                  const { created, task } = yield* upsertTask(binding, issue, assignedPerson, localProject);
                   remoteIssuesById.set(String(issue.id), issue);
                   if (created) {
                     pulledTasks++;
+                  }
+
+                  // GitHub returns PRs through the issues endpoint; mark the Task with the
+                  // pull-request annotation so the UI can offer the changes companion and the
+                  // diff-fetch operation has the PR coordinates. Guarded to avoid a write
+                  // transaction on every sync when the annotation already matches.
+                  if (issue.pull_request != null) {
+                    const pullRequest = {
+                      owner: remoteRepo.owner.login,
+                      repo: remoteRepo.name,
+                      number: issue.number,
+                      url: issue.html_url ?? undefined,
+                    };
+                    const current = Option.getOrUndefined(Annotation.get(task, PullRequestAnnotation));
+                    if (
+                      !current ||
+                      current.owner !== pullRequest.owner ||
+                      current.repo !== pullRequest.repo ||
+                      current.number !== pullRequest.number ||
+                      current.url !== pullRequest.url
+                    ) {
+                      Obj.update(task, (mutableTask) => {
+                        Annotation.set(mutableTask, PullRequestAnnotation, pullRequest);
+                      });
+                    }
                   }
 
                   // TODO(wittjosiah): Comments sync disabled — re-enable once

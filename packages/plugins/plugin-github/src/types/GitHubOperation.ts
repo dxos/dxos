@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
+import { Task } from '@dxos/types';
 import {
   // eslint-disable-next-line unused-imports/no-unused-imports
   type Connection,
@@ -100,3 +101,26 @@ export const SyncGitHubRepositories = Operation.make({
     }),
   }),
 }).pipe(Operation.visible);
+
+/**
+ * Fetch the raw unified diff for the pull request backing a Task.
+ *
+ * The Task must carry the {@link PullRequestAnnotation} (set during sync). The
+ * handler sources a token from the space's GitHub {@link Connection} and returns
+ * the multi-file diff as text; the caller holds it in memory (it is not stored
+ * in ECHO).
+ */
+export const GetGitHubPullRequestDiff = Operation.make({
+  meta: {
+    key: makeKey('getGithubPullRequestDiff'),
+    name: 'Get GitHub Pull Request Diff',
+    description: 'Fetch the unified diff for the pull request backing a Task.',
+    icon: 'ph--git-diff--regular',
+  },
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+  }),
+  output: Schema.Struct({
+    diff: Schema.String,
+  }),
+});
