@@ -30,12 +30,21 @@ const getHeads = (text: Text.Text): string[] => {
 
 /** @returns The Text content at the given automerge heads (read-only time travel). */
 export const contentAt = (text: Text.Text, heads: readonly string[]): string => {
-  const snapshot = checkoutVersion(text, [...heads]) as { content?: string };
-  return snapshot?.content ?? '';
+  // `checkoutVersion` returns `unknown` (raw historical data) — narrow via runtime checks.
+  const snapshot = checkoutVersion(text, [...heads]);
+  if (snapshot && typeof snapshot === 'object' && 'content' in snapshot) {
+    const { content } = snapshot;
+    return typeof content === 'string' ? content : '';
+  }
+  return '';
 };
 
 export type CreateCheckpointProps = { target?: Text.Text; name: string; message?: string; creator?: string };
 
+/**
+ * Records a named checkpoint of the target Text's current automerge heads (defaults to the
+ * document root) and appends it to the document history. Zero-copy: only the heads are stored.
+ */
 export const createCheckpoint = (doc: Markdown.Document, props: CreateCheckpointProps): Versioning.Version => {
   const text = props.target ?? doc.content.target;
   invariant(text, 'document content not loaded');
@@ -56,6 +65,10 @@ export const createCheckpoint = (doc: Markdown.Document, props: CreateCheckpoint
   return stored;
 };
 
+/** Display label for a checkpoint: its name, or the formatted creation time when unnamed. */
+export const versionLabel = (version: Versioning.Version): string =>
+  version.name || new Date(version.createdAt).toLocaleString();
+
 /** Find the branch record owning a given Text (undefined for the root). */
 export const findBranch = (doc: Markdown.Document, text: Text.Text): Versioning.Branch | undefined =>
   doc.history?.branches.find((branch) => branch.content.target?.id === text.id);
@@ -66,6 +79,11 @@ export type CreateBranchProps = {
   creator?: string;
 };
 
+/**
+ * Forks a draft branch: a new Text seeded with the parent's content at the anchor heads
+ * (defaults to the parent's current heads), recorded in the document history. The anchor is
+ * auto-checkpointed so the fork point stays addressable in the timeline.
+ */
 export const createBranch = (doc: Markdown.Document, props: CreateBranchProps): Versioning.Branch => {
   const parent = props.from?.target ?? doc.content.target;
   invariant(parent, 'document content not loaded');

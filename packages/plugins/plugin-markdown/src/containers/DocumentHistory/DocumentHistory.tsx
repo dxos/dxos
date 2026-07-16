@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, IconButton, Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, Input, Panel, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 
 import { meta } from '#meta';
@@ -28,7 +28,7 @@ export type DocumentHistoryProps = AppSurface.ObjectArticleProps<Markdown.Docume
  * Companion panel: git-graph timeline of the document's checkpoints, branch forks, and merges.
  * Clicking a checkpoint time-travels the editor; clicking a branch fork switches the editor to it.
  */
-export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(({ role, subject }, forwardedRef) => {
+export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ role, subject }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
   const versioning = useVersioning(subject);
   const { document, selection, setSelection, activeBranch } = versioning;
@@ -45,20 +45,21 @@ export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(
 
   const handleCreate = useCallback(
     (name: string) => {
-      if (!document || !name.trim()) {
-        setNaming(undefined);
+      setNaming(undefined);
+      if (!document) {
         return;
       }
       if (naming === 'checkpoint') {
+        // Unnamed revisions are allowed; they display as their formatted creation time.
         createCheckpoint(document, { name: name.trim(), target: timelineTarget });
       } else if (naming === 'branch') {
+        // Branch names label timeline lanes, so an empty name falls back to the creation time.
         const branch = createBranch(document, {
-          name: name.trim(),
+          name: name.trim() || new Date().toLocaleString(),
           ...(timelineTarget ? { from: { target: timelineTarget } } : {}),
         });
         setSelection({ kind: 'branch', branchId: branch.id });
       }
-      setNaming(undefined);
     },
     [document, naming, timelineTarget, setSelection],
   );
@@ -95,19 +96,34 @@ export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(
   }
 
   return (
-    <Panel.Root role={role} ref={forwardedRef}>
+    // Surface passes Ref<HTMLElement> and Panel.Root renders a div, so narrowing is safe.
+    <Panel.Root role={role} ref={forwardedRef as React.Ref<HTMLDivElement>}>
       <Panel.Toolbar>
         <Toolbar.Root classNames='dx-document'>
-          <IconButton
-            icon='ph--bookmark-simple--regular'
-            label={t('create-checkpoint.label')}
-            onClick={() => setNaming('checkpoint')}
-          />
-          <IconButton
-            icon='ph--git-branch--regular'
-            label={t('create-branch.label')}
-            onClick={() => setNaming('branch')}
-          />
+          <NamePopover
+            open={naming === 'checkpoint'}
+            placeholder={t('revision-name.placeholder')}
+            onSubmit={handleCreate}
+            onCancel={() => setNaming(undefined)}
+          >
+            <IconButton
+              icon='ph--bookmark-simple--regular'
+              label={t('create-checkpoint.label')}
+              onClick={() => setNaming('checkpoint')}
+            />
+          </NamePopover>
+          <NamePopover
+            open={naming === 'branch'}
+            placeholder={t('branch-name.placeholder')}
+            onSubmit={handleCreate}
+            onCancel={() => setNaming(undefined)}
+          >
+            <IconButton
+              icon='ph--git-branch--regular'
+              label={t('create-branch.label')}
+              onClick={() => setNaming('branch')}
+            />
+          </NamePopover>
           {activeBranch && (
             <>
               <IconButton icon='ph--git-merge--regular' iconOnly label={t('merge.label')} onClick={handleMerge} />
@@ -122,13 +138,6 @@ export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='overflow-y-auto'>
-        {naming && (
-          <NameInput
-            placeholder={t(naming === 'checkpoint' ? 'version-name.placeholder' : 'branch-name.placeholder')}
-            onSubmit={handleCreate}
-            onCancel={() => setNaming(undefined)}
-          />
-        )}
         <Timeline
           commits={commits}
           branches={branches}
@@ -143,35 +152,61 @@ export const DocumentHistory = forwardRef<HTMLDivElement, DocumentHistoryProps>(
 DocumentHistory.displayName = 'DocumentHistory';
 
 type NameInputProps = {
+  open: boolean;
   placeholder: string;
   onSubmit: (name: string) => void;
   onCancel: () => void;
 };
 
-const NameInput = ({ placeholder, onSubmit, onCancel }: NameInputProps) => {
+/**
+ * Name-entry popover anchored to its trigger (mirrors the object rename popover UX).
+ * Enter or Create commits — an empty name is allowed; Escape or dismissal cancels.
+ */
+const NamePopover = ({ children, open, placeholder, onSubmit, onCancel }: PropsWithChildren<NameInputProps>) => {
   const [value, setValue] = useState('');
   const { t } = useTranslation(meta.profile.key);
 
+  const submit = () => {
+    onSubmit(value);
+    setValue('');
+  };
+
+  const cancel = () => {
+    onCancel();
+    setValue('');
+  };
+
   return (
-    <div role='none' className='flex items-center gap-1 pli-2 plb-1'>
-      <Input.Root>
-        <Input.TextInput
-          autoFocus
-          placeholder={placeholder}
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              onSubmit(value);
-            } else if (event.key === 'Escape') {
-              onCancel();
-            }
-          }}
-        />
-      </Input.Root>
-      <Button variant='primary' onClick={() => onSubmit(value)}>
-        {t('create.label')}
-      </Button>
-    </div>
+    <Popover.Root open={open} onOpenChange={(next) => !next && cancel()}>
+      <Popover.Trigger asChild>{children}</Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content>
+          <div role='none' className='flex items-center gap-1 p-2'>
+            <Input.Root>
+              <Input.Label srOnly>{placeholder}</Input.Label>
+              <Input.TextInput
+                autoFocus
+                placeholder={placeholder}
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    submit();
+                  } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    cancel();
+                  }
+                }}
+              />
+            </Input.Root>
+            <Button variant='primary' onClick={submit}>
+              {t('create.label')}
+            </Button>
+          </div>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 };

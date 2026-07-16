@@ -98,13 +98,29 @@ const DefaultStory = () => {
   );
 };
 
-const createCheckpointViaUi = async (canvas: ReturnType<typeof within>, name: string) => {
-  await userEvent.click(await canvas.findByText('New checkpoint', undefined, { timeout: 15_000 }));
-  const input = await canvas.findByPlaceholderText('Checkpoint name…');
+// The name popover portals to document.body, outside the story canvas.
+const createRevisionViaUi = async (canvasElement: HTMLElement, name: string) => {
+  const canvas = within(canvasElement);
+  const body = within(canvasElement.ownerDocument.body);
+  await userEvent.click(await canvas.findByText('Create revision', undefined, { timeout: 15_000 }));
+  const input = await body.findByPlaceholderText('Revision name (optional)');
+  if (name) {
+    await userEvent.type(input, name);
+  }
+  await userEvent.click(body.getByText('Create'));
+  if (name) {
+    // The new revision appears in the timeline.
+    await canvas.findByText(name);
+  }
+};
+
+const createBranchViaUi = async (canvasElement: HTMLElement, name: string) => {
+  const canvas = within(canvasElement);
+  const body = within(canvasElement.ownerDocument.body);
+  await userEvent.click(await canvas.findByText('New branch', undefined, { timeout: 15_000 }));
+  const input = await body.findByPlaceholderText('Branch name…');
   await userEvent.type(input, name);
-  await userEvent.click(canvas.getByText('Create'));
-  // The new checkpoint appears in the timeline.
-  await canvas.findByText(name);
+  await userEvent.click(body.getByText('Create'));
 };
 
 const meta = {
@@ -158,16 +174,20 @@ export const TimeTravel: Story = {
     await waitFor(() => expect(editorContent(canvasElement)).toContain('one'), { timeout: 20_000 });
 
     // Revision 1.
-    await createCheckpointViaUi(canvas, 'v1');
+    await createRevisionViaUi(canvasElement, 'v1');
 
     // Edit + revision 2 (the live editor reflects the data-layer edit).
     setRootContent('one two');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('one two'));
-    await createCheckpointViaUi(canvas, 'v2');
+    await createRevisionViaUi(canvasElement, 'v2');
 
     // Further edits leave the tip ahead of both checkpoints.
     setRootContent('one two three');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('one two three'));
+
+    // An unnamed revision displays as its formatted creation date.
+    await createRevisionViaUi(canvasElement, '');
+    await canvas.findByText(new RegExp(new Date().toLocaleDateString()));
 
     // Travel back to v1: read-only banner + historical content.
     await userEvent.click(canvas.getByText('v1'));
@@ -198,10 +218,7 @@ export const BranchMerge: Story = {
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
 
     // Create a branch through the panel; the editor switches to it.
-    await userEvent.click(await canvas.findByText('New branch', undefined, { timeout: 15_000 }));
-    const input = await canvas.findByPlaceholderText('Branch name…');
-    await userEvent.type(input, 'draft');
-    await userEvent.click(canvas.getByText('Create'));
+    await createBranchViaUi(canvasElement, 'draft');
     await canvas.findByText('Editing branch');
 
     // Edit the branch (visible in the editor, which is bound to the branch Text).

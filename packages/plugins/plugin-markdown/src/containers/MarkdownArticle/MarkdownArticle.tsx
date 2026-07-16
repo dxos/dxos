@@ -37,7 +37,7 @@ import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { versionDiff } from '../../extensions';
-import { createBranch, mergeBranch, restore } from '../../model';
+import { createBranch, mergeBranch, restore, versionLabel } from '../../model';
 import { DiffView } from '../DiffView';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
@@ -89,7 +89,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       const target = activeVersion?.target.target;
       if (document && activeVersion && target) {
         const branch = createBranch(document, {
-          name: `from: ${activeVersion.name}`,
+          name: `from: ${versionLabel(activeVersion)}`,
           from: { target, heads: activeVersion.heads },
         });
         setSelection({ kind: 'branch', branchId: branch.id });
@@ -158,7 +158,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           variant: 'dropdownMenu',
           applyActive: false,
           selectCardinality: 'single',
-        } as ToolbarMenuActionGroupProperties);
+        } satisfies ToolbarMenuActionGroupProperties);
         const actions = [
           createMenuAction('versions--current', () => setSelection({ kind: 'current' }), {
             label: ['main-branch.label', { ns: meta.profile.key }],
@@ -249,8 +249,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
               {activeVersion && (
                 <VersionBanner
                   mode='checkpoint'
-                  name={activeVersion.name}
-                  detail={new Date(activeVersion.createdAt).toLocaleString()}
+                  name={versionLabel(activeVersion)}
+                  detail={activeVersion.name ? new Date(activeVersion.createdAt).toLocaleString() : undefined}
                   onRestore={handleRestore}
                   onBranchFrom={handleBranchFrom}
                   onClose={handleCloseBanner}

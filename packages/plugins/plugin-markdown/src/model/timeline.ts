@@ -6,7 +6,7 @@ import { type Commit } from '@dxos/react-ui-components';
 
 import { type Markdown, type MarkdownCapabilities, type Versioning } from '../types';
 import { diffSpans, diffStats } from './diff';
-import { contentAt } from './versioning';
+import { contentAt, versionLabel } from './versioning';
 
 export const MAIN_BRANCH = 'main';
 export const NOW_COMMIT_ID = 'now';
@@ -106,7 +106,7 @@ export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel
     push({
       id: version.id,
       branch: target,
-      message: version.name,
+      message: versionLabel(version),
       timestamp: new Date(version.createdAt),
       icon: merged ? 'ph--git-merge--regular' : 'ph--bookmark-simple--regular',
       parents,
