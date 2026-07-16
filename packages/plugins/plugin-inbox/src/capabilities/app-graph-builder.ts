@@ -16,7 +16,7 @@ import { Cursor } from '@dxos/link';
 import { Topic } from '@dxos/pipeline-email';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
@@ -35,6 +35,7 @@ import {
   MAILBOX_TOPICS_TYPE,
   MAILBOXES_SECTION_TYPE,
 } from '../constants';
+import { createSyncProgressKey } from '../operations/google/gmail/sync';
 import {
   getCalendarsPath,
   getDraftsId,
@@ -43,6 +44,7 @@ import {
   getSubscriptionsId,
   getTopicsId,
 } from '../paths';
+import { syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -596,11 +598,9 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when an external-sync cursor targets this mailbox. Delegate
-          // to the connector framework's `SyncConnection`, which resolves the connection's connector
-          // and runs its `sync` op — no provider-specific branching here. The cursor no longer relates
-          // to Connection directly, so the Connection is found by matching access tokens (reactive
-          // queries; loading synchronously isn't reliable here).
+          // The sync action appears only when an external-sync cursor targets this mailbox. The cursor
+          // no longer relates to Connection directly, so the Connection is found by matching access
+          // tokens (reactive queries; loading synchronously isn't reliable here).
           const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
           const cursor = cursors.find(
             (candidate): candidate is Cursor.ExternalCursor =>
@@ -609,33 +609,37 @@ export default Capability.makeModule(
           if (!cursor) {
             return Effect.succeed([]);
           }
-          const connections = get(db.query(Filter.type(Connection.Connection)).atom);
-          const connection = connections.find((candidate) => candidate.accessToken.uri === cursor.spec.source.uri);
+          const [connection] = get(
+            db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom,
+          );
           if (!connection) {
             return Effect.succeed([]);
           }
-          return Effect.succeed([
-            {
-              id: 'sync',
-              data: () =>
-                Operation.invoke(
-                  ConnectorOperation.SyncConnection,
-                  { connection: Ref.make(connection) },
-                  {
-                    spaceId: db.spaceId,
-                    notify: {
-                      success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
-                      error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
-                    },
-                  },
-                ),
-              properties: {
-                label: ['sync-mailbox.label', { ns: meta.profile.key }],
-                icon: 'ph--arrows-clockwise--regular',
-                disposition: 'list-item',
+          return Effect.gen(function* () {
+            // Progress registry is optional (absent when plugin-progress isn't loaded); the same
+            // monitor `MailboxArticle`'s statusbar meter reads, so the action's spinner/disabled
+            // state agrees with a sync kicked off from either surface or the background routine.
+            const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+            const isSyncing = Option.match(progressRegistry, {
+              onNone: () => false,
+              onSome: (registry) => get(registry.monitorAtom(createSyncProgressKey(mailbox)))?.status === 'running',
+            });
+            return [
+              {
+                id: 'sync',
+                data: () => syncTarget(mailbox),
+                properties: {
+                  label: ['sync-mailbox.label', { ns: meta.profile.key }],
+                  icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+                  spin: isSyncing,
+                  disabled: isSyncing,
+                  // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
+                  disposition: ['toolbar', 'list-item'],
+                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                },
               },
-            },
-          ]);
+            ];
+          });
         },
       }),
 
@@ -700,24 +704,14 @@ export default Capability.makeModule(
           return Effect.succeed([
             {
               id: 'sync',
-              data: () =>
-                Operation.invoke(
-                  InboxOperation.GoogleCalendarSync,
-                  {
-                    binding: Ref.make(binding),
-                  },
-                  {
-                    spaceId: db.spaceId,
-                    notify: {
-                      success: ['sync-calendar-success.title', { ns: meta.profile.key }],
-                      error: ['sync-calendar-error.title', { ns: meta.profile.key }],
-                    },
-                  },
-                ),
+              data: () => syncTarget(calendar),
               properties: {
                 label: ['sync-calendar.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
-                disposition: 'list-item',
+                // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
+                // No progress monitor yet for calendar sync, so (unlike mailbox) there's no spinner.
+                disposition: ['toolbar', 'list-item'],
+                presentation: { toolbar: { variant: 'primary', iconOnly: false } },
               },
             },
           ]);
