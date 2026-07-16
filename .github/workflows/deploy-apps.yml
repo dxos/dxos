@@ -227,6 +227,20 @@ jobs:
           lfs: true
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
+      # Catches e.g. `app=storybook` on an environment storybook doesn't define (no env.staging/labs) —
+      # before this existed, bundle-env.mjs/deploy-env.mjs silently no-op'd and the job still went green
+      # with a false "deploying"/"succeeded" Discord ping despite deploying nothing. Runs before the
+      # "started" notification so an invalid combo never posts to Discord at all.
+      - name: Check app targets this environment
+        id: validate
+        run: |
+          resolved=$(.github/workflows/scripts/apps.mjs "$DEPLOY_ENV" "$DEPLOY_APP")
+          if [ -z "$resolved" ]; then
+            valid=$(.github/workflows/scripts/apps.mjs "$DEPLOY_ENV" all | paste -sd, - | sed 's/,/, /g')
+            echo "::error::\"$DEPLOY_APP\" has no env.$DEPLOY_ENV — nothing would be deployed. Apps with that env: ${valid:-(none)}"
+            exit 1
+          fi
+
       - name: Notify Discord — deploy started
         if: env.DEPLOY_ENV != 'main'
         continue-on-error: true
@@ -305,7 +319,9 @@ jobs:
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
       - name: Notify Discord — deploy failed
-        if: failure() && env.DEPLOY_ENV != 'main'
+        # Skip when it was the "app targets this environment" check that failed — that's an invalid
+        # app/environment combo caught before any deploy was attempted, not a real deploy failure.
+        if: failure() && env.DEPLOY_ENV != 'main' && steps.validate.conclusion == 'success'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
