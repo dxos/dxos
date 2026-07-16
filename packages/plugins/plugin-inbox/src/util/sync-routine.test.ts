@@ -81,12 +81,14 @@ describe('createSyncRoutine', () => {
     const trigger = triggerRef.target;
     expect(trigger?.spec).toEqual({ kind: 'timer', cron: '*/10 * * * *' });
     expect(trigger?.enabled).toBe(true);
-    expect(trigger?.input?.mailbox?.uri).toBe(db.makeRef(Obj.getURI(mailbox)).uri);
+    // The target association lives on the routine's `subject`, not the trigger's operation input.
+    expect(routine.subject?.uri).toBe(db.makeRef(Obj.getURI(mailbox)).uri);
+    expect(trigger?.input?.mailbox).toBeUndefined();
     expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
     expect(created?.id).toBe(trigger?.id);
   });
 
-  test('creates a routine keyed by `calendar` for a calendar target', async ({ expect }) => {
+  test('associates a calendar target via the routine subject', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
 
@@ -101,7 +103,8 @@ describe('createSyncRoutine', () => {
     await expect.poll(() => findSyncRoutine(db, calendar), { timeout: 5_000 }).toHaveLength(1);
     const [routine] = await findSyncRoutine(db, calendar);
     const trigger = routine.triggers[0].target;
-    expect(trigger?.input?.calendar?.uri).toBe(db.makeRef(Obj.getURI(calendar)).uri);
+    expect(routine.subject?.uri).toBe(db.makeRef(Obj.getURI(calendar)).uri);
+    expect(trigger?.input?.calendar).toBeUndefined();
     expect(trigger?.input?.mailbox).toBeUndefined();
   });
 

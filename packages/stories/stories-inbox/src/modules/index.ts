@@ -9,5 +9,6 @@ export * from './FactsModule';
 export * from './MailboxModule';
 export * from './MessageModule';
 export * from './StatsModule';
+export * from './SyncStateModule';
 export * from './TopicsModule';
 export * from './TriggersModule';

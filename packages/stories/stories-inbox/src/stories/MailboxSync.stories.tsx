@@ -93,7 +93,7 @@ const DefaultStory = () => (
   <ModuleContainer
     layout={[
       [Module.Mailbox, Module.Message],
-      [Module.Archive, Module.Stats],
+      [Module.Archive, Module.Stats, Module.SyncState],
       [Module.Connector, Module.Triggers],
     ]}
     compact

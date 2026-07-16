@@ -15,6 +15,8 @@ import { Routine } from '#types';
  * 2. **Instructions path** (two hops): O is listed in an Instructions' `objects` context array, and those
  *    Instructions are the Routine's action (`spec.instructions`). Both hops traverse `Ref` fields, so they are
  *    fully queryable — no JavaScript parent-symbol traversal needed.
+ * 3. **Subject path** (one hop): O is the Routine's explicit `subject` association ref (e.g. a sync routine's
+ *    Mailbox/Calendar). Kept off the trigger `input` so the runnable's input stays schema-clean on the EDGE.
  *
  * ECHO's reverse-ref index is structural — it tracks every `Ref` regardless of schema path, including
  * nested untyped records and union fields — so all variants are covered.
@@ -27,6 +29,9 @@ export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine
   const byFeed = Query.select(Filter.id(object.id)).reference('feed').referencedBy(Trigger.Trigger);
   const byTrigger = Query.all(byInput, byFeed).referencedBy(Routine.Routine, 'triggers');
 
+  // Subject path: O ← Routine.subject (explicit association ref, set for sync routines).
+  const bySubject = Query.select(Filter.id(object.id)).referencedBy(Routine.Routine, 'subject');
+
   // Instructions path: O ← Instructions.objects ← Routine (via `spec.instructions`). The second hop drops the
   // property key: the instructions ref is nested in the `spec` union, and the reverse-ref index is structural,
   // so a keyless `referencedBy` matches it (a routine only references its own owned instructions here).
@@ -34,7 +39,7 @@ export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine
     .referencedBy(Instructions.Instructions, 'objects')
     .referencedBy(Routine.Routine);
 
-  return Query.all(byTrigger, byInstructions);
+  return Query.all(byTrigger, byInstructions, bySubject);
 };
 
 /**
@@ -45,7 +50,13 @@ export const routinesForObject = (object: Obj.Unknown, routines: Routine.Routine
   routines.filter((routine) => routineReferencesObject(routine, object));
 
 export const routineReferencesObject = (routine: Routine.Routine, object: Obj.Unknown): boolean =>
-  referencesViaTrigger(routine, object) || referencesViaInstructions(routine, object);
+  referencesViaTrigger(routine, object) ||
+  referencesViaInstructions(routine, object) ||
+  referencesViaSubject(routine, object);
+
+/** Subject path: the routine's explicit `subject` association references O. */
+const referencesViaSubject = (routine: Routine.Routine, object: Obj.Unknown): boolean =>
+  routine.subject?.target?.id === object.id;
 
 /** Trigger path: a trigger's `input` references O, or a feed trigger is bound to O's feed. */
 const referencesViaTrigger = (routine: Routine.Routine, object: Obj.Unknown): boolean => {

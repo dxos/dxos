@@ -18,6 +18,7 @@ import {
   MailboxModule,
   MessageModule,
   StatsModule,
+  SyncStateModule,
   TopicsModule,
   TriggersModule,
 } from '../modules';
@@ -36,6 +37,7 @@ export const Module = {
   Connector: Role.make<Record<string, any>>('org.dxos.storybook.inbox.connector'),
   Archive: Role.make<Record<string, any>>('org.dxos.storybook.inbox.archive'),
   Stats: Role.make<Record<string, any>>('org.dxos.storybook.inbox.stats'),
+  SyncState: Role.make<Record<string, any>>('org.dxos.storybook.inbox.syncState'),
   Triggers: Role.make<Record<string, any>>('org.dxos.storybook.inbox.triggers'),
 };
 
@@ -81,6 +83,11 @@ const moduleSurfaces: Surface.Definition[] = [
     id: 'inbox.stats',
     filter: Surface.makeFilter(Module.Stats),
     component: () => <StatsModule />,
+  }),
+  Surface.create({
+    id: 'inbox.syncState',
+    filter: Surface.makeFilter(Module.SyncState),
+    component: withModuleProps(SyncStateModule),
   }),
   Surface.create({
     id: 'inbox.triggers',

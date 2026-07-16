@@ -68,6 +68,24 @@ describe('routines connected to an object', () => {
     await expect.poll(() => connectedIds(db, other), { timeout: 5_000 }).toEqual([]);
   });
 
+  test('subject-ref: routine whose `subject` references the object', async ({ expect }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    const db = await initSpace(harness);
+
+    const target = db.add(Routine.make({ name: 'target', triggers: [] }));
+    const other = db.add(Routine.make({ name: 'other', triggers: [] }));
+    // The association is an explicit `subject` ref on the routine (how sync routines link their target),
+    // kept off the trigger's operation input.
+    const owner = db.add(Routine.make({ name: 'owner', triggers: [], subject: qualifiedRef(db, target) }));
+    await db.flush();
+
+    expect(routinesForObject(target, [owner, other]).map((routine) => routine.id)).toEqual([owner.id]);
+    expect(routinesForObject(other, [owner])).toEqual([]);
+
+    await expect.poll(() => connectedIds(db, target), { timeout: 5_000 }).toEqual([owner.id]);
+    await expect.poll(() => connectedIds(db, other), { timeout: 5_000 }).toEqual([]);
+  });
+
   test("feed-ref: feed trigger bound to the object's feed", async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);

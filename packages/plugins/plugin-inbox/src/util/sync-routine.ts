@@ -5,12 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation, Trigger } from '@dxos/compute';
-import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { type SyncInput, type SyncOutput } from '@dxos/plugin-connector';
 import { Routine, connectedRoutinesQuery } from '@dxos/plugin-routine';
-
-import { Calendar } from '#types';
 
 /** How often an auto-created sync routine's timer trigger fires. */
 const SYNC_ROUTINE_CRON = '*/10 * * * *';
@@ -38,8 +36,9 @@ const ensureOperationRecord = (
  * operation, the same one `ConnectorOperation.SyncConnection` invokes directly — with `binding` bound
  * to `cursor` (the target's external-sync {@link Cursor}). The routine is related to `target` by query
  * ({@link connectedRoutinesQuery}, surfaced in the routines companion) rather than by an ownership
- * field on `target`; the trigger's `input` also carries a `mailbox`/`calendar` ref purely so that query
- * can find it.
+ * field on `target`; the association is carried by the routine's `subject` ref. It is kept off the
+ * trigger's operation `input` because the EDGE validates operation input strictly, so a non-schema key
+ * there fails the runnable remotely.
  */
 export const createSyncRoutine = ({
   target,
@@ -60,17 +59,17 @@ export const createSyncRoutine = ({
     }
 
     const operation = yield* ensureOperationRecord(sync);
-    const inputKey = Obj.getTypename(target) === Type.getTypename(Calendar.Calendar) ? 'calendar' : 'mailbox';
     const { db } = yield* Database.Service;
     const trigger = Trigger.make({
       enabled: true,
       spec: Trigger.specTimer(SYNC_ROUTINE_CRON),
-      input: { binding: Ref.make(cursor), [inputKey]: db.makeRef(Obj.getURI(target)) },
+      input: { binding: Ref.make(cursor) },
     });
 
     const routine = Routine.make({
       name: 'Sync',
       spec: { kind: 'runnable', runnable: Ref.make(operation) },
+      subject: db.makeRef(Obj.getURI(target)),
       trigger,
     });
 

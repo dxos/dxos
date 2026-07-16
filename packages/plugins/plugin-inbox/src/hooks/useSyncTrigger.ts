@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
@@ -33,24 +34,21 @@ export const useSyncTrigger = ({
   handleToggleSync: () => Promise<void>;
 } => {
   const [pending, setPending] = useState(false);
-  const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
+  // The sync trigger is the `timer` trigger of a Routine associated with this subject (via `subject`,
+  // or legacy triggers whose `input` refs it — both are covered by `connectedRoutinesQuery`).
+  const routines = useQuery(db, connectedRoutinesQuery(subject));
   const { connection } = useTargetConnection(subject);
   const connector = useConnectorEntry(connection);
 
-  const subjectUri = Obj.getURI(subject);
-  const syncTrigger = useMemo(
-    () =>
-      triggers.find((trigger) => {
-        if (trigger.spec?.kind !== 'timer') {
-          return false;
-        }
-        const mailboxRef = trigger.input?.mailbox;
-        const calendarRef = trigger.input?.calendar;
-        const ref = mailboxRef ?? calendarRef;
-        return ref?.uri && ref.uri === subjectUri;
-      }),
-    [triggers, subjectUri],
-  );
+  const syncTrigger = useMemo(() => {
+    for (const routine of routines) {
+      const trigger = routine.triggers.find((ref) => ref.target?.spec?.kind === 'timer')?.target;
+      if (trigger) {
+        return trigger;
+      }
+    }
+    return undefined;
+  }, [routines]);
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
 

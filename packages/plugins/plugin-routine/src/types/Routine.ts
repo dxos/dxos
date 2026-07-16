@@ -49,6 +49,14 @@ export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.ro
     spec: RoutineSpec.pipe(Schema.optional),
 
     /**
+     * The domain object this routine automates (e.g. the Mailbox or Calendar a sync routine keeps up to date).
+     * An explicit association ref so `connectedRoutinesQuery` can relate the routine to its subject without
+     * smuggling the ref through the trigger's operation `input`: the EDGE validates operation input strictly
+     * (`onExcessProperty: 'error'`), so any non-schema key placed there fails the runnable on the edge.
+     */
+    subject: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
+
+    /**
      * Explicit membership, bi-directional with `trigger.runnable → runnable`. Required (not derived by query)
      * because the runnable may be a shared registry operation referenced by multiple automations, which would
      * conflate triggers. MVP enforces length <= 1.
