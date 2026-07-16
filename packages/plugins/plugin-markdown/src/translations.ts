@@ -47,6 +47,7 @@ export const translations = [
         'history-panel.title': 'History',
         'branches.title': 'Branches',
         'checkpoints.title': 'Checkpoints',
+        'create.label': 'Create',
         'create-checkpoint.label': 'New checkpoint',
         'create-branch.label': 'New branch',
         'discard-branch.label': 'Discard branch',

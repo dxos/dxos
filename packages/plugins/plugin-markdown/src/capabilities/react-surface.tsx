@@ -22,6 +22,7 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Position } from '@dxos/util';
 
 import {
+  DocumentHistory,
   EditableMarkdownCard,
   MarkdownArticle,
   type MarkdownArticleProps,
@@ -74,6 +75,16 @@ export default Capability.makeModule(() =>
             />
           );
         },
+      }),
+      Surface.create({
+        id: 'companion.documentHistory',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'history'),
+          AppSurface.companion(AppSurface.Article, Markdown.Document),
+        ),
+        component: ({ data, role, ref }) => (
+          <DocumentHistory role={role} subject={data.companionTo} ref={ref as React.Ref<HTMLDivElement>} />
+        ),
       }),
       Surface.create({
         id: 'surface.pluginSettings',
