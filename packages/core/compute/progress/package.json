@@ -14,9 +14,9 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

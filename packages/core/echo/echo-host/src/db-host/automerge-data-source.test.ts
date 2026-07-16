@@ -6,13 +6,12 @@ import { getHeads } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 
 import { AutomergeHost } from '../automerge';
-import { createIdFromSpaceKey } from '../common';
 import { createTestSqliteRuntime } from '../testing';
 import { AutomergeDataSource, headsCodec } from './automerge-data-source';
 

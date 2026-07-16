@@ -22,6 +22,16 @@ export const CommentAgentMode = Schema.Union(Schema.Literal('off'), Schema.Liter
 export type CommentAgentMode = Schema.Schema.Type<typeof CommentAgentMode>;
 
 /**
+ * How document version comparisons are rendered.
+ */
+export const DiffViewMode = Schema.Union(
+  Schema.Literal('inline'),
+  Schema.Literal('sideBySide'),
+  Schema.Literal('gutter'),
+);
+export type DiffViewMode = Schema.Schema.Type<typeof DiffViewMode>;
+
+/**
  * Plugin settings.
  */
 export const Settings = Schema.mutable(
@@ -53,6 +63,13 @@ export const Settings = Schema.mutable(
       Schema.Boolean.annotations({
         title: 'Numbered headings',
         description: 'Automatically number heading levels in the document.',
+      }),
+    ),
+    diffView: Schema.optional(
+      DiffViewMode.annotations({
+        title: 'Diff view',
+        description:
+          "How document version comparisons are rendered: 'inline' (unified), 'sideBySide' (two panes), or 'gutter' (change bars).",
       }),
     ),
     folding: Schema.optional(

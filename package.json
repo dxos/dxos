@@ -55,7 +55,8 @@
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
     "js-yaml": "catalog:",
-    "tslib": "catalog:"
+    "tslib": "catalog:",
+    "vite-plugin-solid": "catalog:"
   },
   "devDependencies": {
     "@changesets/changelog-github": "catalog:",
