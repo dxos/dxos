@@ -14,8 +14,8 @@ describe('Versioning schema', () => {
     const doc = Markdown.make({ content: 'hello' });
     expect(doc.history).toBeUndefined();
 
-    Obj.update(doc, (mutableDoc) => {
-      mutableDoc.history = { branches: [], versions: [] };
+    Obj.update(doc, (doc) => {
+      doc.history = { branches: [], versions: [] };
     });
     expect(doc.history?.versions).toEqual([]);
   });

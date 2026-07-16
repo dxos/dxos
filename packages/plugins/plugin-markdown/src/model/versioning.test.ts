@@ -62,8 +62,8 @@ describe('versioning model', () => {
         expect(checkpoint.heads.length).toBeGreaterThan(0);
         expect(doc.history?.versions).toHaveLength(1);
 
-        Obj.update(text, (mutableText) => {
-          mutableText.content = 'one two';
+        Obj.update(text, (text) => {
+          text.content = 'one two';
         });
 
         expect(contentAt(text, checkpoint.heads)).toBe('one');
@@ -88,8 +88,8 @@ describe('versioning model', () => {
         expect(branchText.content).toBe('one two three');
         expect(doc.history?.versions.some((version) => version.name === 'fork: draft')).toBe(true);
 
-        Obj.update(branchText, (mutableText) => {
-          mutableText.content = 'one two three four';
+        Obj.update(branchText, (branchText) => {
+          branchText.content = 'one two three four';
         });
         expect(root.content).toBe('one two three');
       },
@@ -108,8 +108,8 @@ describe('versioning model', () => {
         const root = yield* Database.load(doc.content);
         const checkpoint = createCheckpoint(doc, { name: 'v1' });
 
-        Obj.update(root, (mutableText) => {
-          mutableText.content = 'second';
+        Obj.update(root, (root) => {
+          root.content = 'second';
         });
 
         const branch = createBranch(doc, { name: 'from-v1', from: { target: root, heads: checkpoint.heads } });
@@ -132,12 +132,12 @@ describe('versioning model', () => {
 
         const branch = createBranch(doc, { name: 'draft' });
         const branchText = yield* Database.load(branch.content);
-        Obj.update(branchText, (mutableText) => {
-          mutableText.content = 'alpha\nbravo\ncharlie\n';
+        Obj.update(branchText, (branchText) => {
+          branchText.content = 'alpha\nbravo\ncharlie\n';
         });
         // Concurrent parent edit after the fork.
-        Obj.update(root, (mutableText) => {
-          mutableText.content = 'alpha edited\nbravo\n';
+        Obj.update(root, (root) => {
+          root.content = 'alpha edited\nbravo\n';
         });
 
         const result = mergeBranch(doc, branch);
@@ -161,8 +161,8 @@ describe('versioning model', () => {
         const root = yield* Database.load(doc.content);
         const checkpoint = createCheckpoint(doc, { name: 'v1' });
 
-        Obj.update(root, (mutableText) => {
-          mutableText.content = 'second';
+        Obj.update(root, (root) => {
+          root.content = 'second';
         });
 
         restore(doc, checkpoint);

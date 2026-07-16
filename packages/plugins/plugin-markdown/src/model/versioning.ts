@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Obj, Ref, Text as EchoText } from '@dxos/echo';
+import { Text as EchoText, Obj, Ref } from '@dxos/echo';
 import { checkoutVersion } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -13,8 +13,8 @@ import { merge3 } from './diff';
 /** Initializes the history struct on first use so existing documents need no migration. */
 export const ensureHistory = (doc: Markdown.Document): Versioning.History => {
   if (!doc.history) {
-    Obj.update(doc, (mutableDoc) => {
-      mutableDoc.history = { branches: [], versions: [] };
+    Obj.update(doc, (doc) => {
+      doc.history = { branches: [], versions: [] };
     });
   }
   return doc.history!;
