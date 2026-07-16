@@ -7,15 +7,15 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 
+import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation, OperationHandlerSet, Skill, Trigger } from '@dxos/compute';
+import { TriggerDispatcher } from '@dxos/compute-runtime';
 import { Collection, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { TriggerDispatcher } from '@dxos/functions-runtime';
-import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { MarkdownSkill } from '@dxos/plugin-markdown';

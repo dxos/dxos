@@ -74,12 +74,6 @@
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
-    "./worker": {
-      "source": "./src/worker/index.ts",
-      "types": "./dist/types/src/worker/index.d.ts",
-      "browser": "./dist/lib/browser/worker/index.mjs",
-      "node": "./dist/lib/node-esm/worker/index.mjs"
-    },
     "./opfs-worker": {
       "source": "./src/worker/opfs-worker.ts",
       "types": "./dist/types/src/worker/opfs-worker.d.ts",

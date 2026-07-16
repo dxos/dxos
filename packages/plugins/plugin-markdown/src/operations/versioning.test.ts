@@ -9,7 +9,7 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Ref, URI } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
