@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { syntaxTree } from '@codemirror/language';
+import { syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
 import { type EditorState, type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import {
   Decoration,
@@ -104,6 +104,13 @@ export type XmlWidgetDef = {
    * Block widgets are created for Image nodes; inline widgets for Link nodes.
    */
   urlSchemes?: string[];
+
+  /**
+   * Reserved block height (px) derived from the widget's props (e.g. parsed from the image label),
+   * used to size the placeholder and CodeMirror's viewport estimate before the React content mounts.
+   * Only meaningful for block widgets.
+   */
+  estimatedHeight?: (props: XmlWidgetProps) => number | undefined;
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
@@ -129,6 +136,12 @@ export const xmlTagContextEffect = StateEffect.define<any>();
  * Reset all state.
  */
 export const xmlTagResetEffect = StateEffect.define();
+
+/**
+ * Force a full decoration rebuild without a document change — dispatched once background parsing of a
+ * long document completes, so blocks past the initial parse window are decorated without needing an edit.
+ */
+export const xmlTagRebuildEffect = StateEffect.define();
 
 /**
  * Update widget.
@@ -223,9 +236,31 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions = {}
     widgetStateMapStateField,
     widgetDecorationsField,
     createWidgetUpdatePlugin(widgetDecorationsField, notifier),
+    createParseCompletionPlugin(),
     createNavigationEffectPlugin(widgetDecorationsField, bookmarks),
     bookmarks?.length ? Prec.highest(keyHandlers) : [],
   ];
+};
+
+/**
+ * Re-decorate once the whole document has parsed. `StateField.create` (and incremental rebuilds) only
+ * see the syntax tree parsed so far, so a block past CodeMirror's initial background-parse window is
+ * not decorated until some later transaction — previously it appeared only after the first edit. This
+ * dispatches a one-shot rebuild when the full tree becomes available (re-armed on each edit).
+ */
+const createParseCompletionPlugin = () => {
+  let rebuiltForLength = -1;
+  return EditorView.updateListener.of((update) => {
+    if (update.docChanged) {
+      rebuiltForLength = -1;
+    }
+    const length = update.state.doc.length;
+    if (rebuiltForLength !== length && syntaxTreeAvailable(update.state, length)) {
+      rebuiltForLength = length;
+      // Defer: cannot dispatch during an update.
+      queueMicrotask(() => update.view.dispatch({ effects: xmlTagRebuildEffect.of(null) }));
+    }
+  });
 };
 
 /**
@@ -237,13 +272,10 @@ const createWidgetMap = (setWidgets?: (widgets: XmlWidgetState[]) => void): XmlW
   // TODO(burdon): Batch updates?
   const notifier = {
     mounted: (state: XmlWidgetState) => {
-      log('widget mounted', { id: state.id, tag: state.props._tag });
       widgets.set(state.id, state);
       setWidgets?.([...widgets.values()]);
     },
     unmounted: (id: string) => {
-      const state = widgets.get(id);
-      log('widget unmounted', { id, tag: state?.props._tag });
       widgets.delete(id);
       setWidgets?.([...widgets.values()]);
     },
@@ -435,6 +467,10 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
           }
           return { from: 0, decorations: Decoration.none };
         }
+        // Full rebuild once background parsing has advanced (no document change).
+        if (effect.is(xmlTagRebuildEffect)) {
+          return buildDecorations(tr.state, { from: 0, to: tr.state.doc.length }, registry, notifier, urlSchemeMap);
+        }
       }
 
       if (tr.docChanged) {
@@ -498,6 +534,11 @@ const buildDecorations = (
 
   let last = range.from;
   let streamingFrom: number | undefined;
+
+  // Per-dxn occurrence counter for position-independent url-scheme widget ids. Keying on document
+  // position would change the id on every keystroke above the widget (full rebuild), remounting the
+  // portal and flashing the embed; occurrence order is stable because edits above force a full rebuild.
+  const dxnOccurrences = new Map<string, number>();
 
   tree.iterate({
     from: range.from,
@@ -589,7 +630,9 @@ const buildDecorations = (
           const [tag, def] = matched;
           const label = state.sliceDoc(markNodes[0].to, markNodes[1].from);
           const nodeRange = { from: node.node.from, to: node.node.to };
-          const widgetId = `cm-url-${node.from}-${dxn}`;
+          const occurrence = dxnOccurrences.get(dxn) ?? 0;
+          dxnOccurrences.set(dxn, occurrence + 1);
+          const widgetId = `cm-url-${dxn}-${occurrence}`;
           const widgetState = widgetStateMap[widgetId];
           const props: XmlWidgetProps = {
             id: widgetId,
@@ -602,10 +645,11 @@ const buildDecorations = (
             suggest: isBlock,
             ...widgetState,
           };
+          const blockHeight = isBlock ? def.estimatedHeight?.(props) : undefined;
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new StubWidget(widgetId, def.Component, props, notifier, false, isBlock)
+              ? new StubWidget(widgetId, def.Component, props, notifier, false, isBlock, blockHeight)
               : undefined;
           if (widget) {
             builder.add(

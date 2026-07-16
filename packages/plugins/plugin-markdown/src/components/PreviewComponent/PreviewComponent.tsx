@@ -18,7 +18,7 @@ import { type XmlWidgetProps } from '@dxos/ui-editor';
 // Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](dxn)`.
 const HEIGHT_PATTERN = /^(.*)\|(\d+)$/;
 
-const parseEmbedLabel = (alt: string): { baseLabel: string; height?: number } => {
+export const parseEmbedLabel = (alt: string): { baseLabel: string; height?: number } => {
   const match = HEIGHT_PATTERN.exec(alt ?? '');
   if (match) {
     const height = Number.parseInt(match[2], 10);

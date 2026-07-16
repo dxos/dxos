@@ -43,7 +43,11 @@ import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
-import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
+import {
+  PreviewComponent,
+  type PreviewComponentProps,
+  parseEmbedLabel,
+} from '../components/PreviewComponent/PreviewComponent';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -198,6 +202,10 @@ const createBaseExtensions = ({
             'dxn-preview': {
               block: true,
               urlSchemes: ['dxn:', 'echo:'],
+              // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+              // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) =>
+                label ? parseEmbedLabel(label).height : undefined,
               Component: (props: Omit<PreviewComponentProps, 'space'>) => <PreviewComponent {...props} space={space} />,
             },
             'link-preview': {

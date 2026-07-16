@@ -143,7 +143,7 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
       }
 
       const zoom = () => {
-        centerContent(editor, width, height, false);
+        zoomToFit(editor, width, height, false);
       };
 
       zoom();
@@ -260,16 +260,19 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
 );
 
 /**
- * Center content in the viewport at 100% zoom (auto-center only — never auto-fits/zooms the content).
+ * Fit content within the viewport and center it, zooming out for oversized content but never
+ * magnifying past 100% (zoom is capped at 1).
  */
-const centerContent = (editor: Editor, width: number, height: number, animate = true) => {
+const zoomToFit = (editor: Editor, width: number, height: number, animate = true) => {
   const commonBounds = editor.getCurrentPageBounds();
   if (width && height && commonBounds?.width && commonBounds?.height) {
-    // Fixed zoom of 1: only the camera position is derived from the content bounds.
+    const padding = 60;
+    // Zoom out to fit oversized content; cap at 1 so small content is never zoomed in.
+    const zoom = Math.min(1, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
     const center = {
-      x: (width - commonBounds.width) / 2 - commonBounds.minX,
-      y: (height - commonBounds.height) / 2 - commonBounds.minY,
-      z: 1,
+      x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
+      y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
+      z: zoom,
     };
 
     editor.setCamera(center, animate ? { animation: { duration: 250 } } : undefined);
