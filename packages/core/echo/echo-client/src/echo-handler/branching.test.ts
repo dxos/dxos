@@ -204,6 +204,23 @@ describe('branching', () => {
     await expect(createBranch(root, 'main')).rejects.toThrow();
   });
 
+  test('guards: duplicate name, unknown branch, inline objects', async () => {
+    const { db, root } = await setup();
+    await createBranch(root, 'b1');
+
+    // Duplicate branch name.
+    await expect(createBranch(root, 'b1')).rejects.toThrow(/already exists/);
+    // Unknown branch for switch / merge / binding.
+    await expect(switchBranch(root, 'nope')).rejects.toThrow(/not found/);
+    await expect(mergeBranch(root, 'nope')).rejects.toThrow(/not found/);
+    await expect(db.branch(root, 'nope')).rejects.toThrow(/not found/);
+
+    // Inline objects (stored in the space root doc) have no own document to fork: clear error.
+    const inline: any = db.add(Obj.make(TestSchema.Expando, { title: 'inline' }), { placeIn: 'root-doc' });
+    await db.flush();
+    await expect(createBranch(inline, 'b1')).rejects.toThrow(/inline object/);
+  });
+
   test('time-travel: switching branch is independent of history; writes blocked while scrubbing', async () => {
     const { db, root } = await setup();
     await createBranch(root, 'b1');

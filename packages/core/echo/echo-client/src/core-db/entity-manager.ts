@@ -840,6 +840,12 @@ export class EntityManager implements IDatabaseBinding {
 
   /**
    * Fork the object and its referenced subtree into a new branch. Does not switch to it.
+   *
+   * Storage/replication cost: each member's branch doc is a full `A.save` copy (history included —
+   * deliberately, so `A.merge` back into main is a true shared-ancestry CRDT merge), and branch
+   * docs join the space document list via the root registry (see `DatabaseRoot.getAllLinkedDocuments`),
+   * so they replicate and export like linked object docs. O(subtree size x branch count).
+   *
    * @param opts.fromHeads Fork from a historical frontier instead of the tip. A `Heads` array forks
    *   only the root from that frontier (children fork at their tip); a `{ objectId -> Heads }` map
    *   forks each member from its own frontier (e.g. the scrubbed position across the whole subtree).
