@@ -69,6 +69,10 @@ export const createCheckpoint = (doc: Markdown.Document, props: CreateCheckpoint
 export const versionLabel = (version: Versioning.Version): string =>
   version.name || new Date(version.createdAt).toLocaleString();
 
+/** Display label for a branch: its name, or the formatted creation time when unnamed. */
+export const branchLabel = (branch: Versioning.Branch): string =>
+  branch.name || new Date(branch.createdAt).toLocaleString();
+
 /** Find the branch record owning a given Text (undefined for the root). */
 export const findBranch = (doc: Markdown.Document, text: Text.Text): Versioning.Branch | undefined =>
   doc.history?.branches.find((branch) => branch.content.target?.id === text.id);
@@ -110,7 +114,11 @@ export const createBranch = (doc: Markdown.Document, props: CreateBranchProps): 
   });
   // The anchor must stay addressable by name in the timeline.
   if (!history.versions.some((version) => sameHeads(version.heads, anchor))) {
-    const version = Versioning.makeVersion({ name: `fork: ${props.name}`, target: Ref.make(parent), heads: anchor });
+    const version = Versioning.makeVersion({
+      name: `fork: ${branchLabel(branch)}`,
+      target: Ref.make(parent),
+      heads: anchor,
+    });
     Obj.update(doc, () => {
       history.versions.push(version);
     });
@@ -154,7 +162,7 @@ export const mergeBranch = (doc: Markdown.Document, branch: Versioning.Branch): 
     stored.status = 'merged';
     stored.mergedAt = new Date().toISOString();
   });
-  createCheckpoint(doc, { name: `merge: ${stored.name}`, target: parent });
+  createCheckpoint(doc, { name: `merge: ${branchLabel(stored)}`, target: parent });
   return { conflicts };
 };
 

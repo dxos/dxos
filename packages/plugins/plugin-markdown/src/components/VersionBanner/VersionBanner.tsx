@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
+import { NamePopover } from '../NamePopover';
 
 export type VersionBannerProps = ThemedClassName<{
   /** Checkpoint mode is read-only time travel; branch mode is an editable draft. */
@@ -15,7 +17,7 @@ export type VersionBannerProps = ThemedClassName<{
   name: string;
   detail?: string;
   onRestore?: () => void;
-  onBranchFrom?: () => void;
+  onBranchFrom?: (name: string) => void;
   onMerge?: () => void;
   onCompare?: () => void;
   onClose: () => void;
@@ -37,6 +39,7 @@ export const VersionBanner = ({
   onClose,
 }: VersionBannerProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const [namingBranch, setNamingBranch] = useState(false);
 
   return (
     <div
@@ -59,9 +62,19 @@ export const VersionBanner = ({
           </Button>
         )}
         {mode === 'checkpoint' && onBranchFrom && (
-          <Button density='sm' variant='ghost' onClick={onBranchFrom}>
-            {t('branch-from.label')}
-          </Button>
+          <NamePopover
+            open={namingBranch}
+            placeholder={t('branch-name.placeholder')}
+            onSubmit={(name) => {
+              setNamingBranch(false);
+              onBranchFrom(name);
+            }}
+            onCancel={() => setNamingBranch(false)}
+          >
+            <Button density='sm' variant='ghost' onClick={() => setNamingBranch(true)}>
+              {t('branch-from.label')}
+            </Button>
+          </NamePopover>
         )}
         {mode === 'branch' && onCompare && (
           <Button density='sm' variant='ghost' onClick={onCompare}>

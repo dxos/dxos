@@ -241,3 +241,43 @@ export const BranchMerge: Story = {
     await canvas.findByText('merge: draft');
   },
 };
+
+/**
+ * A conflicting merge leaves marker blocks in the document; the editor renders them with
+ * inline resolution buttons (and merge markers must not be styled as blockquotes).
+ */
+export const ConflictResolution: Story = {
+  args: {
+    content: 'alpha\nbravo\n',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
+
+    // Both sides edit the same line to force a conflict.
+    await createBranchViaUi(canvasElement, 'draft');
+    await canvas.findByText('Editing branch');
+    setBranchContent('draft', 'alpha theirs\nbravo\n');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha theirs'));
+    setRootContent('alpha ours\nbravo\n');
+
+    const banner = canvas.getByRole('status');
+    await userEvent.click(within(banner).getByText('Merge'));
+
+    // The conflict block renders with markers and both sides.
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('<<<<<<< branch'), { timeout: 10_000 });
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha theirs'));
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha ours'));
+
+    // Merge markers are not decorated as blockquotes (only a single '>' denotes a quote).
+    await expect(canvasElement.querySelector('.cm-blockquote')).toBeNull();
+
+    // Resolve via the inline button: the branch side wins and the markers disappear.
+    await userEvent.click(await canvas.findByText('Accept branch'));
+    await waitFor(() => expect(editorContent(canvasElement)).not.toContain('<<<<<<<'));
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha theirs'));
+    await waitFor(() => expect(editorContent(canvasElement)).not.toContain('alpha ours'));
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('bravo'));
+  },
+};

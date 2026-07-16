@@ -36,8 +36,8 @@ import { useLinkQuery, useVersioning } from '#hooks';
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
-import { versionDiff } from '../../extensions';
-import { createBranch, mergeBranch, restore, versionLabel } from '../../model';
+import { mergeConflicts, versionDiff } from '../../extensions';
+import { branchLabel, createBranch, mergeBranch, restore, versionLabel } from '../../model';
 import { DiffView } from '../DiffView';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
@@ -85,16 +85,19 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       }
     }, [document, activeVersion, setSelection]);
 
-    const handleBranchFrom = useCallback(() => {
-      const target = activeVersion?.target.target;
-      if (document && activeVersion && target) {
-        const branch = createBranch(document, {
-          name: `from: ${versionLabel(activeVersion)}`,
-          from: { target, heads: activeVersion.heads },
-        });
-        setSelection({ kind: 'branch', branchId: branch.id });
-      }
-    }, [document, activeVersion, setSelection]);
+    const handleBranchFrom = useCallback(
+      (name: string) => {
+        const target = activeVersion?.target.target;
+        if (document && activeVersion && target) {
+          const branch = createBranch(document, {
+            name: name.trim(),
+            from: { target, heads: activeVersion.heads },
+          });
+          setSelection({ kind: 'branch', branchId: branch.id });
+        }
+      },
+      [document, activeVersion, setSelection],
+    );
 
     const handleMerge = useCallback(() => {
       if (document && activeBranch) {
@@ -132,10 +135,11 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     // Diff overlay (inline/gutter variants render inside the editor; sideBySide replaces it).
     const combinedExtensions = useMemo<Extension[]>(() => {
+      const list = [...extensions, mergeConflicts()];
       if (compareActive && branchBaseContent !== undefined && diffViewMode !== 'sideBySide') {
-        return [...extensions, versionDiff({ base: branchBaseContent, variant: diffViewMode })];
+        list.push(versionDiff({ base: branchBaseContent, variant: diffViewMode }));
       }
-      return extensions;
+      return list;
     }, [extensions, compareActive, branchBaseContent, diffViewMode]);
 
     // Toolbar actions from app graph, plus the branch switcher dropdown.
@@ -167,7 +171,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           }),
           ...activeBranches.map((branch) =>
             createMenuAction(`versions--${branch.id}`, () => setSelection({ kind: 'branch', branchId: branch.id }), {
-              label: branch.name,
+              label: branchLabel(branch),
               icon: 'ph--git-branch--regular',
               checked: activeBranch?.id === branch.id,
             }),
@@ -259,7 +263,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
               {activeBranch && (
                 <VersionBanner
                   mode='branch'
-                  name={activeBranch.name}
+                  name={branchLabel(activeBranch)}
                   detail={new Date(activeBranch.createdAt).toLocaleString()}
                   onMerge={handleMerge}
                   onCompare={handleCompare}

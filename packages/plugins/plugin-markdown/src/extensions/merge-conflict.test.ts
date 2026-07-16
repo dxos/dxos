@@ -1,0 +1,45 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { EditorState } from '@codemirror/state';
+import { describe, expect, test } from 'vitest';
+
+import { conflictResolution, findConflicts } from './merge-conflict';
+
+const CONFLICT = ['intro', '<<<<<<< branch', 'Moo', '=======', 'Bar', '>>>>>>> current', 'outro', ''].join('\n');
+
+describe('findConflicts', () => {
+  test('locates a conflict block and its sections', () => {
+    const state = EditorState.create({ doc: CONFLICT });
+    const regions = findConflicts(state);
+    expect(regions).toHaveLength(1);
+    const [region] = regions;
+    expect(state.sliceDoc(region.branch.from, region.branch.to)).toBe('Moo\n');
+    expect(state.sliceDoc(region.current.from, region.current.to)).toBe('Bar\n');
+  });
+
+  test('finds multiple blocks and ignores plain text', () => {
+    const doc = [CONFLICT, CONFLICT].join('\n');
+    expect(findConflicts(EditorState.create({ doc }))).toHaveLength(2);
+    expect(findConflicts(EditorState.create({ doc: 'no conflicts here\n' }))).toHaveLength(0);
+  });
+
+  test('ignores an unterminated block', () => {
+    const doc = ['<<<<<<< branch', 'Moo', '=======', 'Bar', ''].join('\n');
+    expect(findConflicts(EditorState.create({ doc }))).toHaveLength(0);
+  });
+});
+
+describe('conflictResolution', () => {
+  test.each([
+    ['branch', 'intro\nMoo\noutro\n'],
+    ['current', 'intro\nBar\noutro\n'],
+    ['both', 'intro\nMoo\nBar\noutro\n'],
+  ] as const)('accept %s', (choice, expected) => {
+    const state = EditorState.create({ doc: CONFLICT });
+    const [region] = findConflicts(state);
+    const resolved = state.update({ changes: conflictResolution(state, region, choice) });
+    expect(resolved.state.doc.toString()).toBe(expected);
+  });
+});
