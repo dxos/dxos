@@ -6,10 +6,10 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import type * as Capability from './capability';
+import { CapabilityNotFoundError } from './errors';
 
 type CapabilityEntry<T> = {
   moduleId: string;
@@ -58,13 +58,19 @@ export interface CapabilityManager {
    * Waits for a capability to be available.
    * @returns The capability.
    */
-  waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T, Error>;
+  waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T>;
 
   /**
    * Get capabilities grouped by the module that contributed them.
    * @returns An atom containing a record from module ID to capability implementations.
    */
   atomByModule<T>(interfaceDef: Capability.InterfaceDef<T>): Atom.Atom<Record<string, T[]>>;
+
+  /**
+   * Live view over all contributions for a capability interface.
+   * Stable per interface: repeated calls return the same object.
+   */
+  contributions<T>(interfaceDef: Capability.InterfaceDef<T>): Capability.Contributions<T>;
 
   /**
    * Lists capability interface identifiers that currently have at least one contribution.
@@ -79,6 +85,8 @@ class CapabilityManagerImpl implements CapabilityManager {
   private readonly _registry: Registry.Registry;
 
   private readonly _registeredIdentifiers = new Set<string>();
+
+  private readonly _contributionsViews = new Map<string, Capability.Contributions<unknown>>();
 
   private readonly _capabilityEntries = Atom.family<string, Atom.Writable<CapabilityEntry<unknown>[]>>(() => {
     return Atom.make<CapabilityEntry<unknown>[]>([]).pipe(Atom.keepAlive);
@@ -105,7 +113,9 @@ class CapabilityManagerImpl implements CapabilityManager {
   readonly _capability = Atom.family<string, Atom.Atom<unknown>>((id: string) => {
     return Atom.make((get) => {
       const current = get(this._capabilities(id));
-      invariant(current.length > 0, `No capability found for ${id}`);
+      if (current.length === 0) {
+        throw new CapabilityNotFoundError({ identifier: id, registered: this.listRegisteredIdentifiers() });
+      }
       return current[0];
     });
   });
@@ -174,7 +184,10 @@ class CapabilityManagerImpl implements CapabilityManager {
         requested: interfaceDef.identifier,
         registered: this.listRegisteredIdentifiers(),
       });
-      invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
+      throw new CapabilityNotFoundError({
+        identifier: interfaceDef.identifier,
+        registered: this.listRegisteredIdentifiers(),
+      });
     }
     return capabilities[0];
   }
@@ -183,14 +196,14 @@ class CapabilityManagerImpl implements CapabilityManager {
     return [...this._registeredIdentifiers].sort();
   }
 
-  waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T, Error> {
+  waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T> {
     return Effect.gen(this, function* () {
       const [capability] = this.getAll(interfaceDef);
       if (capability) {
         return capability;
       }
 
-      const deferred = yield* Deferred.make<T, Error>();
+      const deferred = yield* Deferred.make<T>();
       const cancel = this._registry.subscribe(this.atom(interfaceDef), (capabilities) => {
         if (capabilities.length > 0) {
           Effect.runSync(Deferred.succeed(deferred, capabilities[0]));
@@ -204,6 +217,23 @@ class CapabilityManagerImpl implements CapabilityManager {
 
   atomByModule<T>(interfaceDef: Capability.InterfaceDef<T>): Atom.Atom<Record<string, T[]>> {
     return this._capabilitiesByModule(interfaceDef.identifier) as Atom.Atom<Record<string, T[]>>;
+  }
+
+  contributions<T>(interfaceDef: Capability.InterfaceDef<T>): Capability.Contributions<T> {
+    const existing = this._contributionsViews.get(interfaceDef.identifier);
+    if (existing) {
+      // NOTE: The type-checking for capabilities is done at the time of contribution.
+      return existing as Capability.Contributions<T>;
+    }
+
+    const atom = this._capabilities(interfaceDef.identifier);
+    const view: Capability.Contributions<unknown> = {
+      atom,
+      get: () => this._registry.get(atom),
+      subscribe: (cb) => this._registry.subscribe(atom, cb),
+    };
+    this._contributionsViews.set(interfaceDef.identifier, view);
+    return view as Capability.Contributions<T>;
   }
 }
 

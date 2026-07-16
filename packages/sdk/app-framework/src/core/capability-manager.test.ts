@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
+import { CapabilityNotFoundError } from './errors';
 
 describe('CapabilityManager', () => {
   it('should return empty array if no capabilities are contributed', () => {
@@ -21,7 +22,7 @@ describe('CapabilityManager', () => {
     const registry = Registry.make();
     const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
-    expect(() => capabilityManager.get(interfaceDef)).toThrow('No capability found');
+    expect(() => capabilityManager.get(interfaceDef)).toThrow(CapabilityNotFoundError);
     expect(capabilityManager.listRegisteredIdentifiers()).toEqual([]);
   });
 
@@ -37,6 +38,10 @@ describe('CapabilityManager', () => {
       );
 
       expect(result._tag).toEqual('Left');
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(CapabilityNotFoundError);
+        expect(result.left.context.identifier).toEqual(interfaceDef.identifier);
+      }
     }),
   );
 
@@ -151,4 +156,37 @@ describe('CapabilityManager', () => {
       expect(yield* capability).toEqual(implementation);
     }),
   );
+
+  describe('contributions', () => {
+    it('should provide a live view over multi capability contributions', () => {
+      const registry = Registry.make();
+      const capabilityManager = CapabilityManager.make({ registry });
+      const multi = Capability.makeMulti<{ example: string }>('@dxos/app-framework/test/example');
+
+      const view = capabilityManager.contributions(multi);
+      expect(view.get()).toEqual([]);
+
+      const values: (readonly { example: string }[])[] = [];
+      const cancel = view.subscribe((current) => values.push(current));
+      onTestFinished(() => cancel());
+
+      const first = { example: 'first' };
+      const second = { example: 'second' };
+      capabilityManager.contribute({ interface: multi, implementation: first, module: 'test-1' });
+      expect(view.get()).toEqual([first]);
+      capabilityManager.contribute({ interface: multi, implementation: second, module: 'test-2' });
+      expect(view.get()).toEqual([first, second]);
+      expect(values.at(-1)).toEqual([first, second]);
+
+      capabilityManager.remove(multi, first);
+      expect(view.get()).toEqual([second]);
+    });
+
+    it('should return a stable view per interface', () => {
+      const registry = Registry.make();
+      const capabilityManager = CapabilityManager.make({ registry });
+      const multi = Capability.makeMulti<{ example: string }>('@dxos/app-framework/test/example');
+      expect(capabilityManager.contributions(multi)).toBe(capabilityManager.contributions(multi));
+    });
+  });
 });

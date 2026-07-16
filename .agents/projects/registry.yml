@@ -28,4 +28,15 @@ projects:
     prs: [12174]
     resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
 
+  - name: app-framework-capability-activation
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-16
+    summary: Replace activation-event ordering with capability-dependency activation; capabilities become typed, yieldable Effect services (full plugin migration).
+    tasks: .agents/projects/app-framework-capability-activation/TASKS.md
+    design: .agents/projects/app-framework-capability-activation/DESIGN.md
+    prs: []
+    resume: 'Phases 1-2 done (tags/arity/contributions/errors + typed module authoring). Next: Phase 3 — PluginManager dependency pass + start() coexistence.'
+
 ended: []

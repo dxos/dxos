@@ -23,6 +23,7 @@ import { log } from '@dxos/log';
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
+import { CapabilityNotFoundError } from './errors';
 import * as Plugin from './plugin';
 // Imported with a `PluginRegistry` alias because the unrelated `@effect-atom/atom-react`
 // `Registry` is already imported above; from outside this file the namespace is
@@ -1217,19 +1218,28 @@ class ManagerImpl implements PluginManager {
   }
 
   private _getActiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this._getActiveModules().filter((module) =>
-      ActivationEvent.getEvents(module.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    return this._getActiveModules().filter(
+      (module) =>
+        module.activation.mode !== 'dependency' &&
+        ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
     );
   }
 
   private _getInactiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this._getInactiveModules().filter((module) =>
-      ActivationEvent.getEvents(module.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    return this._getInactiveModules().filter(
+      (module) =>
+        module.activation.mode !== 'dependency' &&
+        ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
     );
   }
 
   private _setPendingResetByModule(module: Plugin.PluginModule): void {
-    const activationEvents = ActivationEvent.getEvents(module.activatesOn)
+    // Dependency-mode modules do not participate in event-keyed resets.
+    if (module.activation.mode === 'dependency') {
+      return;
+    }
+
+    const activationEvents = ActivationEvent.getEvents(module.activation.activatesOn)
       .map(ActivationEvent.eventKey)
       .filter((key) => this._get(this._eventsFiredAtom).includes(key));
 
@@ -1397,14 +1407,18 @@ class ManagerImpl implements PluginManager {
     activatingModules: string[],
   ): Plugin.PluginModule[] {
     return this._getInactiveModulesByEvent(key).filter((module) => {
-      const allOf = ActivationEvent.isAllOf(module.activatesOn);
+      const spec = module.activation;
+      if (spec.mode === 'dependency') {
+        return false;
+      }
+      const allOf = ActivationEvent.isAllOf(spec.activatesOn);
       if (!allOf) {
         return true;
       }
 
       // Check to see if all of the events in the `allOf` have been fired.
       // An event can be considered "fired" if it is in the `eventsFired` list or if it is currently being activated.
-      const events = ActivationEvent.getEvents(module.activatesOn).filter(
+      const events = ActivationEvent.getEvents(spec.activatesOn).filter(
         (event) => ActivationEvent.eventKey(event) !== key,
       );
       return (
@@ -1423,7 +1437,9 @@ class ManagerImpl implements PluginManager {
   ): ActivationEvent.ActivationEvent[] {
     return Function.pipe(
       modules,
-      Array.flatMap((module) => module.firesBeforeActivation ?? []),
+      Array.flatMap((module) =>
+        module.activation.mode === 'legacy' ? (module.activation.firesBeforeActivation ?? []) : [],
+      ),
       HashSet.fromIterable,
       HashSet.toValues,
       Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
@@ -1436,7 +1452,11 @@ class ManagerImpl implements PluginManager {
   ): ActivationEvent.ActivationEvent[] {
     return Function.pipe(
       modules,
-      Array.flatMap((module) => module.firesAfterActivation ?? []),
+      Array.flatMap((module) =>
+        module.activation.mode === 'legacy'
+          ? (module.activation.firesAfterActivation ?? [])
+          : (module.activation.compatFires ?? []),
+      ),
       HashSet.fromIterable,
       HashSet.toValues,
       Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
@@ -1575,7 +1595,8 @@ class ManagerImpl implements PluginManager {
             elapsed,
             failed: false,
           });
-          return normalized as Capability.Any[];
+          // NOTE: The activate return is type-checked at the authoring layer.
+          return Capability.expandContributions(normalized as ReadonlyArray<Capability.Any | Capability.AnyContribution>);
         }).pipe(
           Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
           Effect.withSpan('PluginManager._loadModule'),
@@ -1604,7 +1625,7 @@ class ManagerImpl implements PluginManager {
             Effect.catchAllCause((cause) => {
               const error = Cause.squash(cause);
               const errorMessage = error instanceof Error ? error.message : String(error);
-              const missingCapability = errorMessage.match(/No capability found for ([^\s\[]+)/)?.[1];
+              const missingCapability = error instanceof CapabilityNotFoundError ? error.context.identifier : undefined;
               log.error('module failed to activate', {
                 module: module.id,
                 parentEvent,
