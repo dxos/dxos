@@ -275,6 +275,20 @@ export const isContribution = (value: unknown): value is AnyContribution => {
 };
 
 /**
+ * Normalizes a module activate result into a flat list of items (legacy capabilities and
+ * typed contributions).
+ */
+export const normalizeActivateResult = (
+  result: ModuleReturn | readonly AnyContribution[],
+): Array<Any | AnyContribution> => {
+  if (result == null) {
+    return [];
+  }
+  // Cast: Array.isArray does not narrow the ReadonlyArray members of ModuleReturn.
+  return (Array.isArray(result) ? [...result] : [result]) as Array<Any | AnyContribution>;
+};
+
+/**
  * Expands typed contributions into per-value capability entries; legacy capability entries
  * pass through. A multi-value contribution's deactivate hook is attached to its first entry
  * so deactivation runs it exactly once.

@@ -22,14 +22,14 @@ and the legacy API is deleted (Phase 8).
 
 ## Phase 3 — Manager: dependency pass + coexistence
 
-- [ ] `start()` (idempotent; dependency pass ∥ legacy Startup wave; Startup PubSub message last); `activate(Startup)` delegates
-- [ ] `_activateDependencyGraph` (provider index, hard/soft edges, Kahn, tagged errors, waitFor bridge)
-- [ ] `_activateModule` (requires Context, provides validation, sync contribution, compatFires)
-- [ ] Event-mode activation with on-demand provider pull; mode guard on event queries
-- [ ] Dynamic enable/disable (`_pendingReactivate`), shutdown, lazy unchanged
-- [ ] Replace `/No capability found for/` regex with CapabilityNotFoundError checks
-- [ ] Tests: `describe('capability dependency activation')` (see DESIGN.md test plan); legacy suite untouched-green
-- [ ] Gate: app-framework test
+- [x] `start()` (dependency pass ∥ legacy Startup wave via `_activateEvent(suppressEventMessage)`; event-level Startup message published last — useApp ready contract); `activate(Startup)` delegates to `start()`; `Startup` event moved to core `activation-event.ts` (common re-exports)
+- [x] `_activateDependencyGraph` (singleton provider index + DuplicateProviderError; hard edges + Kahn waves + DependencyCycleError w/ path; multi soft edges dropped wholesale on cycle; MissingProviderError w/ event-gated hint; legacy → waitFor bridge; per-module failure isolation skips transitive dependents only)
+- [x] `_resolveRequires` (Context.unsafeMake; singleton getAll→waitFor bounded by activationTimeout→CapabilityNotFoundError; multi→contributions view) wired into `_loadModule`; runtime ProvidesMismatchError validation on raw items (empty provideAll counts)
+- [x] `_pullDependencyProviders` (event-mode on-demand transitive provider pull in `_activateEvent`); compatFires fired after dependency-module activation and via `_getAfterEvents` for event-mode waves
+- [x] `deactivate` dependents-first (`_collectCapabilityDependents`, reverse activation order) + `_pendingReactivate`; `_enableOne` incremental pass when `_started` (failures scoped to plugin); shutdown resets `_started`/`_pendingReactivate`
+- [x] Regex sniff replaced in Phase 1
+- [x] Tests: `describe('capability dependency activation')` — 19 tests, all green; legacy suite untouched-green (197 total)
+- [x] Gate: app-framework build + test
 
 ## Phase 4 — Core migrations (app-framework common, process-manager, app-toolkit)
 

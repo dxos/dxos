@@ -6,8 +6,9 @@ import { ActivationEvent as ActivationEvent$ } from '../core';
 
 /**
  * Fired when the app is started.
+ * Defined in core; see {@link ActivationEvent$.Startup}.
  */
-export const Startup = ActivationEvent$.make('org.dxos.app-framework.event.startup');
+export const Startup = ActivationEvent$.Startup;
 
 //
 // Dependent Events
