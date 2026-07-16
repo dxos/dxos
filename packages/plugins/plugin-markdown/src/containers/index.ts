@@ -12,3 +12,4 @@ export const MarkdownArticle: ComponentType<any> = lazy(() => import('./Markdown
 export const MarkdownSettings: ComponentType<any> = lazy(() => import('./MarkdownSettings'));
 export const DiffView: ComponentType<any> = lazy(() => import('./DiffView'));
 export const DocumentHistory: ComponentType<any> = lazy(() => import('./DocumentHistory'));
+export const MarkdownProperties: ComponentType<any> = lazy(() => import('./MarkdownProperties'));
