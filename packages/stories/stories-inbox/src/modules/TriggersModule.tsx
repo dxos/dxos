@@ -8,14 +8,13 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { Operation, Trigger } from '@dxos/compute';
-import { TriggerDispatcher } from '@dxos/compute-runtime';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { isCursorForTarget } from '@dxos/plugin-connector';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ModuleProps } from '@dxos/story-modules';
 
@@ -66,20 +65,21 @@ export const TriggersModule = ({ space }: ModuleProps) => {
   const [invokingId, setInvokingId] = useState<string | undefined>();
   const triggerToInvokeRef = useRef<Trigger.Trigger | undefined>(undefined);
 
+  // Invoke via the aggregate monitor (not the local dispatcher directly) so a trigger marked
+  // `remote` is routed to the EDGE dispatcher, while a local trigger runs in-process.
   const invokeTrigger = useSpaceCallback(
     space.db.spaceId,
-    [TriggerDispatcher],
+    [Trigger.TriggerMonitorService],
     Effect.fnUntraced(function* () {
       const trigger = triggerToInvokeRef.current;
       if (!trigger) {
         return;
       }
 
-      const dispatcher = yield* TriggerDispatcher;
-      const now = new Date();
-      yield* dispatcher.invokeTrigger({
+      const monitor = yield* Trigger.TriggerMonitorService;
+      yield* monitor.invokeTrigger({
         trigger,
-        event: { tick: now.getTime() },
+        event: { tick: Date.now() },
       });
     }),
   );
@@ -131,6 +131,19 @@ export const TriggersModule = ({ space }: ModuleProps) => {
                 <li key={trigger.id} className='flex flex-col gap-1 rounded border border-separator p-2'>
                   <div className='font-mono text-xs truncate'>{trigger.id}</div>
                   <div className='text-description'>{formatTriggerSpec(trigger)}</div>
+                  <Input.Root>
+                    <div className='flex items-center gap-2'>
+                      <Input.Switch
+                        checked={trigger.remote === true}
+                        onCheckedChange={(checked) => {
+                          Obj.update(trigger, (trigger) => {
+                            trigger.remote = checked;
+                          });
+                        }}
+                      />
+                      <Input.Label>{trigger.remote ? 'Remote (edge)' : 'Local'}</Input.Label>
+                    </div>
+                  </Input.Root>
                   {lastInvocation && (
                     <div className='text-xs'>
                       Last run: {formatInvocationResult(lastInvocation.result)}
