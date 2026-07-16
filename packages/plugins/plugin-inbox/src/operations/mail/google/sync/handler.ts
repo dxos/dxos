@@ -14,7 +14,7 @@ import { Cursor } from '@dxos/link';
 import { GoogleCredentials, GoogleMailApi } from '../../../../services';
 import { InboxOperation } from '../../../../types';
 import { runMailSync } from '../../mail-sync';
-import { gmailMailSyncProvider } from './sync-provider';
+import { googleMailSyncProvider } from './sync-provider';
 
 const handler = InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(({ binding: bindingRef, userId = 'me', label = 'all' }) =>
@@ -29,14 +29,14 @@ const handler = InboxOperation.GoogleMailSync.pipe(
       // the HTTP client + credentials. Chained `Layer.provide` reads as that dependency stack.
       return yield* runMailSync({ binding: bindingRef }).pipe(
         Effect.provide(
-          gmailMailSyncProvider({ userId, label }).pipe(
+          googleMailSyncProvider({ userId, label }).pipe(
             Layer.provide(InboxResolver.Live),
             Layer.provide(GoogleMailApi.Live),
             Layer.provide(FetchHttpClient.layer),
             Layer.provide(GoogleCredentials.fromAccessToken(accessTokenRef)),
           ),
         ),
-        Effect.withSpan('gmail-sync'),
+        Effect.withSpan('google-sync'),
       );
     }),
   ),

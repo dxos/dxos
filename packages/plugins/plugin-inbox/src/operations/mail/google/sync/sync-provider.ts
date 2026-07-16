@@ -20,14 +20,14 @@ import { Mailbox } from '../../../../types';
 import { parseFromHeader } from '../../../util';
 import { type MailSyncItem, MailSyncProvider, type MailSyncSource } from '../../mail-sync';
 import { decodeBody, mapToMessage } from '../mapper';
-import { GMAIL_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
+import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
 
 /**
  * Gmail's {@link MailSyncProvider}: the message source, the label→tag map, and the fused decode+map.
  * Captures {@link GoogleMailApi} + {@link Resolver} so the harness never names them. Mirror of the JMAP
  * provider (`jmapMailSyncProvider`).
  */
-export const gmailMailSyncProvider = (options: {
+export const googleMailSyncProvider = (options: {
   userId: string;
   label: string;
 }): Layer.Layer<MailSyncProvider, never, GoogleMailApi | Resolver> =>
@@ -41,7 +41,7 @@ export const gmailMailSyncProvider = (options: {
       const { userId, label } = options;
       return {
         name: 'gmail',
-        config: GMAIL_SYNC_CONFIG,
+        config: GOOGLE_SYNC_CONFIG,
         foreignKeySource: GMAIL_SOURCE,
         prepare: ({ mailbox }) =>
           Effect.gen(function* () {
@@ -109,7 +109,7 @@ export const gmailMailSyncProvider = (options: {
  */
 // TODO(wittjosiah): Migrate this label→Tag sync onto a pipeline too (source: labels; sink:
 //   find-or-create Tag), rather than the imperative loop below.
-const syncLabels = Effect.fn('gmail-sync.labels')(function* (mailbox: Mailbox.Mailbox, userId: string) {
+const syncLabels = Effect.fn('google-sync.labels')(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const api = yield* GoogleMailApi;
   const { labels } = yield* api.listLabels(userId);
   const labelMap = new Map<string, string>();

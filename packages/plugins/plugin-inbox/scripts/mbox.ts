@@ -8,7 +8,7 @@
  * Gmail Takeout exports each label as a large RFC-822 `.mbox` file. Messages carry Gmail's own
  * headers (`X-GM-THRID`, `X-Gmail-Labels`, `Message-ID`) which map onto `threadId` / tags / the
  * dedup key. The produced `Message` shape mirrors the live Gmail sync mapper
- * (`src/operations/mail/gmail/mapper.ts`) so imported data is indistinguishable from synced data.
+ * (`src/operations/mail/google/mapper.ts`) so imported data is indistinguishable from synced data.
  *
  * `mailparser` is a devDependency: this module is only reached by the import script, never bundled.
  */

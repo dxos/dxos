@@ -36,7 +36,7 @@ const JMAP_SYNC_CONFIG = {
 /**
  * JMAP's {@link MailSyncProvider}: session/account discovery, the email source, the folder→tag map, and
  * the fused decode+map. Captures {@link JmapMailApi} + {@link Resolver} so the harness never names them.
- * Mirror of the Gmail provider (`gmailMailSyncProvider`).
+ * Mirror of the Gmail provider (`googleMailSyncProvider`).
  */
 export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, JmapMailApi | Resolver> =>
   Layer.effect(
