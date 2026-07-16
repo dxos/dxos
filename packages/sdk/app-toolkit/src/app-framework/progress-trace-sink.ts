@@ -74,12 +74,7 @@ export const createProgressTraceSink = (
     cancelMonitor(key);
   };
 
-  const monitorFor = (
-    registry: AppCapabilities.ProgressRegistry,
-    key: string,
-    label?: string,
-    pid?: string,
-  ) => {
+  const monitorFor = (registry: AppCapabilities.ProgressRegistry, key: string, label?: string, pid?: string) => {
     const existing = monitors.get(key);
     if (existing && existing.pid === pid) {
       return existing.handle;

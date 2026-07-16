@@ -15,11 +15,12 @@ import {
   createProgressTraceSink,
 } from './progress-trace-sink';
 
-const statusMessage = (
-  data: Trace.PayloadType<typeof Trace.StatusUpdate>,
-  meta: Trace.Meta = {},
-): Trace.Message =>
-  ({ meta, isEphemeral: true, events: [{ type: Trace.StatusUpdate.key, timestamp: Date.now(), data }] }) as unknown as Trace.Message;
+const statusMessage = (data: Trace.PayloadType<typeof Trace.StatusUpdate>, meta: Trace.Meta = {}): Trace.Message =>
+  ({
+    meta,
+    isEphemeral: true,
+    events: [{ type: Trace.StatusUpdate.key, timestamp: Date.now(), data }],
+  }) as unknown as Trace.Message;
 
 describe('createProgressTraceSink', () => {
   test('registers a monitor and advances progress for status.update events', () => {
