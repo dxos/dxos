@@ -7,18 +7,20 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { AccessToken } from '@dxos/link';
-import { Publisher } from '@dxos/plugin-blogger/types';
 import { Connection } from '@dxos/plugin-connector/types';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 import { makeTypefullyPublisherService } from './typefully-api';
 
-// Records what the stubbed `fetch` was called with so tests can assert the real
-// request (method, URL, auth header, body) rather than that a function was called.
+const PROXY = 'https://cors-proxy.dxos.workers.dev/api.typefully.com/v2';
+
+// Records what the stubbed `fetch` was called with so tests can assert the real request (method, URL,
+// auth header, body). Requests are routed through the DXOS CORS proxy, which relays the caller's
+// `Authorization` as `X-Cors-Proxy-Authorization`, so that is where the Bearer token is asserted.
 type RecordedCall = {
   url: string;
   method: string;
-  apiKey: string | null;
+  auth: string | null;
   body: string;
 };
 
@@ -31,7 +33,7 @@ const stubFetch = (respond: (call: RecordedCall) => Response) => {
       const call: RecordedCall = {
         url: request.url,
         method: request.method,
-        apiKey: request.headers.get('X-API-KEY'),
+        auth: request.headers.get('X-Cors-Proxy-Authorization'),
         body: await request.clone().text(),
       };
       calls.push(call);
@@ -40,6 +42,13 @@ const stubFetch = (respond: (call: RecordedCall) => Response) => {
   );
   return calls;
 };
+
+// Routes `GET /social-sets` to a personal set + a team set (`ss1`); everything else to `rest`. The
+// team set must be chosen (sync targets the team), so downstream calls are expected under `ss1`.
+const withSocialSet = (rest: (call: RecordedCall) => Response) => (call: RecordedCall) =>
+  call.url.endsWith('/v2/social-sets')
+    ? Response.json({ results: [{ id: 'personal' }, { id: 'ss1', team: { id: 't1', name: 'Team' } }] })
+    : rest(call);
 
 describe('Typefully PublisherService', () => {
   let builder: EchoTestBuilder;
@@ -68,42 +77,56 @@ describe('Typefully PublisherService', () => {
     expect(service.id).toBe('typefully');
     expect(service.label).toBe('Typefully');
     expect(service.source).toBe(TYPEFULLY_SOURCE);
+    expect(service.connectorId).toBe(TYPEFULLY_CONNECTOR_ID);
   });
 
-  test('createDraft POSTs to /v1/drafts/ with X-API-KEY Bearer auth and decodes the draft', async ({ expect }) => {
+  test('createDraft resolves the social set then POSTs a v2 draft with Bearer auth and platform body', async ({
+    expect,
+  }) => {
     const { connection } = await setup();
-    const calls = stubFetch(() => Response.json({ id: 123, content: 'Hello world' }));
+    const calls = stubFetch(
+      withSocialSet(() => Response.json({ id: 123, platforms: { x: { posts: [{ text: 'Hello world' }] } } })),
+    );
 
     const service = makeTypefullyPublisherService();
     const draft = await service.createDraft(connection, { text: 'Hello world' });
 
     expect(draft.id).toBe('123');
     expect(draft.text).toBe('Hello world');
-    expect(calls).toHaveLength(1);
-    expect(calls[0].method).toBe('POST');
-    expect(calls[0].url).toBe('https://api.typefully.com/v1/drafts/');
-    // Verified against the Typefully v1 docs: auth is `X-API-KEY: Bearer <key>`.
-    expect(calls[0].apiKey).toBe('Bearer test-key');
-    expect(JSON.parse(calls[0].body)).toMatchObject({ content: 'Hello world' });
+    expect(calls).toHaveLength(2);
+    expect(calls[0].url).toBe(`${PROXY}/social-sets`);
+    expect(calls[1].method).toBe('POST');
+    expect(calls[1].url).toBe(`${PROXY}/social-sets/ss1/drafts`);
+    // v2 auth is `Authorization: Bearer <key>`, relayed by the proxy as `X-Cors-Proxy-Authorization`.
+    expect(calls[1].auth).toBe('Bearer test-key');
+    expect(JSON.parse(calls[1].body)).toMatchObject({
+      platforms: { x: { enabled: true, posts: [{ text: 'Hello world' }] } },
+    });
   });
 
-  test('createDraft forwards a schedule date when provided', async ({ expect }) => {
+  test('createDraft forwards a schedule date as publish_at', async ({ expect }) => {
     const { connection } = await setup();
-    const calls = stubFetch(() => Response.json({ id: 5, content: 'later' }));
+    const calls = stubFetch(
+      withSocialSet(() => Response.json({ id: 5, platforms: { x: { posts: [{ text: 'later' }] } } })),
+    );
 
     const service = makeTypefullyPublisherService();
     await service.createDraft(connection, { text: 'later', scheduledAt: '2026-01-25T10:00:00Z' });
 
-    expect(JSON.parse(calls[0].body)).toMatchObject({ 'content': 'later', 'schedule-date': '2026-01-25T10:00:00Z' });
+    expect(JSON.parse(calls[1].body)).toMatchObject({ publish_at: '2026-01-25T10:00:00Z' });
   });
 
-  test('listDrafts GETs recently-published and returns an array of drafts', async ({ expect }) => {
+  test('listDrafts GETs the social set drafts and maps platform post text', async ({ expect }) => {
     const { connection } = await setup();
-    const calls = stubFetch(() =>
-      Response.json([
-        { id: 1, content: 'a' },
-        { id: 2, text: 'b' },
-      ]),
+    const calls = stubFetch(
+      withSocialSet(() =>
+        Response.json({
+          results: [
+            { id: 1, platforms: { x: { posts: [{ text: 'a' }] } } },
+            { id: 2, platforms: { x: { posts: [{ text: 'b1' }, { text: 'b2' }] } } },
+          ],
+        }),
+      ),
     );
 
     const service = makeTypefullyPublisherService();
@@ -111,24 +134,36 @@ describe('Typefully PublisherService', () => {
 
     expect(drafts).toHaveLength(2);
     expect(drafts[0]).toMatchObject({ id: '1', text: 'a' });
-    expect(drafts[1]).toMatchObject({ id: '2', text: 'b' });
-    expect(calls[0].method).toBe('GET');
-    expect(calls[0].url).toBe('https://api.typefully.com/v1/drafts/recently-published/');
-    expect(calls[0].apiKey).toBe('Bearer test-key');
+    // A thread of posts is joined into a single body.
+    expect(drafts[1]).toMatchObject({ id: '2', text: 'b1\n\nb2' });
+    expect(calls[1].method).toBe('GET');
+    expect(calls[1].url).toBe(`${PROXY}/social-sets/ss1/drafts`);
+    expect(calls[1].auth).toBe('Bearer test-key');
   });
 
-  test('getDraft, updateDraft and deleteDraft reject with PublisherError (unsupported by the v1 API)', async ({
-    expect,
-  }) => {
+  test('updateDraft PATCHes the draft with the new platform body', async ({ expect }) => {
     const { connection } = await setup();
-    // No network: unsupported verbs must fail fast without issuing a request.
-    stubFetch(() => {
-      throw new Error('unexpected network call');
-    });
+    const calls = stubFetch(
+      withSocialSet(() => Response.json({ id: 7, platforms: { x: { posts: [{ text: 'edited' }] } } })),
+    );
 
     const service = makeTypefullyPublisherService();
-    await expect(service.getDraft(connection, 'x')).rejects.toBeInstanceOf(Publisher.PublisherError);
-    await expect(service.updateDraft(connection, 'x', { text: 't' })).rejects.toBeInstanceOf(Publisher.PublisherError);
-    await expect(service.deleteDraft(connection, 'x')).rejects.toBeInstanceOf(Publisher.PublisherError);
+    const draft = await service.updateDraft(connection, '7', { text: 'edited' });
+
+    expect(draft.text).toBe('edited');
+    expect(calls[1].method).toBe('PATCH');
+    expect(calls[1].url).toBe(`${PROXY}/social-sets/ss1/drafts/7`);
+    expect(JSON.parse(calls[1].body)).toMatchObject({ platforms: { x: { posts: [{ text: 'edited' }] } } });
+  });
+
+  test('deleteDraft DELETEs the draft', async ({ expect }) => {
+    const { connection } = await setup();
+    const calls = stubFetch(withSocialSet(() => new Response(null, { status: 204 })));
+
+    const service = makeTypefullyPublisherService();
+    await service.deleteDraft(connection, '9');
+
+    expect(calls[1].method).toBe('DELETE');
+    expect(calls[1].url).toBe(`${PROXY}/social-sets/ss1/drafts/9`);
   });
 });

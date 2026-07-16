@@ -161,6 +161,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           },
           () => handleAddPost(),
         )
+        .separator()
         .action(
           'sync',
           {
@@ -172,10 +173,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           },
           () => void handleSync(),
         )
-        // "Connect <publisher>" contributed by plugin-connector's `connectorAuth` extension (via the
-        // Publication type's `ConnectorAuthAnnotation`); shown until a matching Connection exists.
         .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
-        // Overflow (⋮) menu at the end of the toolbar. Delete opens a confirmation dialog first.
         .menu('more', (menu) =>
           menu.action(
             'delete',

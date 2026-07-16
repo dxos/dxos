@@ -29,6 +29,7 @@ export const PasswordField = ({
         <Input.TextInput
           type='password'
           noAutoFill
+          spellCheck={false}
           disabled={!!readonly}
           placeholder={placeholder}
           value={value}

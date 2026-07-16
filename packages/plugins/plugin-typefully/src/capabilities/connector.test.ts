@@ -11,13 +11,13 @@ import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 import { createTypefullyConnectorEntry } from './connector';
 
 describe('Typefully connector', () => {
-  test('onSubmit maps apiKey to AccessToken.token and links Connection to connector', ({ expect }) =>
+  test('onSubmit maps the API key to AccessToken.token and links Connection to connector', ({ expect }) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
         const entry = createTypefullyConnectorEntry();
         const connector = { id: TYPEFULLY_CONNECTOR_ID, source: TYPEFULLY_SOURCE, label: 'Typefully' };
 
-        const result = yield* entry.credentialForm.onSubmit({ values: { apiKey: 'test-key' }, connector });
+        const result = yield* entry.credentialForm.onSubmit({ values: { token: 'test-key' }, connector });
 
         expect(result.kind).toBe('complete');
         expect(result.accessToken.token).toBe('test-key');
@@ -32,7 +32,7 @@ describe('Typefully connector', () => {
     const entry = createTypefullyConnectorEntry();
     const connector = { id: TYPEFULLY_CONNECTOR_ID, label: 'Typefully' };
     return expect(
-      EffectEx.runPromise(entry.credentialForm.onSubmit({ values: { apiKey: '   ' }, connector })),
+      EffectEx.runPromise(entry.credentialForm.onSubmit({ values: { token: '   ' }, connector })),
     ).rejects.toThrow('requires an API key');
   });
 });
