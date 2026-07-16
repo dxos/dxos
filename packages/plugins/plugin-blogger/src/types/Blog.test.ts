@@ -9,6 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { invariant } from '@dxos/invariant';
 import { Markdown } from '@dxos/plugin-markdown';
+import { Text } from '@dxos/schema';
 
 import { Blog } from './index';
 
@@ -27,7 +28,7 @@ describe('Blog schema', () => {
     expect(post.name).toBe('Hello');
     const outline = post.outline.target;
     invariant(outline);
-    expect(Obj.instanceOf(Markdown.Document, outline)).toBe(true);
+    expect(Obj.instanceOf(Text.Text, outline)).toBe(true);
     expect(post.drafts).toHaveLength(1);
     expect(Obj.instanceOf(Blog.Draft, post.drafts?.[0]?.target)).toBe(true);
   });
@@ -36,7 +37,7 @@ describe('Blog schema', () => {
     const publication = Blog.makePublication({ name: 'Blog' });
     const instructions = publication.instructions.target;
     invariant(instructions);
-    expect(Obj.instanceOf(Markdown.Document, instructions)).toBe(true);
+    expect(Obj.instanceOf(Text.Text, instructions)).toBe(true);
     expect(publication.posts).toEqual([]);
   });
 

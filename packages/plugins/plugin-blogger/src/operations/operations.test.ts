@@ -12,6 +12,7 @@ import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
+import { Text } from '@dxos/schema';
 
 import { Blog } from '../types';
 import { BloggerOperation, BloggerOperationHandlerSet } from './index';
@@ -20,7 +21,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: BloggerOperationHandlerSet,
-  types: [Blog.Publication, Blog.Post, Blog.Draft, Markdown.Document, Collection.Collection],
+  types: [Blog.Publication, Blog.Post, Blog.Draft, Markdown.Document, Text.Text, Collection.Collection],
   disableLlmMemoization: true,
 });
 
@@ -40,7 +41,7 @@ describe('Blog operations', () => {
         expect(publication.posts).toEqual([]);
 
         const instructions = yield* Database.load(publication.instructions);
-        expect(Obj.instanceOf(Markdown.Document, instructions)).toBe(true);
+        expect(Obj.instanceOf(Text.Text, instructions)).toBe(true);
 
         // Persisted: actually attached to the space graph, not merely resolvable by
         // `Database.load` off a live in-memory ref. A query against the database only
@@ -85,7 +86,7 @@ describe('Blog operations', () => {
         expect(post.name).toBe('Hello World');
 
         const outline = yield* Database.load(post.outline);
-        expect(Obj.instanceOf(Markdown.Document, outline)).toBe(true);
+        expect(Obj.instanceOf(Text.Text, outline)).toBe(true);
 
         expect(post.drafts).toHaveLength(1);
         const draftRef = post.drafts?.[0];

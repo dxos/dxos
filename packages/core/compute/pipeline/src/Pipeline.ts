@@ -57,32 +57,44 @@ export const run: {
 
 /**
  * Abort a pipeline with an `AbortSignal`.
- * @param signal
- * @returns
+ *
+ * Races the wrapped effect against the signal; losing the race resolves as a genuine fiber
+ * interrupt, which skips every subsequent `yield*`/pipe step in the wrapped effect (an interrupt is
+ * not a failure — `Effect.tapError` and friends never see it). `onCancel` runs via `Effect.onInterrupt`
+ * so every caller gets cancellation cleanup (e.g. resetting a progress monitor stuck at its last
+ * `running` snapshot) without each one having to remember to add its own `Effect.onInterrupt`.
  */
-export const abortWith = (signal: AbortSignal): (<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>) =>
-  Effect.raceFirst(
-    Effect.async<never>((resume) => {
-      if (signal.aborted) {
-        resume(Effect.interrupt);
-        return;
-      }
+export const abortWith =
+  (
+    signal: AbortSignal,
+    onCancel: Effect.Effect<void> = Effect.void,
+  ): (<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>) =>
+  (effect) =>
+    effect.pipe(
+      Effect.raceFirst(
+        Effect.async<never>((resume) => {
+          if (signal.aborted) {
+            resume(Effect.interrupt);
+            return;
+          }
 
-      const onAbort = () => {
-        resume(
-          Effect.gen(function* () {
-            log.info('aborting pipeline', {
-              span: yield* Effect.currentSpan.pipe(
-                Effect.map((span) => span.name),
-                Effect.catchAll((_) => Effect.succeed(undefined)),
-              ),
-            });
-            return yield* Effect.interrupt;
-          }),
-        );
-      };
+          const onAbort = () => {
+            resume(
+              Effect.gen(function* () {
+                log.info('aborting pipeline', {
+                  span: yield* Effect.currentSpan.pipe(
+                    Effect.map((span) => span.name),
+                    Effect.catchAll((_) => Effect.succeed(undefined)),
+                  ),
+                });
+                return yield* Effect.interrupt;
+              }),
+            );
+          };
 
-      signal.addEventListener('abort', onAbort, { once: true });
-      return Effect.sync(() => signal.removeEventListener('abort', onAbort));
-    }),
-  );
+          signal.addEventListener('abort', onAbort, { once: true });
+          return Effect.sync(() => signal.removeEventListener('abort', onAbort));
+        }),
+      ),
+      Effect.onInterrupt(() => onCancel),
+    );

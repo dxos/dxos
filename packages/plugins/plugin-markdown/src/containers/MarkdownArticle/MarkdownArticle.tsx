@@ -137,7 +137,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
               )}
               <Panel.Content>
                 <MarkdownEditor.Content initialValue={initialValue} />
-                <MarkdownEditor.Blocks />
+                <Editor.Blocks />
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>

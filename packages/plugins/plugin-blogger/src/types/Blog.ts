@@ -4,9 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, HiddenAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Markdown } from '@dxos/plugin-markdown';
+import { Text } from '@dxos/schema';
 
 /**
  * A single version of a post; wraps a commentable markdown document.
@@ -27,7 +28,7 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
-    outline: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
+    outline: Ref.Ref(Text.Text).pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown)),
     drafts: Schema.Array(Ref.Ref(Draft)).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'amber' })),
 ) {}
@@ -38,7 +39,7 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
 export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos.type.blogger.publication', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    instructions: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
+    instructions: Ref.Ref(Text.Text).pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown)),
     posts: Schema.Array(Ref.Ref(Post)).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--books--regular', hue: 'amber' })),
 ) {}
@@ -54,9 +55,9 @@ export const makeDraft = ({ label, content = '' }: { label?: string; content?: s
   return draft;
 };
 
-/** Creates a `Post` with a fresh outline document and one initial draft. */
+/** Creates a `Post` with a fresh outline text and one initial draft. */
 export const makePost = ({ name, description }: { name?: string; description?: string } = {}): Post => {
-  const outline = Markdown.make({});
+  const outline = Text.make();
   const draft = makeDraft({ label: 'Draft 1' });
   const post = Obj.make(Post, { name, description, outline: Ref.make(outline), drafts: [Ref.make(draft)] });
   Obj.setParent(outline, post);
@@ -64,9 +65,9 @@ export const makePost = ({ name, description }: { name?: string; description?: s
   return post;
 };
 
-/** Creates a `Publication` with a fresh instructions document and no posts. */
+/** Creates a `Publication` with a fresh instructions text and no posts. */
 export const makePublication = ({ name }: { name?: string } = {}): Publication => {
-  const instructions = Markdown.make({});
+  const instructions = Text.make();
   const publication = Obj.make(Publication, { name, instructions: Ref.make(instructions), posts: [] });
   Obj.setParent(instructions, publication);
   return publication;

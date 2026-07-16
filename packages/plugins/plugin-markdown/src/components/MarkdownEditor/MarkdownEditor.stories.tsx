@@ -62,7 +62,7 @@ const EditorArticle = (props: MarkdownEditorEditorRootProps) => (
       </Panel.Toolbar>
       <Panel.Content>
         <MarkdownEditor.Content />
-        <MarkdownEditor.Blocks />
+        <Editor.Blocks />
       </Panel.Content>
     </Panel.Root>
   </Editor.Root>

@@ -7,7 +7,6 @@ import { type EditorView } from '@codemirror/view';
 import { type Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import {
@@ -44,7 +43,6 @@ type MarkdownEditorContextValue = Merge<
   {
     id: string;
     attendableId?: string;
-    widgets: XmlWidgetState[];
   },
   Pick<ExtensionsOptions, 'compact' | 'viewMode'>,
   Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>
@@ -123,6 +121,7 @@ export const MarkdownEditorProvider = ({
   const editorRootProps = useMemo<MarkdownEditorEditorRootProps>(
     () => ({
       extensions,
+      widgets,
       viewMode,
       getMenu: menuOptions.getMenu,
       trigger: menuOptions.trigger,
@@ -130,7 +129,7 @@ export const MarkdownEditorProvider = ({
       ...(menuOptions.filter !== undefined ? { filter: menuOptions.filter } : {}),
       ...(menuOptions.triggerKey !== undefined ? { triggerKey: menuOptions.triggerKey } : {}),
     }),
-    [extensions, viewMode, menuOptions],
+    [extensions, widgets, viewMode, menuOptions],
   );
 
   const markdownContextValue = useMemo<MarkdownEditorContextValue>(
@@ -139,12 +138,11 @@ export const MarkdownEditorProvider = ({
       attendableId,
       compact,
       viewMode,
-      widgets,
       onAction,
       onFileUpload,
       onViewModeChange,
     }),
-    [id, attendableId, compact, viewMode, widgets, onAction, onFileUpload, onViewModeChange],
+    [id, attendableId, compact, viewMode, onAction, onFileUpload, onViewModeChange],
   );
 
   return (
@@ -233,39 +231,19 @@ const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
 MarkdownEditorToolbar.displayName = MARKDOWN_EDITOR_TOOLBAR_NAME;
 
 //
-// MarkdownEditor.Blocks (embedded objects)
-//
-
-const MARKDOWN_EDITOR_BLOCKS_NAME = 'MarkdownEditor.Blocks';
-
-type MarkdownEditorBlocksProps = {};
-
-const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
-  const { widgets } = useMarkdownEditorContext(MARKDOWN_EDITOR_BLOCKS_NAME);
-
-  return (
-    <>
-      {widgets.map(({ id, root, Component, props }) => (
-        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
-      ))}
-    </>
-  );
-};
-
-MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
-
-//
 // MarkdownEditor
 //
+
+// NOTE: Embedded-block portals are rendered by `Editor.Blocks` (react-ui-editor); widgets are passed
+// to `Editor.Root` via `editorRootProps`.
 
 /** @private */
 export const MarkdownEditor = {
   Content: MarkdownEditorContent,
   Toolbar: MarkdownEditorToolbar,
-  Blocks: MarkdownEditorBlocks,
 };
 
-export type { MarkdownEditorBlocksProps, MarkdownEditorContentProps, MarkdownEditorToolbarProps };
+export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps };
 
 /** @deprecated Use `MarkdownEditorProviderProps`. */
 export type MarkdownEditorRootProps = MarkdownEditorProviderProps;

@@ -57,11 +57,20 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
     return this.block && this.blockHeight != null ? this.blockHeight : -1;
   }
 
-  // Report the block's real screen rect so CM can locate positions inside the widget. Large block
-  // widgets need this alongside `estimatedHeight`: without it CM mis-computes scroll geometry and
-  // jumps the viewport when scrolling past the block (codemirror/dev#761).
-  override coordsAt(dom: HTMLElement) {
-    return this.block ? dom.getBoundingClientRect() : null;
+  // Report per-position screen coordinates inside the block so CM can anchor scroll correctly. Large
+  // block widgets need this alongside `estimatedHeight` (codemirror/dev#761); returning the same rect
+  // for every position confuses CM's geometry, so interpolate a vertical position across the widget's
+  // range (offset `pos` within `to - from`).
+  override coordsAt(dom: HTMLElement, pos: number, side: number) {
+    if (!this.block) {
+      return null;
+    }
+    const rect = dom.getBoundingClientRect();
+    const range = (this.props as XmlWidgetProps).range;
+    const length = range ? range.to - range.from : 0;
+    const fraction = length > 0 ? Math.min(1, Math.max(0, pos / length)) : side > 0 ? 1 : 0;
+    const y = rect.top + rect.height * fraction;
+    return { left: rect.left, right: rect.right, top: y, bottom: y };
   }
 
   override eq(other: this) {

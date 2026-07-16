@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector/types';
@@ -20,6 +21,10 @@ import { BloggerOperation } from '#operations';
 import { Blog, BloggerCapabilities } from '#types';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Blog.Post>;
+
+// The Post form shows only the name and the inline outline content (drafts + description are managed
+// elsewhere); pick those fields from the Post schema rather than rendering all of them.
+const PostFormSchema = Type.getSchema(Blog.Post).pipe(Schema.pick('name', 'outline'));
 
 /**
  * Article surface for a `Blog.Post`: a schema-driven form of the Post's own fields (name,
@@ -223,11 +228,9 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
           <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
-          <div className='grid h-full grid-rows-[minmax(0,1fr)_minmax(0,2fr)] overflow-hidden'>
-            <div className='min-bs-0 overflow-hidden'>
-              <ObjectForm object={subject} type={Blog.Post} />
-            </div>
-            <div className='min-bs-0 overflow-hidden'>
+          <div className='grid h-full grid-rows-[auto_minmax(0,2fr)] gap-3 overflow-hidden'>
+            <ObjectForm object={subject} type={Blog.Post} schema={PostFormSchema} />
+            <div className='dx-container'>
               {draftData && <Surface.Surface type={AppSurface.Article} data={draftData} limit={1} />}
             </div>
           </div>

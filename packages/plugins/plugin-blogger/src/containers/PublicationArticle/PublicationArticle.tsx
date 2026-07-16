@@ -142,9 +142,9 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
-          <div className='grid h-full grid-rows-[minmax(0,1fr)_minmax(0,2fr)] overflow-hidden'>
-            <ObjectForm object={subject} type={Blog.Publication} />
-            <div className='min-bs-0 overflow-hidden'>
+          <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
+            <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
+            <div className='dx-container'>
               {mode === 'gallery' ? (
                 <Masonry.Root Tile={PostTile}>
                   <Masonry.Content>
