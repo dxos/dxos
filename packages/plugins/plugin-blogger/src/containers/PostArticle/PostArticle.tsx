@@ -18,9 +18,6 @@ import { Blog } from '#types';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Blog.Post>;
 
-// The Post form shows only the name and the inline outline; `content`/`status` are system-managed.
-const PostFormSchema = Type.getSchema(Blog.Post).pipe(Schema.pick('name', 'outline'));
-
 /**
  * Article surface for a `Blog.Post`: a schema-driven form of the post's own fields (name, outline) on
  * top, and the single body `Markdown.Document` (rendered via the markdown article Surface) below. The
@@ -50,19 +47,11 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
   return (
     <Panel.Root role={role}>
       <Panel.Content>
-        <div className='grid h-full grid-rows-[auto_minmax(0,2fr)] gap-3 overflow-hidden'>
-          <ObjectForm object={subject} type={Blog.Post} schema={PostFormSchema} />
-          {contentData && contentAttendableId ? (
-            // The body editor is rendered outside the Deck plank wrapper, so it must supply its own
-            // attendable container (matching the editor's `attendableId`) or its toolbar never gains
-            // attention and stays inactive. See `AttendableContainer`'s note on non-Deck/Stack usage.
-            <AttendableContainer id={contentAttendableId} classNames='dx-container'>
-              <Surface.Surface type={AppSurface.Article} data={contentData} limit={1} />
-            </AttendableContainer>
-          ) : (
-            <div className='dx-container' />
-          )}
-        </div>
+        {contentData && contentAttendableId && (
+          <AttendableContainer id={contentAttendableId} classNames='dx-container'>
+            <Surface.Surface type={AppSurface.Article} data={contentData} limit={1} />
+          </AttendableContainer>
+        )}
       </Panel.Content>
     </Panel.Root>
   );
