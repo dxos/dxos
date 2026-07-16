@@ -16,6 +16,7 @@ export type DiffSpan = {
   text: string;
 };
 
+/** Computes word-level {@link DiffSpan}s between two texts, offset into the after text. */
 export const diffSpans = (before: string, after: string): DiffSpan[] => {
   const spans: DiffSpan[] = [];
   let offset = 0;
@@ -104,20 +105,41 @@ export const merge3 = ({ base, ours, theirs }: Merge3Props): Merge3Result => {
         (theirsActive && nextOurs < hunkEnd(theirsHunk)));
 
     if (overlap) {
-      // The conflict region spans the union of both intervals; each side's content is its hunk
-      // plus the base lines of the union it leaves unchanged.
-      const unionEnd = Math.max(hunkEnd(oursHunk), hunkEnd(theirsHunk));
+      // The conflict region is the connected union of every intersecting hunk on both sides —
+      // a broad hunk can overlap several smaller ones, all of which must be consumed together.
+      const oursRegion = [oursHunk];
+      const theirsRegion = [theirsHunk];
+      oursCursor += 1;
+      theirsCursor += 1;
+      let unionEnd = Math.max(hunkEnd(oursHunk), hunkEnd(theirsHunk));
+      let expanded = true;
+      while (expanded) {
+        expanded = false;
+        while (oursCursor < oursHunks.length && oursHunks[oursCursor].baseStart < unionEnd) {
+          const hunk = oursHunks[oursCursor];
+          oursRegion.push(hunk);
+          unionEnd = Math.max(unionEnd, hunkEnd(hunk));
+          oursCursor += 1;
+          expanded = true;
+        }
+        while (theirsCursor < theirsHunks.length && theirsHunks[theirsCursor].baseStart < unionEnd) {
+          const hunk = theirsHunks[theirsCursor];
+          theirsRegion.push(hunk);
+          unionEnd = Math.max(unionEnd, hunkEnd(hunk));
+          theirsCursor += 1;
+          expanded = true;
+        }
+      }
+
       out.push(
         '<<<<<<< branch',
-        ...sideContent(baseLines, theirsHunk, next, unionEnd),
+        ...sideContent(baseLines, theirsRegion, next, unionEnd),
         '=======',
-        ...sideContent(baseLines, oursHunk, next, unionEnd),
+        ...sideContent(baseLines, oursRegion, next, unionEnd),
         '>>>>>>> current',
       );
       conflicts += 1;
       baseIndex = unionEnd;
-      oursCursor += 1;
-      theirsCursor += 1;
     } else if (identical) {
       out.push(...oursHunk.lines);
       baseIndex = next + oursHunk.baseLength;
@@ -141,12 +163,17 @@ type Hunk = { baseStart: number; baseLength: number; lines: string[] };
 
 const hunkEnd = (hunk: Hunk) => hunk.baseStart + hunk.baseLength;
 
-/** One side's content for a conflict region: its hunk plus the union's base lines it left unchanged. */
-const sideContent = (baseLines: string[], hunk: Hunk, unionStart: number, unionEnd: number): string[] => [
-  ...baseLines.slice(unionStart, hunk.baseStart),
-  ...hunk.lines,
-  ...baseLines.slice(hunkEnd(hunk), unionEnd),
-];
+/** One side's content for a conflict region: its hunks plus the union's base lines they leave unchanged. */
+const sideContent = (baseLines: string[], hunks: Hunk[], unionStart: number, unionEnd: number): string[] => {
+  const out: string[] = [];
+  let position = unionStart;
+  for (const hunk of hunks) {
+    out.push(...baseLines.slice(position, hunk.baseStart), ...hunk.lines);
+    position = Math.max(position, hunkEnd(hunk));
+  }
+  out.push(...baseLines.slice(position, unionEnd));
+  return out;
+};
 
 /** Convert jsdiff line changes into base-anchored replacement hunks. */
 const lineHunks = (baseLines: string[], sideLines: string[]): Hunk[] => {
@@ -154,7 +181,7 @@ const lineHunks = (baseLines: string[], sideLines: string[]): Hunk[] => {
   let baseIndex = 0;
   let pending: Hunk | undefined;
   for (const change of diffLines(joinForDiff(baseLines), joinForDiff(sideLines))) {
-    const lines = splitLines(stripTrailingNewline(change.value));
+    const lines = chunkLines(change.value);
     if (change.added) {
       pending = pending ?? { baseStart: baseIndex, baseLength: 0, lines: [] };
       pending.lines.push(...lines);
@@ -179,6 +206,10 @@ const lineHunks = (baseLines: string[], sideLines: string[]): Hunk[] => {
 const sameLines = (a: string[], b: string[]) => a.length === b.length && a.every((line, index) => line === b[index]);
 
 const splitLines = (text: string): string[] => (text === '' ? [] : stripTrailingNewline(text).split('\n'));
+
+// Unlike whole-document splitting, a diff chunk is never empty — a chunk of '\n' is one blank
+// line (jsdiff attaches the terminator to its line), so no empty-string special case applies.
+const chunkLines = (value: string): string[] => stripTrailingNewline(value).split('\n');
 
 const stripTrailingNewline = (text: string) => (text.endsWith('\n') ? text.slice(0, -1) : text);
 

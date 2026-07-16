@@ -140,6 +140,51 @@ describe('merge3', () => {
     expect(result.text).toBe('alpha edited\nbravo edited\n');
   });
 
+  test('one broad hunk overlapping multiple hunks forms a single conflict region', ({ expect }) => {
+    // Ours replaces base lines [0,5); theirs edits [1,2) and [3,4) separately.
+    const base = 'l0\nl1\nl2\nl3\nl4\ntail\n';
+    const ours = 'REPLACED\ntail\n';
+    const theirs = 'l0\nl1 edited\nl2\nl3 edited\nl4\ntail\n';
+    const result = merge3({ base, ours, theirs });
+    expect(result.conflicts).toBe(1);
+    // Theirs side of the union carries BOTH edits plus the untouched base lines between them.
+    const theirsSection = result.text.slice(result.text.indexOf('<<<<<<<'), result.text.indexOf('======='));
+    expect(theirsSection).toContain('l1 edited');
+    expect(theirsSection).toContain('l3 edited');
+    expect(theirsSection).toContain('l2');
+    // No hunk is applied twice and trailing content stays outside the conflict.
+    expect(result.text.match(/l1 edited/g)).toHaveLength(1);
+    expect(result.text.match(/l3 edited/g)).toHaveLength(1);
+    expect(result.text.trimEnd().endsWith('tail')).toBe(true);
+  });
+
+  test('inserts a blank line from one side', ({ expect }) => {
+    const base = 'a\nb\n';
+    const ours = 'a\nb\nc\n';
+    const theirs = 'a\n\nb\n';
+    const result = merge3({ base, ours, theirs });
+    expect(result.conflicts).toBe(0);
+    expect(result.text).toBe('a\n\nb\nc\n');
+  });
+
+  test('deletes a blank line from one side', ({ expect }) => {
+    const base = 'a\n\nb\n';
+    const ours = 'a\n\nb\nc\n';
+    const theirs = 'a\nb\n';
+    const result = merge3({ base, ours, theirs });
+    expect(result.conflicts).toBe(0);
+    expect(result.text).toBe('a\nb\nc\n');
+  });
+
+  test('replaces a blank line from one side', ({ expect }) => {
+    const base = 'a\n\nb\n';
+    const ours = 'a\n\nb\nc\n';
+    const theirs = 'a\nmiddle\nb\n';
+    const result = merge3({ base, ours, theirs });
+    expect(result.conflicts).toBe(0);
+    expect(result.text).toBe('a\nmiddle\nb\nc\n');
+  });
+
   test('preserves content without trailing newline', ({ expect }) => {
     const base = 'alpha';
     const ours = 'alpha';
