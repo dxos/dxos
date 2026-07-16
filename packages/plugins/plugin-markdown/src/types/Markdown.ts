@@ -15,6 +15,7 @@ export const SKILL_KEY = 'org.dxos.skill.markdown';
 
 // Re-export Settings as merged const/type (not as namespace).
 import * as SettingsModule from './Settings';
+
 export const Settings = SettingsModule.Settings;
 export type Settings = SettingsModule.Settings;
 
