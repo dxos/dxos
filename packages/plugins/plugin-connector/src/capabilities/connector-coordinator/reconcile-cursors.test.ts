@@ -146,7 +146,7 @@ describe('reconcileCursors', () => {
         target: Ref.make(obj),
         externalId: 'kept',
         label: 'Kept',
-        value: 'sentinel',
+        max: 'sentinel',
       }),
     );
     Obj.update(existing, (existing) => {
@@ -160,7 +160,7 @@ describe('reconcileCursors', () => {
     const cursors = await queryCursors(db, connection);
     expect(cursors.length).toBe(1);
     expect(cursors[0].id).toBe(existing.id);
-    expect(cursors[0].value).toBe('sentinel');
+    expect(cursors[0].max).toBe('sentinel');
     expect(cursors[0].lastTick).toBe(lastTick);
     invariant(Cursor.isExternal(cursors[0]));
     const target = await loadTarget(db, cursors[0].spec.target);

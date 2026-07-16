@@ -13,6 +13,8 @@ export type MenuItemChrome = {
   label: Label;
   icon?: string;
   iconOnly?: boolean;
+  /** Spins the icon (e.g. while the action's underlying operation is in progress). */
+  spin?: boolean;
   disabled?: boolean;
   hidden?: boolean;
   testId?: string;
@@ -24,7 +26,7 @@ export type MenuItemChrome = {
 };
 
 // TODO(burdon): Narrow MenuActionProperties to a discriminated union.
-export type MenuActionProperties = MenuItemChrome & {
+export type MenuActionChrome = MenuItemChrome & {
   variant?: 'action' | 'primary' | 'toggle' | 'switch' | 'custom';
   value?: string;
   checked?: boolean;
@@ -34,6 +36,17 @@ export type MenuActionProperties = MenuItemChrome & {
    * affordances the action model cannot express (e.g. press-and-hold, an embedded dropdown).
    */
   render?: () => ReactNode;
+};
+
+export type MenuActionProperties = MenuActionChrome & {
+  /**
+   * Per-surface chrome overrides, keyed by `disposition` — lets one action declare multiple
+   * dispositions (e.g. `['toolbar', 'list-item']`) yet render appropriately in each: a primary
+   * toolbar button here, a plain context-menu row there. Applied by the surface bridge that
+   * already knows which disposition it's rendering (`graphActions`'s `surface` option,
+   * `getListActions`), so producers declare it once alongside `disposition`.
+   */
+  presentation?: Partial<Record<string, Partial<MenuActionChrome>>>;
 };
 
 /** Root toolbar group or plain container with no render variant. */

@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
@@ -12,9 +12,10 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
-import { Editor } from '@dxos/react-ui-editor';
+import { Editor, useEditorContext } from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
 
@@ -85,6 +86,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return async (file: File) => upload(db, file);
     }, [db, upload]);
 
+    // Local identity for collaboration awareness.
+    const identity = useIdentity();
+
     // Query for @ refs.
     const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
 
@@ -115,6 +119,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         extensions={extensions}
         settings={settings}
         viewMode={viewMode}
+        identity={identity}
         onAction={runAction}
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
@@ -123,6 +128,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       >
         {(editorRootProps) => (
           <Editor.Root {...editorRootProps}>
+            <RegisterEditorView id={id} attendableId={attendableId} />
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar>
@@ -131,7 +137,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
               )}
               <Panel.Content>
                 <MarkdownEditor.Content initialValue={initialValue} />
-                <MarkdownEditor.Blocks />
+                <Editor.Blocks />
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>
@@ -142,3 +148,21 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 );
 
 MarkdownArticle.displayName = 'MarkdownArticle';
+
+/**
+ * Registers the mounted editor view in the shared `EditorViews` registry so operations (e.g.
+ * `ScrollToAnchor` from comments/navigation) can target it by id. Must render inside `Editor.Root`.
+ */
+const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: string }) => {
+  const { controller } = useEditorContext('MarkdownArticle.RegisterEditorView');
+  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
+  const view = controller?.view;
+  useEffect(() => {
+    if (view && editorViews) {
+      editorViews.register(attendableId ?? id, view, id);
+      return () => editorViews.unregister(attendableId ?? id);
+    }
+  }, [view, editorViews, attendableId, id]);
+
+  return null;
+};

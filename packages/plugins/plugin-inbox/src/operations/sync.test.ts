@@ -139,7 +139,7 @@ describe('sync pipeline harness', () => {
     );
   };
 
-  const cursorOf = (binding: Cursor.Cursor): string | undefined => binding.value;
+  const cursorOf = (binding: Cursor.Cursor): string | undefined => binding.max;
 
   const feedForeignIds = async (db: Database.Database, feed: Feed.Feed): Promise<string[]> => {
     const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
@@ -157,7 +157,7 @@ describe('sync pipeline harness', () => {
     // Run 1: fault after the first page (m1, m2) commits.
     const stats1: Cursor.Stats = { newMessages: 0 };
     const exit = await EffectEx.runPromise(
-      Effect.exit(drain({ ...base, cursorKey: 0, stats: stats1, fault: faultAfter(2) })),
+      Effect.exit(drain({ ...base, maxKey: 0, stats: stats1, fault: faultAfter(2) })),
     );
     expect(Exit.isFailure(exit)).toBe(true);
 
@@ -168,7 +168,7 @@ describe('sync pipeline harness', () => {
 
     // Run 2: recovery — resumes from the cursor, no fault. No duplicates.
     const stats2: Cursor.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(drain({ ...base, cursorKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
+    await EffectEx.runPromise(drain({ ...base, maxKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
 
     expect(stats2.newMessages).toBe(3);
     const foreignIds = (await feedForeignIds(db, feed)).sort();
@@ -205,7 +205,7 @@ describe('sync pipeline harness', () => {
     const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
       Cursor.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -219,11 +219,11 @@ describe('sync pipeline harness', () => {
     const base = { db, cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE };
 
     const stats1: Cursor.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(drain({ ...base, cursorKey: 0, stats: stats1 }));
+    await EffectEx.runPromise(drain({ ...base, maxKey: 0, stats: stats1 }));
     expect(stats1.newMessages).toBe(RAWS.length);
 
     const stats2: Cursor.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(drain({ ...base, cursorKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
+    await EffectEx.runPromise(drain({ ...base, maxKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
     expect(stats2.newMessages).toBe(0);
     expect((await feedForeignIds(db, feed)).length).toBe(RAWS.length);
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(3);
@@ -287,7 +287,7 @@ describe('sync pipeline harness', () => {
         EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -364,7 +364,7 @@ describe('sync pipeline harness', () => {
         EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -452,7 +452,7 @@ describe('reconcileDrafts stage', () => {
           EmailStage.toCommitUnit(),
           Stream.grouped(2),
           Pipeline.run({ sink: Cursor.commit }),
-          Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: GMAIL_SOURCE, cursorKey: 0, stats })),
+          Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: GMAIL_SOURCE, maxKey: 0, stats })),
         );
       }).pipe(Effect.provide(Database.layer(db))),
     );

@@ -118,5 +118,11 @@ export const reconcileCursors = ({
       added++;
     }
 
+    // Flush index updates for the adds/removes so a caller that queries cursors right after observes a
+    // state consistent with the returned counts (otherwise index lag can still resolve a removed cursor).
+    if (added > 0 || removed > 0) {
+      yield* Database.flush({ indexes: true });
+    }
+
     return { added, removed };
   });

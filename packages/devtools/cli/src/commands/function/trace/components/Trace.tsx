@@ -6,8 +6,7 @@ import * as Option from 'effect/Option';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
 import { Operation } from '@dxos/compute';
-import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import {
   InvocationOutcome,
   type InvocationSpan,
@@ -15,7 +14,8 @@ import {
   type InvocationTraceEvent,
   InvocationTraceStartEvent,
   createInvocationSpans,
-} from '@dxos/functions-runtime';
+} from '@dxos/compute-runtime';
+import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 
 import { type Column, Table } from '../../../../components';
