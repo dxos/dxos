@@ -57,7 +57,7 @@ The migration decision is: **plugins consume HALO via `@dxos/halo` /
 `@dxos/halo-react`, never `@dxos/client` HALO APIs.** ECHO `space.db` stays on
 `@dxos/echo`. The only place the client backs HALO is the adapter
 (`@dxos/halo-adapter-client`) and plugin-client's client provider + the
-`HaloIdentity`/`HaloSpace` capabilities it contributes.
+`IdentityService`/`SpaceService` capabilities it contributes.
 
 ### HALO API added to support consumers
 
@@ -68,7 +68,7 @@ The migration decision is: **plugins consume HALO via `@dxos/halo` /
   `subscribe()` for non-React/non-Effect callers.
 - `@dxos/halo-react`: `useCredentials` (plus existing useIdentity/useDevices/
   useMembers/useSpaces/useInvitations).
-- plugin-client contributes `ClientCapabilities.HaloIdentity` / `HaloSpace`
+- plugin-client contributes `ClientCapabilities.IdentityService` / `SpaceService`
   (the service instances) for imperative capability singletons.
 
 ### Migrated (off `@dxos/client` HALO)
@@ -89,7 +89,7 @@ The migration decision is: **plugins consume HALO via `@dxos/halo` /
   (call-manager + CallSwarmSynchronizer), plugin-meeting (call-extension),
   plugin-space (navigation-handler, spaces-ready, join operation),
   plugin-transcription (transcriber) — all read identity/devices via the
-  `HaloIdentity` capability (`getSnapshot`/`getDevicesSnapshot`/`subscribe`).
+  `IdentityService` capability (`getSnapshot`/`getDevicesSnapshot`/`subscribe`).
 
 ## Missing APIs
 
