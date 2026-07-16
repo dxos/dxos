@@ -109,8 +109,8 @@
       "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
     "./translations": {

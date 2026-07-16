@@ -21,7 +21,7 @@ export default defineConfig({
     'config': 'src/config/index.ts',
     'vite-plugin': 'src/vite-plugin/index.ts',
   },
-  jsx: 'solid',
+  jsx: 'react',
   assetsAsFiles: true,
   test: { node: { environment: 'jsdom' }, storybook: true },
 });

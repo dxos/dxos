@@ -21,7 +21,7 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'plugin.workerd': 'src/plugin.workerd.ts',
-    'testing': 'src/testing/index.ts',
+    'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
   },

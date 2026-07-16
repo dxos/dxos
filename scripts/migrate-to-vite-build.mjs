@@ -409,9 +409,14 @@ const migrate = (pkgRel) => {
   {
     const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
     const addCandidate = (rel) => {
-      if (existsSync(resolve(pkgDir, rel)) && !entryPoints.includes(rel)) {
-        entryPoints.push(rel);
-      }
+      if (!existsSync(resolve(pkgDir, rel))) return;
+      if (entryPoints.includes(rel)) return;
+      // Skip when another candidate already produces the same entryName — inferring
+      // `src/testing/index.ts` alongside a moon.yml-declared `src/testing.ts` would
+      // silently overwrite the primary entry in the vite entry map (last-write-wins).
+      const name = entryNameFromPath(rel);
+      if (entryPoints.some((ep) => entryNameFromPath(ep) === name)) return;
+      entryPoints.push(rel);
     };
     const collect = (node) => {
       if (typeof node === 'string') {
@@ -553,12 +558,15 @@ const migrate = (pkgRel) => {
     ...(pkgJson.peerDependencies ?? {}),
   };
   // `jsx` flows through to both the library build (vite-plugin-solid / @vitejs/plugin-react)
-  // and the vitest node project's createNodeProject(jsx).
+  // and the vitest node project's createNodeProject(jsx). Prefer React when a package
+  // has both (e.g. `@dxos/app-framework` bundles solid-js as a consumer opt-in but the
+  // package's own components are React); vite-plugin-solid would transform every `.tsx`
+  // and break React's JSX runtime.
   let jsx;
-  if ('solid-js' in allDeps) {
-    jsx = 'solid';
-  } else if ('react' in allDeps || 'react-dom' in allDeps) {
+  if ('react' in allDeps || 'react-dom' in allDeps) {
     jsx = 'react';
+  } else if ('solid-js' in allDeps) {
+    jsx = 'solid';
   }
 
   const newMoon = rewriteMoonYml(moonText, compileTaskDeps);

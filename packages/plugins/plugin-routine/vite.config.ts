@@ -18,7 +18,7 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
-    'testing': 'src/testing/index.ts',
+    'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
   },
