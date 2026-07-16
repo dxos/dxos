@@ -23,9 +23,12 @@ import {
   type MarkdownEditorContentProps,
   MarkdownEditorProvider,
   type MarkdownEditorProviderProps,
+  VersionBanner,
 } from '#components';
-import { useLinkQuery } from '#hooks';
+import { useLinkQuery, useVersioning } from '#hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
+
+import { createBranch, mergeBranch, restore } from '../../model';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
@@ -46,7 +49,55 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
-    const initialValue = docContent ?? textContent;
+
+    // Version selection: swap the editor's subject to the active branch Text, or show a
+    // read-only snapshot when viewing a checkpoint. Selection is per-user session state.
+    const versioning = useVersioning(object);
+    const { document, activeBranch, activeVersion, checkpointContent, setSelection, setCompare } = versioning;
+    const branchText = activeBranch?.content.target;
+    const editorObject = activeVersion
+      ? { id: `${id}--${activeVersion.id}`, text: checkpointContent ?? '' }
+      : (branchText ?? object);
+    const initialValue = activeVersion ? checkpointContent : (branchText?.content ?? docContent ?? textContent);
+    const effectiveViewMode = activeVersion ? 'readonly' : viewMode;
+    // Remount the editor when the selection changes so CodeMirror state rebinds cleanly.
+    const editorKey = activeVersion
+      ? `checkpoint-${activeVersion.id}`
+      : activeBranch
+        ? `branch-${activeBranch.id}`
+        : 'current';
+
+    const handleRestore = useCallback(() => {
+      if (document && activeVersion) {
+        restore(document, activeVersion);
+        setSelection({ kind: 'current' });
+      }
+    }, [document, activeVersion, setSelection]);
+
+    const handleBranchFrom = useCallback(() => {
+      const target = activeVersion?.target.target;
+      if (document && activeVersion && target) {
+        const branch = createBranch(document, {
+          name: `from: ${activeVersion.name}`,
+          from: { target, heads: activeVersion.heads },
+        });
+        setSelection({ kind: 'branch', branchId: branch.id });
+      }
+    }, [document, activeVersion, setSelection]);
+
+    const handleMerge = useCallback(() => {
+      if (document && activeBranch) {
+        mergeBranch(document, activeBranch);
+        setSelection({ kind: 'current' });
+      }
+    }, [document, activeBranch, setSelection]);
+
+    const handleCompare = useCallback(() => setCompare(!versioning.compare), [setCompare, versioning.compare]);
+
+    const handleCloseBanner = useCallback(() => {
+      setSelection({ kind: 'current' });
+      setCompare(false);
+    }, [setSelection, setCompare]);
 
     // Extensions from other plugins.
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
@@ -108,13 +159,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     return (
       <MarkdownEditorProvider
+        key={editorKey}
         id={id}
         attendableId={attendableId}
-        object={object}
+        object={editorObject}
         compact={role !== AppSurface.Article.role}
         extensions={extensions}
         settings={settings}
-        viewMode={viewMode}
+        viewMode={effectiveViewMode}
         onAction={runAction}
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
@@ -128,6 +180,26 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                 <Panel.Toolbar>
                   <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
                 </Panel.Toolbar>
+              )}
+              {activeVersion && (
+                <VersionBanner
+                  mode='checkpoint'
+                  name={activeVersion.name}
+                  detail={new Date(activeVersion.createdAt).toLocaleString()}
+                  onRestore={handleRestore}
+                  onBranchFrom={handleBranchFrom}
+                  onClose={handleCloseBanner}
+                />
+              )}
+              {activeBranch && (
+                <VersionBanner
+                  mode='branch'
+                  name={activeBranch.name}
+                  detail={new Date(activeBranch.createdAt).toLocaleString()}
+                  onMerge={handleMerge}
+                  onCompare={handleCompare}
+                  onClose={handleCloseBanner}
+                />
               )}
               <Panel.Content>
                 <MarkdownEditor.Content initialValue={initialValue} />
