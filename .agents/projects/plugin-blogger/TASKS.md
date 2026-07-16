@@ -15,7 +15,7 @@ Work-stream ledger for the blogger/typefully plugins (PR #12168).
 
 - [ ] Factor out the `widgets.map(...)` xmlTags portal rendering. The block
       `{widgets.map(({ id, root, Component, props }) => <div key={id}>{createPortal(
-      <Component {...props} />, root)}</div>)}` is duplicated across
+    <Component {...props} />, root)}</div>)}` is duplicated across
       plugin-markdown `MarkdownEditor.tsx` (`MarkdownEditorBlocks`),
       react-ui-markdown `MarkdownStream.tsx`, and the react-ui-editor
       `Widgets.stories.tsx` variants. Extract a shared component (e.g.
