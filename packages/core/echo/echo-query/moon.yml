@@ -1,18 +1,13 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - pack
 tasks:
-  compile:
+  build:
     deps:
       - prebuild
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/sandbox/index.ts'
-      - '--injectGlobals'
-      - '--platform=neutral'
   prebuild:
     deps:
       - echo-query:prebuild-lezer
