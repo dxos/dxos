@@ -1,26 +1,8 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/MapPlugin.tsx'
-      - '--entryPoint=src/MapPlugin.node.ts'
-      - '--entryPoint=src/MapPlugin.workerd.ts'
-      - '--entryPoint=src/skills/index.ts'
-      - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/components/index.ts'
-      - '--entryPoint=src/containers/index.ts'
-      - '--entryPoint=src/meta.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/plugin.ts'
-      - '--entryPoint=src/testing.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
-      - '--platform=neutral'

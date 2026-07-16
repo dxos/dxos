@@ -1,28 +1,8 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - pack
   - storybook
   - ts-test-storybook
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/SpacePlugin.ts'
-      - '--entryPoint=src/SpacePlugin.node.ts'
-      - '--entryPoint=src/SpacePlugin.workerd.ts'
-      - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/capabilities/node.ts'
-      - '--entryPoint=src/components/index.ts'
-      - '--entryPoint=src/constants.ts'
-      - '--entryPoint=src/containers/index.ts'
-      - '--entryPoint=src/hooks/index.ts'
-      - '--entryPoint=src/meta.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/plugin.ts'
-      - '--entryPoint=src/testing.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
-      - '--platform=neutral'
