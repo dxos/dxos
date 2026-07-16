@@ -36,7 +36,14 @@ describe('build tests', () => {
 
   test('prohibit vitest in dist builds', async () => {
     await runEnvTest({
-      imports: ['@dxos/echo-client', '@dxos/conductor', '@dxos/echo', '@dxos/keys', '@dxos/log', '@dxos/compute-runtime'],
+      imports: [
+        '@dxos/echo-client',
+        '@dxos/conductor',
+        '@dxos/echo',
+        '@dxos/keys',
+        '@dxos/log',
+        '@dxos/compute-runtime',
+      ],
       conditions: ['browser'],
       external: ['*.wasm', 'node:async_hook'],
       forbid: [/vitest/, /rollup/],

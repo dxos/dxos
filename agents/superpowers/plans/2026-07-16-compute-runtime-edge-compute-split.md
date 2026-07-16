@@ -34,6 +34,7 @@ Moved in from `@dxos/functions` (local, no client/edge): `sdk.ts`, `services/loc
 Moved in from `@dxos/functions-runtime` (local): `triggers/*` except aggregate monitor (`trigger-dispatcher.ts`, `trigger-state-store.ts`, `feed-position.ts`, `input-builder.ts`, `jsonata` helpers), `executor/executor.ts`, `FeedTraceSink.ts`, `object-template.ts`, `trace.ts`, `translations.ts`, `url.ts`, `process/*` (`Service.ts`, `StorageService.ts`), `agent-service/*` (see Decision D1).
 
 New namespace modules:
+
 - `RemoteOperationInvoker.ts` — tag `Service` (supersedes `RemoteFunctionExecutionService`).
 - `RemoteProcessManager.ts` — tag `Service` + `layerNoop`.
 - `RemoteTriggerManager.ts` — tag `Service` + `layerNoop`.
@@ -47,6 +48,7 @@ Moved in from `@dxos/functions-runtime`: `edge/functions.ts` (`createEdgeClient`
 Moved in from `@dxos/functions`: `protocol/functions-ai-http-client.ts` (talks to EDGE AI).
 
 New namespace modules (impls providing `Remote*.Service`):
+
 - `EdgeOperationInvoker.ts` — `layer`/`fromClient` providing `RemoteOperationInvoker.Service`.
 - `EdgeProcessManager.ts` — `layer`/`fromClient` providing `RemoteProcessManager.Service`.
 - `EdgeTriggerManager.ts` — `layer`/`fromClient` providing `RemoteTriggerManager.Service`.
@@ -72,11 +74,13 @@ No moves yet; purely additive. Enables downstream code to target interfaces.
 ### Task 1.1: `RemoteOperationInvoker` interface
 
 **Files:**
+
 - Create: `packages/core/compute/compute-runtime/src/RemoteOperationInvoker.ts`
 - Modify: `packages/core/compute/compute-runtime/src/index.ts`
 - Test: `packages/core/compute/compute-runtime/src/RemoteOperationInvoker.test.ts`
 
 **Interfaces:**
+
 - Produces: namespace `RemoteOperationInvoker` with `interface Invoker { invoke<I, O>(ctx: DxosContext, deployedId: string, input: I): Effect.Effect<O> }` and `class Service extends Context.Tag('@dxos/compute-runtime/RemoteOperationInvoker')<Service, Invoker>`. Also `layerNoop: Layer.Layer<Service>` that dies on invoke (no remote configured).
 
 - [ ] **Step 1: Write the failing test**
@@ -103,9 +107,7 @@ describe('RemoteOperationInvoker', () => {
       const invoker = yield* RemoteOperationInvoker.Service;
       return yield* invoker.invoke(DxosContext.default(), 'fn-1', { value: 42 });
     });
-    const result = await Effect.runPromise(
-      program.pipe(Effect.provideService(RemoteOperationInvoker.Service, stub)),
-    );
+    const result = await Effect.runPromise(program.pipe(Effect.provideService(RemoteOperationInvoker.Service, stub)));
     expect(result).toEqual({ value: 42 });
   });
 });
@@ -178,11 +180,13 @@ git commit -m "compute-runtime: add RemoteOperationInvoker interface"
 ### Task 1.2: `RemoteProcessManager` interface
 
 **Files:**
+
 - Create: `packages/core/compute/compute-runtime/src/RemoteProcessManager.ts`
 - Modify: `packages/core/compute/compute-runtime/src/index.ts`
 - Test: `packages/core/compute/compute-runtime/src/RemoteProcessManager.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Process.Info` from `@dxos/compute`; `Atom` from `@effect-atom/atom`.
 - Produces: namespace `RemoteProcessManager` with `interface Manager { readonly processTree: Effect.Effect<readonly Process.Info[]>; readonly processTreeAtom: Atom.Atom<readonly Process.Info[]> }`, `class Service extends Context.Tag('@dxos/compute-runtime/RemoteProcessManager')<Service, Manager>`, and `layerNoop: Layer.Layer<Service, never, Registry.AtomRegistry>` backed by an empty atom.
 
@@ -290,11 +294,13 @@ git commit -m "compute-runtime: add RemoteProcessManager interface"
 ### Task 1.3: `RemoteTriggerManager` interface
 
 **Files:**
+
 - Create: `packages/core/compute/compute-runtime/src/RemoteTriggerManager.ts`
 - Modify: `packages/core/compute/compute-runtime/src/index.ts`
 - Test: `packages/core/compute/compute-runtime/src/RemoteTriggerManager.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Trigger.State`, `Trigger.InvokeOptions` from `@dxos/compute`; `Atom` from `@effect-atom/atom`.
 - Produces: namespace `RemoteTriggerManager` with `interface Manager { readonly triggers: Atom.Atom<readonly Trigger.State[]>; readonly invokeTrigger: (options: Trigger.InvokeOptions) => Effect.Effect<void> }`, `class Service extends Context.Tag('@dxos/compute-runtime/RemoteTriggerManager')<Service, Manager>`, and `layerNoop: Layer.Layer<Service, never, Registry.AtomRegistry>`.
 
@@ -412,6 +418,7 @@ Move the non-edge halves of `@dxos/functions` and `@dxos/functions-runtime` into
 ### Task 2.1: Add local-runtime deps to `@dxos/compute-runtime`
 
 **Files:**
+
 - Modify: `packages/core/compute/compute-runtime/package.json`
 
 - [ ] **Step 1: Add workspace deps** needed by the incoming local code (not already present): `@dxos/ai`, `@dxos/async`, `@dxos/context`, `@dxos/debug`, `@dxos/echo-client`, `@dxos/protocols`, `@dxos/schema`, `@dxos/util`, `@dxos/link`, `@dxos/node-std`, `@effect/platform`. Edit `package.json` dependencies to `workspace:*` for each `@dxos` entry; add `@effect/platform: "catalog:"`. Per Decision D1, add `"@dxos/assistant": "workspace:^"` under `peerDependencies`.
@@ -435,6 +442,7 @@ git commit -m "compute-runtime: add deps for local runtime consolidation"
 ### Task 2.2: Move `@dxos/functions` local modules into `@dxos/compute-runtime`
 
 **Files:**
+
 - Move (git mv) into `packages/core/compute/compute-runtime/src/`:
   - `functions/src/sdk.ts`
   - `functions/src/services/{local-function-execution.ts,function-invocation-service.ts,service-container.ts,service-registry.ts,credentials.ts,tracing.ts}` → `compute-runtime/src/services/`
@@ -445,6 +453,7 @@ git commit -m "compute-runtime: add deps for local runtime consolidation"
 - Modify: every consumer importing the moved symbols from `@dxos/functions` (see command below).
 
 **Interfaces:**
+
 - Consumes: `RemoteOperationInvoker.Service` (Task 1.1) — `function-invocation-service.ts` will switch its remote dependency to it in Task 4.3; in this task keep it compiling by importing the tag but leaving behavior as the local-only path (the router already falls back to local when no `deployedId`).
 - Produces: same public symbols `@dxos/functions` exported (`FunctionInvocationService`, `LocalFunctionExecutionService`, `ServiceContainer`, `ServiceRegistry`, credentials/tracing helpers, `FUNCTIONS_META_KEY`, protocol types, url helpers) — now from `@dxos/compute-runtime`.
 
@@ -480,6 +489,7 @@ git commit -m "compute-runtime: absorb @dxos/functions local modules; remove @dx
 ### Task 2.3: Move `@dxos/functions-runtime` local modules into `@dxos/compute-runtime`
 
 **Files:**
+
 - Move (git mv) into `packages/core/compute/compute-runtime/src/`:
   - `functions-runtime/src/triggers/{trigger-dispatcher.ts,trigger-state-store.ts,feed-position.ts,input-builder.ts}` and any `jsonata` helper (+ their `.test.ts`) → `compute-runtime/src/triggers/`
   - `functions-runtime/src/executor/executor.ts` → `compute-runtime/src/executor.ts`
@@ -493,6 +503,7 @@ git commit -m "compute-runtime: absorb @dxos/functions local modules; remove @dx
 - Leave in `functions-runtime` for now: `edge/`, `bundler/`, `native/`, `agent-service/` (D1), `services/{remote-function-execution-service,function-invocation-service copy}`, `testing/`, `assistant-session-tests/`. These are handled in Phase 3.
 
 **Interfaces:**
+
 - Consumes: `ProcessManager` (already in compute-runtime).
 - Produces: `TriggerDispatcher`, `TriggerStateStore`, `FeedTraceSink`, executor, object-template, trace/url/translations exported from `@dxos/compute-runtime`.
 
@@ -530,12 +541,14 @@ git commit -m "compute-runtime: absorb functions-runtime local runtime (triggers
 ### Task 3.1: Scaffold `@dxos/edge-compute`
 
 **Files:**
+
 - Create: `packages/core/compute/edge-compute/package.json`
 - Create: `packages/core/compute/edge-compute/src/index.ts`
 - Create: `packages/core/compute/edge-compute/moon.yml` (copy shape from `functions-runtime/moon.yml`)
 - Create: `packages/core/compute/edge-compute/tsconfig.json` (copy from a sibling)
 
 **Interfaces:**
+
 - Produces: empty package barrel; `"private": true`.
 
 - [ ] **Step 1: Write `package.json`**
@@ -617,6 +630,7 @@ git commit -m "edge-compute: scaffold package"
 ### Task 3.2: Move EDGE client + deploy/bundler/scripts into `@dxos/edge-compute`
 
 **Files:**
+
 - git mv from `functions-runtime/src/` → `edge-compute/src/`:
   - `edge/functions.ts` → `edge-compute/src/edge-client.ts` (exports `createEdgeClient`)
   - `edge/functions-service-client.ts` → `edge-compute/src/FunctionsServiceClient.ts`
@@ -628,6 +642,7 @@ git commit -m "edge-compute: scaffold package"
 - Repoint consumers of these edge symbols from `@dxos/functions-runtime` → `@dxos/edge-compute`.
 
 **Interfaces:**
+
 - Produces: `createEdgeClient(client): EdgeHttpClient`, `FunctionsServiceClient` (`fromClient`, `deploy`, `invoke`), bundler/native exports, from `@dxos/edge-compute`.
 
 - [ ] **Step 1: git mv** the files; fix relative imports (`../errors` → local `errors.ts` if needed; import `Operation` from `@dxos/compute`).
@@ -660,12 +675,14 @@ git commit -m "edge-compute: move edge client, deploy, bundler, scripts"
 ### Task 3.3: `EdgeOperationInvoker` (supersedes `RemoteFunctionExecutionService`)
 
 **Files:**
+
 - Create: `packages/core/compute/edge-compute/src/EdgeOperationInvoker.ts`
 - Delete: `functions-runtime/src/services/remote-function-execution-service.ts` (superseded)
 - Modify: `edge-compute/src/index.ts`
 - Test: `packages/core/compute/edge-compute/src/EdgeOperationInvoker.test.ts`
 
 **Interfaces:**
+
 - Consumes: `RemoteOperationInvoker.Service`/`Invoker` (Task 1.1); `createEdgeClient` (Task 3.2); `ClientService` from `@dxos/client`.
 - Produces: namespace `EdgeOperationInvoker` with `fromClient(client: Client, spaceId?: SpaceId): Layer.Layer<RemoteOperationInvoker.Service>` and `layer: Layer.Layer<RemoteOperationInvoker.Service, never, ClientService>` (reads spaceId from context via a small option), each providing `RemoteOperationInvoker.Service`.
 
@@ -733,21 +750,27 @@ const make = (getEdgeClient: () => EdgeClient, spaceId?: SpaceId): RemoteOperati
       const cleanedId = deployedId.replace(/^\//, '');
       return yield* Effect.promise(() =>
         getEdgeClient().invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
-      ).pipe(
-        Effect.mapError(FunctionError.wrap()),
-        Effect.orDie,
-      );
+      ).pipe(Effect.mapError(FunctionError.wrap()), Effect.orDie);
     }),
 });
 
 /** For tests: provide a pre-built edge client. */
-export const fromEdgeClient = (edgeClient: EdgeClient, spaceId?: SpaceId): Layer.Layer<RemoteOperationInvoker.Service> =>
-  Layer.succeed(RemoteOperationInvoker.Service, make(() => edgeClient, spaceId));
+export const fromEdgeClient = (
+  edgeClient: EdgeClient,
+  spaceId?: SpaceId,
+): Layer.Layer<RemoteOperationInvoker.Service> =>
+  Layer.succeed(
+    RemoteOperationInvoker.Service,
+    make(() => edgeClient, spaceId),
+  );
 
 /** Build from a `Client`, deferring edge-client creation until first invoke (identity may be absent at boot). */
 export const fromClient = (client: Client, spaceId?: SpaceId): Layer.Layer<RemoteOperationInvoker.Service> => {
   let cached: EdgeClient | undefined;
-  return Layer.succeed(RemoteOperationInvoker.Service, make(() => (cached ??= createEdgeClient(client)), spaceId));
+  return Layer.succeed(
+    RemoteOperationInvoker.Service,
+    make(() => (cached ??= createEdgeClient(client)), spaceId),
+  );
 };
 
 /** Build from the ambient `ClientService`. */
@@ -785,11 +808,13 @@ git commit -m "edge-compute: add EdgeOperationInvoker superseding RemoteFunction
 ### Task 3.4: Relocate `agent-service/` (Decision D1)
 
 **Files:**
+
 - Per D1 default: git mv `functions-runtime/src/agent-service/*` → `compute-runtime/src/agent-service/` (+ `assistant-session-tests/`, `testing/assistant-test-layer.ts` as needed).
 - Modify: `compute-runtime/src/index.ts` to export `AgentService`, `AGENT_PROCESS_KEY`, delegation types.
 - Repoint consumers `@dxos/functions-runtime` → `@dxos/compute-runtime` for these symbols.
 
 **Interfaces:**
+
 - Produces: `AgentService` namespace (implements `@dxos/compute/AgentService` tag), `AGENT_PROCESS_KEY`, `Delegation`/`DelegationStrategy`.
 
 - [ ] **Step 1: git mv** the directory; fix imports (`@dxos/assistant` is now a peer of compute-runtime — Task 2.1).
@@ -813,6 +838,7 @@ git commit -m "compute-runtime: relocate agent-service (local agent process runt
 ### Task 3.5: Retire `@dxos/functions-runtime`
 
 **Files:**
+
 - Move any residual (`errors.ts`, `url.ts`, `translations.ts`, `testing/`) to their correct home (local → compute-runtime, edge → edge-compute).
 - Delete `packages/core/compute/functions-runtime/` and its `moon.yml`.
 - Grep the repo for any leftover `@dxos/functions-runtime` imports/deps and repoint.
@@ -843,12 +869,14 @@ git commit -m "functions-runtime: remove package after split into compute-runtim
 ### Task 4.1: `ProcessMonitor` aggregate layer (compute-runtime)
 
 **Files:**
+
 - Create: `packages/core/compute/compute-runtime/src/ProcessMonitor.ts`
 - Modify: `packages/core/compute/compute-runtime/src/ProcessManager.ts` (stop providing `Process.ProcessMonitorService` from `ProcessManager.layer`; keep exposing `manager.monitor` as the local input).
 - Modify: `compute-runtime/src/index.ts`
 - Test: `packages/core/compute/compute-runtime/src/ProcessMonitor.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ProcessManagerService` (local `manager.monitor.processTreeAtom`), `RemoteProcessManager.Service` (`processTreeAtom`), `Registry.AtomRegistry`.
 - Produces: `ProcessMonitor.layer: Layer.Layer<Process.ProcessMonitorService, never, ProcessManagerService | RemoteProcessManager.Service | Registry.AtomRegistry>` whose `processTree`/`processTreeAtom` is the concatenation of local + remote trees.
 
@@ -962,11 +990,13 @@ git commit -m "compute-runtime: aggregate ProcessMonitor over local + RemoteProc
 ### Task 4.2: `TriggerMonitor` aggregate layer (compute-runtime)
 
 **Files:**
+
 - Create: `packages/core/compute/compute-runtime/src/TriggerMonitor.ts` (generalize the moved `triggers/trigger-monitor.ts` to also read `RemoteTriggerManager.Service`; then delete the old `trigger-monitor.ts`).
 - Modify: `compute-runtime/src/index.ts`
 - Test: `packages/core/compute/compute-runtime/src/TriggerMonitor.test.ts` (port `trigger-monitor.test.ts`, add a remote-merge case).
 
 **Interfaces:**
+
 - Consumes: `TriggerDispatcher` (local, moved in Task 2.3), `Database.Service`, `Registry.AtomRegistry`, `RemoteTriggerManager.Service`.
 - Produces: `TriggerMonitor.layer: Layer.Layer<Trigger.TriggerMonitorService, never, TriggerDispatcher | Database.Service | Registry.AtomRegistry | RemoteTriggerManager.Service>`. `triggers` atom = local-derived states (from dispatcher+db, `environment: 'local'`) concatenated with `remote.triggers`. `invokeTrigger` routes by the trigger's `remote` flag: `remote === true` → `remote.invokeTrigger`, else local `dispatcher.invokeTrigger`. `localDispatcherEnabled` unchanged.
 
@@ -981,7 +1011,7 @@ Expected: FAIL — module not found.
 
 ```ts
 // key additions over the current trigger-monitor.ts:
-const remote = yield* RemoteTriggerManager.Service;
+const remote = yield * RemoteTriggerManager.Service;
 // ...existing local deriveState producing `triggersAtom`...
 const aggregate = Atom.make((get) => [...get(triggersAtom), ...get(remote.triggers)]);
 registry.mount(aggregate);
@@ -991,7 +1021,9 @@ const monitor: Trigger.Monitor = {
     return registry.get(dispatcher.state).enabled;
   },
   invokeTrigger: (options) =>
-    options.trigger.remote === true ? remote.invokeTrigger(options) : dispatcher.invokeTrigger(options).pipe(Effect.asVoid),
+    options.trigger.remote === true
+      ? remote.invokeTrigger(options)
+      : dispatcher.invokeTrigger(options).pipe(Effect.asVoid),
 };
 ```
 
@@ -1012,10 +1044,12 @@ git commit -m "compute-runtime: aggregate TriggerMonitor over local dispatcher +
 ### Task 4.3: Route `FunctionInvocationService` through `RemoteOperationInvoker`
 
 **Files:**
+
 - Modify: `packages/core/compute/compute-runtime/src/services/function-invocation-service.ts` (moved in Task 2.2).
 - Test: extend `function-invocation-service.test.ts`.
 
 **Interfaces:**
+
 - Consumes: `RemoteOperationInvoker.Service` (replaces the old `RemoteFunctionExecutionServiceTag`), `LocalFunctionExecutionService`.
 - Produces: unchanged `FunctionInvocationService` behavior — routes to `RemoteOperationInvoker.Service.invoke` when `functionDef.meta.deployedId` is set, else local.
 
@@ -1031,12 +1065,12 @@ Expected: FAIL — still referencing old remote tag.
 ```ts
 import { RemoteOperationInvoker } from '../RemoteOperationInvoker'; // via barrel or relative
 // ...
-const remote = yield* RemoteOperationInvoker.Service;
+const remote = yield * RemoteOperationInvoker.Service;
 // ...
 if (functionDef.meta?.deployedId) {
-  return yield* remote.invoke<I, O>(DxosContext.default(), functionDef.meta.deployedId, input);
+  return yield * remote.invoke<I, O>(DxosContext.default(), functionDef.meta.deployedId, input);
 }
-return yield* localExecutionService.invokeFunction(functionDef, input);
+return yield * localExecutionService.invokeFunction(functionDef, input);
 ```
 
 Update the layer requirement type from `RemoteFunctionExecutionService` to `RemoteOperationInvoker.Service`.
@@ -1056,12 +1090,14 @@ git commit -m "compute-runtime: route FunctionInvocationService through RemoteOp
 ### Task 4.4: `EdgeProcessManager` + `EdgeTriggerManager` impls (edge-compute)
 
 **Files:**
+
 - Create: `packages/core/compute/edge-compute/src/EdgeTriggerManager.ts`
 - Create: `packages/core/compute/edge-compute/src/EdgeProcessManager.ts`
 - Modify: `edge-compute/src/index.ts`
 - Test: `edge-compute/src/EdgeTriggerManager.test.ts`
 
 **Interfaces:**
+
 - Consumes: `RemoteTriggerManager.Service`/`Manager`, `RemoteProcessManager.Service`/`Manager` (compute-runtime); `EdgeHttpClient.getTriggersDispatcherStatus` (edge-client); `createEdgeClient` (Task 3.2); `Registry.AtomRegistry`.
 - Produces: `EdgeTriggerManager.fromClient(client, spaceId): Layer.Layer<RemoteTriggerManager.Service, never, Registry.AtomRegistry>` (polls status into `triggers` atom, `invokeTrigger` via edge). `EdgeProcessManager.fromClient(client): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry>` — per D3, returns empty tree with `TODO(edge)` until an endpoint exists (implement as `RemoteProcessManager.layerNoop` re-exported under the `Edge` name for wiring symmetry).
 
@@ -1094,10 +1130,12 @@ git commit -m "edge-compute: add EdgeTriggerManager and EdgeProcessManager"
 ### Task 5.1: Update `plugin-routine` LayerSpecs
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-routine/src/capabilities/layer-specs.ts`
 - Modify: `packages/plugins/plugin-routine/package.json`
 
 **Interfaces:**
+
 - Consumes: `TriggerDispatcher`, `TriggerMonitor.layer`, `ProcessMonitor.layer`, `RemoteTriggerManager`, `RemoteProcessManager`, `RemoteOperationInvoker` (compute-runtime); `EdgeTriggerManager`, `EdgeProcessManager`, `EdgeOperationInvoker` (edge-compute).
 
 - [ ] **Step 1:** Replace the `TriggerMonitorLayer` import (was `@dxos/functions-runtime`) with `TriggerMonitor.layer` from `@dxos/compute-runtime`. Replace `RemoteFunctionExecutionService.fromClient(...)` spec with `EdgeOperationInvoker.layer(...)` providing `RemoteOperationInvoker.Service`. Add specs providing `RemoteTriggerManager.Service` (via `EdgeTriggerManager.fromClient` when `edgeFeatures.agents`, else `RemoteTriggerManager.layerNoop`) and `RemoteProcessManager.Service` (via `EdgeProcessManager.fromClient`/`layerNoop`). Add a `ProcessMonitorSpec` providing `Process.ProcessMonitorService` via `ProcessMonitor.layer`.
@@ -1118,6 +1156,7 @@ git commit -m "plugin-routine: wire aggregate monitors + Edge* impls"
 ### Task 5.2: Update remaining consumers + `app-framework` process-manager capability
 
 **Files:**
+
 - Modify: `packages/sdk/app-framework/src/plugin-process-manager/process-manager-capability.ts`
 - Modify: any remaining package importing the old package names.
 
@@ -1155,7 +1194,7 @@ Expected: PASS (memoized-LLM agent tests may need regeneration — follow the `r
 
 Run: `moon run :lint -- --fix && pnpm format`
 
-- [ ] **Step 4: No-cast audit** — ensure the migration introduced no `as any`/`as unknown as`/`!`. 
+- [ ] **Step 4: No-cast audit** — ensure the migration introduced no `as any`/`as unknown as`/`!`.
 
 Run: `rg -n " as any| as unknown as |!\." packages/core/compute/compute-runtime/src packages/core/compute/edge-compute/src`
 Fix any that this change introduced.
