@@ -122,9 +122,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
         try {
           // Resolve space membership via `getContainingSpaceIdForDocument`, which answers from the
           // local collection state (the space root's document list) and so still identifies a doc
-          // the node owns whose handle is evicted or still loading. The deprecated
-          // `getContainingSpaceForDocument` could only answer for docs currently loaded in memory,
-          // spuriously denying owned docs and stalling replication.
+          // the node owns whose handle is evicted or still loading.
           const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
           if (!spaceId) {
             const remoteDocumentExists = await this._context.isDocumentInRemoteCollection({

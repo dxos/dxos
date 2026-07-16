@@ -13,8 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { range } from '@dxos/util';
 
-import { createTestSqliteRuntime } from '../testing';
-import { TestReplicationNetwork } from '../testing';
+import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing';
 import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host';
 import { type EchoNetworkAdapter } from './echo-network-adapter';
 import { deriveCollectionIdFromSpaceId } from './space-collection';
@@ -63,8 +62,7 @@ describe('AutomergeHost', () => {
     onTestFinished(() => dispose());
 
     // Fallback path: a document in no local collection resolves its space via the loaded-handle /
-    // root-doc space-key provider, then derives the space id. Exercises the `createIdFromSpaceKey`
-    // composition this method owns (relocated here from the network adapter).
+    // root-doc space-key provider, then derives the space id via `createIdFromSpaceKey`.
     const spaceKey = PublicKey.random();
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
     const host = await setupAutomergeHost(runtime, (id) => (id === documentId ? spaceKey : undefined));
