@@ -83,7 +83,7 @@ returns only matching messages; the agent tool accepts and honors `searchKind`.
 behind a feature flag.
 
 - `@dxos/pipeline` indexing flow: `chunk → contentHash-gate → embed (local
-  `@xenova/transformers`) → write `EmbeddingRecord` to a per-space feed`.
+`@xenova/transformers`) → write `EmbeddingRecord` to a per-space feed`.
 - New `VectorIndex` in `index-core` (benchmark `sqlite-vec` vs `usearch`), fed by
   the feed via `IndexTracker` cursors.
 - Wire the `type: 'vector'` executor stub → `VectorIndex`; add `type: 'hybrid'`

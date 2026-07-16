@@ -116,12 +116,12 @@ client-side** (in the client worker) — there is no server/edge indexer.
 owns four indexes, each implementing the `Index` interface (`migrate()` +
 `update(objects)`):
 
-| Index | Backing | Purpose |
-|---|---|---|
-| `EntityMetaIndex` | `objectMeta` table | type / id / timestamp / relation / hierarchy queries — the workhorse |
-| **`FtsIndex`** | **FTS5 virtual table** (`tokenize='trigram'`) | full-text search + JSON snapshot store |
-| `ReverseRefIndex` | `reverseRef` table | incoming-reference traversal |
-| `IndexTracker` | `indexCursor` table | per-source incremental cursors (Automerge heads / queue positions) |
+| Index             | Backing                                       | Purpose                                                              |
+| ----------------- | --------------------------------------------- | -------------------------------------------------------------------- |
+| `EntityMetaIndex` | `objectMeta` table                            | type / id / timestamp / relation / hierarchy queries — the workhorse |
+| **`FtsIndex`**    | **FTS5 virtual table** (`tokenize='trigram'`) | full-text search + JSON snapshot store                               |
+| `ReverseRefIndex` | `reverseRef` table                            | incoming-reference traversal                                         |
+| `IndexTracker`    | `indexCursor` table                           | per-source incremental cursors (Automerge heads / queue positions)   |
 
 Indexing is incremental and event-driven: `EchoHost._runUpdateIndexes` batches 50
 objects per pass off `AutomergeDataSource` and `FeedDataSource`, triggered by
@@ -148,9 +148,9 @@ docs. Rank is threaded onto each result.
 **Documented limitations (TODOs in `query-executor.ts` / `fts-index.ts`):**
 
 - **Single space only** — `invariant(spaces.length <= 1, 'Multiple spaces are not
-  supported for full-text search')`.
+supported for full-text search')`.
 - **FTS + type not combined** — `TODO(dmaretskyi): type + FTS queries would be
-  very common ... maybe chunk the fts index`; `TextSelector.typename` is always
+very common ... maybe chunk the fts index`; `TextSelector.typename` is always
   `null`.
 - **No snippet/highlight** — `// nice to have matched text snippets/highlighting`.
 - **`< 3` char terms scan the whole table.**
@@ -173,9 +173,9 @@ everything. And `contains` is array-membership, **not** substring text search.
 - API accepts it: `Filter.text(text, { type?: 'full-text' | 'vector' })`
   ([`Filter.ts:207-225`](../../../core/echo/echo/src/Filter.ts)), with
   `// TODO(dmaretskyi): Hybrid search.` and `// TODO: ... the embedding should be
-  done on the query-executor side.`
+done on the query-executor side.`
 - Executor **rejects it**: `query-executor.ts:862` — `if (searchKind ===
-  'vector') { log.warn('Vector search is not supported'); break; }` (returns
+'vector') { log.warn('Vector search is not supported'); break; }` (returns
   empty).
 - A grep for `vec0` / `sqlite-vec` / `embedding` / `cosine` across
   `packages/core/echo` finds only the FTS5 table and the two TODOs. **No vector
@@ -202,9 +202,12 @@ message query never references it:
 
 ```ts
 const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
-useEffect(() => { const { filter } = builder.build(filterText); setFilter(filter); }, [filterText, builder]);
+useEffect(() => {
+  const { filter } = builder.build(filterText);
+  setFilter(filter);
+}, [filterText, builder]);
 // ...
-const source = feed && Query.select(Filter.type(Message.Message)).from(feed);   // `filter` never used here
+const source = feed && Query.select(Filter.type(Message.Message)).from(feed); // `filter` never used here
 ```
 
 The only filtering actually applied is `Mailbox.isFiltered` — an **in-memory,
@@ -322,18 +325,18 @@ demo — precedent for in-browser embedding.
 
 ## 6. Capability inventory (what we can build on)
 
-| Capability | Status | Location |
-|---|---|---|
-| Client-side FTS5 full-text index (BM25) | **Ships, unused by plugin** | `index-core` `FtsIndex` |
-| `Filter.text(q, {type:'full-text'})` | **Works** | `echo` `Filter.ts` |
-| Fuzzy ranking (`command-score`) | Exists, dead code in plugin | `react-ui-search` |
-| Query-builder DSL (tags/text/type/props) | **Works** | `echo-query` `QueryBuilder` |
-| Global-filter side channel | **Works** (tables consume it) | `react-ui-search` |
-| Vector `searchKind` seam | Stub (`log.warn`) | `echo` / `echo-host` |
-| Embeddings in-browser (`@xenova/transformers`) | Used elsewhere | `assistant`, `plugin-transformer` |
-| Vector index (`usearch`, cosine) | Research harness only | `stories-brain` |
-| RDF FactStore (symbolic + SQLite backend) | Shipped (in-memory in app) | `pipeline-rdf`, `plugin-brain` |
-| `@dxos/pipeline` streaming substrate + progress | **Mature** | `pipeline` |
-| Feed/queue replication (CF-Worker-safe) | **Ships** | `echo-host`, EDGE |
-| EDGE functions / AI proxy | **Ships** (no embeddings endpoint) | `edge-client`, EDGE |
-| Cloudflare Vectorize / Workers AI | Not integrated (worker repo external) | — |
+| Capability                                      | Status                                | Location                          |
+| ----------------------------------------------- | ------------------------------------- | --------------------------------- |
+| Client-side FTS5 full-text index (BM25)         | **Ships, unused by plugin**           | `index-core` `FtsIndex`           |
+| `Filter.text(q, {type:'full-text'})`            | **Works**                             | `echo` `Filter.ts`                |
+| Fuzzy ranking (`command-score`)                 | Exists, dead code in plugin           | `react-ui-search`                 |
+| Query-builder DSL (tags/text/type/props)        | **Works**                             | `echo-query` `QueryBuilder`       |
+| Global-filter side channel                      | **Works** (tables consume it)         | `react-ui-search`                 |
+| Vector `searchKind` seam                        | Stub (`log.warn`)                     | `echo` / `echo-host`              |
+| Embeddings in-browser (`@xenova/transformers`)  | Used elsewhere                        | `assistant`, `plugin-transformer` |
+| Vector index (`usearch`, cosine)                | Research harness only                 | `stories-brain`                   |
+| RDF FactStore (symbolic + SQLite backend)       | Shipped (in-memory in app)            | `pipeline-rdf`, `plugin-brain`    |
+| `@dxos/pipeline` streaming substrate + progress | **Mature**                            | `pipeline`                        |
+| Feed/queue replication (CF-Worker-safe)         | **Ships**                             | `echo-host`, EDGE                 |
+| EDGE functions / AI proxy                       | **Ships** (no embeddings endpoint)    | `edge-client`, EDGE               |
+| Cloudflare Vectorize / Workers AI               | Not integrated (worker repo external) | —                                 |

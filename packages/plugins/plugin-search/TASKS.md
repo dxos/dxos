@@ -16,21 +16,21 @@ Wire `plugin-search` + `MailboxArticle` to the shipped FTS5 index with ranking a
 ### Tasks
 
 - [x] **FTS query + ranking helpers** — `src/hooks/search-query.ts`
-  (`buildSearchQuery`, `toSearchResults`, `byRelevance`, `computeMatchSpans`) + unit
-  tests; export `getIcon` from `sync.ts`.
+      (`buildSearchQuery`, `toSearchResults`, `byRelevance`, `computeMatchSpans`) + unit
+      tests; export `getIcon` from `sync.ts`.
 - [x] **Wire search containers to FTS** — `SearchDialog` / `SearchArticle` use
-  `Filter.text` + ranked results; drop stale regex-results path and deprecated web
-  search; strengthen the storybook play test to assert real matches.
+      `Filter.text` + ranked results; drop stale regex-results path and deprecated web
+      search; strengthen the storybook play test to assert real matches.
 - [x] **Mailbox selection helper** — `MailboxArticle/mailbox-search.ts`
-  (`buildMailboxSelection`: free-text → FTS over feed; structural → AND with type) +
-  unit tests.
+      (`buildMailboxSelection`: free-text → FTS over feed; structural → AND with type) +
+      unit tests.
 - [x] **Apply the mailbox filter** — use `buildMailboxSelection` in the message
-  query; verify threading/aggregate under a text query (fallback: bypass grouping
-  while querying).
+      query; verify threading/aggregate under a text query (fallback: bypass grouping
+      while querying).
 - [x] **(Optional) Highlighting** — `Highlighted` component used in
-  `SearchResultStack`.
+      `SearchResultStack`.
 - [x] **Reconcile copy** — fix `dx.config.ts` / `PLUGIN.mdl` overstated claims (no
-  working web search).
+      working web search).
 
 ### References
 
@@ -49,26 +49,26 @@ depending on plugin-search.
 ### Tasks
 
 - [x] **Shared search-text utils** — move `computeMatchSpans` + `Highlighted` to
-  `@dxos/react-ui-search` (`src/util`, `src/components/Highlighted`); add pure
-  `buildSnippet(text, query)`; update plugin-search call sites (no shims).
+      `@dxos/react-ui-search` (`src/util`, `src/components/Highlighted`); add pure
+      `buildSnippet(text, query)`; update plugin-search call sites (no shims).
 - [x] **Shared sample corpus** — pure-data `SAMPLE_MESSAGES` (~18 realistic messages
-  across projects/invoices/meetings/hiring/incidents) in `@dxos/plugin-testing`.
+      across projects/invoices/meetings/hiring/incidents) in `@dxos/plugin-testing`.
 - [x] **Best-match snippet in mailbox cards** — thread the active query to `MessageStack`
-  tiles; when searching, show `buildSnippet(Message.extractText(m), query)` highlighted
-  instead of the default preview.
+      tiles; when searching, show `buildSnippet(Message.extractText(m), query)` highlighted
+      instead of the default preview.
 - [x] **Extract MailboxFilter** — `MailboxFilter.tsx` + `MailboxFilter.stories.tsx`;
-  reseed `MailboxArticle.stories.tsx` with the corpus; play test exercises search + snippet.
+      reseed `MailboxArticle.stories.tsx` with the corpus; play test exercises search + snippet.
 - [x] **SearchResultList** — react-ui-list `Listbox` result list (icon + highlighted
-  title/snippet + metadata) + `SearchResultList.stories.tsx` over the corpus.
+      title/snippet + metadata) + `SearchResultList.stories.tsx` over the corpus.
 
 ### Follow-ups
 
 - [ ] **Predicate search** — parse `from:`/`to:` DSL predicates in mailbox search (e.g.
-  `from:rich`) so a field-scoped term filters on that field only, distinct from free-text
-  matching. Depends on Milestone 3 (FTS + type/structural composition in the executor).
+      `from:rich`) so a field-scoped term filters on that field only, distinct from free-text
+      matching. Depends on Milestone 3 (FTS + type/structural composition in the executor).
 - [ ] **Reusable first-class test data** — promote the hand-authored corpus into a
-  shared, realistic message/object dataset + generator for stories and tests across
-  packages (beyond the single `SAMPLE_MESSAGES` fixture).
+      shared, realistic message/object dataset + generator for stories and tests across
+      packages (beyond the single `SAMPLE_MESSAGES` fixture).
 
 ## Milestone 2: Global (cross-space) search
 
@@ -85,21 +85,21 @@ Client fan-out across loaded spaces + RRF merge; scope toggle. See ROADMAP M2.
 ### Tasks
 
 - [ ] Implement the in-memory `text-search` matcher (currently `return false`) in
-  `echo-host/src/filter/filter-match.ts` + `echo/src/internal/Filter/match.ts`.
+      `echo-host/src/filter/filter-match.ts` + `echo/src/internal/Filter/match.ts`.
 - [ ] Enable FTS + type composition; unblock mailbox mixed text+structural.
 - [ ] Add `searchKind: 'full-text' | 'vector' | 'hybrid'` to the `database.query`
-  agent tool.
+      agent tool.
 
 ## Milestone 4: Vector index MVP (local, flagged)
 
 ### Tasks
 
 - [ ] `@dxos/pipeline` flow: chunk → contentHash-gate → embed (`@xenova/transformers`)
-  → write `EmbeddingRecord` to a per-space feed.
+      → write `EmbeddingRecord` to a per-space feed.
 - [ ] New `VectorIndex` in `index-core` (benchmark `sqlite-vec` vs `usearch`), fed by
-  `IndexTracker` cursors.
+      `IndexTracker` cursors.
 - [ ] Wire the `type: 'vector'` executor stub → `VectorIndex`; add `type: 'hybrid'`
-  (RRF).
+      (RRF).
 - [ ] Storybook + eval (lexical vs vector vs hybrid).
 
 ## Milestone 5: EDGE embedding + Vectorize mirror
@@ -124,7 +124,7 @@ FactStore GraphRAG — durable store + fact→source retrieval. See DESIGN §8.
 ### Tasks
 
 - [ ] Persist `plugin-brain` FactStore (`FactStore.layer` SQLite/OPFS) — replace
-  in-memory N3 so facts survive reload.
+      in-memory N3 so facts survive reload.
 - [ ] Promote the `stories-brain` `hybrid` fact→source bridge into a shipped operation.
 - [ ] Surface it: entity-resolved result group in search + agent tool.
 - [ ] Expand only if `brain-skill-eval` shows facts/hybrid beating thread-RAG.

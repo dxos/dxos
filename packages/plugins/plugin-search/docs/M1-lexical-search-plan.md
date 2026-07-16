@@ -74,10 +74,12 @@ explicitly out of scope (blocked by the executor until Milestone 3).
 ## Task 1: Pure search-query helpers
 
 **Files:**
+
 - Create: `packages/plugins/plugin-search/src/hooks/search-query.ts`
 - Test: `packages/plugins/plugin-search/src/hooks/search-query.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `type MatchSpan = { start: number; end: number }`
   - `buildSearchFilter(text: string): Filter.Any` — a `full-text` text filter.
@@ -262,10 +264,12 @@ git commit -m "plugin-search: add FTS query + ranking helpers"
 ## Task 2: Wire the search containers to the FTS index
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-search/src/containers/SearchDialog/SearchDialog.tsx:33-40`
 - Modify: `packages/plugins/plugin-search/src/containers/SearchArticle/SearchArticle.tsx:19-33`
 
 **Interfaces:**
+
 - Consumes: `buildSearchQuery`, `toSearchResults` (Task 1).
 
 - [ ] **Step 1: Update `SearchDialog` to query the FTS index**
@@ -273,9 +277,9 @@ git commit -m "plugin-search: add FTS query + ranking helpers"
 Replace lines 33–40 of `SearchDialog.tsx`:
 
 ```ts
-  const objects = useQuery(space?.db, buildSearchQuery(query));
-  const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
-  const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
+const objects = useQuery(space?.db, buildSearchQuery(query));
+const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
+const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 ```
 
 Update the import on line 17 to pull the helpers instead of the regex hooks:
@@ -285,7 +289,7 @@ import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
 ```
 
 (`setMatch` from `useGlobalSearch` stays — it still drives the `GlobalFilterProvider`
-regex used by `plugin-table` live-filtering; only the *results* now come from FTS.)
+regex used by `plugin-table` live-filtering; only the _results_ now come from FTS.)
 Remove the now-unused `Filter`, `Query`, `Text` imports if the type-checker flags
 them.
 
@@ -294,15 +298,12 @@ them.
 Replace lines 19–33 of `SearchArticle.tsx`:
 
 ```ts
-  // TODO(burdon): Cross-space search — Milestone 2 (fan-out + merge).
-  const [query, setQuery] = useState<string>();
-  const objects = useQuery(space.db, buildSearchQuery(query));
-  const { setMatch } = useGlobalSearch();
-  const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
-  const allResults = useMemo(
-    () => results.filter(({ object }) => object && Entity.getLabel(object)),
-    [results],
-  );
+// TODO(burdon): Cross-space search — Milestone 2 (fan-out + merge).
+const [query, setQuery] = useState<string>();
+const objects = useQuery(space.db, buildSearchQuery(query));
+const { setMatch } = useGlobalSearch();
+const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
+const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 ```
 
 Update imports (line 8, 16): drop `Filter`, `Query`, `Text`, `useWebSearch`; add the
@@ -330,16 +331,16 @@ factory seeds names via `@dxos/random`; use a common trigram-safe substring. Cha
 `option` count:
 
 ```ts
-    // Type a 3+ char term (FTS trigram minimum) likely present across 60 seeded objects.
-    await userEvent.type(searchInput, 'the');
+// Type a 3+ char term (FTS trigram minimum) likely present across 60 seeded objects.
+await userEvent.type(searchInput, 'the');
 
-    await waitFor(
-      async () => {
-        const options = body.queryAllByRole('option');
-        await expect(options.length).toBeGreaterThan(0);
-      },
-      { timeout: 15_000 },
-    );
+await waitFor(
+  async () => {
+    const options = body.queryAllByRole('option');
+    await expect(options.length).toBeGreaterThan(0);
+  },
+  { timeout: 15_000 },
+);
 ```
 
 If `'the'` proves flaky against the seed, seed a deterministic object in the story's
@@ -365,10 +366,12 @@ git commit -m "plugin-search: use FTS index for search results; drop stale regex
 ## Task 3: Mailbox search selection helper
 
 **Files:**
+
 - Create: `packages/plugins/plugin-inbox/src/containers/MailboxArticle/mailbox-search.ts`
 - Test: `packages/plugins/plugin-inbox/src/containers/MailboxArticle/mailbox-search.test.ts`
 
 **Interfaces:**
+
 - Produces: `buildMailboxSelection(filterText: string, filter: Filter.Any | undefined): Filter.Any`
   - blank input → `Filter.type(Message.Message)`
   - filter containing a `text-search` node → `Filter.text(<the text>, {type:'full-text'})`
@@ -485,9 +488,11 @@ git commit -m "plugin-inbox: add mailbox search selection helper"
 ## Task 4: Apply the mailbox filter to the message query
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx:122`
 
 **Interfaces:**
+
 - Consumes: `buildMailboxSelection` (Task 3), the existing `filterText` / `filter`
   state (lines 107-112).
 
@@ -496,8 +501,8 @@ git commit -m "plugin-inbox: add mailbox search selection helper"
 Replace line 122 (`const source = feed && Query.select(Filter.type(Message.Message)).from(feed);`):
 
 ```ts
-  const selection = useMemo(() => buildMailboxSelection(filterText, filter), [filterText, filter]);
-  const source = feed && Query.select(selection).from(feed);
+const selection = useMemo(() => buildMailboxSelection(filterText, filter), [filterText, filter]);
+const source = feed && Query.select(selection).from(feed);
 ```
 
 Add the import (sibling group):
@@ -525,8 +530,8 @@ If threads misrender under an active text query, the documented fallback is to b
 conversation grouping while a text query is active:
 
 ```ts
-  const grouping = conversations && !filterText.trim();
-  // ...use `grouping` in place of `conversations` for the aggregate branch.
+const grouping = conversations && !filterText.trim();
+// ...use `grouping` in place of `conversations` for the aggregate branch.
 ```
 
 Apply the fallback only if the aggregate path misbehaves; note the outcome in
@@ -546,10 +551,12 @@ git commit -m "plugin-inbox: apply the parsed search filter to the mailbox messa
 Deliver only if Tasks 1–4 are green and time allows; it does not gate the milestone.
 
 **Files:**
+
 - Create: `packages/plugins/plugin-search/src/components/Highlighted/Highlighted.tsx`
 - Modify: `packages/plugins/plugin-search/src/components/SearchResultStack/SearchResultStack.tsx`
 
 **Interfaces:**
+
 - Consumes: `computeMatchSpans` (Task 1).
 - Produces: `<Highlighted text={string} query={string} />` rendering `<mark>` around
   matched spans.
@@ -655,9 +662,9 @@ git commit -m "plugin-search: highlight query matches in search results"
 - [ ] `moon run plugin-search:build && moon run plugin-inbox:build` — no type errors.
 - [ ] `pnpm format` — clean (oxfmt).
 - [ ] Manual: search dialog returns ranked results for a term; mailbox box narrows the
-  message list on free text and on `from:`/`#tag`.
+      message list on free text and on `from:`/`#tag`.
 - [ ] Update `dx.config.ts` / `PLUGIN.mdl` copy so it no longer claims a working web
-  search; reconcile `TASKS.md`.
+      search; reconcile `TASKS.md`.
 
 ## Self-review notes (spec coverage)
 

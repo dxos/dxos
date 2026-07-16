@@ -69,7 +69,7 @@ isolation.
   select and fuses. Unknown/unsupported `type` degrades to `full-text` (never
   empty) so callers are forward-compatible.
 - **A single `SearchResult` shape** carries `{ dxn, object?, label, snippet?,
-  score, matches: MatchSpan[], source: 'space' | 'global' | 'edge' }`.
+score, matches: MatchSpan[], source: 'space' | 'global' | 'edge' }`.
   `MatchSpan` (`{ field, start, end }`) drives highlighting and is produced by the
   ranker, not the executor — highlighting is a UI concern computed from the query
   and the matched field, decoupled from whether the match came from FTS or vector.
@@ -89,14 +89,14 @@ An `EmbeddingRecord` is written to a **dedicated per-space feed/queue** (the
 
 ```ts
 type EmbeddingRecord = {
-  chunkId: string;        // stable id: `${objectDxn}:${field}:${chunkIndex}`
-  objectDxn: string;      // source ECHO object / queue item
-  field: string;          // which field/path was embedded
-  span?: [number, number];// character span within the field (for snippet + citation)
-  model: string;          // e.g. 'bge-m3' — vectors are only comparable within a model id
-  dims: number;           // 768 | 1024
-  vector: Float32Array;   // the embedding (stored as bytes)
-  contentHash: string;    // source-content hash for incremental divergence detection
+  chunkId: string; // stable id: `${objectDxn}:${field}:${chunkIndex}`
+  objectDxn: string; // source ECHO object / queue item
+  field: string; // which field/path was embedded
+  span?: [number, number]; // character span within the field (for snippet + citation)
+  model: string; // e.g. 'bge-m3' — vectors are only comparable within a model id
+  dims: number; // 768 | 1024
+  vector: Float32Array; // the embedding (stored as bytes)
+  contentHash: string; // source-content hash for incremental divergence detection
   createdAt: string;
 };
 ```
@@ -132,10 +132,10 @@ chunks.
 
 ### 4.3 Embedding tier (local + EDGE, open-weight)
 
-| Tier | Model | Dims | When | Why |
-|---|---|---|---|---|
-| **Local** | EmbeddingGemma-300m or `bge-small` via `@xenova/transformers` (WASM/WebGPU) | 768 | incremental edits, offline | low latency, no network, private; already have the dep |
-| **EDGE** | Workers AI `@cf/baai/bge-m3` or `@cf/qwen/qwen3-embedding-0.6b` | 1024 | bulk backfill, large imports, when online | quality + throughput; `$0.012–0.067/M` tokens; no extra keys |
+| Tier      | Model                                                                       | Dims | When                                      | Why                                                          |
+| --------- | --------------------------------------------------------------------------- | ---- | ----------------------------------------- | ------------------------------------------------------------ |
+| **Local** | EmbeddingGemma-300m or `bge-small` via `@xenova/transformers` (WASM/WebGPU) | 768  | incremental edits, offline                | low latency, no network, private; already have the dep       |
+| **EDGE**  | Workers AI `@cf/baai/bge-m3` or `@cf/qwen/qwen3-embedding-0.6b`             | 1024 | bulk backfill, large imports, when online | quality + throughput; `$0.012–0.067/M` tokens; no extra keys |
 
 The two tiers **must agree on a model id per index generation** — vectors are only
 comparable within a model. The default pairing uses one dimension (768 local /
@@ -178,7 +178,7 @@ staged:
 - **Near term — client fan-out + merge (M2).** Query each _loaded_ space's FTS in
   parallel and fuse with RRF. No core ECHO change; correct for the "search my open
   spaces" case; bounded by the number of open spaces. Results carry `source:
-  'global'` and their originating space.
+'global'` and their originating space.
 - **Medium term — lift the single-space invariant (optional).** Extend
   `FtsIndex`/executor to span spaces in one pass if fan-out proves insufficient.
 - **Long term — per-user EDGE global index service (M6).** A per-user index on
@@ -203,13 +203,13 @@ staged:
 
 ## 7. Use-case mapping (a–e)
 
-| Use case | Plane(s) | Approach | Milestone |
-|---|---|---|---|
-| **(a) Cross-space search** | lexical (+vector) | fan-out+merge → EDGE global index | M2 → M6 |
-| **(b) Space full-text search** | lexical | wire `plugin-search` to `Filter.text` + ranking/highlight | **M1** |
-| **(c) ECHO query text predicates** | lexical + structured | implement in-memory `text-search` matcher; enable FTS+type | M3 |
-| **(d) Inline filtering (MailboxArticle)** | structured (+lexical) | apply the already-parsed `Filter` to the query | **M1** |
-| **(e) Agent-based search** | agent (all planes) | add `searchKind: vector\|hybrid` to `database.query`; expose fact→source | M3 → M5 |
+| Use case                                  | Plane(s)              | Approach                                                                 | Milestone |
+| ----------------------------------------- | --------------------- | ------------------------------------------------------------------------ | --------- |
+| **(a) Cross-space search**                | lexical (+vector)     | fan-out+merge → EDGE global index                                        | M2 → M6   |
+| **(b) Space full-text search**            | lexical               | wire `plugin-search` to `Filter.text` + ranking/highlight                | **M1**    |
+| **(c) ECHO query text predicates**        | lexical + structured  | implement in-memory `text-search` matcher; enable FTS+type               | M3        |
+| **(d) Inline filtering (MailboxArticle)** | structured (+lexical) | apply the already-parsed `Filter` to the query                           | **M1**    |
+| **(e) Agent-based search**                | agent (all planes)    | add `searchKind: vector\|hybrid` to `database.query`; expose fact→source | M3 → M5   |
 
 ## 8. RDF FactStore — near-term implementation goal
 
@@ -258,14 +258,14 @@ runtime, so the pattern is proven.
 
 ## 10. Key risks & decisions
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| Vector storage medium | **Feed/queue**, not Automerge | avoid CRDT bloat; CF-Worker-consumable; append-only |
-| Client index backend | `sqlite-vec` (default) / `usearch` (scale) | stay in OPFS SQLite; brute-force is enough per-space |
-| Embedding models | local `bge`/EmbeddingGemma + EDGE `bge-m3`/`qwen3` | open-weight, low-cost, dimension-compatible per generation |
-| Vectorize | EDGE-only accelerator | no client replica exists; feed is the synced source of truth |
-| Cross-space | fan-out now, EDGE service later | ship value without touching core echo; scale on EDGE |
-| First shipped value | **wire existing FTS** (M1) | highest confidence, zero new infra, stale TODO |
+| Decision              | Choice                                             | Rationale                                                    |
+| --------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| Vector storage medium | **Feed/queue**, not Automerge                      | avoid CRDT bloat; CF-Worker-consumable; append-only          |
+| Client index backend  | `sqlite-vec` (default) / `usearch` (scale)         | stay in OPFS SQLite; brute-force is enough per-space         |
+| Embedding models      | local `bge`/EmbeddingGemma + EDGE `bge-m3`/`qwen3` | open-weight, low-cost, dimension-compatible per generation   |
+| Vectorize             | EDGE-only accelerator                              | no client replica exists; feed is the synced source of truth |
+| Cross-space           | fan-out now, EDGE service later                    | ship value without touching core echo; scale on EDGE         |
+| First shipped value   | **wire existing FTS** (M1)                         | highest confidence, zero new infra, stale TODO               |
 
 **Open risks:** (1) FTS indexes whole-object JSON — noisy matches until per-field
 indexing lands; mitigated short-term by client-side field-aware ranking. (2)
