@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import { subDays } from 'date-fns';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -9,18 +10,24 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
+import { createProgressRegistry } from '@dxos/app-toolkit';
 import { Operation, RunAgainError } from '@dxos/compute';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Message, Person } from '@dxos/types';
 
-import { JMAP_MAIL_CONNECTOR_ID, JMAP_MESSAGE_SOURCE } from '../../../constants';
-import { type JmapDataset, JmapMailApi } from '../../../services';
-import { generateJmapDataset } from '../../../testing/jmap-fixtures';
-import { ambientSyncServices, inboxJmapSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
-import { InboxOperation, Mailbox } from '../../../types';
-import { runJmapSync } from './sync';
+import { JMAP_MAIL_CONNECTOR_ID, JMAP_MESSAGE_SOURCE } from '../../../../constants';
+import { type JmapDataset, JmapMailApi } from '../../../../services';
+import { generateJmapDataset } from '../../../../testing/jmap-fixtures';
+import {
+  ambientSyncServices,
+  inboxJmapSyncTestServices,
+  runJmapSync,
+  seedMailboxBinding,
+} from '../../../../testing/sync-fixture';
+import { InboxOperation, Mailbox } from '../../../../types';
+import { createSyncProgressKey } from '../../mail-sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -63,6 +70,26 @@ const withFaultAfterEmails = (n: number, dataset: JmapDataset): Layer.Layer<Jmap
       });
     }),
   ).pipe(Layer.provide(JmapMailApi.mock(dataset)));
+
+/** Wraps a mock {@link JmapMailApi} recording every `emailGet` id, so a test can assert which emails
+ *  were downloaded (vs skipped as already-synced before fetch). */
+const countingJmapApi = (dataset: JmapDataset): { layer: Layer.Layer<JmapMailApi>; fetched: string[] } => {
+  const fetched: string[] = [];
+  const layer = Layer.effect(
+    JmapMailApi,
+    Effect.gen(function* () {
+      const inner = yield* JmapMailApi;
+      return JmapMailApi.of({
+        ...inner,
+        emailGet: (target, ids, properties) => {
+          fetched.push(...ids);
+          return inner.emailGet(target, ids, properties);
+        },
+      });
+    }),
+  ).pipe(Layer.provide(JmapMailApi.mock(dataset)));
+  return { layer, fetched };
+};
 
 // The JMAP sync driven end-to-end against a real ECHO db + a mock JMAP API — no live account. The whole
 // pipeline (query, dedup, decode, map, extraction, commit, cursor advance) exercises against generated data.
@@ -135,6 +162,101 @@ describe('runJmapSync against a mock JMAP API', () => {
     const afterRerun = await queryFeedMessages(db, mailbox);
     expect(afterRerun.length).toBe(feedMessages.length);
     expect((await db.query(Filter.type(Person.Person)).run()).length).toBe(people.length);
+  });
+
+  test('a re-run does not re-download already-synced messages (id-level dedup before fetch)', async ({ expect }) => {
+    // Pinned clock so the re-run's forward window lands on the same high-water boundary as the first sync.
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const dataset = generateJmapDataset({ count: 12, seed: 55, start: subDays(now, 6), end: subDays(now, 1) });
+    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+
+    // Initial full sync.
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxJmapSyncTestServices(db, dataset))),
+    );
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(dataset.emails.length);
+
+    // Re-run with a counting API. The forward window still *queries* the boundary message's id
+    // (inclusive `after: max`), but it is already committed, so `skipCommitted` drops it before
+    // `emailGet` — nothing downloads.
+    const { layer, fetched } = countingJmapApi(dataset);
+    const rerun = await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(Layer.mergeAll(layer, ambientSyncServices(db))),
+      ),
+    );
+    expect(rerun.newMessages).toBe(0);
+    expect(fetched).toEqual([]);
+  });
+
+  test('advances a live progress monitor keyed by the mailbox URI, and removes it on success', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = generateJmapDataset({ count: 20, seed: 17, start, end });
+
+    const { db, mailbox, binding } = await seed();
+
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    // Removed on success, so subscribe to capture `current` as the run advances it rather than reading
+    // the final snapshot.
+    const seen: number[] = [];
+    const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
+      const task = snapshot.tasks.find((task) => task.name === createSyncProgressKey(mailbox));
+      if (task) {
+        seen.push(task.current);
+      }
+    });
+
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding) }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(db, dataset, { progressRegistry: progress })),
+      ),
+    );
+    unsubscribe();
+
+    expect(seen.length).toBeGreaterThan(0);
+    expect(Math.max(...seen)).toBeGreaterThan(0);
+    // Removed on success, so the mailbox's task is gone from the final snapshot.
+    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
+  });
+
+  test('cancelling mid-sync clears the monitor instead of leaving it stuck running', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = generateJmapDataset({ count: 30, seed: 29, start, end });
+
+    const { db, mailbox, binding } = await seed();
+
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const key = createSyncProgressKey(mailbox);
+
+    // Cancel as soon as the monitor shows progress, so the run is genuinely mid-flight — the
+    // subscription fires synchronously from `advance`, so it races ahead of completion.
+    let cancelled = false;
+    const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
+      const task = snapshot.tasks.find((task) => task.name === key);
+      if (task && task.current > 0 && !cancelled) {
+        cancelled = true;
+        progress.cancel(key);
+      }
+    });
+
+    // Cancelling aborts as a fiber interrupt (not a typed failure), so `runPromise` rejects. Cleanup
+    // runs via the abort's `onCancel`, not the skipped post-run code, so the monitor is still removed.
+    await expect(
+      EffectEx.runPromise(
+        runJmapSync({ binding: Ref.make(binding) }).pipe(
+          Effect.provide(inboxJmapSyncTestServices(db, dataset, { progressRegistry: progress })),
+        ),
+      ),
+    ).rejects.toThrow();
+    unsubscribe();
+
+    expect(cancelled).toBe(true);
+    // Not stuck at 'running' — the abort-path cleanup removes the monitor like the success path.
+    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
   });
 
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {

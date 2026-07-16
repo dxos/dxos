@@ -8,7 +8,7 @@ import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { InboxOperation, Mailbox } from '../../../types';
+import { InboxOperation, Mailbox } from '../../../../types';
 
 /**
  * Eagerly materializes a local Mailbox so the sync cursor's target exists before the cursor is

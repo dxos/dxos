@@ -12,8 +12,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
 import { OtelHarness } from '../../../../testing/otel-harness';
-import { inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
-import { syncGmail } from './sync';
+import { inboxSyncTestServices, runGoogleSync, seedMailboxBinding } from '../../../../testing/sync-fixture';
 
 // Benchmarks the sync stack across dataset sizes to surface O(n²) growth (e.g. per-message
 // commit/append time rising with N), verifying at every size that the expected spans (root, fetch,
@@ -33,10 +32,10 @@ const SIZES = (process.env.DX_BENCH_SIZES ?? '1000,4000')
   .filter((value) => Number.isFinite(value) && value > 0);
 
 const EXPECTED_SPANS = [
-  'gmail-sync',
-  'gmail-sync.labels',
-  'gmail-sync.fetch.list',
-  'gmail-sync.fetch.message',
+  'google-sync',
+  'google-sync.labels',
+  'google-sync.fetch.list',
+  'google-sync.fetch.message',
   'sync.commit',
   'sync.commit.appendToFeed',
   'sync.commit.tags',
@@ -44,7 +43,7 @@ const EXPECTED_SPANS = [
   'sync.commit.advanceCursor',
 ];
 
-describe.runIf(process.env.DX_BENCH)('syncGmail benchmark', () => {
+describe.runIf(process.env.DX_BENCH)('runGoogleSync benchmark', () => {
   let builder: EchoTestBuilder;
   const harness = new OtelHarness('inbox-sync-bench');
 
@@ -72,7 +71,7 @@ describe.runIf(process.env.DX_BENCH)('syncGmail benchmark', () => {
 
       const startedAt = performance.now();
       const { newMessages } = await EffectEx.runPromise(
-        syncGmail({ binding: Ref.make(binding) }).pipe(
+        runGoogleSync({ binding: Ref.make(binding) }).pipe(
           Effect.provide(inboxSyncTestServices(db, dataset)),
           Effect.provide(harness.layer),
         ),
@@ -124,7 +123,7 @@ describe.runIf(process.env.DX_BENCH)('syncGmail benchmark', () => {
       console.table(growth);
     }
 
-    expect(perMessageByStage.has('gmail-sync')).toBe(true);
+    expect(perMessageByStage.has('google-sync')).toBe(true);
   });
 });
 

@@ -4,8 +4,8 @@
 
 import { type Operation, OperationHandlerSet } from '@dxos/compute';
 
-import Send from './mail/send';
-import Sync from './mail/sync';
+import Send from './send';
+import Sync from './sync';
 
 export const JmapOperations: {
   Send: Operation.WithHandler<Operation.Definition.Any>;
@@ -16,9 +16,6 @@ export const JmapOperations: {
 };
 
 export const JmapHandlers = OperationHandlerSet.lazy(
-  () => import('./mail/materialize-target'),
-  () => import('./mail/send'),
-  () => import('./mail/sync'),
-  // TODO: () => import('./calendar/...'),
-  // TODO: () => import('./contacts/...'),
+  () => import('./send'),
+  () => import('./sync'),
 );

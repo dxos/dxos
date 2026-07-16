@@ -19,7 +19,7 @@ import { type SyncStreamConfig } from '../../../../types';
 import { type AttachmentMetadata } from '../mapper';
 
 /** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
-export const GMAIL_SYNC_CONFIG = {
+export const GOOGLE_SYNC_CONFIG = {
   listPageSize: 500,
   fetchConcurrency: 5,
   commitPageSize: 10,
@@ -82,11 +82,11 @@ export const fetchMessages = (
           const api = yield* GoogleMailApi;
           const message = yield* api
             .getMessage(config.userId, messageId)
-            .pipe(Effect.withSpan('gmail-sync.fetch.message'));
+            .pipe(Effect.withSpan('google-sync.fetch.message'));
           config.onRetrieved?.();
           return message;
         }),
-      { concurrency: GMAIL_SYNC_CONFIG.fetchConcurrency },
+      { concurrency: GOOGLE_SYNC_CONFIG.fetchConcurrency },
     ),
   );
 };
@@ -120,7 +120,7 @@ const fetchMessageIds = (config: FetchMessageIdsProps) =>
           ? generateForwardChunks({
               start: config.start,
               end: config.end,
-              chunkDays: GMAIL_SYNC_CONFIG.dateChunkDays,
+              chunkDays: GOOGLE_SYNC_CONFIG.dateChunkDays,
             })
           : Stream.make({ start: config.start, end: config.end });
 
@@ -155,8 +155,8 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
 
       const listPage = (pageToken: string | undefined) =>
         api
-          .listMessages(userId, query, GMAIL_SYNC_CONFIG.listPageSize, pageToken)
-          .pipe(Effect.withSpan('gmail-sync.fetch.list'));
+          .listMessages(userId, query, GOOGLE_SYNC_CONFIG.listPageSize, pageToken)
+          .pipe(Effect.withSpan('google-sync.fetch.list'));
 
       // Backward commits newest-first — Gmail's native page order — so stream each page's ids lazily.
       // A downstream `Stream.take` (the cap) then halts enumeration rather than paging through all of
@@ -277,7 +277,7 @@ export const fetchAttachments = (
             return Effect.succeed(undefined);
           }),
         ),
-      { concurrency: GMAIL_SYNC_CONFIG.fetchConcurrency },
+      { concurrency: GOOGLE_SYNC_CONFIG.fetchConcurrency },
     );
 
     return fetched.filter((attachment): attachment is EmailStage.Attachment => attachment !== undefined);
