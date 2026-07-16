@@ -46,7 +46,7 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
-import { createSyncProgressKey } from '../../operations/google/gmail/sync';
+import { createSyncProgressKey } from '../../operations/mail-sync';
 import { InitializeMailbox } from './InitializeMailbox';
 
 /** Messages per page for the lazily-loaded message window. */

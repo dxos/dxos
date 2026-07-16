@@ -3,7 +3,6 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { format } from 'date-fns';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -11,26 +10,24 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { type Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Pipeline, Stage } from '@dxos/pipeline';
+import { Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
-import { ContentBlock, Person } from '@dxos/types';
+import { Person } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
-import { meta } from '../../../meta';
 import { JmapCredentials, JmapMailApi } from '../../../services';
 import { InboxOperation, Mailbox, type SyncStreamConfig } from '../../../types';
-import { onArrivalExtractors, readBindingOptions } from '../../../util';
+import { runMailSync } from '../../mail-sync';
 import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
@@ -43,13 +40,6 @@ const JMAP_SYNC_CONFIG = {
   maxItemsPerRun: 500,
 } as const satisfies SyncStreamConfig;
 
-/**
- * Progress-registry key for a mailbox's JMAP sync monitor — the mailbox URI plus `#sync` so distinct
- * monitor types (e.g. `#topics`) can coexist for one mailbox. `MailboxArticle` subscribes to show the
- * sync meter. Mirrors Gmail's `createSyncProgressKey`.
- */
-export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
-
 export type RunJmapSyncProps = {
   binding: Ref.Ref<Cursor.Cursor>;
   /** Caps candidate messages per run before requesting `Operation.runAgain()`. Test-only override. */
@@ -61,15 +51,16 @@ export type RunJmapSyncProps = {
 };
 
 /**
- * Runs the JMAP sync pipeline for a binding. Every run is bidirectional: new mail since the cursor's
- * `max` (ascending) plus backfill from `min` down to the horizon (descending), so an interrupted or
- * capped run resumes both halves from the cursor — the only durable state (see `Cursor.resolveWindows`).
- * Requires `JmapMailApi` rather than providing it, so a test can drive the sync against a mock API; the
- * handler below wraps it with the Live layer. Return type is written out (not inferred) so the `.d.ts`
- * can name it without expanding unnameable cross-package types (TS2883). Mirrors `syncGmail`.
+ * JMAP adapter for the shared mail-sync harness (`runMailSync` in `mail-sync.ts`, which owns the
+ * bidirectional/capped/resumable pipeline); this module supplies only the JMAP-specific hooks: the
+ * session/account discovery, the email source (`jmapEmails`), the folder→tag map, and the decode/map
+ * stages. Mirror of the Gmail adapter (`syncGmail`). Requires `JmapMailApi` rather than providing it,
+ * so a test can drive the sync against a mock API; the handler below wraps it with the Live layer.
+ * Return type is written out (not inferred) so the `.d.ts` can name it without expanding unnameable
+ * cross-package types (TS2883).
  */
 export const runJmapSync = ({
-  binding: bindingRef,
+  binding,
   maxMessages = JMAP_SYNC_CONFIG.maxItemsPerRun,
   now = new Date(),
   dedupSeedTail,
@@ -78,295 +69,72 @@ export const runJmapSync = ({
   JmapApiError | EntityNotFoundError,
   JmapMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
 > =>
-  Effect.gen(function* () {
-    const binding = yield* Database.load(bindingRef);
-    if (!Cursor.isExternal(binding)) {
-      return { newMessages: 0 };
-    }
-    const mailbox = yield* Database.load(binding.spec.target);
-    if (!Mailbox.instanceOf(mailbox)) {
-      log.warn('jmap sync skipped: binding target is not a Mailbox', { typename: Obj.getTypename(mailbox) });
-      return { newMessages: 0 };
-    }
-
-    const api = yield* JmapMailApi;
-    const session = yield* api.getSession;
-    const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
-    if (!accountId) {
-      log.warn('jmap sync: session has no mail account', { username: session.username });
-      return { newMessages: 0 };
-    }
-    const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId, downloadUrl: session.downloadUrl };
-    log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
-
-    const { db } = yield* Database.Service;
-    const feed = yield* Database.load(mailbox.feed);
-    const tagIndex = yield* Database.load(mailbox.tags);
-    // Pool already-sent drafts once; `EmailStage.reconcileDrafts` drops each draft when its canonical copy arrives.
-    const draftPool = yield* EmailStage.queryDraftPool(mailbox);
-
-    // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline (source: folders; sink: find-or-create Tag).
-    // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`.
-    const { list: folders } = yield* api.mailboxGet(target);
-    const folderTagMap = new Map<string, string>();
-    for (const folder of folders) {
-      const tag = yield* Effect.promise(() => Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }));
-      folderTagMap.set(folder.id, Mailbox.tagUri(tag));
-    }
-
-    const targetOptions = readBindingOptions(binding);
-    // `max`/`min` are the newest/oldest committed `receivedAt` (epoch-ms) — see `Cursor.resolveWindows`.
-    const horizon = Cursor.resolveHorizon({ now, syncBackDays: targetOptions.syncBackDays });
-    const maxKey = Cursor.parseKey(binding.max);
-    const minKey = Cursor.parseKey(binding.min);
-    const windows = Cursor.resolveWindows({ maxKey, minKey, now, horizon });
-
-    const formatWindow = (window: Cursor.Window | undefined) =>
-      window && { start: format(window.start, 'yyyy-MM-dd'), end: format(window.end, 'yyyy-MM-dd') };
-    log.info('syncing...', {
-      mailbox: Obj.getURI(mailbox),
-      maxKey,
-      minKey,
-      forward: formatWindow(windows.forward),
-      backward: formatWindow(windows.backward),
-    });
-
-    // Resolve the sender contact, build the ECHO message, and map folder ids to tag URIs.
-    const mapToMessageStage: Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver | JmapMailApi> = Stage.map(
-      'map-to-message',
-      (decoded: DecodedEmail) =>
-        Effect.gen(function* () {
-          const fromAddress = decoded.raw.from?.[0];
-          const contact = fromAddress ? yield* resolve(Person.Person, { email: fromAddress.email }) : undefined;
-          const mapped = mapToMessage(decoded, contact ?? undefined);
-          if (!mapped) {
-            return undefined;
-          }
-          const tagUris = mapped.mailboxIds.flatMap((folderId) => {
-            const uri = folderTagMap.get(folderId);
-            return uri ? [uri] : [];
-          });
-          const attachments = yield* fetchAttachments(target, decoded.attachments);
-          return {
-            message: mapped.message,
-            foreignId: decoded.raw.id,
-            key: new Date(decoded.raw.receivedAt).getTime(),
-            tagUris,
-            attachments,
-          };
-        }),
-    );
-
-    const stats: Cursor.Stats = { newMessages: 0 };
-
-    // Coarse sync telemetry written to the transient stats store (keyed by mailbox) for a live debug
-    // surface. Optional — `getAll` yields nothing without a host plugin, so a no-op in production.
-    // Write only this plugin's compartment; other plugins own their own slots.
-    const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
-      store.compartment(meta.profile.key),
-    );
-
-    // Cooperative cancellation: the meter's cancel control aborts the controller, which drains the
-    // stream so the run stops without error.
-    const controller = new AbortController();
-
-    // Live progress monitor, keyed by the mailbox URI so surfaces can subscribe. The registry is a
-    // singleton from an always-loaded host; absence is a wiring bug, not a typed failure — `orDie`
-    // keeps the error channel provider-scoped.
-    const progressRegistry = yield* Capability.get(AppCapabilities.ProgressRegistry).pipe(Effect.orDie);
-    const progressMonitor = progressRegistry.register(createSyncProgressKey(mailbox), {
-      label: mailbox.name ?? 'Mailbox',
-      onCancel: () => {
-        controller.abort();
-      },
-    });
-
-    // Accumulate the retrieval total as each page's ids are enumerated (before any full fetch), so the
-    // meter renders a determinate bar. Pages enumerate before their ids reach fetch, so `total` leads
-    // `current`.
-    let totalToRetrieve = 0;
-    const addToTotal = (count: number) => {
-      totalToRetrieve += count;
-      progressMonitor.total(totalToRetrieve);
-    };
-
-    const startedAt = new Date().toISOString();
-    const startMs = Date.now();
-    const threads = new Set<string>();
-    const senders = new Set<string>();
-    const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
-
-    // Per-run funnel counts, each stage narrower than the last: `taken` (post-dedup candidates — the
-    // cap gauge) → `processed` (post-decode/map) → `stats.newMessages` (committed). `extent` is the
-    // observed key range, folded into the cursor at run end so a run that commits nothing still advances.
-    let taken = 0;
-    let processed = 0;
-    let attachmentCount = 0;
-    let finishedAt: string | undefined;
-    let finishedMs: number | undefined;
-    const extent: Cursor.Extent = { maxKey: 0, minKey: 0 };
-    const publishStats = () => {
-      if (statsCompartments.length === 0) {
-        return;
-      }
-
-      const snapshot = {
-        startedAt,
-        ...(finishedAt ? { finishedAt } : {}),
-        durationMs: (finishedMs ?? Date.now()) - startMs,
-        range: {
-          syncBackDays: targetOptions.syncBackDays,
-          forward: formatWindow(windows.forward),
-          backward: formatWindow(windows.backward),
-        },
-        taken,
-        processed,
-        newMessages: stats.newMessages,
-        threads: threads.size,
-        senders: senders.size,
-        coverage,
-        attachments: attachmentCount,
-      };
-
-      statsCompartments.forEach((compartment) => compartment.set(snapshot));
-    };
-
-    // Pass-through stage: accumulates telemetry per mapped message, publishing a snapshot so a
-    // subscribed surface ticks up live.
-    const collectStats = Stage.map('collect-stats', (mapped: EmailStage.Mapped) =>
-      Effect.sync(() => {
-        processed += 1;
-        if (mapped.message.threadId) {
-          threads.add(mapped.message.threadId);
+  runMailSync<JmapMail.Email, DecodedEmail, JmapApiError, JmapMailApi>({
+    name: 'jmap',
+    config: JMAP_SYNC_CONFIG,
+    foreignKeySource: JMAP_MESSAGE_SOURCE,
+    binding,
+    maxMessages,
+    now,
+    dedupSeedTail,
+    prepare: ({ db, now }) =>
+      Effect.gen(function* () {
+        const api = yield* JmapMailApi;
+        const session = yield* api.getSession;
+        const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
+        if (!accountId) {
+          log.warn('jmap sync: session has no mail account', { username: session.username });
+          return undefined;
         }
-        if (mapped.message.sender?.email) {
-          senders.add(mapped.message.sender.email);
+        const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId, downloadUrl: session.downloadUrl };
+        log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
+
+        // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline (source: folders; sink: find-or-create Tag).
+        // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`.
+        const { list: folders } = yield* api.mailboxGet(target);
+        const folderTagMap = new Map<string, string>();
+        for (const folder of folders) {
+          const tag = yield* Effect.promise(() =>
+            Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }),
+          );
+          folderTagMap.set(folder.id, Mailbox.tagUri(tag));
         }
-        const textBlocks = mapped.message.blocks.filter((block): block is ContentBlock.Text => block._tag === 'text');
-        const has = (mimeType: string) => textBlocks.some((block) => block.mimeType === mimeType);
-        if (has('text/plain')) {
-          coverage.plain += 1;
-        } else if (has('text/markdown')) {
-          coverage.synthesizedMarkdown += 1;
-        } else if (has('text/html')) {
-          coverage.htmlOnly += 1;
-        } else {
-          coverage.none += 1;
-        }
-        attachmentCount += mapped.attachments?.length ?? 0;
-        publishStats();
-        return mapped;
+
+        // Resolve the sender contact, build the ECHO message, and map folder ids to tag URIs.
+        const mapToMessageStage: Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver | JmapMailApi> =
+          Stage.map('map-to-message', (decoded: DecodedEmail) =>
+            Effect.gen(function* () {
+              const fromAddress = decoded.raw.from?.[0];
+              const contact = fromAddress ? yield* resolve(Person.Person, { email: fromAddress.email }) : undefined;
+              const mapped = mapToMessage(decoded, contact ?? undefined);
+              if (!mapped) {
+                return undefined;
+              }
+              const tagUris = mapped.mailboxIds.flatMap((folderId) => {
+                const uri = folderTagMap.get(folderId);
+                return uri ? [uri] : [];
+              });
+              const attachments = yield* fetchAttachments(target, decoded.attachments);
+              return {
+                message: mapped.message,
+                foreignId: decoded.raw.id,
+                key: new Date(decoded.raw.receivedAt).getTime(),
+                tagUris,
+                attachments,
+              };
+            }),
+          );
+
+        return {
+          buildSource: ({ windows, filter, onEnumerated, onRetrieved }) =>
+            jmapEmails(target, folders, { windows, filter, now, onEnumerated, onRetrieved }),
+          getForeignId: (email: JmapMail.Email) => email.id,
+          getKey: (email: JmapMail.Email) => new Date(email.receivedAt).getTime(),
+          decodeBodyStage,
+          mapToMessageStage,
+        };
       }),
-    );
-
-    //
-    // Start pipeline
-    //
-    // `jmapEmails` covers both halves as one unbounded stream; the per-run cap is applied *after* dedup
-    // so it counts only genuinely-new messages — capping before dedup would let re-fetched boundary
-    // messages stall the cursor. `taken` distinguishes a truncated run (→ re-run) from both windows
-    // exhausted (→ complete backfill).
-    yield* jmapEmails(target, folders, {
-      windows,
-      filter: targetOptions.filter,
-      now,
-      onEnumerated: addToTotal,
-      // Advance at retrieval so `current` reaches `total`; counting after downstream dedup/decode drops
-      // would leave the bar short of 100%.
-      onRetrieved: () => progressMonitor.advance(1),
-    }).pipe(
-      Cursor.dedupStage<JmapMail.Email>(
-        'dedup',
-        (email) => email.id,
-        (email) => new Date(email.receivedAt).getTime(),
-      ),
-      Stream.take(maxMessages),
-      Stream.tap(() => Effect.sync(() => (taken += 1))),
-      decodeBodyStage,
-      mapToMessageStage,
-      EmailStage.processAttachments(),
-      onArrivalExtractors(mailbox),
-      EmailStage.extractContacts(),
-      EmailStage.reconcileDrafts(draftPool),
-      collectStats,
-      EmailStage.toCommitUnit({ tagIndex }),
-      Stream.grouped(JMAP_SYNC_CONFIG.commitPageSize),
-      Pipeline.run({ sink: Cursor.commit }),
-      Effect.provide(
-        Cursor.layer({
-          cursor: binding,
-          feed,
-          foreignKeySource: JMAP_MESSAGE_SOURCE,
-          maxKey,
-          minKey,
-          trackRange: true,
-          stats,
-          extent,
-          dedupSeedTail,
-        }),
-      ),
-      Pipeline.abortWith(
-        controller.signal,
-        // TODO(wittjosiah): Could this note+remove pairing be upstreamed into abortWith itself?
-        Effect.sync(() => {
-          log('jmap sync cancelled', { mailbox: Obj.getURI(mailbox) });
-          progressMonitor.note('Cancelled');
-          progressMonitor.remove();
-        }),
-      ),
-      Effect.tapError((error) =>
-        Effect.sync(() => {
-          // Log the raw error; the meter shows only a short reason (the full exception — provider
-          // errors, auth tokens — must not reach the UI).
-          log.warn('jmap sync failed', { error });
-          progressMonitor.fail('Sync failed');
-        }),
-      ),
-    );
-
-    // Flush indexes once at end of run so cross-run dedup / contact resolution observe this run's writes
-    // (per-page commits no longer flush — see `Cursor.commit`).
-    yield* Database.flush({ indexes: true });
-
-    // Final publish so the committed `newMessages` count and the run's end time / duration are recorded
-    // after the last mid-stream snapshot.
-    finishedMs = Date.now();
-    finishedAt = new Date(finishedMs).toISOString();
-    publishStats();
-
-    // On cancel, `Pipeline.abortWith`'s onAbort already noted 'Cancelled' and removed the monitor, so
-    // only the completed path has post-run work.
-    if (!controller.signal.aborted) {
-      progressMonitor.done();
-      progressMonitor.remove();
-
-      // Fold the run's observed key extent so the window advances even if every scanned message was
-      // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
-      Cursor.extendRange(binding, extent);
-
-      const capped = taken >= maxMessages;
-      log('jmap sync run finished', {
-        mailbox: Obj.getURI(mailbox),
-        taken,
-        maxMessages,
-        capped,
-        newMessages: stats.newMessages,
-        action: capped ? 'runAgain' : 'completeBackfill',
-      });
-      if (!capped) {
-        // Both halves exhausted naturally (not just capped) — the backward half reached the horizon.
-        Cursor.completeBackfill(binding, horizon.getTime());
-      } else {
-        // Capped: more to sync. A re-run (rather than an in-process loop) keeps this invocation bounded
-        // and lets the durable runtime schedule the continuation. Progress is already committed, so the
-        // next run resumes from the advanced cursor.
-        yield* Operation.runAgain().pipe(Effect.orDie);
-      }
-    }
-
-    log('sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted, taken });
-    return { newMessages: stats.newMessages };
-  }).pipe(Effect.withSpan('jmap-sync'));
+  });
 
 export default InboxOperation.JmapSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
@@ -545,10 +313,10 @@ const jmapEmailsForIds = (
 
 /**
  * Streams full JMAP emails for one bidirectional run: forward window's ids then backward's, concatenated
- * and fetched in full. Intentionally UNBOUNDED — the caller caps after dedup (see `runJmapSync`).
+ * and fetched in full. Intentionally UNBOUNDED — the caller caps after dedup (see `runMailSync`).
  *
  * `Cursor.skipCommitted` drops ids already in the dedup set before `emailGet`, so re-queried boundary
- * ids aren't downloaded; the caller's post-fetch `Cursor.dedupStage` stays the authority.
+ * ids aren't downloaded; the harness's post-fetch `Cursor.dedupStage` stays the authority.
  */
 const jmapEmails = (
   target: JmapMail.Target,

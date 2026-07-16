@@ -22,7 +22,8 @@ import { type JmapDataset, JmapMailApi } from '../../../services';
 import { generateJmapDataset } from '../../../testing/jmap-fixtures';
 import { ambientSyncServices, inboxJmapSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
 import { InboxOperation, Mailbox } from '../../../types';
-import { createSyncProgressKey, runJmapSync } from './sync';
+import { createSyncProgressKey } from '../../mail-sync';
+import { runJmapSync } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
