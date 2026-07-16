@@ -19,12 +19,29 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
+import { gmailMailSyncProvider } from '../operations/mail/gmail/sync/sync-provider';
+import { jmapMailSyncProvider } from '../operations/mail/jmap/sync/sync-provider';
+import { type RunMailSyncOptions, runMailSync } from '../operations/mail/mail-sync';
 import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
 import { Mailbox } from '../types';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded
 // with a mailbox binding, plus the ambient services `runGmailSync`/`runJmapSync` require. Not exported
 // from `@dxos/plugin-inbox/testing` — it pulls app-framework/compute, so it stays a local test helper.
+
+/**
+ * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API
+ * for the test to supply (mock, counting, fault, or Live). Production inlines this in the handler.
+ */
+export const syncGmail = (options: RunMailSyncOptions) =>
+  runMailSync(options).pipe(
+    Effect.provide(gmailMailSyncProvider({ userId: 'me', label: 'all' })),
+    Effect.withSpan('gmail-sync'),
+  );
+
+/** Test entry point for the JMAP sync — peer of {@link syncGmail}. */
+export const runJmapSync = (options: RunMailSyncOptions) =>
+  runMailSync(options).pipe(Effect.provide(jmapMailSyncProvider()), Effect.withSpan('jmap-sync'));
 
 /** The ECHO types the sync writes: messages, contacts, tags, tag index, connection + cursor. */
 export const SYNC_TEST_TYPES = [

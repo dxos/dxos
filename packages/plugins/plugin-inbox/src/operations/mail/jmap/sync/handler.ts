@@ -14,7 +14,8 @@ import { log } from '@dxos/log';
 
 import { JmapCredentials, JmapMailApi } from '../../../../services';
 import { InboxOperation } from '../../../../types';
-import { runJmapSync } from './sync';
+import { runMailSync } from '../../mail-sync';
+import { jmapMailSyncProvider } from './sync-provider';
 
 const handler = InboxOperation.JmapSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
@@ -30,16 +31,18 @@ const handler = InboxOperation.JmapSync.pipe(
       }
 
       const accessTokenRef = bindingObj.spec.source;
-
-      return yield* runJmapSync({ binding: bindingRef }).pipe(
+      // Layer stack, top-down: the provider needs JmapMailApi + Resolver; JmapMailApi.Live needs the
+      // HTTP client + credentials. Chained `Layer.provide` reads as that dependency stack.
+      return yield* runMailSync({ binding: bindingRef }).pipe(
         Effect.provide(
-          Layer.mergeAll(
-            JmapMailApi.Live.pipe(
-              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, JmapCredentials.fromAccessToken(accessTokenRef))),
-            ),
-            InboxResolver.Live,
+          jmapMailSyncProvider().pipe(
+            Layer.provide(InboxResolver.Live),
+            Layer.provide(JmapMailApi.Live),
+            Layer.provide(FetchHttpClient.layer),
+            Layer.provide(JmapCredentials.fromAccessToken(accessTokenRef)),
           ),
         ),
+        Effect.withSpan('jmap-sync'),
       );
     }),
   ),

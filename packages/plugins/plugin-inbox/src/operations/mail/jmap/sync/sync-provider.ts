@@ -9,10 +9,6 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-import { type Capability } from '@dxos/app-framework';
-import { type Operation } from '@dxos/compute';
-import { type Database, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -24,7 +20,7 @@ import { JMAP_MESSAGE_SOURCE } from '../../../../constants';
 import { type JmapApiError, MailSyncError } from '../../../../errors';
 import { JmapMailApi } from '../../../../services';
 import { Mailbox, type SyncStreamConfig } from '../../../../types';
-import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../../mail-sync';
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource } from '../../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
@@ -36,16 +32,6 @@ const JMAP_SYNC_CONFIG = {
   commitPageSize: 10,
   maxItemsPerRun: 500,
 } as const satisfies SyncStreamConfig;
-
-export type RunJmapSyncProps = {
-  binding: Ref.Ref<Cursor.Cursor>;
-  /** Caps candidate messages per run before requesting `Operation.runAgain()`. Test-only override. */
-  maxMessages?: number;
-  /** Reference "now" for window/horizon resolution. Test-only (pins the clock); defaults to `new Date()`. */
-  now?: Date;
-  /** Overrides the dedup-set seed bound (see `Cursor.layer`). Test-only — shrinks it to reproduce the seed-eviction dedup bug. */
-  dedupSeedTail?: number;
-};
 
 /**
  * JMAP's {@link MailSyncProvider}: session/account discovery, the email source, the folder→tag map, and
@@ -134,27 +120,6 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
           }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
       };
     }),
-  );
-
-/**
- * Runs the JMAP sync: {@link runMailSync} with the JMAP provider layer supplied. Requires
- * {@link JmapMailApi} (+ {@link Resolver}) rather than providing it, so a test can drive it against a
- * mock; the handler wraps it with the Live layers. Return type written out for `.d.ts` nameability
- * (TS2883). Mirror of the Gmail adapter (`syncGmail`).
- */
-export const runJmapSync = ({
-  binding,
-  maxMessages,
-  now,
-  dedupSeedTail,
-}: RunJmapSyncProps): Effect.Effect<
-  { newMessages: number },
-  MailSyncError | EntityNotFoundError,
-  JmapMailApi | Resolver | Database.Service | Capability.Service | Operation.Service
-> =>
-  runMailSync({ binding, maxMessages, now, dedupSeedTail }).pipe(
-    Effect.provide(jmapMailSyncProvider()),
-    Effect.withSpan('jmap-sync'),
   );
 
 /**

@@ -26,7 +26,7 @@ import { onArrivalExtractors, readBindingOptions } from '../../util';
 /**
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect
  * service ({@link MailSyncProvider}), so each operation is this one effect with its own provider layer
- * provided (see `syncGmail` / `runJmapSync`). Owns everything not provider-specific: binding/mailbox/feed
+ * provided (see the gmail/jmap handlers). Owns everything not provider-specific: binding/mailbox/feed
  * loads, window resolution, the dedup→cap→process→commit pipeline, progress monitor, cancellation, stats.
  */
 
@@ -132,7 +132,6 @@ export const runMailSync = (
     const maxMessages = options.maxMessages ?? provider.config.maxItemsPerRun ?? Number.POSITIVE_INFINITY;
 
     const binding = yield* Database.load(options.binding);
-    // The integration mechanism only ever creates external-sync cursors for mail providers.
     if (!Cursor.isExternal(binding)) {
       return { newMessages: 0 };
     }
@@ -150,7 +149,6 @@ export const runMailSync = (
     }
 
     const targetOptions = readBindingOptions(binding);
-    // `max`/`min` are the newest/oldest committed provider key (epoch-ms) — see `Cursor.resolveWindows`.
     const horizon = Cursor.resolveHorizon({ now, syncBackDays: targetOptions.syncBackDays });
     const maxKey = Cursor.parseKey(binding.max);
     const minKey = Cursor.parseKey(binding.min);
@@ -287,6 +285,7 @@ export const runMailSync = (
     //
     // Start pipeline
     //
+
     // The cap is applied after dedup (see `MailSyncItem`), so `taken` counts only genuinely-new
     // messages: it tells us whether the run was truncated (→ re-run) or exhausted (→ complete backfill).
     yield* source
@@ -395,5 +394,4 @@ export const runMailSync = (
       taken,
     });
     return { newMessages: stats.newMessages };
-    // The run span (`gmail-sync` / `jmap-sync`) is added by each provider wrapper.
   });

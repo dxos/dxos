@@ -20,10 +20,14 @@ import { Message, Person } from '@dxos/types';
 import { GMAIL_SOURCE } from '../../../../constants';
 import { type GmailDataset, GoogleMailApi } from '../../../../services';
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
-import { ambientSyncServices, inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
+import {
+  ambientSyncServices,
+  inboxSyncTestServices,
+  seedMailboxBinding,
+  syncGmail,
+} from '../../../../testing/sync-fixture';
 import { InboxOperation, Mailbox } from '../../../../types';
 import { createSyncProgressKey } from '../../mail-sync';
-import { syncGmail } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>

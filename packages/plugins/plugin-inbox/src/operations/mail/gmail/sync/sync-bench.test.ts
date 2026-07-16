@@ -12,8 +12,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
 import { OtelHarness } from '../../../../testing/otel-harness';
-import { inboxSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
-import { syncGmail } from './sync';
+import { inboxSyncTestServices, seedMailboxBinding, syncGmail } from '../../../../testing/sync-fixture';
 
 // Benchmarks the sync stack across dataset sizes to surface O(n²) growth (e.g. per-message
 // commit/append time rising with N), verifying at every size that the expected spans (root, fetch,

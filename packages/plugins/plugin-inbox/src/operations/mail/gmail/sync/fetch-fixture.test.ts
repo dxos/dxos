@@ -13,8 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { inboxSyncLiveServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
-import { syncGmail } from './sync';
+import { inboxSyncLiveServices, seedMailboxBinding, syncGmail } from '../../../../testing/sync-fixture';
 
 const ACCESS_TOKEN = process.env.GOOGLE_ACCESS_TOKEN;
 const FIXTURE_OUT = process.env.FIXTURE_OUT;

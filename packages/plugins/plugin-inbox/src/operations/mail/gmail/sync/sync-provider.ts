@@ -6,12 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { type Capability } from '@dxos/app-framework';
-import { type Operation } from '@dxos/compute';
-import { type Database, Obj, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { Obj } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
-import { type Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 import { Person } from '@dxos/types';
@@ -22,28 +18,9 @@ import { MailSyncError } from '../../../../errors';
 import { GoogleMailApi } from '../../../../services';
 import { Mailbox } from '../../../../types';
 import { parseFromHeader } from '../../../util';
-import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../../mail-sync';
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource } from '../../mail-sync';
 import { decodeBody, mapToMessage } from '../mapper';
 import { GMAIL_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
-
-export type SyncGmailProps = {
-  binding: Ref.Ref<Cursor.Cursor>;
-  userId?: string;
-  /**
-   * Defaults to all mail (every folder incl. Sent) so full conversations sync; a label restricts to
-   * that folder. See `fetchMessageIds` for how `'all'` maps to the query.
-   */
-  label?: string;
-  /**
-   * Candidate messages this run considers before requesting `Operation.runAgain()`. Test-only
-   * override — production uses the default.
-   */
-  maxMessages?: number;
-  /** Reference "now" for window/horizon resolution. Test-only (pins the clock); defaults to `new Date()`. */
-  now?: Date;
-  /** Overrides the dedup-set seed bound (see `Cursor.layer`). Test-only — shrinks it to reproduce the seed-eviction dedup bug. */
-  dedupSeedTail?: number;
-};
 
 /**
  * Gmail's {@link MailSyncProvider}: the message source, the label→tag map, and the fused decode+map.
@@ -124,29 +101,6 @@ export const gmailMailSyncProvider = (options: {
           }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
       };
     }),
-  );
-
-/**
- * Runs the Gmail sync: {@link runMailSync} with the Gmail provider layer supplied. Requires
- * {@link GoogleMailApi} (+ {@link Resolver}) rather than providing it, so a test can drive it against a
- * mock; the handler wraps it with the Live layers. Return type written out for `.d.ts` nameability
- * (TS2883). Mirror of the JMAP adapter (`runJmapSync`).
- */
-export const syncGmail = ({
-  binding,
-  userId = 'me',
-  label = 'all',
-  maxMessages,
-  now,
-  dedupSeedTail,
-}: SyncGmailProps): Effect.Effect<
-  { newMessages: number },
-  MailSyncError | EntityNotFoundError,
-  GoogleMailApi | Resolver | Database.Service | Capability.Service | Operation.Service
-> =>
-  runMailSync({ binding, maxMessages, now, dedupSeedTail }).pipe(
-    Effect.provide(gmailMailSyncProvider({ userId, label })),
-    Effect.withSpan('gmail-sync'),
   );
 
 /**
