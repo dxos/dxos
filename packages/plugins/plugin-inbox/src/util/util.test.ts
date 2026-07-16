@@ -230,6 +230,23 @@ describe('messageMatchesQuery', () => {
     expect(messageMatchesQuery(message, 'htmlonlyterm')).toBe(false);
   });
 
+  test('matches the sender (from) name or email', ({ expect }) => {
+    expect(messageMatchesQuery(message, 'bob')).toBe(true);
+    expect(messageMatchesQuery(message, 'bob@example.com')).toBe(true);
+  });
+
+  test('matches the recipients (to/cc)', ({ expect }) => {
+    const addressed = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Bob', email: 'bob@example.com' },
+      blocks: [{ _tag: 'text' as const, text: 'Body', mimeType: 'text/markdown' }],
+      properties: { subject: 'Hi', to: 'alice@example.com', cc: 'carol@example.com' },
+    });
+    expect(messageMatchesQuery(addressed, 'alice')).toBe(true);
+    expect(messageMatchesQuery(addressed, 'carol@example.com')).toBe(true);
+    expect(messageMatchesQuery(addressed, 'nobody')).toBe(false);
+  });
+
   test('an empty query always matches', ({ expect }) => {
     expect(messageMatchesQuery(message, '')).toBe(true);
     expect(messageMatchesQuery(message, '   ')).toBe(true);

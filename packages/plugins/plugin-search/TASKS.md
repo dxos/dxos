@@ -63,6 +63,9 @@ depending on plugin-search.
 
 ### Follow-ups
 
+- [ ] **Predicate search** — parse `from:`/`to:` DSL predicates in mailbox search (e.g.
+  `from:rich`) so a field-scoped term filters on that field only, distinct from free-text
+  matching. Depends on Milestone 3 (FTS + type/structural composition in the executor).
 - [ ] **Reusable first-class test data** — promote the hand-authored corpus into a
   shared, realistic message/object dataset + generator for stories and tests across
   packages (beyond the single `SAMPLE_MESSAGES` fixture).

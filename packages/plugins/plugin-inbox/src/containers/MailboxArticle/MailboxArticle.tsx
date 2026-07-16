@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { type ReactNode, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -39,6 +39,7 @@ import {
   useMailboxExtractorActions,
   useTargetSync,
 } from '#components';
+import { useDebouncedValue } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
@@ -123,22 +124,24 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const conversations = settings.conversations ?? true;
   const direction = sortDescending.value ? 'desc' : 'asc';
 
-  // The ECHO query (and the `searchQuery` that drives highlighting) is driven by a DEFERRED value so
-  // typing in the filter editor doesn't re-run the query and blank the list on every keystroke — the
-  // previous results stay rendered while React resolves the next query in the background. The editor
-  // itself, and the save-filter gating below, stay bound to the immediate `filterText`/`filter`.
-  const deferredFilterText = useDeferredValue(filterText);
-  const deferredFilter = useMemo(() => builder.build(deferredFilterText).filter, [deferredFilterText, builder]);
+  // The ECHO query (and the `searchQuery` that drives highlighting) is driven by a DEBOUNCED value so
+  // typing in the filter editor doesn't rebuild the paginated store and flash the list empty on every
+  // keystroke — the query's AST only changes once typing pauses. The editor itself, and the
+  // save-filter gating below, stay bound to the immediate `filterText`/`filter`. (`useDeferredValue`
+  // is insufficient here: it still commits every intermediate keystroke, just at a lower priority, so
+  // the query AST — and thus `usePagination`'s store — still changes on each keypress.)
+  const debouncedFilterText = useDebouncedValue(filterText, 300);
+  const debouncedFilter = useMemo(() => builder.build(debouncedFilterText).filter, [debouncedFilterText, builder]);
 
   // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
   const selection = useMemo(
-    () => buildMailboxSelection(deferredFilterText, deferredFilter),
-    [deferredFilterText, deferredFilter],
+    () => buildMailboxSelection(debouncedFilterText, debouncedFilter),
+    [debouncedFilterText, debouncedFilter],
   );
-  const searchQuery = useMemo(() => getSearchText(deferredFilter), [deferredFilter]);
+  const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
   const source = feed && Query.select(selection).from(feed);
   const pagination = usePagination(
     db,

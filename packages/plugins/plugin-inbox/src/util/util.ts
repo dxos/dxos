@@ -176,14 +176,26 @@ export const getMessageBodyText = (message: Message.Message): string => {
   return (markdownBlock ?? plainBlock ?? untaggedBlock)?.text ?? '';
 };
 
-/** Whether a message's plain/markdown body or subject contains `query` (case-insensitive). */
+/**
+ * Whether `query` (case-insensitive) matches a message's subject, sender (from), recipients
+ * (to/cc), or plain/markdown body. Raw HTML blocks are never consulted (see `getMessageBodyText`).
+ */
 export const messageMatchesQuery = (message: Message.Message, query: string): boolean => {
   const needle = query.trim().toLowerCase();
   if (needle.length === 0) {
     return true;
   }
-  const subject = (message.properties?.subject ?? '').toLowerCase();
-  return subject.includes(needle) || getMessageBodyText(message).toLowerCase().includes(needle);
+  const fields = [
+    message.properties?.subject,
+    message.sender?.name,
+    message.sender?.email,
+    message.properties?.to,
+    message.properties?.cc,
+  ];
+  return (
+    fields.some((value) => typeof value === 'string' && value.toLowerCase().includes(needle)) ||
+    getMessageBodyText(message).toLowerCase().includes(needle)
+  );
 };
 
 export const getMessageProps = (
