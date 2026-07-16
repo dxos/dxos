@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { mergeBranch } from '@dxos/versioning';
+import { Branch as VersioningBranch } from '@dxos/versioning';
 
 import { MarkdownOperation } from '../types';
 
@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.MergeBranch> = Mar
       invariant(branch, `branch not found: ${branchId}`);
       const parent = yield* Database.load(branch.parent);
       yield* Database.load(branch.content);
-      const { conflicts } = mergeBranch(document, branch);
+      const { conflicts } = VersioningBranch.merge(document, branch);
       return { conflicts, newContent: parent.content };
     }),
   ),

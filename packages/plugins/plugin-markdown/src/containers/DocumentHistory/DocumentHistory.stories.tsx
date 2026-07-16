@@ -16,7 +16,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { createBranch, createCheckpoint } from '@dxos/versioning';
+import { Branch, Version } from '@dxos/versioning';
 
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
@@ -73,13 +73,13 @@ const meta = {
 
               const root = doc.content.target;
               if (root) {
-                createCheckpoint(doc, { name: 'first draft', target: root });
+                Version.create(doc, { name: 'first draft', target: root });
                 Obj.update(root, (root) => {
                   root.content = 'alpha\nbravo\ncharlie\ndelta\n';
                 });
-                createCheckpoint(doc, { name: 'v2 outline', target: root });
+                Version.create(doc, { name: 'v2 outline', target: root });
 
-                const branch = createBranch(doc, { name: 'agent-draft', parent: root });
+                const branch = Branch.create(doc, { name: 'agent-draft', parent: root });
                 const branchText = branch.content.target;
                 if (branchText) {
                   Obj.update(branchText, (branchText) => {

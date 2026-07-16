@@ -5,14 +5,14 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
-import { createBranch, createCheckpoint, mergeBranch } from '@dxos/versioning';
+import { Branch, Version } from '@dxos/versioning';
 
 import { WithProperties } from '#testing';
 
@@ -35,17 +35,17 @@ describe('timeline model', () => {
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const v1 = createCheckpoint(doc, { name: 'v1', target: root });
-        const branch = createBranch(doc, { name: 'draft', parent: root });
+        const v1 = Version.create(doc, { name: 'v1', target: root });
+        const branch = Branch.create(doc, { name: 'draft', parent: root });
         const branchText = yield* Database.load(branch.content);
         Obj.update(branchText, (branchText) => {
           branchText.content = 'alpha\nbravo\n';
         });
-        mergeBranch(doc, branch);
+        Branch.merge(doc, branch);
         Obj.update(root, (root) => {
           root.content = 'alpha\nbravo\ncharlie\n';
         });
-        createCheckpoint(doc, { name: 'v2', target: root });
+        Version.create(doc, { name: 'v2', target: root });
 
         const { commits, branches } = createTimelineModel(doc);
 
@@ -98,7 +98,7 @@ describe('timeline model', () => {
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const branch = createBranch(doc, { name: 'draft', parent: root });
+        const branch = Branch.create(doc, { name: 'draft', parent: root });
         const branchText = yield* Database.load(branch.content);
         Obj.update(branchText, (branchText) => {
           branchText.content = 'alpha\nbravo\n';

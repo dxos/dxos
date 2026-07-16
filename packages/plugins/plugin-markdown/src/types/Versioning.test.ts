@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import * as Versioning from '@dxos/versioning';
+import { Branch, Version } from '@dxos/versioning';
 
 import * as Markdown from './Markdown';
 
@@ -22,11 +22,11 @@ describe('Versioning schema', () => {
 
   test('makeVersion/makeBranch produce valid records', () => {
     const doc = Markdown.make({ content: 'hello' });
-    const version = Versioning.makeVersion({ target: doc.content, heads: ['abc'], name: 'v1' });
+    const version = Version.make({ target: doc.content, heads: ['abc'], name: 'v1' });
     expect(version.id).toBeDefined();
     expect(version.heads).toEqual(['abc']);
 
-    const branch = Versioning.makeBranch({
+    const branch = Branch.make({
       content: doc.content,
       parent: doc.content,
       anchor: ['abc'],

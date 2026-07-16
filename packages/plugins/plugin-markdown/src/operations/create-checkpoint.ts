@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { createCheckpoint } from '@dxos/versioning';
+import { Version } from '@dxos/versioning';
 
 import { MarkdownOperation } from '../types';
 
@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.CreateCheckpoint> 
       Effect.fn(function* ({ doc, name, message }) {
         const document = yield* Database.load(doc);
         const target = yield* Database.load(document.content);
-        const version = createCheckpoint(document, { name, target, ...(message !== undefined && { message }) });
+        const version = Version.create(document, { name, target, ...(message !== undefined && { message }) });
         return { versionId: version.id };
       }),
     ),

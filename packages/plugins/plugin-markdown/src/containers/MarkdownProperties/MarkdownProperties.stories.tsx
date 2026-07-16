@@ -17,7 +17,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { createBranch, createCheckpoint } from '@dxos/versioning';
+import { Branch, Version } from '@dxos/versioning';
 
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
@@ -77,8 +77,8 @@ const meta = {
               yield* Effect.promise(() => personalSpace.db.flush());
               const root = doc.content.target;
               if (root) {
-                createCheckpoint(doc, { name: 'first draft', target: root });
-                createBranch(doc, { name: 'agent-draft', parent: root });
+                Version.create(doc, { name: 'first draft', target: root });
+                Branch.create(doc, { name: 'agent-draft', parent: root });
               }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),

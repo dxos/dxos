@@ -7,7 +7,7 @@ import { checkoutVersion } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
-import { merge3 } from './diff';
+import { merge3 } from '../diff';
 import * as Versioning from './types';
 
 /** Any ECHO object that carries a versioning history (e.g. a markdown document). */
@@ -125,6 +125,7 @@ export const createBranch = (doc: VersionedObject, props: CreateBranchProps): Ve
       history.versions.push(version);
     });
   }
+
   // Return the stored record (the pushed plain object is detached from the database).
   const stored = history.branches.find(({ id }) => id === branch.id);
   invariant(stored, 'branch not stored');
@@ -164,6 +165,7 @@ export const mergeBranch = (doc: VersionedObject, branch: Versioning.Branch): Me
     stored.status = 'merged';
     stored.mergedAt = new Date().toISOString();
   });
+
   createCheckpoint(doc, { name: `merge: ${branchLabel(stored)}`, target: parent });
   return { conflicts };
 };

@@ -8,23 +8,23 @@ import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { type Text } from '@dxos/schema';
-import * as Versioning from '@dxos/versioning';
+import { Branch, History, Version } from '@dxos/versioning';
 
 import { Markdown, MarkdownCapabilities } from '../types';
 
 export type UseVersioningResult = {
   document?: Markdown.Document;
-  history?: Versioning.History;
+  history?: History.History;
   selection: MarkdownCapabilities.VersionSelection;
   setSelection: (selection: MarkdownCapabilities.VersionSelection) => void;
   compare: boolean;
   setCompare: (compare: boolean) => void;
   /** The branch being viewed (selection.kind === 'branch'). */
-  activeBranch?: Versioning.Branch;
+  activeBranch?: Branch.Branch;
   /** The Text object the editor should bind to (branch Text or the root). */
   activeText?: Text.Text;
   /** The checkpoint being viewed (selection.kind === 'checkpoint'). */
-  activeVersion?: Versioning.Version;
+  activeVersion?: Version.Version;
   /** Read-only content at the selected checkpoint. */
   checkpointContent?: string;
   /** Parent content at the active branch's anchor (the compare/merge base). */
@@ -89,7 +89,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     if (!activeBranch || !branchParent) {
       return undefined;
     }
-    return Versioning.contentAt(branchParent, activeBranch.anchor);
+    return Version.contentAt(branchParent, activeBranch.anchor);
   }, [activeBranch, branchParent]);
 
   const versionTarget = activeVersion?.target.target;
@@ -98,7 +98,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     if (!activeVersion || !versionTarget) {
       return undefined;
     }
-    return Versioning.contentAt(versionTarget, activeVersion.heads);
+    return Version.contentAt(versionTarget, activeVersion.heads);
   }, [activeVersion, versionTarget]);
 
   return {

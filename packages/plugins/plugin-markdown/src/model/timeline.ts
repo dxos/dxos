@@ -3,7 +3,7 @@
 //
 
 import { type Commit } from '@dxos/react-ui-components';
-import * as Versioning from '@dxos/versioning';
+import { Branch, Version, diffSpans, diffStats } from '@dxos/versioning';
 
 import { type Markdown, type MarkdownCapabilities } from '../types';
 
@@ -30,13 +30,13 @@ export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel
   }
 
   // Branch name per Text id; the root is main.
-  const branchByTextId = new Map<string, Versioning.Branch | undefined>([[rootText.id, undefined]]);
+  const branchByTextId = new Map<string, Branch.Branch | undefined>([[rootText.id, undefined]]);
   const branchName = (textId: string | undefined): string | undefined => {
     if (textId === undefined || !branchByTextId.has(textId)) {
       return undefined;
     }
     const branch = branchByTextId.get(textId);
-    return branch ? Versioning.branchLabel(branch) : MAIN_BRANCH;
+    return branch ? Branch.label(branch) : MAIN_BRANCH;
   };
 
   // Archived (discarded) branches are dropped from the graph.
@@ -60,14 +60,14 @@ export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel
   };
 
   const emittedBranches = new Set<string>();
-  const emitBranch = (branch: Versioning.Branch) => {
+  const emitBranch = (branch: Branch.Branch) => {
     const parent = branchName(branch.parent.target?.id);
     if (emittedBranches.has(branch.id) || !parent) {
       return;
     }
     emittedBranches.add(branch.id);
     const stats = branchStats(branch);
-    const label = Versioning.branchLabel(branch);
+    const label = Branch.label(branch);
     push({
       id: `branch-${branch.id}`,
       branch: label,
@@ -98,20 +98,20 @@ export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel
     const merged = branches.find(
       (branch) =>
         branch.status === 'merged' &&
-        version.name === `merge: ${Versioning.branchLabel(branch)}` &&
+        version.name === `merge: ${Branch.label(branch)}` &&
         branch.parent.target?.id === targetId,
     );
     if (merged) {
       emitBranch(merged);
     }
 
-    const parents = [lastOnBranch.get(target), merged && lastOnBranch.get(Versioning.branchLabel(merged))].filter(
+    const parents = [lastOnBranch.get(target), merged && lastOnBranch.get(Branch.label(merged))].filter(
       (id): id is string => id !== undefined,
     );
     push({
       id: version.id,
       branch: target,
-      message: Versioning.versionLabel(version),
+      message: Version.label(version),
       timestamp: new Date(version.createdAt),
       icon: merged ? 'ph--git-merge--regular' : 'ph--bookmark-simple--regular',
       parents,
@@ -132,7 +132,7 @@ export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel
 
   return {
     commits,
-    branches: [MAIN_BRANCH, ...branches.map((branch) => Versioning.branchLabel(branch))],
+    branches: [MAIN_BRANCH, ...branches.map((branch) => Branch.label(branch))],
   };
 };
 
@@ -156,7 +156,7 @@ export const commitToSelection = (
   return undefined;
 };
 
-const branchStats = (branch: Versioning.Branch) => {
+const branchStats = (branch: Branch.Branch) => {
   if (branch.status !== 'active') {
     return undefined;
   }
@@ -165,7 +165,5 @@ const branchStats = (branch: Versioning.Branch) => {
   if (!branchText || !parentText) {
     return undefined;
   }
-  return Versioning.diffStats(
-    Versioning.diffSpans(Versioning.contentAt(parentText, branch.anchor), branchText.content),
-  );
+  return diffStats(diffSpans(Version.contentAt(parentText, branch.anchor), branchText.content));
 };

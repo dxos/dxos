@@ -24,7 +24,7 @@ import {
   isToolbarAction,
 } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
-import * as Versioning from '@dxos/versioning';
+import { Branch, Version } from '@dxos/versioning';
 
 import {
   MarkdownEditor,
@@ -80,7 +80,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     const handleRestore = useCallback(() => {
       if (document && activeVersion) {
-        Versioning.restore(document, activeVersion);
+        Version.restore(document, activeVersion);
         setSelection({ kind: 'current' });
       }
     }, [document, activeVersion, setSelection]);
@@ -89,7 +89,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       (name: string) => {
         const target = activeVersion?.target.target;
         if (document && activeVersion && target) {
-          const branch = Versioning.createBranch(document, {
+          const branch = Branch.create(document, {
             name: name.trim(),
             parent: target,
             heads: activeVersion.heads,
@@ -102,7 +102,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     const handleMerge = useCallback(() => {
       if (document && activeBranch) {
-        Versioning.mergeBranch(document, activeBranch);
+        Branch.merge(document, activeBranch);
         setSelection({ kind: 'current' });
       }
     }, [document, activeBranch, setSelection]);
@@ -172,7 +172,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           }),
           ...activeBranches.map((branch) =>
             createMenuAction(`versions--${branch.id}`, () => setSelection({ kind: 'branch', branchId: branch.id }), {
-              label: Versioning.branchLabel(branch),
+              label: Branch.label(branch),
               icon: 'ph--git-branch--regular',
               checked: activeBranch?.id === branch.id,
             }),
@@ -254,7 +254,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
               {activeVersion && (
                 <VersionBanner
                   mode='checkpoint'
-                  name={Versioning.versionLabel(activeVersion)}
+                  name={Version.label(activeVersion)}
                   detail={activeVersion.name ? new Date(activeVersion.createdAt).toLocaleString() : undefined}
                   onRestore={handleRestore}
                   onBranchFrom={handleBranchFrom}
@@ -264,7 +264,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
               {activeBranch && (
                 <VersionBanner
                   mode='branch'
-                  name={Versioning.branchLabel(activeBranch)}
+                  name={Branch.label(activeBranch)}
                   detail={new Date(activeBranch.createdAt).toLocaleString()}
                   onMerge={handleMerge}
                   onCompare={handleCompare}

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { createBranch } from '@dxos/versioning';
+import { Branch } from '@dxos/versioning';
 
 import { MarkdownOperation } from '../types';
 
@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.CreateBranch> = Ma
     Effect.fn(function* ({ doc, name }) {
       const document = yield* Database.load(doc);
       const parent = yield* Database.load(document.content);
-      const branch = createBranch(document, { name, parent });
+      const branch = Branch.create(document, { name, parent });
       const branchText = yield* Database.load(branch.content);
       return { branchId: branch.id, contentId: Obj.getURI(branchText).toString() };
     }),

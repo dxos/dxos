@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
-import * as Versioning from '@dxos/versioning';
+import { Branch, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
 
@@ -48,9 +48,9 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
       }
       if (naming === 'checkpoint') {
         // Unnamed revisions are allowed; they display as their formatted creation time.
-        Versioning.createCheckpoint(document, { name: name.trim(), target: timelineTarget });
+        Version.create(document, { name: name.trim(), target: timelineTarget });
       } else if (naming === 'branch') {
-        const branch = Versioning.createBranch(document, { name: name.trim(), parent: timelineTarget });
+        const branch = Branch.create(document, { name: name.trim(), parent: timelineTarget });
         setSelection({ kind: 'branch', branchId: branch.id });
       }
     },
@@ -72,14 +72,14 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
 
   const handleMerge = useCallback(() => {
     if (document && activeBranch) {
-      Versioning.mergeBranch(document, activeBranch);
+      Branch.merge(document, activeBranch);
       setSelection({ kind: 'current' });
     }
   }, [document, activeBranch, setSelection]);
 
   const handleDiscard = useCallback(() => {
     if (document && activeBranch) {
-      Versioning.discardBranch(document, activeBranch);
+      Branch.discard(document, activeBranch);
       setSelection({ kind: 'current' });
     }
   }, [document, activeBranch, setSelection]);
@@ -134,9 +134,7 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
         <Timeline
           commits={commits}
           branches={branches}
-          currentBranch={
-            selection.kind === 'branch' ? (activeBranch ? Versioning.branchLabel(activeBranch) : null) : MAIN_BRANCH
-          }
+          currentBranch={selection.kind === 'branch' ? (activeBranch ? Branch.label(activeBranch) : null) : MAIN_BRANCH}
           onSelect={handleSelect}
         />
       </Panel.Content>

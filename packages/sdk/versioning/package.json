@@ -1,6 +1,7 @@
 {
   "name": "@dxos/versioning",
   "version": "0.10.0",
+  "private": true,
   "description": "Checkpoints, draft branches, and 3-way merge for automerge-backed ECHO objects.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,8 +37,5 @@
   "devDependencies": {
     "@dxos/typings": "workspace:*",
     "vitest": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

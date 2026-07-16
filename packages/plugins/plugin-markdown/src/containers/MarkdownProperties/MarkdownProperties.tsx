@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import * as Versioning from '@dxos/versioning';
+import { Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
 
@@ -28,7 +28,7 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
   const handleCheckpoint = useCallback(() => {
     const target = document?.content.target;
     if (document && target) {
-      Versioning.createCheckpoint(document, { name: '', target });
+      Version.create(document, { name: '', target });
     }
   }, [document]);
 
