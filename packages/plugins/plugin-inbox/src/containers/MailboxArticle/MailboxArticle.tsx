@@ -45,7 +45,6 @@ import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/google/gmail/sync';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
@@ -76,12 +75,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // Pull "Sync" toolbar action once a connection is bound to this mailbox.
   const { connection, sync } = useTargetSync(mailbox);
 
-  // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
-  // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
-  const syncProgress = useProgress(createSyncProgressKey(mailbox));
-  const topicsProgress = useProgress(createTopicsProgressKey(mailbox));
-  const progress =
-    topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
+  // Gmail sync registers a monitor keyed by the mailbox URI (`#sync`); show it in the statusbar.
+  const progress = useProgress(createSyncProgressKey(mailbox));
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
   // Derived from the same monitor atom the meter reads (not the already-subscribed `syncProgress`

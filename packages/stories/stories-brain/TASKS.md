@@ -459,6 +459,25 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       `TopicArticle.stories.tsx`. `Default`/`Minimal` render; `Test` plays hit the known headless
       space/query Loading limitation (CI/real storybook exercise them).
 
+### Nexus Phase 2 — decouple inbox, Topic as ECHO class (2026-07-16)
+
+- [x] **Removed `topicSuggestions` from `Mailbox` + all suggestions functionality from plugin-inbox** —
+      dropped the `Mailbox.topicSuggestions` field, `TopicSuggestionsArticle` + its surface, the mailbox
+      "Topic Suggestions" folder node + Analyze toolbar action, the `AnalyzeTopics` operation (its only
+      output was suggestions), `suggestions.ts` (+ test), the topic-suggestions/analyze translations, and
+      the `#topics` progress meter in `MailboxArticle`. `MAILBOX_TOPICS_TYPE`/`getTopicsId` removed. Topics
+      are now created via the nav menu (`CreateObject`) and from a message (`CreateTopicFromMessage`).
+- [x] **`Topic` → standard ECHO class** — now that nothing imports `Topic.Props`, inlined the struct into
+      the `Type.makeObject` class (dropped the separate `Props` export), matching the `Project.ts` standard.
+      Builds green across types/pipeline-email/inbox/brain/stories (364 tasks); types(12)/brain(13)/inbox(193)
+      tests pass.
+- [x] **Top-level Topics virtual node + per-Topic children** — provided by the plugin-brain
+      `TypeSection.createTypeSectionExtension(Topic.Topic)` (per-space root node + a child per `Topic`, each
+      opening via the object/article `TopicArticle` surface) with the `+` create action. With the inbox
+      folder removed, this is now the sole Topics nav presence. (Suppressed when empty; the first Topic is
+      created via the space's global create menu — Topic is registered — or the section `+` once ≥1 exists.
+      An always-visible bespoke node is an option if wanted.)
+
 ## Bugs
 
 - [ ] **MailboxArticle search/filtering isn't working.** The filter/query editor in

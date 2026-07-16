@@ -10,7 +10,7 @@ import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
-import { Message, Topic } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
 
@@ -96,9 +96,6 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
         filter: Schema.String,
       }),
     ).pipe(FormInputAnnotation.set(false)),
-    // Proposed topics the user has not yet accepted (see {@link Topic.Props}). `AnalyzeTopics` writes
-    // these instead of materializing `Topic` objects; accepting one promotes it via `Obj.make(Topic, …)`.
-    topicSuggestions: Schema.optional(Schema.Array(Topic.Props)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
     FeedAnnotation.set(true),

@@ -28,32 +28,6 @@ import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 // - FactStore persistence (Feed/ECHO?)
 //
 
-// The field shape shared by a persisted `Topic` and an unaccepted `Mailbox.topicSuggestions` entry —
-// extracted so promotion is `Obj.make(Topic, suggestion)` with no mapping. Kept free of annotations so
-// referencing it (e.g. from `Mailbox.topicSuggestions`) does not alter that schema's serialization.
-export const Props = Schema.Struct({
-  label: Schema.String,
-
-  // Untyped ref to an agent-instructions object (created + linked at the plugin layer, e.g. plugin-brain,
-  // which can depend on `@dxos/compute`). FLAG: should be `Ref<Instructions.Instructions>`, but typing it
-  // here would pull `@dxos/compute` into `@dxos/types` and cycle (`types → compute → ai → types`); revisit
-  // when Topic moves to its nexus home. See plugin-brain/DESIGN.md.
-  instructions: Ref.Ref(Obj.Unknown).pipe(FormInlineAnnotation.set(true), Schema.optional),
-
-  // TODO(burdon): Uncouple from Email; Model via Refs?
-  // TODO(burdon): Refs to other objects in context?
-  threadIds: Schema.Array(Schema.String),
-  participants: Schema.Array(Schema.String),
-  keywords: Schema.Array(Schema.String),
-
-  // TODO(burdon): Artifacts.
-  summary: Schema.String,
-  // Open questions and action items rolled up from the topic's member threads.
-  questions: Schema.Array(Schema.String),
-  // TODO(burdon): Reconcile with plugin-outliner; and task skill.
-  tasks: Schema.Array(Schema.String),
-});
-
 /**
  * A meta-thread: a cluster of related conversations with an optional label/summary. Authoritative in
  * ECHO; string-keyed thread references (like `Thread.messageIds`) until the entity layer firms up to
@@ -61,7 +35,28 @@ export const Props = Schema.Struct({
  */
 // TODO(burdon): Generalize beyond email (threads, task lists); reconcile with Project.
 export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.topic', '0.1.0'))(
-  Props.pipe(
+  Schema.Struct({
+    label: Schema.String,
+
+    // Untyped ref to an agent-instructions object (created + linked at the plugin layer, e.g. plugin-brain,
+    // which can depend on `@dxos/compute`). FLAG: should be `Ref<Instructions.Instructions>`, but typing it
+    // here would pull `@dxos/compute` into `@dxos/types` and cycle (`types → compute → ai → types`); revisit
+    // when Topic moves to its nexus home. See plugin-brain/DESIGN.md.
+    instructions: Ref.Ref(Obj.Unknown).pipe(FormInlineAnnotation.set(true), Schema.optional),
+
+    // TODO(burdon): Uncouple from Email; Model via Refs?
+    // TODO(burdon): Refs to other objects in context?
+    threadIds: Schema.Array(Schema.String),
+    participants: Schema.Array(Schema.String),
+    keywords: Schema.Array(Schema.String),
+
+    // TODO(burdon): Artifacts.
+    summary: Schema.String,
+    // Open questions and action items rolled up from the topic's member threads.
+    questions: Schema.Array(Schema.String),
+    // TODO(burdon): Reconcile with plugin-outliner; and task skill.
+    tasks: Schema.Array(Schema.String),
+  }).pipe(
     Schema.annotations({ title: 'Topic' }),
     LabelAnnotation.set(['label']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'rose' }),

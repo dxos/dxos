@@ -37,5 +37,4 @@ export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopov
 
 export const MAILBOXES_SECTION_TYPE = `${meta.profile.key}.mailboxes-section`;
 export const MAILBOX_DRAFTS_TYPE = `${meta.profile.key}.drafts`;
-export const MAILBOX_TOPICS_TYPE = `${meta.profile.key}.topics`;
 export const MAILBOX_SUBSCRIPTIONS_TYPE = `${meta.profile.key}.subscriptions`;

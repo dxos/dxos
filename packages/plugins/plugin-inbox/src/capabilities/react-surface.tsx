@@ -27,12 +27,11 @@ import {
   RelatedToOrganization,
   SaveFilterPopover,
   SubscriptionsArticle,
-  TopicSuggestionsArticle,
 } from '#containers';
 import { Calendar, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../constants';
-import { getDraftsId, getSubscriptionsId, getTopicsId } from '../paths';
+import { getDraftsId, getSubscriptionsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -54,16 +53,6 @@ export default Capability.makeModule(() =>
         }),
         component: ({ data, role }) => (
           <DraftsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
-      }),
-      Surface.create({
-        id: 'topicSuggestions',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const lastSegment = data.attendableId.split('/').pop();
-          return lastSegment === getTopicsId() && Mailbox.instanceOf(data.subject);
-        }),
-        component: ({ data, role }) => (
-          <TopicSuggestionsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
