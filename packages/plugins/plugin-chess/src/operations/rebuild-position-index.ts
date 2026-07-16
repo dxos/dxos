@@ -23,10 +23,10 @@ export default ChessOperation.RebuildPositionIndex.pipe(
       );
 
       const positionIndex = yield* Database.load(review.positionIndex);
-      const games = yield* Database.query(Filter.type(Game)).run;
+      const games = yield* Database.query(Filter.type(Game.Game)).run;
 
       const processed: Array<{
-        game: Game;
+        game: Game.Game;
         side: ChessPositionIndex.Side;
         fens: readonly string[];
       }> = [];

@@ -311,18 +311,21 @@ type IsSurfaceAvailable = <TToken extends Role.Role<any>>(args: { type: TToken; 
 export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
   const surfaceManager = useSurfaceManager();
   const registry = useContext(RegistryContext);
-  return useCallback(
+  return useCallback<IsSurfaceAvailable>(
     (args: { type: Role.Role<any>; data?: Props['data'] }) => {
       const effectiveRole = args.type?.role;
       if (effectiveRole == null) {
         return false;
       }
 
-      const roleCandidates = registry.get(surfaceManager.candidatesAtom(effectiveRole));
-      return matchCandidates(roleCandidates, effectiveRole, args.data).length > 0;
+      const candidates = matchCandidates(
+        registry.get(surfaceManager.candidatesAtom(effectiveRole)),
+        effectiveRole,
+        args.data,
+      );
+
+      return candidates.length > 0;
     },
     [surfaceManager, registry],
-    // `useCallback` widens a generic callback to its inferred concrete parameter type; cast back
-    // to the generic signature so callers still get `data` narrowed to the passed token's contract.
-  ) as IsSurfaceAvailable;
+  );
 };
