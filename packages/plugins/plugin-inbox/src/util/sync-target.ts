@@ -55,29 +55,30 @@ export const syncTarget = (target: Obj.Unknown) =>
       return;
     }
 
-    let trigger = yield* findSyncTrigger(target).pipe(Effect.provide(Database.layer(db)));
-    if (!trigger) {
-      const cursor = yield* findBindingForTarget(target).pipe(Effect.provide(Database.layer(db)));
-      if (!cursor) {
-        return;
+    const trigger = yield* Effect.gen(function* () {
+      const existing = yield* findSyncTrigger(target);
+      if (existing) {
+        return existing;
       }
 
-      const connections = yield* Database.query(Filter.type(Connection.Connection)).run.pipe(
-        Effect.provide(Database.layer(db)),
-      );
-      const connection = connections.find((candidate) => candidate.accessToken.uri === cursor.spec.source.uri);
+      const cursor = yield* findBindingForTarget(target);
+      if (!cursor) {
+        return undefined;
+      }
+
+      const [connection] = yield* Database.query(
+        Filter.type(Connection.Connection, { accessToken: cursor.spec.source }),
+      ).run;
       const connectors = (yield* Capability.getAll(Connector)).flat();
       const connector = connectors.find((entry) => entry.id === connection?.connectorId);
       if (!connector?.sync) {
-        return;
+        return undefined;
       }
 
-      trigger = yield* createSyncRoutine({ target, cursor, sync: connector.sync }).pipe(
-        Effect.provide(Database.layer(db)),
-      );
-      if (!trigger) {
-        return;
-      }
+      return yield* createSyncRoutine({ target, cursor, sync: connector.sync });
+    }).pipe(Effect.provide(Database.layer(db)));
+    if (!trigger) {
+      return;
     }
 
     const resolver = yield* Capability.get(Capabilities.ServiceResolver);

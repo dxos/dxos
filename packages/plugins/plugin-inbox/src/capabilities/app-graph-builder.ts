@@ -609,8 +609,9 @@ export default Capability.makeModule(
           if (!cursor) {
             return Effect.succeed([]);
           }
-          const connections = get(db.query(Filter.type(Connection.Connection)).atom);
-          const connection = connections.find((candidate) => candidate.accessToken.uri === cursor.spec.source.uri);
+          const [connection] = get(
+            db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom,
+          );
           if (!connection) {
             return Effect.succeed([]);
           }

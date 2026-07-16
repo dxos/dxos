@@ -24,21 +24,21 @@ export const useTargetConnection = <T extends Obj.Any>(
 ): { connection: Connection.Connection | undefined } => {
   const db = target ? Obj.getDatabase(target) : undefined;
   const cursors = useQuery(db, Filter.type(Cursor.Cursor));
-  const connections = useQuery(db, Filter.type(Connection.Connection));
-  const connection = useMemo(() => {
-    if (!target) {
-      return undefined;
-    }
-    const cursor = cursors.find(
-      (candidate): candidate is Cursor.ExternalCursor =>
-        Cursor.isExternal(candidate) && isCursorForTarget(candidate, target),
-    );
-    if (!cursor) {
-      return undefined;
-    }
-    return connections.find((candidate) => candidate.accessToken.uri === cursor.spec.source.uri);
-  }, [target, cursors, connections]);
-  return { connection };
+  const cursor = useMemo(
+    () =>
+      target
+        ? cursors.find(
+            (candidate): candidate is Cursor.ExternalCursor =>
+              Cursor.isExternal(candidate) && isCursorForTarget(candidate, target),
+          )
+        : undefined,
+    [target, cursors],
+  );
+  const connections = useQuery(
+    db,
+    cursor ? Filter.type(Connection.Connection, { accessToken: cursor.spec.source }) : Filter.nothing(),
+  );
+  return { connection: connections[0] };
 };
 
 /** The {@link ConnectorEntry} backing `connection`, resolved from the registered {@link Connector} capability list. */
