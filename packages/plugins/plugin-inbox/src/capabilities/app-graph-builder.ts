@@ -631,6 +631,7 @@ export default Capability.makeModule(
                 properties: {
                   label: ['sync-mailbox.label', { ns: meta.profile.key }],
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+                  spin: isSyncing,
                   disabled: isSyncing,
                   // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                   disposition: ['toolbar', 'list-item'],

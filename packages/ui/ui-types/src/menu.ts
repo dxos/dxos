@@ -13,6 +13,8 @@ export type MenuItemChrome = {
   label: Label;
   icon?: string;
   iconOnly?: boolean;
+  /** Spins the icon (e.g. while the action's underlying operation is in progress). */
+  spin?: boolean;
   disabled?: boolean;
   hidden?: boolean;
   testId?: string;
