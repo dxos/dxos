@@ -13,7 +13,7 @@ import { Connection, Connector } from '@dxos/plugin-connector';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 
 import { findBindingForTarget } from './find-binding';
-import { createSyncRoutine, isTimerSyncTriggerFor } from './sync-routine';
+import { createSyncRoutine } from './sync-routine';
 
 /**
  * Finds `target`'s sync timer trigger: the `timer` trigger owned by a Routine connected to `target`
@@ -31,10 +31,10 @@ const findSyncTrigger = (target: Obj.Unknown) =>
       }
     }
 
-    const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
-    const cursorById = new Map(cursors.map((cursor) => [cursor.id, cursor]));
-    const allTriggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger))).run;
-    return allTriggers.find((trigger) => isTimerSyncTriggerFor(trigger, target, (id) => cursorById.get(id)));
+    const triggers = yield* Database.query(
+      Query.select(Filter.id(target.id)).referencedBy(Cursor.Cursor).referencedBy(Trigger.Trigger),
+    ).run;
+    return triggers.find((trigger) => trigger.spec?.kind === 'timer');
   });
 
 /**

@@ -6,40 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { type SyncInput, type SyncOutput } from '@dxos/plugin-connector';
 import { Routine, connectedRoutinesQuery } from '@dxos/plugin-routine';
 
 /** How often an auto-created sync routine's timer trigger fires. */
 const SYNC_ROUTINE_CRON = '*/10 * * * *';
-
-/** The entity id a `Ref` points at, independent of bare vs space-qualified encoding; `undefined` for a non-object (e.g. type) ref. */
-const refEntityId = (ref: unknown): string | undefined => {
-  if (!Ref.isRef(ref)) {
-    return undefined;
-  }
-  const eid = EID.tryParse(ref.uri);
-  return eid ? (EID.getEntityId(eid) ?? undefined) : undefined;
-};
-
-/**
- * Whether `trigger` is a timer sync trigger bound to `target`: its `input.binding` references an external-sync
- * {@link Cursor} whose `spec.target` is `target`. `resolveCursor` loads a cursor by id — refs nested in `input`
- * aren't auto-resolved, so callers pass a lookup over a separately-queried cursor set.
- */
-export const isTimerSyncTriggerFor = (
-  trigger: Trigger.Trigger,
-  target: Obj.Unknown,
-  resolveCursor: (cursorId: string) => Cursor.Cursor | undefined,
-): boolean => {
-  if (trigger.spec?.kind !== 'timer') {
-    return false;
-  }
-  const cursorId = refEntityId(trigger.input?.binding);
-  const cursor = cursorId ? resolveCursor(cursorId) : undefined;
-  return cursor != null && Cursor.isExternal(cursor) && refEntityId(cursor.spec.target) === target.id;
-};
 
 /**
  * Finds an existing local record for `definition`, or persists a fresh one via
