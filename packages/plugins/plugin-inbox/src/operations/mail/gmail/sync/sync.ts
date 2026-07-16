@@ -46,10 +46,9 @@ export type SyncGmailProps = {
 };
 
 /**
- * Gmail's implementation of the shared {@link MailSyncProvider} service — the message source
- * (`fetchMessages`), the label→tag map, and the fused decode+map step. Captures {@link GoogleMailApi}
- * and the {@link Resolver} from the layer's context, so the harness never names them (a run is just
- * `runMailSync` with this layer provided). Mirror of the JMAP provider (`jmapMailSyncProvider`).
+ * Gmail's {@link MailSyncProvider}: the message source, the label→tag map, and the fused decode+map.
+ * Captures {@link GoogleMailApi} + {@link Resolver} so the harness never names them. Mirror of the JMAP
+ * provider (`jmapMailSyncProvider`).
  */
 export const gmailMailSyncProvider = (options: {
   userId: string;
@@ -58,9 +57,8 @@ export const gmailMailSyncProvider = (options: {
   Layer.effect(
     MailSyncProvider,
     Effect.gen(function* () {
-      // Captured once; the API is provided into the source stream (which still needs `Cursor.Service`
-      // from the harness), the full context into each item's `process` (whose only requirements are the
-      // API + resolver) — so both carry no requirements the harness would have to name.
+      // The API is provided into the source stream (leaving `Cursor.Service` for the harness); the full
+      // context into each `process` (whose only needs are API + resolver).
       const context = yield* Effect.context<GoogleMailApi | Resolver>();
       const api = yield* GoogleMailApi;
       const { userId, label } = options;
@@ -77,9 +75,7 @@ export const gmailMailSyncProvider = (options: {
               }),
             );
 
-            // Fused decode + map: decode the body (drop no-body), resolve the sender contact, build the
-            // ECHO message, and map label ids to tag URIs via the Gmail-specific label map. `undefined`
-            // drops the item (no body, or a filtered sender).
+            // Fused decode + map; `undefined` drops the item (no body, or a filtered sender).
             const toMapped = (
               message: GoogleMail.Message,
             ): Effect.Effect<EmailStage.Mapped | undefined, never, GoogleMailApi | Resolver> =>
@@ -131,11 +127,10 @@ export const gmailMailSyncProvider = (options: {
   );
 
 /**
- * Runs the Gmail sync: the shared {@link runMailSync} harness with the Gmail provider layer supplied.
- * Requires the {@link GoogleMailApi} service (+ {@link Resolver}) rather than providing it, so a test
- * can drive the sync against a mock API + real ECHO db; the handler wraps it with the Live layers. The
- * return type is written out (not inferred) so the emitted `.d.ts` can name it without expanding
- * unnameable cross-package types (TS2883). Mirror of the JMAP adapter (`runJmapSync`).
+ * Runs the Gmail sync: {@link runMailSync} with the Gmail provider layer supplied. Requires
+ * {@link GoogleMailApi} (+ {@link Resolver}) rather than providing it, so a test can drive it against a
+ * mock; the handler wraps it with the Live layers. Return type written out for `.d.ts` nameability
+ * (TS2883). Mirror of the JMAP adapter (`runJmapSync`).
  */
 export const syncGmail = ({
   binding,

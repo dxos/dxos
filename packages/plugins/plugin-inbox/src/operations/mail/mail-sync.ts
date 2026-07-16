@@ -24,33 +24,21 @@ import { Mailbox, type SyncStreamConfig } from '../../types';
 import { onArrivalExtractors, readBindingOptions } from '../../util';
 
 /**
- * Provider-agnostic harness for a bidirectional, capped, resumable mail sync (Gmail, JMAP). Every run
- * syncs new mail above the cursor's `max` (ascending) and backfills from `min` down to the horizon
- * (descending), so an interrupted or capped run resumes both halves from where it left off; the cursor
- * is the only durable state (`Cursor.resolveWindows`). The harness owns everything that is not
- * provider-specific — binding/mailbox/feed loads, window resolution, the dedup→cap→process→commit
- * pipeline, the live progress monitor, cooperative cancellation, and stats telemetry.
- *
- * The provider is supplied as an Effect service ({@link MailSyncProvider}) rather than an argument, so
- * the two operations are literally one effect with different services provided: each handler provides
- * a provider layer that captures its own API + resolver (see `syncGmail` / `runJmapSync`). Adding a
- * third provider (Outlook, an IMAP bridge, …) is "write a {@link MailSyncProvider} layer".
+ * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect
+ * service ({@link MailSyncProvider}), so each operation is this one effect with its own provider layer
+ * provided (see `syncGmail` / `runJmapSync`). Owns everything not provider-specific: binding/mailbox/feed
+ * loads, window resolution, the dedup→cap→process→commit pipeline, progress monitor, cancellation, stats.
  */
 
 /**
  * Progress-registry key for a mailbox's mail-sync monitor — the mailbox URI plus `#sync` so distinct
- * monitor types (e.g. `#topics`) can coexist for one mailbox. `MailboxArticle` subscribes to show the
- * sync meter. Provider-agnostic: a mailbox is bound to one provider, so the keys cannot collide.
+ * monitor types (e.g. `#topics`) can coexist. `MailboxArticle` subscribes to show the sync meter.
  */
 export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
 
 /** Options the harness passes to a provider's {@link MailSyncSource.buildSource} for one run. */
 export type MailSyncSourceOptions = {
-  /**
-   * Forward/backward windows this run covers (from `Cursor.resolveWindows`); either may be absent.
-   * Direction only sets the walk order over each `[start, end)`: forward oldest→newest (incremental
-   * resume), backward newest→oldest (initial/backfill).
-   */
+  /** Forward/backward windows this run covers (`Cursor.resolveWindows`); either may be absent. */
   readonly windows: Cursor.Windows;
   /** User search filter from the binding options (provider query DSL). */
   readonly filter?: string;
@@ -61,12 +49,10 @@ export type MailSyncSourceOptions = {
 };
 
 /**
- * One candidate message the provider emits: its dedup key fields plus a self-contained `process`
- * effect. The harness dedups on `foreignId`/`key` *before* running `process`, so those are cheap
- * field reads and never trigger the (potentially expensive) decode/map/attachment work. `process`
- * fuses the provider's decode + map stages into a single per-item effect that is fully provided (the
- * provider layer has already captured its API + resolver), returning the generic `EmailStage.Mapped`
- * the shared stages consume — or `undefined` to drop the item (no body, filtered sender, unmappable).
+ * One candidate message: its dedup key fields plus a self-contained `process` effect. The harness
+ * dedups on `foreignId`/`key` before running `process`, so dedup stays cheap. `process` fuses the
+ * provider's decode + map (API + resolver already provided) into `EmailStage.Mapped`, or `undefined`
+ * to drop the item (no body, filtered sender, unmappable).
  */
 export type MailSyncItem = {
   readonly foreignId: string;
@@ -77,11 +63,9 @@ export type MailSyncItem = {
 /** The run's message source, produced by {@link MailSyncProviderService.prepare} once ready. */
 export type MailSyncSource = {
   /**
-   * Streams candidate messages for one bidirectional run: forward window then backward, concatenated.
-   * Must be UNBOUNDED — the harness caps *after* dedup so the budget counts only genuinely-new
-   * messages (capping before would let re-enumerated boundary items stall the cursor), and must pipe
-   * its raw ids through `Cursor.skipCommitted` so already-committed ids aren't re-downloaded. Requires
-   * only `Cursor.Service` (provided by the harness); the provider's own API is already captured.
+   * Streams candidate messages for one run (forward then backward). Must be UNBOUNDED — the harness
+   * caps after dedup — and must pipe raw ids through `Cursor.skipCommitted`. Requires only
+   * `Cursor.Service`; the provider's API is already captured.
    */
   readonly buildSource: (options: MailSyncSourceOptions) => Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
 };
@@ -104,9 +88,8 @@ export interface MailSyncProviderService {
   /** Foreign-key source stamped on committed items (dedup key namespace). */
   readonly foreignKeySource: string;
   /**
-   * Provider-specific setup: resolve the session/target, build the label/folder→tag map, and return
-   * the run's source. Returning undefined skips the run (e.g. a session without a mail account) — the
-   * harness then returns `{ newMessages: 0 }`. Any provider error is wrapped into {@link MailSyncError}.
+   * Resolve the session/target and tag map, returning the run's source; `undefined` skips the run
+   * (e.g. no mail account). Provider errors are wrapped into {@link MailSyncError}.
    */
   readonly prepare: (
     preparation: MailSyncPreparation,
@@ -133,9 +116,8 @@ export type RunMailSyncOptions = {
 };
 
 /**
- * Runs the shared mail-sync pipeline for a binding against the {@link MailSyncProvider} in context.
- * The return type is written out (not inferred) so a caller's emitted `.d.ts` can name it without
- * expanding unnameable cross-package types (TS2883).
+ * Runs the shared pipeline against the {@link MailSyncProvider} in context. Return type is written out
+ * (not inferred) so the emitted `.d.ts` can name it without expanding unnameable types (TS2883).
  */
 export const runMailSync = (
   options: RunMailSyncOptions,
@@ -305,11 +287,8 @@ export const runMailSync = (
     //
     // Start pipeline
     //
-    // `buildSource` covers both halves as one unbounded stream; the per-run cap is applied after dedup
-    // so it counts only genuinely-new messages — capping before would let a dense boundary's
-    // re-enumerated messages consume the budget and stall the cursor. `taken` then tells us whether the
-    // cap truncated the run (→ re-run) or both windows were exhausted (→ complete backfill). Each
-    // provider fuses its decode + map into `item.process`, run here as the single `process` stage.
+    // The cap is applied after dedup (see `MailSyncItem`), so `taken` counts only genuinely-new
+    // messages: it tells us whether the run was truncated (→ re-run) or exhausted (→ complete backfill).
     yield* source
       .buildSource({
         windows,
@@ -416,6 +395,5 @@ export const runMailSync = (
       taken,
     });
     return { newMessages: stats.newMessages };
-    // The run span is added by each provider wrapper (`gmail-sync` / `jmap-sync`) so the per-provider
-    // trace name and its children (`<provider>-sync.labels`, `.fetch.*`) stay stable.
+    // The run span (`gmail-sync` / `jmap-sync`) is added by each provider wrapper.
   });

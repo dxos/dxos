@@ -48,19 +48,16 @@ export type RunJmapSyncProps = {
 };
 
 /**
- * JMAP's implementation of the shared {@link MailSyncProvider} service — session/account discovery,
- * the email source (`jmapEmails`), the folder→tag map, and the fused decode+map step. Captures
- * {@link JmapMailApi} and the {@link Resolver} from the layer's context, so the harness never names
- * them (a run is just `runMailSync` with this layer provided). Mirror of the Gmail provider
- * (`gmailMailSyncProvider`).
+ * JMAP's {@link MailSyncProvider}: session/account discovery, the email source, the folder→tag map, and
+ * the fused decode+map. Captures {@link JmapMailApi} + {@link Resolver} so the harness never names them.
+ * Mirror of the Gmail provider (`gmailMailSyncProvider`).
  */
 export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, JmapMailApi | Resolver> =>
   Layer.effect(
     MailSyncProvider,
     Effect.gen(function* () {
-      // Captured once; the API is provided into the source stream (which still needs `Cursor.Service`
-      // from the harness), the full context into each item's `process` (whose only requirements are the
-      // API + resolver) — so both carry no requirements the harness would have to name.
+      // The API is provided into the source stream (leaving `Cursor.Service` for the harness); the full
+      // context into each `process` (whose only needs are API + resolver).
       const context = yield* Effect.context<JmapMailApi | Resolver>();
       const providerApi = yield* JmapMailApi;
       return {
@@ -90,8 +87,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               folderTagMap.set(folder.id, Mailbox.tagUri(tag));
             }
 
-            // Fused decode + map: extract the body (drop no-body), resolve the sender contact, build
-            // the ECHO message, and map folder ids to tag URIs. `undefined` drops the item.
+            // Fused decode + map; `undefined` drops the item (no body, or unmappable).
             const toMapped = (
               email: JmapMail.Email,
             ): Effect.Effect<EmailStage.Mapped | undefined, never, JmapMailApi | Resolver> =>
@@ -141,11 +137,10 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
   );
 
 /**
- * Runs the JMAP sync: the shared {@link runMailSync} harness with the JMAP provider layer supplied.
- * Requires `JmapMailApi` (+ {@link Resolver}) rather than providing it, so a test can drive the sync
- * against a mock API; the handler below wraps it with the Live layers. Return type is written out (not
- * inferred) so the `.d.ts` can name it without expanding unnameable cross-package types (TS2883).
- * Mirror of the Gmail adapter (`syncGmail`).
+ * Runs the JMAP sync: {@link runMailSync} with the JMAP provider layer supplied. Requires
+ * {@link JmapMailApi} (+ {@link Resolver}) rather than providing it, so a test can drive it against a
+ * mock; the handler wraps it with the Live layers. Return type written out for `.d.ts` nameability
+ * (TS2883). Mirror of the Gmail adapter (`syncGmail`).
  */
 export const runJmapSync = ({
   binding,
