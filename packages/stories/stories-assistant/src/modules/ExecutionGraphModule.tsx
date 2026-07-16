@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Filter, Query } from '@dxos/echo';
-import { InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
