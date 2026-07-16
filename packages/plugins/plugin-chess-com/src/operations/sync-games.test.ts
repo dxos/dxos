@@ -6,10 +6,10 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, vi } from 'vitest';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game } from '@dxos/plugin-game/types';

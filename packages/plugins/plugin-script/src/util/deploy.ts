@@ -4,11 +4,11 @@
 
 import { type Client } from '@dxos/client';
 import { Operation, Script } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
-import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';
+import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { log } from '@dxos/log';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';

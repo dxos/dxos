@@ -8,10 +8,10 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Trace } from '@dxos/compute';
-import { TestDatabaseLayer } from './testing';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 
 import * as FeedTraceSink from './FeedTraceSink';
+import { TestDatabaseLayer } from './testing';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),

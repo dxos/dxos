@@ -3,9 +3,9 @@
 //
 
 import { type Operation, Script } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { getInvocationUrl } from '@dxos/compute-runtime';
+import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';

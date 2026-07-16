@@ -9,10 +9,10 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Operation } from '@dxos/compute';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 
 import { ValueBag } from './compute';
 

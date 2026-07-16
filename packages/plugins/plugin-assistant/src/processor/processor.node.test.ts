@@ -10,6 +10,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import { test } from 'vitest';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Capabilities } from '@dxos/app-framework';
 import { AiSession } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
@@ -17,7 +18,6 @@ import { Database, Feed } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 
 import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor';
 

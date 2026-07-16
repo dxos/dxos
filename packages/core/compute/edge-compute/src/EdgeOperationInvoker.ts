@@ -23,10 +23,7 @@ const make = (getEdgeClient: () => EdgeClient, spaceId?: SpaceId): RemoteOperati
       const cleanedId = deployedId.replace(/^\//, '');
       return yield* Effect.promise(() =>
         getEdgeClient().invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
-      ).pipe(
-        Effect.mapError(FunctionError.wrap()),
-        Effect.orDie,
-      );
+      ).pipe(Effect.mapError(FunctionError.wrap()), Effect.orDie);
     }),
 });
 
@@ -37,7 +34,10 @@ export const fromEdgeClient = (
   edgeClient: EdgeClient,
   spaceId?: SpaceId,
 ): Layer.Layer<RemoteOperationInvoker.Service> =>
-  Layer.succeed(RemoteOperationInvoker.Service, make(() => edgeClient, spaceId));
+  Layer.succeed(
+    RemoteOperationInvoker.Service,
+    make(() => edgeClient, spaceId),
+  );
 
 /**
  * Build from a `Client`, deferring edge-client creation until first invoke

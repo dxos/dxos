@@ -8,8 +8,8 @@ import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import * as InboxResolver from '@dxos/extractor-lib';
 import { credentialsLayerConfig } from '@dxos/compute-runtime';
+import * as InboxResolver from '@dxos/extractor-lib';
 
 import { GoogleCalendar } from '../../../../apis';
 import { GoogleCredentials } from '../../../../services';

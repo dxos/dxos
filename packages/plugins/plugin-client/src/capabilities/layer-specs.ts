@@ -8,8 +8,8 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientService } from '@dxos/client';
 import { Credential, LayerSpec } from '@dxos/compute';
-import { Database } from '@dxos/echo';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { ClientCapabilities } from '#types';

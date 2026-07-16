@@ -22,14 +22,14 @@ import {
   Trigger,
   TriggerEvent,
 } from '@dxos/compute';
-import * as ProcessManager from '../ProcessManager';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { credentialsLayerConfig } from '../services/credentials';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
+import * as ProcessManager from '../ProcessManager';
+import { credentialsLayerConfig } from '../services/credentials';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 

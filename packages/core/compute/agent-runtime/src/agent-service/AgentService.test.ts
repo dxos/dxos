@@ -17,14 +17,14 @@ import { expect } from 'vitest';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
 import { Operation, OperationHandlerSet, Process, ServiceResolver, Skill, Trace } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
 import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '../testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message, Organization } from '@dxos/types';
 
-import { ProcessManager } from '@dxos/compute-runtime';
+import { AssistantTestLayer } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
 import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';

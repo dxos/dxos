@@ -5,9 +5,9 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { TestHelpers } from '@dxos/effect/testing';
 
 import { WebSearchHandlers } from './operations';
 import WebSearchSkill from './skill';

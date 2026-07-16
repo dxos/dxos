@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 import type * as Runtime from 'effect/Runtime';
 
 import { DeferredTask, asyncTimeout } from '@dxos/async';
+import { type FunctionExecutor } from '@dxos/compute-runtime';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type FunctionExecutor } from '@dxos/compute-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 

@@ -11,10 +11,10 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Operation, Trace } from '@dxos/compute';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { URI } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';

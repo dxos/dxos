@@ -8,11 +8,11 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { vi } from 'vitest';
 
+import { AgentService } from '@dxos/agent-runtime';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Skill } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 
 import { SearchOperationHandlerSet } from '../operations';

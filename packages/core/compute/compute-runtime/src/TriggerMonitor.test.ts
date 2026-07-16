@@ -12,17 +12,17 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Operation, OperationHandlerSet, ServiceResolver, Trace, Trigger, type TriggerEvent } from '@dxos/compute';
-import * as ProcessManager from './ProcessManager';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { credentialsLayerConfig } from './services/credentials';
 import { invariant } from '@dxos/invariant';
 import { Person } from '@dxos/types';
 
-import { TriggerDispatcher } from './triggers/trigger-dispatcher';
+import * as ProcessManager from './ProcessManager';
 import * as RemoteTriggerManager from './RemoteTriggerManager';
+import { credentialsLayerConfig } from './services/credentials';
 import * as TriggerMonitor from './TriggerMonitor';
+import { TriggerDispatcher } from './triggers/trigger-dispatcher';
 import { TriggerStateStore } from './triggers/trigger-state-store';
 
 /**

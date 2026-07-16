@@ -7,12 +7,12 @@ import type * as Layer from 'effect/Layer';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type RuntimeServices, ServiceContainer } from '@dxos/compute-runtime';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
-import { type RuntimeServices, ServiceContainer } from '@dxos/compute-runtime';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';

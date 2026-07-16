@@ -7,8 +7,8 @@ import * as Fiber from 'effect/Fiber';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ServiceResolver } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
+import { Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';

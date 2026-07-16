@@ -3,10 +3,9 @@
 //
 
 import { Registry } from '@effect-atom/atom';
-import { describe, test } from 'vitest';
-
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 

@@ -6,12 +6,12 @@ import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
 import { type Credential, type Trace } from '@dxos/compute';
+import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
+import { ServiceContainer } from '@dxos/compute-runtime';
 import { Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
-import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
 import { assertArgument } from '@dxos/invariant';
 
-import { ServiceContainer } from '@dxos/compute-runtime';
 import { consoleTraceWriter, noopTraceWriter } from './logger';
 
 // TODO(burdon): Factor out.

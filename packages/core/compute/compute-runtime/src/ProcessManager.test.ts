@@ -751,10 +751,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     }),
   );
 
-  const InheritanceTestLayer = Layer.mergeAll(
-    ProcessManager.ProcessOperationInvoker.layer,
-    ProcessMonitor.layer,
-  ).pipe(
+  const InheritanceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(SpaceAwareResolverLayer),

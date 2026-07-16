@@ -28,9 +28,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
+import { FunctionsAiHttpClient } from './functions-ai-http-client';
 import { type FunctionServices } from './sdk';
 import { FunctionInvocationService, configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
-import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 export interface FunctionWrappingOptions {
   /**

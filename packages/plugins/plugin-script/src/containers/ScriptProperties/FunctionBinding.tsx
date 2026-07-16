@@ -6,9 +6,9 @@ import React, { type ChangeEvent, useCallback } from 'react';
 
 import { type Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { getInvocationUrl } from '@dxos/compute-runtime';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';

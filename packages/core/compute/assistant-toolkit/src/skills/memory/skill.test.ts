@@ -6,12 +6,12 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { AgentService } from '@dxos/agent-runtime';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { OpaqueToolkit } from '@dxos/ai';
 import { Skill } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 
 import { Memory } from '../../types/Memory';

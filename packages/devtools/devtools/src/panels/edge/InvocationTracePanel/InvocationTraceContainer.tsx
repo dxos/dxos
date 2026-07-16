@@ -8,11 +8,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
+import { type InvocationSpan } from '@dxos/compute-runtime';
+import { TraceEvent } from '@dxos/compute-runtime';
 import { type Database, type Obj, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/Format';
-import { type InvocationSpan } from '@dxos/compute-runtime';
-import { TraceEvent } from '@dxos/compute-runtime';
 import { type URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
 import { Toolbar } from '@dxos/react-ui';

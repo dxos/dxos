@@ -23,13 +23,13 @@ import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
 import { Operation, Process, RunAgainError, Trigger, TriggerEvent } from '@dxos/compute';
-import * as ProcessManager from '../ProcessManager';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as ProcessManager from '../ProcessManager';
 import { filterReadyFeedItems } from './feed-position';
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';

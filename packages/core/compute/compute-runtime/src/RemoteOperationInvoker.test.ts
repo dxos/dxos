@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import * as Effect from 'effect/Effect';
-
-import { EffectEx } from '@dxos/effect';
 import { Context as DxosContext } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 
 import * as RemoteOperationInvoker from './RemoteOperationInvoker';
 

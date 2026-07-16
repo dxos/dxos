@@ -7,11 +7,11 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Capabilities, Capability, CapabilityManager } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId } from '@dxos/keys';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';

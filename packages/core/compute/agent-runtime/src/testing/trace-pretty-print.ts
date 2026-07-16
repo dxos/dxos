@@ -8,9 +8,8 @@ import * as Layer from 'effect/Layer';
 import { ConsolePrinter } from '@dxos/ai';
 import { CompleteBlock } from '@dxos/assistant';
 import { Process, Trace } from '@dxos/compute';
-import { Database, Filter, Query } from '@dxos/echo';
-
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import { Database, Filter, Query } from '@dxos/echo';
 
 /**
  * Pretty-prints assistant trace messages to stdout (CompleteBlock, process spawn/exit).
