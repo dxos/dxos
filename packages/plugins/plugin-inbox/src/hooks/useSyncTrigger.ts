@@ -2,69 +2,40 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
-import { type Client } from '@dxos/client';
-import { Operation, Trigger } from '@dxos/compute';
-import { Context } from '@dxos/context';
-import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
-import { useClient } from '@dxos/react-client';
+import { Trigger } from '@dxos/compute';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
-import { Calendar } from '#types';
+// Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
+// (which exports this file), so going through the barrel would create a module cycle.
+import { useConnectorEntry, useTargetConnection } from '../components/Initialize/useTargetConnection';
+import { createSyncRoutine, findBindingForTarget } from '../util';
 
 /**
- * Finds or imports a function by key from Edge into the space database.
- * Updates existing functions if a newer version is available.
- */
-const ensureFunction = async (
-  client: Client,
-  db: Database.Database,
-  functionKey: string,
-): Promise<Operation.PersistentOperation | undefined> => {
-  const deployed = await getDeployedFunctions(Context.default(), client, true);
-  const match = deployed.find((fn) => Obj.getMeta(fn).key === functionKey);
-  if (!match) {
-    return undefined;
-  }
-
-  const existing = await db
-    .query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(functionKey)))
-    .run();
-  const [existingFunc] = existing;
-  if (existingFunc) {
-    Operation.setFrom(existingFunc, match);
-    return existingFunc;
-  }
-
-  return db.add(match);
-};
-
-/**
- * Hook to find, create, and toggle a timer-based sync trigger for a mailbox or calendar.
- * Imports the required function from Edge if it doesn't exist in the space.
+ * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. Creation
+ * wires the trigger to the bound connector's own `sync` operation (the same one
+ * `ConnectorOperation.SyncConnection` invokes directly) via {@link createSyncRoutine}.
  */
 export const useSyncTrigger = ({
   db,
   subject,
-  functionKey,
-  input: extraInput,
 }: {
   db: Database.Database | undefined;
   subject: Obj.Unknown;
-  functionKey: string;
-  /** Additional input fields merged into the trigger input alongside the subject ref. */
-  input?: Record<string, unknown>;
 }): {
   syncEnabled: boolean | undefined;
   syncTrigger: Trigger.Trigger | undefined;
   pending: boolean;
   handleToggleSync: () => Promise<void>;
 } => {
-  const client = useClient();
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
+  const { connection } = useTargetConnection(subject);
+  const connector = useConnectorEntry(connection);
 
   const subjectUri = Obj.getURI(subject);
   const syncTrigger = useMemo(
@@ -93,26 +64,24 @@ export const useSyncTrigger = ({
       return;
     }
 
+    const sync = connector?.sync;
+    if (!connection || !sync) {
+      return;
+    }
+
     setPending(true);
     try {
-      const fn = await ensureFunction(client, db, functionKey);
-      if (!fn) {
-        return;
-      }
-
-      const inputKey = Obj.getTypename(subject) === Type.getTypename(Calendar.Calendar) ? 'calendar' : 'mailbox';
-      const trigger = Trigger.make({
-        enabled: true,
-        spec: Trigger.specTimer('*/5 * * * *'),
-        runnable: Ref.make(fn),
-        input: { [inputKey]: db.makeRef(Obj.getURI(subject)), ...extraInput },
-      });
-
-      db.add(trigger);
+      await Effect.gen(function* () {
+        const cursor = yield* findBindingForTarget(subject);
+        if (!cursor) {
+          return;
+        }
+        yield* createSyncRoutine({ target: subject, cursor, sync });
+      }).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
     } finally {
       setPending(false);
     }
-  }, [syncTrigger, db, client, subject, functionKey, extraInput]);
+  }, [syncTrigger, db, subject, connection, connector]);
 
   return { syncEnabled, syncTrigger, pending, handleToggleSync };
 };

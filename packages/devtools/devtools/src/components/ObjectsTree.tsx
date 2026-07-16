@@ -345,13 +345,14 @@ const computeRole = (entity: Entity.Snapshot): string | undefined => {
   }
   const parent = Obj.getParent(entity);
   if (parent === undefined) {
-    log.info('no parent');
     return undefined;
   }
+
   for (const key of Record.keys(parent)) {
     if (Ref.isRef(parent[key]) && parent[key].target?.id === entity.id) {
       return `$.${key}`;
     }
   }
+
   return undefined;
 };

@@ -19,9 +19,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "workerd": "./dist/lib/browser/index.mjs",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./workerd": {
       "types": "./dist/types/src/index.d.ts",
@@ -30,20 +28,17 @@
     "./events": {
       "source": "./src/app-framework/AppActivationEvents.ts",
       "types": "./dist/types/src/app-framework/AppActivationEvents.d.ts",
-      "browser": "./dist/lib/browser/app-framework/AppActivationEvents.mjs",
-      "node": "./dist/lib/node-esm/app-framework/AppActivationEvents.mjs"
+      "import": "./dist/lib/app-framework/AppActivationEvents.mjs"
     },
     "./query": {
       "source": "./src/echo/Query.ts",
       "types": "./dist/types/src/echo/Query.d.ts",
-      "browser": "./dist/lib/browser/echo/Query.mjs",
-      "node": "./dist/lib/node-esm/echo/Query.mjs"
+      "import": "./dist/lib/echo/Query.mjs"
     },
     "./ui": {
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
-      "browser": "./dist/lib/browser/ui/index.mjs",
-      "node": "./dist/lib/node-esm/ui/index.mjs"
+      "import": "./dist/lib/ui.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

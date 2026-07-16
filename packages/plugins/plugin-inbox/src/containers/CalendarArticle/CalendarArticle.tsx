@@ -14,11 +14,18 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import {
+  Menu,
+  MenuBuilder,
+  TOOLBAR_DISPOSITION,
+  graphActions,
+  isToolbarAction,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
-import { EventStack, type EventStackActionHandler, useTargetSync } from '#components';
+import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
 import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
 
@@ -44,11 +51,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const [selectedDate, setSelectedDate] = useState<Date>();
   const calendarRef = useRef<CalendarController>(null);
   const eventStackRef = useRef<MosaicScrollController>(null);
-  // Syncing drafts (and the pull "Sync" toolbar action) require a connection bound to this calendar.
-  const { connection, sync, syncing } = useTargetSync(subject, {
-    success: ['sync-calendar-success.title', { ns: meta.profile.key }],
-    error: ['sync-calendar-error.title', { ns: meta.profile.key }],
-  });
+  // Pushing draft events to Google Calendar requires a connection bound to this calendar.
+  const { connection } = useTargetConnection(subject);
 
   const feed = calendar.feed?.target;
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented
@@ -203,29 +207,12 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           handleSyncDraft,
         );
       }
-      // Own action: pull-sync from Google once connected (an external-sync `Cursor` exists).
-      if (connection) {
-        const isSyncing = get(syncing);
-        builder.action(
-          'sync',
-          {
-            label: ['sync-calendar.label', { ns: meta.profile.key }],
-            icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
-            variant: 'primary',
-            iconOnly: false,
-            disabled: isSyncing,
-          },
-          () => {
-            void sync();
-          },
-        );
-      }
       return builder
         .separator('gap')
-        .subgraph(graphActions(graph, get, id, { filter: isToolbarAction }))
+        .subgraph(graphActions(graph, get, id, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
         .build();
     },
-    [graph, id, handleCreate, handleSyncDraft, draftEvents.length, connection, sync, syncing],
+    [graph, id, handleCreate, handleSyncDraft, draftEvents.length, connection],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });

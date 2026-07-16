@@ -40,10 +40,10 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/extractor"
+      "path": "../../core/compute/compute-runtime"
     },
     {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/extractor"
     },
     {
       "path": "../../core/compute/link"

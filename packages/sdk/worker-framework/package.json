@@ -16,32 +16,27 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./Client": {
       "source": "./src/Client.ts",
       "types": "./dist/types/src/Client.d.ts",
-      "browser": "./dist/lib/browser/Client.mjs",
-      "node": "./dist/lib/node-esm/Client.mjs"
+      "import": "./dist/lib/Client.mjs"
     },
     "./Worker": {
       "source": "./src/Worker.ts",
       "types": "./dist/types/src/Worker.d.ts",
-      "browser": "./dist/lib/browser/Worker.mjs",
-      "node": "./dist/lib/node-esm/Worker.mjs"
+      "import": "./dist/lib/Worker.mjs"
     },
     "./Coordinator": {
       "source": "./src/Coordinator/index.ts",
       "types": "./dist/types/src/Coordinator/index.d.ts",
-      "browser": "./dist/lib/browser/Coordinator/index.mjs",
-      "node": "./dist/lib/node-esm/Coordinator/index.mjs"
+      "import": "./dist/lib/Coordinator.mjs"
     },
     "./WorkerProtocol": {
       "source": "./src/WorkerProtocol.ts",
       "types": "./dist/types/src/WorkerProtocol.d.ts",
-      "browser": "./dist/lib/browser/WorkerProtocol.mjs",
-      "node": "./dist/lib/node-esm/WorkerProtocol.mjs"
+      "import": "./dist/lib/WorkerProtocol.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

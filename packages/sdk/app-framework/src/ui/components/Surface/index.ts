@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Role from '../../../common/Role';
-// TODO(wittjosiah): Cleanup to avoid re-naming.
+import { Role } from '../../../common';
 import { SurfaceContext } from './context';
 import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent';
 import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';

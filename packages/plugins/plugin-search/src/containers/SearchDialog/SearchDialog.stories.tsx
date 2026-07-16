@@ -93,16 +93,17 @@ export const Test: Story = {
     const searchInput = await body.findByRole('textbox', undefined, { timeout: 10_000 });
     await expect(searchInput).toBeInTheDocument();
 
-    // Type a search term that should match generated Person/Organization names.
-    await userEvent.type(searchInput, 'a');
+    // Type a 3+ char term (FTS trigram minimum) likely present across 60 seeded objects.
+    await userEvent.type(searchInput, 'the');
 
-    // Wait for search results to appear as options in the listbox.
+    // Wait for search results to appear as options in the listbox — this is the
+    // end-to-end proof that the FTS5 index is wired and populated.
     await waitFor(
       async () => {
         const options = body.queryAllByRole('option');
         await expect(options.length).toBeGreaterThan(0);
       },
-      { timeout: 10_000 },
+      { timeout: 15_000 },
     );
   },
 };

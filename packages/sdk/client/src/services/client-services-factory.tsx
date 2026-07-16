@@ -12,8 +12,6 @@ import { DedicatedWorkerClientServices, type DedicatedWorkerClientServicesOption
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 
 export type CreateClientServicesOptions = {
-  /** @deprecated The SHARED_WORKER services mode was removed; retained only for source compatibility. */
-  createWorker?: () => SharedWorker;
   /** Factory for creating a dedicated worker. Required for {@link Runtime.Client.ServicesMode.DEDICATED_WORKER}. */
   createDedicatedWorker?: DedicatedWorkerClientServicesOptions['createWorker'];
   /** Factory for creating the coordinator SharedWorker (for dedicated worker mode). Use for a custom entrypoint that e.g. initializes observability. */
@@ -63,15 +61,6 @@ export const createClientServices = async (
       const dataRoot = config.values.runtime?.client?.storage?.dataRoot;
       const effectiveSqlitePath = sqlitePath ?? (dataRoot ? `${dataRoot}/sqlite.db` : undefined);
       return fromHost(config, { createOpfsWorker, sqlitePath: effectiveSqlitePath });
-    }
-
-    case Runtime.Client.ServicesMode.SHARED_WORKER: {
-      // The shared-worker services mode was removed in favour of the dedicated-worker framework
-      // (leader election + coordinator). Its client/host plumbing still rides the legacy protobuf
-      // system peer and is no longer wired up.
-      throw new Error(
-        'createClientServices: runtime.client.services_mode=SHARED_WORKER is no longer supported; use DEDICATED_WORKER.',
-      );
     }
 
     case Runtime.Client.ServicesMode.DEDICATED_WORKER: {

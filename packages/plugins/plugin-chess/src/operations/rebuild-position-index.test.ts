@@ -6,12 +6,12 @@ import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
-import { Game, make as makeGame } from '@dxos/plugin-game/types';
+import { Game } from '@dxos/plugin-game/types';
 
 import * as positionIndexInternal from '../internal/position-index';
 import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '../types';
@@ -21,7 +21,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: ChessOperationHandlerSet,
-  types: [Chess.State, Game, PlayerReview.Review, ChessPositionIndex.PositionIndex],
+  types: [Chess.State, Game.Game, PlayerReview.Review, ChessPositionIndex.PositionIndex],
   disableLlmMemoization: true,
 });
 
@@ -62,7 +62,7 @@ describe('RebuildPositionIndex', () => {
       function* ({ expect }) {
         const review = yield* Database.add(PlayerReview.makeReview({ playerName: 'alice' }));
         const variant = Chess.make({ pgn: '1. e4 e5 2. Nf3 Nc6 *' });
-        const game = makeGame({
+        const game = Game.make({
           name: 'alice vs bob',
           players: [
             { role: 'white', name: 'alice' },
@@ -95,7 +95,7 @@ describe('RebuildPositionIndex', () => {
       function* ({ expect }) {
         const review = yield* Database.add(PlayerReview.makeReview({ playerName: 'alice' }));
         const variant = Chess.make({ pgn: '1. e4 e5 *' });
-        const game = makeGame({
+        const game = Game.make({
           players: [
             { role: 'white', name: 'alice' },
             { role: 'black', name: 'bob' },
