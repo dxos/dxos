@@ -38,8 +38,15 @@ export const findConflicts = (state: EditorState): ConflictRegion[] => {
 
     let separator: typeof start | undefined;
     let end: typeof start | undefined;
+    let restart: number | undefined;
     for (let scan = lineNumber + 1; scan <= lineCount; scan++) {
       const line = state.doc.line(scan);
+      if (!separator && line.text.startsWith(START_MARKER)) {
+        // A new start marker before the separator: the current block is malformed — abandon it
+        // (rather than greedily absorbing the next block's markers) and rescan from here.
+        restart = scan;
+        break;
+      }
       if (!separator && line.text.startsWith(SEPARATOR)) {
         separator = line;
       } else if (separator && line.text.startsWith(END_MARKER)) {
@@ -49,7 +56,9 @@ export const findConflicts = (state: EditorState): ConflictRegion[] => {
       }
     }
     if (!separator || !end) {
-      break;
+      // Malformed (unterminated) block: skip it so later well-formed conflicts are still found.
+      lineNumber = restart ?? lineNumber + 1;
+      continue;
     }
 
     regions.push({

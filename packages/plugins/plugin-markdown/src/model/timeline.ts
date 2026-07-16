@@ -94,6 +94,8 @@ export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel
 
     // A `merge:` checkpoint on the parent becomes the merge commit (two parents) of the
     // matching merged branch; everything else is a plain checkpoint commit.
+    // TODO(burdon): Replace the label match with a structural version→branch link if branch
+    // renaming is introduced (labels are currently immutable: name set once, else createdAt).
     const merged = branches.find(
       (branch) =>
         branch.status === 'merged' &&
