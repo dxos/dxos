@@ -88,19 +88,37 @@ export const merge3 = ({ base, ours, theirs }: Merge3Props): Merge3Result => {
 
     const oursActive = oursHunk !== undefined && oursHunk.baseStart === next;
     const theirsActive = theirsHunk !== undefined && theirsHunk.baseStart === next;
-    // Hunks starting at the same base line conflict unless they are identical replacements.
-    const overlap =
+    const identical =
       oursActive &&
       theirsActive &&
-      !(sameLines(oursHunk.lines, theirsHunk.lines) && oursHunk.baseLength === theirsHunk.baseLength);
+      sameLines(oursHunk.lines, theirsHunk.lines) &&
+      oursHunk.baseLength === theirsHunk.baseLength;
+    // Hunks conflict when their consumed base intervals overlap — same start, or a staggered
+    // hunk beginning inside the interval the active hunk consumes (e.g. [0,2) vs [1,2)).
+    const overlap =
+      !identical &&
+      oursHunk !== undefined &&
+      theirsHunk !== undefined &&
+      (nextOurs === nextTheirs ||
+        (oursActive && nextTheirs < hunkEnd(oursHunk)) ||
+        (theirsActive && nextOurs < hunkEnd(theirsHunk)));
 
     if (overlap) {
-      out.push('<<<<<<< branch', ...theirsHunk.lines, '=======', ...oursHunk.lines, '>>>>>>> current');
+      // The conflict region spans the union of both intervals; each side's content is its hunk
+      // plus the base lines of the union it leaves unchanged.
+      const unionEnd = Math.max(hunkEnd(oursHunk), hunkEnd(theirsHunk));
+      out.push(
+        '<<<<<<< branch',
+        ...sideContent(baseLines, theirsHunk, next, unionEnd),
+        '=======',
+        ...sideContent(baseLines, oursHunk, next, unionEnd),
+        '>>>>>>> current',
+      );
       conflicts += 1;
-      baseIndex = next + Math.max(oursHunk.baseLength, theirsHunk.baseLength);
+      baseIndex = unionEnd;
       oursCursor += 1;
       theirsCursor += 1;
-    } else if (oursActive && theirsActive) {
+    } else if (identical) {
       out.push(...oursHunk.lines);
       baseIndex = next + oursHunk.baseLength;
       oursCursor += 1;
@@ -109,7 +127,7 @@ export const merge3 = ({ base, ours, theirs }: Merge3Props): Merge3Result => {
       out.push(...oursHunk.lines);
       baseIndex = next + oursHunk.baseLength;
       oursCursor += 1;
-    } else {
+    } else if (theirsHunk !== undefined) {
       out.push(...theirsHunk.lines);
       baseIndex = next + theirsHunk.baseLength;
       theirsCursor += 1;
@@ -120,6 +138,15 @@ export const merge3 = ({ base, ours, theirs }: Merge3Props): Merge3Result => {
 };
 
 type Hunk = { baseStart: number; baseLength: number; lines: string[] };
+
+const hunkEnd = (hunk: Hunk) => hunk.baseStart + hunk.baseLength;
+
+/** One side's content for a conflict region: its hunk plus the union's base lines it left unchanged. */
+const sideContent = (baseLines: string[], hunk: Hunk, unionStart: number, unionEnd: number): string[] => [
+  ...baseLines.slice(unionStart, hunk.baseStart),
+  ...hunk.lines,
+  ...baseLines.slice(hunkEnd(hunk), unionEnd),
+];
 
 /** Convert jsdiff line changes into base-anchored replacement hunks. */
 const lineHunks = (baseLines: string[], sideLines: string[]): Hunk[] => {

@@ -28,18 +28,21 @@ export const versionDiff = ({ base, variant }: VersionDiffOptions): Extension =>
 
 /** Widget rendering deleted base text in place (zero-width in the current doc). */
 class DeletionWidget extends WidgetType {
-  constructor(private readonly _text: string) {
+  #text: string;
+
+  constructor(text: string) {
     super();
+    this.#text = text;
   }
 
   override eq(other: DeletionWidget): boolean {
-    return other._text === this._text;
+    return other.#text === this.#text;
   }
 
   override toDOM(): HTMLElement {
     const span = document.createElement('span');
     span.className = 'cm-version-delete';
-    span.textContent = this._text;
+    span.textContent = this.#text;
     return span;
   }
 }
@@ -75,17 +78,20 @@ const inlineDiff = (base: string): Extension => {
 type LineChange = 'insert' | 'delete' | 'both';
 
 class ChangeMarker extends GutterMarker {
-  constructor(private readonly _change: LineChange) {
+  #change: LineChange;
+
+  constructor(change: LineChange) {
     super();
+    this.#change = change;
   }
 
   override eq(other: ChangeMarker): boolean {
-    return other._change === this._change;
+    return other.#change === this.#change;
   }
 
   override toDOM(): Node {
     const bar = document.createElement('div');
-    bar.className = `cm-version-gutter-marker cm-version-gutter-${this._change}`;
+    bar.className = `cm-version-gutter-marker cm-version-gutter-${this.#change}`;
     return bar;
   }
 }

@@ -83,9 +83,7 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'history'),
           AppSurface.companion(AppSurface.Article, Markdown.Document),
         ),
-        component: ({ data, role, ref }) => (
-          <DocumentHistory role={role} subject={data.companionTo} ref={ref as React.Ref<HTMLDivElement>} />
-        ),
+        component: ({ data, role, ref }) => <DocumentHistory role={role} subject={data.companionTo} ref={ref} />,
       }),
       Surface.create({
         id: 'surface.objectProperties',

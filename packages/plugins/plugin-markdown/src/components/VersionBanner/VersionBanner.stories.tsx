@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -28,9 +29,9 @@ export const Checkpoint: Story = {
     mode: 'checkpoint',
     name: 'v2 outline',
     detail: '2 days ago',
-    onRestore: () => console.log('restore'),
-    onBranchFrom: () => console.log('branch from'),
-    onClose: () => console.log('close'),
+    onRestore: fn(),
+    onBranchFrom: fn(),
+    onClose: fn(),
   },
 };
 
@@ -39,8 +40,8 @@ export const Branch: Story = {
     mode: 'branch',
     name: 'agent-draft',
     detail: 'anchored at v2 outline',
-    onMerge: () => console.log('merge'),
-    onCompare: () => console.log('compare'),
-    onClose: () => console.log('close'),
+    onMerge: fn(),
+    onCompare: fn(),
+    onClose: fn(),
   },
 };

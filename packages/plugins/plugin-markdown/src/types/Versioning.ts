@@ -61,6 +61,7 @@ export interface History extends Schema.Schema.Type<typeof History> {}
 export type MakeVersionProps = Pick<Version, 'target' | 'heads' | 'name'> &
   Partial<Pick<Version, 'creator' | 'message'>>;
 
+/** Constructs a Version checkpoint record with a generated id and creation timestamp. */
 export const makeVersion = (props: MakeVersionProps): Version => ({
   id: Key.EntityId.random(),
   createdAt: new Date().toISOString(),
@@ -69,6 +70,7 @@ export const makeVersion = (props: MakeVersionProps): Version => ({
 
 export type MakeBranchProps = Pick<Branch, 'content' | 'parent' | 'anchor' | 'name'> & Partial<Pick<Branch, 'creator'>>;
 
+/** Constructs an active Branch record with a generated id and creation timestamp. */
 export const makeBranch = (props: MakeBranchProps): Branch => ({
   id: Key.EntityId.random(),
   status: 'active',
