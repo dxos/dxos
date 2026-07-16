@@ -10,8 +10,8 @@ import * as Effect from 'effect/Effect';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { withAuthorization } from '@dxos/compute-runtime';
 import { Database, Obj } from '@dxos/echo';
-import { withAuthorization } from '@dxos/functions';
 
 import { GooglePeople } from '../../../../apis';
 import { AccessTokenNotPopulatedError } from '../../../../errors';

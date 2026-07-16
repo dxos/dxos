@@ -10,10 +10,10 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Process, Trace } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
-import { AGENT_PROCESS_KEY } from '@dxos/functions-runtime';
 import { EID } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
