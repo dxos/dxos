@@ -226,6 +226,9 @@
       "path": "../../plugins/plugin-attention"
     },
     {
+      "path": "../../plugins/plugin-blogger"
+    },
+    {
       "path": "../../plugins/plugin-bluesky"
     },
     {
@@ -464,6 +467,9 @@
     },
     {
       "path": "../../plugins/plugin-trip"
+    },
+    {
+      "path": "../../plugins/plugin-typefully"
     },
     {
       "path": "../../plugins/plugin-video"

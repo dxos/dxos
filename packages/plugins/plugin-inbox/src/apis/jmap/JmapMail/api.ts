@@ -6,7 +6,7 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute-runtime';
 
 import { JmapApiError } from '../../../errors';
 import { JmapCredentials } from '../../../services/jmap-credentials';

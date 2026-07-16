@@ -3,6 +3,7 @@
 //
 
 export * from './core';
+export * from './corpus';
 export * from './meta';
 export * from './types';
 

@@ -33,10 +33,9 @@ export default InboxOperation.SyncDraftEvents.pipe(
       }
       // Finds the Connection whose access token is the binding's `spec.source` — fuzzy if an access
       // token is ever shared across connections.
-      const connections = yield* Database.query(Filter.type(Connection.Connection)).run.pipe(
-        Effect.provide(Database.layer(db)),
-      );
-      const connection = connections.find((candidate) => candidate.accessToken.uri === binding.spec.source.uri);
+      const [connection] = yield* Database.query(
+        Filter.type(Connection.Connection, { accessToken: binding.spec.source }),
+      ).run.pipe(Effect.provide(Database.layer(db)));
       if (!connection) {
         return { synced: 0 };
       }

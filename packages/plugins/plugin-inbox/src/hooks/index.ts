@@ -3,6 +3,7 @@
 //
 
 export * from './useActorContact';
+export * from './useDebouncedValue';
 export * from './useEmailComposerExtensions';
 export * from './useExtractedObjects';
 export * from './useSendEmail';

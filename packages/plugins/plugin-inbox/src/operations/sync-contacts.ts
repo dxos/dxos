@@ -16,7 +16,7 @@ import { InboxOperation } from '../types';
 
 const dispatch = (bindingRef: Ref.Ref<Cursor.Cursor>, db: Database.Database) =>
   Effect.gen(function* () {
-    const { ContactsFunctions } = yield* Effect.promise(() => import('./google/contacts'));
+    const { ContactsFunctions } = yield* Effect.promise(() => import('./contacts/google'));
     yield* Operation.invoke(
       ContactsFunctions.Sync,
       {

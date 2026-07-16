@@ -6,10 +6,10 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, vi } from 'vitest';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game } from '@dxos/plugin-game/types';
@@ -57,7 +57,7 @@ const SAMPLE_PLAYER = {
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: ChessComOperationHandlerSet,
-  types: [Feed.Feed, ChessComAccount.Account, Chess.State, Game],
+  types: [Feed.Feed, ChessComAccount.Account, Chess.State, Game.Game],
   disableLlmMemoization: true,
 });
 
@@ -96,7 +96,7 @@ describe('SyncGames', () => {
         expect(first.appended).toBe(1);
 
         const echoFeed = yield* Database.load(account.games);
-        const gamesAfterFirst = yield* Feed.query(echoFeed, Filter.type(Game)).run;
+        const gamesAfterFirst = yield* Feed.query(echoFeed, Filter.type(Game.Game)).run;
         expect(gamesAfterFirst).toHaveLength(1);
         expect(gamesAfterFirst[0]?.name).toBe('alice vs bob');
 
@@ -109,7 +109,7 @@ describe('SyncGames', () => {
         const second = yield* Operation.invoke(ChessComOperation.SyncGames, { account: Ref.make(account) });
         expect(second.appended).toBe(0);
 
-        const gamesAfterSecond = yield* Feed.query(echoFeed, Filter.type(Game)).run;
+        const gamesAfterSecond = yield* Feed.query(echoFeed, Filter.type(Game.Game)).run;
         expect(gamesAfterSecond).toHaveLength(1);
       },
       Effect.provide(TestLayer),

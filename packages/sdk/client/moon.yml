@@ -16,6 +16,5 @@ tasks:
       - '--entryPoint=src/invitations/index.ts'
       - '--entryPoint=src/mesh/index.ts'
       - '--entryPoint=src/testing/index.ts'
-      - '--entryPoint=src/worker/index.ts'
       - '--entryPoint=src/services/dedicated/dedicated-worker-entrypoint.ts'
       - '--entryPoint=src/services/dedicated/coordinator-worker-entrypoint.ts'

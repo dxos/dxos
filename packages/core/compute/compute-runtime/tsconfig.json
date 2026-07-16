@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/effect"
     },
     {
@@ -23,6 +26,9 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {
@@ -32,7 +38,16 @@
       "path": "../../echo/echo-client"
     },
     {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../ai"
+    },
+    {
       "path": "../compute"
+    },
+    {
+      "path": "../link"
     },
     {
       "path": "../operation"

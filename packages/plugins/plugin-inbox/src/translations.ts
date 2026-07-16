@@ -74,13 +74,9 @@ export const translations = [
         'no-connections.label': 'No connections configured',
 
         'sync-mailbox.label': 'Sync',
-        'sync-mailbox-error.title': 'Failed to sync mailbox',
-        'sync-mailbox-success.title': 'Mailbox sync complete',
         'empty-mailbox.message': 'Mailbox empty',
 
         'sync-calendar.label': 'Sync calendar',
-        'sync-calendar-error.title': 'Failed to sync calendar',
-        'sync-calendar-success.title': 'Calendar sync complete',
         'empty-calendar.message': 'Calendar empty',
 
         'sync-contacts.label': 'Sync contacts',
