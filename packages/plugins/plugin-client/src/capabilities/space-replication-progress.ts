@@ -13,6 +13,10 @@ import { ServiceResolver } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { Progress } from '@dxos/progress';
+
 import { ClientCapabilities } from '#types';
 
 import { createSpaceFeedReplicationProgressKey, createSpaceReplicationProgressKey } from '../progress';
@@ -31,9 +35,9 @@ type MonitorUpdate = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const registry = yield* Capability.get(AppCapabilities.ProgressRegistry);
-    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const client = yield* ClientCapabilities.Client;
+    const registry = yield* AppCapabilities.ProgressRegistry;
+    const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
 
     const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
 

@@ -6,6 +6,7 @@
 
 import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
+import type * as Scope from 'effect/Scope';
 
 import {
   ActivationEvents,
@@ -45,11 +46,17 @@ export type CapabilityModuleOptions<
   /** @deprecated Legacy event wiring; declare capability dependencies instead. */
   activatesOn?: ActivationEvent$.Events;
   /** @deprecated Legacy event wiring; declare `requires` instead. */
-  firesBeforeActivation?: ActivationEvent$.ActivationEvent[];
+  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
   /** @deprecated Legacy event wiring; providers gate consumers via capabilities instead. */
-  firesAfterActivation?: ActivationEvent$.ActivationEvent[];
+  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
   activate:
-    | ((props?: any) => Effect.Effect<Capability$.ModuleReturn, Error, Capability$.Service | Plugin$.Service | never>)
+    | ((
+        props?: any,
+      ) => Effect.Effect<
+        Capability$.ModuleReturn,
+        Error,
+        Capability$.Service | Plugin$.Service | Scope.Scope | never
+      >)
     | (() => Effect.Effect<
         ReadonlyArray<Capability$.Contribution<C>> | readonly Capability$.AnyContribution[],
         Error,
@@ -123,9 +130,9 @@ export type TranslationsModuleOptions = {
   /** @deprecated Legacy event wiring. */
   activatesOn?: ActivationEvent$.Events;
   /** @deprecated Legacy event wiring. */
-  firesBeforeActivation?: ActivationEvent$.ActivationEvent[];
+  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
   /** @deprecated Legacy event wiring. */
-  firesAfterActivation?: ActivationEvent$.ActivationEvent[];
+  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
 };
 
 /**
@@ -192,9 +199,9 @@ export type PluginAssetModuleOptions = {
   /** @deprecated Legacy event wiring. */
   activatesOn?: ActivationEvent$.Events;
   /** @deprecated Legacy event wiring. */
-  firesBeforeActivation?: ActivationEvent$.ActivationEvent[];
+  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
   /** @deprecated Legacy event wiring. */
-  firesAfterActivation?: ActivationEvent$.ActivationEvent[];
+  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
 };
 
 /**
@@ -228,9 +235,9 @@ export type SchemaModuleOptions = {
   /** @deprecated Legacy event wiring. */
   activatesOn?: ActivationEvent$.Events;
   /** @deprecated Legacy event wiring. */
-  firesBeforeActivation?: ActivationEvent$.ActivationEvent[];
+  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
   /** @deprecated Legacy event wiring. */
-  firesAfterActivation?: ActivationEvent$.ActivationEvent[];
+  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
 };
 
 /**
@@ -260,9 +267,9 @@ export type CommandModuleOptions = {
   /** @deprecated Legacy event wiring. */
   activatesOn?: ActivationEvent$.Events;
   /** @deprecated Legacy event wiring. */
-  firesBeforeActivation?: ActivationEvent$.ActivationEvent[];
+  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
   /** @deprecated Legacy event wiring. */
-  firesAfterActivation?: ActivationEvent$.ActivationEvent[];
+  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
 };
 
 /**

@@ -13,13 +13,13 @@ import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactContext, {
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }: { children?: ReactNode }) => {
         const client = useCapability(ClientCapabilities.Client);
         return <ClientProvider client={client}>{children}</ClientProvider>;
       },
     }),
-  ),
+  ]),
 );

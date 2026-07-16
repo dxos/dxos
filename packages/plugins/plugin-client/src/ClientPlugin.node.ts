@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { Client, LayerSpecs, Migrations, OperationHandler, SchemaDefs } from '#capabilities';
@@ -15,27 +15,18 @@ import { account, config, device, edge, halo, profile } from './commands';
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
   AppPlugin.addCommandModule({ commands: [account, config, device, edge, halo, profile] }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Plugin.addLazyModule(OperationHandler),
   Plugin.addModule((options) => ({
     id: Capability.getModuleTag(Client),
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [ClientEvents.ClientReady],
+    requires: Client.requires,
+    provides: Client.provides,
+    // Migration bridge for unmigrated ClientReady listeners.
+    compatFires: [ClientEvents.ClientReady],
     activate: () => Client(options),
   })),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [AppActivationEvents.SetupSchema],
-    activate: SchemaDefs,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ClientEvents.SetupMigration],
-    activate: Migrations,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: LayerSpecs,
-  }),
+  Plugin.addLazyModule(SchemaDefs, { compatFires: [AppActivationEvents.SetupSchema] }),
+  Plugin.addLazyModule(Migrations, { compatFires: [ClientEvents.SetupMigration] }),
+  Plugin.addLazyModule(LayerSpecs),
   Plugin.make,
 );
 

@@ -49,6 +49,12 @@
       "path": "../../core/compute/functions"
     },
     {
+      "path": "../../core/compute/operation"
+    },
+    {
+      "path": "../../core/compute/progress"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

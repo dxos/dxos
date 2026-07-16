@@ -120,6 +120,6 @@ export default Capability.makeModule(
         }).pipe(Effect.orDie),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

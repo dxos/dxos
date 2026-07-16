@@ -32,7 +32,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl, onReset }: ReactSurfaceOptions) {
     const capabilityManager = yield* Capability.Service;
 
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return [Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: Account.Profile,
         filter: AppSurface.literal(AppSurface.Article, Account.Profile),
@@ -83,6 +83,6 @@ export default Capability.makeModule(
           <ResetDialog {...data.props} onReset={onReset} capabilityManager={capabilityManager} />
         ),
       }),
-    ]);
+    ])];
   }),
 );

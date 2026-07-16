@@ -75,7 +75,7 @@ export default Capability.makeModule(
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?
       //  Perhaps move to using layer has source of truth and add a getter capability for the client.
-      Capability.contributes(ClientCapabilities.Client, client, () =>
+      Capability.provide(ClientCapabilities.Client, client, () =>
         Effect.gen(function* () {
           log.info('client capability: destroying client');
           // TODO(dmaretskyi): use scope for destroy.
@@ -83,7 +83,7 @@ export default Capability.makeModule(
           yield* Effect.tryPromise(() => client.destroy());
         }),
       ),
-      Capability.contributes(Capabilities.Layer, ClientService.fromClient(client)),
+      Capability.provide(Capabilities.Layer, ClientService.fromClient(client)),
     ];
   }),
 );

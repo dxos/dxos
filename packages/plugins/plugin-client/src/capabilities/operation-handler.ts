@@ -9,8 +9,8 @@ import type { OperationHandlerSet } from '@dxos/compute';
 
 import { ClientOperationHandlerSet } from '#operations';
 
-export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.OperationHandler, ClientOperationHandlerSet);
+    return [Capability.provide(Capabilities.OperationHandler, ClientOperationHandlerSet)];
   }),
 );

@@ -7,6 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 import { log } from '@dxos/log';
 
 import { ClientOperation } from '../../operations';
@@ -28,7 +31,7 @@ export default Capability.makeModule(
     tokenTypeProp = 'type',
   }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
-    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
+    const operationService = yield* Capabilities.OperationInvoker;
 
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {
@@ -52,7 +55,7 @@ export default Capability.makeModule(
         Effect.orDie,
       );
 
-    return Capability.contributes(AppCapabilities.NavigationHandler, handler);
+    return [Capability.provide(AppCapabilities.NavigationHandler, handler)];
   }),
 );
 

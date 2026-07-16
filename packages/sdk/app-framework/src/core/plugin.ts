@@ -177,8 +177,8 @@ export interface PluginModule {
 export type PluginModuleOptions = {
   id?: string;
   activatesOn: ActivationEvent.Events;
-  firesBeforeActivation?: ActivationEvent.ActivationEvent[];
-  firesAfterActivation?: ActivationEvent.ActivationEvent[];
+  firesBeforeActivation?: readonly ActivationEvent.ActivationEvent[];
+  firesAfterActivation?: readonly ActivationEvent.ActivationEvent[];
   activate: (
     props?: any,
   ) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | Scope.Scope | never>;
@@ -474,6 +474,34 @@ export function addModule<T>(
   const moduleOpts = moduleOptionsOrBuilder as ModuleEntry | ((options: T) => ModuleEntry);
   return (builder: PluginBuilder<T>) => builder.addModule(moduleOpts);
 }
+
+/**
+ * Adds a module from a spec-carrying lazy body ({@link Capability.lazyModule}) taking no
+ * props: requires/provides come from the spec and the id derives from the lazy name.
+ * Dependency-mode by default; pass `activatesOn` for a runtime-event module.
+ */
+export const addLazyModule =
+  <
+    Requires extends readonly Capability.AnyTag[],
+    Provides extends readonly Capability.AnyTag[],
+    T = void,
+  >(
+    module: Capability.LazyModule<void, Requires, Provides>,
+    options?: {
+      id?: string;
+      activatesOn?: ActivationEvent.Events;
+      compatFires?: readonly ActivationEvent.ActivationEvent[];
+    },
+  ) =>
+  (builder: PluginBuilder<T>): PluginBuilder<T> =>
+    builder.addModule({
+      id: options?.id,
+      activatesOn: options?.activatesOn,
+      requires: module.requires,
+      provides: module.provides,
+      compatFires: options?.compatFires,
+      activate: module,
+    });
 
 export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
 

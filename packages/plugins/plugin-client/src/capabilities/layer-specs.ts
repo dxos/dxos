@@ -83,8 +83,8 @@ const CredentialsLayerSpec = LayerSpec.make(
 
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(Capabilities.LayerSpec, ClientLayerSpec),
-    Capability.contributes(Capabilities.LayerSpec, DatabaseLayerSpec),
-    Capability.contributes(Capabilities.LayerSpec, CredentialsLayerSpec),
+    Capability.provide(Capabilities.LayerSpec, ClientLayerSpec),
+    Capability.provide(Capabilities.LayerSpec, DatabaseLayerSpec),
+    Capability.provide(Capabilities.LayerSpec, CredentialsLayerSpec),
   ]),
 );

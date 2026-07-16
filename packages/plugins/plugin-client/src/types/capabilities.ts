@@ -16,8 +16,8 @@ import { type AccountCache as AccountCacheType } from './account-cache';
 
 export namespace ClientCapabilities {
   export const Client = Capability.make<Client>(`${meta.profile.key}.capability.client`);
-  export const Schema = Capability.make<Type.AnyEntity[]>(`${meta.profile.key}.capability.schema`);
-  export const Migration = Capability.make<ObjectMigration[]>(`${meta.profile.key}.capability.migration`);
+  export const Schema = Capability.makeMulti<Type.AnyEntity[]>(`${meta.profile.key}.capability.schema`);
+  export const Migration = Capability.makeMulti<ObjectMigration[]>(`${meta.profile.key}.capability.migration`);
   export const AccountCache = Capability.make<Atom.Writable<AccountCacheType>>(
     `${meta.profile.key}.capability.accountCache`,
   );

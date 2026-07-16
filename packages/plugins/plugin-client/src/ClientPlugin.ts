@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import {
@@ -25,47 +25,34 @@ import { ClientEvents } from '#types';
 import { type ClientPluginOptions } from '#types';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Plugin.addLazyModule(AppGraphBuilder),
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    requires: NavigationHandler.requires,
+    provides: NavigationHandler.provides,
     activate: () => NavigationHandler({ invitationProp }),
   })),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addReactContextModule({ activate: ReactContext }),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(ReactContext),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule((options) => {
     return {
       id: Capability.getModuleTag(Client),
-      activatesOn: ActivationEvent.oneOf(ActivationEvents.Startup, AppActivationEvents.SetupAppGraph),
-      firesAfterActivation: [ClientEvents.ClientReady],
+      requires: Client.requires,
+      provides: Client.provides,
+      // Migration bridge for unmigrated ClientReady listeners.
+      compatFires: [ClientEvents.ClientReady],
       activate: () => Client(options),
     };
   }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    activate: AccountCache,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    activate: HubHttpClient,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [AppActivationEvents.SetupSchema],
-    activate: SchemaDefs,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ClientEvents.SetupMigration],
-    activate: Migrations,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.SpacesReady, AppActivationEvents.ProgressRegistryReady),
-    activate: SpaceReplicationProgress,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: LayerSpecs,
-  }),
+  Plugin.addLazyModule(AccountCache),
+  Plugin.addLazyModule(HubHttpClient),
+  // Registers contributed schemas with the client; the contributions view is live, so the
+  // compat window may fire after activation and still be picked up.
+  Plugin.addLazyModule(SchemaDefs, { compatFires: [AppActivationEvents.SetupSchema] }),
+  Plugin.addLazyModule(Migrations, { compatFires: [ClientEvents.SetupMigration] }),
+  // Runtime event: spaces become ready when the client observes them, not at startup.
+  Plugin.addLazyModule(SpaceReplicationProgress, { activatesOn: ClientEvents.SpacesReady }),
+  Plugin.addLazyModule(LayerSpecs),
   Plugin.addModule(
     ({
       shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
@@ -81,7 +68,8 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(ReactSurface),
-        activatesOn: ActivationEvents.SetupReactSurface,
+        requires: ReactSurface.requires,
+        provides: ReactSurface.provides,
         activate: () => ReactSurface({ createInvitationUrl, onReset }),
       };
     },
