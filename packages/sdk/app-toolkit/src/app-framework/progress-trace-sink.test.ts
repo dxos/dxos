@@ -98,6 +98,24 @@ describe('createProgressTraceSink', () => {
     expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
   });
 
+  test('lazy registry getter drops events until the registry is available', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    let resolved: ReturnType<typeof createProgressRegistry> | undefined;
+    const sink = createProgressTraceSink(() => resolved);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }));
+    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
+
+    resolved = progress;
+    sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 2, total: 5 } }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.current).toBe(2);
+    expect(task?.total).toBe(5);
+  });
+
   test('registers a cancellable monitor and terminates the emitting process on cancel', () => {
     const registry = Registry.make();
     const progress = createProgressRegistry(registry);

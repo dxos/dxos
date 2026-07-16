@@ -14,14 +14,15 @@ import { ProcessManager } from '@dxos/compute-runtime';
  * {@link AppCapabilities.ProgressRegistry}. Runs in parallel with the feed trace sink contributed by
  * `plugin-routine` — both are merged by the process-manager runtime.
  *
- * Activation mirrors `plugin-client`'s space replication progress: gate on
- * {@link AppActivationEvents.ProgressRegistryReady} so {@link Capability.get} is safe. Process-manager
- * runtime is resolved lazily on cancel — it is contributed only after this module's sink is collected.
+ * Activates on `SetupProcessManager` so the factory is collected when the process-manager runtime
+ * is built. {@link AppCapabilities.ProgressRegistry} is resolved lazily on each write — it is
+ * contributed later on Startup, and waiting for it here would deadlock the Startup →
+ * SetupProcessManager `firesBefore` chain. Process-manager runtime is likewise resolved lazily on
+ * cancel.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const progressRegistry = yield* Capability.waitFor(AppCapabilities.ProgressRegistry);
-
+    const capabilityManager = yield* Capability.Service;
     const runtime = yield* Effect.runtime<Capability.Service>();
 
     const terminateProcess = (pid: string) =>
@@ -42,7 +43,9 @@ export default Capability.makeModule(
       }).pipe(Effect.provide(runtime), Effect.runFork);
 
     return Capability.contributes(Capabilities.TraceSink, () =>
-      createProgressTraceSink(progressRegistry, { terminateProcess }),
+      createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
+        terminateProcess,
+      }),
     );
   }),
 );

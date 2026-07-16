@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { ProgressRegistry, ReactSurface, TraceProgressSink } from '#capabilities';

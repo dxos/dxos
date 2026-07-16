@@ -29,14 +29,30 @@ export type ProgressTraceSinkOptions = {
 };
 
 /**
+ * Progress registry, or a getter that resolves it lazily.
+ *
+ * A getter lets the sink activate during SetupProcessManager (before
+ * ProgressRegistry is contributed on Startup) without deadlocking.
+ */
+export type ProgressRegistrySource =
+  | AppCapabilities.ProgressRegistry
+  | (() => AppCapabilities.ProgressRegistry | undefined);
+
+/**
  * Builds a {@link Trace.Sink} that projects ephemeral `status.update` events into a
  * {@link AppCapabilities.ProgressRegistry}. Intended as a parallel sink alongside feed
  * persistence — operations emit trace status; this adapter drives UI monitors.
+ *
+ * When {@link ProgressRegistrySource} is a getter that returns `undefined`, status
+ * updates are dropped until the registry becomes available.
  */
 export const createProgressTraceSink = (
-  progressRegistry: AppCapabilities.ProgressRegistry,
+  progressRegistry: ProgressRegistrySource,
   options: ProgressTraceSinkOptions = {},
 ): Trace.Sink => {
+  const resolveRegistry = (): AppCapabilities.ProgressRegistry | undefined =>
+    typeof progressRegistry === 'function' ? progressRegistry() : progressRegistry;
+
   const monitors = new Map<string, MonitorEntry>();
 
   const dropMonitor = (key: string) => {
@@ -58,14 +74,19 @@ export const createProgressTraceSink = (
     cancelMonitor(key);
   };
 
-  const monitorFor = (key: string, label?: string, pid?: string) => {
+  const monitorFor = (
+    registry: AppCapabilities.ProgressRegistry,
+    key: string,
+    label?: string,
+    pid?: string,
+  ) => {
     const existing = monitors.get(key);
     if (existing && existing.pid === pid) {
       return existing.handle;
     }
 
     const onCancel = pid && options.terminateProcess ? makeOnCancel(key, pid) : undefined;
-    const handle = progressRegistry.register(key, { label, onCancel });
+    const handle = registry.register(key, { label, onCancel });
     monitors.set(key, { handle, pid });
     return handle;
   };
@@ -76,7 +97,12 @@ export const createProgressTraceSink = (
       return;
     }
 
-    const handle = monitorFor(key, data.message, pid);
+    const registry = resolveRegistry();
+    if (!registry) {
+      return;
+    }
+
+    const handle = monitorFor(registry, key, data.message, pid);
 
     if (data.message === PROGRESS_STATUS_FAILED) {
       handle.fail(PROGRESS_STATUS_FAILED);
@@ -112,7 +138,6 @@ export const createProgressTraceSink = (
     write: (message) => {
       const pid = message.meta.pid;
       for (const event of Trace.flatten(message)) {
-        console.log('event', event);
         if (Trace.isOfType(Trace.StatusUpdate, event)) {
           applyStatusUpdate(event.data, pid);
         }
