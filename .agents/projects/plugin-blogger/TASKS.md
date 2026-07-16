@@ -13,11 +13,9 @@ Work-stream ledger for the blogger/typefully plugins (PR #12168).
       path — see plugin-markdown `useExtensions`/`PreviewComponent`; the artifact
       surface already renders via `AppSurface.CardContent`/Section.)
 
-- [ ] Factor out the `widgets.map(...)` xmlTags portal rendering. The block
-      `{widgets.map(({ id, root, Component, props }) => <div key={id}>{createPortal(
-    <Component {...props} />, root)}</div>)}` is duplicated across
-      plugin-markdown `MarkdownEditor.tsx` (`MarkdownEditorBlocks`),
-      react-ui-markdown `MarkdownStream.tsx`, and the react-ui-editor
-      `Widgets.stories.tsx` variants. Extract a shared component (e.g.
-      `XmlWidgetPortals`/`useXmlWidgets` in ui-editor or react-ui-editor) that
-      owns the `setWidgets` state + portal rendering, and update all call sites.
+- [ ] Factor out the xmlTags portal rendering. The `widgets.map(... createPortal(...))`
+      block is duplicated across plugin-markdown `MarkdownEditor.tsx`
+      (`MarkdownEditorBlocks`), react-ui-markdown `MarkdownStream.tsx`, and the
+      react-ui-editor `Widgets.stories.tsx` variants. Extract a shared component
+      (`XmlWidgetPortals` / `useXmlWidgets` in ui-editor or react-ui-editor) that owns
+      the `setWidgets` state + portal rendering, and update all call sites.
