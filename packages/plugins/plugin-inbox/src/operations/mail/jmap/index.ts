@@ -16,7 +16,6 @@ export const JmapOperations: {
 };
 
 export const JmapHandlers = OperationHandlerSet.lazy(
-  () => import('./materialize-target'),
   () => import('./send'),
   () => import('./sync'),
 );

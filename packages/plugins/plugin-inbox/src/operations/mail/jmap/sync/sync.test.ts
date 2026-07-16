@@ -17,12 +17,12 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Message, Person } from '@dxos/types';
 
-import { JMAP_MAIL_CONNECTOR_ID, JMAP_MESSAGE_SOURCE } from '../../../constants';
-import { type JmapDataset, JmapMailApi } from '../../../services';
-import { generateJmapDataset } from '../../../testing/jmap-fixtures';
-import { ambientSyncServices, inboxJmapSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
-import { InboxOperation, Mailbox } from '../../../types';
-import { createSyncProgressKey } from '../mail-sync';
+import { JMAP_MAIL_CONNECTOR_ID, JMAP_MESSAGE_SOURCE } from '../../../../constants';
+import { type JmapDataset, JmapMailApi } from '../../../../services';
+import { generateJmapDataset } from '../../../../testing/jmap-fixtures';
+import { ambientSyncServices, inboxJmapSyncTestServices, seedMailboxBinding } from '../../../../testing/sync-fixture';
+import { InboxOperation, Mailbox } from '../../../../types';
+import { createSyncProgressKey } from '../../mail-sync';
 import { runJmapSync } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */

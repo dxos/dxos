@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -11,23 +10,22 @@ import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
 import { type Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
-import { type Database, Obj, type Ref } from '@dxos/echo';
+import { type Operation } from '@dxos/compute';
+import { type Database, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
-import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 import { Person } from '@dxos/types';
 
-import { Jmap, JmapMail } from '../../../apis';
-import { JMAP_MESSAGE_SOURCE } from '../../../constants';
-import { type JmapApiError, MailSyncError } from '../../../errors';
-import { JmapCredentials, JmapMailApi } from '../../../services';
-import { InboxOperation, Mailbox, type SyncStreamConfig } from '../../../types';
-import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../mail-sync';
-import { type AttachmentMetadata, decodeBody, mapToMessage } from './mapper';
+import { Jmap, JmapMail } from '../../../../apis';
+import { JMAP_MESSAGE_SOURCE } from '../../../../constants';
+import { type JmapApiError, MailSyncError } from '../../../../errors';
+import { JmapMailApi } from '../../../../services';
+import { Mailbox, type SyncStreamConfig } from '../../../../types';
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource, runMailSync } from '../../mail-sync';
+import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -163,36 +161,6 @@ export const runJmapSync = ({
     Effect.provide(jmapMailSyncProvider()),
     Effect.withSpan('jmap-sync'),
   );
-
-export default InboxOperation.JmapSync.pipe(
-  Operation.withHandler(({ binding: bindingRef }) =>
-    Effect.gen(function* () {
-      const bindingObj = bindingRef.target;
-      const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-      if (!bindingObj || !db || !Cursor.isExternal(bindingObj)) {
-        log.warn('jmap sync skipped: missing binding target or database', {
-          hasBinding: Boolean(bindingObj),
-          hasDatabase: Boolean(db),
-        });
-        return { newMessages: 0 };
-      }
-
-      const accessTokenRef = bindingObj.spec.source;
-
-      return yield* runJmapSync({ binding: bindingRef }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            JmapMailApi.Live.pipe(
-              Layer.provide(Layer.mergeAll(FetchHttpClient.layer, JmapCredentials.fromAccessToken(accessTokenRef))),
-            ),
-            InboxResolver.Live,
-          ),
-        ),
-      );
-    }),
-  ),
-  Operation.opaqueHandler,
-);
 
 /**
  * Downloads each attachment's bytes via `JmapMailApi.downloadBlob`. One failed download (including a
