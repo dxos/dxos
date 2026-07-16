@@ -8,12 +8,13 @@ import { useCallback, useMemo, useState } from 'react';
 import { Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
 // (which exports this file), so going through the barrel would create a module cycle.
 import { useConnectorEntry, useTargetConnection } from '../components/Initialize/useTargetConnection';
-import { createSyncRoutine, findBindingForTarget } from '../util';
+import { createSyncRoutine, findBindingForTarget, isTimerSyncTriggerFor } from '../util';
 
 /**
  * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. Creation
@@ -34,22 +35,16 @@ export const useSyncTrigger = ({
 } => {
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
+  // Cursors are queried separately: a timer trigger references its synced target only indirectly, through the
+  // `binding` cursor's `spec.target` (refs nested in `input` aren't auto-resolved).
+  const cursors = useQuery(db, Query.select(Filter.type(Cursor.Cursor)).debugLabel('plugin-inbox.useSyncTrigger'));
   const { connection } = useTargetConnection(subject);
   const connector = useConnectorEntry(connection);
 
-  const subjectUri = Obj.getURI(subject);
+  const cursorById = useMemo(() => new Map(cursors.map((cursor) => [cursor.id, cursor])), [cursors]);
   const syncTrigger = useMemo(
-    () =>
-      triggers.find((trigger) => {
-        if (trigger.spec?.kind !== 'timer') {
-          return false;
-        }
-        const mailboxRef = trigger.input?.mailbox;
-        const calendarRef = trigger.input?.calendar;
-        const ref = mailboxRef ?? calendarRef;
-        return ref?.uri && ref.uri === subjectUri;
-      }),
-    [triggers, subjectUri],
+    () => triggers.find((trigger) => isTimerSyncTriggerFor(trigger, subject, (id) => cursorById.get(id))),
+    [triggers, cursorById, subject],
   );
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
