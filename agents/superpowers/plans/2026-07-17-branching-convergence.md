@@ -46,6 +46,15 @@ Extract commits 1–3 only, rebased on current main:
 - Real test coverage (17% → suite comparable to `@dxos/versioning`'s model tests).
 - **Writable per-surface branch access** (see decision (a)) — the agent-draft use case needs an
   agent to edit a branch while the user stays on main; `getObjectOnBranch` is read-only today.
+  API spec (stage-1 acceptance criterion):
+  - `db.branch(obj, name): BranchBinding` — a caller-owned, writable binding to one branch of one
+    object; multiple bindings to different branches of the same object may coexist in a process.
+  - **Ownership/lifetime:** the caller (surface, agent session) owns the binding and must dispose
+    it; bindings are ephemeral and never persisted. `BranchStore` persists only the device's
+    _default_ selection, which bindings override locally and never mutate.
+  - **Read/write semantics:** reads resolve the branch doc; writes land on the branch doc only.
+    The device-global current branch and other bindings are unaffected. Binding to `'main'`
+    returns the live object. Disposing a binding releases the doc handle (no doc deletion).
 - Inline-object promotion gap (`cannot branch an inline object`) — at minimum a clear error path.
 - Replication/storage review: full `A.save` copy per member per branch; subduction policy
   interaction for branch docs.
@@ -57,6 +66,11 @@ Extract commits 1–3 only, rebased on current main:
   registry's branch name. Core registry owns doc urls; records own presentation.
 - `Version` checkpoints stay as-is (core has no named-checkpoint concept; they complement the
   scrubber) and checkpoint viewing switches from snapshot-swap to `setTimeTravel` pinning.
+  **Restore-while-pinned semantics:** `Version.restore` first clears any active time-travel pin on
+  the target (`clearTimeTravel`), then applies the historical content as a forward edit on the
+  live tip, and the caller's selection resets to current — writes never go through a pinned
+  object (they throw there by design). Stage 2 adds coverage for restoring while a pin is active
+  (transition + resulting state).
 - `merge3`/conflict markers retained only until stage 4 (new branches merge via CRDT and cannot
   produce marker conflicts; the marker editor remains useful for external/imported conflicts).
 
