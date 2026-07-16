@@ -50,6 +50,8 @@ export type SyncGmailProps = {
   maxMessages?: number;
   /** Reference "now" for window/horizon resolution. Test-only (pins the clock); defaults to `new Date()`. */
   now?: Date;
+  /** Overrides the dedup-set seed bound (see `Cursor.layer`). Test-only — shrinks it to reproduce the seed-eviction dedup bug. */
+  dedupSeedTail?: number;
 };
 
 /**
@@ -67,6 +69,7 @@ export const syncGmail = ({
   label = 'all',
   maxMessages = GMAIL_SYNC_CONFIG.maxItemsPerRun,
   now = new Date(),
+  dedupSeedTail,
 }: SyncGmailProps): Effect.Effect<
   { newMessages: number },
   GoogleMailApiError | EntityNotFoundError,
@@ -300,6 +303,7 @@ export const syncGmail = ({
           trackRange: true,
           stats,
           extent,
+          dedupSeedTail,
         }),
       ),
       Pipeline.abortWith(

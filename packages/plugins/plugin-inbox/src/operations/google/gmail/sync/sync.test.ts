@@ -428,6 +428,40 @@ describe('syncGmail against a mock Gmail API', () => {
     },
   );
 
+  test(
+    'the newest message is not re-committed across backfill runs once it ages out of the dedup seed — ' +
+      'regression: the forward high-boundary re-fetch duplicated it every run',
+    async ({ expect }) => {
+      const now = new Date();
+      const dataset = generateGmailDataset({ count: 30, seed: 31, start: subDays(now, 5), end: subDays(now, 1) });
+      const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+      // `dedupSeedTail` (5) < messages backfilled after the newest, so a newest-only seed would evict the
+      // newest from the dedup set and the forward high-boundary-day re-fetch would re-commit it (prod: >500).
+      const runOnce = () =>
+        EffectEx.runPromise(
+          Effect.exit(syncGmail({ binding: Ref.make(binding), maxMessages: 10, dedupSeedTail: 5 })).pipe(
+            Effect.provide(inboxSyncTestServices(db, dataset)),
+          ),
+        );
+
+      let runs = 0;
+      let exit: Exit.Exit<unknown, unknown>;
+      do {
+        exit = await runOnce();
+        runs += 1;
+        const ids = await syncedIdsOf(db, mailbox);
+        // The invariant the bug violated: never a duplicate, on any run.
+        expect(new Set(ids).size).toBe(ids.length);
+      } while (Exit.isFailure(exit) && runs < 10);
+
+      expect(Exit.isSuccess(exit)).toBe(true);
+      const finalIds = await syncedIdsOf(db, mailbox);
+      expect(new Set(finalIds).size).toBe(finalIds.length);
+      expect(finalIds).toHaveLength(dataset.messages.length);
+    },
+  );
+
   test('attachments land as Blobs on the feed with resolvable attachment refs', async ({ expect }) => {
     const end = subDays(new Date(), 3);
     const message = generateGmailDataset({ count: 1, seed: 5, start: subDays(end, 1), end }).messages[0];

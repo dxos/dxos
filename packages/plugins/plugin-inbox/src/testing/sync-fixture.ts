@@ -134,5 +134,8 @@ export const inboxSyncLiveServices = (db: Database.Database, connectionRef: Ref.
 };
 
 /** The ambient services `runJmapSync` requires, backed by a mock JMAP API + a real db. */
-export const inboxJmapSyncTestServices = (db: Database.Database, dataset: JmapDataset) =>
-  Layer.mergeAll(JmapMailApi.mock(dataset), ambientSyncServices(db));
+export const inboxJmapSyncTestServices = (
+  db: Database.Database,
+  dataset: JmapDataset,
+  options?: { progressRegistry?: AppCapabilities.ProgressRegistry },
+) => Layer.mergeAll(JmapMailApi.mock(dataset), ambientSyncServices(db, options));
