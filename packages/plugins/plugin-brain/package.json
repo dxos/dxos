@@ -100,6 +100,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-rdf": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -109,6 +110,9 @@
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@types/react": "catalog:",
     "react": "catalog:",

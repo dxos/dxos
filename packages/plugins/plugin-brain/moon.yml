@@ -3,12 +3,15 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
+  - storybook
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/BrainPlugin.tsx'
       - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/containers/index.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/types/index.ts'

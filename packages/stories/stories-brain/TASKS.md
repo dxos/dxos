@@ -439,6 +439,26 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       component (`Default`/`Minimal` render; `Test` hits the known headless topic-query issue). Relocating
       it into a brain-owned stories package is optional polish.
 
+### Nexus Phase 1 — instructions + nav-create + storybooks (2026-07-16)
+
+- [x] **`Topic.instructions` ref (agent config)** — added `instructions: Ref<Obj.Unknown>` to `Topic.Props`
+      (untyped to avoid a `types → compute → ai → types` cycle; FLAGGED in Topic.ts + here). The typed
+      `Instructions` object is created + linked at the plugin layer.
+- [ ] **FLAG: type `Topic.instructions` as `Ref<Instructions>`** — blocked by the layering cycle; needs
+      Topic to move to its nexus home (a package that can depend on `@dxos/compute`, below the plugins).
+      Deferred with the `Topic`↔`Project` reconciliation.
+- [ ] **FactStore ref on Topic — DEFERRED** (no FactStore ECHO type today; per-space registry). Revisit
+      with the nexus schema.
+- [x] **Create Topic from the nav menu** — plugin-brain `CreateObject` capability (`SpaceCapabilities.CreateObjectEntry`
+      for `Topic.Topic`) creates the Topic + an `Instructions` (seeded default brief, drives the agent) and
+      links them; wired the `+` action into the Topics type-section (`OpenCreateObject`). Registered via
+      `addCreateObjectModule`. Added `@dxos/plugin-space` dep.
+- [x] **Storybooks in plugin-brain** — co-located `TopicArticle.stories.tsx` + `FactsCompanion.stories.tsx`
+      (contributes a seeded `FactStoreRegistry`); added the `storybook`/`ts-test-storybook` tags,
+      `.storybook/main.mts`, `vitest storybook: true`, and story dev-deps. Removed the stories-inbox
+      `TopicArticle.stories.tsx`. `Default`/`Minimal` render; `Test` plays hit the known headless
+      space/query Loading limitation (CI/real storybook exercise them).
+
 ## Bugs
 
 - [ ] **MailboxArticle search/filtering isn't working.** The filter/query editor in

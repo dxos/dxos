@@ -8,6 +8,7 @@ import { Topic } from '@dxos/types';
 
 import {
   AppGraphBuilder,
+  CreateObject,
   FactStore,
   MailboxAction,
   NavigationResolver,
@@ -26,6 +27,7 @@ export const BrainPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addSchemaModule({ schema: [Topic.Topic] }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

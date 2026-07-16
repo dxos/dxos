@@ -9,26 +9,24 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Filter, Obj } from '@dxos/echo';
-import { TopicArticle } from '@dxos/plugin-brain/containers';
-import { translations as brainTranslations } from '@dxos/plugin-brain/translations';
+import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { InboxPlugin } from '@dxos/plugin-inbox/testing';
-import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Topic } from '@dxos/types';
 
-// A fully-populated topic and a bare one (only label + summary) to exercise the omitted-section paths.
+import { translations } from '../../translations';
+import { TopicArticle } from './TopicArticle';
+
 const FULL_TOPIC = 'q2 report budget';
 const BARE_TOPIC = 'quick note';
 
+// A fully-populated topic and a bare one (label + summary only) to exercise the omitted-section paths.
 const seedTopics = (space: Space) => {
   space.db.add(
-    Obj.make(Topic.Topic, {
+    Topic.make({
       label: FULL_TOPIC,
       summary: 'Alice circulated the Q2 report and budget for review.',
       threadIds: ['q2 report', 'q2 budget'],
@@ -39,14 +37,9 @@ const seedTopics = (space: Space) => {
     }),
   );
   space.db.add(
-    Obj.make(Topic.Topic, {
+    Topic.make({
       label: BARE_TOPIC,
       summary: 'A short note with no threads, questions, or tasks.',
-      threadIds: [],
-      participants: [],
-      keywords: [],
-      questions: [],
-      tasks: [],
     }),
   );
 };
@@ -64,7 +57,7 @@ const DefaultStory = ({ label = FULL_TOPIC }: { label?: string }) => {
 };
 
 const meta = {
-  title: 'stories/stories-inbox/TopicArticle',
+  title: 'plugins/plugin-brain/containers/TopicArticle',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -74,28 +67,26 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Mailbox.Mailbox, Topic.Topic],
+          types: [Topic.Topic],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
-                personalSpace.db.add(Mailbox.make());
                 seedTopics(personalSpace);
                 await personalSpace.db.flush({ indexes: true });
               });
             }),
         }),
         StorybookPlugin({}),
-        InboxPlugin(),
       ],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...brainTranslations, ...inboxTranslations, ...reactUiTranslations],
+    translations: [...translations, ...reactUiTranslations],
   },
-} satisfies Meta;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

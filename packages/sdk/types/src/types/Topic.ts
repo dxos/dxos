@@ -6,27 +6,51 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-// TODO(burdon): Model goals; base instructions.
+//
+// PRIORITIES
+//
+// TODO(burdon): Move type to plugin-brain; keep Project as generic/low-level.
+//
+// - Reconcile with Project (linear/github use cases).
+// - Model goals via instructions (ISSUE: Dependency on compute).
+// - Project as low-level type; Brain has higher-level concept that wraps?
+//   - Focus, Initiative, Plan, Mission, Objective, Goal,
+//     Objective (Goal)
+//     └── Key Result
+//         └── Initiative
+//             └── Project
+//                 └── Task
+// - Basic datastructure and article UI
+// - Task management (via skills); spawn agents, etc.
+// - FactStore persistence (Feed/ECHO?)
+//
 
 // The field shape shared by a persisted `Topic` and an unaccepted `Mailbox.topicSuggestions` entry —
 // extracted so promotion is `Obj.make(Topic, suggestion)` with no mapping. Kept free of annotations so
 // referencing it (e.g. from `Mailbox.topicSuggestions`) does not alter that schema's serialization.
 export const Props = Schema.Struct({
   label: Schema.String,
-  summary: Schema.String,
 
-  // TODO(burdon): Uncouple from Email.
-  // TODO(burdon): Model via Relations?
+  // Untyped ref to an agent-instructions object (created + linked at the plugin layer, e.g. plugin-brain,
+  // which can depend on `@dxos/compute`). FLAG: should be `Ref<Instructions.Instructions>`, but typing it
+  // here would pull `@dxos/compute` into `@dxos/types` and cycle (`types → compute → ai → types`); revisit
+  // when Topic moves to its nexus home. See plugin-brain/DESIGN.md.
+  instructions: Ref.Ref(Obj.Unknown).pipe(FormInlineAnnotation.set(true), Schema.optional),
+
+  // TODO(burdon): Uncouple from Email; Model via Refs?
+  // TODO(burdon): Refs to other objects in context?
   threadIds: Schema.Array(Schema.String),
   participants: Schema.Array(Schema.String),
   keywords: Schema.Array(Schema.String),
 
+  // TODO(burdon): Artifacts.
+  summary: Schema.String,
   // Open questions and action items rolled up from the topic's member threads.
   questions: Schema.Array(Schema.String),
-  // TODO(burdon): Reconcile with plugin-outliner.
+  // TODO(burdon): Reconcile with plugin-outliner; and task skill.
   tasks: Schema.Array(Schema.String),
 });
 
