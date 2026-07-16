@@ -99,8 +99,12 @@ export class DatabaseRoot {
     const doc = this.doc();
     invariant(doc);
 
-    // .toString() to handle RawString.
-    return Object.values(doc.links ?? {}).map((s) => s.toString()) as AutomergeUrl[];
+    // .toString() to handle RawString. Branch documents are referenced via the `branches` registry
+    // (not `links`), so they must be collected here too in order to replicate.
+    return [
+      ...Object.values(doc.links ?? {}).map((s) => s.toString()),
+      ...DatabaseDirectory.getAllBranchDocUrls(doc),
+    ] as AutomergeUrl[];
   }
 
   measureMetrics(): DocMetrics | null {

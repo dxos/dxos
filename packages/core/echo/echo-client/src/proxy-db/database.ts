@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Heads } from '@automerge/automerge';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -131,6 +132,36 @@ export interface EchoDatabase extends Database.Database {
    * Will be moved to a dedicated internal entrypoint in a future stage.
    */
   _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
+
+  //
+  // Branching. A branch is a writable alternate timeline of an object subtree; the registry is
+  // synced on the space root while the currently-viewed branch stays device-local.
+  //
+
+  /** Fires after any branch operation (create / switch / merge / delete) for reactive branch UI. */
+  readonly branchesChanged: ReadOnlyEvent<void>;
+
+  /** The branch name this device currently views the object on (`'main'` by default). */
+  getCurrentBranch(objectId: string): string;
+
+  /** All branch names available for an object, including the implicit `'main'` (always first). */
+  listBranches(objectId: string): string[];
+
+  /**
+   * Fork the object and its referenced subtree into a new branch (does not switch to it).
+   * @param opts.fromHeads Fork from a historical frontier instead of the tip (a bare `Heads` applies
+   *   to the root only; a map forks each member from its own frontier).
+   */
+  createBranch(rootObjectId: string, name: string, opts?: { fromHeads?: Heads | Record<string, Heads> }): Promise<void>;
+
+  /** Switch the object's subtree to a branch (or back to `'main'`). Device-local; cascades to children. */
+  switchBranch(rootObjectId: string, name: string): Promise<void>;
+
+  /** Merge a branch back into main across the subtree, then switch back to main. */
+  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void>;
+
+  /** Delete a branch (its documents lose their sync reference). Cannot delete `'main'`. */
+  deleteBranch(rootObjectId: string, name: string): void;
 
   /**
    * Insert new objects.
@@ -811,6 +842,38 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getObjectDocumentId(objectId: string): string | undefined {
     return this._entityManager.getObjectDocumentId(objectId);
+  }
+
+  get branchesChanged(): ReadOnlyEvent<void> {
+    return this._entityManager.branchesChanged;
+  }
+
+  getCurrentBranch(objectId: string): string {
+    return this._entityManager.getCurrentBranch(objectId);
+  }
+
+  listBranches(objectId: string): string[] {
+    return this._entityManager.listBranches(objectId);
+  }
+
+  createBranch(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: Heads | Record<string, Heads> },
+  ): Promise<void> {
+    return this._entityManager.createBranch(rootObjectId, name, opts);
+  }
+
+  switchBranch(rootObjectId: string, name: string): Promise<void> {
+    return this._entityManager.switchBranch(rootObjectId, name);
+  }
+
+  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void> {
+    return this._entityManager.mergeBranch(rootObjectId, name, opts);
+  }
+
+  deleteBranch(rootObjectId: string, name: string): void {
+    this._entityManager.deleteBranch(rootObjectId, name);
   }
 
   getObjectCoreById(id: string, opts?: Parameters<EntityManager['getObjectCoreById']>[1]) {

@@ -34,11 +34,15 @@ export {
   clearTimeTravel,
   clone,
   createArrayMethodError,
+  createBranch,
   createObject,
   createPropertyDeleteError,
   createPropertySetError,
   createSubscription,
+  deleteBranch,
   findObjectWithForeignKey,
+  getBranches,
+  getCurrentBranch,
   getDXNWithSpaceKey,
   getEditHistory,
   getEditHistoryWithDiffs,
@@ -47,7 +51,9 @@ export {
   initEchoReactiveObjectRootProxy,
   isEchoObject,
   matchKeys,
+  mergeBranch,
   setTimeTravel,
+  switchBranch,
 } from './echo-handler';
 export * from './hypergraph';
 export * from './proxy-db';
