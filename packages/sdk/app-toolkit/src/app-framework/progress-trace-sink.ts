@@ -112,6 +112,7 @@ export const createProgressTraceSink = (
     write: (message) => {
       const pid = message.meta.pid;
       for (const event of Trace.flatten(message)) {
+        console.log('event', event);
         if (Trace.isOfType(Trace.StatusUpdate, event)) {
           applyStatusUpdate(event.data, pid);
         }

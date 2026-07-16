@@ -21,21 +21,25 @@ import { ProcessManager } from '@dxos/compute-runtime';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const progressRegistry = yield* Capability.get(AppCapabilities.ProgressRegistry);
-    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
 
-    const terminateProcess = (pid: string) => {
-      processManagerRuntime.runFork(
-        Effect.gen(function* () {
-          const manager = yield* ProcessManager.ProcessManagerService;
-          const handle = yield* manager
-            .attach(Process.ID.make(pid))
-            .pipe(Effect.catchAll(() => Effect.succeed(undefined)));
-          if (handle) {
-            yield* handle.terminate();
-          }
-        }),
-      );
-    };
+    const runtime = yield* Effect.runtime<Capability.Service>();
+
+    const terminateProcess = (pid: string) =>
+      Effect.gen(function* () {
+        const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+
+        processManagerRuntime.runFork(
+          Effect.gen(function* () {
+            const manager = yield* ProcessManager.ProcessManagerService;
+            const handle = yield* manager
+              .attach(Process.ID.make(pid))
+              .pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+            if (handle) {
+              yield* handle.terminate();
+            }
+          }),
+        );
+      }).pipe(Effect.provide(runtime), Effect.runFork);
 
     return Capability.contributes(Capabilities.TraceSink, () =>
       createProgressTraceSink(progressRegistry, { terminateProcess }),
