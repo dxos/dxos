@@ -20,7 +20,7 @@ import { ProcessManager } from '@dxos/compute-runtime';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const progressRegistry = yield* Capability.get(AppCapabilities.ProgressRegistry);
+    const progressRegistry = yield* Capability.waitFor(AppCapabilities.ProgressRegistry);
 
     const runtime = yield* Effect.runtime<Capability.Service>();
 
