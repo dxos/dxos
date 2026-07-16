@@ -29,7 +29,9 @@ export {
   type Selection,
   type SubscriptionHandle,
   type UpdateInfo,
+  type VersionDiff,
   checkoutVersion,
+  clearTimeTravel,
   clone,
   createArrayMethodError,
   createObject,
@@ -39,11 +41,13 @@ export {
   findObjectWithForeignKey,
   getDXNWithSpaceKey,
   getEditHistory,
+  getEditHistoryWithDiffs,
   getObjectCore,
   getVersion,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
   matchKeys,
+  setTimeTravel,
 } from './echo-handler';
 export * from './hypergraph';
 export * from './proxy-db';
