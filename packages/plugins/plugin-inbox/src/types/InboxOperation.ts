@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
-import { Credential, Operation, Trace, Trigger } from '@dxos/compute';
+import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { FactStore } from '@dxos/pipeline-rdf';
@@ -366,29 +366,6 @@ export const SyncDraftEvents = Operation.make({
     synced: Schema.Number,
   }),
   services: [Database.Service, Credential.CredentialsService],
-});
-
-/**
- * Force-runs the sync timer trigger for a Mailbox or Calendar — invoking the trigger is how a target
- * syncs. Invoked by the graph-builder "Sync" action, which surfaces both as a primary object-toolbar
- * button and a nav-tree context-menu row from a single definition. Creates a sync Routine first via
- * `createSyncRoutine` if the target has none yet (e.g. it was bound before this mechanism existed).
- */
-export const SyncTarget = Operation.make({
-  meta: {
-    key: makeKey('syncTarget'),
-    name: 'Sync Target',
-    description:
-      'Force-runs the sync timer trigger for a Mailbox or Calendar, creating a sync Routine first if none exists yet.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    target: Schema.Any.annotations({
-      description: 'The Mailbox or Calendar to sync.',
-    }),
-  }),
-  output: Schema.Void,
-  services: [Capability.Service, Database.Service, Trigger.TriggerMonitorService],
 });
 
 export const RenameFilter = Operation.make({

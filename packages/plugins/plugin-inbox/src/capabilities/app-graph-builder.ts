@@ -44,6 +44,7 @@ import {
   getSubscriptionsId,
   getTopicsId,
 } from '../paths';
+import { syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -625,18 +626,7 @@ export default Capability.makeModule(
             return [
               {
                 id: 'sync',
-                data: () =>
-                  Operation.invoke(
-                    InboxOperation.SyncTarget,
-                    { target: mailbox },
-                    {
-                      spaceId: db.spaceId,
-                      notify: {
-                        success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
-                        error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
-                      },
-                    },
-                  ),
+                data: () => syncTarget(mailbox),
                 properties: {
                   label: ['sync-mailbox.label', { ns: meta.profile.key }],
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
@@ -712,18 +702,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             {
               id: 'sync',
-              data: () =>
-                Operation.invoke(
-                  InboxOperation.SyncTarget,
-                  { target: calendar },
-                  {
-                    spaceId: db.spaceId,
-                    notify: {
-                      success: ['sync-calendar-success.title', { ns: meta.profile.key }],
-                      error: ['sync-calendar-error.title', { ns: meta.profile.key }],
-                    },
-                  },
-                ),
+              data: () => syncTarget(calendar),
               properties: {
                 label: ['sync-calendar.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
