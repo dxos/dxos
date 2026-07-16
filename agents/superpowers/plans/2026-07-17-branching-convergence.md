@@ -73,13 +73,22 @@ Remove the textual fork path from `Branch.create`, migrate existing `history` re
 branches stay mergeable via `merge3` until archived), fold `HistoryScrubber` vs Timeline overlap,
 update `DESIGN.md`.
 
-## Decisions needed
+## Decisions (resolved 2026-07-16 with @richburdon)
 
-1. **(a) Branch selection scope** — device-global (`switchBranch`, #11829) vs per-surface/session
-   (#12237). Recommendation: per-surface as the product behavior (collaborators and agents view
-   independently), implemented over core writable branch bindings; device-global switch remains a
+1. **(a) Branch selection scope: per-surface/session.** Each surface (plank, agent session) binds
+   to its own branch independently; the canonical object is never globally switched. Stage 1 adds
+   writable per-surface branch bindings to the core; device-global `switchBranch` remains a
    lower-level capability.
-2. **(b) Source of truth** — space-root registry (docs/urls, replication) + `@dxos/versioning`
-   records (names/status/anchors) referencing it. Recommendation: yes, split exactly there.
-3. **(c) Ownership/sequencing of the #11829 revival** — coordinate with @wittjosiah; stage 1 could
-   be a joint PR or their rebase with the hardening list above.
+2. **(b) Source of truth: split registry + records.** The space-root registry owns the
+   replication-critical facts (doc urls, membership); `@dxos/versioning` records own product
+   metadata (label, status, creator, anchor heads) referencing registry branch ids.
+3. **(c) Ownership: Claude drafts stage 1, @wittjosiah reviews.** Extract #11829 commits 1–3 onto
+   a fresh branch (new session/worktree), add coverage + writable bindings, open a PR tagging
+   @wittjosiah as reviewer/co-author.
+4. **Sequencing: stage 1 starts after #12237 lands** (npm bootstrap of `@dxos/versioning` and the
+   assistant-e2e fixtures are the only remaining blockers).
+5. **Merge UX: keep both paths.** Instant CRDT merge by default, with an opt-in review mode
+   (editable merge overlay + per-hunk `AcceptChange`) per document or per branch.
+6. **Stage-3 UI scope: markdown only, in the generic slot.** Move the companion to plugin-space's
+   generic slot with per-type providers; markdown ships first, sheets re-enable when their diff
+   provider is ported.

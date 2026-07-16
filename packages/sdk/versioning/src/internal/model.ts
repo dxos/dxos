@@ -61,6 +61,7 @@ export const createCheckpoint = (doc: VersionedObject, props: CreateCheckpointPr
   Obj.update(doc, () => {
     history.versions.push(version);
   });
+
   // Return the stored record (the pushed plain object is detached from the database).
   const stored = history.versions.find(({ id }) => id === version.id);
   invariant(stored, 'checkpoint not stored');
