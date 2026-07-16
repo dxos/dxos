@@ -602,6 +602,11 @@ export class FeedStore {
 
   /**
    * Creates local blocks with sequential predecessors and appends grouped batches.
+   *
+   * A block whose object id is later superseded by a newer same-id block (a live feed object's
+   * `Obj.update`, persisted as a whole-object re-append) is never reclaimed — the index collapses
+   * reads to the latest block by id, but old blocks stay on disk indefinitely.
+   * TODO(wittjosiah): Add compaction/retention driven by `Feed.RetentionOptions`.
    */
   appendLocal = Effect.fn('Feed.appendLocal')(
     (

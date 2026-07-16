@@ -10,7 +10,7 @@ import * as Scope from 'effect/Scope';
 import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID, PublicKey } from '@dxos/keys';
@@ -271,6 +271,45 @@ describe('Feed', () => {
 
   // TODO(wittjosiah): Implement when queue retention is supported.
   test.todo('setRetention configures feed retention policy');
+
+  describe('Live updates', () => {
+    test('append retries after a failed insertIntoFeed RPC and eventually succeeds', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let callCount = 0;
+      const realHandlers = peer.host.feedService;
+      const flakyHandlers: FeedService.Handlers = {
+        ...realHandlers,
+        'FeedService.insertIntoFeed': (...args: Parameters<(typeof realHandlers)['FeedService.insertIntoFeed']>) => {
+          callCount++;
+          return callCount === 1
+            ? Effect.fail(new Error('simulated insertIntoFeed failure'))
+            : realHandlers['FeedService.insertIntoFeed'](...args);
+        },
+      };
+      const flakyClient = await makeFeedClient(flakyHandlers);
+      db._setFeedService(flakyClient);
+
+      const feed = db.add(Feed.make({ name: 'flaky' }));
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+
+      // append() swallows the RPC error (matching the pre-existing contract) — it must not throw —
+      // but the core stays dirty for the background scheduler to retry. The retry may already have
+      // run by the time this resolves (it's scheduled on the next microtask), so don't assert on
+      // `callCount` until after an explicit flush forces it to settle.
+      await db.appendToFeed(feed, [john]);
+
+      await db.flush();
+      expect(callCount).toBeGreaterThanOrEqual(2);
+
+      const results = await db
+        .query(Query.select(Filter.everything()).from(FeedScope.feed(Feed.getFeedUri(feed)!)))
+        .run();
+      expect(results).toHaveLength(1);
+      expect((results[0] as TestSchema.Person).name).toEqual('john');
+    });
+  });
 
   test('Ref.make on a feed item stores a Queue DXN and does not leak into space.db', async ({ expect }) => {
     await using peer = await builder.createPeer({

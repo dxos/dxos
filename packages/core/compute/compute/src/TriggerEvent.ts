@@ -27,6 +27,11 @@ export const FeedEvent = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
   item: Schema.Any,
   cursor: Schema.String,
+  /**
+   * True when `item` is a re-append-by-id of an id already delivered to this trigger (a live feed
+   * object's `Obj.update`), false on the item's first delivery. See `FeedSpec.ignoreUpdates`.
+   */
+  isUpdate: Schema.Boolean,
 });
 export type FeedEvent = Schema.Schema.Type<typeof FeedEvent>;
 

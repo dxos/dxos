@@ -324,6 +324,10 @@ export class EntityMetaIndex implements Index {
               const createdAtTimestamp = object.createdAt ?? updatedAtTimestamp;
 
               if (existing.length > 0) {
+                // Feed entries collapse by id to the latest whole-object block — a re-append reusing
+                // an existing id (a live feed object's `Obj.update`) UPDATEs this row wholesale.
+                // TODO(wittjosiah): With partial-update blocks (see `EchoFeedCodec.encode`'s TODO),
+                // this becomes a field-level last-write-wins merge instead of a wholesale replace.
                 yield* sql`
                   UPDATE objectMeta SET
                     version = ${version},

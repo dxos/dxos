@@ -24,12 +24,13 @@ import * as Struct from 'effect/Struct';
 
 import { Operation, Process, RunAgainError, Trigger, TriggerEvent } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { getDeliveredFeedIds, setDeliveredFeedIds } from './feed-delivery-state';
 import { filterReadyFeedItems } from './feed-position';
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
@@ -87,6 +88,21 @@ export interface TriggerExecutionResult {
    */
   feedCursor?: string;
 }
+
+/**
+ * Per-item outcome of a feed trigger's poll cycle: either a real invocation, or (when
+ * `FeedSpec.ignoreUpdates` is set and the item is an update) a skip that still counts as success for
+ * cursor-advancement purposes.
+ */
+type FeedTriggerOutcome =
+  | { readonly item: Entity.Unknown; readonly position: string; readonly isUpdate: boolean; readonly skipped: true }
+  | {
+      readonly item: Entity.Unknown;
+      readonly position: string;
+      readonly isUpdate: boolean;
+      readonly skipped: false;
+      readonly invocation: TriggerExecutionResult;
+    };
 
 /**
  * Unified runtime state for a single trigger, tracking *when/whether the trigger should run again*
@@ -603,6 +619,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
               const cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
+              const deliveredIds = getDeliveredFeedIds(trigger);
               const feed = yield* Database.load(feedRef).pipe(Effect.orDie);
 
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
@@ -614,34 +631,57 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               );
 
               for (const chunk of chunks) {
-                const invocationsThisIteration = yield* Effect.forEach(
+                // `isUpdate` is computed from the delivered-ids snapshot taken before this chunk —
+                // stable across the chunk's concurrent invocations. `ignoreUpdates` items are never
+                // invoked (only cursor-advanced), which is why this can't be a plain `invokeTrigger`
+                // map: each item independently resolves to either an invocation or a skip.
+                const outcomesThisIteration = yield* Effect.forEach(
                   chunk,
-                  ({ item, position }) =>
-                    this.invokeTrigger({
+                  ({ item, position }): Effect.Effect<FeedTriggerOutcome, never, never> => {
+                    const isUpdate = deliveredIds.has(item.id);
+                    if (spec.ignoreUpdates && isUpdate) {
+                      return Effect.succeed({ item, position, isUpdate, skipped: true });
+                    }
+                    return this.invokeTrigger({
                       trigger,
                       event: {
                         feed: feedRef,
                         item,
                         cursor: position,
+                        isUpdate,
                       } satisfies TriggerEvent.FeedEvent,
-                    }),
+                    }).pipe(Effect.map((invocation) => ({ item, position, isUpdate, skipped: false, invocation })));
+                  },
                   { concurrency: 'unbounded' },
                 );
-                invocations.push(...invocationsThisIteration);
-
-                // Update trigger cursor only if the invocation was successful.
-                const lastSuccessfulInvocation = pipe(
-                  invocationsThisIteration,
-                  Array.takeWhile((invocation) => Exit.isSuccess(invocation.result)),
-                  Array.last,
+                invocations.push(
+                  ...outcomesThisIteration.flatMap((outcome) => (outcome.skipped ? [] : [outcome.invocation])),
                 );
-                if (Option.isSome(lastSuccessfulInvocation)) {
+
+                // Update trigger cursor only past a contiguous prefix of successful invocations (or
+                // ignoreUpdates skips, which count as success for cursor-advancement purposes — a
+                // trailing skipped item must not pin the cursor and cause it to be re-fetched every
+                // tick).
+                const succeededPrefix = pipe(
+                  outcomesThisIteration,
+                  Array.takeWhile((outcome) => outcome.skipped || Exit.isSuccess(outcome.invocation.result)),
+                );
+                const lastSuccessfulOutcome = Array.last(succeededPrefix);
+                if (Option.isSome(lastSuccessfulOutcome)) {
+                  // Record delivered ids only for the same successful prefix, atomically with the
+                  // cursor advance (same `Obj.update` + `Database.flush()` call — see
+                  // feed-delivery-state.ts) — so a crash between invocation success and this write
+                  // cannot desync the cursor from the delivered-ids set.
+                  for (const outcome of succeededPrefix) {
+                    deliveredIds.add(outcome.item.id);
+                  }
                   Obj.update(trigger, (trigger) => {
                     Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
                     Obj.getMeta(trigger).keys.push({
                       source: KEY_FEED_CURSOR,
-                      id: lastSuccessfulInvocation.value.feedCursor ?? failedInvariant(),
+                      id: lastSuccessfulOutcome.value.position ?? failedInvariant(),
                     });
+                    setDeliveredFeedIds(trigger, deliveredIds);
                   });
                   yield* Database.flush();
                 } else {

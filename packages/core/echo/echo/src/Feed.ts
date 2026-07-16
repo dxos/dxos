@@ -67,6 +67,12 @@ export interface Cursor<T = Obj.Snapshot> {
 
 /**
  * Retention options for a feed.
+ *
+ * Live feed objects persist every `Obj.update` as a whole-object re-append reusing the object's id
+ * (see `EchoFeedCodec.encode`), so superseded blocks accumulate indefinitely — retention/compaction
+ * of those superseded blocks (driven by these options, once implemented) is the reclaim mechanism.
+ * TODO(wittjosiah): Implement when feed retention is supported (see `setRetention` below and
+ * `FeedStore.appendLocal`).
  */
 export interface RetentionOptions {
   /** Retain items after this cursor position. */

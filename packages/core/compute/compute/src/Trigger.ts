@@ -42,6 +42,11 @@ export const specEmail = (): EmailSpec => ({ kind: 'email' });
 export const FeedSpec = Schema.Struct({
   kind: Schema.Literal('feed').annotations(kindLiteralAnnotations),
   feed: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Feed' })),
+  /**
+   * When true, the dispatcher skips invoking for update deliveries (`TriggerEvent.FeedEvent.isUpdate`),
+   * still advancing its cursor past them. Defaults to false (deliver both new items and updates).
+   */
+  ignoreUpdates: Schema.optional(Schema.Boolean),
 });
 export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 

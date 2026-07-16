@@ -13,7 +13,12 @@ import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Arra
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
-import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
+import {
+  attachTypedJsonSerializer,
+  defineHiddenProperty,
+  makeDecodedEntityLive,
+  typedJsonSerializer,
+} from '../common/proxy';
 import {
   type AnyEntity,
   ATTR_PARENT,
@@ -78,6 +83,9 @@ export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> =
  * @param options.refResolver - Resolver for references.
  * @param options.uri - Override object URI.
  * @param options.database - Database to associate with the object.
+ * @param options.live - Rewrap the decoded object as a live reactive proxy (see
+ *   {@link makeDecodedEntityLive}) instead of an inert snapshot. Used by feed-backed queries so
+ *   `Obj.update` synchronously mutates and notifies subscribers instead of silently no-op'ing.
  */
 export const objectFromJSON = async (
   jsonData: unknown,
@@ -86,7 +94,14 @@ export const objectFromJSON = async (
     uri,
     database,
     parent,
-  }: { refResolver?: RefResolver; uri?: URI.URI; database?: Database.Database; parent?: Obj.Unknown } = {},
+    live,
+  }: {
+    refResolver?: RefResolver;
+    uri?: URI.URI;
+    database?: Database.Database;
+    parent?: Obj.Unknown;
+    live?: boolean;
+  } = {},
 ): Promise<AnyEntity> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
@@ -183,6 +198,10 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_SELF_URI_LEGACY] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
+
+  if (live) {
+    return makeDecodedEntityLive(obj);
+  }
   return obj;
 };
 

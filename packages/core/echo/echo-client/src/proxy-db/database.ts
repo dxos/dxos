@@ -603,6 +603,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * @internal
+   * Like {@link _getOrCreateFeedHandle}, but returns `undefined` instead of throwing when no feed
+   * service is connected. Used by query hydration, which must fall back to a plain (non-live)
+   * decode rather than fail the whole query when the feed backend isn't available.
+   */
+  _getFeedHandleIfAvailable(feedUri: EID.EID, namespace?: string): FeedHandle | undefined {
+    if (!this.#feedService) {
+      return undefined;
+    }
+    return this._getOrCreateFeedHandle(feedUri, namespace);
+  }
+
+  /**
+   * @internal
    * Returns an already-instantiated feed handle for a URI, without creating one.
    */
   _tryGetFeedHandle(feedUri: EID.EID): FeedHandle | undefined {
@@ -647,6 +660,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
+    await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {

@@ -264,10 +264,17 @@ const compactMetadataToInstanceState = (target: ProxyTarget): void => {
   }
   const state = Object.create(TypedObjectPrototype);
   for (const symbol of Object.getOwnPropertySymbols(target)) {
-    Object.defineProperty(state, symbol, Object.getOwnPropertyDescriptor(target, symbol)!);
-    // Dynamic delete over arbitrary symbol keys: `ProxyTarget` declares these as required, so the
-    // statically-typed view cannot express deleting them; the symbol set is only known at runtime.
-    delete (target as any)[symbol];
+    const descriptor = Object.getOwnPropertyDescriptor(target, symbol)!;
+    Object.defineProperty(state, symbol, descriptor);
+    // Non-configurable symbols (e.g. `SchemaId`/`TypeId`, locked by `setSchema`/`setTypename` on
+    // objects decoded from JSON) cannot be deleted — leave them as an own property on the target,
+    // shadowing the copy on `state`; reads still resolve correctly since own properties take
+    // precedence over the prototype chain.
+    if (descriptor.configurable) {
+      // Dynamic delete over arbitrary symbol keys: `ProxyTarget` declares these as required, so the
+      // statically-typed view cannot express deleting them; the symbol set is only known at runtime.
+      delete (target as any)[symbol];
+    }
   }
   Object.setPrototypeOf(target, state);
 };
@@ -606,31 +613,43 @@ export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNo
 
 /**
  * Recursively set AST on all potential proxy targets.
+ *
+ * @param skipOwnStamp Skip stamping `TypeId`/`SchemaId` on `obj` itself (still recurses into
+ *   children, which always get stamped). Used for objects decoded from JSON, whose own `TypeId`/
+ *   `SchemaId` are already set by `setTypename`/`setSchema` as `configurable: false` — redefining
+ *   them here (with `configurable: true`) would throw.
  */
-const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeSource?: TypeSource) => {
-  const schemaType = getSchemaURI(schema);
-  if (schemaType != null) {
-    defineHiddenProperty(obj, TypeId, schemaType);
-  }
+const setSchemaProperties = (
+  obj: any,
+  schema: Schema.Schema.AnyNoContext,
+  typeSource?: TypeSource,
+  skipOwnStamp = false,
+) => {
+  if (!skipOwnStamp) {
+    const schemaType = getSchemaURI(schema);
+    if (schemaType != null) {
+      defineHiddenProperty(obj, TypeId, schemaType);
+    }
 
-  if (typeSource != null) {
-    // Keep a back-reference to the type entity so `Obj.getType` /
-    // `Relation.getType` / `Entity.getType` can return it.
-    defineHiddenProperty(obj, TypeEntityId, typeSource);
+    if (typeSource != null) {
+      // Keep a back-reference to the type entity so `Obj.getType` /
+      // `Relation.getType` / `Entity.getType` can return it.
+      defineHiddenProperty(obj, TypeEntityId, typeSource);
 
-    // Install `SchemaId` as a getter that reads through the entity's static
-    // schema slot. The three entity shapes (static / persisted / in-memory
-    // pre-persist) each populate the slot via their own get-trap path, so
-    // `Type.update` / `Type.addFields` mutations propagate into validation
-    // for objects created via `Obj.make(typeEntity, ...)` without this file
-    // having to rebuild from `jsonSchema` itself.
-    Object.defineProperty(obj, SchemaId, {
-      get: () => typeSource[StaticTypeSchemaSlot] ?? schema,
-      enumerable: false,
-      configurable: true,
-    });
-  } else {
-    defineHiddenProperty(obj, SchemaId, schema);
+      // Install `SchemaId` as a getter that reads through the entity's static
+      // schema slot. The three entity shapes (static / persisted / in-memory
+      // pre-persist) each populate the slot via their own get-trap path, so
+      // `Type.update` / `Type.addFields` mutations propagate into validation
+      // for objects created via `Obj.make(typeEntity, ...)` without this file
+      // having to rebuild from `jsonSchema` itself.
+      Object.defineProperty(obj, SchemaId, {
+        get: () => typeSource[StaticTypeSchemaSlot] ?? schema,
+        enumerable: false,
+        configurable: true,
+      });
+    } else {
+      defineHiddenProperty(obj, SchemaId, schema);
+    }
   }
 
   if (Array.isArray(obj)) {
@@ -661,6 +680,15 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeS
 // whose encoded form differs (e.g. refs encode as `{ '/': uri }`) are valid here.
 export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>, typeSource?: TypeSource) => {
   // log.info('prepareTypedTarget', { target, schema });
+  validateAndReactifyTarget(target, schema);
+  setSchemaProperties(target, schema, typeSource);
+};
+
+/**
+ * Validate a target against its schema and convert nested arrays to `ReactiveArray`. Shared by
+ * {@link prepareTypedTarget} and {@link prepareDecodedTypedTarget}.
+ */
+export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T, any>) => {
   if (!SchemaAST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
@@ -669,7 +697,17 @@ export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>, 
   const _ = Schema.asserts(schema)(target);
   SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path));
   makeArraysReactive(target);
-  setSchemaProperties(target, schema, typeSource);
+};
+
+/**
+ * Like {@link prepareTypedTarget}, for a target whose own `SchemaId`/`TypeId` are already stamped
+ * and locked `configurable: false` — e.g. an object decoded from JSON via `setSchema`/`setTypename`
+ * (see `objectFromJSON`). Validates and reactifies as usual, then stamps `SchemaId`/`TypeId` on
+ * nested records/arrays only, leaving the target's own (locked) stamps untouched.
+ */
+export const prepareDecodedTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>) => {
+  validateAndReactifyTarget(target, schema);
+  setSchemaProperties(target, schema, undefined, true);
 };
 
 const makeArraysReactive = (target: any) => {

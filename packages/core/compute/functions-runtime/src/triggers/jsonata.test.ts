@@ -61,6 +61,7 @@ describe('jsonata', () => {
         name: 'John',
       },
       cursor: '01J00J9B45YHYSGZQTQMSKMGJ6',
+      isUpdate: false,
     };
 
     const obj = Obj.make(TestSchema.Expando, { id: '01KD35WMWTEEE1WQQPYEGD1X2B', name: 'DXOS' });
