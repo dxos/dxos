@@ -8,11 +8,11 @@ import { Obj } from '@dxos/echo';
 
 import { Blog, Publisher } from '#types';
 
-/** The draft's linked remote id for `source`, if it has ever been synced there. */
-export const linkedId = (draft: Blog.Draft, source: string): string | undefined => Obj.getKeys(draft, source)[0]?.id;
+/** The post's linked remote id for `source`, if it has ever been synced there. */
+export const linkedId = (post: Blog.Post, source: string): string | undefined => Obj.getKeys(post, source)[0]?.id;
 
-/** The draft body: Draft -> Markdown.Document -> Text.Text. */
-export const draftText = (draft: Blog.Draft): string => draft.content.target?.content.target?.content ?? '';
+/** The post body: Post -> Markdown.Document -> Text.Text. */
+export const postText = (post: Blog.Post): string => post.content.target?.content.target?.content ?? '';
 
 /** Resolves the configured `PublisherService`, preferring `publisherId` when given. */
 export const resolvePublisherService = (

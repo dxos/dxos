@@ -207,6 +207,7 @@ export const makeTypefullyPublisherService = (): Publisher.PublisherService => (
   id: TYPEFULLY_CONNECTOR_ID,
   label: 'Typefully',
   source: TYPEFULLY_SOURCE,
+  connectorId: TYPEFULLY_CONNECTOR_ID,
   listDrafts: (connection) => runConnection(connection, listDraftsEffect()),
   createDraft: (connection, input) => runConnection(connection, createDraftEffect(input)),
   // The Typefully v1 API has no get-draft-by-id endpoint.

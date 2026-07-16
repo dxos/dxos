@@ -16,7 +16,7 @@ import { Blog } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BloggerPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Blog.Publication, Blog.Post, Blog.Draft] }),
+  AppPlugin.addSchemaModule({ schema: [Blog.Publication, Blog.Post] }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

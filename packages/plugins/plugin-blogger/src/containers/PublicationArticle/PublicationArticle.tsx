@@ -4,21 +4,24 @@
 
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { useObject, useObjects } from '@dxos/echo-react';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useObjects, useQuery } from '@dxos/echo-react';
+import { log } from '@dxos/log';
+import { Connection } from '@dxos/plugin-connector/types';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Panel } from '@dxos/react-ui';
+import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PostCard } from '#components';
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
-import { Blog } from '#types';
+import { Blog, BloggerCapabilities } from '#types';
 
 type ViewMode = 'gallery' | 'instructions';
 
@@ -38,9 +41,13 @@ export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blog.Publica
  * `plugin-markdown`'s `surface.document`).
  */
 export const PublicationArticle = ({ role, attendableId, subject }: PublicationArticleProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const [publication] = useObject(subject);
   const { invokePromise } = useOperationInvoker();
+  const { graph } = useAppGraph();
+  const runAction = useActionRunner();
   const [mode, setMode] = useState<ViewMode>('gallery');
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const handleOpenPost = useCallback(
     (post: Blog.Post) => {
@@ -65,6 +72,40 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   const handleDelete = useCallback(() => {
     void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
   }, [invokePromise, subject]);
+
+  // Publisher + connection resolution for the Sync action. A publisher is contributed by a provider
+  // plugin (e.g. plugin-typefully); default to the first. The `Connection` it needs is looked up by
+  // its access token's `source` (the provider-neutral credential handle).
+  const publishers = useCapabilities(BloggerCapabilities.PublisherService);
+  const publisher = publishers[0];
+  const db = Obj.getDatabase(subject);
+  const connections = useQuery(db, Filter.type(Connection.Connection));
+  const accessTokenRefs = useMemo(() => connections.map((connection) => connection.accessToken), [connections]);
+  const loadedAccessTokens = useObjects(accessTokenRefs);
+  const connection = useMemo(
+    () =>
+      publisher
+        ? connections.find((candidate) => candidate.accessToken.target?.source === publisher.source)
+        : undefined,
+    [connections, loadedAccessTokens, publisher],
+  );
+  const canSync = !!publisher && !!connection;
+
+  const handleSync = useCallback(async () => {
+    if (!publisher || !connection) {
+      return;
+    }
+    try {
+      await invokePromise(BloggerOperation.SyncPosts, {
+        publication: Ref.make(subject),
+        connection: Ref.make(connection),
+        publisherId: publisher.id,
+      });
+    } catch (error) {
+      // The publisher call hits an external API (rate limits, auth, network); surface via the log.
+      log.error('failed to sync posts', { error });
+    }
+  }, [invokePromise, publisher, connection, subject]);
 
   const postRefs = publication.posts;
   // `useObjects` subscribes to each post ref's resolution (and later mutations) via `Obj.atom(ref)`,
@@ -98,7 +139,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   );
 
   const menuActions = useMenuBuilder(
-    () =>
+    (get) =>
       MenuBuilder.make()
         .action(
           'toggle-view',
@@ -120,23 +161,38 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           },
           () => handleAddPost(),
         )
-        .separator()
         .action(
-          'delete',
+          'sync',
           {
-            label: ['delete.label', { ns: meta.profile.key }],
-            icon: 'ph--trash--regular',
+            label: ['sync.label', { ns: meta.profile.key }],
+            icon: 'ph--arrows-clockwise--regular',
             disposition: 'toolbar',
-            testId: 'publication.toolbar.delete',
+            disabled: !canSync,
+            testId: 'publication.toolbar.sync',
           },
-          () => handleDelete(),
+          () => void handleSync(),
+        )
+        // "Connect <publisher>" contributed by plugin-connector's `connectorAuth` extension (via the
+        // Publication type's `ConnectorAuthAnnotation`); shown until a matching Connection exists.
+        .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        // Overflow (⋮) menu at the end of the toolbar. Delete opens a confirmation dialog first.
+        .menu('more', (menu) =>
+          menu.action(
+            'delete',
+            {
+              label: ['delete.label', { ns: meta.profile.key }],
+              icon: 'ph--trash--regular',
+              testId: 'publication.toolbar.delete',
+            },
+            () => setConfirmDeleteOpen(true),
+          ),
         )
         .build(),
-    [mode, handleAddPost, handleDelete],
+    [mode, handleAddPost, canSync, handleSync, graph, attendableId],
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
           <Menu.Toolbar className='dx-document' />
@@ -158,6 +214,27 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           </div>
         </Panel.Content>
       </Panel.Root>
+
+      <AlertDialog.Root open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialog.Overlay>
+          <AlertDialog.Content>
+            <AlertDialog.Body>
+              <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
+              <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
+            </AlertDialog.Body>
+            <AlertDialog.ActionBar>
+              <AlertDialog.Cancel asChild>
+                <Button>{t('cancel.label')}</Button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <Button variant='destructive' onClick={handleDelete}>
+                  {t('delete-publication-dialog.confirm.label')}
+                </Button>
+              </AlertDialog.Action>
+            </AlertDialog.ActionBar>
+          </AlertDialog.Content>
+        </AlertDialog.Overlay>
+      </AlertDialog.Root>
     </Menu.Root>
   );
 };

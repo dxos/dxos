@@ -32,6 +32,7 @@ export interface PublisherService {
   readonly id: string;
   readonly label: string;
   readonly source: string; // matches AccessToken.source, e.g. 'typefully.com'.
+  readonly connectorId: string; // matches Connection.connectorId / the Connector registry entry id.
   listDrafts(connection: Ref.Ref<Connection.Connection>): Promise<PublisherDraft[]>;
   getDraft(connection: Ref.Ref<Connection.Connection>, id: string): Promise<PublisherDraft>;
   createDraft(connection: Ref.Ref<Connection.Connection>, input: PublisherDraftInput): Promise<PublisherDraft>;

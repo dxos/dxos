@@ -9,7 +9,6 @@ import { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
@@ -21,7 +20,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: BloggerOperationHandlerSet,
-  types: [Blog.Publication, Blog.Post, Blog.Draft, Markdown.Document, Text.Text, Collection.Collection],
+  types: [Blog.Publication, Blog.Post, Markdown.Document, Text.Text, Collection.Collection],
   disableLlmMemoization: true,
 });
 
@@ -55,7 +54,7 @@ describe('Blog operations', () => {
   );
 
   it.effect(
-    'AddPost pushes a Post onto publication.posts with an outline and one initial draft',
+    'AddPost pushes a Post onto publication.posts with an outline and a body document',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { db } = yield* Database.Service;
@@ -84,57 +83,17 @@ describe('Blog operations', () => {
         expect(publication.posts?.[0]?.target?.id).toBe(post.id);
 
         expect(post.name).toBe('Hello World');
+        expect(post.status).toBe('draft');
 
         const outline = yield* Database.load(post.outline);
         expect(Obj.instanceOf(Text.Text, outline)).toBe(true);
 
-        expect(post.drafts).toHaveLength(1);
-        const draftRef = post.drafts?.[0];
-        invariant(draftRef, 'AddPost must push an initial draft ref onto post.drafts.');
-        const draft = yield* Database.load(draftRef);
-        expect(Obj.instanceOf(Blog.Draft, draft)).toBe(true);
-        expect(draft.label).toBe('Draft 1');
+        const content = yield* Database.load(post.content);
+        expect(Obj.instanceOf(Markdown.Document, content)).toBe(true);
 
         // Persisted: actually filed under the target `Collection`'s `objects`, which is
         // populated only by the handler's `CollectionModel.add` call.
         expect(collection.objects.some((ref) => ref.target?.id === post.id)).toBe(true);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'AddDraft appends a new Draft to post.drafts',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const { db } = yield* Database.Service;
-
-        const publicationRef = yield* Operation.invoke(BloggerOperation.AddPublication, { target: db });
-        const postRef = yield* Operation.invoke(BloggerOperation.AddPost, {
-          publication: publicationRef,
-          target: db,
-        });
-
-        const draftRef = yield* Operation.invoke(BloggerOperation.AddDraft, {
-          post: postRef,
-        });
-
-        const post = yield* Database.load(postRef);
-        expect(post.drafts).toHaveLength(2);
-
-        const draft = yield* Database.load(draftRef);
-        expect(draft.label).toBe('Draft 2');
-
-        const content = yield* Database.load(draft.content);
-        expect(Obj.instanceOf(Markdown.Document, content)).toBe(true);
-
-        // Persisted: actually attached to the space graph (reachable via `post.drafts`
-        // pushed onto an already-attached `post`), not merely resolvable by `Database.load`
-        // off a live in-memory ref. (There is no separate explicit `Database.add(draft)` in
-        // the handler — see `add-draft.ts` for why that call was removed as dead code.)
-        const drafts = yield* Effect.promise(() => db.query(Filter.type(Blog.Draft)).run());
-        expect(drafts.map((candidate) => candidate.id)).toContain(draft.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

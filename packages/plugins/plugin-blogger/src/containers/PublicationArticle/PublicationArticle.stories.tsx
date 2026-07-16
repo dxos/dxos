@@ -61,7 +61,7 @@ const meta = {
         StorybookPlugin({}),
         PreviewPlugin(),
         ClientPlugin({
-          types: [Blog.Publication, Blog.Post, Blog.Draft, Markdown.Document],
+          types: [Blog.Publication, Blog.Post, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

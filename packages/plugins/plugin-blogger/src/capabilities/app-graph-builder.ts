@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -11,10 +10,9 @@ import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolk
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -35,22 +33,19 @@ const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;
 const PUBLICATION_NODE_TYPE = `${meta.profile.key}.publication`;
 
 /**
+ * Node type of the hidden post-body-doc node contributed by `postComments`. A custom type (not the
+ * doc's ECHO typename) scopes graph contributions to the in-editor comment action only, keeping
+ * object/delete actions off the body editor toolbar.
+ */
+const CONTENT_DOC_NODE_TYPE = `${meta.profile.key}.post-content`;
+
+/**
  * Contributes the Publications navtree hub, mirroring plugin-studio's Studio section: a "Publications"
  * section under each space's `content` group (always present, so it is the create hub), with a branch
  * node per Publication whose children are that Publication's Posts.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-    // Derive a single-mode selected id per context from the ViewStateManager selection slice, keyed by
-    // the plank node id (mirrors plugin-inbox's `selectedId` family).
-    const selectedId = Atom.family((nodeId: string) =>
-      Atom.make((get) => {
-        const selection = get(viewState.atom(selectionAspect, nodeId));
-        return selection.mode === 'single' ? selection.id : undefined;
-      }),
-    );
-
     const extensions = yield* Effect.all([
       // "Publications" section under each space's content group.
       GraphBuilder.createExtension({
@@ -163,42 +158,18 @@ export default Capability.makeModule(
         },
       }),
 
-      // Comments companion for the Post plank: anchors the comments panel to the currently-selected
-      // draft's `Markdown.Document`. PostArticle publishes that doc as the plank's single-selection
-      // (LayoutOperation.Select with contextId == the Post plank node id); this connector reads it back
-      // and contributes a companion whose data is the doc. The doc (not the Post) is where draft comments
-      // are anchored, so the panel and the in-editor comment creation stay in sync.
+      // Comments companion for the Post plank: anchors the comments panel to the post's single body
+      // `Markdown.Document` (where post comments are anchored), and contributes a hidden, addressable
+      // node for that doc so the in-editor comment toolbar action resolves.
       GraphBuilder.createExtension({
         id: 'postComments',
-        match: (node) =>
-          Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data, nodeId: node.id }) : Option.none(),
-        connector: ({ post, nodeId }, get) => {
+        match: (node) => (Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data }) : Option.none()),
+        connector: ({ post }, get) => {
           const snapshot = get(Obj.atom(post));
-          const drafts = (snapshot.drafts ?? [])
-            .map((ref) => {
-              // Subscribe so the connector re-runs once the draft target loads.
-              get(Obj.atom(ref));
-              return ref.target;
-            })
-            .filter(isNonNullable);
-          if (drafts.length === 0) {
-            return Effect.succeed([]);
-          }
-
-          const selection = get(selectedId(nodeId));
-          const selectedDraft = selection
-            ? drafts.find((draft) => {
-                // Subscribe so the connector re-runs once the doc target loads.
-                get(Obj.atom(draft.content));
-                const doc = draft.content.target;
-                return doc ? Obj.getURI(doc) === selection : false;
-              })
-            : undefined;
-          // Default to the last draft's doc so the companion always has a target.
-          const draft = selectedDraft ?? drafts[drafts.length - 1];
-          get(Obj.atom(draft.content));
-          const draftDoc = draft.content.target;
-          if (!draftDoc) {
+          // Subscribe so the connector re-runs once the content target loads.
+          get(Obj.atom(snapshot.content));
+          const contentDoc = snapshot.content.target;
+          if (!contentDoc) {
             return Effect.succeed([]);
           }
 
@@ -207,8 +178,19 @@ export default Capability.makeModule(
               id: linkedSegment('comments'),
               label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
-              data: draftDoc,
+              data: contentDoc,
               position: Position.first,
+            }),
+            // Hidden, addressable node for the body doc so the in-editor comment toolbar action resolves.
+            // The doc has no navtree node, so `graph.actions(<post node id>/<doc.id>)` — the id
+            // PostArticle uses as the editor's `attendableId` — would otherwise be empty. plugin-comments'
+            // `commentToolbar` matches on `node.data` (not the node type/id), so a custom `type` keeps
+            // object/delete actions off this node. `disposition: 'hidden'` keeps it out of the navtree.
+            Node.make({
+              id: contentDoc.id,
+              type: CONTENT_DOC_NODE_TYPE,
+              data: contentDoc,
+              properties: { disposition: 'hidden' },
             }),
           ]);
         },

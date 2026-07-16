@@ -18,14 +18,14 @@ export type PostCardProps = {
 
 /**
  * Summary tile for a `Blog.Post`, rendered as a Masonry tile in the publication view.
- * Reactive to the passed ECHO object via {@link useObject} so edits to the title/description/drafts
+ * Reactive to the passed ECHO object via {@link useObject} so edits to the title/description/status
  * update the tile without navigating away and back.
  */
 export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [post] = useObject(postProp);
   const title = post.name?.trim() || t('post-card.untitled.label');
-  const draftCount = post.drafts?.length ?? 0;
+  const status = post.status ?? 'draft';
   const icon = Obj.getIcon(post)?.icon ?? 'ph--article--regular';
 
   // `Card.Root` renders `role='button'` when clickable but provides no keyboard handling itself, so
@@ -70,9 +70,9 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
         )}
         <Card.Row>
           <Card.Block>
-            <Icon icon='ph--stack--regular' />
+            <Icon icon={status === 'published' ? 'ph--cloud-check--regular' : 'ph--pencil-simple--regular'} />
           </Card.Block>
-          <Card.Text variant='description'>{t('post-card.drafts.label', { count: draftCount })}</Card.Text>
+          <Card.Text variant='description'>{t(`post-card.status.${status}.label`)}</Card.Text>
         </Card.Row>
       </Card.Body>
     </Card.Root>

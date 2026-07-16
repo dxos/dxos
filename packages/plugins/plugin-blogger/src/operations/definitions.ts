@@ -39,7 +39,7 @@ export const AddPublication = Operation.make({
 });
 
 /**
- * Creates a new Post (an outline plus one initial draft) and appends it to a Publication's
+ * Creates a new Post (an outline plus a single body document) and appends it to a Publication's
  * `posts`, also filing it in the space graph under `target`.
  */
 export const AddPost = Operation.make({
@@ -57,89 +57,34 @@ export const AddPost = Operation.make({
   output: Ref.Ref(Blog.Post),
 });
 
-/**
- * Creates a new Draft (wrapping a fresh markdown document) and appends it to a Post's `drafts`.
- */
-export const AddDraft = Operation.make({
-  meta: {
-    key: makeKey('addDraft'),
-    name: 'Add Draft',
-    description: 'Create a new draft version of a post.',
-    icon: 'ph--file-plus--regular',
-  },
-  input: Schema.Struct({
-    post: Ref.Ref(Blog.Post).annotations({ description: 'The post to add the draft to.' }),
-  }),
-  output: Ref.Ref(Blog.Draft),
-});
-
 /** Selects which contributed `PublisherService` to use; falls back to the first one when omitted. */
 const PublisherIdSchema = Schema.optional(Schema.String).annotations({
   description: 'Selects a contributed publisher service by id; defaults to the first one available.',
 });
 
 /**
- * Pushes a Draft's current body to its external publisher (Task 3's `PublisherService`), creating the
- * remote draft on first publish or updating it thereafter. Tracks the remote id as a foreign key on
- * the draft, keyed by the publisher's `source`.
+ * Bidirectionally syncs a Publication's posts with an external publisher (the provider calls them
+ * "drafts"). Reconciliation, keyed by the remote id stored as a foreign key on each post's meta
+ * (source = the publisher's `source`):
+ * - post linked to a still-present remote draft → push the local body (local is source of truth);
+ * - post linked to a remote draft that was deleted → clear the key, set `status: 'draft'`;
+ * - post with no link → create the remote draft, stamp the key, set `status: 'published'`;
+ * - remote draft not linked to any post → create a new local Post (stamped, `status: 'published'`).
  */
-export const PublishDraft = Operation.make({
+export const SyncPosts = Operation.make({
   meta: {
-    key: makeKey('publishDraft'),
-    name: 'Publish Draft',
-    description: 'Push a draft to its external publisher, creating or updating the remote copy.',
-    icon: 'ph--cloud-arrow-up--regular',
+    key: makeKey('syncPosts'),
+    name: 'Sync Posts',
+    description: 'Bidirectionally sync a publication’s posts with its external publisher.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    draft: Ref.Ref(Blog.Draft).annotations({ description: 'The draft to publish.' }),
+    publication: Ref.Ref(Blog.Publication).annotations({ description: 'The publication whose posts to sync.' }),
     connection: Ref.Ref(Connection.Connection).annotations({
-      description: 'The publisher connection to push through.',
+      description: 'The publisher connection to sync through.',
     }),
     publisherId: PublisherIdSchema,
   }),
-  output: Ref.Ref(Blog.Draft),
-  services: [Capability.Service],
-});
-
-/**
- * Pulls drafts from the external publisher that are not yet linked to a local draft, creating one
- * local Draft per new remote draft and appending it to the Post's `drafts`.
- */
-export const ImportDrafts = Operation.make({
-  meta: {
-    key: makeKey('importDrafts'),
-    name: 'Import Drafts',
-    description: 'Pull drafts from the external publisher into a post.',
-    icon: 'ph--cloud-arrow-down--regular',
-  },
-  input: Schema.Struct({
-    post: Ref.Ref(Blog.Post).annotations({ description: 'The post to import drafts into.' }),
-    connection: Ref.Ref(Connection.Connection).annotations({
-      description: 'The publisher connection to pull from.',
-    }),
-    publisherId: PublisherIdSchema,
-  }),
-  output: Ref.Ref(Blog.Post),
-  services: [Capability.Service],
-});
-
-/**
- * Deletes a Draft's remote copy (if linked) from the external publisher and clears its foreign key.
- */
-export const UnpublishDraft = Operation.make({
-  meta: {
-    key: makeKey('unpublishDraft'),
-    name: 'Unpublish Draft',
-    description: 'Delete a draft from its external publisher.',
-    icon: 'ph--cloud-slash--regular',
-  },
-  input: Schema.Struct({
-    draft: Ref.Ref(Blog.Draft).annotations({ description: 'The draft to unpublish.' }),
-    connection: Ref.Ref(Connection.Connection).annotations({
-      description: 'The publisher connection to delete through.',
-    }),
-    publisherId: PublisherIdSchema,
-  }),
-  output: Ref.Ref(Blog.Draft),
+  output: Ref.Ref(Blog.Publication),
   services: [Capability.Service],
 });

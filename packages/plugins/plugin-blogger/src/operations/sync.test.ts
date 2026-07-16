@@ -11,135 +11,117 @@ import { AccessToken } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector/types';
 
 import { Blog, Publisher } from '../types';
-import { runImportDrafts } from './import-drafts';
-import { runPublishDraft } from './publish-draft';
-import { runUnpublishDraft } from './unpublish-draft';
+import { runSyncPosts } from './sync-posts';
 
-describe('Blog sync operations', () => {
-  test('PublishDraft creates the remote draft and stamps a foreign key on an unlinked draft', async () => {
-    const { stub, calls } = makeStub();
-    const draft = Blog.makeDraft({ content: 'hello world' });
-    const connection = makeConnectionRef();
+const SOURCE = 'stub.test';
 
-    const result = await EffectEx.runPromise(runPublishDraft(stub, draft, connection));
+describe('SyncPosts', () => {
+  test('pushes an unlinked local post to the publisher and marks it published', async () => {
+    const { publication, post } = makePublicationWithPost({ content: 'hello world' });
+    const { stub, calls } = makeStub([]);
+
+    await EffectEx.runPromise(runSyncPosts(stub, publication, makeConnectionRef()));
 
     expect(calls).toEqual(['create']);
-    expect(Obj.getKeys(result, stub.source).map((key) => key.id)).toEqual(['new1']);
+    expect(Obj.getKeys(post, SOURCE).map((key) => key.id)).toEqual(['new1']);
+    expect(post.status).toBe('published');
   });
 
-  test('PublishDraft updates the remote draft when already linked, without re-creating', async () => {
-    const { stub, calls } = makeStub();
-    const draft = Blog.makeDraft({ content: 'hello world' });
-    Obj.update(draft, (draft) => {
-      Obj.getMeta(draft).keys.push({ source: stub.source, id: 'existing1' });
-    });
-    const connection = makeConnectionRef();
+  test('updates a linked local post whose remote copy still exists (local wins)', async () => {
+    const { publication, post } = makePublicationWithPost({ content: 'edited', remoteId: 'x1' });
+    const { stub, calls } = makeStub([{ id: 'x1', text: 'remote body' }]);
 
-    await EffectEx.runPromise(runPublishDraft(stub, draft, connection));
+    await EffectEx.runPromise(runSyncPosts(stub, publication, makeConnectionRef()));
 
     expect(calls).toEqual(['update']);
-    expect(Obj.getKeys(draft, stub.source).map((key) => key.id)).toEqual(['existing1']);
+    expect(Obj.getKeys(post, SOURCE).map((key) => key.id)).toEqual(['x1']);
   });
 
-  test('ImportDrafts creates a local draft for an unlinked remote id and skips one already linked', async () => {
-    const post = Blog.makePost();
-    const initialDraft = post.drafts?.[0]?.target;
-    expect(initialDraft).toBeDefined();
-    invariant(initialDraft);
-    // Link the post's initial draft to remote id 'x1' so the stub's matching listDrafts entry is skipped.
-    Obj.update(initialDraft, (initialDraft) => {
-      Obj.getMeta(initialDraft).keys.push({ source: 'stub.test', id: 'x1' });
+  test('reverts a linked local post whose remote copy was deleted back to draft', async () => {
+    const { publication, post } = makePublicationWithPost({
+      content: 'orphaned',
+      remoteId: 'gone',
+      status: 'published',
     });
+    const { stub, calls } = makeStub([]);
 
-    const { stub, calls } = makeStub();
-    const connection = makeConnectionRef();
-    const draftsBefore = post.drafts?.length ?? 0;
+    await EffectEx.runPromise(runSyncPosts(stub, publication, makeConnectionRef()));
 
-    const result = await EffectEx.runPromise(runImportDrafts(stub, post, connection));
-
-    // Only the unlinked remote draft ('x2') was imported; 'x1' was skipped (already linked), so
-    // `createDraft`/`updateDraft` (which import never calls) never fired. `getDraft` also never
-    // fired because the stub's `listDrafts` entry for 'x2' already carried its body text.
     expect(calls).toEqual([]);
-    expect(result.drafts).toHaveLength(draftsBefore + 1);
+    expect(Obj.getKeys(post, SOURCE)).toEqual([]);
+    expect(post.status).toBe('draft');
+  });
 
-    const importedRef = result.drafts?.[result.drafts.length - 1];
-    const imported = importedRef?.target;
-    expect(imported).toBeDefined();
+  test('pulls an unlinked remote draft into a new published post', async () => {
+    const publication = Blog.makePublication();
+    const { stub, calls } = makeStub([{ id: 'x2', text: 'remote body', title: 'Imported' }]);
+
+    const result = await EffectEx.runPromise(runSyncPosts(stub, publication, makeConnectionRef()));
+
+    expect(calls).toEqual([]);
+    expect(result.posts).toHaveLength(1);
+    const imported = result.posts?.[0]?.target;
     invariant(imported);
     expect(imported.content.target?.content.target?.content).toBe('remote body');
-    expect(Obj.getKeys(imported, stub.source).map((key) => key.id)).toEqual(['x2']);
+    expect(imported.status).toBe('published');
+    expect(Obj.getKeys(imported, SOURCE).map((key) => key.id)).toEqual(['x2']);
   });
 
-  test('ImportDrafts falls back to getDraft when listDrafts omits the body text', async () => {
-    const post = Blog.makePost();
-    const { stub, calls } = makeStub('');
-    const connection = makeConnectionRef();
-    const draftsBefore = post.drafts?.length ?? 0;
+  test('falls back to getDraft when listDrafts omits the body text on a pulled draft', async () => {
+    const publication = Blog.makePublication();
+    const { stub, calls } = makeStub([{ id: 'x2', text: '' }]);
 
-    const result = await EffectEx.runPromise(runImportDrafts(stub, post, connection));
+    const result = await EffectEx.runPromise(runSyncPosts(stub, publication, makeConnectionRef()));
 
-    // 'x1' and 'x2' are both unlinked here (no draft was pre-linked), but only 'x2' had its body
-    // text blanked out by `makeStub('')`, so `getDraft` fires exactly once, for 'x2'.
     expect(calls).toEqual(['getDraft']);
-    expect(result.drafts).toHaveLength(draftsBefore + 2);
-
-    const importedRef = result.drafts?.[result.drafts.length - 1];
-    const imported = importedRef?.target;
-    expect(imported).toBeDefined();
+    const imported = result.posts?.[result.posts.length - 1]?.target;
     invariant(imported);
     expect(imported.content.target?.content.target?.content).toBe('fetched body');
   });
-
-  test('UnpublishDraft deletes the remote draft and clears the foreign key', async () => {
-    const { stub, calls } = makeStub();
-    const draft = Blog.makeDraft({ content: 'hello world' });
-    Obj.update(draft, (draft) => {
-      Obj.getMeta(draft).keys.push({ source: stub.source, id: 'new1' });
-    });
-    const connection = makeConnectionRef();
-
-    const result = await EffectEx.runPromise(runUnpublishDraft(stub, draft, connection));
-
-    expect(calls).toEqual(['delete']);
-    expect(Obj.getKeys(result, stub.source)).toEqual([]);
-  });
-
-  test('UnpublishDraft is a no-op when the draft was never linked', async () => {
-    const { stub, calls } = makeStub();
-    const draft = Blog.makeDraft({ content: 'hello world' });
-    const connection = makeConnectionRef();
-
-    await EffectEx.runPromise(runUnpublishDraft(stub, draft, connection));
-
-    expect(calls).toEqual([]);
-  });
 });
 
-/**
- * The `connection` ref is opaque to every sync handler — it is only forwarded to the
- * `PublisherService` calls, never dereferenced — so a minimal, schema-valid Connection is enough.
- */
-const makeConnectionRef = (): Ref.Ref<Connection.Connection> => {
-  const accessToken = AccessToken.make({ source: 'stub.test', token: 'secret' });
-  return Ref.make(Connection.make({ accessToken: Ref.make(accessToken) }));
+/** Creates a publication holding one post with the given body, optional remote link, and status. */
+const makePublicationWithPost = ({
+  content,
+  remoteId,
+  status = 'draft',
+}: {
+  content: string;
+  remoteId?: string;
+  status?: Blog.PostStatus;
+}): { publication: Blog.Publication; post: Blog.Post } => {
+  const publication = Blog.makePublication();
+  const post = Blog.makePost({ content });
+  Obj.update(post, (post) => {
+    post.status = status;
+    if (remoteId) {
+      Obj.getMeta(post).keys.push({ source: SOURCE, id: remoteId });
+    }
+  });
+  Obj.update(publication, (publication) => {
+    publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+  });
+  return { publication, post };
 };
 
 /**
- * `listDrafts` returns each remote draft's full body text by default; pass `listDraftsText` to
- * simulate a provider (e.g. Typefully v1) whose `listDrafts` omits it, forcing the `getDraft`
- * fallback.
+ * The `connection` ref is opaque to the sync handler — it is only forwarded to the `PublisherService`
+ * calls, never dereferenced — so a minimal, schema-valid Connection is enough.
  */
-const makeStub = (listDraftsText: string = 'remote body'): { stub: Publisher.PublisherService; calls: string[] } => {
+const makeConnectionRef = (): Ref.Ref<Connection.Connection> => {
+  const accessToken = AccessToken.make({ source: SOURCE, token: 'secret' });
+  return Ref.make(Connection.make({ accessToken: Ref.make(accessToken) }));
+};
+
+/** A stub `PublisherService` whose `listDrafts` returns `remote`, recording each remote call. */
+const makeStub = (remote: Publisher.PublisherDraft[]): { stub: Publisher.PublisherService; calls: string[] } => {
   const calls: string[] = [];
   const stub: Publisher.PublisherService = {
     id: 'stub',
     label: 'Stub',
-    source: 'stub.test',
-    listDrafts: async () => [
-      { id: 'x1', text: 'already linked' },
-      { id: 'x2', text: listDraftsText },
-    ],
+    source: SOURCE,
+    connectorId: 'stub',
+    listDrafts: async () => remote,
     getDraft: async (_connection, id) => {
       calls.push('getDraft');
       return { id, text: 'fetched body' };
