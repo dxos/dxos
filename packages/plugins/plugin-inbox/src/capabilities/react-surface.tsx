@@ -101,6 +101,7 @@ export default Capability.makeModule(() =>
             <MailboxArticle
               subject={data.subject}
               filter={data.properties?.filter}
+              systemTag={data.properties?.systemTag}
               draftsOnly={data.properties?.draftsOnly}
               attendableId={data.attendableId}
             />

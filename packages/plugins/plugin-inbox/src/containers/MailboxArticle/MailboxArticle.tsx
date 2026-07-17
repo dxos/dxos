@@ -55,7 +55,7 @@ import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
 import { dedupeSupersededDrafts, messageMatchesQuery, sortByCreated } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
-import { buildDraftFilter, buildMailboxSelection, getSearchText } from './mailbox-search';
+import { buildDraftFilter, buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -69,6 +69,14 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   {
     filter?: string;
     /**
+     * A canonical system tag (see `SystemTags.SystemTag`) this view resolves by identity rather than by
+     * parsing `filter` as a tag-label string — used by the pre-seeded Inbox/Sent views so they stay
+     * correct across providers/locales and don't depend on a tag's label text. `filter` still seeds the
+     * editable filter box (e.g. `'#inbox'`) for display and further narrowing; once the user edits it
+     * away from that seed, the box's own text/tag parsing takes over as normal.
+     */
+    systemTag?: SystemTags.SystemTagId;
+    /**
      * Drives the mailbox's Drafts view: the list is driven by this mailbox's drafts directly (grouped
      * by thread; a draft with no thread is its own row) instead of the feed, and the filter editor is
      * hidden. Otherwise, this mailbox's drafts are attached to feed threads already present in the list
@@ -81,6 +89,7 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
 export const MailboxArticle = ({
   subject: mailbox,
   filter: filterProp,
+  systemTag,
   draftsOnly = false,
   attendableId,
 }: MailboxArticleProps) => {
@@ -118,6 +127,14 @@ export const MailboxArticle = ({
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
+
+  // Resolves this view's canonical system tag (e.g. Inbox/Sent) by its stable foreign key, not by label
+  // text — `undefined` until the provider sync has created it (see `buildSystemTagSelection`).
+  const systemTagObj = useQuery(
+    db,
+    systemTag ? Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(systemTag)]) : Filter.nothing(),
+  )[0];
+  const systemTagUri = systemTagObj && Obj.getURI(systemTagObj).toString();
 
   // This mailbox's drafts (space-db, not the feed). In the Drafts view (`draftsOnly`) they drive the
   // list directly; otherwise each is attached to its thread if that thread is already present in the
@@ -172,9 +189,17 @@ export const MailboxArticle = ({
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
+  //
+  // A system-tag view (Inbox/Sent) resolves by tag identity while the filter box sits at its seeded
+  // text (e.g. unedited `'#inbox'`) — robust across providers/locales and immune to a same-named user
+  // tag. Once the user edits the box away from that seed, the usual text/tag DSL parse takes over.
+  const isUnmodifiedSystemTagView = systemTag !== undefined && debouncedFilterText === (filterProp ?? '');
   const selection = useMemo(
-    () => buildMailboxSelection(debouncedFilterText, debouncedFilter),
-    [debouncedFilterText, debouncedFilter],
+    () =>
+      isUnmodifiedSystemTagView
+        ? buildSystemTagSelection(systemTagUri)
+        : buildMailboxSelection(debouncedFilterText, debouncedFilter),
+    [isUnmodifiedSystemTagView, systemTagUri, debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
   // The Drafts view drives its list from `drafts` directly (below), not this feed-paginated query.

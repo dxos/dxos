@@ -54,3 +54,12 @@ export const getSearchText = (filter: Filter.Any | undefined): string | undefine
  */
 export const buildDraftFilter = (mailboxUri: string): Filter.Any =>
   Filter.type(Message.Message, { properties: { mailbox: mailboxUri } });
+
+/**
+ * Selects feed messages carrying an already-resolved system tag (see `SystemTags.systemTagKey`), e.g.
+ * the canonical Inbox/Sent tag. `tagUri` is `undefined` until the provider sync has created the tag
+ * (or if the mailbox has never synced), in which case this selects nothing rather than falling back to
+ * the whole feed — consistent with the pre-sync empty state.
+ */
+export const buildSystemTagSelection = (tagUri: string | undefined): Filter.Any =>
+  tagUri ? Filter.and(Filter.type(Message.Message), Filter.tag(tagUri)) : Filter.nothing();

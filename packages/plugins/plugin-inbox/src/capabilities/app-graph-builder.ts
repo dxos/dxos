@@ -24,7 +24,7 @@ import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Calendar, InboxOperation, Mailbox } from '#types';
+import { Calendar, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import {
   MAILBOX_DRAFTS_TYPE,
@@ -200,8 +200,11 @@ export default Capability.makeModule(
                   iconHue: 'rose',
                   role: 'branch',
                   // Placeholder for a future "intelligent inbox" (important mail only); for now, the
-                  // provider inbox tag. New-message badge stubbed pending a real read/unread signal.
+                  // canonical inbox system tag (resolved by identity, not by this label string — see
+                  // `MailboxArticle`'s `systemTag` prop). New-message badge stubbed pending a real
+                  // read/unread signal.
                   filter: '#inbox',
+                  systemTag: 'inbox' satisfies SystemTags.SystemTagId,
                 },
                 nodes: [
                   // Pre-seeded, non-removable filter nodes — the same mechanism as a saved user filter
@@ -227,6 +230,7 @@ export default Capability.makeModule(
                       icon: 'ph--paper-plane-tilt--regular',
                       iconHue: 'rose',
                       filter: '#sent',
+                      systemTag: 'sent' satisfies SystemTags.SystemTagId,
                     },
                   }),
                   Node.make({

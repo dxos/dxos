@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 
-import { buildDraftFilter, buildMailboxSelection, getSearchText } from './mailbox-search';
+import { buildDraftFilter, buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
 
 describe('buildMailboxSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
@@ -50,5 +51,17 @@ describe('buildDraftFilter', () => {
   test('selects messages scoped to this mailbox by properties.mailbox', () => {
     const filter = buildDraftFilter('echo:mailbox-1');
     expect(filter.ast.type).toBe('object');
+  });
+});
+
+describe('buildSystemTagSelection', () => {
+  test('ANDs the message type with the resolved tag uri', () => {
+    const selection = buildSystemTagSelection('dxn:echo:@:tag-1');
+    expect(selection.ast).toMatchObject({ type: 'and', filters: [{ type: 'object' }, { type: 'tag' }] });
+  });
+
+  test('selects nothing when the tag has not been resolved yet (e.g. before first sync)', () => {
+    const selection = buildSystemTagSelection(undefined);
+    expect(selection.ast).toMatchObject(Filter.nothing().ast);
   });
 });
