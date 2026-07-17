@@ -16,7 +16,7 @@ import { Person } from '@dxos/types';
 import { GoogleMail } from '../../../../apis';
 import { GMAIL_SOURCE } from '../../../../constants';
 import { GoogleApiError, MailSyncError } from '../../../../errors';
-import { type GoogleMailApiError, GoogleMailApi } from '../../../../services';
+import { GoogleMailApi, type GoogleMailApiError } from '../../../../services';
 import { Mailbox, SystemTags } from '../../../../types';
 import { parseFromHeader } from '../../../util';
 import {
