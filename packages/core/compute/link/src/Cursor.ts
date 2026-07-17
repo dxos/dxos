@@ -45,10 +45,9 @@ export const ExternalSpec = Schema.Struct({
   /** Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`); drives 3-way merge. */
   snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
   /**
-   * Opaque provider delta-resume token (Gmail `historyId`, JMAP `Email/get` `state`). Optional
-   * optimization *alongside* `max`/`min`: when present and valid, the provider fetches an exact delta;
-   * when absent or stale it falls back to the `max`/`min` date-window scan. Never a timestamp — it is
-   * opaque and forward-only, so it cannot drive backfill.
+   * Opaque provider delta-resume token (Gmail `historyId`, JMAP `Email/get` `state`). An optional
+   * fast-path alongside `max`/`min`: when valid the provider fetches an exact delta, else it falls back
+   * to the date-window scan. Forward-only, so it cannot drive backfill.
    */
   token: Schema.String.pipe(Schema.optional),
 });
@@ -398,9 +397,9 @@ export type State = {
   /** Foreign ids already committed (seeded from the feed, extended as pages commit). */
   readonly dedupSet: Set<string>;
   /**
-   * foreignId → EntityId map for the delta's messages, built only when a `reconcileFilter` is supplied —
-   * lets the reconcile branch resolve an already-committed message's EntityId to retag/remove it. Absent
-   * on the add-only path (which pays nothing to build it).
+   * foreignId → EntityId map for the delta's messages, built only when a `reconcileFilter` is supplied so
+   * the reconcile branch can resolve an already-committed message's EntityId to retag/remove it. Absent
+   * on the add-only path.
    */
   readonly foreignIndex?: ReadonlyMap<string, Obj.ID>;
   /** Serializes the advanced cursor key for storage on the cursor. */
@@ -414,9 +413,9 @@ export type State = {
 /** Terminal unit produced by the pipeline for one source item: everything the commit needs to write. */
 export type CommitUnit = {
   /**
-   * The mapped ECHO object to append to the feed. Optional: an *objectless* unit (no feed append)
-   * carries only `commitEffects` that mutate already-committed objects — e.g. a label change retagging
-   * an existing feed message by EntityId. Objectless units carry `key: 0` so they never move `max`/`min`.
+   * The mapped ECHO object to append to the feed. Optional: an *objectless* unit (no feed append) carries
+   * only `commitEffects` that mutate already-committed objects (e.g. a retag by EntityId), and carries
+   * `key: 0` so it never moves `max`/`min`.
    */
   readonly object?: Obj.Any;
   /** Provider foreign id (the dedup key; matches `Obj.Meta.keys[].id`). */
@@ -455,10 +454,10 @@ export type LayerOptions = Omit<
   /** Overrides {@link DEFAULT_DEDUP_SEED_TAIL} — set per pipeline when its commit page size warrants it. */
   readonly dedupSeedTail?: number;
   /**
-   * Filter selecting exactly the already-committed feed messages a reconcile run needs to resolve to
-   * their EntityIds (built by the caller as `Filter.foreignKeys(<message schema>, <delta keys>)`). When
-   * set, {@link State.foreignIndex} is built from *this* query rather than the whole feed, so the cost
-   * is O(delta) once the query engine supports feed filter pushdown. Absent on the add-only path.
+   * Selects the already-committed feed messages a reconcile run must resolve to EntityIds (caller builds
+   * it as `Filter.foreignKeys(<message schema>, <delta keys>)`). {@link State.foreignIndex} is built from
+   * this query rather than the whole feed, so the cost is O(delta) once the engine supports feed filter
+   * pushdown. Absent on the add-only path.
    */
   readonly reconcileFilter?: Filter.Any;
 };
@@ -667,10 +666,10 @@ export const dedupStage = <In>(
   );
 
 /**
- * Caps a stream at `limit` items and reports each item that survives the cap via `onTaken`. The caller
- * uses that count to tell a truncated run (`taken === limit` → re-run) from an exhausted one. Placed
- * after {@link dedupStage} so it counts only genuinely-new items. Unlike its siblings it reads no
- * {@link Service} — it lives here because it's part of the same per-run bounding family.
+ * Caps a stream at `limit`, reporting each surviving item via `onTaken` so the caller can tell a
+ * truncated run (`taken === limit` → re-run) from an exhausted one. Placed after {@link dedupStage} so it
+ * counts only genuinely-new items. Reads no {@link Service}, but lives here as part of the per-run
+ * bounding family.
  */
 export const boundStage =
   <In>(limit: number, onTaken: (count: number) => void): Stage.Stage<In, In, never, never> =>
@@ -699,13 +698,12 @@ const DEFAULT_DEDUP_SEED_TAIL = 500;
  * interleave.
  */
 /**
- * Builds a foreignId → EntityId map for exactly the messages a reconcile run targets, selected by the
- * caller-supplied `reconcileFilter` (`Filter.foreignKeys(<schema>, <delta keys>)`). Unlike
- * {@link seedDedupSet} (a bounded tail read for the boundary items), reconciliation must resolve *any*
- * already-committed message — a label change can target a message far older than the seed tail — but it
- * only needs the delta's messages, not the whole feed. The foreign id is read off `Obj.getMeta(item)`
- * (feed messages live in a queue). Today a feed query still decodes the whole feed, so this is written
- * to express O(delta) intent for when the engine gains filter pushdown.
+ * Builds a foreignId → EntityId map for the messages a reconcile run targets, selected by the caller's
+ * `reconcileFilter`. Unlike {@link seedDedupSet}'s bounded tail read, reconciliation must resolve *any*
+ * already-committed message (a label change can target one far older than the seed tail), but only the
+ * delta's messages, not the whole feed. Foreign ids come off `Obj.getMeta(item)` (feed messages live in a
+ * queue). A feed query still decodes the whole feed today, so this expresses O(delta) intent for when the
+ * engine gains filter pushdown.
  */
 const seedForeignIndex = (
   feed: Feed.Feed,

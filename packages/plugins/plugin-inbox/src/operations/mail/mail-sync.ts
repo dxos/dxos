@@ -51,11 +51,9 @@ export type MailSyncSourceOptions = {
 };
 
 /**
- * One candidate message: its dedup key fields plus a self-contained `process` effect. `process` fuses
- * the provider's decode + map (API + resolver already provided) into an `EmailStage.Change` (always an
- * `insert`, tagged at construction), or `undefined` to drop the item (no body, filtered sender,
- * unmappable). The harness dedups on `foreignId`/`key` and caps *before* running `process` (see
- * `runMailSync`'s add-only head), so dedup stays cheap and decode only runs for survivors.
+ * One candidate message: dedup key fields plus a self-contained `process` effect that decodes it into an
+ * `insert` `EmailStage.Change` (or `undefined` to drop it). The harness dedups and caps before
+ * `process`, so decode runs only for survivors.
  */
 export type MailSyncItem = {
   readonly foreignId: string;
@@ -64,10 +62,8 @@ export type MailSyncItem = {
 };
 
 /**
- * The pre-resolution shape of a `retag`/`delete` {@link EmailStage.Change} — everything a provider can
- * know before its `foreignId` is resolved to a feed message's `entityId` (the one field a provider can't
- * supply yet). {@link reconcileToChanges} performs that resolution (via `Cursor.State.foreignIndex`) and
- * attaches `entityId` to produce the full `Change`.
+ * A `retag`/`delete` {@link EmailStage.Change} minus its `entityId` — the shape a provider produces
+ * before {@link reconcileToChanges} resolves `foreignId` → `entityId`.
  */
 export type ReconcileItem = Omit<EmailStage.Retag, 'entityId'> | Omit<EmailStage.Delete, 'entityId'>;
 
@@ -98,9 +94,9 @@ export type MailSyncSource = {
   readonly buildSource: (options: MailSyncSourceOptions) => MailSyncStreams;
   /**
    * The opaque delta-resume token at this run's chunk boundary (first-tick / staleness paths return the
-   * freshly-captured provider token), read by the harness at run end and written to the cursor only after
-   * the stream has fully drained. Advancing to a *chunk* boundary (not the whole delta) is what bounds a
-   * run: a large delta is drained across runs. Absent for providers with no delta path.
+   * freshly-captured provider token). The harness reads it at run end and writes it to the cursor only
+   * after the stream fully drains. Advancing to a *chunk* boundary (not the whole delta) bounds each run:
+   * a large delta drains across runs. Absent for providers with no delta path.
    */
   readonly nextToken?: () => string | undefined;
   /**
@@ -395,10 +391,9 @@ export const runMailSync = (
     //
 
     // The provider yields two raw streams; the harness owns everything generic. The add-only head —
-    // dedup on foreignId/key, cap at `maxMessages` (counting survivors into `taken`, which tells a
-    // truncated run → re-run from an exhausted one → complete backfill), then the provider decode into
-    // an `insert` Change — is flat here rather than hidden in the provider, so the whole stage list
-    // reads top-to-bottom.
+    // dedup on foreignId/key, then cap at `maxMessages` (counting survivors into `taken`, which tells a
+    // truncated run → re-run from an exhausted one → complete backfill), then the provider decode into an
+    // `insert` Change — is flat here rather than hidden in the provider.
     const { additions, reconciles } = source.buildSource({
       windows,
       filter: targetOptions.filter,
@@ -512,10 +507,9 @@ export const runMailSync = (
         action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
       });
       if (!capped) {
-        // Additions weren't truncated, so this run's chunk fully drained. Mark backfill done (the backward
-        // half reached the horizon) and advance the delta token LAST, only after the merged add+reconcile
-        // stream committed. Advancing to the *chunk* boundary bounds each run: a large delta drains over
-        // several runs. A crash/cap leaves the token unadvanced → the next run re-fetches the same chunk
+        // Additions weren't truncated, so this run's chunk fully drained: mark backfill done (the backward
+        // half reached the horizon) and advance the delta token LAST, only after the merged stream
+        // committed. A crash/cap leaves the token unadvanced, so the next run re-fetches the same chunk
         // (additions dedup-drop, tag ops re-apply idempotently).
         Cursor.completeBackfill(binding, horizon.getTime());
         const nextToken = source.nextToken?.();

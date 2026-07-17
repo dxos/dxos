@@ -38,12 +38,10 @@ export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, 
   Stage.map('html-to-markdown', (item: In) => Effect.sync(() => ({ ...item, body: normalizeText(item.body) })))(self);
 
 /**
- * A new message to append, tagged `insert` from the moment a provider decodes it — the dedup stage
- * upstream (`Cursor.dedupStage`) guarantees a message reaching this variant was never previously
- * committed, so this is a one-time insert, never a resync/overwrite of an existing message. The generic
- * email stages (attachments, contact extraction, …) act only on this variant of {@link Change}, each
- * simply recording what it found (`attachments`, `contact`) rather than building its own deferred write;
- * {@link toCommitUnit} turns those into a `Cursor.CommitUnit`'s `commitEffects` and must run last.
+ * A new message to append, tagged `insert` from the moment a provider decodes it. The upstream dedup
+ * stage (`Cursor.dedupStage`) guarantees a message reaching this variant was never previously committed,
+ * so it's a one-time insert, never a resync/overwrite. The generic email stages act only on this variant
+ * of {@link Change}.
  */
 export type Insert = {
   readonly _tag: 'insert';

@@ -9,15 +9,13 @@ import { type EntityId } from '@dxos/keys';
 import { Tagging, TagIndex } from '@dxos/schema';
 
 /**
- * Canonical, provider-agnostic system tags. Each provider maps its own vocabulary onto these — see
- * `operations/mail/google/sync/tags.ts` (Gmail labels) and `operations/mail/jmap/sync/tags.ts` (JMAP
- * mailbox roles + keywords) — so a Gmail star, a JMAP `$flagged` keyword, and a locally-toggled star
- * resolve to the *same* {@link Tag} object, likewise for inbox/sent/etc. Custom user labels/folders keep
- * their own provider-scoped tags (see `findOrCreateGmailTag` in `operations/mail/google/tags.ts` and
- * `findOrCreateJmapTag` in `operations/mail/jmap/tags.ts`).
+ * Canonical, provider-agnostic system tags. Each provider maps its own vocabulary onto these (Gmail
+ * labels, JMAP mailbox roles + keywords), so a Gmail star, a JMAP `$flagged` keyword, and a
+ * locally-toggled star resolve to the *same* {@link Tag} object (likewise inbox/sent/etc.). Custom user
+ * labels/folders keep their own provider-scoped tags (`findOrCreateGmailTag`/`findOrCreateJmapTag`).
  *
- * The source is space-general (`org.dxos.tag`), not mail-specific: the same tag identities apply to any
- * object in the space.
+ * The source is space-general (`org.dxos.tag`), not mail-specific, so the same tag identities apply to
+ * any object in the space.
  *
  * TODO(wittjosiah): Factor out — these belong in a shared tag package, not plugin-inbox.
  */

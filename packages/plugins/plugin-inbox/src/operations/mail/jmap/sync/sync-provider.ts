@@ -161,10 +161,10 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             );
 
             // Resolve the delta plan. An incremental run fetches one bounded `Email/changes` chunk since
-            // the token (`maxChanges` = the per-run budget); `hasMoreChanges` drives the harness's
-            // `runAgain`, and `newState` is the chunk boundary the token advances to — so a large delta
-            // drains across runs. A stale token (`cannotCalculateChanges`) falls back to
-            // `captureFreshDelta` — `Effect.catchIf` recovers only that case, propagating anything else.
+            // the token (`maxChanges` = the per-run budget); `hasMoreChanges` drives `runAgain`, and
+            // `newState` is the chunk boundary the token advances to — so a large delta drains across
+            // runs. A stale token (`cannotCalculateChanges`) falls back to `captureFreshDelta`;
+            // `Effect.catchIf` recovers only that case.
             const resolveDelta: Effect.Effect<DeltaPlan, JmapApiError, never> =
               token === undefined
                 ? captureFreshDelta
@@ -242,15 +242,15 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
 
 /**
  * Reconcile branch for JMAP: for each `updated` email id, re-fetch its current `mailboxIds` + `keywords`,
- * map them to canonical/folder Tags, and diff against the message's current *local* tags — a remote-wins,
- * snapshot-free reconciliation that is idempotent (a re-run after a crash produces an empty diff, so it
- * is crash-safe). Emits a retag {@link EmailStage.Change} keyed by the resolved EntityId; ids not in the
- * feed (never synced / outside window) or with no net change are dropped.
+ * map them to Tags, and diff against the message's current *local* tags — a remote-wins, snapshot-free
+ * reconciliation that is idempotent (a crash re-run produces an empty diff). Emits a retag
+ * {@link EmailStage.Change} keyed by the resolved EntityId; ids not in the feed or with no net change are
+ * dropped.
  *
- * The two axes reconcile differently: **folder** tags are fully remote-wins (added *and* removed, since
- * folder membership is server-authoritative), while **keyword** tags (starred) are **add-only** — the
- * remote can add a star, but we never auto-remove one, which would clobber a locally-toggled star until
- * we support writing local flags back to the provider.
+ * The two axes differ: **folder** tags are fully remote-wins (added *and* removed, since folder
+ * membership is server-authoritative), while **keyword** tags (starred) are **add-only** — the remote can
+ * add a star but we never auto-remove one, which would clobber a locally-toggled star until we write
+ * local flags back to the provider.
  */
 const jmapReconcile = (
   updatedIds: readonly string[],

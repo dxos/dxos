@@ -16,9 +16,8 @@ export const JMAP_ROLE_TAGS: Partial<Record<string, SystemTags.SystemTagId>> = {
 
 /**
  * JMAP keyword → canonical system tag ({@link SystemTags.SystemTag}). Only `$flagged` (starred) is
- * projected. Read-state (`$seen`) and the rest (`$answered`, `$draft`, `$forwarded`, …) are
- * intentionally dropped — high-churn and noisier than useful. Kept as an explicit omission in case we
- * want them later.
+ * projected; read-state (`$seen`) and the rest (`$answered`, `$draft`, `$forwarded`, …) are intentionally
+ * dropped as high-churn and noisier than useful.
  */
 export const JMAP_KEYWORD_TAGS: Partial<Record<string, SystemTags.SystemTagId>> = {
   $flagged: 'starred',

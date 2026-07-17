@@ -122,10 +122,10 @@ export const googleMailSyncProvider = (options: {
 
             // Resolve the delta plan. First tick captures the current `historyId` before backfill. An
             // incremental run fetches one bounded `history.list` page since the token (`maxResults` = the
-            // per-run budget); `nextPageToken` drives the harness's `runAgain`, and the token advances to
-            // the last processed record's id (not the mailbox's current `historyId`) so a large delta
-            // drains across runs without skipping unread pages. A stale token (HTTP 404) falls back to
-            // `captureFreshDelta` — `Effect.catchIf` recovers only that case, propagating anything else.
+            // per-run budget); `nextPageToken` drives `runAgain`, and the token advances to the last
+            // processed record's id (not the current `historyId`) so a large delta drains across runs
+            // without skipping unread pages. A stale token (HTTP 404) falls back to `captureFreshDelta`;
+            // `Effect.catchIf` recovers only that case.
             const resolveDelta: Effect.Effect<DeltaPlan, GoogleMailApiError, never> =
               token === undefined
                 ? captureFreshDelta

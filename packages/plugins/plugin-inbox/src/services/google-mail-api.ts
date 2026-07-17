@@ -184,10 +184,10 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
         },
         getProfile: () => Effect.succeed({ historyId: dataset.historyId }),
         // Chains the history-log steps from `startHistoryId` into one record per step (Gmail returns a
-        // record per change-batch), then paginates them by `historyPageSize`. `historyId` is the
-        // mailbox's *current* record on every page (Gmail semantics), so a caller that stops at page one
-        // advances past the unread pages. An unknown/evicted id (no chain match, not already the latest)
-        // fails with a 404 GoogleApiError, matching a server past its retention window.
+        // record per change-batch), then returns one bounded page (honoring `maxResults`). `historyId` is
+        // the mailbox's *current* record on every page (Gmail semantics). An unknown/evicted id (no chain
+        // match, not already the latest) fails with a 404 GoogleApiError, matching a server past its
+        // retention window.
         listHistory: (_userId, options) =>
           Effect.gen(function* () {
             const latest = dataset.historyId;
