@@ -19,10 +19,11 @@ import { DraftMessage, Message, Person } from '@dxos/types';
 // TODO(burdon): Factor out.
 
 /**
- * Reusable, generic email-processing pipeline stages: Mapped → Mapped, composing in any order, each
- * simply recording what it found (`message.attachments`, `contact`, …) rather than writing directly.
- * {@link toCommitUnit} is the terminal stage that turns those into a generic `Cursor.CommitUnit`, and
- * must run last. Provider-specific decode/map stages stay in each sync op.
+ * Reusable, generic email-processing pipeline stages: {@link Change} → {@link Change}, composing in any
+ * order, each simply recording what it found (`message.attachments`, `contact`, …) rather than writing
+ * directly. {@link toCommitUnit} is the terminal stage that turns those into a generic
+ * `Cursor.CommitUnit`, and must run last. Provider-specific decode/map stages construct the initial
+ * `Change` (an `Upsert`, tagged from the start) and stay in each sync op.
  */
 
 /** An item carrying a body string that may contain HTML. */
@@ -37,13 +38,13 @@ export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, 
   Stage.map('html-to-markdown', (item: In) => Effect.sync(() => ({ ...item, body: normalizeText(item.body) })))(self);
 
 /**
- * A mapped message flowing through the generic email stages (attachments, contact extraction, …) —
- * each is Mapped → Mapped, so they compose in any order, simply recording what they found
- * (`message.attachments`, `contact`) rather than each building its own deferred write.
- * {@link toCommitUnit} is the stage that turns those into a `Cursor.CommitUnit`'s `commitEffects`,
- * and must run last.
+ * A new message to append, tagged `upsert` from the moment a provider decodes it. The generic email
+ * stages (attachments, contact extraction, …) act only on this variant of {@link Change}, each simply
+ * recording what it found (`attachments`, `contact`) rather than building its own deferred write;
+ * {@link toCommitUnit} turns those into a `Cursor.CommitUnit`'s `commitEffects` and must run last.
  */
-export type Mapped = {
+export type Upsert = {
+  readonly _tag: 'upsert';
   readonly message: Message.Message;
   readonly foreignId: string;
   readonly key: number;
@@ -56,12 +57,6 @@ export type Mapped = {
   /** Local drafts this synced message supersedes ({@link reconcileDrafts}), removed by {@link toCommitUnit}. */
   readonly supersededDrafts?: readonly Message.Message[];
 };
-
-/**
- * A new message to append (the full {@link Mapped} payload, tagged `upsert`). The body stages act only
- * on this variant of {@link Change}.
- */
-export type Upsert = { readonly _tag: 'upsert' } & Mapped;
 
 /**
  * A label change on an already-committed message, resolved to its feed message's `entityId`.
@@ -94,14 +89,6 @@ export type Delete = {
  */
 export type Change = Upsert | Retag | Delete;
 
-/**
- * Wraps each decoded {@link Mapped} item as an `upsert` {@link Change}. Directly pipeable — like
- * {@link htmlToMarkdown} — so callers compose it with `.pipe(...)` alongside the other stages rather
- * than a separate `Stream.map`.
- */
-export const upsert = <E, R>(self: Stream.Stream<Mapped, E, R>): Stream.Stream<Change, E, R> =>
-  Stage.map('upsert', (mapped: Mapped) => Effect.succeed({ _tag: 'upsert' as const, ...mapped }))(self);
-
 /** A decoded email attachment, ready for {@link processAttachments} to turn into a Blob. */
 export type Attachment = {
   readonly name?: string;
@@ -114,7 +101,7 @@ export type Attachment = {
 
 /**
  * Builds a Person (+ Organization link by domain) from the message sender and records it on the
- * item as {@link Mapped.contact} — the stage writes nothing itself; {@link toCommitUnit} defers
+ * item as {@link Upsert.contact} — the stage writes nothing itself; {@link toCommitUnit} defers
  * the actual `db.add` to commit. A stage factory: call it once per pipeline run so its
  * {@link ContactLookup} is scoped to that run.
  *
@@ -253,11 +240,11 @@ export const reconcileDrafts = (
   );
 
 /**
- * Terminal stage converting a run's {@link Mapped} item into the generic `Cursor.CommitUnit` the
- * commit sink consumes: `message.attachments` (populated by {@link processAttachments}) becomes a
+ * Terminal stage converting a run's {@link Change} into the generic `Cursor.CommitUnit` the commit sink
+ * consumes. For an `upsert`: `message.attachments` (populated by {@link processAttachments}) becomes a
  * feed-append commit effect for the referenced blobs, `mapped.contact` (from {@link extractContacts})
  * becomes a `db.add` commit effect, and `mapped.supersededDrafts` (from {@link reconcileDrafts})
- * becomes a `db.remove` commit effect. Every other email stage is Mapped → Mapped and composes in
+ * becomes a `db.remove` commit effect. Every other email stage is Change → Change and composes in
  * any order; this is the one stage that must run last.
  *
  * Tagging is email-specific (`Cursor.CommitUnit` carries no tag data), so it's applied here rather
@@ -344,7 +331,7 @@ export const toCommitUnit = (
       const commitEffects: Cursor.CommitEffect[] = [];
 
       // Each attachment's ref is inlined (its blob isn't attached to a database yet), so `.target`
-      // resolves it synchronously without a Mapped.attachmentBlobs field to carry it separately.
+      // resolves it synchronously without an Upsert.attachmentBlobs field to carry it separately.
       const blobs = (mapped.message.attachments ?? [])
         .map((attachment) => attachment.ref.target)
         .filter((target): target is Blob.Blob => Obj.instanceOf(Blob.Blob, target));

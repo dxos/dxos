@@ -98,10 +98,11 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               keywordTagMap.set(keyword, Mailbox.tagUri(tag));
             }
 
-            // Fused decode + map; `undefined` drops the item (no body, or unmappable).
+            // Fused decode + map; `undefined` drops the item (no body, or unmappable). Constructs the
+            // `Change` (an `upsert`) directly, so no separate wrapping stage is needed downstream.
             const toMapped = (
               email: JmapMail.Email,
-            ): Effect.Effect<EmailStage.Mapped | undefined, never, JmapMailApi | Resolver> =>
+            ): Effect.Effect<EmailStage.Change | undefined, never, JmapMailApi | Resolver> =>
               Effect.gen(function* () {
                 const decoded = decodeBody(email);
                 if (!decoded) {
@@ -124,12 +125,13 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 const tagUris = [...folderUris, ...keywordUris];
                 const attachments = yield* fetchAttachments(target, decoded.attachments);
                 return {
+                  _tag: 'upsert',
                   message: mapped.message,
                   foreignId: decoded.raw.id,
                   key: new Date(decoded.raw.receivedAt).getTime(),
                   tagUris,
                   attachments,
-                };
+                } satisfies EmailStage.Change;
               });
 
             const toItem = (email: JmapMail.Email): MailSyncItem => ({

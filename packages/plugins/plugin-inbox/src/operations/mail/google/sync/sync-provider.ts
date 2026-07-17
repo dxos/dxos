@@ -63,10 +63,11 @@ export const googleMailSyncProvider = (options: {
               }),
             );
 
-            // Fused decode + map; `undefined` drops the item (no body, or a filtered sender).
+            // Fused decode + map; `undefined` drops the item (no body, or a filtered sender). Constructs
+            // the `Change` (an `upsert`) directly, so no separate wrapping stage is needed downstream.
             const toMapped = (
               message: GoogleMail.Message,
-            ): Effect.Effect<EmailStage.Mapped | undefined, never, GoogleMailApi | Resolver> =>
+            ): Effect.Effect<EmailStage.Change | undefined, never, GoogleMailApi | Resolver> =>
               Effect.gen(function* () {
                 const decoded = decodeBody(message);
                 if (!decoded) {
@@ -86,12 +87,13 @@ export const googleMailSyncProvider = (options: {
                 });
                 const attachments = yield* fetchAttachments(userId, decoded.raw.id, decoded.attachments);
                 return {
+                  _tag: 'upsert',
                   message: mapped.message,
                   foreignId: decoded.raw.id,
                   key: Number.parseInt(decoded.raw.internalDate),
                   tagUris,
                   attachments,
-                };
+                } satisfies EmailStage.Change;
               });
 
             const toItem = (message: GoogleMail.Message): MailSyncItem => ({

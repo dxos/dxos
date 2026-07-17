@@ -56,14 +56,15 @@ export type MailSyncSourceOptions = {
 
 /**
  * One candidate message: its dedup key fields plus a self-contained `process` effect. `process` fuses
- * the provider's decode + map (API + resolver already provided) into `EmailStage.Mapped`, or `undefined`
- * to drop the item (no body, filtered sender, unmappable). Fed through {@link additionsToChanges}, which
- * dedups on `foreignId`/`key` and caps before running `process`, so dedup/decode stay cheap.
+ * the provider's decode + map (API + resolver already provided) into an `EmailStage.Change` (always an
+ * `upsert`, tagged at construction), or `undefined` to drop the item (no body, filtered sender,
+ * unmappable). Fed through {@link additionsToChanges}, which dedups on `foreignId`/`key` and caps before
+ * running `process`, so dedup/decode stay cheap.
  */
 export type MailSyncItem = {
   readonly foreignId: string;
   readonly key: number;
-  readonly process: Effect.Effect<EmailStage.Mapped | undefined, MailSyncError, never>;
+  readonly process: Effect.Effect<EmailStage.Change | undefined, MailSyncError, never>;
 };
 
 /**
@@ -154,10 +155,11 @@ export class MailSyncProvider extends Context.Tag('@dxos/plugin-inbox/MailSyncPr
 
 /**
  * The add-specific head, shared by both providers: dedups raw candidates on foreignId/key, caps at
- * `maxMessages`, runs the provider decode, and wraps survivors as `upsert` changes. Providers apply this
- * inside `buildSource` (after their windows/list/skipCommitted/fetch) so the harness never manipulates
- * streams. `dedupStage`/`take`/decode are add-only — a retag targets an already-committed message — so
- * they live here rather than in the shared tail.
+ * `maxMessages`, and runs the provider decode (which constructs each survivor's `upsert` change
+ * directly — see `MailSyncItem.process`). Providers apply this inside `buildSource` (after their
+ * windows/list/skipCommitted/fetch) so the harness never manipulates streams. `dedupStage`/`take`/decode
+ * are add-only — a retag targets an already-committed message — so they live here rather than in the
+ * shared tail.
  */
 export const additionsToChanges = (
   items: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>,
@@ -172,7 +174,6 @@ export const additionsToChanges = (
     Stream.take(options.maxMessages),
     Stream.tap(() => Effect.sync(() => options.onTaken(1))),
     Stage.map('process', (item: MailSyncItem) => item.process),
-    EmailStage.upsert,
   );
 
 /**
