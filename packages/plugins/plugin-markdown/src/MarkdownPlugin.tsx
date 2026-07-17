@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';
 
@@ -23,30 +22,53 @@ import { translations } from '#translations';
 import { Markdown, MarkdownEvents } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCommentConfigModule({
+    requires: CommentConfig.requires,
+    provides: CommentConfig.provides,
+    activate: CommentConfig,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    // Migration bridge: Batch-5 consumer plugins still contribute extension providers via
+    // `activatesOn: MarkdownEvents.SetupExtensions`; the ExtensionProvider capability is a live
+    // (multi) view read reactively by the surface's Container component, so firing after
+    // activation is safe — contributions still show up whenever they land.
+    compatFires: [MarkdownEvents.SetupExtensions],
     activate: ReactSurface,
-    firesBeforeActivation: [MarkdownEvents.SetupExtensions],
   }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
+  AppPlugin.addSettingsModule({
+    requires: MarkdownSettings.requires,
+    provides: MarkdownSettings.provides,
     activate: MarkdownSettings,
   }),
   Plugin.addModule({
-    id: 'state',
-    // Wait for AttentionEvents.AttentionReady so ViewStateManager is available when the module
-    // resolves AttentionCapabilities.ViewState to build the editor state store.
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AttentionEvents.AttentionReady),
+    id: Capability.getModuleTag(MarkdownState),
+    requires: MarkdownState.requires,
+    provides: MarkdownState.provides,
     activate: MarkdownState,
   }),
   Plugin.addModule({
-    // TODO(wittjosiah): More relevant event?
-    activatesOn: AppActivationEvents.AppGraphReady,
+    id: Capability.getModuleTag(AnchorSort),
+    requires: AnchorSort.requires,
+    provides: AnchorSort.provides,
     activate: AnchorSort,
   }),
   Plugin.make,

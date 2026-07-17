@@ -2373,6 +2373,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const CompatEvent = ActivationEvent.make('org.dxos.test.compat');
         const order: string[] = [];
+        const listenerRan = yield* Deferred.make<void>();
         const Test = Plugin.make(
           Plugin.define(testMeta).pipe(
             Plugin.addModule({
@@ -2389,6 +2390,7 @@ describe('PluginManager', () => {
               activatesOn: CompatEvent,
               activate: Effect.fnUntraced(function* () {
                 order.push('legacy-listener');
+                yield* Deferred.succeed(listenerRan, undefined);
               }),
             }),
           ),
@@ -2396,6 +2398,9 @@ describe('PluginManager', () => {
 
         const manager = makeManagerWith(Test);
         assert.isTrue(yield* manager.start());
+        // Compat events are fire-and-forget: start() does not await the listener wave,
+        // but the listener runs after the migrated module's contributions are visible.
+        yield* Deferred.await(listenerRan);
         assert.deepStrictEqual(order, ['migrated', 'legacy-listener']);
       }),
     );

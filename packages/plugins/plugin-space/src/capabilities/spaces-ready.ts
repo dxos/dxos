@@ -7,12 +7,18 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { GraphBuilder } from '@dxos/app-graph';
 import { AppAnnotation, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
@@ -37,14 +43,14 @@ export default Capability.makeModule(
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invoke, invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
-    const attention = yield* Capability.get(AttentionCapabilities.Attention);
-    const stateAtom = yield* Capability.get(SpaceCapabilities.State);
-    const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const { invoke, invokePromise } = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const registry = yield* Capabilities.AtomRegistry;
+    const layoutAtom = yield* AppCapabilities.Layout;
+    const attention = yield* AttentionCapabilities.Attention;
+    const stateAtom = yield* SpaceCapabilities.State;
+    const ephemeralAtom = yield* SpaceCapabilities.EphemeralState;
+    const client = yield* ClientCapabilities.Client;
 
     //
     // Personal space initialization — deferred until found.
@@ -353,7 +359,7 @@ export default Capability.makeModule(
     );
     registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
         if (personalSpaceInitFiber) {
           yield* Fiber.interrupt(personalSpaceInitFiber);
@@ -362,5 +368,6 @@ export default Capability.makeModule(
         subscriptions.clear();
       }),
     );
+    return [];
   }),
 );

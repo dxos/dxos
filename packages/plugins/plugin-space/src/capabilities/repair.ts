@@ -13,11 +13,11 @@ import { type Space } from '@dxos/react-client/echo';
 import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
+  Effect.succeed([
+    Capability.provide(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
       await removeQueryCollections(space);
     }),
-  ),
+  ]),
 );
 
 /**

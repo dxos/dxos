@@ -35,17 +35,17 @@ export default Capability.makeModule(
       defaultValue: () => ({ viewMode: {} }),
     });
 
-    // Resolve ViewStateManager contributed by plugin-attention (guaranteed available because this
-    // module activates only after AttentionEvents.AttentionReady fires — see MarkdownPlugin.tsx).
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    // Resolve ViewStateManager contributed by plugin-attention (declared in `requires` so this
+    // module activates only once it lands — see MarkdownPlugin.tsx).
+    const viewState = yield* AttentionCapabilities.ViewState;
     const editorState = createEditorViewStateStore(viewState);
 
     const editorViews = createEditorViewRegistry();
 
     return [
-      Capability.contributes(MarkdownCapabilities.State, stateAtom),
-      Capability.contributes(MarkdownCapabilities.EditorState, editorState),
-      Capability.contributes(MarkdownCapabilities.EditorViews, editorViews),
+      Capability.provide(MarkdownCapabilities.State, stateAtom),
+      Capability.provide(MarkdownCapabilities.EditorState, editorState),
+      Capability.provide(MarkdownCapabilities.EditorViews, editorViews),
     ];
   }),
 );

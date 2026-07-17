@@ -14,7 +14,7 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
 
     const personalSpace = yield* Effect.tryPromise(() =>
       client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),

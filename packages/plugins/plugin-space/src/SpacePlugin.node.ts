@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -31,8 +31,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addCommandModule({
     commands: [database, queue, space],
   }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({
     schema: [
       ...DataTypes,
@@ -63,14 +71,20 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(UndoMappings),
-        activatesOn: ActivationEvents.SetupProcessManager,
+        requires: UndoMappings.requires,
+        provides: UndoMappings.provides,
         activate: () => UndoMappings({ createInvitationUrl, observability: false }),
       };
     },
   ),
   Plugin.addModule({
+    id: Capability.getModuleTag(IdentityCreated),
+    // Runtime event: the personal space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
-    firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
+    requires: IdentityCreated.requires,
+    provides: IdentityCreated.provides,
+    // Migration bridge for unmigrated PersonalSpaceReady listeners (plugin-onboarding).
+    compatFires: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.make,

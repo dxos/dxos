@@ -58,7 +58,7 @@ export namespace SpaceCapabilities {
     isDefault: boolean;
     rootCollection: Collection.Collection;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.profile.key}.capability.on-space-created`);
+  export const OnCreateSpace = Capability.makeMulti<OnCreateSpace>(`${meta.profile.key}.capability.on-space-created`);
 
   export type OnTypeAdded = (params: {
     db: Database.Database;
@@ -66,7 +66,7 @@ export namespace SpaceCapabilities {
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnTypeAdded = Capability.make<OnTypeAdded>(`${meta.profile.key}.capability.on-type-added`);
+  export const OnTypeAdded = Capability.makeMulti<OnTypeAdded>(`${meta.profile.key}.capability.on-type-added`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
@@ -88,7 +88,9 @@ export namespace SpaceCapabilities {
      */
     customPanel?: ComponentType<CreateObjectCustomPanelProps>;
   }>;
-  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.profile.key}.capability.create-object`);
+  export const CreateObjectEntry = Capability.makeMulti<CreateObjectEntry>(
+    `${meta.profile.key}.capability.create-object`,
+  );
 
   /** Props passed to a `CreateObjectEntry.customPanel`. */
   export type CreateObjectCustomPanelProps = {

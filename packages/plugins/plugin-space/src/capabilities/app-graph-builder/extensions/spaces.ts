@@ -43,6 +43,13 @@ const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }
 /** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
+  // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
+  // `Capability.get`, establishing a dependency that heals once the capability lands.
+  const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+  const stateCapAtom = yield* Capability.atom(SpaceCapabilities.State);
+  const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
+  const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.Settings);
+  const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
@@ -178,14 +185,17 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
         // This reactive connector can recompute once during the teardown window (e.g. when stories
-        // swap plugin managers) after the Client capability has been removed; tolerate its absence
-        // via the safe `getAll` lookup rather than the throwing `get`.
-        const [client] = capabilities.getAll(ClientCapabilities.Client);
+        // swap plugin managers) after the Client capability has been removed; the hoisted atom
+        // resolves to an empty array rather than throwing in that case.
+        const [client] = get(clientAtom);
         if (!client) {
           return Effect.succeed([]);
         }
-        const stateAtom = capabilities.get(SpaceCapabilities.State);
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+        const [stateAtom] = get(stateCapAtom);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!stateAtom || !ephemeralAtom) {
+          return Effect.succeed([]);
+        }
         const spacesAtom = CreateAtom.fromObservable(client.spaces);
 
         const spaces = get(spacesAtom);
@@ -195,14 +205,21 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
-        const settingsAtom = capabilities.get(SpaceCapabilities.Settings);
+        const [settingsAtom] = get(settingsCapAtom);
+        if (!settingsAtom) {
+          return Effect.succeed([]);
+        }
         const settings = get(settingsAtom);
         const state = get(stateAtom);
         const ephemeralState = get(ephemeralAtom);
 
         try {
           const [spacesOrder] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
-          const { graph } = capabilities.get(AppCapabilities.AppGraph);
+          const [appGraph] = get(appGraphAtom);
+          if (!appGraph) {
+            return Effect.succeed([]);
+          }
+          const { graph } = appGraph;
 
           const spacesOrderSnapshot = spacesOrder ? get(Obj.atom(spacesOrder)) : undefined;
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
@@ -270,13 +287,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       id: 'actions',
       match: AppNodeMatcher.whenSpace,
       actions: (space, get) => {
-        const [client] = get(capabilities.atom(ClientCapabilities.Client));
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
-        const ephemeralState = get(ephemeralAtom);
+        const [client] = get(clientAtom);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
 
-        if (!client) {
+        if (!client || !ephemeralAtom) {
           return Effect.succeed([]);
         }
+        const ephemeralState = get(ephemeralAtom);
 
         // Recompute actions when a migration completes (state transition or versionProperty stamp).
         get(CreateAtom.fromObservable(space.state));

@@ -5,6 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { PluginManager } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { RegistryCapabilities } from '../types';
@@ -17,9 +20,9 @@ import { RegistryCapabilities } from '../types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const manager = yield* Capability.get(Capabilities.PluginManager);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const settingsAtom = yield* Capability.get(RegistryCapabilities.Settings);
+    const manager = yield* Capabilities.PluginManager;
+    const registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* RegistryCapabilities.Settings;
 
     const settings = registry.get(settingsAtom);
     const url = settings.devPluginUrl?.trim();

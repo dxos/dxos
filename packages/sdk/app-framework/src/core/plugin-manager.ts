@@ -935,7 +935,17 @@ class ManagerImpl implements PluginManager {
       const results = yield* Effect.withFiberRuntime<[boolean, boolean], Error>((fiber) =>
         Effect.all(
           [
-            this._activateDependencyGraph(),
+            // Graph-level failures (missing provider, duplicate provider, cycle) fail the
+            // start call; publish them so boot UIs surface the root cause instead of a
+            // silent hang behind their own watchdog.
+            this._activateDependencyGraph().pipe(
+              Effect.tapError((error) =>
+                Effect.gen(this, function* () {
+                  log.error('dependency activation failed', { error: String(error) });
+                  yield* PubSub.publish(this.activation, { event: key, state: 'error', error });
+                }),
+              ),
+            ),
             this._activateEvent(key, undefined, fiber, { suppressEventMessage: true }),
           ],
           { concurrency: 'unbounded' },
@@ -1818,11 +1828,25 @@ class ManagerImpl implements PluginManager {
       }
       const capabilities = yield* this._loadModule(module, parentEvent);
       yield* this._contributeCapabilities(module, capabilities);
+
+      // Compat events fire-and-forget: the bridge only *triggers* unmigrated listeners
+      // (after this module's contributions are visible). Awaiting them would couple the
+      // dependency pass to legacy modules whose own waits can be slow, stuck, or failing —
+      // observed as a startup hang. Fibers are tracked so shutdown interrupts them.
       const compatFires = module.activation.mode !== 'legacy' ? (module.activation.compatFires ?? []) : [];
-      yield* Effect.all(
-        compatFires.map((event) => this.activate(event, { after: module.id })),
-        { concurrency: 'unbounded' },
-      );
+      for (const event of compatFires) {
+        const fiber = yield* Effect.forkDaemon(
+          this.activate(event, { after: module.id }).pipe(
+            Effect.catchAll((error) =>
+              Effect.sync(() => log.warn('compat event activation failed', { event, module: module.id, error })),
+            ),
+          ),
+        );
+        yield* this._trackFiber(this._inFlightFibers, fiber);
+        yield* Effect.forkDaemon(
+          Fiber.await(fiber).pipe(Effect.andThen(() => this._untrackFiber(this._inFlightFibers, fiber))),
+        );
+      }
     });
   }
 

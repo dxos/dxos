@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
     const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
@@ -86,9 +86,9 @@ export default Capability.makeModule(
     };
 
     return [
-      Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),
-      Capability.contributes(AppCapabilities.NavigationPathResolver, pathResolver),
-      Capability.contributes(AppCapabilities.NavigationPathResolver, bareEntityPathResolver),
+      Capability.provide(AppCapabilities.NavigationTargetResolver, resolver),
+      Capability.provide(AppCapabilities.NavigationPathResolver, pathResolver),
+      Capability.provide(AppCapabilities.NavigationPathResolver, bareEntityPathResolver),
     ];
   }),
 );

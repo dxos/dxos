@@ -8,6 +8,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { SpaceOperation } from '../../operations';
@@ -23,8 +26,8 @@ export type NavigationHandlerOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ invitationProp = 'spaceInvitationCode' }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
-    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const operationService = yield* Capabilities.OperationInvoker;
+    const client = yield* ClientCapabilities.Client;
 
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {
@@ -48,7 +51,7 @@ export default Capability.makeModule(
         Effect.orDie,
       );
 
-    return Capability.contributes(AppCapabilities.NavigationHandler, handler);
+    return [Capability.provide(AppCapabilities.NavigationHandler, handler)];
   }),
 );
 

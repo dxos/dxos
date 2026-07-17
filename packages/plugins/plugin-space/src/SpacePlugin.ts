@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
-import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -49,13 +48,27 @@ import { type SpacePluginOptions } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    requires: NavigationHandler.requires,
+    provides: NavigationHandler.provides,
     activate: () => NavigationHandler({ invitationProp }),
   })),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addReactRootModule({ activate: ReactRoot }),
+  AppPlugin.addNavigationResolverModule({
+    requires: NavigationResolver.requires,
+    provides: NavigationResolver.provides,
+    activate: NavigationResolver,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addReactRootModule({ requires: ReactRoot.requires, provides: ReactRoot.provides, activate: ReactRoot }),
   AppPlugin.addSchemaModule({
     schema: [
       ...DataTypes,
@@ -73,16 +86,20 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Task.Task,
     ],
   }),
-  AppPlugin.addSettingsModule({ activate: SpaceSettings }),
+  AppPlugin.addSettingsModule({
+    requires: SpaceSettings.requires,
+    provides: SpaceSettings.provides,
+    activate: SpaceSettings,
+  }),
   AppPlugin.addTranslationsModule({
     translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
   Plugin.addModule({
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    firesAfterActivation: [SpaceEvents.StateReady],
+    id: Capability.getModuleTag(SpaceState),
+    requires: SpaceState.requires,
+    provides: SpaceState.provides,
+    // Migration bridge for unmigrated StateReady listeners.
+    compatFires: [SpaceEvents.StateReady],
     activate: SpaceState,
   }),
   Plugin.addModule(
@@ -99,9 +116,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(ReactSurface),
-        activatesOn: ActivationEvents.SetupReactSurface,
-        // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
-        firesBeforeActivation: [SpaceEvents.SetupSettingsPanel],
+        requires: ReactSurface.requires,
+        provides: ReactSurface.provides,
         activate: () => ReactSurface({ createInvitationUrl }),
       };
     },
@@ -109,7 +125,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule(
     ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
       id: Capability.getModuleTag(AppGraphBuilder),
-      activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
+      requires: AppGraphBuilder.requires,
+      provides: AppGraphBuilder.provides,
       activate: () => AppGraphBuilder({ shareableLinkOrigin }),
     }),
   ),
@@ -128,29 +145,36 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(UndoMappings),
-        activatesOn: ActivationEvents.SetupProcessManager,
+        requires: UndoMappings.requires,
+        provides: UndoMappings.provides,
         activate: () => UndoMappings({ createInvitationUrl, observability }),
       };
     },
   ),
   Plugin.addModule({
+    id: Capability.getModuleTag(IdentityCreated),
+    // Runtime event: the personal space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
-    firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
+    requires: IdentityCreated.requires,
+    provides: IdentityCreated.provides,
+    // Migration bridge for unmigrated PersonalSpaceReady listeners (plugin-onboarding).
+    compatFires: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(
-      ActivationEvents.ProcessManagerReady,
-      AppActivationEvents.LayoutReady,
-      AppActivationEvents.AppGraphReady,
-      AttentionEvents.AttentionReady,
-      SpaceEvents.StateReady,
-      ClientEvents.SpacesReady,
-    ),
+    id: Capability.getModuleTag(SpacesReady),
+    // Runtime event: spaces become ready when the client observes them, not at startup.
+    activatesOn: ClientEvents.SpacesReady,
+    requires: SpacesReady.requires,
+    provides: SpacesReady.provides,
     activate: SpacesReady,
   }),
   Plugin.addModule({
+    id: Capability.getModuleTag(Repair),
+    // Runtime event: repairs run once spaces are observed, not at startup.
     activatesOn: ClientEvents.SpacesReady,
+    requires: Repair.requires,
+    provides: Repair.provides,
     activate: Repair,
   }),
   AppPlugin.addPluginAssetModule({

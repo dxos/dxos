@@ -27,6 +27,6 @@ export default Capability.makeModule(
       createCompanionExtensions(),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions.flat())];
   }),
 );

@@ -36,6 +36,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin: string;
 }) {
   const capabilities = yield* Capability.Service;
+  // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
+  // `Capability.get`, establishing a dependency that heals once the capability lands.
+  const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
 
   return yield* Effect.all([
     // Content section group — created alongside collections so the group always
@@ -101,7 +104,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!ephemeralAtom) {
+          return Effect.succeed([]);
+        }
         const ephemeralState = get(ephemeralAtom);
 
         get(Obj.atom(space.properties));
@@ -146,7 +152,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       id: 'objects',
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!ephemeralAtom) {
+          return Effect.succeed([]);
+        }
         const ephemeralState = get(ephemeralAtom);
         const db = Obj.getDatabase(collection);
 
@@ -196,12 +205,12 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const deletable = !Type.isType(object);
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
-        const ephemeralState = get(ephemeralAtom);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
 
-        if (!appGraph) {
+        if (!appGraph || !ephemeralAtom) {
           return Effect.succeed([]);
         }
+        const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
         const parentNode = Option.getOrUndefined(Graph.getNode(appGraph.graph, parentId));

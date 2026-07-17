@@ -56,6 +56,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/operation"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -69,6 +72,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"

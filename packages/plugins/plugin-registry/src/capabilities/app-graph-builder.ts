@@ -41,7 +41,9 @@ const toDisplayPlugin = (entry: Plugin.Meta): Plugin.Plugin =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    // Hoisted so connector bodies read reactively via `get(...)` instead of a sync
+    // `Capability.get`, establishing a dependency that heals once the capability lands.
+    const pluginManagerAtom = yield* Capability.atom(Capabilities.PluginManager);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -64,7 +66,10 @@ export default Capability.makeModule(
         id: 'registry',
         match: NodeMatcher.whenRoot,
         connector: (_node, get) => {
-          const manager = capabilities.get(Capabilities.PluginManager);
+          const [manager] = get(pluginManagerAtom);
+          if (!manager) {
+            return Effect.succeed([]);
+          }
           const plugins = get(manager.plugins);
           const filterContext = {
             core: get(manager.core),
@@ -181,7 +186,10 @@ export default Capability.makeModule(
         id: 'plugins',
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
-          const manager = capabilities.get(Capabilities.PluginManager);
+          const [manager] = get(pluginManagerAtom);
+          if (!manager) {
+            return Effect.succeed([]);
+          }
           const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.profile.key));
 
           const installedNodes = manager.getPlugins().map((plugin) =>
@@ -219,6 +227,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

@@ -23,7 +23,11 @@ import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const SpacePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({
     schema: [
       ...DataTypes,
