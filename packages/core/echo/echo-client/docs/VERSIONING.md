@@ -208,6 +208,49 @@ The branching methods and `BranchBinding` type live on the core `Database.Databa
 `getCurrentBranch`, and `getObjectOnBranch(obj, name)` (a one-shot read of an object's current
 decoded data on a branch, via a transient binding).
 
+### Nested branches (planned)
+
+Today a branch can only fork from **main**: `createBranch` forks each member from its current core
+document, and `mergeBranch` always merges into the main document. A branch-of-a-branch (a sub-branch
+forked off another branch's tip or one of its revisions) is therefore unsupported — the fork would
+derive from main (wrong content) or throw "fork frontier not reachable" (the sub-branch's changes are
+not in main). The plugin layer guards against it (the "New branch" affordance is disabled on a branch
+or a branch revision) rather than silently forking from main.
+
+The planned model is a **parent pointer**, keeping the registry flat (still keyed by
+`(rootObjectId, branchName)`) and forming a branch _tree_ via one added field:
+
+```
+branches[rootObjectId][branchName] = {
+  members, baseHeads?, createdAt?,
+  parent?: string,   // parent branch name; absent ⇒ main. baseHeads become the parent's fork heads.
+}
+```
+
+Only the two hardwired-to-main operations change; the fork source and merge target resolve through
+`parent`:
+
+- `createBranch(rootId, name, { fromHeads?, parent? })` — when `parent` is set, `forkDump` each
+  member from the **parent branch's** document (`registry[parent].members[objectId]`) at the fork
+  frontier, not from the member's current core doc.
+- `mergeBranch(rootId, name)` — merge into the **parent branch's** documents when `record.parent` is
+  set, else main; afterwards switch the device back to the parent branch. Merging or deleting a
+  branch that still has live children is blocked in v1 ("merge children first"); re-parenting
+  children to the grandparent is a deferred refinement.
+- `deleteBranch` — orphaned members fall back to `record.parent ?? 'main'`.
+
+Everything else is already nesting-agnostic and unchanged: `switchBranch`, `bindCoreToBranch`,
+`listBranches`, and `_findBranchRootFor` resolve a branch by name (a nested branch is just another
+named branch under the same root); replication (`getAllBranchDocUrls`), import remap
+(`DatabaseRoot.mapLinks`), and `BranchStore` iterate all records regardless of parentage. Merge
+correctness is free: a child shares the parent's automerge ancestry, which shares main's, and
+`A.merge` is order-independent over shared history, so child→parent→main converges under any
+interleaving. The field is additive and optional — existing branches read as parented to main, so no
+migration is needed.
+
+Full design, plugin/timeline plumbing, and estimate:
+[`agents/superpowers/specs/2026-07-17-nested-branches-design.md`](../../../../../agents/superpowers/specs/2026-07-17-nested-branches-design.md).
+
 ## Design notes & constraints
 
 - **Selection is per-surface/session, not device-global.** The canonical object is never globally
