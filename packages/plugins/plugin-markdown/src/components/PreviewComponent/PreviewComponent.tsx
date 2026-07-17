@@ -10,7 +10,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { useResolveRef } from '@dxos/react-client/echo';
+import { useObject, useResolveRef } from '@dxos/react-client/echo';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
@@ -90,7 +90,8 @@ export const PreviewComponent = ({
   // Resolve relative to the containing document's own space so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
   const ref = useMemo(() => (uri && space ? space.db.makeRef<Obj.Unknown>(uri) : undefined), [uri, space]);
-  const subject = useResolveRef(ref);
+  const object = useResolveRef(ref);
+  const subject = useObject(object);
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
@@ -154,26 +155,28 @@ export const PreviewComponent = ({
 
   // Open the referenced object: defer to the caller's handler when provided, else navigate to it.
   const handleOpen = useCallback(() => {
-    if (!uri || !subject) {
+    if (!uri || !object) {
       return;
     }
+
     if (onOpen) {
       onOpen(uri);
     } else {
       void invokePromise?.(LayoutOperation.Open, {
-        subject: [Paths.getObjectPathFromObject(subject)],
+        subject: [Paths.getObjectPathFromObject(object)],
         navigation: 'immediate',
       });
     }
-  }, [uri, subject, onOpen, invokePromise]);
+  }, [uri, object, onOpen, invokePromise]);
 
-  if (!uri || !subject || !data) {
+  if (!uri || !object || !data) {
     return null;
   }
 
-  const objectLabel = Obj.getLabel(subject);
-  const objectIcon = Obj.getIcon(subject);
+  const objectLabel = Obj.getLabel(object);
+  const objectIcon = Obj.getIcon(object);
 
+  // Section preview.
   if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
     return (
       <div
@@ -214,13 +217,14 @@ export const PreviewComponent = ({
     );
   }
 
+  // Card preview.
   if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
     return (
       <div>
         <Card.Root>
           <Card.Header>
             <Card.Block />
-            <Card.Title>{Obj.getLabel(data.subject)}</Card.Title>
+            <Card.Title>{objectLabel}</Card.Title>
           </Card.Header>
           <Card.Body>
             <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />

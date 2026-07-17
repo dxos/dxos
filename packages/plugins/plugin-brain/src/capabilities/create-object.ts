@@ -47,7 +47,7 @@ export default Capability.makeModule(
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object: topic,
             target: options.target,
-            targetNodeId: Paths.getSpacePath(options.db.spaceId, Type.getTypename(Topic.Topic)),
+            targetNodeId: Paths.getSpacePath(options.db.spaceId, Paths.GroupSegments.ai, Type.getTypename(Topic.Topic)),
           });
         }),
     });

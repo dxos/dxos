@@ -28,14 +28,14 @@ export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical' padding thin>
           <ScrollArea.Viewport classNames='dx-document'>
-            <Card.Root fullWidth border={false}>
+            {/* <Card.Root fullWidth border={false}>
               <Card.Header>
                 <Card.Block>
                   <Icon icon='ph--stack--regular' />
                 </Card.Block>
                 <Card.Title>{topic.name}</Card.Title>
               </Card.Header>
-              {/* <Card.Body>
+              <Card.Body>
                 {topic.summary.length > 0 && (
                   <Card.Row>
                     <Card.Text variant='description'>{topic.summary}</Card.Text>
@@ -64,8 +64,8 @@ export const TopicArticle = ({ role, subject: topic }: TopicArticleProps) => {
                 <ListSection icon='ph--tree-view--regular' label={t('topic.threads.label')} items={topic.threadIds} />
                 <ListSection icon='ph--question--regular' label={t('topic.questions.label')} items={topic.questions} />
                 <ListSection icon='ph--check-square--regular' label={t('topic.tasks.label')} items={topic.tasks} />
-              </Card.Body> */}
-            </Card.Root>
+              </Card.Body>
+            </Card.Root> */}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>
