@@ -65,8 +65,16 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // for core branches, the forked Text for legacy ones); viewing a checkpoint pins the live
     // Text to historical heads (the hook manages the pin). Selection is per-user session state.
     const versioning = useVersioning(object);
-    const { document, activeBranch, activeVersion, checkpointText, branchBaseContent, setSelection, setCompare } =
-      versioning;
+    const {
+      document,
+      activeBranch,
+      activeVersion,
+      checkpointText,
+      checkpointContent,
+      branchBaseContent,
+      setSelection,
+      setCompare,
+    } = versioning;
     const diffViewMode = settings.diffView ?? 'inline';
     const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
     const branchText = activeBranch ? versioning.activeText : undefined;
@@ -77,10 +85,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // While a core-branch binding is resolving, the editor must not mount against the root object
     // — edits would silently land on main. Render an empty panel until the binding is ready.
     const branchLoading = !!activeBranch && !branchText;
-    const editorObject = activeVersion ? object : (branchText ?? object);
-    const initialValue = activeVersion
-      ? (docContent ?? textContent)
-      : (branchText?.content ?? docContent ?? textContent);
+    // A checkpoint is shown read-only from a DETACHED content snapshot, not the live (pinned) object:
+    // binding CodeMirror's automerge sync to a time-travelled doc mismatches (CM holds the tip text
+    // while the pinned doc reads the shorter historical text → out-of-range splice). The pin still
+    // drives non-editor surfaces (label, companion). Branch view binds the live branch Text.
+    const editorObject = activeVersion
+      ? { id: `${id}--${activeVersion.id}`, text: checkpointContent ?? '' }
+      : (branchText ?? object);
+    const initialValue = activeVersion ? checkpointContent : (branchText?.content ?? docContent ?? textContent);
     const effectiveViewMode = activeVersion ? 'readonly' : viewMode;
     // Remount the editor when the selection or compare overlay changes so CodeMirror state rebinds cleanly.
     const editorKey = `${
