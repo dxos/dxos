@@ -28,6 +28,6 @@ export default Capability.makeModule(() =>
       return undefined;
     };
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [provider]);
+    return [Capability.provide(MarkdownCapabilities.ExtensionProvider, [provider])];
   }),
 );

@@ -12,6 +12,6 @@ import { TranscriptionCapabilities } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const sessionAtom = Atom.make<TranscriptionCapabilities.RecordingSession | null>(null).pipe(Atom.keepAlive);
-    return Capability.contributes(TranscriptionCapabilities.RecordingSession, sessionAtom);
+    return [Capability.provide(TranscriptionCapabilities.RecordingSession, sessionAtom)];
   }),
 );

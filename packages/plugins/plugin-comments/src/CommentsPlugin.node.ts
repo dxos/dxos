@@ -10,10 +10,26 @@ import { AppGraphBuilder, OperationHandler, SkillDefinition, UndoMappings } from
 import { meta } from '#meta';
 
 export const CommentsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addUndoMappingsModule({
+    requires: UndoMappings.requires,
+    provides: UndoMappings.provides,
+    activate: UndoMappings,
+  }),
   AppPlugin.addSchemaModule({
     schema: [AnchoredTo.AnchoredTo, Message.Message, Thread.Thread],
   }),

@@ -13,24 +13,26 @@ import { Message, Transcript } from '@dxos/types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(AppCapabilities.TextContent, {
-      id: Type.getTypename(Transcript.Transcript),
-      getTextContent: async (transcript: Transcript.Transcript) => {
-        const space = getSpace(transcript);
-        const members = space?.members.get().map((member) => member.identity) ?? [];
-        const feed = await transcript.feed.load();
-        const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
-        if (!space || !feedDXN) {
-          return undefined;
-        }
-        const messages = await space.db
-          .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(feedDXN)))
-          .run();
-        return messages
-          .filter((message) => Obj.instanceOf(Message.Message, message))
-          .flatMap((message, index) => renderByline(members)(message, index))
-          .join('\n\n');
-      },
-    });
+    return [
+      Capability.provide(AppCapabilities.TextContent, {
+        id: Type.getTypename(Transcript.Transcript),
+        getTextContent: async (transcript: Transcript.Transcript) => {
+          const space = getSpace(transcript);
+          const members = space?.members.get().map((member) => member.identity) ?? [];
+          const feed = await transcript.feed.load();
+          const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
+          if (!space || !feedDXN) {
+            return undefined;
+          }
+          const messages = await space.db
+            .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(feedDXN)))
+            .run();
+          return messages
+            .filter((message) => Obj.instanceOf(Message.Message, message))
+            .flatMap((message, index) => renderByline(members)(message, index))
+            .join('\n\n');
+        },
+      }),
+    ];
   }),
 );

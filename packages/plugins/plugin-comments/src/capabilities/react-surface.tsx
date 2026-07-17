@@ -15,8 +15,8 @@ import { CommentsArticle } from '#containers';
 // `AppCapabilities.Settings` contribution (see capabilities/settings.ts);
 // no plugin-specific settings surface is required.
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'comments',
         filter: AppSurface.allOf(
@@ -27,5 +27,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <CommentsArticle attendableId={data.attendableId} subject={data.companionTo} />,
       }),
     ]),
-  ),
+  ]),
 );

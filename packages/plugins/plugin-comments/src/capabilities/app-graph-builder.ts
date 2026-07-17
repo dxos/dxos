@@ -54,10 +54,14 @@ const whenCommentableObject = NodeMatcher.whenAll(
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    // Read reactively so the extension establishes a dependency and heals once these
+    // capabilities land (dependency modules contribute individually, not batched per wave).
+    const commentConfigAtom = yield* Capability.atom(AppCapabilities.CommentConfig);
+    const stateAtom = yield* Capability.atom(CommentCapabilities.State);
+    const viewStateAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
 
-    const getCommentConfig = (typename: string) =>
-      capabilities.getAll(AppCapabilities.CommentConfig).find(({ id }) => id === typename);
+    const getCommentConfig = (get: Atom.Context, typename: string) =>
+      get(commentConfigAtom).find(({ id }) => id === typename);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -66,7 +70,7 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
-          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          const commentConfig = getCommentConfig(get, Obj.getTypename(node.data)!);
           return commentConfig ? Option.some(node) : Option.none();
         },
         connector: () =>
@@ -86,15 +90,17 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
-          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          const commentConfig = getCommentConfig(get, Obj.getTypename(node.data)!);
           return commentConfig ? Option.some(node) : Option.none();
         },
         actions: (matched, get) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
-          const stateAtom = capabilities.atom(CommentCapabilities.State);
-          const viewState = capabilities.get(AttentionCapabilities.ViewState);
-          const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
+          const [viewState] = get(viewStateAtom);
+          if (!viewState) {
+            return Effect.succeed([]);
+          }
+          const commentConfig = getCommentConfig(get, Obj.getTypename(object)!)!;
 
           const disabled = get(
             commentDisabledFamily({
@@ -109,11 +115,10 @@ export default Capability.makeModule(
             {
               id: 'comment',
               data: Effect.fnUntraced(function* () {
-                const config = getCommentConfig(Obj.getTypename(object)!)!;
                 const selection = viewState.get(selectionAspect, objectUri);
                 const anchor =
-                  (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
-                const name = config.getAnchorLabel?.(object, anchor);
+                  (commentConfig.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
+                const name = commentConfig.getAnchorLabel?.(object, anchor);
                 yield* Operation.invoke(CommentOperation.Create, {
                   anchor,
                   name,
@@ -133,6 +138,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

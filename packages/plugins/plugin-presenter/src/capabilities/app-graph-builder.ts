@@ -26,19 +26,24 @@ const whenPresentable = (node: Node.Node, get: Atom.Context) =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    // Read reactively so the extension establishes a dependency and heals once this
+    // capability lands (dependency modules contribute individually, not batched per wave).
+    const settingsCapabilityAtom = yield* Capability.atom(PresenterCapabilities.Settings);
+
+    const isPresentable = (object: Obj.Any, get: Atom.Context) => {
+      const [settingsAtom] = get(settingsCapabilityAtom);
+      const settings = settingsAtom ? get(settingsAtom) : undefined;
+      return settings?.presentCollections
+        ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
+        : Obj.instanceOf(Markdown.Document, object);
+    };
 
     const extensions = yield* GraphBuilder.createExtension({
       id: 'root',
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {
-        const settingsAtom = capabilities.get(PresenterCapabilities.Settings);
-        const settings = get(settingsAtom);
-        const isPresentable = settings?.presentCollections
-          ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
-          : Obj.instanceOf(Markdown.Document, object);
-        if (!isPresentable) {
+        if (!isPresentable(object, get)) {
           return Effect.succeed([]);
         }
 
@@ -52,13 +57,8 @@ export default Capability.makeModule(
         ]);
       },
       actions: (object, get) => {
-        const settingsAtom = capabilities.get(PresenterCapabilities.Settings);
-        const settings = get(settingsAtom);
-        const isPresentable = settings?.presentCollections
-          ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
-          : Obj.instanceOf(Markdown.Document, object);
         const db = Obj.getDatabase(object);
-        if (!isPresentable || !db) {
+        if (!isPresentable(object, get) || !db) {
           return Effect.succeed([]);
         }
 
@@ -82,6 +82,6 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

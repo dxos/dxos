@@ -19,27 +19,29 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
-      ({ document }) => {
-        if (!document) {
-          return undefined;
-        }
+    return [
+      Capability.provide(MarkdownCapabilities.ExtensionProvider, [
+        ({ document }) => {
+          if (!document) {
+            return undefined;
+          }
 
-        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-        return Prec.highest(
-          keymap.of([
-            {
-              key: 'Shift-Mod-p',
-              preventDefault: true,
-              stopPropagation: true,
-              run: () => {
-                void invokePromise(PresenterOperation.TogglePresentation, { object: document });
-                return true;
+          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+          return Prec.highest(
+            keymap.of([
+              {
+                key: 'Shift-Mod-p',
+                preventDefault: true,
+                stopPropagation: true,
+                run: () => {
+                  void invokePromise(PresenterOperation.TogglePresentation, { object: document });
+                  return true;
+                },
               },
-            },
-          ]),
-        );
-      },
-    ]);
+            ]),
+          );
+        },
+      ]),
+    ];
   }),
 );

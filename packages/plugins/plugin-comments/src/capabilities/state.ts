@@ -15,8 +15,8 @@ export default Capability.makeModule(
     const viewStoreAtom = Atom.make<ViewStore>({}).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(CommentCapabilities.State, stateAtom),
-      Capability.contributes(CommentCapabilities.ViewState, viewStoreAtom),
+      Capability.provide(CommentCapabilities.State, stateAtom),
+      Capability.provide(CommentCapabilities.ViewState, viewStoreAtom),
     ];
   }),
 );

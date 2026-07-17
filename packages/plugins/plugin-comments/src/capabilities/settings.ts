@@ -21,9 +21,9 @@ export default Capability.makeModule(() =>
 
     return [
       // Expose atom directly for programmatic access.
-      Capability.contributes(CommentCapabilities.Settings, settingsAtom),
+      Capability.provide(CommentCapabilities.Settings, settingsAtom),
       // Contribute to common settings for UI discovery.
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.provide(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

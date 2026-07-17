@@ -19,7 +19,7 @@ const AUTO_SAVE_DELAY_MS = 1000;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-    const filesystemManager = yield* Capability.get(NativeFilesystemCapabilities.FilesystemManager);
+    const filesystemManager = yield* NativeFilesystemCapabilities.FilesystemManager;
 
     const pendingSaves = new Map<string, ReturnType<typeof debounce>>();
 
@@ -106,6 +106,6 @@ export default Capability.makeModule(
         },
       });
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [extensionProvider]);
+    return [Capability.provide(MarkdownCapabilities.ExtensionProvider, [extensionProvider])];
   }),
 );

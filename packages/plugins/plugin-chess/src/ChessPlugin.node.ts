@@ -15,8 +15,16 @@ import { Chess, ChessPositionIndex, PlayerReview } from '#types';
  */
 export const ChessPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review] }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   Plugin.make,
 );
 

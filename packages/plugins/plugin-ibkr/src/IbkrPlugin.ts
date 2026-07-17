@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -23,19 +22,33 @@ import { Ibkr } from './types';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
   AppPlugin.addSchemaModule({ schema: [Ibkr.Portfolio, Ibkr.Report, Ibkr.Instrument, Ibkr.Lot] }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupConnectors,
-    activate: Connector,
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
   }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(Connector),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

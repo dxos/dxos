@@ -250,14 +250,16 @@ const TranscriptionDriver = () => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.ReactContext, {
-      id: meta.profile.key,
-      context: ({ children }) => (
-        <Fragment>
-          {children}
-          <TranscriptionDriver />
-        </Fragment>
-      ),
-    });
+    return [
+      Capability.provide(Capabilities.ReactContext, {
+        id: meta.profile.key,
+        context: ({ children }) => (
+          <Fragment>
+            {children}
+            <TranscriptionDriver />
+          </Fragment>
+        ),
+      }),
+    ];
   }),
 );

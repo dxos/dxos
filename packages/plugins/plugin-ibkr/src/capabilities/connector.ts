@@ -69,6 +69,6 @@ export const createIbkrConnectorEntry = () => ({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [createIbkrConnectorEntry()]);
+    return [Capability.provide(Connector, [createIbkrConnectorEntry()])];
   }),
 );

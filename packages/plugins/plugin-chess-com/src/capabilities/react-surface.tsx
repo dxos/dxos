@@ -13,8 +13,8 @@ import { ChessGameArticle } from '#containers';
 import { ChessComAccount } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'chessGameArticle',
         filter: AppSurface.oneOf(
@@ -26,5 +26,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ),
+  ]),
 );

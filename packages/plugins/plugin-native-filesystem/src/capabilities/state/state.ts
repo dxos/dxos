@@ -20,8 +20,8 @@ import { MirrorSpaceManager } from './mirror-space-manager';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const registry = yield* Capabilities.AtomRegistry;
+    const client = yield* ClientCapabilities.Client;
 
     const stateAtom = Atom.make<NativeFilesystemState>({
       workspaces: [],
@@ -122,8 +122,8 @@ export default Capability.makeModule(
     yield* Effect.forEach(currentWorkspaces, directoryWatcher.startWatching, { discard: true });
 
     return [
-      Capability.contributes(NativeFilesystemCapabilities.State, stateAtom),
-      Capability.contributes(NativeFilesystemCapabilities.FilesystemManager, filesystemManager, () =>
+      Capability.provide(NativeFilesystemCapabilities.State, stateAtom),
+      Capability.provide(NativeFilesystemCapabilities.FilesystemManager, filesystemManager, () =>
         directoryWatcher.stopAll(),
       ),
     ];

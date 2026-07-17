@@ -20,8 +20,8 @@ import {
 import { Ibkr } from '../types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'portfolioArticle',
         // Article view for the navigable Portfolio owner; `AppSurface.object` narrows
@@ -62,5 +62,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <InstrumentCard role={role} subject={data.subject} />,
       }),
     ]),
-  ),
+  ]),
 );

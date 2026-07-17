@@ -18,8 +18,10 @@ describe('NativeFilesystemPlugin', () => {
       plugins: [NativeFilesystemPlugin()],
     });
 
-    // AppGraphBuilder and ReactSurface require StateReady (gated on ClientReady) and won't activate in headless tests.
-    // OperationHandler activates at startup when ProcessManagerPlugin fires SetupProcessManager.
+    // State requires ClientCapabilities.Client (never provided here, no ClientPlugin) so it — and its
+    // dependents AppGraphBuilder/ReactSurface — stay pending; the manager logs a structural
+    // MissingProviderError but the plugin still activates. OperationHandler has no requires, so it's
+    // active as a dependency-mode root regardless.
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

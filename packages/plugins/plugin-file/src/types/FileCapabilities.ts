@@ -30,7 +30,8 @@ export type Backend = {
   readonly storage: string;
 };
 
-export const Backend = Capability.make<Backend>(`${meta.profile.key}.capability.backend`);
+// Multi capability: inline-backend and edge-backend each contribute one entry.
+export const Backend = Capability.makeMulti<Backend>(`${meta.profile.key}.capability.backend`);
 
 export const SettingsAtom = Capability.make<Atom.Writable<Settings.Settings>>(
   `${meta.profile.key}.capability.settings`,

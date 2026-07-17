@@ -20,5 +20,5 @@ export const inlineBackend: FileCapabilities.Backend = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(FileCapabilities.Backend, inlineBackend)),
+  Effect.succeed([Capability.provide(FileCapabilities.Backend, inlineBackend)]),
 );

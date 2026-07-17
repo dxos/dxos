@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import { GameVariant, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
@@ -14,13 +14,17 @@ import { Chess, ChessPositionIndex, PlayerReview } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'game-variant',
-    activatesOn: AppActivationEvents.SetupSchema,
-    activate: GameVariant,
+  Plugin.addLazyModule(GameVariant),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
   }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

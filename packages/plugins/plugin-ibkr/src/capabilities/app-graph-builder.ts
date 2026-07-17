@@ -18,9 +18,15 @@ import { Ibkr } from '../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    // Read reactively so the extension establishes a dependency and heals once this
+    // capability lands (dependency modules contribute individually, not batched per wave).
+    const viewStateAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
+        const [viewState] = get(viewStateAtom);
+        if (!viewState) {
+          return undefined;
+        }
         const selection = get(viewState.atom(selectionAspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
@@ -52,6 +58,6 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension]);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, [extension])];
   }),
 );
