@@ -21,7 +21,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Panel } from '@dxos/react-ui';
+import { ElevationProvider, Icon, Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
@@ -188,22 +188,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // TODO(burdon): Actual test should be if we have synced; not number of messages.
-  // Show the message list as soon as any messages are present; only fall back to the empty state
-  // after a brief delay of genuinely having none (prevents an initial-load flicker). Keyed on the
-  // COUNT, not the query-result identity: keying on `messages` (which changes on every update) plus
-  // an always-delayed setter meant that during a sync the timeout was cleared before it ever fired,
-  // latching the empty state `true` while messages streamed in — the mailbox showed empty for the
-  // whole burst and only revealed messages once updates slowed past the 1s window.
-  const [isEmpty, setEmpty] = useState<boolean>(false);
-  useEffect(() => {
-    if (messages.length > 0) {
-      setEmpty(false);
-      return;
-    }
-    const t = setTimeout(() => setEmpty(true), 1_000);
-    return () => clearTimeout(t);
-  }, [messages.length]);
+  // `usePagination`'s `isLoading` reflects the underlying query settling, not a message-count guess --
+  // it stays true until the (possibly async, feed-backed) query delivers its first result, including
+  // when that result is empty. Gating on it (rather than on `messages.length`) means the empty-mailbox
+  // panel only ever renders once the query has genuinely settled with nothing, never mid-load.
+  const loading = !feed || pagination.isLoading;
 
   const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
@@ -343,9 +332,17 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         </Menu.Root>
       </ElevationProvider>
       <Panel.Content asChild>
-        {isEmpty ? (
-          <InitializeMailbox mailbox={mailbox} />
-        ) : (
+        {loading ? (
+          // The spinner stays hidden for 1s (the fade-in animation only reveals after its delay) so a
+          // fast (sub-second) load never flashes it -- it should be a rare sight in practice.
+          <div className='grid place-items-center bs-full is-full'>
+            <Icon
+              icon='ph--spinner-gap--regular'
+              size={6}
+              classNames='text-subdued [animation:spin_1s_linear_infinite,fade-in_200ms_ease-out_1s_backwards]'
+            />
+          </div>
+        ) : messages.length > 0 ? (
           <MessageStack
             id={id}
             items={items}
@@ -358,6 +355,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             searchQuery={searchQuery}
             onAction={handleAction}
           />
+        ) : (
+          // Settled with no messages: genuinely empty. `InitializeMailbox` looks up the mailbox's own
+          // sync cursor/connection to choose between "No connections configured" and "Mailbox empty".
+          <InitializeMailbox mailbox={mailbox} />
         )}
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (

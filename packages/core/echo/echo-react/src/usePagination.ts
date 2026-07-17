@@ -28,6 +28,11 @@ export type PaginationResult<T> = {
   getPrevious: () => void;
   /** Whether older items remain beyond what is currently loaded. Inferred from the last page's size. */
   hasMore: boolean;
+  /**
+   * Whether a range query is in flight -- true from when a range is requested until it delivers its
+   * first result (including the initial load), false once settled (even if the result is empty).
+   * Lets a consumer distinguish "still loading" from "loaded and empty".
+   */
   isLoading: boolean;
   /** False once eviction has detached the window from the live head (i.e. skip > 0). */
   atHead: boolean;
@@ -71,15 +76,21 @@ const createPaginationStore = <Q extends Query.Any, O>(
   let maxWindowSize = initialMaxWindowSize;
   let skip = 0;
   let limit = pageSize;
-  // Guards `getNext`/`getPrevious` against a burst of synchronous re-entrant calls within the
-  // same tick (a virtualizer's `onChange` can fire once per newly-rendered row, so a single
-  // "scrolled near the edge" event may invoke the callback many times before the first one's new
-  // range has delivered a result). Plain closure state, checked and set synchronously inside the
-  // call itself, so the rest of the burst sees it immediately -- no dependency on a render
-  // happening in between.
-  let pending = false;
+  // Single-flight latch coalescing a synchronous burst of `getNext`/`getPrevious` into one range
+  // change: a virtualizer's `onChange` fires once per newly-rendered row, so one "scrolled near the
+  // edge" gesture can invoke the callback many times before React re-renders with the new range.
+  // Set and checked synchronously within the call (so the whole burst sees it, no dependency on a
+  // render in between) and cleared on the next microtask, so a later genuine gesture isn't blocked.
+  // Purely about coalescing re-entrant calls -- whether the query has delivered is `isLoading`'s job.
+  let rangeChangePending = false;
   let innerUnsubscribe: (() => void) | undefined;
-  let isLoading = false;
+  // Whether a range query is in flight: true from the moment a range is (re)pointed until that range
+  // delivers its first result (including the initial load), then false. Cleared on genuine delivery
+  // (in the subscribe callback), never on a timer: async sources (feeds served by the index) stay
+  // `true` until the host's first response lands, and since even an empty feed notifies, this settles
+  // rather than sticking. A real "still loading" signal, so consumers can tell "loading" apart from
+  // "loaded and empty". Initialised to whether there is a resource to load at all.
+  let isLoading = resource !== undefined;
   // The items currently shown. Held across a range change until the new range delivers its own
   // results, so the list never flickers to empty while a new (possibly async) range loads.
   let displayItems: O[] = EMPTY_ARRAY;
@@ -116,31 +127,33 @@ const createPaginationStore = <Q extends Query.Any, O>(
     const nextQueryResult = resource.query(effectiveQuery);
     isLoading = true;
 
-    // Publish the new range's results only once they exist. `subscribe({ fire: true })` invokes the
-    // callback synchronously for synchronous sources (authoritative results, possibly empty) and
-    // defers it until the first real result for asynchronous sources (e.g. a feed served by the
-    // index). Until then `displayItems` keeps showing the previous range, so the list never flickers
-    // to empty while a new range loads. The callback also fires on every later change, keeping the
-    // window live.
+    // Publish the new range's results only once they exist, and clear `isLoading` on that first
+    // delivery. `subscribe({ fire: true })` invokes the callback synchronously for synchronous
+    // sources (authoritative results, possibly empty) and defers it until the first response for
+    // asynchronous sources (e.g. a feed served by the index) -- that first response always arrives,
+    // even for an empty feed, so `isLoading` clears on genuine delivery without ever sticking. Until
+    // then `displayItems` keeps showing the previous range, so the list never flickers to empty while
+    // a new range loads. The callback also fires on every later change (keeping the window live);
+    // those later fires leave the already-false `isLoading` untouched.
     innerUnsubscribe = nextQueryResult.subscribe(
       () => {
         displayItems = nextQueryResult.results as O[];
+        isLoading = false;
         notify();
       },
       { fire: true },
     );
 
-    // Reflect the pending state without clobbering `displayItems` (which still holds the previous
-    // range for async sources; synchronous sources have already replaced it above). `isLoading`/
-    // `pending` gate this tick's re-entrancy and a "just requested a new range" signal, not "the
-    // query is provably settled", so resolving them on the next microtask keeps them from getting
-    // stuck while still blocking every synchronous call within the same burst (a virtualizer's
-    // `onChange` can fire many times per tick for one user gesture, all before a microtask elapses).
+    // Reflect the in-flight state without clobbering `displayItems` (which still holds the previous
+    // range for async sources; synchronous sources have already replaced it, and cleared `isLoading`,
+    // above).
     notify();
+    // Clear the re-entrancy latch on the next microtask: long enough to coalesce a synchronous burst
+    // within one tick, but not tied to delivery -- `isLoading` (cleared only on delivery) is what
+    // guards against requesting the next range before this one lands, so a later gesture on a settled
+    // window can proceed once the latch lifts.
     queueMicrotask(() => {
-      isLoading = false;
-      pending = false;
-      notify();
+      rangeChangePending = false;
     });
   };
 
@@ -163,10 +176,10 @@ const createPaginationStore = <Q extends Query.Any, O>(
       maxWindowSize = value;
     },
     getNext: () => {
-      if (pending || snapshot.items.length < limit) {
+      if (isLoading || rangeChangePending || snapshot.items.length < limit) {
         return;
       }
-      pending = true;
+      rangeChangePending = true;
       const nextLimit = limit + pageSize;
       if (nextLimit <= maxWindowSize) {
         limit = nextLimit;
@@ -177,10 +190,10 @@ const createPaginationStore = <Q extends Query.Any, O>(
       pointAtRange();
     },
     getPrevious: () => {
-      if (pending || skip === 0) {
+      if (isLoading || rangeChangePending || skip === 0) {
         return;
       }
-      pending = true;
+      rangeChangePending = true;
       // Slides the window toward the head at constant size (limit unchanged) -- decreasing skip
       // while holding limit fixed both reveals newer items at the front and drops an equal count
       // of the oldest loaded items, mirroring getNext's own "slide" branch (taken once it hits
@@ -189,7 +202,7 @@ const createPaginationStore = <Q extends Query.Any, O>(
       pointAtRange();
     },
     jumpToHead: () => {
-      pending = false;
+      rangeChangePending = false;
       skip = 0;
       limit = pageSize;
       pointAtRange();

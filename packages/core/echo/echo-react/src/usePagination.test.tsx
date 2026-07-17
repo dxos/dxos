@@ -408,6 +408,66 @@ describe('usePagination', () => {
     ]);
   });
 
+  test('isLoading is true while the first page loads, then false once it settles', async () => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'windowed' }));
+    await appendPeople(feed, db, 5);
+
+    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const loadingStates: boolean[] = [];
+    const { result } = renderHook(() => {
+      const paginated = usePagination(db, query);
+      loadingStates.push(paginated.isLoading);
+      return paginated;
+    });
+
+    // The async feed query is in flight from the first render until its first result lands.
+    expect(loadingStates[0]).toBe(true);
+    await waitFor(() => expect(result.current.items).toHaveLength(3));
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  test('isLoading settles to false for an empty feed (never sticks)', async () => {
+    // Regression: an async feed query with zero results still receives a first response from the
+    // host, so `isLoading` must clear on that delivery rather than hang forever waiting for a row.
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'empty' }));
+
+    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const { result } = renderHook(() => usePagination(db, query));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.items).toHaveLength(0);
+  });
+
+  test('isLoading goes true again while getNext loads the next page', async () => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'windowed' }));
+    await appendPeople(feed, db, 10);
+
+    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const loadingStates: boolean[] = [];
+    const { result } = renderHook(() => {
+      const paginated = usePagination(db, query);
+      loadingStates.push(paginated.isLoading);
+      return paginated;
+    });
+
+    await waitFor(() => expect(result.current.items).toHaveLength(3));
+    expect(result.current.isLoading).toBe(false);
+
+    loadingStates.length = 0;
+    result.current.getNext();
+    await waitFor(() => expect(result.current.items).toHaveLength(6));
+
+    // The next range was in flight between the request and its delivery, then settled.
+    expect(loadingStates.some((loading) => loading)).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+  });
+
   test('throws when the query does not carry a limit', async () => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
