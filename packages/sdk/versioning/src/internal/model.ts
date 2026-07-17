@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Text as EchoText, Obj, Ref } from '@dxos/echo';
+import { type Database, Text as EchoText, Entity, Obj, Ref } from '@dxos/echo';
 import { checkoutVersion, clearTimeTravel, setTimeTravel } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -60,6 +60,10 @@ export type CreateCheckpointProps = {
  */
 export const createCheckpoint = (doc: VersionedObject, props: CreateCheckpointProps): Versioning.Version => {
   const text = props.target;
+  // A checkpoint records the target's current tip. Refuse to checkpoint while the target is pinned
+  // to a historical revision (viewing a checkpoint) — it is not at the tip, and `getHeads` would
+  // silently record the live tip anyway. Return to the tip (or a branch) before checkpointing.
+  invariant(!Entity.isTimeTraveling(text), 'cannot create a revision while viewing history (not at the tip)');
   const version = Versioning.makeVersion({
     name: props.name,
     target: Ref.make(text),

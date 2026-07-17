@@ -159,6 +159,9 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             <IconButton
               icon='ph--bookmark-simple--regular'
               label={t('create-checkpoint.label')}
+              // A revision records the tip; disable while viewing a historical checkpoint (not at
+              // the tip). `current` and `branch` selections are at a tip.
+              disabled={selection.kind === 'checkpoint'}
               onClick={() => setNaming('checkpoint')}
             />
           </NamePopover>

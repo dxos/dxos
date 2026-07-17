@@ -208,6 +208,22 @@ describe('versioning model', () => {
     expect(Entity.isTimeTraveling(root)).toBe(false);
   });
 
+  test('cannot create a revision while viewing a checkpoint (not at the tip)', async ({ expect }) => {
+    const { doc, root } = await setup('first');
+    const checkpoint = Version.create(doc, { name: 'v1', target: root });
+    Obj.update(root, (root) => {
+      root.content = 'second';
+    });
+
+    // Viewing the checkpoint pins the object off the tip; checkpointing must refuse.
+    Version.view(checkpoint);
+    expect(() => Version.create(doc, { name: 'nope', target: root })).toThrow(/not at the tip/);
+
+    // Back at the tip it succeeds again.
+    Version.clearView(checkpoint);
+    expect(() => Version.create(doc, { name: 'v2', target: root })).not.toThrow();
+  });
+
   test('restore applies historical content as a new forward edit', async ({ expect }) => {
     const { doc, root } = await setup('first');
     const checkpoint = Version.create(doc, { name: 'v1', target: root });
