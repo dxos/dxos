@@ -16,8 +16,6 @@ import { type ChromaticPalette } from '@dxos/ui-types';
  */
 export type MarkerHue = ChromaticPalette;
 
-const MARKED = ['.cm-marker > span', '.cm-marker-text'].join(', ');
-
 // Map `data-hue` to the standard ui-theme surface/foreground tokens (one rule per hue).
 const hueVars = Object.fromEntries(
   hues.flatMap((hue) =>
@@ -39,7 +37,7 @@ export const markerTheme = (): Extension =>
   EditorView.theme({
     ...hueVars,
     // The comment-style surface "padding" is a box-shadow of the same colour so adjacent lines join.
-    [MARKED]: {
+    '.cm-marker > span, .cm-marker-text': {
       boxDecorationBreak: 'clone',
       backgroundColor: 'var(--cm-marker-surface)',
       boxShadow: '0 0 0 3px var(--cm-marker-surface)',
