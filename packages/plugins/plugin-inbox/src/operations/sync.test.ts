@@ -127,6 +127,7 @@ describe('sync pipeline harness', () => {
         (raw) => raw.key,
       ),
       mapStage,
+      Stream.map(EmailStage.upsert),
       EmailStage.extractContacts(),
       EmailStage.toCommitUnit({ tagIndex: options.tagIndex }),
     );
@@ -282,6 +283,7 @@ describe('sync pipeline harness', () => {
     await EffectEx.runPromise(
       Stream.fromIterable(raws).pipe(
         mapAttachmentStage,
+        Stream.map(EmailStage.upsert),
         EmailStage.processAttachments(),
         EmailStage.extractContacts(),
         EmailStage.toCommitUnit(),
@@ -357,8 +359,9 @@ describe('sync pipeline harness', () => {
     await EffectEx.runPromise(
       Stream.fromIterable([raw]).pipe(
         mapAttachmentStage,
+        Stream.map(EmailStage.upsert),
         // Swapped relative to the production pipelines (extractContacts before processAttachments) —
-        // both are Mapped → Mapped, so order doesn't matter; only toCommitUnit must run last.
+        // both are Change → Change, so order doesn't matter; only toCommitUnit must run last.
         EmailStage.extractContacts(),
         EmailStage.processAttachments(),
         EmailStage.toCommitUnit(),
@@ -448,6 +451,7 @@ describe('reconcileDrafts stage', () => {
         const draftPool = yield* EmailStage.queryDraftPool(mailbox);
         const stats: Cursor.Stats = { newMessages: 0 };
         yield* Stream.fromIterable(synced).pipe(
+          Stream.map(EmailStage.upsert),
           EmailStage.reconcileDrafts(draftPool),
           EmailStage.toCommitUnit(),
           Stream.grouped(2),

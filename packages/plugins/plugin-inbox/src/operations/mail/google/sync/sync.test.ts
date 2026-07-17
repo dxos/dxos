@@ -15,6 +15,8 @@ import { Operation, RunAgainError } from '@dxos/compute';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
+import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../../../../constants';
@@ -26,7 +28,7 @@ import {
   runGoogleSync,
   seedMailboxBinding,
 } from '../../../../testing/sync-fixture';
-import { InboxOperation, Mailbox } from '../../../../types';
+import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
 import { createSyncProgressKey } from '../../mail-sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
@@ -145,9 +147,17 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const people = await db.query(Filter.type(Person.Person)).run();
     expect(people.length).toBe(senderEmails.size);
 
-    // Labels: `syncLabels` materializes one Tag per Gmail label (independent of the date-walk).
+    // Labels: system labels (INBOX/SENT/IMPORTANT) map onto shared canonical tags — UNREAD and other
+    // unmapped system labels are dropped — and custom user labels become provider-scoped tags.
     const tags = await db.query(Filter.type(Tag.Tag)).run();
-    expect(tags.length).toBe(dataset.labels.length);
+    const canonical = new Set(
+      dataset.labels.flatMap((label) => {
+        const id = SystemTags.GMAIL_SYSTEM_TAGS[label.id];
+        return id ? [id] : [];
+      }),
+    );
+    const customCount = dataset.labels.filter((label) => label.type === 'user').length;
+    expect(tags.length).toBe(canonical.size + customCount);
 
     // Cursor advanced to the last synced key; backfill completed within the run (small dataset).
     expect(binding.max).toBeDefined();
@@ -602,5 +612,255 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
   test('GoogleMailSync is marked idempotent for durable-execution retry', ({ expect }) => {
     expect(Operation.isIdempotent(InboxOperation.GoogleMailSync)).toBe(true);
+  });
+
+  //
+  // Incremental (history.list) sync.
+  //
+
+  const tokenOf = (binding: Cursor.Cursor): string | undefined =>
+    binding.spec.kind === 'external' ? binding.spec.token : undefined;
+
+  test('the first tick captures the mailbox historyId (before backfill)', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = { ...generateGmailDataset({ count: 6, seed: 81, start, end }), historyId: '1000' };
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding) }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+    );
+
+    expect(tokenOf(binding)).toBe('1000');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(dataset.messages.length);
+  });
+
+  test('an incremental run syncs only the delta added messages and advances the token', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 82, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // First tick: window backfill + capture '1000'.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('1000');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(base.messages.length);
+
+    // A new message arrives; the history log advances 1000 → 1001 with it added.
+    const arrival = generateGmailDataset({ count: 1, seed: 83, start: subDays(now, 1), end: now, idPrefix: 'new' })
+      .messages[0];
+    const run2 = {
+      ...base,
+      messages: [...base.messages, arrival],
+      historyId: '1001',
+      historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: [arrival.id] }],
+    };
+    const r2 = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2))),
+    );
+
+    expect(r2.newMessages).toBe(1);
+    expect(tokenOf(binding)).toBe('1001');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(ids).toContain(arrival.id);
+    expect(ids.length).toBe(base.messages.length + 1);
+  });
+
+  test('a multi-page incremental delta drains every history page, not just the first', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // First tick: window backfill + capture '1000'.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('1000');
+
+    // Three messages arrive across three history steps (1000 → 1001 → 1002 → 1003). With one record per
+    // page, the delta spans three pages, and Gmail reports the *current* historyId ('1003') on every
+    // page — so a caller that read only page one would advance the token to '1003' and drop the last two
+    // arrivals. Draining every page picks up all three.
+    const arrivals = generateGmailDataset({ count: 3, seed: 86, start: subDays(now, 1), end: now, idPrefix: 'multi' })
+      .messages;
+    const run2 = {
+      ...base,
+      messages: [...base.messages, ...arrivals],
+      historyId: '1003',
+      historyPageSize: 1,
+      historyLog: [
+        { startHistoryId: '1000', historyId: '1001', messagesAdded: [arrivals[0].id] },
+        { startHistoryId: '1001', historyId: '1002', messagesAdded: [arrivals[1].id] },
+        { startHistoryId: '1002', historyId: '1003', messagesAdded: [arrivals[2].id] },
+      ],
+    };
+    const r2 = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2))),
+    );
+
+    expect(r2.newMessages).toBe(3);
+    expect(tokenOf(binding)).toBe('1003');
+    const ids = await syncedIdsOf(db, mailbox);
+    for (const arrival of arrivals) {
+      expect(ids).toContain(arrival.id);
+    }
+    expect(ids.length).toBe(base.messages.length + 3);
+  });
+
+  test('a stale historyId clears it, falls back to the window scan, and recaptures', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 84, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // A prior run left a historyId the server can no longer resolve (evicted past retention → 404).
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind === 'external') {
+        binding.spec.token = '1';
+      }
+    });
+
+    const dataset = { ...base, historyId: '9999', historyLog: [] };
+    const result = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+    );
+
+    expect(result.newMessages).toBe(base.messages.length);
+    expect(tokenOf(binding)).toBe('9999');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(base.messages.length);
+  });
+
+  test('a crash mid-incremental leaves the token unadvanced and recovers with no duplicate', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // First tick: backfill + capture '1000'.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('1000');
+
+    // A large delta arrives; fault after the first commit page (10) lands.
+    const arrivals = generateGmailDataset({ count: 15, seed: 86, start: subDays(now, 1), end: now, idPrefix: 'new' })
+      .messages;
+    const run2Dataset = {
+      ...base,
+      messages: [...base.messages, ...arrivals],
+      historyId: '1001',
+      historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: arrivals.map((message) => message.id) }],
+    };
+    const exit = await EffectEx.runPromise(
+      Effect.exit(runGoogleSync({ binding: Ref.make(binding), now })).pipe(
+        Effect.provide(ambientSyncServices(db)),
+        Effect.provide(withFaultAfterMessages(10, run2Dataset)),
+      ),
+    );
+    expect(Exit.isFailure(exit)).toBe(true);
+    // Token NOT advanced — a crash before the delta fully drained keeps it at '1000'.
+    expect(tokenOf(binding)).toBe('1000');
+
+    // Recovery: the next run re-fetches the whole delta, dedups the committed prefix, finishes clean.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2Dataset))),
+    );
+    expect(tokenOf(binding)).toBe('1001');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.length).toBe(base.messages.length + arrivals.length);
+  });
+
+  test('an incremental label add retags an existing message with no new feed append', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 3, seed: 90, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '2000' })),
+      ),
+    );
+    const before = (await syncedIdsOf(db, mailbox)).length;
+    const targetId = base.messages[0].id;
+
+    // Delta: the 'Work' label (Label_1) was added to the target message on the server.
+    const run2 = {
+      ...base,
+      historyId: '2001',
+      historyLog: [{ startHistoryId: '2000', historyId: '2001', labelsAdded: [{ id: targetId, labelIds: ['Label_1'] }] }],
+    };
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2))),
+    );
+
+    // No new feed message — the retag is an objectless commit unit — and the token advanced.
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(before);
+    expect(tokenOf(binding)).toBe('2001');
+
+    // The target message's EntityId gained the Label_1 Tag in the mailbox tag index.
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    const target = feedMessages.find((message) =>
+      Obj.getMeta(message).keys.some((key) => key.id === targetId && key.source === GMAIL_SOURCE),
+    )!;
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const label1 = tags.find((tag) => Obj.getMeta(tag).keys.some((key) => key.id === 'Label_1'))!;
+    expect(TagIndex.bind(tagIndex).tags(target.id)).toContain(Obj.getURI(label1).toString());
+  });
+
+  test('system labels resolve to canonical DXOS tags, not provider-scoped ones', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 3, seed: 92, start: subDays(now, 6), end: subDays(now, 2) });
+    const targetId = base.messages[0].id;
+    // Star + Promotions on the target, and add both system labels to the dictionary.
+    const dataset: GmailDataset = {
+      ...base,
+      labels: [
+        ...base.labels,
+        { id: 'STARRED', type: 'system', name: 'STARRED' },
+        { id: 'CATEGORY_PROMOTIONS', type: 'system', name: 'CATEGORY_PROMOTIONS' },
+      ],
+      messages: base.messages.map((message) =>
+        message.id === targetId
+          ? { ...message, labelIds: [...(message.labelIds ?? []), 'STARRED', 'CATEGORY_PROMOTIONS'] }
+          : message,
+      ),
+    };
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+    );
+
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    const target = feedMessages.find((message) =>
+      Obj.getMeta(message).keys.some((key) => key.id === targetId && key.source === GMAIL_SOURCE),
+    )!;
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const canonicalUri = (id: string) =>
+      Obj.getURI(
+        tags.find((tag) =>
+          Obj.getMeta(tag).keys.some((key) => key.source === SystemTags.SYSTEM_TAG_SOURCE && key.id === id),
+        )!,
+      ).toString();
+
+    // STARRED and CATEGORY_PROMOTIONS land on the canonical `org.dxos.tag` tags.
+    const localTags = TagIndex.bind(tagIndex).tags(target.id);
+    expect(localTags).toContain(canonicalUri('starred'));
+    expect(localTags).toContain(canonicalUri('promotions'));
+    // No provider-scoped tag was minted for the system labels.
+    expect(
+      tags.some((tag) =>
+        Obj.getMeta(tag).keys.some(
+          (key) =>
+            key.source === Mailbox.GMAIL_TAG_SOURCE && (key.id === 'STARRED' || key.id === 'CATEGORY_PROMOTIONS'),
+        ),
+      ),
+    ).toBe(false);
   });
 });

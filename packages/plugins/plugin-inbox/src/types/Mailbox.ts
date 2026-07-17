@@ -14,6 +14,7 @@ import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
+import { systemTagKey } from './SystemTags';
 
 /**
  * Foreign-key source for Gmail provider labels. A Gmail label maps to a {@link Tag} object carrying
@@ -23,13 +24,12 @@ import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
 export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
 
 /**
- * Foreign keys that mark a message as person-to-person ("personal") mail, used to tell it from
- * bulk/marketing when deciding how aggressively to restyle a message body (see the HTML viewer).
- * Each provider contributes its own signal: Gmail persists the "Personal"/Primary inbox category
- * (`CATEGORY_PERSONAL`) during label sync. JMAP contributes nothing — its mailbox roles
- * (inbox/archive/sent/…) don't distinguish person-to-person from bulk mail — so it has no equivalent.
+ * Foreign key that marks a message as person-to-person ("personal") mail, used to tell it from
+ * bulk/marketing when deciding how aggressively to restyle a message body (see the HTML viewer). Gmail's
+ * "Personal"/Primary inbox category maps onto the canonical {@link SystemTags.SystemTag} `personal`
+ * during label sync; a future provider that distinguishes person-to-person mail maps onto the same tag.
  */
-export const PERSONAL_TAG_KEYS = [{ source: GMAIL_TAG_SOURCE, id: 'CATEGORY_PERSONAL' }] as const;
+export const PERSONAL_TAG_KEYS = [systemTagKey('personal')] as const;
 
 /**
  * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}

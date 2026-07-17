@@ -4,18 +4,21 @@
 
 import { Atom } from '@effect-atom/atom-react';
 
-import { type Database, Obj, Ref, Tag } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 import { Tagging, TagIndex } from '@dxos/schema';
 
+import { SystemTag, findOrCreateSystemTag, systemTagKey } from './SystemTags';
+
 /**
- * Well-known "starred" tag. The stable foreign `key` lets {@link Tag.findOrCreate} dedupe by identity
- * (not label), so every starring site across the app resolves the same tag.
+ * The canonical "starred" system tag — one of the shared {@link SystemTag} identities, so a
+ * locally-toggled star and a provider-synced star (Gmail `STARRED`, JMAP `$flagged`) resolve to the
+ * same {@link Tag}. The stable `key` lets the app's starring sites look it up by foreign key.
  */
 export const TAG_STARRED = {
-  key: { source: 'org.dxos.org', id: 'starred' },
-  label: 'Starred',
-  hue: 'amber',
+  key: systemTagKey('starred'),
+  label: SystemTag.starred.label,
+  hue: SystemTag.starred.hue,
 } as const;
 
 /**
@@ -64,7 +67,7 @@ export const toggleStarred = async (
     });
   }
 
-  const tag = await Tag.findOrCreate(db, TAG_STARRED);
+  const tag = await findOrCreateSystemTag(db, 'starred');
   const uri = Obj.getURI(tag).toString();
   if (Tagging.get(object, { index }).includes(uri)) {
     Tagging.unset(object, uri, { index });

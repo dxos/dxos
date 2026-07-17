@@ -123,3 +123,53 @@ export const ListMessagesResponse = Schema.Struct({
 });
 
 export type ListMessagesResponse = Schema.Schema.Type<typeof ListMessagesResponse>;
+
+//
+// https://gmail.googleapis.com/gmail/v1/users/{userId}/profile
+// https://gmail.googleapis.com/gmail/v1/users/{userId}/history
+//
+
+/**
+ * users.getProfile — only `historyId` (the delta-resume token) is used by incremental sync. Optional
+ * defensively: a provider/dataset without delta support returns none, which keeps sync on the
+ * `max`/`min` window scan.
+ */
+export const Profile = Schema.Struct({
+  emailAddress: Schema.optional(Schema.String),
+  messagesTotal: Schema.optional(Schema.Number),
+  threadsTotal: Schema.optional(Schema.Number),
+  historyId: Schema.optional(Schema.String),
+});
+export type Profile = Schema.Schema.Type<typeof Profile>;
+
+/** A message reference inside a history record (id + optional labelIds carried by label deltas). */
+const HistoryMessage = Schema.Struct({
+  id: Schema.String,
+  threadId: Schema.optional(Schema.String),
+  labelIds: Schema.optional(Schema.Array(Schema.String)),
+});
+
+/**
+ * One `users.history.list` record: message additions/deletions and per-message label changes since the
+ * prior `historyId` (RFC-style delta). Every sub-list is optional — a record carries only the change
+ * kinds that occurred.
+ */
+export const HistoryRecord = Schema.Struct({
+  id: Schema.String,
+  messagesAdded: Schema.optional(Schema.Array(Schema.Struct({ message: HistoryMessage }))),
+  messagesDeleted: Schema.optional(Schema.Array(Schema.Struct({ message: HistoryMessage }))),
+  labelsAdded: Schema.optional(
+    Schema.Array(Schema.Struct({ message: HistoryMessage, labelIds: Schema.Array(Schema.String) })),
+  ),
+  labelsRemoved: Schema.optional(
+    Schema.Array(Schema.Struct({ message: HistoryMessage, labelIds: Schema.Array(Schema.String) })),
+  ),
+});
+export type HistoryRecord = Schema.Schema.Type<typeof HistoryRecord>;
+
+export const HistoryResponse = Schema.Struct({
+  history: Schema.optional(Schema.Array(HistoryRecord)),
+  historyId: Schema.String,
+  nextPageToken: Schema.optional(Schema.String),
+});
+export type HistoryResponse = Schema.Schema.Type<typeof HistoryResponse>;

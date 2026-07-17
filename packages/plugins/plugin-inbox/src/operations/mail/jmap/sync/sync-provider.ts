@@ -4,6 +4,7 @@
 
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
@@ -12,15 +13,17 @@ import * as Stream from 'effect/Stream';
 import { type Resolver, resolve } from '@dxos/extractor';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import { Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
+import { TagIndex } from '@dxos/schema';
 import { Person } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../../constants';
 import { type JmapApiError, MailSyncError } from '../../../../errors';
 import { JmapMailApi } from '../../../../services';
-import { Mailbox, type SyncStreamConfig } from '../../../../types';
-import { type MailSyncItem, MailSyncProvider, type MailSyncSource } from '../../mail-sync';
+import { Mailbox, SystemTags, type SyncStreamConfig } from '../../../../types';
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource, additionsToChanges } from '../../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
@@ -50,7 +53,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
         name: 'jmap',
         config: JMAP_SYNC_CONFIG,
         foreignKeySource: JMAP_MESSAGE_SOURCE,
-        prepare: ({ db, now }) =>
+        prepare: ({ db, binding, now, token }) =>
           Effect.gen(function* () {
             const api = yield* JmapMailApi;
             const session = yield* api.getSession;
@@ -63,14 +66,36 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
 
             // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline (source: folders; sink: find-or-create Tag).
-            // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`.
+            // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`. A well-known role
+            // (`inbox`/`sent`) maps onto the shared canonical system tag; a custom folder gets a
+            // JMAP-scoped provider tag; a dropped role (`archive` — derived as "not in inbox";
+            // `drafts`/`trash`/`junk` — not synced) produces no tag.
             const { list: folders } = yield* api.mailboxGet(target);
             const folderTagMap = new Map<string, string>();
             for (const folder of folders) {
-              const tag = yield* Effect.promise(() =>
-                Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }),
-              );
-              folderTagMap.set(folder.id, Mailbox.tagUri(tag));
+              const canonical = folder.role ? SystemTags.JMAP_ROLE_TAGS[folder.role] : undefined;
+              if (canonical) {
+                const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, canonical));
+                folderTagMap.set(folder.id, Mailbox.tagUri(tag));
+              } else if (folder.role) {
+                continue;
+              } else {
+                const tag = yield* Effect.promise(() =>
+                  Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }),
+                );
+                folderTagMap.set(folder.id, Mailbox.tagUri(tag));
+              }
+            }
+
+            // Keyword → canonical system tag uri (only `$flagged`/starred today). Built once so the
+            // initial map and the reconcile diff resolve the same tags.
+            const keywordTagMap = new Map<string, string>();
+            for (const [keyword, canonical] of Object.entries(SystemTags.JMAP_KEYWORD_TAGS)) {
+              if (!canonical) {
+                continue;
+              }
+              const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, canonical));
+              keywordTagMap.set(keyword, Mailbox.tagUri(tag));
             }
 
             // Fused decode + map; `undefined` drops the item (no body, or unmappable).
@@ -88,10 +113,15 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 if (!mapped) {
                   return undefined;
                 }
-                const tagUris = mapped.mailboxIds.flatMap((folderId) => {
+                const folderUris = mapped.mailboxIds.flatMap((folderId) => {
                   const uri = folderTagMap.get(folderId);
                   return uri ? [uri] : [];
                 });
+                const keywordUris = mapped.keywords.flatMap((keyword) => {
+                  const uri = keywordTagMap.get(keyword);
+                  return uri ? [uri] : [];
+                });
+                const tagUris = [...folderUris, ...keywordUris];
                 const attachments = yield* fetchAttachments(target, decoded.attachments);
                 return {
                   message: mapped.message,
@@ -102,25 +132,140 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 };
               });
 
+            const toItem = (email: JmapMail.Email): MailSyncItem => ({
+              foreignId: email.id,
+              key: new Date(email.receivedAt).getTime(),
+              process: toMapped(email).pipe(Effect.provide(context)),
+            });
+
+            // Resolve the delta plan. First tick captures the current `Email/get` state before backfill
+            // (so mail arriving during backfill is caught by the next incremental, not missed). An
+            // incremental run fetches `Email/changes` since the token; a stale token
+            // (`cannotCalculateChanges`) clears + recaptures and falls back to the window scan.
+            let capturedToken: string | undefined = token;
+            let createdIds: readonly string[] | undefined;
+            let updatedIds: readonly string[] = [];
+            if (token === undefined) {
+              capturedToken = (yield* api.emailGet(target, [])).state;
+            } else {
+              const result = yield* Effect.either(api.emailChanges(target, token));
+              if (Either.isRight(result)) {
+                capturedToken = result.right.newState;
+                createdIds = result.right.created;
+                // `updated` are ids whose keywords/mailboxIds may have changed — re-fetched + diffed
+                // against local tags in the reconcile branch. Exclude ids that are also newly created
+                // (their full fetch already carries current tags).
+                const created = new Set(result.right.created);
+                updatedIds = result.right.updated.filter((id) => !created.has(id));
+                log('jmap sync: incremental delta', {
+                  created: result.right.created.length,
+                  updated: result.right.updated.length,
+                  destroyed: result.right.destroyed.length,
+                });
+              } else if (result.left.type === 'cannotCalculateChanges') {
+                log('jmap sync: state token stale, falling back to window scan');
+                Cursor.clearToken(binding);
+                capturedToken = (yield* api.emailGet(target, [])).state;
+              } else {
+                return yield* Effect.fail(result.left);
+              }
+            }
+
             const source: MailSyncSource = {
-              buildSource: ({ windows, filter, onEnumerated, onRetrieved }) =>
-                jmapEmails(target, folders, { windows, filter, now, onEnumerated, onRetrieved }).pipe(
-                  Stream.map(
-                    (email): MailSyncItem => ({
-                      foreignId: email.id,
-                      key: new Date(email.receivedAt).getTime(),
-                      process: toMapped(email).pipe(Effect.provide(context)),
-                    }),
-                  ),
+              buildSource: ({ windows, filter, tagIndex, maxMessages, onEnumerated, onRetrieved, onTaken }) => {
+                // Incremental replaces the forward window with the delta's created ids but keeps the
+                // backward backfill window, so each tick still makes backfill progress.
+                if (createdIds) {
+                  onEnumerated(createdIds.length);
+                }
+                const additions = additionsToChanges(
+                  jmapEmails(target, folders, { windows, filter, now, onEnumerated, onRetrieved, forwardIds: createdIds })
+                    .pipe(
+                      Stream.map(toItem),
+                      Stream.provideService(JmapMailApi, providerApi),
+                      Stream.mapError(MailSyncError.wrap()),
+                    ),
+                  { maxMessages, onTaken },
+                );
+                // Merge the label-change reconcile branch (empty on non-incremental runs).
+                const reconciles = jmapReconcile(updatedIds, target, folderTagMap, keywordTagMap, tagIndex).pipe(
                   Stream.provideService(JmapMailApi, providerApi),
                   Stream.mapError(MailSyncError.wrap()),
-                ),
+                );
+                return Stream.merge(additions, reconciles);
+              },
+              nextToken: () => capturedToken,
             };
             return source;
           }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
       };
     }),
   );
+
+/**
+ * Reconcile branch for JMAP: for each `updated` email id, re-fetch its current `mailboxIds` + `keywords`,
+ * map them to canonical/folder Tags, and diff against the message's current *local* tags — a remote-wins,
+ * snapshot-free reconciliation that is idempotent (a re-run after a crash produces an empty diff, so it
+ * is crash-safe). Emits a retag {@link EmailStage.Change} keyed by the resolved EntityId; ids not in the
+ * feed (never synced / outside window) or with no net change are dropped.
+ *
+ * The two axes reconcile differently: **folder** tags are fully remote-wins (added *and* removed, since
+ * folder membership is server-authoritative), while **keyword** tags (starred) are **add-only** — the
+ * remote can add a star, but we never auto-remove one, which would clobber a locally-toggled star until
+ * we support writing local flags back to the provider.
+ */
+const jmapReconcile = (
+  updatedIds: readonly string[],
+  target: JmapMail.Target,
+  folderTagMap: ReadonlyMap<string, string>,
+  keywordTagMap: ReadonlyMap<string, string>,
+  tagIndex: TagIndex.TagIndex,
+): Stream.Stream<EmailStage.Change, JmapApiError, JmapMailApi | Cursor.Service> => {
+  const folderProviderUris = new Set(folderTagMap.values());
+  return Stream.fromIterable(updatedIds).pipe(
+    Stage.map('jmap-reconcile', (id: string) =>
+      Effect.gen(function* () {
+        const { foreignIndex } = yield* Cursor.Service;
+        const entityId = foreignIndex?.get(id);
+        if (!entityId) {
+          return undefined;
+        }
+        const api = yield* JmapMailApi;
+        const { list } = yield* api.emailGet(target, [id]);
+        const email = list[0];
+        if (!email) {
+          return undefined;
+        }
+        const remoteFolderUris = (email.mailboxIds ? Object.keys(email.mailboxIds) : []).flatMap((folderId) => {
+          const uri = folderTagMap.get(folderId);
+          return uri ? [uri] : [];
+        });
+        const remoteKeywordUris = (
+          email.keywords
+            ? Object.entries(email.keywords)
+                .filter(([, set]) => set)
+                .map(([keyword]) => keyword)
+            : []
+        ).flatMap((keyword) => {
+          const uri = keywordTagMap.get(keyword);
+          return uri ? [uri] : [];
+        });
+        const localTags = TagIndex.bind(tagIndex).tags(entityId);
+        const remoteFolders = new Set(remoteFolderUris);
+        // Add any remote folder/keyword tag the message lacks.
+        const addTagIds = [...remoteFolderUris, ...remoteKeywordUris].filter((tagUri) => !localTags.includes(tagUri));
+        // Remove only folder tags the remote no longer has; user tags and starred are never auto-removed.
+        const removeTagIds = localTags.filter(
+          (tagUri) => folderProviderUris.has(tagUri) && !remoteFolders.has(tagUri),
+        );
+        if (addTagIds.length === 0 && removeTagIds.length === 0) {
+          return undefined;
+        }
+        return { _tag: 'retag', foreignId: id, entityId, addTagIds, removeTagIds } satisfies EmailStage.Change;
+      }),
+    ),
+  );
+};
 
 /**
  * Downloads each attachment's bytes via `JmapMailApi.downloadBlob`. One failed download (including a
@@ -262,8 +407,11 @@ const jmapEmailsForIds = (
   );
 
 /**
- * Streams full JMAP emails for one bidirectional run: forward window's ids then backward's, concatenated
- * and fetched in full. Intentionally UNBOUNDED — the harness caps after dedup (see `runMailSync`).
+ * Streams full JMAP emails for one run: the forward source's ids then the backward window's,
+ * concatenated and fetched in full. Intentionally UNBOUNDED — the harness caps after dedup (see
+ * `runMailSync`). The forward source is either the `max`-anchored forward window (first tick / stale
+ * fallback) or, when `forwardIds` is set, the incremental delta's created ids — in which case the
+ * backward window still runs, so an incremental tick keeps making backfill progress.
  *
  * `Cursor.skipCommitted` drops ids already in the dedup set before `emailGet`, so re-queried boundary
  * ids aren't downloaded; the harness's post-fetch `Cursor.dedupStage` stays the authority.
@@ -277,18 +425,19 @@ const jmapEmails = (
     now: Date;
     onEnumerated?: (count: number) => void;
     onRetrieved?: () => void;
+    /** Incremental delta's created ids; when set, replaces the forward window (backward still runs). */
+    forwardIds?: readonly string[];
   },
 ): Stream.Stream<JmapMail.Email, JmapApiError, JmapMailApi | Cursor.Service> => {
   const idsFor = (window: Cursor.Window | undefined) =>
     window
       ? jmapIds(target, folders, window, { filter: config.filter, now: config.now, onEnumerated: config.onEnumerated })
       : Stream.empty;
+  const forward = config.forwardIds ? Stream.fromIterable(config.forwardIds) : idsFor(config.windows.forward);
 
   return jmapEmailsForIds(
     target,
-    Stream.concat(idsFor(config.windows.forward), idsFor(config.windows.backward)).pipe(
-      Cursor.skipCommitted('skip-committed', (id) => id),
-    ),
+    Stream.concat(forward, idsFor(config.windows.backward)).pipe(Cursor.skipCommitted('skip-committed', (id) => id)),
     { onRetrieved: config.onRetrieved },
   );
 };

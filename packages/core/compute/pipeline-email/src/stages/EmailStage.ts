@@ -13,7 +13,7 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import { Stage } from '@dxos/pipeline';
-import { Tagging, type TagIndex } from '@dxos/schema';
+import { Tagging, TagIndex } from '@dxos/schema';
 import { DraftMessage, Message, Person } from '@dxos/types';
 
 // TODO(burdon): Factor out.
@@ -57,6 +57,46 @@ export type Mapped = {
   readonly supersededDrafts?: readonly Message.Message[];
 };
 
+/**
+ * A new message to append (the full {@link Mapped} payload, tagged `upsert`). The body stages act only
+ * on this variant of {@link Change}.
+ */
+export type Upsert = { readonly _tag: 'upsert' } & Mapped;
+
+/**
+ * A label change on an already-committed message, resolved to its feed message's `entityId`.
+ * {@link toCommitUnit} turns it into an objectless commit unit that applies the tag adds/removes — no
+ * feed append, so the body stages ({@link processAttachments}, {@link extractContacts},
+ * {@link reconcileDrafts}) pass it through untouched.
+ */
+export type Retag = {
+  readonly _tag: 'retag';
+  readonly foreignId: string;
+  readonly entityId: Obj.ID;
+  readonly addTagIds: readonly string[];
+  readonly removeTagIds: readonly string[];
+};
+
+/**
+ * A remote deletion of an already-committed message. Wired but STUBBED — {@link toCommitUnit} emits an
+ * objectless unit with no effect (see the TODO there) pending safe in-sync feed object deletion.
+ */
+export type Delete = {
+  readonly _tag: 'delete';
+  readonly foreignId: string;
+  readonly entityId: Obj.ID;
+};
+
+/**
+ * The discriminated item flowing through the shared email tail. `upsert` is a new message; `retag`/
+ * `delete` act on existing feed messages by `entityId`. All converge on the single {@link toCommitUnit}
+ * → `Cursor.commit`.
+ */
+export type Change = Upsert | Retag | Delete;
+
+/** Wraps a decoded {@link Mapped} as an `upsert` {@link Change}. */
+export const upsert = (mapped: Mapped): Upsert => ({ _tag: 'upsert', ...mapped });
+
 /** A decoded email attachment, ready for {@link processAttachments} to turn into a Blob. */
 export type Attachment = {
   readonly name?: string;
@@ -77,21 +117,25 @@ export type Attachment = {
  * same run (the lookup is maintained as each is built, since a not-yet-committed contact wouldn't show
  * in a fresh query), so a repeat sender never yields a duplicate Person.
  */
-export const extractContacts = (): Stage.Stage<Mapped, Mapped, never, Database.Service> => {
+export const extractContacts = (): Stage.Stage<Change, Change, never, Database.Service> => {
   // Run-scoped contact/org lookup, seeded once on the first item and maintained by
   // `buildContactFromActor` as it creates contacts. Without it, each message re-queried every Person
   // and Organization in the space (O(#contacts) per message → O(n²) over a large sync) — the dominant
   // upstream cost measured in profiling.
   let lookup: ContactLookup | undefined;
-  return Stage.map('extract-contacts', (mapped: Mapped) =>
+  return Stage.map('extract-contacts', (change: Change) =>
     Effect.gen(function* () {
+      // Only new messages carry a body/sender; retag/delete pass through untouched.
+      if (change._tag !== 'upsert') {
+        return change;
+      }
       const { db } = yield* Database.Service;
       if (!lookup) {
         lookup = yield* buildContactLookup(db);
       }
-      const sender = mapped.message.sender;
+      const sender = change.message.sender;
       const contact = sender ? yield* buildContactFromActor(sender, db, lookup) : undefined;
-      return contact ? { ...mapped, contact } : mapped;
+      return contact ? { ...change, contact } : change;
     }),
   );
 };
@@ -106,9 +150,14 @@ export const extractContacts = (): Stage.Stage<Mapped, Mapped, never, Database.S
  * One bad or oversized attachment must not fail the whole message: each `Blob.fromBytes` is caught
  * and logged individually, so a rejected attachment is simply dropped from the message.
  */
-export const processAttachments = (): Stage.Stage<Mapped, Mapped, never, Database.Service> =>
-  Stage.map('process-attachments', (mapped: Mapped) =>
+export const processAttachments = (): Stage.Stage<Change, Change, never, Database.Service> =>
+  Stage.map('process-attachments', (change: Change) =>
     Effect.gen(function* () {
+      // Only new messages carry attachments; retag/delete pass through untouched.
+      if (change._tag !== 'upsert') {
+        return change;
+      }
+      const mapped = change;
       if (!mapped.attachments?.length) {
         return mapped;
       }
@@ -186,11 +235,15 @@ export const queryDraftPool = Effect.fn('queryDraftPool')(function* (parent: Obj
  */
 export const reconcileDrafts = (
   draftPool: ReadonlyMap<string, readonly Message.Message[]>,
-): Stage.Stage<Mapped, Mapped, never, never> =>
-  Stage.map('reconcile-drafts', (mapped: Mapped) =>
+): Stage.Stage<Change, Change, never, never> =>
+  Stage.map('reconcile-drafts', (change: Change) =>
     Effect.sync(() => {
-      const drafts = draftPool.get(mapped.foreignId);
-      return drafts?.length ? { ...mapped, supersededDrafts: drafts } : mapped;
+      // Only new messages can supersede a draft; retag/delete pass through untouched.
+      if (change._tag !== 'upsert') {
+        return change;
+      }
+      const drafts = draftPool.get(change.foreignId);
+      return drafts?.length ? { ...change, supersededDrafts: drafts } : change;
     }),
   );
 
@@ -210,7 +263,7 @@ export const reconcileDrafts = (
  */
 export const toCommitUnit = (
   options: { readonly tagIndex?: TagIndex.TagIndex } = {},
-): Stage.Stage<Mapped, Cursor.CommitUnit, never, Cursor.Service> => {
+): Stage.Stage<Change, Cursor.CommitUnit, never, Cursor.Service> => {
   const { tagIndex } = options;
   const tagUrisByObject = new WeakMap<Obj.Any, readonly string[]>();
   const applyTags: Cursor.CommitEffect = Effect.fn('email.commit.tags')(function* (
@@ -221,6 +274,9 @@ export const toCommitUnit = (
     }
     const tagEntries: { object: Obj.Any; tagId: string }[] = [];
     for (const unit of units) {
+      if (!unit.object) {
+        continue;
+      }
       for (const uri of tagUrisByObject.get(unit.object) ?? []) {
         tagEntries.push({ object: unit.object, tagId: uri });
       }
@@ -230,8 +286,55 @@ export const toCommitUnit = (
     }
   });
 
-  return Stage.map('to-commit-unit', (mapped: Mapped) =>
+  // Retag adds/removes recorded per foreign id, applied in one shared effect (identity-batched by the
+  // commit) so a page of label changes resolves to a single pass over the tag index.
+  const retagByForeignId = new Map<string, Pick<Retag, 'entityId' | 'addTagIds' | 'removeTagIds'>>();
+  const applyRetags: Cursor.CommitEffect = Effect.fn('email.commit.retags')(function* (
+    units: readonly Cursor.CommitUnit[],
+  ) {
+    if (!tagIndex) {
+      return;
+    }
+    const accessor = TagIndex.bind(tagIndex);
+    for (const unit of units) {
+      const retag = retagByForeignId.get(unit.foreignId);
+      if (!retag) {
+        continue;
+      }
+      for (const tagId of retag.addTagIds) {
+        accessor.setTag(tagId, retag.entityId);
+      }
+      for (const tagId of retag.removeTagIds) {
+        accessor.unsetTag(tagId, retag.entityId);
+      }
+    }
+  });
+
+  return Stage.map('to-commit-unit', (change: Change) =>
     Effect.gen(function* () {
+      // Label change on an existing message: an objectless unit (no feed append, key 0) whose effect
+      // retags by entityId.
+      if (change._tag === 'retag') {
+        retagByForeignId.set(change.foreignId, {
+          entityId: change.entityId,
+          addTagIds: change.addTagIds,
+          removeTagIds: change.removeTagIds,
+        });
+        return {
+          foreignId: change.foreignId,
+          key: 0,
+          commitEffects: tagIndex ? [applyRetags] : undefined,
+        } satisfies Cursor.CommitUnit;
+      }
+
+      // Remote deletion: wired but STUBBED — the branch resolves an objectless unit that does nothing.
+      // TODO(wittjosiah): Remove the message from the feed once in-sync feed object deletion is safe
+      //   (cursor/dedup-set interaction across the non-transactional queue↔space-db seam).
+      if (change._tag === 'delete') {
+        return { foreignId: change.foreignId, key: 0 } satisfies Cursor.CommitUnit;
+      }
+
+      const mapped = change;
       const { feed } = yield* Cursor.Service;
       const commitEffects: Cursor.CommitEffect[] = [];
 

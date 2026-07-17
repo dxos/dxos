@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 
 import { Jmap, JmapMail } from '../apis';
-import { type JmapApiError } from '../errors';
+import { JmapApiError } from '../errors';
 import { type JmapCredentials } from './jmap-credentials';
 
 /**
@@ -46,6 +46,11 @@ export interface JmapMailApiService {
     ids: readonly string[],
     properties?: readonly string[],
   ) => Effect.Effect<JmapMail.EmailGetResult, JmapApiError>;
+  readonly emailChanges: (
+    target: JmapMail.Target,
+    sinceState: string,
+    maxChanges?: number,
+  ) => Effect.Effect<JmapMail.EmailChangesResult, JmapApiError>;
   readonly downloadBlob: (
     target: JmapMail.Target,
     blobId: string,
@@ -89,6 +94,22 @@ export interface JmapDataset {
   readonly emails: readonly JmapMail.Email[];
   /** Attachment bytes keyed by `blobId`, served by `downloadBlob` for emails that carry one. */
   readonly blobs?: Readonly<Record<string, Uint8Array>>;
+  /**
+   * Current `Email/get` state token — `emailGet` returns it and it's the newest `Email/changes` state.
+   * Set to exercise the incremental path; absent means "no delta support" (token capture returns undefined).
+   */
+  readonly state?: string;
+  /** Ordered `Email/changes` steps chaining `sinceState` → `newState`, each carrying the delta. */
+  readonly changeLog?: readonly JmapChangeStep[];
+}
+
+/** One `Email/changes` step in a {@link JmapDataset}'s change log. */
+export interface JmapChangeStep {
+  readonly sinceState: string;
+  readonly newState: string;
+  readonly created?: readonly string[];
+  readonly updated?: readonly string[];
+  readonly destroyed?: readonly string[];
 }
 
 /** Narrows an `unknown` filter value to a plain object so the mock can walk its conditions. */
@@ -166,6 +187,8 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
         mailboxGet: (target) => Effect.provide(JmapMail.mailboxGet(target), context),
         emailQuery: (target, options) => Effect.provide(JmapMail.emailQuery(target, options), context),
         emailGet: (target, ids, properties) => Effect.provide(JmapMail.emailGet(target, ids, properties), context),
+        emailChanges: (target, sinceState, maxChanges) =>
+          Effect.provide(JmapMail.emailChanges(target, sinceState, maxChanges), context),
         downloadBlob: (target, blobId, options) =>
           Effect.provide(JmapMail.downloadBlob(target, blobId, options), context),
         identityGet: (target) => Effect.provide(JmapMail.identityGet(target), context),
@@ -201,7 +224,40 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
             return { position, total: matching.length, ids: page.map((email) => email.id) };
           }),
         emailGet: (_target, ids) =>
-          Effect.sync(() => ({ list: ids.map((id) => byId.get(id)).filter(Predicate.isNotNullable) })),
+          Effect.sync(() => ({
+            list: ids.map((id) => byId.get(id)).filter(Predicate.isNotNullable),
+            state: dataset.state,
+          })),
+        // Aggregates the change-log steps chaining from `sinceState`; an unknown/evicted state (no
+        // chain match, and not already the latest) fails with `cannotCalculateChanges`, matching a
+        // server past its retention window.
+        emailChanges: (_target, sinceState) =>
+          Effect.gen(function* () {
+            const latest = dataset.state ?? sinceState;
+            if (sinceState === latest) {
+              return { oldState: sinceState, newState: latest, hasMoreChanges: false, created: [], updated: [], destroyed: [] };
+            }
+            const created: string[] = [];
+            const updated: string[] = [];
+            const destroyed: string[] = [];
+            let chain = sinceState;
+            let matched = false;
+            for (const step of dataset.changeLog ?? []) {
+              if (step.sinceState === chain) {
+                matched = true;
+                created.push(...(step.created ?? []));
+                updated.push(...(step.updated ?? []));
+                destroyed.push(...(step.destroyed ?? []));
+                chain = step.newState;
+              }
+            }
+            if (!matched) {
+              return yield* Effect.fail(
+                new JmapApiError(undefined, 'Cannot calculate changes', 'cannotCalculateChanges'),
+              );
+            }
+            return { oldState: sinceState, newState: chain, hasMoreChanges: false, created, updated, destroyed };
+          }),
         downloadBlob: (_target, blobId) => {
           const bytes = dataset.blobs?.[blobId];
           return bytes

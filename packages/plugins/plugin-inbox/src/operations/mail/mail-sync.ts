@@ -16,6 +16,7 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
+import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock } from '@dxos/types';
 
 import { MailSyncError } from '../../errors';
@@ -41,17 +42,23 @@ export type MailSyncSourceOptions = {
   readonly windows: Cursor.Windows;
   /** User search filter from the binding options (provider query DSL). */
   readonly filter?: string;
+  /** The mailbox's tag index — a provider's reconcile branch reads it to diff remote vs local tags. */
+  readonly tagIndex: TagIndex.TagIndex;
+  /** Per-run cap on genuinely-new messages (additions) — the source applies it after dedup. */
+  readonly maxMessages: number;
   /** Called with each enumeration page/chunk's id count, to accumulate the retrieval total. */
   readonly onEnumerated: (count: number) => void;
   /** Called once per item retrieved (full fetch), to advance progress. */
   readonly onRetrieved: () => void;
+  /** Called once per genuinely-new message taken (post-dedup, pre-cap), so the harness can detect a capped run. */
+  readonly onTaken: (count: number) => void;
 };
 
 /**
- * One candidate message: its dedup key fields plus a self-contained `process` effect. The harness
- * dedups on `foreignId`/`key` before running `process`, so dedup stays cheap. `process` fuses the
- * provider's decode + map (API + resolver already provided) into `EmailStage.Mapped`, or `undefined`
- * to drop the item (no body, filtered sender, unmappable).
+ * One candidate message: its dedup key fields plus a self-contained `process` effect. `process` fuses
+ * the provider's decode + map (API + resolver already provided) into `EmailStage.Mapped`, or `undefined`
+ * to drop the item (no body, filtered sender, unmappable). Fed through {@link additionsToChanges}, which
+ * dedups on `foreignId`/`key` and caps before running `process`, so dedup/decode stay cheap.
  */
 export type MailSyncItem = {
   readonly foreignId: string;
@@ -59,14 +66,33 @@ export type MailSyncItem = {
   readonly process: Effect.Effect<EmailStage.Mapped | undefined, MailSyncError, never>;
 };
 
-/** The run's message source, produced by {@link MailSyncProviderService.prepare} once ready. */
+/**
+ * One reconcile change: a label add/remove on an already-committed message (or a stubbed deletion),
+ * keyed by `foreignId`. {@link reconcileToChanges} resolves the `foreignId` to its feed message's
+ * EntityId (via `Cursor.State.foreignIndex`) and produces an `EmailStage.Change`.
+ */
+export type ReconcileItem =
+  | { readonly _tag: 'retag'; readonly foreignId: string; readonly addTagIds: readonly string[]; readonly removeTagIds: readonly string[] }
+  | { readonly _tag: 'delete'; readonly foreignId: string };
+
+/** The run's change source, produced by {@link MailSyncProviderService.prepare} once ready. */
 export type MailSyncSource = {
   /**
-   * Streams candidate messages for one run (forward then backward). Must be UNBOUNDED — the harness
-   * caps after dedup — and must pipe raw ids through `Cursor.skipCommitted`. Requires only
-   * `Cursor.Service`; the provider's API is already captured.
+   * Streams the run's changes (additions + reconcile) as a single `EmailStage.Change` stream. The
+   * provider internalizes everything add-specific — the forward/backward windows, `skipCommitted`,
+   * fetch, `dedupStage`, the `maxMessages` cap, and decode (via {@link additionsToChanges}) — and merges
+   * in the reconcile branch (via {@link reconcileToChanges}), so the harness only pipes this through the
+   * shared email tail. Requires only `Cursor.Service`; the provider's API is already captured.
    */
-  readonly buildSource: (options: MailSyncSourceOptions) => Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
+  readonly buildSource: (
+    options: MailSyncSourceOptions,
+  ) => Stream.Stream<EmailStage.Change, MailSyncError, Cursor.Service>;
+  /**
+   * The opaque delta-resume token captured during this run's fetch (first-tick / staleness paths return
+   * the freshly-captured provider token), read by the harness at run end and written to the cursor only
+   * after the stream has fully drained. Absent for providers with no delta path.
+   */
+  readonly nextToken?: () => string | undefined;
 };
 
 /** Resolved run context the harness hands a provider's {@link MailSyncProviderService.prepare}. */
@@ -76,6 +102,8 @@ export type MailSyncPreparation = {
   readonly mailbox: Mailbox.Mailbox;
   /** Reference "now" for provider filters with relative dates (pinned by tests). */
   readonly now: Date;
+  /** The cursor's current delta-resume token, or undefined on the first tick / after staleness. */
+  readonly token?: string;
 };
 
 /** The provider-specific surface the shared harness runs against. */
@@ -103,6 +131,59 @@ export class MailSyncProvider extends Context.Tag('@dxos/plugin-inbox/MailSyncPr
   MailSyncProvider,
   MailSyncProviderService
 >() {}
+
+/**
+ * The add-specific head, shared by both providers: dedups raw candidates on foreignId/key, caps at
+ * `maxMessages`, runs the provider decode, and wraps survivors as `upsert` changes. Providers apply this
+ * inside `buildSource` (after their windows/list/skipCommitted/fetch) so the harness never manipulates
+ * streams. `dedupStage`/`take`/decode are add-only — a retag targets an already-committed message — so
+ * they live here rather than in the shared tail.
+ */
+export const additionsToChanges = (
+  items: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>,
+  options: { readonly maxMessages: number; readonly onTaken: (count: number) => void },
+): Stream.Stream<EmailStage.Change, MailSyncError, Cursor.Service> =>
+  items.pipe(
+    Cursor.dedupStage<MailSyncItem>(
+      'dedup',
+      (item) => item.foreignId,
+      (item) => item.key,
+    ),
+    Stream.take(options.maxMessages),
+    Stream.tap(() => Effect.sync(() => options.onTaken(1))),
+    Stage.map('process', (item: MailSyncItem) => item.process),
+    Stream.map(EmailStage.upsert),
+  );
+
+/**
+ * The reconcile branch, shared by both providers: resolves each change's foreignId to its feed message's
+ * EntityId via `Cursor.State.foreignIndex`, dropping (with a debug log) any whose message was never
+ * synced / is outside the window. Produces retag/delete `EmailStage.Change`s that carry no feed object.
+ */
+export const reconcileToChanges = (
+  items: Stream.Stream<ReconcileItem, MailSyncError, Cursor.Service>,
+): Stream.Stream<EmailStage.Change, MailSyncError, Cursor.Service> =>
+  items.pipe(
+    Stage.map('reconcile', (item: ReconcileItem) =>
+      Effect.gen(function* () {
+        const { foreignIndex } = yield* Cursor.Service;
+        const entityId = foreignIndex?.get(item.foreignId);
+        if (!entityId) {
+          log('mail sync: reconcile change for unsynced message, skipping', { foreignId: item.foreignId });
+          return undefined;
+        }
+        return item._tag === 'delete'
+          ? ({ _tag: 'delete', foreignId: item.foreignId, entityId } satisfies EmailStage.Change)
+          : ({
+              _tag: 'retag',
+              foreignId: item.foreignId,
+              entityId,
+              addTagIds: item.addTagIds,
+              removeTagIds: item.removeTagIds,
+            } satisfies EmailStage.Change);
+      }),
+    ),
+  );
 
 export type RunMailSyncOptions = {
   readonly binding: Ref.Ref<Cursor.Cursor>;
@@ -173,8 +254,12 @@ export const runMailSync = (
     // canonical copy's arrival removes its now-redundant draft during commit.
     const draftPool = yield* EmailStage.queryDraftPool(mailbox);
 
+    // The delta-resume token (undefined on the first tick / after staleness): drives the provider's
+    // incremental fast-path, and gates building the foreignId→EntityId map (only reconcile runs need it).
+    const token = Cursor.readToken(binding);
+
     // Session/target discovery + the provider's label/folder→tag map; undefined skips the run.
-    const source = yield* provider.prepare({ db, binding, mailbox, now });
+    const source = yield* provider.prepare({ db, binding, mailbox, now, token });
     if (!source) {
       return { newMessages: 0 };
     }
@@ -253,8 +338,13 @@ export const runMailSync = (
 
     // Pass-through stage: collects per-message telemetry into the run counters. Publishing a live
     // snapshot from these is disabled (see the TODO above) until it goes through the trace feed.
-    const collectStats = Stage.map('collect-stats', (mapped: EmailStage.Mapped) =>
+    const collectStats = Stage.map('collect-stats', (change: EmailStage.Change) =>
       Effect.sync(() => {
+        // Telemetry counts new messages only; retag/delete changes pass through.
+        if (change._tag !== 'upsert') {
+          return change;
+        }
+        const mapped = change;
         processed += 1;
         if (mapped.message.threadId) {
           threads.add(mapped.message.threadId);
@@ -284,24 +374,24 @@ export const runMailSync = (
 
     // The cap is applied after dedup (see `MailSyncItem`), so `taken` counts only genuinely-new
     // messages: it tells us whether the run was truncated (→ re-run) or exhausted (→ complete backfill).
+    // The provider's `buildSource` internalizes the add-only head (windows → skipCommitted → fetch →
+    // dedup → cap → decode) and merges in the reconcile branch, so the harness only pipes the resulting
+    // `EmailStage.Change` stream through the shared email tail into the single commit.
     yield* source
       .buildSource({
         windows,
         filter: targetOptions.filter,
+        tagIndex,
+        maxMessages,
         onEnumerated: addToTotal,
         // Advance at retrieval so `current` reaches `total`; counting after downstream dedup/decode
         // drops would leave the bar short of 100%.
         onRetrieved: () => progressMonitor.advance(1),
+        onTaken: () => {
+          taken += 1;
+        },
       })
       .pipe(
-        Cursor.dedupStage<MailSyncItem>(
-          'dedup',
-          (item) => item.foreignId,
-          (item) => item.key,
-        ),
-        Stream.take(maxMessages),
-        Stream.tap(() => Effect.sync(() => (taken += 1))),
-        Stage.map('process', (item: MailSyncItem) => item.process),
         EmailStage.processAttachments(),
         // TODO(wittjosiah): Not compatible with edge compute — reaches `Capability.Service`
         //   (`InboxCapabilities.ObjectExtractor`) and invokes `Operation.ExtractMessage`, neither of
@@ -324,6 +414,8 @@ export const runMailSync = (
             trackRange: true,
             stats,
             extent,
+            // Only an incremental (token) run reconciles label changes, so only it pays to build the map.
+            buildEntityMap: token !== undefined,
             dedupSeedTail: options.dedupSeedTail,
           }),
         ),
@@ -379,10 +471,18 @@ export const runMailSync = (
       if (!capped) {
         // Both halves exhausted naturally (not just capped) — the backward half reached the horizon.
         Cursor.completeBackfill(binding, horizon.getTime());
+        // Advance the delta-resume token LAST, only after the merged add+reconcile stream has fully
+        // drained through the single commit. A crash/cap leaves it unadvanced → the next run re-fetches
+        // the whole delta (additions dedup-drop, tag ops re-apply idempotently). See the invariant.
+        const nextToken = source.nextToken?.();
+        if (nextToken !== undefined) {
+          Cursor.writeToken(binding, nextToken);
+        }
       } else {
         // Capped: more to sync. A re-run (rather than an in-process loop) keeps this invocation bounded
         // and lets the durable runtime schedule the continuation. Progress is already committed, so the
-        // next run resumes from the advanced cursor.
+        // next run resumes from the advanced cursor. The token stays unadvanced so the re-run re-fetches
+        // the rest of the delta.
         yield* Operation.runAgain().pipe(Effect.orDie);
       }
     }
