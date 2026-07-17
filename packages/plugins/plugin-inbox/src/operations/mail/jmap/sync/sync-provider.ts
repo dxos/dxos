@@ -183,7 +183,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
                 // is set, the delta's account-wide created ids would bypass it — so fall back to the
-                // filtered forward window scan `insert`for additions (the delta still drives reconcile).
+                // filtered forward window scan for additions (the delta still drives reconcile).
                 const forwardIds = filter ? undefined : createdIds;
                 if (forwardIds) {
                   onEnumerated(forwardIds.length);
@@ -223,13 +223,13 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
 /**
  * Reconcile branch for JMAP: for each `updated` email id, re-fetch its current `mailboxIds` + `keywords`,
  * map them to canonical/folder Tags, and diff against the message's current *local* tags — a remote-wins,
- * snapshot-free reconciliation that is idempotent (a re-run after a crash produces an `insert`empty diff, so it
+ * snapshot-free reconciliation that is idempotent (a re-run after a crash produces an empty diff, so it
  * is crash-safe). Emits a retag {@link EmailStage.Change} keyed by the resolved EntityId; ids not in the
  * feed (never synced / outside window) or with no net change are dropped.
  *
  * The two axes reconcile differently: **folder** tags are fully remote-wins (added *and* removed, since
  * folder membership is server-authoritative), while **keyword** tags (starred) are **add-only** — the
- * remote can `insert`add a star, but we never auto-remove one, which would clobber a locally-toggled star until
+ * remote can add a star, but we never auto-remove one, which would clobber a locally-toggled star until
  * we support writing local flags back to the provider.
  */
 const jmapReconcile = (
@@ -285,7 +285,7 @@ const jmapReconcile = (
 
 /**
  * Downloads each attachment's bytes via `JmapMailApi.downloadBlob`. One failed download (including a
- * session with no `downloadUrl`) is logged and dropped rather than `insert`failing the whole message.
+ * session with no `downloadUrl`) is logged and dropped rather than failing the whole message.
  */
 const fetchAttachments = (
   target: JmapMail.Target,
@@ -321,8 +321,8 @@ const fetchAttachments = (
  * bounds + optional user DSL), then paginate. Forward pages oldest-first from `max` so a capped run
  * advances `max` gap-free instead of jumping to the newest key and stranding the middle; backward pages
  * newest-first from `min` to the horizon. Backward's upper bound is queried 1ms past `min` so a message
- * sharing that exact millisecond is re-queried (and deduped) rather than `insert`skipped once `min` passes it.
- * Split from the full-email fetch so a bidirectional run can `insert`cap the combined id stream before fetching.
+ * sharing that exact millisecond is re-queried (and deduped) rather than skipped once `min` passes it.
+ * Split from the full-email fetch so a bidirectional run can cap the combined id stream before fetching.
  */
 const jmapIds = (
   target: JmapMail.Target,
@@ -394,7 +394,7 @@ const jmapIds = (
 
 /**
  * Fetches the full JMAP email for each id. Takes a plain id stream (not a window) so a bidirectional
- * run can `insert`cap the combined stream once, then fetch full emails for exactly the capped set.
+ * run can cap the combined stream once, then fetch full emails for exactly the capped set.
  */
 const jmapEmailsForIds = (
   target: JmapMail.Target,
@@ -407,9 +407,9 @@ const jmapEmailsForIds = (
   ids.pipe(
     Stream.flatMap(
       (id) =>
-        // Drop an `insert`id deleted between query and `emailGet` (returns nothing) by filtering out the null.
+        // Drop an id deleted between query and `emailGet` (returns nothing) by filtering out the null.
         // Do NOT recover the error channel: a real `JmapApiError` must propagate and fail the run so the
-        // durable retry re-fetches, rather than `insert`stranding the message once `max` advances.
+        // durable retry re-fetches, rather than stranding the message once `max` advances.
         Stream.fromEffect(
           Effect.gen(function* () {
             const api = yield* JmapMailApi;
@@ -427,7 +427,7 @@ const jmapEmailsForIds = (
  * concatenated and fetched in full. Intentionally UNBOUNDED — the harness caps after dedup (see
  * `runMailSync`). The forward source is either the `max`-anchored forward window (first tick / stale
  * fallback) or, when `forwardIds` is set, the incremental delta's created ids — in which case the
- * backward window still runs, so an `insert`incremental tick keeps making backfill progress.
+ * backward window still runs, so an incremental tick keeps making backfill progress.
  *
  * `Cursor.skipCommitted` drops ids already in the dedup set before `emailGet`, so re-queried boundary
  * ids aren't downloaded; the harness's post-fetch `Cursor.dedupStage` stays the authority.

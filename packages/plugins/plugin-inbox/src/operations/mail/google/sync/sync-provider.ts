@@ -236,11 +236,11 @@ const collectLabelChanges = (
  * Syncs the Gmail label dictionary to `Tag` objects. Returns a `gmailLabelId -> Tag uri` map used to
  * index messages by tag. A known system label (`STARRED`, `INBOX`, `CATEGORY_*`, …) maps onto the
  * shared canonical {@link SystemTags.SystemTag}; a custom user label gets a Gmail-scoped provider tag;
- * an `insert`unmapped system label (read-state, drafts, trash/spam) is intentionally dropped — see
+ * an unmapped system label (read-state, drafts, trash/spam) is intentionally dropped — see
  * {@link GMAIL_SYSTEM_TAGS}.
  */
 // TODO(wittjosiah): Migrate this label→Tag sync onto a pipeline too (source: labels; sink:
-//   find-or-create Tag), rather than `insert`the imperative loop below.
+//   find-or-create Tag), rather than the imperative loop below.
 const syncLabels = Effect.fn('google-sync.labels')(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const api = yield* GoogleMailApi;
   const { labels } = yield* api.listLabels(userId);
