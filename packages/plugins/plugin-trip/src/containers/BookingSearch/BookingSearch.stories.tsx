@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
@@ -48,8 +48,8 @@ const StubBookingPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'stub-booking-service',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(TripCapabilities.BookingService, STUB_SERVICE)),
+    provides: [TripCapabilities.BookingService],
+    activate: () => Effect.succeed([Capability.provide(TripCapabilities.BookingService, STUB_SERVICE)]),
   }),
   Plugin.make,
 );

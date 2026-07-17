@@ -32,8 +32,8 @@ import { type Space } from '@dxos/react-client/echo';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const runtime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const client = yield* ClientCapabilities.Client;
+    const runtime = yield* Capabilities.ProcessManagerRuntime;
 
     /** Per-space property-subscription unsubscribe, last-seen disabled state, and in-flight transition fiber. */
     type Tracker = {
@@ -107,7 +107,7 @@ export default Capability.makeModule(
     const spacesSubscription = client.spaces.subscribe(installAll);
     installAll(client.spaces.get());
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         spacesSubscription.unsubscribe();
         for (const tracker of trackers.values()) {

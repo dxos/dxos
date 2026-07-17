@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Text } from '@dxos/schema';
 
@@ -15,15 +15,23 @@ import { Bookmark } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BookmarksPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
-  AppPlugin.addSchemaModule({ schema: [Bookmark.Bookmark, Text.Text] }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  Plugin.addModule({
-    id: 'page-action',
-    activatesOn: ActivationEvents.Startup,
-    activate: PageActionProvider,
+  AppPlugin.addCommentConfigModule({
+    requires: CommentConfig.requires,
+    provides: CommentConfig.provides,
+    activate: CommentConfig,
   }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSchemaModule({ schema: [Bookmark.Bookmark, Text.Text] }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  Plugin.addLazyModule(PageActionProvider),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

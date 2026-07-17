@@ -24,6 +24,6 @@ export default Capability.makeModule(() =>
         operation: BookmarkOperation.AddFromSnapshot,
       },
     ];
-    return Capability.contributes(CrxCapabilities.PageAction, actions);
+    return [Capability.provide(CrxCapabilities.PageAction, actions)];
   }),
 );

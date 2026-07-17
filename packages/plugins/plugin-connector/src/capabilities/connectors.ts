@@ -11,7 +11,7 @@ import { Format } from '@dxos/echo/Format';
 import { AccessToken } from '@dxos/link';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { Connection, Connector, type ConnectorEntry, type CredentialForm } from '#types';
+import { Connection, Connector, type CredentialForm } from '#types';
 
 import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES, CUSTOM_PROVIDER_ID } from '../constants';
 
@@ -52,51 +52,53 @@ const atprotoCredentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPre
  * Service-specific connectors (Bluesky, Trello, GitHub, …) live in their
  * own plugins and contribute on `SetupConnectors`.
  */
-export default Capability.makeModule<ConnectorEntry[]>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
-      {
-        id: CUSTOM_PROVIDER_ID,
-        // The user enters the source in the dialog; we don't know it ahead of time.
-        source: '',
-        label: 'Custom Token',
-        credentialForm: {
-          schema: CustomTokenForm,
-          defaultValues: { source: '', token: '' },
-          onSubmit: ({ values, connector }) =>
-            Effect.sync(() => {
-              const accessToken = Obj.make(AccessToken.AccessToken, {
-                source: values.source,
-                account: values.account,
-                token: values.token,
-              });
-              const connection = Obj.make(Connection.Connection, {
-                name: connector.label ?? values.account ?? values.source,
-                connectorId: connector.id,
-                accessToken: Ref.make(accessToken),
-              });
-              return { kind: 'complete', accessToken, connection };
-            }),
+    return [
+      Capability.provide(Connector, [
+        {
+          id: CUSTOM_PROVIDER_ID,
+          // The user enters the source in the dialog; we don't know it ahead of time.
+          source: '',
+          label: 'Custom Token',
+          credentialForm: {
+            schema: CustomTokenForm,
+            defaultValues: { source: '', token: '' },
+            onSubmit: ({ values, connector }) =>
+              Effect.sync(() => {
+                const accessToken = Obj.make(AccessToken.AccessToken, {
+                  source: values.source,
+                  account: values.account,
+                  token: values.token,
+                });
+                const connection = Obj.make(Connection.Connection, {
+                  name: connector.label ?? values.account ?? values.source,
+                  connectorId: connector.id,
+                  accessToken: Ref.make(accessToken),
+                });
+                return { kind: 'complete', accessToken, connection };
+              }),
+          },
         },
-      },
-      {
-        // Atmosphere: the same atproto OAuth flow as the Bluesky connector but credential-only — no
-        // sync targets. Connects an atproto account without syncing feeds, and is the connector the
-        // OAuth account-recovery flow routes its Connection to.
-        id: ATMOSPHERE_PROVIDER_ID,
-        source: ATMOSPHERE_SOURCE,
-        label: 'Atmosphere',
-        oauth: {
-          provider: OAuthProvider.ATPROTO,
-          scopes: [...ATPROTO_OAUTH_SCOPES],
-          // bsky.social nullifies window.opener, so popup + postMessage can't be used; rely on Edge
-          // redirecting to `/redirect/oauth`.
-          useRedirectFlow: true,
+        {
+          // Atmosphere: the same atproto OAuth flow as the Bluesky connector but credential-only — no
+          // sync targets. Connects an atproto account without syncing feeds, and is the connector the
+          // OAuth account-recovery flow routes its Connection to.
+          id: ATMOSPHERE_PROVIDER_ID,
+          source: ATMOSPHERE_SOURCE,
+          label: 'Atmosphere',
+          oauth: {
+            provider: OAuthProvider.ATPROTO,
+            scopes: [...ATPROTO_OAUTH_SCOPES],
+            // bsky.social nullifies window.opener, so popup + postMessage can't be used; rely on Edge
+            // redirecting to `/redirect/oauth`.
+            useRedirectFlow: true,
+          },
+          credentialForm: atprotoCredentialForm,
         },
-        credentialForm: atprotoCredentialForm,
-      },
-      // GitHub, Linear, and Slack are implemented as dedicated plugins
-      // (`@dxos/plugin-github`, `@dxos/plugin-linear`, `@dxos/plugin-slack`).
-    ]);
+        // GitHub, Linear, and Slack are implemented as dedicated plugins
+        // (`@dxos/plugin-github`, `@dxos/plugin-linear`, `@dxos/plugin-slack`).
+      ]),
+    ];
   }),
 );

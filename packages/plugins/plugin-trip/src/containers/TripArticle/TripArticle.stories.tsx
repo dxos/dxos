@@ -6,7 +6,7 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -35,8 +35,8 @@ const RoutingStoryPlugin = (service: Routing.RoutingService) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.trip.story.routing'), name: 'Story Routing' })).pipe(
     Plugin.addModule({
       id: 'story-routing',
-      activatesOn: ActivationEvents.Startup,
-      activate: () => Effect.succeed(Capability.contributes(TripCapabilities.RoutingService, service)),
+      provides: [TripCapabilities.RoutingService],
+      activate: () => Effect.succeed([Capability.provide(TripCapabilities.RoutingService, service)]),
     }),
     Plugin.make,
   )();

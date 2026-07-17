@@ -12,7 +12,11 @@ import { meta } from '#meta';
 import { Connection } from '#types';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({
     schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
   }),

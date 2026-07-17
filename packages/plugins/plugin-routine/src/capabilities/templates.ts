@@ -12,6 +12,6 @@ import { defaultTemplates } from '../templates';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return defaultTemplates.map((template) => Capability.contributes(RoutineCapabilities.Template, template));
+    return [Capability.provideAll(RoutineCapabilities.Template, defaultTemplates)];
   }),
 );

@@ -45,9 +45,10 @@ const MockDeckOperationsPlugin = Plugin.define(
   }),
 ).pipe(
   AppPlugin.addOperationHandlerModule({
+    provides: [Capabilities.OperationHandler],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.provide(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(
             Operation.withHandler(LayoutOperation.Select, () => Effect.void),
@@ -55,7 +56,7 @@ const MockDeckOperationsPlugin = Plugin.define(
             Operation.withHandler(LayoutOperation.Open, () => Effect.succeed([])),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -91,9 +92,8 @@ const ImportantExtractorPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () =>
-      Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)),
+    provides: [InboxCapabilities.ObjectExtractor],
+    activate: () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)]),
   }),
   Plugin.make,
 );
@@ -142,10 +142,10 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [Capabilities.LayerSpec],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.provide(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             // Mock model: `generateText` returns a static summary (for SummarizeMessageExtractor),
@@ -154,7 +154,7 @@ const MockAiServicePlugin = Plugin.define(
             mockAiService({ text: MOCK_SUMMARY, object: MOCK_FLIGHT_PAYLOAD }),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );

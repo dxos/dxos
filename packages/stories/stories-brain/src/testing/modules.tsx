@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { DXN } from '@dxos/keys';
 import { withModuleProps } from '@dxos/story-modules';
@@ -89,8 +89,8 @@ export const StoryModulesPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'brain-story-modules',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => Effect.succeed(Capability.contributes(Capabilities.ReactSurface, moduleSurfaces)),
+    provides: [Capabilities.ReactSurface],
+    activate: () => Effect.succeed([Capability.provide(Capabilities.ReactSurface, moduleSurfaces)]),
   }),
   Plugin.make,
 );

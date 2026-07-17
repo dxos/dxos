@@ -31,15 +31,16 @@ export const createNumberPlugin = (id: string) => {
 
   return Plugin.define(Plugin.makeMeta({ key: pluginId, name: `Plugin ${DXN.getName(pluginId)}` })).pipe(
     AppPlugin.addOperationHandlerModule({
+      provides: [Capabilities.OperationHandler],
       activate: () =>
-        Effect.succeed(
-          Capability.contributes(
+        Effect.succeed([
+          Capability.provide(
             Capabilities.OperationHandler,
             OperationHandlerSet.make(
               Operation.withHandler(AlertOperation, () => Effect.sync(() => window.alert(JSON.stringify({ number })))),
             ),
           ),
-        ),
+        ]),
     }),
     Plugin.addModule({
       id: 'Main',

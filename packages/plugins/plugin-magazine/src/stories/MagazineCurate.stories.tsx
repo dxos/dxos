@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppPlugin } from '@dxos/app-toolkit';
@@ -49,16 +49,13 @@ const AgentRuntimePlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.magazineStoryAgent'), name: 'Magazine Story Agent Runtime' }),
 ).pipe(
   AppPlugin.addOperationHandlerModule({
-    activate: Capability.makeModule(() =>
-      Effect.succeed([Capability.contributes(Capabilities.OperationHandler, AgentHandlers)]),
-    ),
+    provides: [Capabilities.OperationHandler],
+    activate: () => Effect.succeed([Capability.provide(Capabilities.OperationHandler, AgentHandlers)]),
   }),
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: Capability.makeModule(() =>
-      Effect.succeed([Capability.contributes(Capabilities.LayerSpec, aiServiceSpec)]),
-    ),
+    provides: [Capabilities.LayerSpec],
+    activate: () => Effect.succeed([Capability.provide(Capabilities.LayerSpec, aiServiceSpec)]),
   }),
   Plugin.make,
 );

@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -35,16 +35,16 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [Capabilities.LayerSpec],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.provide(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             mockAiService({ text: 'A concise topic summary.' }),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );

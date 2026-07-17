@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { ActivationEvents, Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
@@ -47,10 +47,10 @@ const ExampleSurfacesPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'org.dxos.storybook.storyModules.surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+      Effect.succeed([
+        Capability.provide(Capabilities.ReactSurface, [
           Surface.create({
             id: 'panelA',
             filter: Surface.makeFilter(PanelA),
@@ -67,7 +67,7 @@ const ExampleSurfacesPlugin = Plugin.define(
             component: () => <ExamplePanel label='Panel C' />,
           }),
         ]),
-      ),
+      ]),
   }),
   Plugin.make,
 );

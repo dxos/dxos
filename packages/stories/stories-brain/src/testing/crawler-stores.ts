@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { DXN } from '@dxos/keys';
 import { ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
@@ -43,7 +43,7 @@ export const CrawlerStores = Capability.make<CrawlerStoresRuntime>('org.dxos.sto
 const CrawlerStoresModule = Capability.makeModule(
   Effect.fnUntraced(function* () {
     const runtime = ManagedRuntime.make(crawlerStoresLayer());
-    return [Capability.contributes(CrawlerStores, runtime)];
+    return [Capability.provide(CrawlerStores, runtime)];
   }),
 );
 
@@ -53,7 +53,7 @@ export const CrawlerStoresPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'crawler-stores',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [CrawlerStores],
     activate: CrawlerStoresModule,
   }),
   Plugin.make,

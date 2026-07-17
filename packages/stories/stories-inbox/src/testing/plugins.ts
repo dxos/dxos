@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
@@ -24,13 +24,14 @@ export const StorySyncPlugin = Plugin.define(
   }),
 ).pipe(
   AppPlugin.addOperationHandlerModule({
+    provides: [Capabilities.OperationHandler],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.provide(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -48,11 +49,11 @@ export const StoryAiPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'story-ai',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [Capabilities.LayerSpec],
     activate: Capability.makeModule(
       Effect.fnUntraced(function* () {
         return [
-          Capability.contributes(
+          Capability.provide(
             Capabilities.LayerSpec,
             LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
               // `orDie`: a layer-construction ConfigError is a story setup fault, not a recoverable

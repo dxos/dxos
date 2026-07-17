@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN } from '@dxos/keys';
 import { type Observability } from '@dxos/observability';
@@ -39,11 +39,9 @@ const StoryObservabilityPlugin = ({ available = true }: { available?: boolean } 
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.story.observability'), name: 'Story Observability' })).pipe(
     Plugin.addModule({
       id: 'observability',
-      activatesOn: ActivationEvents.Startup,
+      provides: [ObservabilityCapabilities.Observability],
       activate: () =>
-        Effect.succeed(
-          Capability.contributes(ObservabilityCapabilities.Observability, makeObservability({ available })),
-        ),
+        Effect.succeed([Capability.provide(ObservabilityCapabilities.Observability, makeObservability({ available }))]),
     }),
     Plugin.make,
   );
@@ -53,14 +51,14 @@ const StoryLogDownloaderPlugin = () =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.story.logDownloader'), name: 'Story Log Downloader' })).pipe(
     Plugin.addModule({
       id: 'log-downloader',
-      activatesOn: ActivationEvents.Startup,
+      provides: [ObservabilityCapabilities.LogDownloader],
       activate: () =>
-        Effect.succeed(
-          Capability.contributes(ObservabilityCapabilities.LogDownloader, () => {
+        Effect.succeed([
+          Capability.provide(ObservabilityCapabilities.LogDownloader, () => {
             // eslint-disable-next-line no-console
             console.log('[story] download logs clicked');
           }),
-        ),
+        ]),
     }),
     Plugin.make,
   );

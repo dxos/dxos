@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -21,15 +21,8 @@ import { DeckCapabilities, getMode } from '#types';
 import { Deck } from './Deck';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: DeckSettings,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(DeckState),
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: () => DeckState(),
-  }),
+  Plugin.addLazyModule(DeckSettings),
+  Plugin.addLazyModule(DeckState),
   Plugin.make,
 );
 

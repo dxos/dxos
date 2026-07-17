@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation, Skill } from '@dxos/compute';
+import { Operation, Skill, type OperationHandlerSet } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -28,15 +28,14 @@ import { ClientCapabilities } from '@dxos/plugin-client';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
-    const capabilityManager = yield* Capability.Service;
+    const client = yield* ClientCapabilities.Client;
+    const atomRegistry = yield* Capabilities.AtomRegistry;
 
     //
     // Skill registration.
     //
 
-    const skillDefinitionsAtom = capabilityManager.atom(AppCapabilities.SkillDefinition);
+    const skillDefinitionsAtom = (yield* AppCapabilities.SkillDefinition).atom;
     const prevSkillKeys = new Set<string>();
 
     atomRegistry.subscribe(
@@ -60,7 +59,7 @@ export default Capability.makeModule(
     // Operation registration.
     //
 
-    const operationHandlersAtom = capabilityManager.atom(Capabilities.OperationHandler);
+    const operationHandlersAtom = (yield* Capabilities.OperationHandler).atom;
     const prevOperationKeys = new Set<string>();
 
     atomRegistry.subscribe(

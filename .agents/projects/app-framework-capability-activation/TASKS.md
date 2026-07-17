@@ -100,3 +100,15 @@ Gate recipe per wave: per-package build+test → framework suites → Composer b
 - [ ] Changesets (@dxos/app-framework, @dxos/app-toolkit, touched plugins)
 - [ ] Full suite: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`; `moon run :lint -- --fix`; `pnpm format`
 - [ ] submit-pr skill
+
+## Session checkpoint 2026-07-17 (capacity-conservation mode)
+
+- Committed through 38f3a26d63 (batches 9+10 + specials). UNCOMMITTED in tree: final sweep
+  (connector, bookmarks, plugin-files dead-code deletion, scaffolding + storybook fixtures;
+  residual fires* grep EMPTY) and plugin-routine remainder (agent in flight).
+- Next steps for the driving session (delegate everything heavy to Sonnet agents):
+  1. When routine agent completes: one agent runs the boot gate (recipe above; probe
+     manager legacyRemaining — must be [] except plugin-comments story stub) and reports.
+  2. Review `git diff --stat`, commit sweep+routine → Phase 7 CLOSED.
+  3. Dispatch Phase 8 agent with PHASE8-BRIEF.md (deletion + all landing gates).
+  4. Review, commit, boot-gate once, changesets, submit-pr skill.

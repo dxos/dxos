@@ -69,8 +69,8 @@ export const Main = () => {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(
+  Effect.succeed([
+    Capability.provide(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.main',
@@ -78,5 +78,5 @@ export default Capability.makeModule(() =>
         component: Main,
       }),
     ),
-  ),
+  ]),
 );

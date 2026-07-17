@@ -15,8 +15,8 @@ import { meta } from '#meta';
 import { Routine } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'spaceSettingsAutomation',
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.space-settings-automation`),
@@ -62,5 +62,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ),
+  ]),
 );

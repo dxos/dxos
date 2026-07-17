@@ -50,8 +50,8 @@ export const Toolbar = () => {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(
+  Effect.succeed([
+    Capability.provide(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.toolbar',
@@ -59,5 +59,5 @@ export default Capability.makeModule(() =>
         component: Toolbar,
       }),
     ),
-  ),
+  ]),
 );

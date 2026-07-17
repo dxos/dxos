@@ -15,6 +15,9 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';
@@ -175,8 +178,8 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const client = yield* ClientCapabilities.Client;
+    const invoker = yield* Capabilities.OperationInvoker;
     const pluginContext = yield* Capability.Service;
 
     let cachedEdgeClient: EdgeHttpClient | undefined;
@@ -547,21 +550,23 @@ export default Capability.makeModule(
         return yield* reconcileCursors({ invoker, db, connection, connector, selected, existingTarget });
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
-    return Capability.contributes(
-      ConnectorCoordinator,
-      {
-        createConnection,
-        reauthenticate,
-        createCustomConnection,
-        finalizeRedirectFlow,
-        submitCredentialForm,
-        setCursors,
-      },
-      () =>
-        Effect.sync(() => {
-          window.removeEventListener('message', handleMessage);
-          pending.clear();
-        }),
-    );
+    return [
+      Capability.provide(
+        ConnectorCoordinator,
+        {
+          createConnection,
+          reauthenticate,
+          createCustomConnection,
+          finalizeRedirectFlow,
+          submitCredentialForm,
+          setCursors,
+        },
+        () =>
+          Effect.sync(() => {
+            window.removeEventListener('message', handleMessage);
+            pending.clear();
+          }),
+      ),
+    ];
   }),
 );

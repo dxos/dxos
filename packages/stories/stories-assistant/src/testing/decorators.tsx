@@ -7,14 +7,7 @@ import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import {
-  ActivationEvent,
-  ActivationEvents,
-  Capabilities,
-  Capability,
-  Plugin,
-  PluginManager,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin, PluginManager } from '@dxos/app-framework';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
@@ -322,31 +315,33 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
 ).pipe(
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => Effect.succeed(Capability.contributes(Capabilities.ReactSurface, moduleSurfaces)),
+    provides: [Capabilities.ReactSurface],
+    activate: () => Effect.succeed([Capability.provide(Capabilities.ReactSurface, moduleSurfaces)]),
   }),
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
-    activatesOn: AppActivationEvents.SetupArtifactDefinition,
+    provides: [AppCapabilities.SkillDefinition, Capabilities.OperationHandler],
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
-        Capability.contributes(AppCapabilities.SkillDefinition, MarkdownSkill),
-        Capability.contributes(AppCapabilities.SkillDefinition, PlanningSkill),
-        Capability.contributes(AppCapabilities.SkillDefinition, DelegationSkill),
-        Capability.contributes(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
-        Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
-        Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
-        Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
-        Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),
+        Capability.provide(AppCapabilities.SkillDefinition, MarkdownSkill),
+        Capability.provide(AppCapabilities.SkillDefinition, PlanningSkill),
+        Capability.provide(AppCapabilities.SkillDefinition, DelegationSkill),
+        Capability.provide(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
+        Capability.provide(Capabilities.OperationHandler, PlanningHandlers),
+        Capability.provide(Capabilities.OperationHandler, DelegationHandlers),
+        Capability.provide(Capabilities.OperationHandler, AgentHandlers),
+        Capability.provide(Capabilities.OperationHandler, ExampleHandlers),
       ]),
   }),
   Plugin.addModule(({ createAgent, onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.setup',
-    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
+    // Runtime event: the space isn't available until the client observes it.
+    activatesOn: ClientEvents.SpacesReady,
+    requires: [Capabilities.OperationInvoker, ClientCapabilities.Client, Capabilities.AtomRegistry],
     activate: Effect.fnUntraced(function* () {
-      const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
-      const client = yield* Capability.get(ClientCapabilities.Client);
+      const { invoke } = yield* Capabilities.OperationInvoker;
+      const client = yield* ClientCapabilities.Client;
       const space = client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 
@@ -374,7 +369,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
         if (onChatCreated) {
-          const registry = yield* Capability.get(Capabilities.AtomRegistry);
+          const registry = yield* Capabilities.AtomRegistry;
           const chat = yield* Effect.promise(() => agent.chat!.load());
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
@@ -393,7 +388,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // the assistant plugin and has no hook for it.
         const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
         if (onChatCreated) {
-          const registry = yield* Capability.get(Capabilities.AtomRegistry);
+          const registry = yield* Capabilities.AtomRegistry;
           const feed = yield* Effect.promise(() => chat.feed.load());
           const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
@@ -409,14 +404,16 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
   })),
   Plugin.addModule(() => ({
     id: 'com.example.plugin.testing.module.operationHandler',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [Capabilities.OperationHandler],
     activate: Effect.fnUntraced(function* () {
       // NOTE: Chat creation is owned by the assistant plugin's `CreateChat` handler; this module
       // only stubs the no-op operations the deck companion surfaces expect.
-      return Capability.contributes(
-        Capabilities.OperationHandler,
-        OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
-      );
+      return [
+        Capability.provide(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
+        ),
+      ];
     }),
   })),
   Plugin.make,

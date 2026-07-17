@@ -49,10 +49,10 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [Capabilities.LayerSpec],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.provide(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             Layer.succeed(AiService.AiService, {
@@ -66,7 +66,7 @@ const MockAiServicePlugin = Plugin.define(
             }),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );

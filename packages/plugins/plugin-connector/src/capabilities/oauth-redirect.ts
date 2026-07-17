@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { ConnectorCoordinator } from '#types';
@@ -16,10 +16,10 @@ import { OAUTH_REDIRECT_PATH } from '../constants';
  *
  * Captures `accessTokenId` and `accessToken` from `/redirect/oauth?…` and
  * rewrites `window.location` to `/` synchronously, so the deck's URL
- * handler doesn't try to interpret the redirect path. The actual finalize
- * work waits on `ConnectorCoordinator` (which depends on `ClientReady`)
- * and runs on a daemon fiber so Startup completes immediately and the rest
- * of the boot sequence isn't blocked.
+ * handler doesn't try to interpret the redirect path. `ConnectorCoordinator`
+ * is a declared dependency, so it is already active by the time this module
+ * runs; the finalize work still runs on a daemon fiber so Startup completes
+ * immediately and the rest of the boot sequence isn't blocked.
  */
 
 /** Edge stamps the literal "undefined" into the URL when no tokens were produced. */
@@ -53,15 +53,13 @@ export default Capability.makeModule(
     const tokens = readRedirectTokens();
     if (tokens) {
       log('oauth redirect: capturing tokens', { accessTokenId: tokens.accessTokenId });
+      const coordinator = yield* ConnectorCoordinator;
       yield* Effect.forkDaemon(
-        Effect.gen(function* () {
-          const coordinator = yield* Capability.waitFor(ConnectorCoordinator);
-          yield* coordinator
-            .finalizeRedirectFlow(tokens)
-            .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error }))));
-        }),
+        coordinator
+          .finalizeRedirectFlow(tokens)
+          .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error })))),
       );
     }
-    return Capability.contributes(Capabilities.Null, null);
+    return [];
   }),
 );

@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { ActivationEvents } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Blob, Obj, Ref, Type } from '@dxos/echo';
@@ -79,11 +78,11 @@ const RemoteImagesEnabledPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'settings',
-    activatesOn: AppActivationEvents.SetupSettings,
+    provides: [InboxCapabilities.Settings],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(InboxCapabilities.Settings, Atom.make<Settings.Settings>({ loadRemoteImages: true })),
-      ),
+      Effect.succeed([
+        Capability.provide(InboxCapabilities.Settings, Atom.make<Settings.Settings>({ loadRemoteImages: true })),
+      ]),
   }),
   Plugin.make,
 );
@@ -181,18 +180,18 @@ const ExtractorsPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'contact-extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)),
+    provides: [InboxCapabilities.ObjectExtractor],
+    activate: () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
   }),
   Plugin.addModule({
     id: 'fake-trip-extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, FakeTripExtractor)),
+    provides: [InboxCapabilities.ObjectExtractor],
+    activate: () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, FakeTripExtractor)]),
   }),
   Plugin.addModule({
     id: 'operation-handlers',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(Capabilities.OperationHandler, InboxOperationHandlerSet)),
+    provides: [Capabilities.OperationHandler],
+    activate: () => Effect.succeed([Capability.provide(Capabilities.OperationHandler, InboxOperationHandlerSet)]),
   }),
   Plugin.make,
 );

@@ -54,7 +54,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
-    return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
+    return [Capability.provide(DeckCapabilities.Settings, settingsAtom)];
   }),
 );
 
@@ -109,9 +109,9 @@ const storyDeckState = Capability.makeModule(() =>
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(DeckCapabilities.State, stateAtom),
-      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.provide(DeckCapabilities.State, stateAtom),
+      Capability.provide(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.provide(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );
@@ -151,22 +151,25 @@ const toStoryItemNode = (item: Item, index: number, depth: number): Node.NodeArg
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: 'story-deck-settings',
-    activatesOn: AppActivationEvents.SetupSettings,
+    provides: [DeckCapabilities.Settings],
     activate: storyDeckSettings,
   }),
   Plugin.addModule({
     id: 'story-deck-state',
-    activatesOn: AppActivationEvents.AppGraphReady,
+    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
     activate: storyDeckState,
   }),
   AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
   AppPlugin.addSurfaceModule({
     id: 'story-surfaces',
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+      Effect.succeed([
+        Capability.provide(Capabilities.ReactSurface, [
           Surface.create({
             id: 'storyNavigation',
             filter: Surface.makeFilter(AppSurface.Navigation),
@@ -226,10 +229,11 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             },
           }),
         ]),
-      ),
+      ]),
   }),
   AppPlugin.addAppGraphModule({
     id: 'story-graph',
+    provides: [AppCapabilities.AppGraphBuilder],
     activate: Effect.fnUntraced(function* () {
       const extensions = yield* Effect.all([
         GraphBuilder.createExtension({
@@ -258,7 +262,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             ]),
         }),
       ]);
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+      return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions.flat())];
     }),
   }),
   Plugin.make,
