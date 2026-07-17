@@ -272,3 +272,32 @@ Full design, plugin/timeline plumbing, and estimate:
 `packages/core/echo/echo-client/src/echo-handler/`: `time-travel.test.ts`, `edit-history.test.ts`,
 `branching.test.ts` (incl. two-peer replication, reload persistence, concurrent-frontier fork, and
 guard cases), `branch-binding.test.ts`.
+
+## Status
+
+Current risk and known limitations in the echo core layers (`echo`, `echo-host`, `echo-client`,
+`echo-protocol`). Product/UI-layer risk lives with the consuming plugins.
+
+- **Reactivity blast radius (highest).** The dual-channel split (`updates`/`displayUpdates`,
+  `latestOnly` + the ambient `withLatestRead`) sits on the subscription path that _every_ ECHO object
+  uses. A wiring error would surface as subtle staleness in unrelated subscribers, not a loud
+  failure. Broadly exercised by tests, but the affected surface is the whole DB layer.
+- **Branch-doc lifecycle completeness.** Branch docs live outside `links`, so every path that
+  enumerates a space's documents must also walk the registry. Done: host `getAllLinkedDocuments`
+  (replication/export) and `DatabaseRoot.mapLinks` (import remap). Deferred:
+  `EntityManager.getDocumentHeads`/`reIndexHeads` still enumerate only `links`, so `flush()` may
+  return before a freshly created branch doc has replicated (no data loss — the host still replicates
+  it), and `reIndexHeads` intentionally omits branch docs (indexing them would surface phantom,
+  duplicate-id objects — the reason branch docs sit outside `links`).
+- **Merged-branch head reachability.** After `mergeBranch`, a checkpoint taken on the merged branch
+  is read back against the root document, relying on `A.merge` keeping the branch's historical heads
+  reachable in main. This holds for shared-ancestry CRDT merges but is an implicit dependency on
+  automerge semantics.
+- **Storage cost.** Each member's branch doc is a full `A.save` copy (history included, deliberately,
+  to preserve ancestry for merge). O(subtree size × branch count); no dedup/compaction yet.
+- **Nested branch-of-branch unsupported.** The registry is flat (keyed by the root object) and
+  fork/merge resolve to main only — see [Nested branches (planned)](#nested-branches-planned).
+- **Inline objects cannot be branched** (promotion not implemented) — a clear runtime error, not
+  silent misbehaviour.
+- **Unreachable time-travel heads** (a frontier not yet synced) are ignored with a warning, leaving
+  the object live rather than throwing.
