@@ -125,14 +125,18 @@ const QueryItem = Object.freeze({
   },
 
   /**
-   * Computes the composite group key for this item from the aggregate's `group`-kind entries, keyed
-   * by result field name. No `group` entries yields `{}` — a single group over the whole input.
+   * Computes the composite group key for this item from the aggregate's `group` and `date-bucket`
+   * entries, keyed by result field name. No such entries yields `{}` — a single group over the whole
+   * input.
    */
   getGroupKey: (item: QueryItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue => {
     const key: GroupKeyValue = {};
     for (const aggregate of aggregates) {
       if (aggregate.kind === 'group') {
         key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property]));
+      } else if (aggregate.kind === 'date-bucket') {
+        const timestamp = aggregate.field === 'updatedAt' ? item.updatedAt : item.createdAt;
+        key[aggregate.name] = GroupBy.bucketTimestamp(timestamp, aggregate.resolution);
       }
     }
     return key;

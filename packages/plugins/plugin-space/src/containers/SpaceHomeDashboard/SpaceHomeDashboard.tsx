@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
-import { Collection, Filter, Obj, Query } from '@dxos/echo';
+import { Aggregate, Collection, Filter, Obj, Query } from '@dxos/echo';
 import { type Space, useMembers, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type ActivityDatum, Dashboard } from '@dxos/react-ui-dashboard';
@@ -26,8 +26,8 @@ type SpaceHomeDashboardProps = {
 
 /**
  * Space stats and activity matrix for the Home article. Stats are derived from the object graph
- * (counts of objects, distinct types, collections, members); the matrix buckets objects by the
- * day they were last touched (`updatedAt`, falling back to `createdAt`).
+ * (counts of objects, distinct types, collections, members); the matrix is an ECHO aggregate query
+ * that buckets objects by the day they were last touched (`updatedAt`) and counts them per day.
  *
  * NOTE: per-object `updatedAt` only reflects the latest change, so the matrix undercounts busy
  * days in the past.
@@ -40,7 +40,16 @@ type SpaceHomeDashboardProps = {
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  const query = useMemo(() => Query.select(Filter.everything()), []);
+  const statsQuery = useMemo(() => Query.select(Filter.everything()), []);
+  // Daily activity counts, aggregated in ECHO rather than materialising every object on the client.
+  const activityQuery = useMemo(
+    () =>
+      Query.select(Filter.everything()).aggregate({
+        day: Aggregate.dateBucket('updatedAt', { resolution: 'day' }),
+        count: Aggregate.count(),
+      }),
+    [],
+  );
   const members = useMembers(space?.key);
 
   const manager = usePluginManager();
@@ -48,13 +57,22 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
   const enabled = useAtomValue(manager.enabled);
   const plugins = useMemo(() => enabled.filter((id) => !core.includes(id)).length, [core, enabled]);
 
-  // TODO(burdon): Can we caches this?
-  const objects = useQuery(space ? space.db : undefined, query);
-  const { activity, values } = useMemo(() => {
+  const activityRows = useQuery(space ? space.db : undefined, activityQuery);
+  const activity = useMemo<ActivityDatum[]>(() => {
+    const data: ActivityDatum[] = [];
+    for (const row of activityRows) {
+      if (row.day != null) {
+        data.push({ date: new Date(row.day), value: row.count });
+      }
+    }
+    return data;
+  }, [activityRows]);
+
+  // TODO(burdon): Can we cache this?
+  const objects = useQuery(space ? space.db : undefined, statsQuery);
+  const values = useMemo<Record<SpaceStatId, number>>(() => {
     const typenames = new Set<string>();
-    const days = new Set<string>();
     let collections = 0;
-    const activity: ActivityDatum[] = [];
     for (const object of objects) {
       const typename = Obj.getTypename(object);
       if (typename) {
@@ -63,26 +81,17 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
       if (Obj.instanceOf(Collection.Collection, object)) {
         collections++;
       }
-      const objectMeta = Obj.getMeta(object);
-      const timestamp = objectMeta.updatedAt ?? objectMeta.createdAt;
-      if (timestamp) {
-        const date = new Date(timestamp);
-        days.add(date.toDateString());
-        activity.push({ date, value: 1 });
-      }
     }
 
-    const values: Record<SpaceStatId, number> = {
+    return {
       'objects': objects.length,
       'types': typenames.size,
       'collections': collections,
       'members': members.length,
-      'active-days': days.size,
+      'active-days': activity.length,
       'plugins': plugins,
     };
-
-    return { activity, values };
-  }, [objects, members, plugins]);
+  }, [objects, members, plugins, activity]);
 
   if (!space) {
     return null;

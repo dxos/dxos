@@ -122,7 +122,13 @@ export class WorkingSetQueryExecutor {
     }
   }
 
-  private _execAggregateStep(step: QueryPlan.AggregateStep, ws: WorkingSetItem[]): WorkingSetItem[] {
+  private _execAggregateStep(step: QueryPlan.AggregateStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
+    // `date-bucket` groups by a system timestamp, which lives only in the index — the in-memory
+    // working set has no timestamps (see the `timestamp` order/filter bail-outs). Defer the whole
+    // aggregate to the index-backed source.
+    if (step.aggregates.some((aggregate) => aggregate.kind === 'date-bucket')) {
+      return null;
+    }
     const withKeys = ws.map((item) => ({ ...item, groupKey: WorkingSetItem.getGroupKey(item, step.aggregates) }));
     const partitioned = GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
     return GroupBy.withGroupAggregates(

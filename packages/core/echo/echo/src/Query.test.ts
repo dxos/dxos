@@ -834,6 +834,22 @@ describe('query api', () => {
         Schema.validateSync(QueryAST.Query)(query.ast);
       });
 
+      test('dateBucket groups by a bucketed system timestamp', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).aggregate({
+          day: Aggregate.dateBucket('updatedAt', { resolution: 'day' }),
+          count: Aggregate.count(),
+        });
+
+        expect(query.ast).toMatchObject({
+          type: 'aggregate',
+          aggregates: [
+            { name: 'day', kind: 'date-bucket', field: 'updatedAt', resolution: 'day' },
+            { name: 'count', kind: 'count' },
+          ],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
       test('aggregate-everything (no group entries) is valid', () => {
         const query = Query.select(Filter.type(TestSchema.Person)).aggregate({ latest: Aggregate.max('name') });
 
@@ -929,6 +945,16 @@ describe('query api', () => {
           '.aggregate({ "email": Aggregate.group("email"), "latest": Aggregate.max("name"), "items": Aggregate.items({ limit: 20 }) })',
         );
         expect(pretty).toContain('.orderBy(Order.property("latest", "desc"))');
+      });
+
+      test('Query.pretty renders a dateBucket aggregate', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).aggregate({
+          day: Aggregate.dateBucket('updatedAt', { resolution: 'day' }),
+          count: Aggregate.count(),
+        });
+        expect(Query.pretty(query)).toContain(
+          '.aggregate({ "day": Aggregate.dateBucket("updatedAt", { resolution: "day" }), "count": Aggregate.count() })',
+        );
       });
 
       test('type-level: aggregates surface as flat top-level fields', () => {

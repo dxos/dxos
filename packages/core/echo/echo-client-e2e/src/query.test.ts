@@ -849,6 +849,31 @@ describe('Query', () => {
       expect(second).toBe(first);
       expect(second.atom).toBe(first.atom);
     });
+
+    test('dateBucket groups by the day objects were last touched, with per-day counts', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      db.add(Obj.make(TestSchema.Expando, { value: 2 }));
+      db.add(Obj.make(TestSchema.Expando, { value: 3 }));
+      await db.flush();
+
+      const rows = await db
+        .query(
+          Query.select(Filter.everything()).aggregate({
+            day: Aggregate.dateBucket('updatedAt', { resolution: 'day' }),
+            count: Aggregate.count(),
+          }),
+        )
+        .run();
+
+      // All three objects were touched "now", so they fall in a single day bucket.
+      expect(rows).to.have.length(1);
+      expect(rows[0].count).to.equal(3);
+      // The bucket key is the local-midnight unix ms for today.
+      const now = new Date();
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      expect(rows[0].day).to.equal(todayMidnight);
+    });
   });
 
   describe('Timestamp queries', () => {

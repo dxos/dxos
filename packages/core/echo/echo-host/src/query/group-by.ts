@@ -10,6 +10,9 @@ import { type QueryAST } from '@dxos/echo-protocol';
  */
 export type GroupKeyValue = Record<string, string | number | boolean | null>;
 
+/** Bucket size for a `date-bucket` aggregate; mirrors `Aggregate.TimeResolution`. */
+export type TimeResolution = 'hour' | 'day' | 'week' | 'month';
+
 /** Scalar result of a `max`/`min` aggregate (`null` when the group has no scalar values). */
 export type AggregateValue = string | number | boolean | null;
 
@@ -29,6 +32,31 @@ export const GroupBy = Object.freeze({
    */
   coerceKeyComponent: (value: unknown): string | number | boolean | null =>
     typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null,
+
+  /**
+   * Floors a unix-ms timestamp to the start of its `resolution` bucket, returning the bucket-start
+   * unix ms (`null` passes through). Floored in local time — hour/day/month starts, weeks starting
+   * Monday — matching how a calendar view lays days out. `date-bucket` aggregates key on this.
+   */
+  bucketTimestamp: (timestampMs: number | null, resolution: TimeResolution): number | null => {
+    if (timestampMs == null) {
+      return null;
+    }
+    const date = new Date(timestampMs);
+    switch (resolution) {
+      case 'hour':
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()).getTime();
+      case 'day':
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+      case 'week': {
+        // Monday-first week start (matches the activity-calendar layout).
+        const mondayOffset = (date.getDay() + 6) % 7;
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate() - mondayOffset).getTime();
+      }
+      case 'month':
+        return new Date(date.getFullYear(), date.getMonth(), 1).getTime();
+    }
+  },
 
   /**
    * Stable serialization of a composite group key (component order matters).
@@ -152,20 +180,22 @@ export const GroupBy = Object.freeze({
   },
 
   /**
-   * Computes each group's scalar aggregates (`group`/`max`/`min`/`count`) and returns the same items
-   * with those values stamped on every member (all members of a group share them), so a following
-   * group-level `OrderStep` can order by them — including by a `group` field whose result name differs
-   * from its source property. The `items` aggregate is not stamped — it collects the members and is
+   * Computes each group's scalar aggregates (`group`/`date-bucket`/`max`/`min`/`count`) and returns
+   * the same items with those values stamped on every member (all members of a group share them), so
+   * a following group-level `OrderStep` can order by them — including by a `group`/`date-bucket` field
+   * whose result name differs from its source. The `items` aggregate is not stamped — it collects the
+   * members and is
    * materialised at result assembly. Assumes `items` are already partitioned into contiguous groups
    * (see {@link partitionByGroupKey}).
    */
-  withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
+  withGroupAggregates: <T extends { aggregates?: GroupAggregates; groupKey?: GroupKeyValue }>(
     items: readonly T[],
     getKey: (item: T) => string,
     aggregates: readonly QueryAST.GroupAggregate[],
     getProperty: (item: T, property: string) => unknown,
   ): T[] => {
-    // Only group/max/min/count are stamped for ordering; `items` collects members at result assembly.
+    // Only group/date-bucket/max/min/count are stamped for ordering; `items` collects members at
+    // result assembly.
     if (!aggregates.some((aggregate) => aggregate.kind !== 'items')) {
       return items.slice();
     }
@@ -186,9 +216,10 @@ export const GroupBy = Object.freeze({
         computed[aggregate.name] =
           aggregate.kind === 'count'
             ? members.length
-            : aggregate.kind === 'group'
-              ? // All members of a group share the key, so read the group value off any member.
-                GroupBy.coerceKeyComponent(getProperty(members[0], aggregate.property))
+            : aggregate.kind === 'group' || aggregate.kind === 'date-bucket'
+              ? // Grouping keys carry the field value directly; all members share it, so read it off
+                // the already-computed group key rather than re-deriving from the source.
+                (members[0].groupKey?.[aggregate.name] ?? null)
               : GroupBy.reduceAggregate(
                   members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
                   aggregate.kind,
