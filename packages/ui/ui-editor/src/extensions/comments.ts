@@ -371,7 +371,9 @@ const mapTrackedComment = (comment: TrackedComment, changes: ChangeDesc) => ({
  * These are attached to undone/redone transactions in the editor for the purpose of restoring comments
  * that were deleted by the original changes.
  */
-const restoreCommentEffect = StateEffect.define<TrackedComment>({ map: mapTrackedComment });
+const restoreCommentEffect = StateEffect.define<TrackedComment>({
+  map: mapTrackedComment,
+});
 
 const optionsFacet = singleValueFacet<CommentsOptions>();
 

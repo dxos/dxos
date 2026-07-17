@@ -87,8 +87,7 @@ Deferred from the CodeRabbit round (stage 3/4):
 - [x] 3c: editable unified merge overlay (ui-editor diffView) for the sideBySide compare, on the
       live branch editor; read-only DiffView removed.
 - [x] 3d: branch-aware comments (AnchoredTo.branch, scoped to the review branch from the shared
-      version selection) + AcceptChange per-hunk cherry-pick (CollaborationOperation.AcceptChange
-      + cherryPickHunk); getObjectOnBranch read helper. Memoized fixtures regenerated.
+      version selection) + AcceptChange per-hunk cherry-pick (CollaborationOperation.AcceptChange + cherryPickHunk); getObjectOnBranch read helper. Memoized fixtures regenerated.
 
 ## Next stages
 
