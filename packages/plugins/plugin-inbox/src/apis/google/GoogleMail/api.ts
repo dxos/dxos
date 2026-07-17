@@ -10,7 +10,16 @@ import * as Schema from 'effect/Schema';
 import type { Credential } from '@dxos/compute';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
-import { ErrorResponse, GoogleError, LabelsResponse, ListMessagesResponse, Message, MessagePartBody } from './types';
+import {
+  ErrorResponse,
+  GoogleError,
+  HistoryResponse,
+  LabelsResponse,
+  ListMessagesResponse,
+  Message,
+  MessagePartBody,
+  Profile,
+} from './types';
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.
 const decodeAndHandleErrors =
@@ -75,6 +84,34 @@ export const listMessages = Effect.fn(function* (
 ) {
   const url = createUrl([API_URL, 'users', userId, 'messages'], { q, pageSize, pageToken }).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(ListMessagesResponse)));
+});
+
+/**
+ * Gets the user's mailbox profile — `historyId` is the delta-resume token for incremental sync.
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users/getProfile
+ */
+export const getProfile = Effect.fn(function* (userId: string) {
+  const url = createUrl([API_URL, 'users', userId, 'profile']).toString();
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(Profile)));
+});
+
+/**
+ * Lists the history of mailbox changes since `startHistoryId` (additions, deletions, label changes).
+ * A `startHistoryId` older than the server's retention (~1 week) returns HTTP 404 — the caller's cue to
+ * fall back to a full scan and recapture a fresh `historyId` via {@link getProfile}.
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.history/list
+ */
+export const listHistory = Effect.fn(function* (
+  userId: string,
+  options: { startHistoryId: string; labelId?: string; pageToken?: string; maxResults?: number },
+) {
+  const url = createUrl([API_URL, 'users', userId, 'history'], {
+    startHistoryId: options.startHistoryId,
+    labelId: options.labelId,
+    pageToken: options.pageToken,
+    maxResults: options.maxResults,
+  }).toString();
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(HistoryResponse)));
 });
 
 /**

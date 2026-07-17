@@ -19,7 +19,7 @@ import { Menu } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock } from '@dxos/types';
 
-import { InboxCapabilities, Mailbox, Starred } from '#types';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
@@ -196,7 +196,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 
   // Starring uses the owning mailbox's tag index (messages are feed objects). Subscribe to the index
   // via `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = mailbox?.tags?.target;
   const starredAtom = useMemo(
@@ -206,7 +206,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (mailbox && db) {
-      void Starred.toggleStarred(mailbox, message, db);
+      void SystemTags.toggleTag(mailbox, message, db, 'starred');
     }
   }, [mailbox, message, db]);
 
@@ -278,7 +278,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   // persisted into the mailbox tag index during label sync); used to decide how aggressively the
   // HTML view restyles the body.
   const db = getSpace(mailbox ?? message)?.db;
-  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [...Mailbox.PERSONAL_TAG_KEYS]))[0];
+  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('personal')]))[0];
   const isPersonal = useMemo(
     () =>
       !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
