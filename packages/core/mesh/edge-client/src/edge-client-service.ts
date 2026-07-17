@@ -15,7 +15,7 @@ import * as Layer from 'effect/Layer';
 import * as Ref from 'effect/Ref';
 
 import { EdgeApi } from '@dxos/edge-protocol';
-import { EDGE_CLIENT_TAG_HEADER, type EdgeErrorData, type EdgeFailure } from '@dxos/protocols';
+import { EDGE_CLIENT_TAG_HEADER, type EdgeFailure } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 
 import { type EdgeApiClient } from './edge-api-client';
