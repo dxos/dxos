@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
+import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -49,7 +49,10 @@ export type UseVersioningResult = {
  */
 export const useVersioning = (subject?: unknown): UseVersioningResult => {
   const document = Obj.instanceOf(Markdown.Document, subject) ? (subject as Markdown.Document) : undefined;
-  const [state, setState] = useAtomCapabilityState(SpaceCapabilities.VersioningState);
+  // Versioning state is contributed by plugin-space (the generic history companion). A markdown
+  // editor can render standalone without it (e.g. plugin-blogger, cards, previews), so read it
+  // tolerantly: absent → no selection, and the version UI simply does not engage.
+  const [state, setState] = useOptionalAtomCapabilityState(SpaceCapabilities.VersioningState);
 
   // Subscribe to history mutations (checkpoints/branches added elsewhere).
   useObject(document, 'history');
@@ -57,8 +60,8 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   useObject(document?.content);
 
   const documentId = document?.id;
-  const selection = (documentId && state.selection[documentId]) || { kind: 'current' as const };
-  const compare = (documentId && state.compare[documentId]) || false;
+  const selection = (documentId && state?.selection[documentId]) || { kind: 'current' as const };
+  const compare = (documentId && state?.compare[documentId]) || false;
 
   const setSelection = useCallback(
     (next: SpaceCapabilities.VersionSelection) => {
