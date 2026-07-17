@@ -48,6 +48,6 @@ projects:
     tasks: .agents/projects/document-revisions/TASKS.md
     design: packages/plugins/plugin-markdown/DESIGN.md
     prs: [12237, 12246]
-    resume: 'PR #12246 open with stages 1, 2, AND 3 complete (echo core branching + time-travel + BranchBinding; @dxos/versioning rewired onto the core API; stage 3 UI: branch-scoped agent edits + deployed BranchStore, generic plugin-space history companion, editable merge overlay, branch-aware comments + AcceptChange cherry-pick). ~120 files. Watch Check to green + wittjosiah review + any CodeRabbit round. Then stage 4 (retire textual fork path; migrate legacy content-copy branches) — likely a follow-up PR/session. Stage 4 + deferrals in TASKS.md.'
+    resume: 'PR #12246 open with ALL stages 1-4 complete (echo core branching + time-travel + BranchBinding; @dxos/versioning rewired; stage 3 UI: agent branch edits + BranchStore, generic history companion, editable merge overlay, branch-aware comments + AcceptChange; stage 4 cleanup: mapLinks branch remap, ref-atom deleted-target, DESIGN.md). Plus post-merge fixes: origin/main merged, branch-checkpoint laning bug fixed, flaky forkDump test relaxed. Whole-repo build green. NEXT (morning): confirm Check green on HEAD 147ca1e8e4 (watch for memoized-fixture ripples + address any new CodeRabbit/wittjosiah comments), then land. Only-remaining future work (not blocking): discriminated-union Branch shape after legacy drains; generalize versioning to non-Text objects. User has role=none cleanup WIP uncommitted in the shared worktree (theirs).'
 
 ended: []
