@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import { Operation, Trace } from '@dxos/compute';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { Cursor } from '@dxos/link';
@@ -204,7 +204,7 @@ export const runMailSync = (
 ): Effect.Effect<
   { newMessages: number },
   MailSyncError | EntityNotFoundError,
-  MailSyncProvider | Database.Service | Capability.Service | Operation.Service
+  MailSyncProvider | Database.Service | Capability.Service | Operation.Service | Trace.TraceService
 > =>
   Effect.gen(function* () {
     const provider = yield* MailSyncProvider;
@@ -266,20 +266,41 @@ export const runMailSync = (
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // Cooperative cancellation: the meter's cancel control aborts the controller, which drains the
-    // stream so the run stops without error.
+    // Cooperative cancellation: the progress trace sink wires the meter's cancel control to
+    // `ProcessManager.terminate()`; the pipeline also observes this signal for in-process abort.
     const controller = new AbortController();
 
-    // Live progress monitor, keyed by the mailbox URI so surfaces can subscribe. The registry is a
-    // singleton from an always-loaded host; absence is a wiring bug, not a typed failure — `orDie`
-    // keeps the error channel provider-scoped.
-    const progressRegistry = yield* Capability.get(AppCapabilities.ProgressRegistry).pipe(Effect.orDie);
-    const progressMonitor = progressRegistry.register(createSyncProgressKey(mailbox), {
-      label: mailbox.name ?? 'Mailbox',
-      onCancel: () => {
-        controller.abort();
-      },
-    });
+    // Live sync status via trace `status.update` events. The progress trace sink projects these into
+    // the runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
+    const traceWriter = yield* Trace.TraceService;
+    const progressKey = createSyncProgressKey(mailbox);
+    const syncLabel = mailbox.name ?? 'Mailbox';
+    let progressCurrent = 0;
+    let progressTotal: number | undefined;
+    type StatusPatch = {
+      message?: string;
+      current?: number;
+      total?: number;
+      estimate?: number;
+    };
+    const reportStatus = (patch: StatusPatch = {}) => {
+      if (patch.current !== undefined) {
+        progressCurrent = patch.current;
+      }
+      if (patch.total !== undefined) {
+        progressTotal = patch.total;
+      }
+      traceWriter.write(Trace.StatusUpdate, {
+        message: patch.message ?? syncLabel,
+        progress: {
+          key: progressKey,
+          current: patch.current ?? progressCurrent,
+          total: patch.total ?? progressTotal,
+          estimate: patch.estimate,
+        },
+      });
+    };
+    reportStatus({ current: 0 });
 
     // Accumulate the retrieval total as each page/chunk's ids are enumerated (before any full fetch),
     // so the meter renders a determinate bar. Enumeration runs ahead of the full fetch, so `total`
@@ -287,7 +308,7 @@ export const runMailSync = (
     let totalToRetrieve = 0;
     const addToTotal = (count: number) => {
       totalToRetrieve += count;
-      progressMonitor.total(totalToRetrieve);
+      reportStatus({ total: totalToRetrieve });
     };
 
     const threads = new Set<string>();
@@ -386,7 +407,10 @@ export const runMailSync = (
         onEnumerated: addToTotal,
         // Advance at retrieval so `current` reaches `total`; counting after downstream dedup/decode
         // drops would leave the bar short of 100%.
-        onRetrieved: () => progressMonitor.advance(1),
+        onRetrieved: () => {
+          progressCurrent += 1;
+          reportStatus({ current: progressCurrent });
+        },
         onTaken: () => {
           taken += 1;
         },
@@ -424,8 +448,6 @@ export const runMailSync = (
           // TODO(wittjosiah): Could this note+remove pairing be upstreamed into abortWith itself?
           Effect.sync(() => {
             log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
-            progressMonitor.note('Cancelled');
-            progressMonitor.remove();
           }),
         ),
         Effect.tapError((error) =>
@@ -433,7 +455,7 @@ export const runMailSync = (
             // Log the raw error; the meter shows only a short reason (the full exception — provider
             // errors, auth tokens — must not reach the UI).
             log.warn('mail sync failed', { provider: provider.name, error });
-            progressMonitor.fail('Sync failed');
+            reportStatus({ message: PROGRESS_STATUS_FAILED });
           }),
         ),
       );
@@ -448,11 +470,11 @@ export const runMailSync = (
     // finishedAt = new Date(finishedMs).toISOString();
     // publishStats();
 
-    // On cancel, `Pipeline.abortWith`'s onAbort already noted 'Cancelled' and removed the monitor, so
-    // only the completed path has post-run work.
-    if (!controller.signal.aborted) {
-      progressMonitor.done();
-      progressMonitor.remove();
+    // On cancel, only the status event differs; the completed path also has cursor post-run work.
+    if (controller.signal.aborted) {
+      reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+    } else {
+      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
 
       // Fold the run's observed key extent so the window advances even if every scanned message was
       // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.

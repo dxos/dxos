@@ -119,7 +119,6 @@ export default defineConfig((env) => ({
       clientFiles: [
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
-        './src/workers/shared-worker.ts',
         './src/workers/coordinator-worker.ts',
         './src/plugin-defs.tsx',
       ],

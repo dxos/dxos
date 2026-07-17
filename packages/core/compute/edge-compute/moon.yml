@@ -1,18 +1,10 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - pack
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/bundler/index.ts'
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/native/index.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--platform=neutral'
-
   # Executed manually as part of runtime deploy: builds the vendored script packages.
   build-runtime:
     command: node ./scripts/build-modules.mjs

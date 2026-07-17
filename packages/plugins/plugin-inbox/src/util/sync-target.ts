@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ServiceResolver, Trigger, type TriggerEvent } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { Connection, Connector } from '@dxos/plugin-connector';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 
@@ -16,9 +17,9 @@ import { createSyncRoutine } from './sync-routine';
 
 /**
  * Finds `target`'s sync timer trigger: the `timer` trigger owned by a Routine connected to `target`
- * (see {@link connectedRoutinesQuery}), falling back to a bare `timer` trigger whose `input` refs
- * `target` directly (pre-existing triggers not wrapped in a routine). Mirrors the react-side lookup
- * this helper supersedes, so both agree on which trigger is "the" sync trigger.
+ * (see {@link connectedRoutinesQuery}), falling back to a bare `timer` trigger bound to `target` via its
+ * `binding` cursor (pre-existing triggers not wrapped in a routine). Mirrors the react-side lookup this
+ * helper supersedes, so both agree on which trigger is "the" sync trigger.
  */
 const findSyncTrigger = (target: Obj.Unknown) =>
   Effect.gen(function* () {
@@ -30,15 +31,10 @@ const findSyncTrigger = (target: Obj.Unknown) =>
       }
     }
 
-    const targetUri = Obj.getURI(target);
-    const allTriggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger))).run;
-    return allTriggers.find((trigger) => {
-      if (trigger.spec?.kind !== 'timer') {
-        return false;
-      }
-      const ref = trigger.input?.mailbox ?? trigger.input?.calendar;
-      return ref?.uri === targetUri;
-    });
+    const triggers = yield* Database.query(
+      Query.select(Filter.id(target.id)).referencedBy(Cursor.Cursor).referencedBy(Trigger.Trigger),
+    ).run;
+    return triggers.find((trigger) => trigger.spec?.kind === 'timer');
   });
 
 /**

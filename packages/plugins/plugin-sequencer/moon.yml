@@ -1,25 +1,8 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/SequencerPlugin.tsx'
-      - '--entryPoint=src/SequencerPlugin.node.ts'
-      - '--entryPoint=src/SequencerPlugin.workerd.ts'
-      - '--entryPoint=src/skills/index.ts'
-      - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/components/index.ts'
-      - '--entryPoint=src/containers/index.ts'
-      - '--entryPoint=src/meta.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/plugin.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
-      - '--platform=neutral'

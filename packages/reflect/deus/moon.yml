@@ -1,17 +1,13 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - pack
 tasks:
-  compile:
+  build:
     deps:
       - deus:prebuild-lezer
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/extension/index.ts'
-      - '--platform=neutral'
   prebuild-lezer:
     command: pnpm exec lezer-generator --typeScript ./src/extension/mdl.grammar -o ./src/extension/gen/mdl.ts
     inputs:

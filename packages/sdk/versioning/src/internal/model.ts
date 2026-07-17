@@ -1,0 +1,189 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Text as EchoText, Obj, Ref } from '@dxos/echo';
+import { checkoutVersion } from '@dxos/echo-client';
+import { invariant } from '@dxos/invariant';
+import { Text } from '@dxos/schema';
+
+import { merge3 } from '../diff';
+import * as Versioning from './types';
+
+/** Any ECHO object that carries a versioning history (e.g. a markdown document). */
+export type VersionedObject = Obj.Unknown & { history?: Versioning.History | undefined };
+
+/** Initializes the history struct on first use so existing documents need no migration. */
+export const ensureHistory = (doc: VersionedObject): Versioning.History => {
+  if (!doc.history) {
+    Obj.update(doc, (doc) => {
+      doc.history = { branches: [], versions: [] };
+    });
+  }
+  const history = doc.history;
+  invariant(history, 'history not initialized');
+  return history;
+};
+
+const getHeads = (text: Text.Text): string[] => {
+  const version = Obj.version(text);
+  invariant(version.versioned && version.automergeHeads, 'text is not versioned (not persisted?)');
+  return [...version.automergeHeads];
+};
+
+/** @returns The Text content at the given automerge heads (read-only time travel). */
+export const contentAt = (text: Text.Text, heads: readonly string[]): string => {
+  // `checkoutVersion` returns `unknown` (raw historical data) — narrow via runtime checks.
+  const snapshot = checkoutVersion(text, [...heads]);
+  if (snapshot && typeof snapshot === 'object' && 'content' in snapshot) {
+    const { content } = snapshot;
+    return typeof content === 'string' ? content : '';
+  }
+  return '';
+};
+
+export type CreateCheckpointProps = { target: Text.Text; name: string; message?: string; creator?: string };
+
+/**
+ * Records a named checkpoint of the target Text's current automerge heads and appends it to
+ * the object's history. Zero-copy: only the heads are stored.
+ */
+export const createCheckpoint = (doc: VersionedObject, props: CreateCheckpointProps): Versioning.Version => {
+  const text = props.target;
+  const version = Versioning.makeVersion({
+    name: props.name,
+    target: Ref.make(text),
+    heads: getHeads(text),
+    ...(props.message !== undefined && { message: props.message }),
+    ...(props.creator !== undefined && { creator: props.creator }),
+  });
+  const history = ensureHistory(doc);
+  Obj.update(doc, () => {
+    history.versions.push(version);
+  });
+
+  // Return the stored record (the pushed plain object is detached from the database).
+  const stored = history.versions.find(({ id }) => id === version.id);
+  invariant(stored, 'checkpoint not stored');
+  return stored;
+};
+
+/** Display label for a checkpoint: its name, or the formatted creation time when unnamed. */
+export const versionLabel = (version: Versioning.Version): string =>
+  version.name || new Date(version.createdAt).toLocaleString();
+
+/** Display label for a branch: its name, or the formatted creation time when unnamed. */
+export const branchLabel = (branch: Versioning.Branch): string =>
+  branch.name || new Date(branch.createdAt).toLocaleString();
+
+/** Find the branch record owning a given Text (undefined for the root). */
+export const findBranch = (doc: VersionedObject, text: Text.Text): Versioning.Branch | undefined =>
+  doc.history?.branches.find((branch) => branch.content.target?.id === text.id);
+
+export type CreateBranchProps = {
+  name: string;
+  parent: Text.Text;
+  heads?: readonly string[];
+  creator?: string;
+};
+
+/**
+ * Forks a draft branch: a new Text seeded with the parent's content at the anchor heads
+ * (defaults to the parent's current heads), recorded in the object's history. The anchor is
+ * auto-checkpointed so the fork point stays addressable in the timeline.
+ */
+export const createBranch = (doc: VersionedObject, props: CreateBranchProps): Versioning.Branch => {
+  const parent = props.parent;
+  const anchor = props.heads ? [...props.heads] : getHeads(parent);
+  const baseContent = contentAt(parent, anchor);
+
+  const branchText = Text.make({ content: baseContent });
+  const db = Obj.getDatabase(doc);
+  invariant(db, 'document not in a database');
+  db.add(branchText);
+  Obj.setParent(branchText, doc);
+
+  const branch = Versioning.makeBranch({
+    name: props.name,
+    content: Ref.make(branchText),
+    parent: Ref.make(parent),
+    anchor,
+    ...(props.creator !== undefined && { creator: props.creator }),
+  });
+
+  const history = ensureHistory(doc);
+  Obj.update(doc, () => {
+    history.branches.push(branch);
+  });
+  // The anchor must stay addressable by name in the timeline.
+  if (!history.versions.some((version) => sameHeads(version.heads, anchor))) {
+    const version = Versioning.makeVersion({
+      name: `fork: ${branchLabel(branch)}`,
+      target: Ref.make(parent),
+      heads: anchor,
+    });
+    Obj.update(doc, () => {
+      history.versions.push(version);
+    });
+  }
+
+  // Return the stored record (the pushed plain object is detached from the database).
+  const stored = history.branches.find(({ id }) => id === branch.id);
+  invariant(stored, 'branch not stored');
+  return stored;
+};
+
+/** Applies the checkpoint's content to the tip as a new forward edit — history is never rewritten. */
+export const restore = (doc: VersionedObject, version: Versioning.Version): void => {
+  const text = version.target.target;
+  invariant(text, 'checkpoint target not loaded');
+  const historical = contentAt(text, version.heads);
+  Obj.update(text, () => {
+    EchoText.update(text, 'content', historical);
+  });
+};
+
+export type MergeResult = { conflicts: number };
+
+/**
+ * 3-way merge: base = parent@anchor, ours = parent tip, theirs = branch tip.
+ * Conflicting hunks are left in the document with git-style markers for manual cleanup.
+ */
+export const mergeBranch = (doc: VersionedObject, branch: Versioning.Branch): MergeResult => {
+  // Callers may hold a detached copy of the record — mutate the stored one.
+  const stored = resolveBranch(doc, branch);
+  invariant(stored.status === 'active', 'branch is not active');
+  const parent = stored.parent.target;
+  const branchText = stored.content.target;
+  invariant(parent && branchText, 'branch refs not loaded');
+
+  const base = contentAt(parent, stored.anchor);
+  const { text, conflicts } = merge3({ base, ours: parent.content, theirs: branchText.content });
+  Obj.update(parent, () => {
+    EchoText.update(parent, 'content', text);
+  });
+  Obj.update(doc, () => {
+    stored.status = 'merged';
+    stored.mergedAt = new Date().toISOString();
+  });
+
+  createCheckpoint(doc, { name: `merge: ${branchLabel(stored)}`, target: parent });
+  return { conflicts };
+};
+
+/** Archives the branch; its Text is retained for recovery. */
+export const discardBranch = (doc: VersionedObject, branch: Versioning.Branch): void => {
+  const stored = resolveBranch(doc, branch);
+  Obj.update(doc, () => {
+    stored.status = 'archived';
+  });
+};
+
+const resolveBranch = (doc: VersionedObject, branch: Versioning.Branch): Versioning.Branch => {
+  const stored = doc.history?.branches.find(({ id }) => id === branch.id);
+  invariant(stored, `branch not found: ${branch.id}`);
+  return stored;
+};
+
+const sameHeads = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((head) => b.includes(head));

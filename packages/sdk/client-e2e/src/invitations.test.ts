@@ -633,7 +633,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: host.halo, guest: guest.halo }),
-      () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
+      () => [(host.services as any).host.context, (guest.services as any).host.context],
     );
   });
 
@@ -663,7 +663,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: space, guest: guest.spaces }),
-      () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
+      () => [(host.services as any).host.context, (guest.services as any).host.context],
     );
   });
 });

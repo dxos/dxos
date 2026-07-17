@@ -114,6 +114,85 @@ export const SetViewMode = Operation.make({
   output: Schema.Void,
 });
 
+export const CreateCheckpoint = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.markdown.createCheckpoint'),
+    name: 'Create Checkpoint',
+    description: 'Records a named checkpoint of the current document content that can be viewed or restored later.',
+    icon: 'ph--bookmark-simple--regular',
+  },
+  input: Schema.Struct({
+    doc: Ref.Ref(Markdown.Document).annotations({ description: 'The document to checkpoint.' }),
+    name: Schema.String.annotations({ description: 'Checkpoint name.' }),
+    message: Schema.optional(Schema.String.annotations({ description: 'Optional description of this checkpoint.' })),
+  }),
+  output: Schema.Struct({
+    versionId: Schema.String.annotations({ description: 'The id of the created checkpoint.' }),
+  }),
+  services: [Database.Service],
+});
+
+export const CreateBranch = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.markdown.createBranch'),
+    name: 'Create Branch',
+    description: trim`
+      Creates a draft branch of the document. Edit the branch content with the update operation
+      using the returned branch document id, then merge it back for review.
+    `,
+    icon: 'ph--git-branch--regular',
+  },
+  input: Schema.Struct({
+    doc: Ref.Ref(Markdown.Document).annotations({ description: 'The document to branch.' }),
+    name: Schema.String.annotations({ description: 'Branch name.' }),
+  }),
+  output: Schema.Struct({
+    branchId: Schema.String.annotations({ description: 'The id of the created branch.' }),
+    contentId: Schema.String.annotations({ description: 'The DXN of the branch Text object.' }),
+  }),
+  services: [Database.Service],
+});
+
+export const MergeBranch = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.markdown.mergeBranch'),
+    name: 'Merge Branch',
+    description: trim`
+      Merges an active branch back into its parent document content (3-way merge;
+      conflicting hunks are left in the text with git-style markers).
+    `,
+    icon: 'ph--git-merge--regular',
+  },
+  input: Schema.Struct({
+    doc: Ref.Ref(Markdown.Document).annotations({ description: 'The document that owns the branch.' }),
+    branchId: Schema.String.annotations({ description: 'The id of the branch to merge.' }),
+  }),
+  output: Schema.Struct({
+    conflicts: Schema.Number.annotations({ description: 'Number of conflicting hunks left in the merged text.' }),
+    newContent: Schema.String.annotations({ description: 'The merged document content.' }),
+  }),
+  services: [Database.Service],
+});
+
+export const GetHistory = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.markdown.getHistory'),
+    name: 'Get History',
+    description: 'Lists the checkpoints and branches of a document.',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
+  input: Schema.Struct({
+    doc: Ref.Ref(Markdown.Document).annotations({ description: 'The document to inspect.' }),
+  }),
+  output: Schema.Struct({
+    versions: Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String, createdAt: Schema.String })),
+    branches: Schema.Array(
+      Schema.Struct({ id: Schema.String, name: Schema.String, status: Schema.String, createdAt: Schema.String }),
+    ),
+  }),
+  services: [Database.Service],
+});
+
 export const Update = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.markdown.update'),

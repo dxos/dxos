@@ -11,7 +11,7 @@ import { Trigger, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { createIdFromSpaceKey } from '@dxos/echo-host';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
