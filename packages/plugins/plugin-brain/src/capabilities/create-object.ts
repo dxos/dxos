@@ -11,15 +11,17 @@ import { Instructions, Operation } from '@dxos/compute';
 import { Topic } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { trim } from '@dxos/util';
 
 /** Default brief seeded into a new Topic's agent instructions. */
-const DEFAULT_TOPIC_INSTRUCTIONS =
-  'You are an assistant focused on this topic. Use its threads, participants, facts, and tasks as context ' +
-  'to answer questions, summarize activity, and drive its workflows.';
+const DEFAULT_TOPIC_INSTRUCTIONS = trim`
+  You are an assistant focused on this topic. 
+  Use its threads, participants, facts, and tasks as context to answer questions, summarize activity, and drive its workflows
+`;
 
 /** Form fields for creating a Topic from the nav menu. */
 const CreateTopicSchema = Schema.Struct({
-  label: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 
 /**
@@ -33,18 +35,14 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Topic.Topic),
       inputSchema: CreateTopicSchema,
-      createObject: ({ label }: Schema.Schema.Type<typeof CreateTopicSchema>, options) =>
+      createObject: ({ name }: Schema.Schema.Type<typeof CreateTopicSchema>, options) =>
         Effect.gen(function* () {
-          const topic = Topic.make({ label: label ?? '' });
-          const instructions = Instructions.make({
-            name: label ? `${label} agent` : 'Topic agent',
-            text: DEFAULT_TOPIC_INSTRUCTIONS,
-          });
+          const topic = Topic.make({ name: name ?? '' });
+          const instructions = Instructions.make({ text: DEFAULT_TOPIC_INSTRUCTIONS });
+          Obj.setParent(instructions, topic);
           Obj.update(topic, (topic) => {
             topic.instructions = Ref.make(instructions);
           });
-          // Cascade-delete the Instructions (and its Text body) with the Topic.
-          Obj.setParent(instructions, topic);
 
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object: topic,

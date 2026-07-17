@@ -8,6 +8,7 @@ import { Obj } from '@dxos/echo';
 import { type Thread } from '../types';
 import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';
 
+// TODO(burdon): Move to LLM.
 // Subject tokens that carry no topical signal; excluded from signatures and keywords.
 const DEFAULT_STOPWORDS: readonly string[] = [
   'the',
@@ -68,15 +69,13 @@ export const DEFAULT_TOPIC_OPTIONS: Required<TopicOptions> = {
 
 /** A topic before ECHO materialization: plain values so LLM enrichment can rewrite them freely. */
 export type TopicDraft = {
-  readonly label: string;
-  readonly summary: string;
-  readonly threadIds: readonly string[];
-  readonly participants: readonly string[];
-  readonly keywords: readonly string[];
-  /** Open questions rolled up (deduped) from the member threads. */
-  readonly questions: readonly string[];
-  /** Action items rolled up (deduped) from the member threads. */
-  readonly tasks: readonly string[];
+  readonly name: string;
+  // readonly summary: string;
+  // readonly threadIds: readonly string[];
+  // readonly participants: readonly string[];
+  // readonly keywords: readonly string[];
+  // readonly questions: readonly string[];
+  // readonly tasks: readonly string[];
 };
 
 type Signature = {
@@ -202,14 +201,14 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
     // first thread's subject to its threadId so the label is never empty.
     const first = cluster.members[0].thread;
     return {
-      label: keywords.length > 0 ? keywords.slice(0, 3).join(' ') : first.subject || first.threadId,
-      summary: summaries.join('\n'),
-      threadIds: cluster.members.map((member) => member.thread.threadId),
-      participants: [...cluster.participants].sort(),
-      keywords,
-      questions,
-      tasks,
-    };
+      name: keywords.length > 0 ? keywords.slice(0, 3).join(' ') : first.subject || first.threadId,
+      // summary: summaries.join('\n'),
+      // threadIds: cluster.members.map((member) => member.thread.threadId),
+      // participants: [...cluster.participants].sort(),
+      // keywords,
+      // questions,
+      // tasks,
+    } satisfies TopicDraft;
   });
 };
 
@@ -228,8 +227,14 @@ export const summarizeTopics = async (
     drafts.map(async (draft) => {
       try {
         const summary = await summarize(
-          [prompts.topicSummary, `Topic: ${draft.label}`, `Threads:\n${draft.summary}`].join('\n\n'),
+          [
+            //
+            prompts.topicSummary,
+            `Topic: ${draft.name}`,
+            // `Threads:\n${draft.summary}`,
+          ].join('\n\n'),
         );
+
         return summary.trim().length > 0 ? { ...draft, summary: summary.trim() } : draft;
       } catch {
         return draft;
@@ -242,12 +247,12 @@ export const summarizeTopics = async (
 export const materializeTopics = (drafts: readonly TopicDraft[]): Topic.Topic[] =>
   drafts.map((draft) =>
     Obj.make(Topic.Topic, {
-      label: draft.label,
-      summary: draft.summary,
-      threadIds: [...draft.threadIds],
-      participants: [...draft.participants],
-      keywords: [...draft.keywords],
-      questions: [...draft.questions],
-      tasks: [...draft.tasks],
+      name: draft.name,
+      // summary: draft.summary,
+      // threadIds: [...draft.threadIds],
+      // participants: [...draft.participants],
+      // keywords: [...draft.keywords],
+      // questions: [...draft.questions],
+      // tasks: [...draft.tasks],
     }),
   );
