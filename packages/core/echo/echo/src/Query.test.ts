@@ -759,6 +759,19 @@ describe('query api', () => {
       expect(pretty).toContain('.project("title")');
       expect(pretty).toContain('Query.select(Filter.type(');
     });
+
+    test('project is strictly typed to the query type properties', () => {
+      const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+
+      // `title` is `Schema.optional(Schema.String)` on Task — the projection and the filter it
+      // feeds both carry that exact value type, not `unknown`, through Query.project -> Filter.in.
+      expectTypeOf(subquery.project('title')).toEqualTypeOf<Query.Projection<string | undefined>>();
+      expectTypeOf(Query.project(subquery, 'title')).toEqualTypeOf<Query.Projection<string | undefined>>();
+      expectTypeOf(Filter.in(subquery.project('title'))).toEqualTypeOf<Filter.Filter<string | undefined>>();
+
+      // @ts-expect-error - 'nope' is not a property of Task.
+      subquery.project('nope');
+    });
   });
 
   describe('Filter.childOf', () => {

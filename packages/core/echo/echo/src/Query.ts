@@ -81,7 +81,7 @@ export interface Query<T> {
    * value, not a `Query`, so it cannot be chained further.
    * @param property - Property path to project.
    */
-  'project'<K extends RefPropKey<T>>(property: K): Projection;
+  'project'<K extends RefPropKey<T>>(property: K): Projection<T[K]>;
 
   /**
    * Traverse an outgoing reference.
@@ -305,7 +305,7 @@ export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 /**
  * A query projected to a single scalar property (see {@link Query.project}).
  */
-export type Projection = internal.Projection;
+export type Projection<V = unknown> = internal.Projection<V>;
 
 /**
  * Brand key for {@link Projection}. Re-exported (like {@link QueryTypeId}) so the sandboxed
@@ -337,7 +337,7 @@ class QueryClass implements Any {
     }
   }
 
-  project(property: string): Projection {
+  project(property: string): Projection<any> {
     return internal.makeProjection(this.ast, property);
   }
 
@@ -659,7 +659,8 @@ export const type: {
  * @param property - Property path to project.
  * @returns Projection for use in `Filter.in`.
  */
-export const project = (query: Any, property: string): Projection => internal.makeProjection(query.ast, property);
+export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K): Projection<T[K]> =>
+  internal.makeProjection<T[K]>(query.ast, property);
 
 /**
  * Combine results of multiple queries.

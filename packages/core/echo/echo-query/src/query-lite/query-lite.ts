@@ -523,6 +523,9 @@ class QueryClass implements Query$.Any {
 
   private static 'variance': Query$.Any[typeof QueryTypeId] = {} as Query$.Any[typeof QueryTypeId];
 
+  private static 'projectionVariance': Query$.Projection<any>[typeof ProjectionTypeId] =
+    {} as Query$.Projection<any>[typeof ProjectionTypeId];
+
   static is(value: unknown): value is Query$.Any {
     return typeof value === 'object' && value !== null && QueryTypeId in value;
   }
@@ -554,8 +557,8 @@ class QueryClass implements Query$.Any {
     }
   }
 
-  project(property: string): Query$.Projection {
-    return { [ProjectionTypeId]: true, query: this.ast, property };
+  project(property: string): Query$.Projection<any> {
+    return { [ProjectionTypeId]: QueryClass.projectionVariance, query: this.ast, property };
   }
 
   static type<S extends Schema.Schema.All>(
@@ -594,8 +597,8 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  static project(query: Query$.Any, property: string): Query$.Projection {
-    return { [ProjectionTypeId]: true, query: query.ast, property };
+  static project(query: Query$.Any, property: string): Query$.Projection<any> {
+    return { [ProjectionTypeId]: QueryClass.projectionVariance, query: query.ast, property };
   }
 
   static from(...args: any[]): Query$.Any {

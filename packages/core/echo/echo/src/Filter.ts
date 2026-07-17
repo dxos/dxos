@@ -318,9 +318,9 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
  * @param values - Values to check against, or a single subquery projection.
  */
 const in$: {
-  <T>(projection: internal.Projection): Filter<T>;
+  <T>(projection: internal.Projection<T>): Filter<T>;
   <T>(...values: T[]): Filter<T>;
-} = <T>(...args: [internal.Projection] | T[]): Filter<T> => {
+} = <T>(...args: [internal.Projection<T>] | T[]): Filter<T> => {
   if (args.length === 1 && internal.isProjection(args[0])) {
     const projection = args[0];
     return new FilterClass({

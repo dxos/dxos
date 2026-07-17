@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Types from 'effect/Types';
+
 import { type QueryAST } from '@dxos/echo-protocol';
 
 /**
@@ -20,8 +22,13 @@ import { type QueryAST } from '@dxos/echo-protocol';
 export const ProjectionTypeId = '~@dxos/echo/Query.Projection' as const;
 export type ProjectionTypeId = typeof ProjectionTypeId;
 
-export interface Projection {
-  readonly [ProjectionTypeId]: true;
+/**
+ * `V` is the projected property's value type — carried only as a phantom brand (like
+ * `Filter<T>`'s `[FilterTypeId]: { value: Types.Covariant<T> }`) so `Filter.in(query.project(k))`
+ * infers its own type parameter from the projected property instead of defaulting to `unknown`.
+ */
+export interface Projection<V = unknown> {
+  readonly [ProjectionTypeId]: { value: Types.Covariant<V> };
   readonly query: QueryAST.Query;
   readonly property: string;
 }
@@ -29,8 +36,10 @@ export interface Projection {
 export const isProjection = (value: unknown): value is Projection =>
   typeof value === 'object' && value !== null && ProjectionTypeId in value;
 
-export const makeProjection = (query: QueryAST.Query, property: string): Projection => ({
-  [ProjectionTypeId]: true,
+const variance: Projection<any>[ProjectionTypeId] = {} as Projection<any>[ProjectionTypeId];
+
+export const makeProjection = <V>(query: QueryAST.Query, property: string): Projection<V> => ({
+  [ProjectionTypeId]: variance,
   query,
   property,
 });
