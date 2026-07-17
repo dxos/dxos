@@ -9,7 +9,14 @@ import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
+import {
+  EdgeApiService,
+  type EdgeApiClientService,
+  EdgeClient,
+  type EdgeConnection,
+  EdgeHttpClient,
+  createStubEdgeIdentity,
+} from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -88,6 +95,9 @@ export class ClientServicesHost {
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   private _edgeConnection?: EdgeConnection = undefined;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
+  // Derived Effect-native edge client, provided alongside `_edgeHttpClient` while consumers migrate
+  // group-by-group. Currently backs the agents endpoints (see `EdgeAgentManager`).
+  private _edgeApiClient?: EdgeApiClientService = undefined;
 
   private _serviceContext!: ServiceContext;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<
@@ -242,6 +252,7 @@ export class ClientServicesHost {
       const clientTag = resolveTelemetryTag(config);
       this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
       this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
+      this._edgeApiClient = EdgeApiService.make({ baseUrl: endpoint, clientTag });
     }
 
     const {
@@ -298,6 +309,7 @@ export class ClientServicesHost {
       this._signalManager,
       this._edgeConnection,
       this._edgeHttpClient,
+      this._edgeApiClient,
       this._runtime,
       this._runtimeProps,
       this._config.get('runtime.client.edgeFeatures'),

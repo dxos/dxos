@@ -6,7 +6,9 @@ import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { EdgeAgentStatus } from '@dxos/protocols';
+// `EdgeAgentStatus` is owned by the `@dxos/edge-protocol` contract; import it from there so the
+// value flowing out of the derived agents client unifies with this mapper (single type identity).
+import { EdgeAgentStatus } from '@dxos/edge-protocol';
 import {
   type EdgeAgentService,
   EdgeStatus,

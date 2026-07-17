@@ -21,7 +21,7 @@ import {
   valueEncoding,
 } from '@dxos/echo-host';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
-import type { EdgeConnection, EdgeHttpClient, EdgeIdentity } from '@dxos/edge-client';
+import type { EdgeApiClientService, EdgeConnection, EdgeHttpClient, EdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -116,6 +116,7 @@ export class ServiceContext extends Resource {
     public readonly signalManager: SignalManager,
     private readonly _edgeConnection: EdgeConnection | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
+    private readonly _edgeApiClient: EdgeApiClientService | undefined,
     private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>,
     public readonly _runtimeProps?: ServiceContextRuntimeProps,
     private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
@@ -428,7 +429,7 @@ export class ServiceContext extends Resource {
 
     this.edgeAgentManager = new EdgeAgentManager(
       this._edgeFeatures,
-      this._edgeHttpClient,
+      this._edgeApiClient,
       this.dataSpaceManager,
       identity,
     );
@@ -557,6 +558,11 @@ export class ServiceContext extends Resource {
 
     this._edgeConnection?.setIdentity(edgeIdentity);
     this._edgeHttpClient?.setIdentity(edgeIdentity);
+    if (this._edgeApiClient) {
+      // `setIdentity` is a synchronous `Ref` update; run it eagerly so the derived agents client
+      // presents the current identity on its next request.
+      Effect.runSync(this._edgeApiClient.setIdentity(edgeIdentity));
+    }
     this.networkManager.setPeerInfo({
       identityDid: edgeIdentity.identityDid,
       peerKey: edgeIdentity.peerKey,

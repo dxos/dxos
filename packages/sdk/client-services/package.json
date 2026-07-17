@@ -67,6 +67,7 @@
     "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/edge-protocol": "catalog:",
     "@dxos/effect": "workspace:*",
     "@dxos/feed": "workspace:*",
     "@dxos/feed-store": "workspace:*",

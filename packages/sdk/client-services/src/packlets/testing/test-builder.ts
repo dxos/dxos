@@ -68,7 +68,7 @@ export const createServiceContext = async ({
       .pipe(Layer.orDie),
   ).runtimeEffect;
 
-  return new ServiceContext(networkManager, signalManager, undefined, undefined, runtime, {
+  return new ServiceContext(networkManager, signalManager, undefined, undefined, undefined, runtime, {
     invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
     ...runtimeProps,
   });

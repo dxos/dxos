@@ -2,14 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeApiClientService, mapEdgeErrors } from '@dxos/edge-client';
+import { EdgeAgentStatus } from '@dxos/edge-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -35,7 +37,7 @@ export class EdgeAgentManager extends Resource {
 
   constructor(
     private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined,
-    private readonly _edgeHttpClient: EdgeHttpClient | undefined,
+    private readonly _edgeApiClient: EdgeApiClientService | undefined,
     private readonly _dataSpaceManager: DataSpaceManager,
     private readonly _identity: Identity,
   ) {
@@ -51,16 +53,22 @@ export class EdgeAgentManager extends Resource {
   }
 
   @synchronized
-  public async createAgent(ctx: Context): Promise<void> {
+  public async createAgent(_ctx: Context): Promise<void> {
     invariant(this.isOpen);
-    invariant(this._edgeHttpClient);
+    invariant(this._edgeApiClient);
     invariant(this._edgeFeatures?.agents);
 
-    const response = await this._edgeHttpClient.createAgent(ctx, {
-      identityDid: this._identity.did,
-      haloSpaceId: this._identity.haloSpaceId,
-      haloSpaceKey: this._identity.haloSpaceKey.toHex(),
-    });
+    const { data: response } = await Effect.runPromise(
+      mapEdgeErrors(
+        this._edgeApiClient.client.agents.createAgent({
+          payload: {
+            identityDid: this._identity.did,
+            haloSpaceId: this._identity.haloSpaceId,
+            haloSpaceKey: this._identity.haloSpaceKey.toHex(),
+          },
+        }),
+      ),
+    );
 
     const deviceKey = PublicKey.fromHex(response.deviceKey);
 
@@ -83,7 +91,7 @@ export class EdgeAgentManager extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    const isEnabled = this._edgeHttpClient && this._edgeFeatures?.agents;
+    const isEnabled = this._edgeApiClient && this._edgeFeatures?.agents;
 
     log('edge agent manager open', { isEnabled });
 
@@ -93,7 +101,7 @@ export class EdgeAgentManager extends Resource {
 
     this._lastKnownDeviceCount = this._identity.authorizedDeviceKeys.size;
     this._fetchAgentStatusTask = new DeferredTask(this._ctx, async () => {
-      await this._fetchAgentStatus(this._ctx);
+      await this._fetchAgentStatus();
     });
     this._fetchAgentStatusTask.schedule();
 
@@ -118,28 +126,39 @@ export class EdgeAgentManager extends Resource {
     this._lastKnownDeviceCount = 0;
   }
 
-  protected async _fetchAgentStatus(ctx: Context): Promise<void> {
-    invariant(this._edgeHttpClient);
-    try {
-      log('fetching agent status');
-      const { agent } = await this._edgeHttpClient.getAgentStatus(ctx, {
-        ownerIdentityDid: this._identity.did,
-      });
-      const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
-      if (!wasAgentCreatedDuringQuery) {
-        const deviceKey = agent.deviceKey ? PublicKey.fromHex(agent.deviceKey) : undefined;
-        this._updateStatus(agent.status, deviceKey);
-      }
-    } catch (err) {
-      if (err instanceof EdgeCallFailedError) {
-        if (!err.isRetryable) {
-          log.warn('non retryable error on agent status fetch attempt', { err });
-          return;
-        }
-      }
+  protected async _fetchAgentStatus(): Promise<void> {
+    invariant(this._edgeApiClient);
+    log('fetching agent status');
+
+    // `EdgeRequestError`/`EdgeAuthChallengeError` are handled inside the effect via `catchTag` and
+    // reduced to an outcome, so this never rejects for an edge failure. A non-retryable request
+    // failure gives up quietly (agent status simply unavailable); everything else reschedules.
+    const outcome = await Effect.runPromise(
+      mapEdgeErrors(this._edgeApiClient.client.agents.agentStatus({ path: { identity: this._identity.did } })).pipe(
+        Effect.map(({ data }) => ({ tag: 'ok' as const, agent: data.agent })),
+        Effect.catchTag('EdgeRequestError', (error) =>
+          Effect.succeed(error.isRetryable ? { tag: 'retry' as const, error } : { tag: 'giveup' as const, error }),
+        ),
+        Effect.catchTag('EdgeAuthChallengeError', (error) => Effect.succeed({ tag: 'retry' as const, error })),
+      ),
+    );
+
+    if (outcome.tag === 'giveup') {
+      log.warn('non retryable error on agent status fetch attempt', { err: outcome.error });
+      return;
+    }
+    if (outcome.tag === 'retry') {
       const retryAfterMs = AGENT_STATUS_QUERY_RETRY_INTERVAL + Math.random() * AGENT_STATUS_QUERY_RETRY_JITTER;
-      log.info('agent status fetching failed', { err, retryAfterMs });
+      log.info('agent status fetching failed', { err: outcome.error, retryAfterMs });
       scheduleTask(this._ctx, () => this._fetchAgentStatusTask?.schedule(), retryAfterMs);
+      return;
+    }
+
+    const { agent } = outcome;
+    const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
+    if (!wasAgentCreatedDuringQuery) {
+      const deviceKey = agent.deviceKey ? PublicKey.fromHex(agent.deviceKey) : undefined;
+      this._updateStatus(agent.status, deviceKey);
     }
   }
 

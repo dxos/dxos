@@ -70,6 +70,9 @@ catalog:
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
+  # Actual resolution is a pkg.pr.new preview, redirected via the `overrides` section below —
+  # moon's dependency-version parser rejects a raw preview URL here (semver/calendar formats only).
+  '@dxos/edge-protocol': 0.1.0
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.3
@@ -732,6 +735,9 @@ overrides:
   '@automerge/automerge': 'catalog:'
   '@automerge/automerge-subduction': 'catalog:'
   '@dxos/docs>vite': ^7.3.2
+  # Preview build from dxos/edge#t3code/a092bc61 (Effect HttpApi contract), consumed while the
+  # HttpApiClient-derived client is validated locally, ahead of a proper release.
+  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/common': 'catalog:'
   '@lezer/highlight': 'catalog:'
@@ -793,6 +799,7 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
+    '@dxos/edge-protocol>@effect/platform': 0.96.2
     '@effect-atom/atom>@effect/experimental': 0.60.0
     '@effect-atom/atom>@effect/platform': 0.96.2
     '@effect-atom/atom>@effect/rpc': 0.75.1
