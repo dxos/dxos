@@ -2,12 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationHandlerSet } from '@dxos/compute';
+import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const Connector = Capability.lazy('TrelloConnector', () => import('./connector'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+export const AppGraphBuilder = Capability.lazyModule(
+  'AppGraphBuilder',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  () => import('./app-graph-builder'),
+);
+export const Connector = Capability.lazyModule(
+  'TrelloConnector',
+  { provides: [ConnectorCapability] },
+  () => import('./connector'),
+);
+export const OperationHandler = Capability.lazyModule(
   'OperationHandler',
+  { provides: [Capabilities.OperationHandler] },
   () => import('./operation-handler'),
 );

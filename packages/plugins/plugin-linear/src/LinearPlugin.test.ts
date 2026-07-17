@@ -20,9 +20,8 @@ describe('LinearPlugin', () => {
       plugins: [ClientPlugin({}), ConnectorPlugin(), LinearPlugin()],
     });
 
-    // After autoStart: SetupAppGraph fires (cascading SetupConnectors via
-    // ConnectorPlugin's AppGraphBuilder), and SetupProcessManager fires from
-    // ProcessManagerPlugin — both reach the LinearPlugin's modules.
+    // Both modules are dependency-mode with no requires, so they activate in the
+    // startup wave without waiting on any legacy ordering event.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('LinearConnector'), moduleId('OperationHandler')]),
     );

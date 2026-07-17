@@ -62,21 +62,23 @@ const testConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
-      {
-        id: 'trello',
-        source: TRELLO_SOURCE,
-        label: 'Trello',
-        oauth: {
-          provider: OAuthProvider.TRELLO,
-          scopes: [],
+    return [
+      Capability.provide(Connector, [
+        {
+          id: 'trello',
+          source: TRELLO_SOURCE,
+          label: 'Trello',
+          oauth: {
+            provider: OAuthProvider.TRELLO,
+            scopes: [],
+          },
+          getSyncTargets: TrelloOperation.GetTrelloBoards,
+          materializeTarget: TrelloOperation.MaterializeTrelloTarget,
+          sync: TrelloOperation.SyncTrelloBoard,
+          onTokenCreated,
+          testConnection,
         },
-        getSyncTargets: TrelloOperation.GetTrelloBoards,
-        materializeTarget: TrelloOperation.MaterializeTrelloTarget,
-        sync: TrelloOperation.SyncTrelloBoard,
-        onTokenCreated,
-        testConnection,
-      },
-    ]);
+      ]),
+    ];
   }),
 );

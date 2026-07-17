@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import { ChannelBackend, Connector, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
@@ -14,19 +14,16 @@ import { translations } from './translations';
 import { BlueskyChannel } from './types';
 
 export const BlueskyPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addSchemaModule({ schema: [BlueskyChannel] }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupConnectors,
-    activate: Connector,
-  }),
+  Plugin.addLazyModule(Connector),
   // Read-only ATProto channel backend (contributes ThreadCapabilities.ChannelBackend).
-  Plugin.addModule({
-    id: 'channel-backend',
-    activatesOn: ActivationEvents.Startup,
-    activate: ChannelBackend,
-  }),
+  Plugin.addLazyModule(ChannelBackend),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

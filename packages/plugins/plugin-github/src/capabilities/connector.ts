@@ -64,22 +64,24 @@ const testConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
-      {
-        id: GITHUB_PROVIDER_ID,
-        source: GITHUB_SOURCE,
-        label: 'GitHub',
-        oauth: {
-          provider: OAuthProvider.GITHUB,
-          scopes: [],
+    return [
+      Capability.provide(Connector, [
+        {
+          id: GITHUB_PROVIDER_ID,
+          source: GITHUB_SOURCE,
+          label: 'GitHub',
+          oauth: {
+            provider: OAuthProvider.GITHUB,
+            scopes: [],
+          },
+          getSyncTargets: GitHubOperation.GetGitHubRepositories,
+          materializeTarget: GitHubOperation.MaterializeGitHubTarget,
+          sync: GitHubOperation.SyncGitHubRepositories,
+          optionsSchema: GitHubOperation.SyncOptions,
+          onTokenCreated,
+          testConnection,
         },
-        getSyncTargets: GitHubOperation.GetGitHubRepositories,
-        materializeTarget: GitHubOperation.MaterializeGitHubTarget,
-        sync: GitHubOperation.SyncGitHubRepositories,
-        optionsSchema: GitHubOperation.SyncOptions,
-        onTokenCreated,
-        testConnection,
-      },
-    ]);
+      ]),
+    ];
   }),
 );

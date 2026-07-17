@@ -13,8 +13,8 @@ import { Collection } from '@dxos/echo';
 import { StackArticle } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(
+  Effect.succeed([
+    Capability.provide(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'article',
@@ -24,5 +24,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ),
-  ),
+  ]),
 );

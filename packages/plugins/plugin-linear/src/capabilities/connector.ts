@@ -71,22 +71,24 @@ const testConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
-      {
-        id: LINEAR_PROVIDER_ID,
-        source: LINEAR_SOURCE,
-        label: 'Linear',
-        oauth: {
-          provider: OAuthProvider.LINEAR,
-          scopes: ['read', 'write'],
+    return [
+      Capability.provide(Connector, [
+        {
+          id: LINEAR_PROVIDER_ID,
+          source: LINEAR_SOURCE,
+          label: 'Linear',
+          oauth: {
+            provider: OAuthProvider.LINEAR,
+            scopes: ['read', 'write'],
+          },
+          getSyncTargets: LinearOperation.GetLinearTeams,
+          materializeTarget: LinearOperation.MaterializeLinearTarget,
+          sync: LinearOperation.SyncLinearTeams,
+          optionsSchema: LinearOperation.SyncOptions,
+          onTokenCreated,
+          testConnection,
         },
-        getSyncTargets: LinearOperation.GetLinearTeams,
-        materializeTarget: LinearOperation.MaterializeLinearTarget,
-        sync: LinearOperation.SyncLinearTeams,
-        optionsSchema: LinearOperation.SyncOptions,
-        onTokenCreated,
-        testConnection,
-      },
-    ]);
+      ]),
+    ];
   }),
 );

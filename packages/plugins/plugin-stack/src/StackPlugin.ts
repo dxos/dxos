@@ -15,7 +15,11 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const StackPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Stack.Stack] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

@@ -72,8 +72,8 @@ Gate recipe per wave: per-package build+test → framework suites → Composer b
 
 - [x] Call-site inventory + batch assignment → PHASE7-WORKLIST.md (~89 packages; 5 runtime events stay; 8 graph-extension atom-pattern files flagged)
 - [x] Foundational wave 1: attention, graph, theme, settings, status-bar, progress (Sonnet agent; committed 2c3ce4db59; boot check stable)
-- [ ] Foundational wave 2: spotlight, simple-layout, testing (layout role), deck (careful), navtree — agent running
-- [ ] Foundational wave 3: plugin-space (careful, after wave 2), plugin-registry, plugin-markdown (before Batch 5)
+- [x] Foundational wave 2: spotlight, simple-layout, testing (layout role), deck (careful), navtree (committed a073380f44; boot 3/3)
+- [x] Foundational wave 3: plugin-space, plugin-registry, plugin-markdown (committed d9dac04902; boot 5/5, 182/182 dependency modules). Framework fixes found by the gate: dependency-pass failures now publish error activation messages (silent-hang fix); **compatFires are fire-and-forget tracked fibers** (awaiting legacy waves stalled startup); multi-consumed singleton definitions flipped (CreateObjectEntry, OnCreateSpace, OnTypeAdded) — arity rule added to MIGRATION-BRIEF.
 - [ ] Leaf batches 1-10 (parallelize after foundational; see work-list)
 - [ ] Special cases: assistant, brain, observability (architectural call), code (imperative SetupPluginAssets fire)
 - [ ] Scaffolding: app-toolkit playground, stories-*, story-modules

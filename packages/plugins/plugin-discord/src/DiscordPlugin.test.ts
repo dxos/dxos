@@ -20,9 +20,8 @@ describe('DiscordPlugin', () => {
       plugins: [ClientPlugin({}), ConnectorPlugin(), DiscordPlugin()],
     });
 
-    // After autoStart: SetupAppGraph fires (cascading SetupConnectors via
-    // ConnectorPlugin's AppGraphBuilder), and SetupProcessManager fires from
-    // OperationPlugin — both reach the DiscordPlugin's modules.
+    // Both modules are dependency-mode with no requires, so they activate in the
+    // startup wave without waiting on any legacy ordering event.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('DiscordConnector'), moduleId('OperationHandler')]),
     );

@@ -16,7 +16,7 @@ import type * as Routing from './Routing';
  * may register; `BookingSearch` resolves all contributions and filters them by
  * the segment kind being searched.
  */
-export const BookingService = Capability.make<BookingSearch.BookingService>(
+export const BookingService = Capability.makeMulti<BookingSearch.BookingService>(
   `${meta.profile.key}.capability.bookingService`,
 );
 

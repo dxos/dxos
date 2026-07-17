@@ -15,7 +15,7 @@ import { DuffelCapabilities, Settings } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
     const settingsAtom = createKvsStore({
       key: meta.profile.key,
       schema: Settings.Settings,
@@ -25,13 +25,13 @@ export default Capability.makeModule(
     const service: BookingSearch.BookingService = makeDuffelBookingService(() => registry.get(settingsAtom).apiKey);
 
     return [
-      Capability.contributes(DuffelCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.provide(DuffelCapabilities.Settings, settingsAtom),
+      Capability.provide(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),
-      Capability.contributes(TripCapabilities.BookingService, service),
+      Capability.provide(TripCapabilities.BookingService, service),
     ];
   }),
 );

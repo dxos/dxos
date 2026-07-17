@@ -2,16 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
-import { type ThreadCapabilities } from '@dxos/plugin-thread';
+import { Capabilities, Capability } from '@dxos/app-framework';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationHandlerSet } from '@dxos/compute';
+import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import { ThreadCapabilities } from '@dxos/plugin-thread';
 
-export const ChannelBackend = Capability.lazy<ThreadCapabilities.ChannelBackendProvider>(
+export const ChannelBackend = Capability.lazyModule(
   'BlueskyChannelBackend',
+  { provides: [ThreadCapabilities.ChannelBackend] },
   () => import('./channel-backend'),
 );
-export const Connector = Capability.lazy('BlueskyConnector', () => import('./connector'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+export const Connector = Capability.lazyModule(
+  'BlueskyConnector',
+  { provides: [ConnectorCapability] },
+  () => import('./connector'),
+);
+export const OperationHandler = Capability.lazyModule(
   'OperationHandler',
+  { provides: [Capabilities.OperationHandler] },
   () => import('./operation-handler'),
 );

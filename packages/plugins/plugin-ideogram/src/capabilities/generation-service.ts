@@ -12,5 +12,5 @@ import { makeIdeogramGenerationService } from '#services';
 export default Capability.makeModule(() => {
   // Explicit type keeps the emitted declaration portable (TS2883).
   const service: GenerationService.GenerationService = makeIdeogramGenerationService();
-  return Effect.succeed(Capability.contributes(StudioCapabilities.GenerationService, service));
+  return Effect.succeed([Capability.provide(StudioCapabilities.GenerationService, service)]);
 });

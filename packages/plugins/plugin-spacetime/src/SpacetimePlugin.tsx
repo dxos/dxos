@@ -14,10 +14,22 @@ import { Model, Scene } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
   AppPlugin.addSchemaModule({ schema: [Scene.Scene, Model.Object] }),
-  AppPlugin.addSettingsModule({ activate: SpacetimeSettings }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSettingsModule({
+    requires: SpacetimeSettings.requires,
+    provides: SpacetimeSettings.provides,
+    activate: SpacetimeSettings,
+  }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

@@ -156,8 +156,8 @@ export const ChannelBackend = Capability.makeModule(
     const manager = new ConnectionManager();
     // TODO(Task 11): supply lookupCredential from stored AccessToken once server auth shapes are confirmed.
     return [
-      Capability.contributes(FreeqCapabilities.ConnectionManager, manager),
-      Capability.contributes(ThreadCapabilities.ChannelBackend, makeFreeqChannelBackend(manager)),
+      Capability.provide(FreeqCapabilities.ConnectionManager, manager),
+      Capability.provide(ThreadCapabilities.ChannelBackend, makeFreeqChannelBackend(manager)),
     ];
   }),
 );

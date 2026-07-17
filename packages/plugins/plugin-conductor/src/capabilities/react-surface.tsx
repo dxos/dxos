@@ -13,8 +13,8 @@ import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 import { CanvasArticle } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(
+  Effect.succeed([
+    Capability.provide(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'root',
@@ -28,5 +28,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ),
-  ),
+  ]),
 );

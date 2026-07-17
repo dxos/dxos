@@ -54,7 +54,15 @@ classification), and the reference migrations:
 5. **CreateObject modules**: pass `provides: [SpaceCapabilities.CreateObjectEntry]` explicitly
    (helper has no default).
 
-## Hard rules (violations broke the app during Phase 5 — do not skip)
+## Hard rules (violations broke the app during Phases 5-7 — do not skip)
+
+- **Arity check before declaring `provides`:** if a capability you provide is (or will be)
+  contributed by MORE THAN ONE module — check its consumers: `getAll(`/`atom(` reads and
+  per-typename/per-plugin entry semantics — it MUST be defined with `Capability.makeMulti`.
+  A singleton-defined capability with two dependency-mode providers fails startup with
+  DuplicateProviderError (e.g. SpaceCapabilities.CreateObjectEntry, OnCreateSpace,
+  OnTypeAdded were flipped for this). Flip the definition in the owning package's types
+  file as part of your change.
 
 - **Graph-extension bodies (`connector:`/`resolver:`/actions closures inside
   `GraphBuilder.createExtension`) must NEVER call sync `Capability.get`.** Hoist an atom

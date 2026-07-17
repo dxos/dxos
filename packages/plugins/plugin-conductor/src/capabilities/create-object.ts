@@ -13,17 +13,19 @@ import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Type.getTypename(CanvasBoard.CanvasBoard),
-      createObject: (props, options) =>
-        Effect.gen(function* () {
-          const object = CanvasBoard.make(props);
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
-        }),
-    });
+    return [
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+        id: Type.getTypename(CanvasBoard.CanvasBoard),
+        createObject: (props, options) =>
+          Effect.gen(function* () {
+            const object = CanvasBoard.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              targetNodeId: options.targetNodeId,
+            });
+          }),
+      }),
+    ];
   }),
 );

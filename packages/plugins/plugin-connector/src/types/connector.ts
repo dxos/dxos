@@ -217,5 +217,7 @@ export type ConnectorEntry = {
 
 /**
  * Capability registry token for Connector contributions (auth + discovery + sync wiring).
+ * Multi: every service-specific connector plugin (Bluesky, Discord, GitHub, …) contributes its
+ * own entry array alongside plugin-connector's built-ins.
  */
-export const Connector = Capability.make<ConnectorEntry[]>('org.dxos.plugin.connector.capability.connector');
+export const Connector = Capability.makeMulti<ConnectorEntry[]>('org.dxos.plugin.connector.capability.connector');
