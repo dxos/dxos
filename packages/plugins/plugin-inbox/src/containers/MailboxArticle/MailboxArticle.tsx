@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -129,12 +129,23 @@ export const MailboxArticle = ({
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
 
   // Resolves this view's canonical system tag (e.g. Inbox/Sent) by its stable foreign key, not by label
-  // text — `undefined` until the provider sync has created it (see `buildSystemTagSelection`).
+  // text (see `buildSystemTagSelection`) — `undefined` until the provider sync has created it.
   const systemTagObj = useQuery(
     db,
     systemTag ? Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(systemTag)]) : Filter.nothing(),
   )[0];
   const systemTagUri = systemTagObj && Obj.getURI(systemTagObj).toString();
+  // A bare `Filter.tag` query can't see this: feed messages are immutable and carry no `meta.tags` of
+  // their own, so membership lives entirely in the mailbox's `TagIndex` sibling object. Resolve it to
+  // concrete ids instead. The index mutates in place, which `useResolveRef` doesn't observe, so
+  // subscribe to it directly and force a recompute on change (mirrors `CalendarArticle`'s starred marks).
+  // Only subscribed for system-tag views — other views never read `systemTagIds`.
+  const [, bumpSystemTagIds] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(
+    () => (systemTag && tagIndex ? Obj.subscribe(tagIndex, bumpSystemTagIds) : undefined),
+    [systemTag, tagIndex],
+  );
+  const systemTagIds = systemTagUri && tagIndex ? TagIndex.bind(tagIndex).objects(systemTagUri) : [];
 
   // This mailbox's drafts (space-db, not the feed). In the Drafts view (`draftsOnly`) they drive the
   // list directly; otherwise each is attached to its thread if that thread is already present in the
@@ -194,12 +205,15 @@ export const MailboxArticle = ({
   // text (e.g. unedited `'#inbox'`) — robust across providers/locales and immune to a same-named user
   // tag. Once the user edits the box away from that seed, the usual text/tag DSL parse takes over.
   const isUnmodifiedSystemTagView = systemTag !== undefined && debouncedFilterText === (filterProp ?? '');
+  const systemTagIdsKey = systemTagIds.join(',');
   const selection = useMemo(
     () =>
       isUnmodifiedSystemTagView
-        ? buildSystemTagSelection(systemTagUri)
+        ? buildSystemTagSelection(systemTagIds)
         : buildMailboxSelection(debouncedFilterText, debouncedFilter),
-    [isUnmodifiedSystemTagView, systemTagUri, debouncedFilterText, debouncedFilter],
+    // `systemTagIds` is a fresh array each render; key the memo on its membership (`systemTagIdsKey`) instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
   // The Drafts view drives its list from `drafts` directly (below), not this feed-paginated query.

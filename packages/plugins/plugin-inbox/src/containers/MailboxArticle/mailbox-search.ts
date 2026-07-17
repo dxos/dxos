@@ -3,6 +3,7 @@
 //
 
 import { Filter, QueryAST } from '@dxos/echo';
+import { type EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 /** Whether the filter AST contains a text-search node anywhere. */
@@ -56,10 +57,14 @@ export const buildDraftFilter = (mailboxUri: string): Filter.Any =>
   Filter.type(Message.Message, { properties: { mailbox: mailboxUri } });
 
 /**
- * Selects feed messages carrying an already-resolved system tag (see `SystemTags.systemTagKey`), e.g.
- * the canonical Inbox/Sent tag. `tagUri` is `undefined` until the provider sync has created the tag
- * (or if the mailbox has never synced), in which case this selects nothing rather than falling back to
- * the whole feed — consistent with the pre-sync empty state.
+ * Selects feed messages carrying a system tag (e.g. the canonical Inbox/Sent tag), given the member
+ * ids already resolved from the mailbox's `TagIndex` (see `TagIndex.bind(...).objects(uri)`).
+ *
+ * A bare `Filter.tag` cannot express this: it matches an object's own `meta.tags`, but feed/queue
+ * messages are immutable and can't carry that — their tag membership lives entirely in the mailbox's
+ * sibling `TagIndex` object instead (see `@dxos/schema`'s `TagIndex`). So membership has to be resolved
+ * to concrete ids first and selected by id, not by a `Filter.tag` predicate. `Filter.id()` on an empty
+ * array selects nothing, which is also the correct pre-sync (no ids yet) behavior.
  */
-export const buildSystemTagSelection = (tagUri: string | undefined): Filter.Any =>
-  tagUri ? Filter.and(Filter.type(Message.Message), Filter.tag(tagUri)) : Filter.nothing();
+export const buildSystemTagSelection = (ids: readonly EntityId[]): Filter.Any =>
+  ids.length === 0 ? Filter.nothing() : Filter.and(Filter.type(Message.Message), Filter.id(...ids));

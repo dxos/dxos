@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
+import { EntityId } from '@dxos/keys';
 
 import { buildDraftFilter, buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
 
@@ -55,13 +56,17 @@ describe('buildDraftFilter', () => {
 });
 
 describe('buildSystemTagSelection', () => {
-  test('ANDs the message type with the resolved tag uri', () => {
-    const selection = buildSystemTagSelection('dxn:echo:@:tag-1');
-    expect(selection.ast).toMatchObject({ type: 'and', filters: [{ type: 'object' }, { type: 'tag' }] });
+  test('ANDs the message type with the resolved member ids', () => {
+    const id = EntityId.deterministic('test-message-1');
+    const selection = buildSystemTagSelection([id]);
+    expect(selection.ast).toMatchObject({
+      type: 'and',
+      filters: [{ type: 'object' }, { type: 'object', id: [id] }],
+    });
   });
 
-  test('selects nothing when the tag has not been resolved yet (e.g. before first sync)', () => {
-    const selection = buildSystemTagSelection(undefined);
+  test('selects nothing when no messages are tagged yet (e.g. before first sync)', () => {
+    const selection = buildSystemTagSelection([]);
     expect(selection.ast).toMatchObject(Filter.nothing().ast);
   });
 });

@@ -594,11 +594,9 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'syncMailbox',
-        // Filter nodes store the parent mailbox as node.data; exclude them so sync only appears on the mailbox itself.
-        match: (node) =>
-          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
-            ? Option.some(node.data)
-            : Option.none(),
+        // Sibling view nodes (All Mail, Sent, Drafts, saved filters) all store the same mailbox as
+        // node.data, so the action shows on any of them, not just the primary node.
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           if (!db) {
@@ -651,12 +649,9 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'analyzeTopicsMailbox',
-        // Filter nodes store the parent mailbox as node.data; exclude them so the action only appears
-        // on the mailbox itself (peer of the `sync` action).
-        match: (node) =>
-          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
-            ? Option.some(node.data)
-            : Option.none(),
+        // Sibling view nodes (All Mail, Sent, Drafts, saved filters) all store the same mailbox as
+        // node.data, so the action shows on any of them, not just the primary node (peer of `sync`).
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox) => {
           const db = Obj.getDatabase(mailbox);
           if (!db) {
