@@ -131,26 +131,23 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
+  // `buildMailboxSelection` returns the whole-thread semi-join filter (see its doc comment): a
+  // thread qualifies if any of its messages match the search/filter box, and the selection then
+  // pulls in every message sharing that thread's `threadId`, across the feed AND this space
+  // (drafts), so `count`/`items` reflect the whole thread rather than only its filter-matching
+  // members. The space branch can also surface another mailbox's draft that happens to share a
+  // `threadId` (thread ids are effectively globally unique, so this is rare) —
+  // `reconcileDrafts` below re-scopes drafts to this mailbox and drops ones already superseded
+  // by their synced copy.
   const selection = useMemo(
-    () => buildMailboxSelection(debouncedFilterText, debouncedFilter),
-    [debouncedFilterText, debouncedFilter],
+    () => (feed ? buildMailboxSelection(debouncedFilterText, debouncedFilter, feed) : undefined),
+    [debouncedFilterText, debouncedFilter, feed],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
-  // A thread qualifies if any of its messages match `selection`; the source then pulls in every
-  // message sharing that thread's `threadId`, across the feed AND this space (drafts), so `count`/
-  // `items` reflect the whole thread rather than only its filter-matching members. The space branch
-  // can also surface another mailbox's draft that happens to share a `threadId` (thread ids are
-  // effectively globally unique, so this is rare) — `reconcileDrafts` below re-scopes drafts to this
-  // mailbox and drops ones already superseded by their synced copy.
-  const source = feed
-    ? (() => {
-        const matches = Query.select(selection).from(feed);
-        return Query.select(Filter.type(Message.Message, { threadId: Filter.in(matches.project('threadId')) })).from([
-          Scope.feed(Obj.getURI(feed, { prefer: 'absolute' })),
-          Scope.space(),
-        ]);
-      })()
-    : undefined;
+  const source =
+    feed && selection
+      ? Query.select(selection).from([Scope.feed(Obj.getURI(feed, { prefer: 'absolute' })), Scope.space()])
+      : undefined;
   const pagination = usePagination(
     db,
     source
