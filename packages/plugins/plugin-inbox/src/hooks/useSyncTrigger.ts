@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { connectedRoutinesQuery } from '@dxos/plugin-routine';
+import { Cursor } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
@@ -34,21 +34,19 @@ export const useSyncTrigger = ({
   handleToggleSync: () => Promise<void>;
 } => {
   const [pending, setPending] = useState(false);
-  // The sync trigger is the `timer` trigger of a Routine associated with this subject (via `subject`,
-  // or legacy triggers whose `input` refs it — both are covered by `connectedRoutinesQuery`).
-  const routines = useQuery(db, connectedRoutinesQuery(subject));
+  // A sync trigger doesn't reference its target directly — its `binding` refs a Cursor whose `spec.target`
+  // is the target — so traverse the reverse-ref chain subject ← Cursor ← Trigger in a single query.
+  const triggers = useQuery(
+    db,
+    Query.select(Filter.id(subject.id))
+      .referencedBy(Cursor.Cursor)
+      .referencedBy(Trigger.Trigger)
+      .debugLabel('plugin-inbox.useSyncTrigger'),
+  );
   const { connection } = useTargetConnection(subject);
   const connector = useConnectorEntry(connection);
 
-  const syncTrigger = useMemo(() => {
-    for (const routine of routines) {
-      const trigger = routine.triggers.find((ref) => ref.target?.spec?.kind === 'timer')?.target;
-      if (trigger) {
-        return trigger;
-      }
-    }
-    return undefined;
-  }, [routines]);
+  const syncTrigger = useMemo(() => triggers.find((trigger) => trigger.spec?.kind === 'timer'), [triggers]);
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
 

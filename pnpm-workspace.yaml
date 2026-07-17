@@ -35,7 +35,7 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.40
   '@automerge/automerge-subduction': 0.16.0
   '@babel/core': ^7.18.13
-  '@babel/parser': ^8.0.4
+  '@babel/parser': ^7.29.0
   '@babel/preset-typescript': ^7.27.1
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
@@ -64,6 +64,7 @@ catalog:
   '@codemirror/language': ^6.12.4
   '@codemirror/language-data': ^6.5.2
   '@codemirror/lint': 6.9.7
+  '@codemirror/merge': ^6.12.2
   '@codemirror/search': ^6.7.1
   '@codemirror/state': ^6.7.0
   '@codemirror/theme-one-dark': ^6.1.3

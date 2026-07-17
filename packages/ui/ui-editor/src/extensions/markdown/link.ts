@@ -16,7 +16,11 @@ const tooltipClassName = mx(
   surfaceShadow({ elevation: 'positioned' }),
 );
 
-export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) => {
+export type LinkTooltipProps = {
+  render: RenderCallback<{ url: string }>;
+};
+
+export const linkTooltip = ({ render }: LinkTooltipProps) => {
   return hoverTooltip((view, pos, side) => {
     const syntax = syntaxTree(view.state).resolveInner(pos, side);
     let link = null;
@@ -41,7 +45,7 @@ export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) => {
       create: () => {
         const el = document.createElement('div');
         el.className = tooltipClassName;
-        renderTooltip(el, { url: urlText }, view);
+        render(el, { url: urlText }, view);
         return { dom: el, offset: { x: 0, y: 4 } };
       },
     };

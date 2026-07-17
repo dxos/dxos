@@ -208,6 +208,7 @@
       "@dxos/vendor-hyperformula",
       "@dxos/vendor-kbn-handlebars",
       "@dxos/vendor-quickjs",
+      "@dxos/versioning",
       "@dxos/vite-plugin-icons",
       "@dxos/vite-plugin-import-source",
       "@dxos/vite-plugin-log",

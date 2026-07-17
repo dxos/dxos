@@ -34,11 +34,10 @@ const ensureOperationRecord = (
  * timer trigger — the existing one if a routine is already connected, otherwise a freshly-created one:
  * a local (`remote` unset) timer trigger, every 10 minutes, wired to `sync` — the connector's own sync
  * operation, the same one `ConnectorOperation.SyncConnection` invokes directly — with `binding` bound
- * to `cursor` (the target's external-sync {@link Cursor}). The routine is related to `target` by query
- * ({@link connectedRoutinesQuery}, surfaced in the routines companion) rather than by an ownership
- * field on `target`; the association is carried by the routine's `subject` ref. It is kept off the
- * trigger's operation `input` because the EDGE validates operation input strictly, so a non-schema key
- * there fails the runnable remotely.
+ * to `cursor` (the target's external-sync {@link Cursor}). `input` carries only `binding`, matching the
+ * sync operation's input schema. The routine is related to `target` by query ({@link connectedRoutinesQuery},
+ * surfaced in the routines companion), which reaches it through `binding` → the cursor → the cursor's
+ * `spec.target` — so no target ref is smuggled into the operation input.
  */
 export const createSyncRoutine = ({
   target,
@@ -59,7 +58,6 @@ export const createSyncRoutine = ({
     }
 
     const operation = yield* ensureOperationRecord(sync);
-    const { db } = yield* Database.Service;
     const trigger = Trigger.make({
       enabled: true,
       spec: Trigger.specTimer(SYNC_ROUTINE_CRON),
@@ -69,7 +67,6 @@ export const createSyncRoutine = ({
     const routine = Routine.make({
       name: 'Sync',
       spec: { kind: 'runnable', runnable: Ref.make(operation) },
-      subject: db.makeRef(Obj.getURI(target)),
       trigger,
     });
 

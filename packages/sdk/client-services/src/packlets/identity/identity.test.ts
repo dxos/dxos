@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
-import { createIdFromSpaceKey } from '@dxos/echo-host';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { type FeedWrapper } from '@dxos/feed-store';
