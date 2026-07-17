@@ -137,6 +137,7 @@ export const translations = [
         'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
+        'message-toolbar-collapse.label': 'Collapse message',
 
         'message-body.placeholder': 'Enter message text...',
 

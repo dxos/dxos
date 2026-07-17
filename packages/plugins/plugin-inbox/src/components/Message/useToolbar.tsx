@@ -26,9 +26,11 @@ export type UseMessageToolbarActionsProps = {
   onAiReply?: () => void;
 };
 
-// Body view controls (view-mode switch, load-images) apply to the whole conversation, so they live on
-// the thread toolbar (see {@link useThreadViewActions}), not here — this builds only the per-message
-// actions (reply/forward/…) that target the individual message.
+/**
+ * Body view controls (view-mode switch, load-images) apply to the whole conversation, so they live on
+ * the thread toolbar (see {@link useThreadViewActions}), not here — this builds only the per-message
+ * actions (reply/forward/…) that target the individual message.
+ */
 export const useMessageActions = ({
   graph,
   nodeId,

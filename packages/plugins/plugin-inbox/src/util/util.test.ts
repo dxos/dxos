@@ -9,26 +9,6 @@ import { Message } from '@dxos/types';
 
 import { createDraftMessage, getMessageBodyText, getMessageProps, messageMatchesQuery, orderThreadItems } from './util';
 
-const makeRead = (created: string) =>
-  Obj.make(Message.Message, {
-    created,
-    sender: { name: 'Sender' },
-    blocks: [{ _tag: 'text' as const, text: '' }],
-    properties: { subject: 'Topic' },
-  });
-
-// A draft is a message with an EID `properties.mailbox` (see DraftMessage); any `echo:`-prefixed
-// string is a valid EID. A reply draft also carries `parentMessage`.
-const DRAFT_MAILBOX = 'echo:mailbox';
-const makeDraft = (created: string, parent?: Message.Message) =>
-  Obj.make(Message.Message, {
-    created,
-    sender: { name: 'Me' },
-    ...(parent ? { parentMessage: parent.id } : {}),
-    blocks: [{ _tag: 'text' as const, text: '' }],
-    properties: { subject: 'Re: Topic', mailbox: DRAFT_MAILBOX },
-  });
-
 describe('createDraftMessage', () => {
   test('compose mode returns empty to and provided subject/body', ({ expect }) => {
     const props = createDraftMessage({ mode: 'compose', subject: 'Hi', body: 'Hello' });
@@ -311,3 +291,23 @@ describe('messageMatchesQuery', () => {
     expect(messageMatchesQuery(message, '   ')).toBe(true);
   });
 });
+
+const makeRead = (created: string) =>
+  Obj.make(Message.Message, {
+    created,
+    sender: { name: 'Sender' },
+    blocks: [{ _tag: 'text' as const, text: '' }],
+    properties: { subject: 'Topic' },
+  });
+
+// A draft is a message with an EID `properties.mailbox` (see DraftMessage); any `echo:`-prefixed
+// string is a valid EID. A reply draft also carries `parentMessage`.
+const DRAFT_MAILBOX = 'echo:mailbox';
+const makeDraft = (created: string, parent?: Message.Message) =>
+  Obj.make(Message.Message, {
+    created,
+    sender: { name: 'Me' },
+    ...(parent ? { parentMessage: parent.id } : {}),
+    blocks: [{ _tag: 'text' as const, text: '' }],
+    properties: { subject: 'Re: Topic', mailbox: DRAFT_MAILBOX },
+  });

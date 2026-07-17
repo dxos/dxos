@@ -5,6 +5,7 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type FC,
+  type KeyboardEvent,
   type MouseEvent,
   createContext,
   useCallback,
@@ -133,12 +134,14 @@ export const ConversationStack = composable<HTMLDivElement, ConversationStackPro
     forwardedRef,
   ) => {
     const viewportRef = useRef<HTMLDivElement>(null);
-    const seenIds = useRef<ReadonlySet<string>>(new Set());
 
     const tileItems = useMemo<ConversationTileData[]>(
       () => items.map((message) => ({ id: keyOf(message), message })),
       [items],
     );
+
+    // Seeded with the initial tiles so drafts already present on mount aren't treated as newly appended.
+    const seenIds = useRef<ReadonlySet<string>>(new Set(tileItems.map((item) => item.id)));
 
     const getId = useCallback((item: ConversationTileData) => item.id, []);
 
@@ -236,6 +239,7 @@ type ReadTileProps = {
  * stays granular, and builds reply/forward/delete handlers bound to this message rather than the thread.
  */
 const ReadTile = ({ id, message: messageOrRef }: ReadTileProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const { attendableId, mailbox, viewMode, expanded, onExpandedChange, onContactCreate, companion } =
     useConversationStack();
   // The snapshot drives reactive body/header rendering; the live object (already the item, or the ref's
@@ -255,6 +259,19 @@ const ReadTile = ({ id, message: messageOrRef }: ReadTileProps) => {
       if (clicked instanceof Element && clicked.closest('button,[role="menuitem"],a,input,select,textarea')) {
         return;
       }
+      onExpandedChange(id, false);
+    },
+    [id, onExpandedChange],
+  );
+
+  // Keyboard equivalent of `handleToolbarClick`: only fires when the div itself is focused (not a
+  // bubbled key from one of its button/menuitem children, which handle their own activation).
+  const handleToolbarKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) {
+        return;
+      }
+      event.preventDefault();
       onExpandedChange(id, false);
     },
     [id, onExpandedChange],
@@ -284,7 +301,11 @@ const ReadTile = ({ id, message: messageOrRef }: ReadTileProps) => {
       <div
         className='flex items-center border-be border-subdued-separator cursor-pointer'
         data-testid='message.collapse'
+        role='button'
+        tabIndex={0}
+        aria-label={t('message-toolbar-collapse.label')}
         onClick={handleToolbarClick}
+        onKeyDown={handleToolbarKeyDown}
       >
         <Message.Toolbar classNames='justify-end' />
       </div>
