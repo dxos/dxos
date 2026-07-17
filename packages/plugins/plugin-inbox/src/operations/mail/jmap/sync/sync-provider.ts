@@ -53,7 +53,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
         name: 'jmap',
         config: JMAP_SYNC_CONFIG,
         foreignKeySource: JMAP_MESSAGE_SOURCE,
-        prepare: ({ db, binding, now, token }) =>
+        prepare: ({ db, binding, now, token, maxMessages }) =>
           Effect.gen(function* () {
             const api = yield* JmapMailApi;
             const session = yield* api.getSession;
@@ -140,15 +140,18 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
 
             // Resolve the delta plan. First tick captures the current `Email/get` state before backfill
             // (so mail arriving during backfill is caught by the next incremental, not missed). An
-            // incremental run fetches `Email/changes` since the token; a stale token
+            // incremental run fetches one bounded `Email/changes` chunk since the token (`maxChanges` =
+            // the per-run budget); `hasMoreChanges` drives the harness's `runAgain`, and `newState` is the
+            // chunk boundary the token advances to — so a large delta drains across runs. A stale token
             // (`cannotCalculateChanges`) clears + recaptures and falls back to the window scan.
             let capturedToken: string | undefined = token;
             let createdIds: readonly string[] | undefined;
             let updatedIds: readonly string[] = [];
+            let hasMoreDelta = false;
             if (token === undefined) {
               capturedToken = (yield* api.emailGet(target, [])).state;
             } else {
-              const result = yield* Effect.either(api.emailChanges(target, token));
+              const result = yield* Effect.either(api.emailChanges(target, token, maxMessages));
               if (Either.isRight(result)) {
                 capturedToken = result.right.newState;
                 createdIds = result.right.created;
@@ -157,10 +160,12 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 // (their full fetch already carries current tags).
                 const created = new Set(result.right.created);
                 updatedIds = result.right.updated.filter((id) => !created.has(id));
+                hasMoreDelta = result.right.hasMoreChanges;
                 log('jmap sync: incremental delta', {
                   created: result.right.created.length,
                   updated: result.right.updated.length,
                   destroyed: result.right.destroyed.length,
+                  hasMoreDelta,
                 });
               } else if (result.left.type === 'cannotCalculateChanges') {
                 log('jmap sync: state token stale, falling back to window scan');
@@ -204,6 +209,8 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 return Stream.merge(additions, reconciles);
               },
               nextToken: () => capturedToken,
+              reconcileForeignIds: updatedIds,
+              hasMoreDelta: () => hasMoreDelta,
             };
             return source;
           }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),

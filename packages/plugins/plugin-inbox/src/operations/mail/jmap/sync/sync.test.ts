@@ -706,4 +706,58 @@ describe('runJmapSync against a mock JMAP API', () => {
     ).toString();
     expect(TagIndex.bind(tagIndex).tags(target.id)).toContain(starredUri);
   });
+
+  test('a created delta larger than the per-run budget syncs across bounded runs (maxChanges)', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 3, seed: 94, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(db, { ...base, state: 'state-0' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('state-0');
+
+    // Four new emails arrive across two change steps; with a budget of 3, `Email/changes` returns them in
+    // bounded chunks (`hasMoreChanges` → runAgain), advancing the state token to each chunk's `newState`.
+    const arrivals = generateJmapDataset({
+      count: 4,
+      seed: 95,
+      start: subDays(now, 1),
+      end: now,
+      idPrefix: 'new',
+    }).emails;
+    const dataset = {
+      ...base,
+      emails: [...base.emails, ...arrivals],
+      state: 'state-2',
+      changeLog: [
+        { sinceState: 'state-0', newState: 'state-1', created: [arrivals[0].id, arrivals[1].id] },
+        { sinceState: 'state-1', newState: 'state-2', created: [arrivals[2].id, arrivals[3].id] },
+      ],
+    };
+
+    let runs = 0;
+    let exit: Exit.Exit<unknown, unknown>;
+    do {
+      exit = await EffectEx.runPromise(
+        Effect.exit(runJmapSync({ binding: Ref.make(binding), maxMessages: 3, now })).pipe(
+          Effect.provide(inboxJmapSyncTestServices(db, dataset)),
+        ),
+      );
+      runs += 1;
+      if (Exit.isFailure(exit)) {
+        expect(RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
+      }
+    } while (Exit.isFailure(exit) && runs < 10);
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(runs).toBeGreaterThan(1);
+    expect(tokenOf(binding)).toBe('state-2');
+    const ids = await syncedIdsOf(db, mailbox);
+    for (const arrival of arrivals) {
+      expect(ids).toContain(arrival.id);
+    }
+    expect(ids.length).toBe(base.emails.length + 4);
+  });
 });

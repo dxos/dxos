@@ -228,10 +228,12 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
             list: ids.map((id) => byId.get(id)).filter(Predicate.isNotNullable),
             state: dataset.state,
           })),
-        // Aggregates the change-log steps chaining from `sinceState`; an unknown/evicted state (no
-        // chain match, and not already the latest) fails with `cannotCalculateChanges`, matching a
-        // server past its retention window.
-        emailChanges: (_target, sinceState) =>
+        // Chains the change-log steps from `sinceState`, honoring `maxChanges`: it stops before a step
+        // that would exceed the budget (always including at least one, so a single oversized step still
+        // makes progress), sets `hasMoreChanges`, and returns the intermediate `newState` as the chunk
+        // boundary to resume from. An unknown/evicted state (no chain match, not already the latest) fails
+        // with `cannotCalculateChanges`, matching a server past its retention window.
+        emailChanges: (_target, sinceState, maxChanges) =>
           Effect.gen(function* () {
             const latest = dataset.state ?? sinceState;
             if (sinceState === latest) {
@@ -249,8 +251,20 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
             const destroyed: string[] = [];
             let chain = sinceState;
             let matched = false;
+            let hasMoreChanges = false;
             for (const step of dataset.changeLog ?? []) {
               if (step.sinceState === chain) {
+                const stepSize =
+                  (step.created?.length ?? 0) + (step.updated?.length ?? 0) + (step.destroyed?.length ?? 0);
+                // Stop before overflowing the budget, but never before the first step (guarantees progress).
+                if (
+                  maxChanges !== undefined &&
+                  chain !== sinceState &&
+                  created.length + updated.length + destroyed.length + stepSize > maxChanges
+                ) {
+                  hasMoreChanges = true;
+                  break;
+                }
                 matched = true;
                 created.push(...(step.created ?? []));
                 updated.push(...(step.updated ?? []));
@@ -263,7 +277,7 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
                 new JmapApiError(undefined, 'Cannot calculate changes', 'cannotCalculateChanges'),
               );
             }
-            return { oldState: sinceState, newState: chain, hasMoreChanges: false, created, updated, destroyed };
+            return { oldState: sinceState, newState: chain, hasMoreChanges, created, updated, destroyed };
           }),
         downloadBlob: (_target, blobId) => {
           const bytes = dataset.blobs?.[blobId];

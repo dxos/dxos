@@ -349,7 +349,7 @@ describe('token accessors', () => {
   });
 });
 
-describe('foreignIndex (buildEntityMap)', () => {
+describe('foreignIndex (reconcileFilter)', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -360,7 +360,7 @@ describe('foreignIndex (buildEntityMap)', () => {
     await builder.close();
   });
 
-  test('maps every committed foreignId to its EntityId, matching dedup-set membership', async ({ expect }) => {
+  test('maps the reconcile filter’s foreignIds to their EntityIds', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
     const feed = db.add(Feed.make());
     const target = db.add(Expando.make({ name: 'mailbox' }));
@@ -380,7 +380,11 @@ describe('foreignIndex (buildEntityMap)', () => {
           feed,
           foreignKeySource: 'test',
           maxKey: 0,
-          buildEntityMap: true,
+          // Resolve only the two messages the reconcile targets, not the whole feed.
+          reconcileFilter: Filter.foreignKeys(Expando.Expando, [
+            { source: 'test', id: 'id-10' },
+            { source: 'test', id: 'id-30' },
+          ]),
           stats: { newMessages: 0 },
         }),
       ),
@@ -389,16 +393,13 @@ describe('foreignIndex (buildEntityMap)', () => {
     );
 
     expect(state.foreignIndex).toBeDefined();
-    expect([...state.foreignIndex!.keys()].sort()).toEqual(['id-10', 'id-20', 'id-30']);
-    // Every foreignId in the dedup set resolves to a real EntityId via the index.
-    for (const foreignId of state.dedupSet) {
-      expect(state.foreignIndex!.get(foreignId)).toBeDefined();
-    }
+    expect([...state.foreignIndex!.keys()].sort()).toEqual(['id-10', 'id-30']);
     // The mapped EntityId is the feed message's own id.
-    expect(state.foreignIndex!.get('id-20')).toBe(items[1].id);
+    expect(state.foreignIndex!.get('id-10')).toBe(items[0].id);
+    expect(state.foreignIndex!.get('id-30')).toBe(items[2].id);
   });
 
-  test('is absent when buildEntityMap is not set — the add-only path pays nothing', async ({ expect }) => {
+  test('is absent when no reconcileFilter is set — the add-only path pays nothing', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
     const feed = db.add(Feed.make());
     const target = db.add(Expando.make({ name: 'mailbox' }));

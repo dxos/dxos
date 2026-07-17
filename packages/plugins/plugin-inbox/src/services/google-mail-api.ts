@@ -88,11 +88,6 @@ export interface GmailDataset {
   readonly historyId?: string;
   /** Ordered `history.list` steps chaining `startHistoryId` → `historyId`, each carrying the delta. */
   readonly historyLog?: readonly GmailHistoryStep[];
-  /**
-   * Records per `history.list` page — set to force a multi-page delta (the mock returns `nextPageToken`
-   * until drained), exercising the caller's pagination. Absent returns the whole delta in one page.
-   */
-  readonly historyPageSize?: number;
 }
 
 /** One `history.list` step in a {@link GmailDataset}'s history log. */
@@ -225,19 +220,14 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
             if (!matched) {
               return yield* Effect.fail(new GoogleApiError(404, 'Requested entity was not found.'));
             }
-            // A chain that matches but does not reach the mailbox's current `historyId` means the start id
-            // is too old (a gap in the log) — treat it like an evicted id past retention.
-            if (latest !== undefined && chain !== latest) {
-              return yield* Effect.fail(new GoogleApiError(404, 'Requested entity was not found.'));
-            }
-            const pageSize = dataset.historyPageSize ?? (records.length || 1);
-            const offset = options.pageToken ? Number.parseInt(options.pageToken, 10) : 0;
-            const page = records.slice(offset, offset + pageSize);
-            const nextOffset = offset + page.length;
+            // One bounded page per call (honors `maxResults`). The caller resumes across runs from the
+            // last record's id (not `pageToken`), so more records simply mean a non-empty `nextPageToken`.
+            const pageSize = options.maxResults ?? (records.length || 1);
+            const page = records.slice(0, pageSize);
             return {
               history: page,
               historyId: latest ?? options.startHistoryId,
-              nextPageToken: nextOffset < records.length ? String(nextOffset) : undefined,
+              nextPageToken: page.length < records.length ? 'more' : undefined,
             };
           }),
         getAttachment: (_userId, _messageId, attachmentId) => {

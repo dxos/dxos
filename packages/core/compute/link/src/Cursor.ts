@@ -397,9 +397,9 @@ export type State = {
   /** Foreign ids already committed (seeded from the feed, extended as pages commit). */
   readonly dedupSet: Set<string>;
   /**
-   * Full foreignId → EntityId map, built from the feed only when `buildEntityMap` is set — lets the
-   * reconcile branch resolve an already-committed message's EntityId to retag/remove it. Absent on the
-   * add-only path (which pays nothing to build it).
+   * foreignId → EntityId map for the delta's messages, built only when a `reconcileFilter` is supplied —
+   * lets the reconcile branch resolve an already-committed message's EntityId to retag/remove it. Absent
+   * on the add-only path (which pays nothing to build it).
    */
   readonly foreignIndex?: ReadonlyMap<string, Obj.ID>;
   /** Serializes the advanced cursor key for storage on the cursor. */
@@ -454,11 +454,12 @@ export type LayerOptions = Omit<
   /** Overrides {@link DEFAULT_DEDUP_SEED_TAIL} — set per pipeline when its commit page size warrants it. */
   readonly dedupSeedTail?: number;
   /**
-   * Build the full {@link State.foreignIndex} from the feed (one unlimited read). Set only on a run
-   * that reconciles label/delete deltas against already-committed messages; the add-only path leaves it
-   * off so it pays nothing.
+   * Filter selecting exactly the already-committed feed messages a reconcile run needs to resolve to
+   * their EntityIds (built by the caller as `Filter.foreignKeys(<message schema>, <delta keys>)`). When
+   * set, {@link State.foreignIndex} is built from *this* query rather than the whole feed, so the cost
+   * is O(delta) once the query engine supports feed filter pushdown. Absent on the add-only path.
    */
-  readonly buildEntityMap?: boolean;
+  readonly reconcileFilter?: Filter.Any;
 };
 
 /**
@@ -475,9 +476,11 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
       const { feed, dedupSeedTail = DEFAULT_DEDUP_SEED_TAIL } = options;
       // DB-target runs (no feed) dedup via the cursor + idempotent write; nothing to seed.
       const dedupSet = feed ? yield* seedDedupSet(feed, options.foreignKeySource, dedupSeedTail) : new Set<string>();
-      // Only reconcile runs build the full foreignId → EntityId map (one unlimited feed read).
+      // Only reconcile runs build the foreignId → EntityId map, and only for the delta's messages.
       const foreignIndex =
-        feed && options.buildEntityMap ? yield* seedForeignIndex(feed, options.foreignKeySource) : undefined;
+        feed && options.reconcileFilter
+          ? yield* seedForeignIndex(feed, options.foreignKeySource, options.reconcileFilter)
+          : undefined;
       return {
         ...options,
         minKey: options.minKey ?? 0,
@@ -681,17 +684,20 @@ const DEFAULT_DEDUP_SEED_TAIL = 500;
  * interleave.
  */
 /**
- * Builds the full foreignId → EntityId map from a single unlimited feed read. Unlike {@link seedDedupSet}
- * (a bounded tail read that only needs the boundary items), reconciliation must resolve *any*
- * already-committed message — a label change can target a message far older than the seed tail — so this
- * decodes the whole feed once. Feed messages live in a queue, so `db.query(Filter.foreignKeys)` can't
- * find them; the foreign id is read off `Obj.getMeta(item).keys`.
+ * Builds a foreignId → EntityId map for exactly the messages a reconcile run targets, selected by the
+ * caller-supplied `reconcileFilter` (`Filter.foreignKeys(<schema>, <delta keys>)`). Unlike
+ * {@link seedDedupSet} (a bounded tail read for the boundary items), reconciliation must resolve *any*
+ * already-committed message — a label change can target a message far older than the seed tail — but it
+ * only needs the delta's messages, not the whole feed. The foreign id is read off `Obj.getMeta(item)`
+ * (feed messages live in a queue). Today a feed query still decodes the whole feed, so this is written
+ * to express O(delta) intent for when the engine gains filter pushdown.
  */
 const seedForeignIndex = (
   feed: Feed.Feed,
   foreignKeySource: string,
+  reconcileFilter: Filter.Any,
 ): Effect.Effect<ReadonlyMap<string, Obj.ID>, never, Database.Service> =>
-  Feed.query(feed, Query.select(Filter.everything())).run.pipe(
+  Feed.query(feed, Query.select(reconcileFilter)).run.pipe(
     Effect.map((items) => {
       const index = new Map<string, Obj.ID>();
       for (const item of items) {

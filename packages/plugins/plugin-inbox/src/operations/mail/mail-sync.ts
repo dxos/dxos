@@ -10,14 +10,14 @@ import * as Stream from 'effect/Stream';
 import { Capability } from '@dxos/app-framework';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Obj, type Ref } from '@dxos/echo';
+import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { type TagIndex } from '@dxos/schema';
-import { type ContentBlock } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { MailSyncError } from '../../errors';
 import { Mailbox, type SyncStreamConfig } from '../../types';
@@ -93,11 +93,24 @@ export type MailSyncSource = {
     options: MailSyncSourceOptions,
   ) => Stream.Stream<EmailStage.Change, MailSyncError, Cursor.Service>;
   /**
-   * The opaque delta-resume token captured during this run's fetch (first-tick / staleness paths return
-   * the freshly-captured provider token), read by the harness at run end and written to the cursor only
-   * after the stream has fully drained. Absent for providers with no delta path.
+   * The opaque delta-resume token at this run's chunk boundary (first-tick / staleness paths return the
+   * freshly-captured provider token), read by the harness at run end and written to the cursor only after
+   * the stream has fully drained. Advancing to a *chunk* boundary (not the whole delta) is what bounds a
+   * run: a large delta is drained across runs. Absent for providers with no delta path.
    */
   readonly nextToken?: () => string | undefined;
+  /**
+   * The already-committed feed foreign ids this run's reconcile branch targets (JMAP `updated`, Gmail
+   * label-change message ids). The harness resolves *only* these to EntityIds (see
+   * `Cursor.LayerOptions.reconcileFilter`) rather than scanning the whole feed.
+   */
+  readonly reconcileForeignIds?: readonly string[];
+  /**
+   * Whether the provider has more delta beyond the chunk fetched this run. When true the harness requests
+   * a durable `runAgain()` so reconciliation is bounded per run and resumed from the advanced token —
+   * the same budget/re-run treatment additions already get.
+   */
+  readonly hasMoreDelta?: () => boolean;
 };
 
 /** Resolved run context the harness hands a provider's {@link MailSyncProviderService.prepare}. */
@@ -109,6 +122,8 @@ export type MailSyncPreparation = {
   readonly now: Date;
   /** The cursor's current delta-resume token, or undefined on the first tick / after staleness. */
   readonly token?: string;
+  /** Per-run budget — the provider bounds its delta chunk (JMAP `maxChanges`, Gmail `maxResults`) to it. */
+  readonly maxMessages: number;
 };
 
 /** The provider-specific surface the shared harness runs against. */
@@ -264,7 +279,7 @@ export const runMailSync = (
     const token = Cursor.readToken(binding);
 
     // Session/target discovery + the provider's label/folder→tag map; undefined skips the run.
-    const source = yield* provider.prepare({ db, binding, mailbox, now, token });
+    const source = yield* provider.prepare({ db, binding, mailbox, now, token, maxMessages });
     if (!source) {
       return { newMessages: 0 };
     }
@@ -443,8 +458,15 @@ export const runMailSync = (
             trackRange: true,
             stats,
             extent,
-            // Only an incremental (token) run reconciles label changes, so only it pays to build the map.
-            buildEntityMap: token !== undefined,
+            // Resolve EntityIds for only the delta's reconcile messages (not the whole feed). Absent when
+            // there's nothing to reconcile this run.
+            reconcileFilter:
+              source.reconcileForeignIds && source.reconcileForeignIds.length > 0
+                ? Filter.foreignKeys(
+                    Message.Message,
+                    source.reconcileForeignIds.map((id) => ({ source: provider.foreignKeySource, id })),
+                  )
+                : undefined,
             dedupSeedTail: options.dedupSeedTail,
           }),
         ),
@@ -486,30 +508,35 @@ export const runMailSync = (
       Cursor.extendRange(binding, extent);
 
       const capped = taken >= maxMessages;
+      // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
+      // and more remain. Both signals mean "re-run", but only `!capped` advances state.
+      const hasMoreDelta = source.hasMoreDelta?.() ?? false;
       log('mail sync run finished', {
         provider: provider.name,
         mailbox: Obj.getURI(mailbox),
         taken,
         maxMessages,
         capped,
+        hasMoreDelta,
         newMessages: stats.newMessages,
-        action: capped ? 'runAgain' : 'completeBackfill',
+        action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
       });
       if (!capped) {
-        // Both halves exhausted naturally (not just capped) — the backward half reached the horizon.
+        // Additions weren't truncated, so this run's chunk fully drained. Mark backfill done (the backward
+        // half reached the horizon) and advance the delta token LAST, only after the merged add+reconcile
+        // stream committed. Advancing to the *chunk* boundary bounds each run: a large delta drains over
+        // several runs. A crash/cap leaves the token unadvanced → the next run re-fetches the same chunk
+        // (additions dedup-drop, tag ops re-apply idempotently).
         Cursor.completeBackfill(binding, horizon.getTime());
-        // Advance the delta-resume token LAST, only after the merged add+reconcile stream has fully
-        // drained through the single commit. A crash/cap leaves it unadvanced → the next run re-fetches
-        // the whole delta (additions dedup-drop, tag ops re-apply idempotently). See the invariant.
         const nextToken = source.nextToken?.();
         if (nextToken !== undefined) {
           Cursor.writeToken(binding, nextToken);
         }
-      } else {
-        // Capped: more to sync. A re-run (rather than an in-process loop) keeps this invocation bounded
-        // and lets the durable runtime schedule the continuation. Progress is already committed, so the
-        // next run resumes from the advanced cursor. The token stays unadvanced so the re-run re-fetches
-        // the rest of the delta.
+      }
+      if (capped || hasMoreDelta) {
+        // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
+        // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
+        // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
         yield* Operation.runAgain().pipe(Effect.orDie);
       }
     }

@@ -637,7 +637,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(ids.length).toBe(base.messages.length + 1);
   });
 
-  test('a multi-page incremental delta drains every history page, not just the first', async ({ expect }) => {
+  test('a label-change delta larger than the per-run budget reconciles across bounded runs', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateGmailDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });
     const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
@@ -650,39 +650,54 @@ describe('runGoogleSync against a mock Gmail API', () => {
     );
     expect(tokenOf(binding)).toBe('1000');
 
-    // Three messages arrive across three history steps (1000 → 1001 → 1002 → 1003). With one record per
-    // page, the delta spans three pages, and Gmail reports the *current* historyId ('1003') on every
-    // page — so a caller that read only page one would advance the token to '1003' and drop the last two
-    // arrivals. Draining every page picks up all three.
-    const arrivals = generateGmailDataset({
-      count: 3,
-      seed: 86,
-      start: subDays(now, 1),
-      end: now,
-      idPrefix: 'multi',
-    }).messages;
-    const run2 = {
+    // Four label-change steps — the 'Work' label (Label_1) added to four already-synced messages —
+    // chained 1000 → 1004. With a per-run budget of 2 records, the reconcile drains across bounded runs
+    // (`hasMoreDelta` → runAgain), advancing the token to each chunk's last record id; no single run holds
+    // the whole delta, and each run resolves only its chunk's messages (targeted foreign-key lookup).
+    const targets = base.messages.slice(0, 4).map((message) => message.id);
+    const dataset = {
       ...base,
-      messages: [...base.messages, ...arrivals],
-      historyId: '1003',
-      historyPageSize: 1,
-      historyLog: [
-        { startHistoryId: '1000', historyId: '1001', messagesAdded: [arrivals[0].id] },
-        { startHistoryId: '1001', historyId: '1002', messagesAdded: [arrivals[1].id] },
-        { startHistoryId: '1002', historyId: '1003', messagesAdded: [arrivals[2].id] },
-      ],
+      historyId: '1004',
+      historyLog: targets.map((id, index) => ({
+        startHistoryId: String(1000 + index),
+        historyId: String(1001 + index),
+        labelsAdded: [{ id, labelIds: ['Label_1'] }],
+      })),
     };
-    const r2 = await EffectEx.runPromise(
-      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2))),
-    );
 
-    expect(r2.newMessages).toBe(3);
-    expect(tokenOf(binding)).toBe('1003');
-    const ids = await syncedIdsOf(db, mailbox);
-    for (const arrival of arrivals) {
-      expect(ids).toContain(arrival.id);
+    let runs = 0;
+    let exit: Exit.Exit<unknown, unknown>;
+    do {
+      exit = await EffectEx.runPromise(
+        Effect.exit(runGoogleSync({ binding: Ref.make(binding), maxMessages: 2, now })).pipe(
+          Effect.provide(inboxSyncTestServices(db, dataset)),
+        ),
+      );
+      runs += 1;
+      if (Exit.isFailure(exit)) {
+        expect(RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
+      }
+    } while (Exit.isFailure(exit) && runs < 10);
+
+    // Bounded: the 4-record delta took more than one run, and the token reached the mailbox's current id.
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(runs).toBeGreaterThan(1);
+    expect(tokenOf(binding)).toBe('1004');
+
+    // Reconcile-only: no new feed messages, and every target gained the Label_1 tag.
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(base.messages.length);
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const label1Uri = Obj.getURI(
+      tags.find((tag) => Obj.getMeta(tag).keys.some((key) => key.id === 'Label_1'))!,
+    ).toString();
+    for (const id of targets) {
+      const target = feedMessages.find((message) =>
+        Obj.getMeta(message).keys.some((key) => key.id === id && key.source === GMAIL_SOURCE),
+      )!;
+      expect(TagIndex.bind(tagIndex).tags(target.id)).toContain(label1Uri);
     }
-    expect(ids.length).toBe(base.messages.length + 3);
   });
 
   test('a stale historyId clears it, falls back to the window scan, and recaptures', async ({ expect }) => {
