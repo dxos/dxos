@@ -81,6 +81,23 @@ export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
 export const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
 
 /**
+ * In (subquery form) — membership against a value projected from a subquery's results,
+ * e.g. `threadId IN (SELECT threadId FROM feed WHERE tag = 'inbox')`.
+ *
+ * Nested-only (like {@link FilterIn}): valid inside an `object` filter's `props`, not at
+ * the query root — the planner has no selector for a standalone membership predicate.
+ * The subquery may target a different scope than the parent query; it is resolved once at
+ * execution time by projecting `property` from its results into a set.
+ */
+const FilterInQuery_ = Schema.Struct({
+  type: Schema.Literal('in-query'),
+  subquery: Schema.suspend(() => Query),
+  property: Schema.String,
+});
+export interface FilterInQuery extends Schema.Schema.Type<typeof FilterInQuery_> {}
+export const FilterInQuery: Schema.Schema<FilterInQuery> = FilterInQuery_;
+
+/**
  * Contains.
  */
 const FilterContains_ = Schema.Struct({
@@ -200,6 +217,7 @@ export const Filter = Schema.Union(
   FilterObject,
   FilterCompare,
   FilterIn,
+  FilterInQuery,
   FilterContains,
   FilterTag,
   FilterRange,

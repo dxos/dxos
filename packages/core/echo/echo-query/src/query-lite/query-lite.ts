@@ -31,6 +31,7 @@ import type { DXN, EID, EntityId, URI } from '@dxos/keys';
 const OrderTypeId: Order$.OrderTypeId = '~@dxos/echo/Order';
 const FilterTypeId: Filter$.FilterTypeId = '~@dxos/echo/Filter';
 const QueryTypeId: Query$.QueryTypeId = '~@dxos/echo/Query';
+const ProjectionTypeId: Query$.ProjectionTypeId = '~@dxos/echo/Query.Projection';
 
 class OrderClass implements Order$.Any {
   private static 'variance': Order$.Any[typeof OrderTypeId] = {} as Order$.Any[typeof OrderTypeId];
@@ -113,6 +114,10 @@ const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolea
     }
     case 'in':
       return filter.values.includes(value);
+    case 'in-query':
+      // The QuickJS sandbox has no database access to run a subquery — a semi-join predicate
+      // must be resolved to a literal `in` by the query executor before reaching this matcher.
+      throw new Error('in-query filters are not supported in the sandboxed toPredicate matcher.');
     case 'range':
       return (value as any) >= filter.from && (value as any) <= filter.to;
     case 'not':
@@ -549,6 +554,10 @@ class QueryClass implements Query$.Any {
     }
   }
 
+  project(property: string): Query$.Projection {
+    return { [ProjectionTypeId]: true, query: this.ast, property };
+  }
+
   static type<S extends Schema.Schema.All>(
     schema: S,
     predicates?: Filter$.Props<Schema.Schema.Type<S>>,
@@ -583,6 +592,10 @@ class QueryClass implements Query$.Any {
       source: source.ast,
       exclude: exclude.ast,
     });
+  }
+
+  static project(query: Query$.Any, property: string): Query$.Projection {
+    return { [ProjectionTypeId]: true, query: query.ast, property };
   }
 
   static from(...args: any[]): Query$.Any {
@@ -858,6 +871,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.${filter.operator}(${JSON.stringify(filter.value)})`;
     case 'in':
       return `Filter.in(${filter.values.map((v) => JSON.stringify(v)).join(', ')})`;
+    case 'in-query':
+      return `Filter.in(${prettyQuery(filter.subquery)}.project(${JSON.stringify(filter.property)}))`;
     case 'contains':
       return `Filter.contains(${JSON.stringify(filter.value)})`;
     case 'range':

@@ -9,7 +9,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { QueryPlanner } from './query-planner';
+import { QueryPlanner, filterContainsInQuery } from './query-planner';
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();
@@ -1938,6 +1938,110 @@ describe('QueryPlanner', () => {
     const hasLimitStep = plan.steps.some((step) => step._tag === 'LimitStep');
     const orderWithLimit = plan.steps.some((step) => step._tag === 'OrderStep' && (step as any).limit === 10);
     expect(hasLimitStep || orderWithLimit).toBe(true);
+  });
+
+  describe('Filter.in subquery (semi-join)', () => {
+    const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+
+    test('nested in-query rides inside the residual object FilterStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }));
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep']);
+
+      const filterStep = plan.steps.find((step) => step._tag === 'FilterStep');
+      expect(filterStep).toMatchObject({
+        filter: {
+          type: 'object',
+          props: {
+            title: {
+              type: 'in-query',
+              property: 'title',
+              subquery: subquery.ast,
+            },
+          },
+        },
+      });
+    });
+
+    test('root Filter.in(projection) throws query too complex', () => {
+      const query = Query.select(Filter.in(subquery.project('title')));
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
+    });
+
+    test('Filter.and(type, root in-query) throws query too complex', () => {
+      const query = Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.in(subquery.project('title'))));
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
+    });
+
+    test('_filterContainsInQuery detects a nested in-query in object props', () => {
+      const filter = Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }).ast;
+      expect(filterContainsInQuery(filter)).toBe(true);
+      expect(filterContainsInQuery(Filter.type(TestSchema.Task).ast)).toBe(false);
+    });
+
+    test('_filterContainsInQuery detects in-query nested inside and/or/not', () => {
+      const inQueryFilter = Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }).ast;
+      expect(filterContainsInQuery({ type: 'not', filter: inQueryFilter })).toBe(true);
+      expect(filterContainsInQuery({ type: 'and', filters: [Filter.type(TestSchema.Person).ast, inQueryFilter] })).toBe(
+        true,
+      );
+      expect(filterContainsInQuery({ type: 'or', filters: [Filter.type(TestSchema.Person).ast, inQueryFilter] })).toBe(
+        true,
+      );
+    });
+
+    test('limit-guard: limit is retained (not folded into SelectStep) when a nested in-query is present', () => {
+      const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }))
+        .orderBy(Order.natural('asc'))
+        .limit(10);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const selectStep = plan.steps.find((step) => step._tag === 'SelectStep');
+      expect((selectStep as any).limit).toBeUndefined();
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect((orderStep as any).limit).toBeUndefined();
+      expect(plan.steps.some((step) => step._tag === 'LimitStep')).toBe(true);
+    });
+
+    test('negative control: without in-query, the limit folds into the OrderStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('asc')).limit(10);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      expect(plan.steps.some((step) => step._tag === 'LimitStep')).toBe(false);
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect((orderStep as any).limit).toBe(10);
+    });
+
+    test('composes below aggregate + limit: the semi-join FilterStep runs before grouping', () => {
+      const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }))
+        .orderBy(Order.property('title', 'asc'))
+        .aggregate({ title: Aggregate.group('title'), count: Aggregate.count() })
+        .orderBy(Order.property('count', 'desc'))
+        .limit(10);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      // The group-level limit stays a distinct LimitStep after AggregateStep (AggregateStep is a
+      // BLOCKER in _optimizeLimits); the semi-join FilterStep runs before OrderStep/AggregateStep.
+      expect(tags).toEqual([
+        'SelectStep',
+        'FilterDeletedStep',
+        'FilterStep',
+        'OrderStep',
+        'AggregateStep',
+        'OrderStep',
+        'LimitStep',
+      ]);
+
+      const filterStepIndex = tags.indexOf('FilterStep');
+      const aggregateStepIndex = tags.indexOf('AggregateStep');
+      expect(filterStepIndex).toBeLessThan(aggregateStepIndex);
+
+      const filterStep = plan.steps[filterStepIndex];
+      expect(filterStep).toMatchObject({ filter: { type: 'object', props: { title: { type: 'in-query' } } } });
+    });
   });
 });
 

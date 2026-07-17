@@ -355,6 +355,45 @@ describe('usePagination', () => {
     ]);
   });
 
+  test('pages over whole groups produced by a subquery semi-join (Filter.in(query.project(...)))', async () => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'semi-join' }));
+
+    // Three "threads" by title; only threads with an explicitly completed member qualify.
+    await db.appendToFeed(feed, [
+      Obj.make(TestSchema.Task, { title: 'a', completed: true }),
+      Obj.make(TestSchema.Task, { title: 'a', completed: false }),
+      Obj.make(TestSchema.Task, { title: 'b', completed: true }),
+      Obj.make(TestSchema.Task, { title: 'b', completed: false }),
+      Obj.make(TestSchema.Task, { title: 'c', completed: false }), // no qualifying member — excluded
+    ]);
+
+    const matches = Query.select(Filter.type(TestSchema.Task, { completed: true })).from(feed);
+    const source = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(matches.project('title')) }))
+      .from(feed)
+      .orderBy(Order.natural('asc'))
+      .aggregate({ title: Aggregate.group('title'), items: Aggregate.items() })
+      .limit(1);
+    const { result } = renderHook(() => usePagination(db, source));
+
+    // First page: one whole qualifying thread (both members), not a partial row slice.
+    await waitFor(() => {
+      expect(result.current.items).toHaveLength(1);
+    });
+    expect(result.current.items[0].items).toHaveLength(2);
+    expect(result.current.hasMore).toBe(true);
+
+    result.current.getNext();
+
+    // Second page reveals the other qualifying thread; the non-qualifying thread 'c' never appears.
+    await waitFor(() => {
+      expect(result.current.items.map((group) => group.title).sort()).toEqual(['a', 'b']);
+    });
+    expect(result.current.items.every((group) => group.items.length === 2)).toBe(true);
+    expect(result.current.items.some((group) => group.title === 'c')).toBe(false);
+  });
+
   test('orders and pages groups by a max aggregate in both directions', async () => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();

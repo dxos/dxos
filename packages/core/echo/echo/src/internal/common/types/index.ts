@@ -10,6 +10,7 @@ export * from './entity';
 // would create an eval-order cycle (TDZ on `createAnnotationHelper`). Import meta from `./meta`
 // directly, or from the top-level `@dxos/echo/internal` barrel (re-exported there after Ref loads).
 export * from './model-symbols';
+export * from './projection';
 export * from './typename';
 export * from './version';
 export * from './well-known-types';

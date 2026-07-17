@@ -33,7 +33,7 @@ import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
 import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by';
 import { QueryPlan } from './plan';
-import { QueryPlanner } from './query-planner';
+import { QueryPlanner, filterContainsInQuery } from './query-planner';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -428,6 +428,14 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
         if (step.filter.type === 'child-of') {
           scopes.isSimple = false;
         }
+        // A nested in-query (subquery-membership) predicate's result depends on the subquery's
+        // own scope/typenames — which may differ entirely from this query's — so a hint scoped
+        // to this query's dimensions could miss a change that alters the subquery's result set.
+        // `filterContainsInQuery` (not a bare `step.filter.type` check) is required: the residual
+        // filter here is always `type: 'object'` with the in-query nested in `props`.
+        if (filterContainsInQuery(step.filter)) {
+          scopes.isSimple = false;
+        }
         break;
       }
       case 'TraverseStep':
@@ -522,6 +530,18 @@ export class QueryExecutor extends Resource {
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
 
+  /**
+   * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
+   * `JSON.stringify(subquery) + '\0' + property`. Two FilterSteps embedding the same subquery
+   * (e.g. both branches of a `Query.all` union) share one resolution instead of re-running it;
+   * the `Promise` (rather than the resolved value) is cached so concurrent lookups — `UnionStep`
+   * branches execute via `Promise.all` — await the same in-flight resolution instead of racing.
+   * Cleared at the top of every `execQuery()` since subquery results can change between runs.
+   */
+  #inQuerySetCache = new Map<string, Promise<{ values: ReadonlySet<unknown>; trace: ExecutionTrace }>>();
+  /** Subquery-resolution traces already attached to a FilterStep's trace this `execQuery` run. */
+  #inQueryTracesAttached = new Set<string>();
+
   constructor(options: QueryExecutorOptions) {
     super();
 
@@ -612,6 +632,11 @@ export class QueryExecutor extends Resource {
       queryId: this._id,
       query: Query.pretty(Query.fromAst(this._query)),
     });
+
+    // Subquery results can change between reactive runs, so resolved `in-query` sets must not
+    // survive across `execQuery` calls.
+    this.#inQuerySetCache = new Map();
+    this.#inQueryTracesAttached = new Set();
 
     const prevResultSet = this._lastResultSet;
     const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
@@ -993,15 +1018,23 @@ export class QueryExecutor extends Resource {
       });
     }
 
+    // A nested `in-query` (subquery-membership) predicate is not a matcher-level concept — resolve
+    // each one to a concrete literal `in` before falling through to the normal in-memory matchers,
+    // which only know how to test a value against a static set.
+    const subqueryTraces: ExecutionTrace[] = [];
+    const filter = filterContainsInQuery(step.filter)
+      ? await this._resolveInQueryFilter(step.filter, subqueryTraces)
+      : step.filter;
+
     const result = workingSet.filter((item) => {
       if (item.doc) {
-        return filterMatchDoc(step.filter, {
+        return filterMatchDoc(filter, {
           id: item.objectId,
           spaceId: item.spaceId,
           doc: item.doc,
         });
       } else if (item.data) {
-        return filterMatchObjectJSON(step.filter, item.data);
+        return filterMatchObjectJSON(filter, item.data);
       } else {
         return false;
       }
@@ -1014,8 +1047,98 @@ export class QueryExecutor extends Resource {
         name: 'Filter',
         details: JSON.stringify(step.filter),
         objectCount: result.length,
+        children: subqueryTraces,
       },
     };
+  }
+
+  /**
+   * Recursively rewrites every `in-query` node in `filter` to a literal `in` node, resolving each
+   * subquery's projected value set at most once per `execQuery` run (see `#inQuerySetCache`).
+   * `subqueryTraces` collects the resolution's `ExecutionTrace` the first time each subquery is
+   * resolved this run, so its cost is visible under the FilterStep that triggered it.
+   */
+  private async _resolveInQueryFilter(
+    filter: QueryAST.Filter,
+    subqueryTraces: ExecutionTrace[],
+  ): Promise<QueryAST.Filter> {
+    switch (filter.type) {
+      case 'in-query': {
+        const { values, trace } = await this._resolveInQuerySet(filter);
+        const cacheKey = _inQueryCacheKey(filter);
+        if (!this.#inQueryTracesAttached.has(cacheKey)) {
+          this.#inQueryTracesAttached.add(cacheKey);
+          subqueryTraces.push(trace);
+        }
+        return { type: 'in', values: [...values] };
+      }
+      case 'object': {
+        if (Object.keys(filter.props).length === 0) {
+          return filter;
+        }
+        const props: Record<string, QueryAST.Filter> = {};
+        for (const [key, propFilter] of Object.entries(filter.props)) {
+          props[key] = await this._resolveInQueryFilter(propFilter, subqueryTraces);
+        }
+        return { ...filter, props };
+      }
+      case 'not':
+        return { ...filter, filter: await this._resolveInQueryFilter(filter.filter, subqueryTraces) };
+      case 'and':
+        return {
+          ...filter,
+          filters: await Promise.all(filter.filters.map((f) => this._resolveInQueryFilter(f, subqueryTraces))),
+        };
+      case 'or':
+        return {
+          ...filter,
+          filters: await Promise.all(filter.filters.map((f) => this._resolveInQueryFilter(f, subqueryTraces))),
+        };
+      default:
+        return filter;
+    }
+  }
+
+  /**
+   * Resolves a single `in-query` node's projected value set, sharing one resolution across every
+   * occurrence of the same subquery+property within this `execQuery` run (e.g. both branches of a
+   * `Query.all` union embedding the same subquery). The `Promise` is cached (not just the value) so
+   * concurrent callers — `UnionStep` branches run under `Promise.all` — await the same in-flight
+   * resolution instead of each starting their own.
+   */
+  private _resolveInQuerySet(
+    node: QueryAST.FilterInQuery,
+  ): Promise<{ values: ReadonlySet<unknown>; trace: ExecutionTrace }> {
+    const cacheKey = _inQueryCacheKey(node);
+    let cached = this.#inQuerySetCache.get(cacheKey);
+    if (!cached) {
+      cached = this._computeInQuerySet(node);
+      this.#inQuerySetCache.set(cacheKey, cached);
+    }
+    return cached;
+  }
+
+  private async _computeInQuerySet(
+    node: QueryAST.FilterInQuery,
+  ): Promise<{ values: ReadonlySet<unknown>; trace: ExecutionTrace }> {
+    // TODO(dmaretskyi): Push membership into the SQL index once custom property indexes are
+    // supported, instead of a full in-memory scan of the subquery's candidates.
+    const subPlan = new QueryPlanner().createPlan(node.subquery);
+    const { workingSet: subResults, trace } = await this._execPlan(subPlan, []);
+    trace.name = 'Subquery';
+    trace.details = Query.pretty(Query.fromAst(node.subquery));
+
+    const values = new Set<unknown>();
+    for (const item of subResults) {
+      const rawValue = QueryItem.getProperty(item, [node.property]);
+      // Omit missing/null projected values so a subquery object lacking the property never
+      // broadens the membership set (it must not make parents that also lack the property match).
+      if (rawValue === undefined || rawValue === null) {
+        continue;
+      }
+      values.add(isEncodedReference(rawValue) ? EncodedReference.toURI(rawValue) : rawValue);
+    }
+    return { values, trace };
   }
 
   private async _execTimestampFilterStep(
@@ -2058,3 +2181,9 @@ function filterContainsTimestamp(filter: QueryAST.Filter): boolean {
   }
   return false;
 }
+
+/**
+ * Cache key identifying an `in-query` node's subquery + projected property, used to share one
+ * resolution across every occurrence of the same subquery within an `execQuery` run.
+ */
+const _inQueryCacheKey = (node: QueryAST.FilterInQuery): string => `${JSON.stringify(node.subquery)}\0${node.property}`;

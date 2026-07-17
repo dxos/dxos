@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Aggregate, Filter, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -216,6 +216,23 @@ describe('WorkingSetQueryExecutor', () => {
     const plan = planner.createPlan(query.ast);
     const results = executor.tryExecute(plan);
     // TimestampSelector requires SQL index — executor must bail.
+    expect(results).toBeNull();
+  });
+
+  test('nested Filter.in(projection) (subquery semi-join) causes executor to return null', async ({ expect }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    db.add(alice);
+    await db.flush();
+
+    const planner = makeNoIndexPlanner();
+    const executor = makeExecutor(db);
+    // Feed-scoped subquery: `_execSelectStep` would return an *empty* (not null) working set for
+    // a scope outside this space, so the executor must bail rather than silently resolve an empty
+    // membership set — this is the regression the semi-join relies on `null` to prevent.
+    const subquery = Query.select(Filter.type(TestSchema.Person)).from([Scope.feed('dxn:queue:example:01')]);
+    const query = Query.select(Filter.type(TestSchema.Person, { name: Filter.in(subquery.project('name')) })).from(db);
+    const plan = planner.createPlan(query.ast);
+    const results = executor.tryExecute(plan);
     expect(results).toBeNull();
   });
 

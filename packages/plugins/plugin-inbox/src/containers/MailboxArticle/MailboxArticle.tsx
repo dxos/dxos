@@ -13,7 +13,7 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, ProgressMeter, useAppGraph, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
-import { Aggregate, type Database, Ref as EchoRef, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
+import { Aggregate, type Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -33,7 +33,7 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { DraftMessage, Message } from '@dxos/types';
 
 import {
   MessageStack,
@@ -136,7 +136,21 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     [debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
-  const source = feed && Query.select(selection).from(feed);
+  // A thread qualifies if any of its messages match `selection`; the source then pulls in every
+  // message sharing that thread's `threadId`, across the feed AND this space (drafts), so `count`/
+  // `items` reflect the whole thread rather than only its filter-matching members. The space branch
+  // can also surface another mailbox's draft that happens to share a `threadId` (thread ids are
+  // effectively globally unique, so this is rare) — `reconcileDrafts` below re-scopes drafts to this
+  // mailbox and drops ones already superseded by their synced copy.
+  const source = feed
+    ? (() => {
+        const matches = Query.select(selection).from(feed);
+        return Query.select(Filter.type(Message.Message, { threadId: Filter.in(matches.project('threadId')) })).from([
+          Scope.feed(Obj.getURI(feed, { prefer: 'absolute' })),
+          Scope.space(),
+        ]);
+      })()
+    : undefined;
   const pagination = usePagination(
     db,
     source
@@ -174,14 +188,17 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     // During an active search, also drop messages that don't match in their plain/markdown body or
     // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
     // message can match the index yet have no matching (or any) plain/markdown text to display.
+    // `reconcileDrafts` first re-scopes a thread's drafts to this mailbox and drops ones already
+    // superseded by their synced copy (see the `source` query's doc comment above).
+    const mailboxUri = Obj.getURI(mailbox);
     return result.flatMap((item): MessageStackItem[] => {
-      const matches = (message: Message.Message) =>
+      const messageMatches = (message: Message.Message) =>
         !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
       if (isMessageGroup(item)) {
-        const messages = item.messages.filter(matches);
+        const messages = reconcileDrafts(item.messages, mailboxUri).filter(messageMatches);
         return messages.length > 0 ? [{ ...item, messages }] : [];
       }
-      return matches(item) ? [item] : [];
+      return messageMatches(item) ? [item] : [];
     });
   }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
@@ -383,6 +400,30 @@ type ThreadGroup = {
 // group is a plain record. `Obj.instanceOf` is the seam between the two.
 const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGroup =>
   !Obj.instanceOf(Message.Message, entry);
+
+/**
+ * Synced messages (no `properties.mailbox`) always pass; drafts pass only when they belong to this
+ * mailbox and aren't yet superseded by their sent copy (matched on the provider id set at send
+ * time). Mirrors the reconciliation in `app-graph-builder.ts`'s `mailboxMessage` connector — the
+ * single multi-scope semi-join query (feed + this space) can pull in another mailbox's draft
+ * sharing a `threadId`, or a draft whose sent copy has already synced into the feed.
+ */
+const reconcileDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
+  const syncedIds = new Set(
+    messages
+      .filter((message) => !DraftMessage.instanceOf(message))
+      .flatMap((message) => Obj.getMeta(message).keys.map((key) => key.id)),
+  );
+  return messages.filter((message) => {
+    if (!DraftMessage.instanceOf(message)) {
+      return true;
+    }
+    if (!DraftMessage.belongsTo(message, mailboxUri)) {
+      return false;
+    }
+    return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
+  });
+};
 
 const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
 

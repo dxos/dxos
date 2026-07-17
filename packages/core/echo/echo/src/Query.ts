@@ -75,6 +75,15 @@ export interface Query<T> {
   'select'(props: Filter.Props<T>): Query<T>;
 
   /**
+   * Project the query's results to a single scalar property, for use as a membership set in
+   * `Filter.in(query.project('col'))` — an uncorrelated `col IN (SELECT property FROM ...)`
+   * semi-join. The subquery is resolved once at execution time. A projection is a terminal
+   * value, not a `Query`, so it cannot be chained further.
+   * @param property - Property path to project.
+   */
+  'project'<K extends RefPropKey<T>>(property: K): Projection;
+
+  /**
    * Traverse an outgoing reference.
    * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
@@ -293,6 +302,18 @@ export type Any = Query<any>;
 
 export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
+/**
+ * A query projected to a single scalar property (see {@link Query.project}).
+ */
+export type Projection = internal.Projection;
+
+/**
+ * Brand key for {@link Projection}. Re-exported (like {@link QueryTypeId}) so the sandboxed
+ * `query-lite` mirror can declare its own local constant with the same string literal and
+ * construct structurally-compatible projections without importing this module's runtime.
+ */
+export type ProjectionTypeId = internal.ProjectionTypeId;
+
 class QueryClass implements Any {
   private static 'variance': Any[QueryTypeId] = {} as Any[QueryTypeId];
 
@@ -314,6 +335,10 @@ class QueryClass implements Any {
         filter: Filter.props(filter).ast,
       });
     }
+  }
+
+  project(property: string): Projection {
+    return internal.makeProjection(this.ast, property);
   }
 
   reference(key: string): Any {
@@ -626,6 +651,15 @@ export const type: {
     filter: Filter.type(type, predicates).ast,
   });
 };
+
+/**
+ * Project a query's results to a single scalar property, for use as a membership set in
+ * `Filter.in(Query.project(query, 'col'))`.
+ * @param query - Query to project.
+ * @param property - Property path to project.
+ * @returns Projection for use in `Filter.in`.
+ */
+export const project = (query: Any, property: string): Projection => internal.makeProjection(query.ast, property);
 
 /**
  * Combine results of multiple queries.
