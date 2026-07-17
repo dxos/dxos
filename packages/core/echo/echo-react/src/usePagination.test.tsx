@@ -429,8 +429,7 @@ describe('usePagination', () => {
   });
 
   test('isLoading settles to false for an empty feed (never sticks)', async () => {
-    // Regression: an async feed query with zero results still receives a first response from the
-    // host, so `isLoading` must clear on that delivery rather than hang forever waiting for a row.
+    // An empty async feed still delivers a first response, so isLoading must clear on it.
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'empty' }));

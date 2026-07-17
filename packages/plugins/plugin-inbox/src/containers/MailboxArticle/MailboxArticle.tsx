@@ -188,10 +188,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // `usePagination`'s `isLoading` reflects the underlying query settling, not a message-count guess --
-  // it stays true until the (possibly async, feed-backed) query delivers its first result, including
-  // when that result is empty. Gating on it (rather than on `messages.length`) means the empty-mailbox
-  // panel only ever renders once the query has genuinely settled with nothing, never mid-load.
+  // Gates on the query settling, not on `messages.length`, so the empty-mailbox panel never renders mid-load.
   const loading = !feed || pagination.isLoading;
 
   const handleClear = useCallback(() => {
@@ -333,8 +330,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       </ElevationProvider>
       <Panel.Content asChild>
         {loading ? (
-          // The spinner stays hidden for 1s (the fade-in animation only reveals after its delay) so a
-          // fast (sub-second) load never flashes it -- it should be a rare sight in practice.
+          // Fade-in delayed 1s so a fast load never flashes the spinner.
           <div className='grid place-items-center bs-full is-full'>
             <Icon
               icon='ph--spinner-gap--regular'
@@ -356,8 +352,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             onAction={handleAction}
           />
         ) : (
-          // Settled with no messages: genuinely empty. `InitializeMailbox` looks up the mailbox's own
-          // sync cursor/connection to choose between "No connections configured" and "Mailbox empty".
           <InitializeMailbox mailbox={mailbox} />
         )}
       </Panel.Content>

@@ -73,13 +73,7 @@ type StoryArgs = {
   conversations?: boolean;
   /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
   seedSearchTerm?: boolean;
-  /**
-   * Seed a sync binding (AccessToken → Connection → Cursor → Mailbox) for an otherwise-empty mailbox,
-   * exercising `InitializeMailbox`'s connection-derived copy: bound shows "Mailbox empty", unbound
-   * (the default) shows "No connections configured". `MailboxArticle`'s own loading vs. empty branch
-   * is driven by `usePagination`'s `isLoading` instead (real query-settlement, not fakeable via the
-   * cursor), so there is no separate "loading" binding to demonstrate as a stable story.
-   */
+  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "Mailbox empty" instead of "No connections configured". */
   bound?: boolean;
 };
 
@@ -166,9 +160,6 @@ const meta = {
               } else {
                 const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
                 if (bound) {
-                  // Seed a sync binding (AccessToken → Connection → Cursor → Mailbox) so
-                  // `InitializeMailbox` resolves a `Connection` and shows "Mailbox empty" instead of
-                  // the unbound "No connections configured" state.
                   const accessToken = personalSpace.db.add(
                     AccessToken.make({ source: 'imap.example.com', account: 'user@example.com', token: 'story-token' }),
                   );
@@ -217,15 +208,12 @@ export const Flat: Story = {
   },
 };
 
-// Empty, unbound mailbox: no sync cursor exists, so the article shows the "No connections configured" panel.
 export const NoConnection: Story = {
   args: {
     count: 0,
   },
 };
 
-// Empty mailbox bound to a connection (cursor + access token seeded, no messages): shows the "Mailbox
-// empty" panel rather than "No connections configured".
 export const Empty: Story = {
   args: {
     count: 0,
