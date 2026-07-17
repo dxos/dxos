@@ -114,9 +114,7 @@ export const mapEdgeErrors = <A, R>(
     // `RequestError` (transport/network) and any `ParseError` from a malformed success body are
     // non-graceful failures — surface as retryable request errors.
     const cause = error instanceof Error ? error : undefined;
-    return Effect.fail(
-      new EdgeRequestError({ message: cause?.message ?? String(error), isRetryable: true, cause }),
-    );
+    return Effect.fail(new EdgeRequestError({ message: cause?.message ?? String(error), isRetryable: true, cause }));
   });
 
 //
@@ -132,7 +130,9 @@ const makeAuthTransform =
       HttpClient.mapRequestEffect((request) => injectHeaders(request, authState, clientTag)),
       // On a verifiable-presentation 401 challenge, present the credential, cache the auth header,
       // and fail with a retryable marker error so `retry` re-executes the request with it.
-      HttpClient.transformResponse((response) => Effect.flatMap(response, (res) => refreshOnAuthChallenge(res, authState))),
+      HttpClient.transformResponse((response) =>
+        Effect.flatMap(response, (res) => refreshOnAuthChallenge(res, authState)),
+      ),
       HttpClient.retry({ times: 1, while: isAuthChallengeError }),
       // Route every non-success response into the error channel so `mapEdgeErrors` classifies it
       // from status/headers/body.
@@ -157,7 +157,9 @@ const routeFailures = (
 ): Effect.Effect<HttpClientResponse.HttpClientResponse, HttpClientError.HttpClientError> =>
   Effect.gen(function* () {
     const failResponse = (target: HttpClientResponse.HttpClientResponse) =>
-      Effect.fail(new HttpClientError.ResponseError({ request: response.request, response: target, reason: 'StatusCode' }));
+      Effect.fail(
+        new HttpClientError.ResponseError({ request: response.request, response: target, reason: 'StatusCode' }),
+      );
 
     if (response.status < 200 || response.status >= 300) {
       return yield* failResponse(response);
@@ -285,9 +287,7 @@ const classifyResponseError = (
     );
   });
 
-const readFailureBody = (
-  response: HttpClientResponse.HttpClientResponse,
-): Effect.Effect<EdgeFailure | undefined> =>
+const readFailureBody = (response: HttpClientResponse.HttpClientResponse): Effect.Effect<EdgeFailure | undefined> =>
   response.json.pipe(
     Effect.map((body) => (isEdgeFailure(body) ? body : undefined)),
     Effect.orElseSucceed(() => undefined),

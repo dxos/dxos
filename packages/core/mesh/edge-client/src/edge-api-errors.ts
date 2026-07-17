@@ -21,9 +21,7 @@ export class EdgeRequestError extends BaseError.extend('EdgeRequestError', 'Edge
   /** Verbatim `EdgeFailure.data` — carries the open-ended `data.type` vocabulary consumers branch on. */
   readonly data?: EdgeErrorData;
 
-  constructor(
-    options: { isRetryable?: boolean; retryAfterMs?: number; data?: EdgeErrorData } & BaseErrorOptions,
-  ) {
+  constructor(options: { isRetryable?: boolean; retryAfterMs?: number; data?: EdgeErrorData } & BaseErrorOptions) {
     super(options);
     this.isRetryable = Boolean(options.isRetryable);
     this.retryAfterMs = options.retryAfterMs;

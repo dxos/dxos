@@ -103,7 +103,8 @@ describe('EdgeApiService (auth + error mapping)', () => {
   });
 
   test('maps a graceful failure body, preserving data.type and 4xx non-retryability', async ({ expect }) => {
-    globalThis.fetch = async () => jsonResponse(400, { success: false, message: 'slow down', data: { type: 'rate_limited' } });
+    globalThis.fetch = async () =>
+      jsonResponse(400, { success: false, message: 'slow down', data: { type: 'rate_limited' } });
     const error = await expectError();
     expect(error).toBeInstanceOf(EdgeRequestError);
     expect((error as EdgeRequestError).data?.type).toBe('rate_limited');
@@ -112,7 +113,8 @@ describe('EdgeApiService (auth + error mapping)', () => {
 
   test('maps a graceful failure returned as HTTP 200 to a non-retryable EdgeRequestError', async ({ expect }) => {
     // Edge returns handled errors with status 200 and a `success:false` envelope.
-    globalThis.fetch = async () => jsonResponse(200, { success: false, message: 'nope', data: { type: 'quota_exceeded' } });
+    globalThis.fetch = async () =>
+      jsonResponse(200, { success: false, message: 'nope', data: { type: 'quota_exceeded' } });
     const error = await expectError();
     expect(error).toBeInstanceOf(EdgeRequestError);
     expect((error as EdgeRequestError).data?.type).toBe('quota_exceeded');
@@ -143,7 +145,10 @@ describe('EdgeApiService (auth + error mapping)', () => {
       if (!authorization) {
         return new Response(JSON.stringify({ success: false, message: 'unauthorized' }), {
           status: 401,
-          headers: { 'content-type': 'application/json', 'www-authenticate': `VerifiablePresentation challenge=${challenge}` },
+          headers: {
+            'content-type': 'application/json',
+            'www-authenticate': `VerifiablePresentation challenge=${challenge}`,
+          },
         });
       }
       return jsonResponse(200, { success: true, data: { status: 'ok' } });

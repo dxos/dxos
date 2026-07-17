@@ -82,7 +82,7 @@ client-services → edge-client` a real cycle in moon's project graph (and in `t
 graph), since `client-services` depends on `edge-client` directly.
 
 It turned out unnecessary: `@dxos/edge-protocol` declares those packages as **`peerDependencies`**,
-and pnpm resolves a package's own peer deps into its *own* scoped `node_modules` (visible under
+and pnpm resolves a package's own peer deps into its _own_ scoped `node_modules` (visible under
 `node_modules/.pnpm/@dxos+edge-protocol@.../node_modules/@dxos/`) independent of what any particular
 consumer declares. TypeScript resolves nested type references (e.g. a `SpaceId` type reachable
 through `EdgeApi`) starting from the file that imports them — i.e. from inside `edge-protocol`'s own
@@ -96,23 +96,23 @@ The one place this DOES apply directly: `client-services` imports `EdgeAgentStat
 `@dxos/edge-protocol` (`catalog:`) as its own dependency — but needs no tsconfig reference, for the
 same external-package reason.
 
-### A second, subtler issue: bare `"*"` peer ranges fork on the *consumer's* peer context
+### A second, subtler issue: bare `"*"` peer ranges fork on the _consumer's_ peer context
 
 Removing the cycle didn't fully close the loop: `moon exec :build` across the whole tree turned up
 `app-framework:build` failing with "two different types with this name exist, but they are
 unrelated" for `DXN` — a classic dual-package-identity error, not present on `origin/main`.
 `tsc --explainFiles` traced it to `@dxos/compute`'s `LayerSpec.d.ts`, imported via `@dxos/keys` —
-but a *different*, peer-suffixed copy of both, distinct from the plain workspace ones every direct
+but a _different_, peer-suffixed copy of both, distinct from the plain workspace ones every direct
 `workspace:*` consumer resolves.
 
 Cause: `@dxos/edge-protocol` declares `@dxos/compute`/`@dxos/echo`/`@dxos/echo-protocol`/`@dxos/keys`/
 `@dxos/protocols`/`@dxos/timeframe` as peerDependencies with a bare `"*"` range. A bare-range peer is
-satisfied from whichever peer context the *consuming* install position already sits in — it isn't
+satisfied from whichever peer context the _consuming_ install position already sits in — it isn't
 pinned to one canonical resolution. `@dxos/edge-client` (which depends on `@dxos/edge-protocol`) is
 now a **direct** dependency of `app-framework`, and `app-framework` also depends on
 `@effect-atom/atom`, which already forces a large, distinct peer-dependency bucket (visible in the
 pre-existing `'@effect-atom/atom>@effect/experimental'` / `'>@effect/rpc'` `allowedVersions` entries
-below). Resolved *through that bucket*, edge-protocol's `"*"` peer for `@dxos/compute` picked the
+below). Resolved _through that bucket_, edge-protocol's `"*"` peer for `@dxos/compute` picked the
 bucket's forked compute/keys instead of the plain ones `@dxos/compute`'s own project reference uses
 — so the same-named `DXN` type existed twice, and TS refused to unify them.
 
@@ -121,6 +121,6 @@ Fix: pin each of those six peers to `workspace:*` unconditionally via `overrides
 nothing left for a consumer's peer context to redirect. After `pnpm install --force
 --no-frozen-lockfile` (a plain `--no-frozen-lockfile` install doesn't relink already-installed
 `.pnpm` store slots), the fork disappeared and `app-framework:build` (and the rest of `moon exec
-:build`) went green. The four *regular* (non-peer) leaf deps edge-protocol pins to a `dxos/dxos`
+:build`) went green. The four _regular_ (non-peer) leaf deps edge-protocol pins to a `dxos/dxos`
 preview build (`@dxos/errors`/`@dxos/invariant`/`@dxos/log`/`@dxos/util`) don't need the same
 treatment — they're leaves with no further `.d.ts` cross-references, so no identity risk.
