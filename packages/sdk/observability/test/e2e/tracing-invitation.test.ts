@@ -30,6 +30,7 @@ import { identityProvider } from '../../src/providers/client-observability';
 //      `EDGE_DEV_OTLP=1 pnpm run dev` in packages/services/edge (dev-OTLP opt-in makes
 //      the tail-logger export local spans to SigNoz).
 //   2. dxos repo:
+//      DX_RUN_MANUAL_TESTS=1 \
 //      VITEST_TAGS_FILTER=manual \
 //      DX_EDGE_URL=http://localhost:8787 \
 //      DX_OTEL_ENDPOINT=https://ingest.eu.signoz.cloud:443 \
@@ -37,11 +38,12 @@ import { identityProvider } from '../../src/providers/client-observability';
 //      DX_TELEMETRY_TAG=tracing-e2e-$(uuidgen) \
 //        moon run observability:test
 //
-// NOTE: `--tagsFilter` appended after `--` does NOT reach vitest (the moon task wraps
-// vitest in `bash -c`, so appended args become bash positionals) — the VITEST_TAGS_FILTER
-// env var is the only working selector; `=manual` just narrows the run to this suite.
-// Omit DX_EDGE_URL to target edge-main. In SigNoz, filter spans with
-// `ctx.tag = '<DX_TELEMETRY_TAG>'`.
+// NOTE: the `manual` tag is force-skipped unless DX_RUN_MANUAL_TESTS=1 (see the tag's
+// `skip` condition in vitest.tags.ts). `--tagsFilter` appended after `--` does NOT reach
+// vitest (the moon task wraps vitest in `bash -c`, so appended args become bash
+// positionals) — the VITEST_TAGS_FILTER env var is the only working selector; `=manual`
+// just narrows the run to this suite. Omit DX_EDGE_URL to target edge-main. In SigNoz,
+// filter spans with `ctx.tag = '<DX_TELEMETRY_TAG>'`.
 
 const EDGE_URL = process.env.DX_EDGE_URL ?? 'https://edge-main.dxos.workers.dev';
 

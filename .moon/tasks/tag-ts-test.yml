@@ -25,6 +25,13 @@ tasks:
       - $VITEST_XML_REPORT
       - $VITEST_TAGS_FILTER
       - $ALLOW_LLM_GENERATION
+      # Manual-suite toggles: without these in the hash, a run with DX_RUN_MANUAL_TESTS=1
+      # replays the cached "all skipped" result from a run without it.
+      - $DX_RUN_MANUAL_TESTS
+      - $DX_TELEMETRY_TAG
+      - $DX_OTEL_ENDPOINT
+      - $DX_OTEL_HEADERS
+      - $DX_EDGE_URL
     outputs:
       - /coverage/$project/node/**
       - /test-results/$project/node/**
