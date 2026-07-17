@@ -17,7 +17,7 @@ import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 // - Reconcile with Project (linear/github use cases).
 // - Model goals via instructions (ISSUE: Dependency on compute).
 // - Project as low-level type; Brain has higher-level concept that wraps?
-//   - Focus, Initiative, Plan, Mission, Objective, Goal,
+// - Focus, Initiative, Plan, Mission, Objective, Goal,
 //     Objective (Goal)
 //     └── Key Result
 //         └── Initiative
@@ -33,15 +33,14 @@ import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
  * ECHO; string-keyed thread references (like `Thread.messageIds`) until the entity layer firms up to
  * DXN refs.
  */
-// TODO(burdon): Generalize beyond email (threads, task lists); reconcile with Project.
 export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.topic', '0.1.0'))(
   Schema.Struct({
-    label: Schema.String,
-
     // Ref to an agent-instructions object (created + linked at the plugin layer, e.g. plugin-brain).
     // TODO(burdon): Now that Topic lives in `@dxos/compute` alongside `Instructions` (no more
     // `types → compute → ai → types` cycle), tighten this to `Ref.Ref(Instructions.Instructions)`.
     instructions: Ref.Ref(Obj.Unknown).pipe(FormInlineAnnotation.set(true), Schema.optional),
+
+    label: Schema.String,
 
     // TODO(burdon): Uncouple from Email; Model via Refs?
     // TODO(burdon): Refs to other objects in context?
