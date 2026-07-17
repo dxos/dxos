@@ -7,8 +7,8 @@ import { type Database, Tag } from '@dxos/echo';
 /**
  * Foreign-key source for Gmail provider labels. A Gmail label maps to a {@link Tag} object carrying
  * a foreign key `{ source: GMAIL_TAG_SOURCE, id: <gmail-label-id> }`; "provider" tags are those with
- * such a key, "user" tags are those without. Shared by both `sync/` (label→tag materialization) and
- * `send/` (tagging a local draft with the same tag its sent copy will carry).
+ * such a key, "user" tags are those without. Used by `sync/` to materialize custom user labels as tags
+ * (system labels map onto canonical {@link SystemTags.SystemTag}s instead).
  */
 export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
 

@@ -7,8 +7,8 @@ import { type Database, Tag } from '@dxos/echo';
 /**
  * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag} object
  * carrying a foreign key `{ source: JMAP_TAG_SOURCE, id: <jmap-mailbox-id> }`; mirrors Gmail's
- * `GMAIL_TAG_SOURCE`. Shared by both `sync/` (folder→tag materialization) and `send/` (tagging a local
- * draft with the same tag its sent copy will carry).
+ * `GMAIL_TAG_SOURCE`. Used by `sync/` to materialize custom user folders as tags (well-known roles map
+ * onto canonical {@link SystemTags.SystemTag}s instead).
  */
 export const JMAP_TAG_SOURCE = 'org.ietf.jmap.mailbox';
 

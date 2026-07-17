@@ -14,15 +14,6 @@ import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
-import { systemTagKey } from './SystemTags';
-
-/**
- * Foreign key that marks a message as person-to-person ("personal") mail, used to tell it from
- * bulk/marketing when deciding how aggressively to restyle a message body (see the HTML viewer). Gmail's
- * "Personal"/Primary inbox category maps onto the canonical {@link SystemTags.SystemTag} `personal`
- * during label sync; a future provider that distinguishes person-to-person mail maps onto the same tag.
- */
-export const PERSONAL_TAG_KEYS = [systemTagKey('personal')] as const;
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 

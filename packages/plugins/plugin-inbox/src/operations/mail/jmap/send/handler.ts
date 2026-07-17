@@ -11,8 +11,7 @@ import { log } from '@dxos/log';
 import { Jmap, JmapMail } from '../../../../apis';
 import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../../errors';
 import { JmapCredentials } from '../../../../services';
-import { InboxOperation } from '../../../../types';
-import { JMAP_TAG_SOURCE } from '../tags';
+import { InboxOperation, SystemTags } from '../../../../types';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -83,9 +82,10 @@ export default InboxOperation.JmapSend.pipe(
       return {
         id: result.id,
         threadId: result.threadId ?? '',
-        // The Sent folder the submission filed the message into; the same tag its canonical synced copy
-        // will carry, so the caller can tag the local draft to match.
-        sentTag: { source: JMAP_TAG_SOURCE, id: sent.id, label: sent.name },
+        // The submission filed the message into the Sent (`sent`-role) folder, which sync maps onto the
+        // canonical `sent` system tag; return that same canonical tag so the caller can tag the local
+        // draft to match the copy that will sync down.
+        sentTag: { ...SystemTags.systemTagKey('sent'), label: SystemTags.SystemTag.sent.label },
       };
     }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(JmapCredentials.fromConnection(connectionRef))),
   ),

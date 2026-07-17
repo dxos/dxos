@@ -296,7 +296,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   // persisted into the mailbox tag index during label sync); used to decide how aggressively the
   // HTML view restyles the body.
   const db = getSpace(mailbox ?? message)?.db;
-  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [...Mailbox.PERSONAL_TAG_KEYS]))[0];
+  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('personal')]))[0];
   const isPersonal = useMemo(
     () =>
       !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
