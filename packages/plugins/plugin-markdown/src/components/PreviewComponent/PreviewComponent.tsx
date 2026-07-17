@@ -36,7 +36,7 @@ const MIN_SIZE = 6;
 const FALLBACK_SIZE = 320;
 
 /** Scroll the element's top into view (honoring its `scroll-margin`) only if that top is not already visible. */
-const scrollTopIntoViewIfNeeded = (element: HTMLElement): void => {
+const maybeScrollIntoView = (element: HTMLElement): void => {
   let parent = element.parentElement;
   while (parent) {
     const { overflowY } = getComputedStyle(parent);
@@ -48,6 +48,7 @@ const scrollTopIntoViewIfNeeded = (element: HTMLElement): void => {
     }
     parent = parent.parentElement;
   }
+
   const elementTop = element.getBoundingClientRect().top;
   const viewTop = parent ? parent.getBoundingClientRect().top : 0;
   const viewBottom = parent ? parent.getBoundingClientRect().bottom : window.innerHeight;
@@ -146,7 +147,7 @@ export const PreviewComponent = ({
       // actually scrolls (cm-scroller or an outer panel); defer a frame so the new height applies first.
       requestAnimationFrame(() => {
         if (containerRef.current) {
-          scrollTopIntoViewIfNeeded(containerRef.current);
+          maybeScrollIntoView(containerRef.current);
         }
       });
     },
