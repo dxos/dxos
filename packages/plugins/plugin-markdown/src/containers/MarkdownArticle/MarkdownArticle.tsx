@@ -25,6 +25,7 @@ import {
   isToolbarAction,
 } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
+import { diffView } from '@dxos/ui-editor';
 import { Branch, Version } from '@dxos/versioning';
 
 import {
@@ -39,7 +40,6 @@ import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { mergeConflicts, versionDiff } from '../../extensions';
-import { DiffView } from '../DiffView';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
@@ -140,11 +140,18 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         }, []);
     }, [extensionProviders, otherExtensionProviders, object, viewMode]);
 
-    // Diff overlay (inline/gutter variants render inside the editor; sideBySide replaces it).
+    // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants
+    // use the custom versionDiff decorations; sideBySide uses the richer editable unified merge
+    // overlay (codemirror merge chunks with review-oriented colouring) — the branch stays editable
+    // in every mode, so a reviewer can adjust the draft while seeing it diffed against the anchor.
     const combinedExtensions = useMemo<Extension[]>(() => {
       const list = [...extensions, mergeConflicts()];
-      if (compareActive && branchBaseContent !== undefined && diffViewMode !== 'sideBySide') {
-        list.push(versionDiff({ base: branchBaseContent, variant: diffViewMode }));
+      if (compareActive && branchBaseContent !== undefined) {
+        list.push(
+          diffViewMode === 'sideBySide'
+            ? diffView({ original: branchBaseContent })
+            : versionDiff({ base: branchBaseContent, variant: diffViewMode }),
+        );
       }
       return list;
     }, [extensions, compareActive, branchBaseContent, diffViewMode]);
@@ -282,17 +289,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                 />
               )}
               <Panel.Content>
-                {versioning.compare &&
-                diffViewMode === 'sideBySide' &&
-                branchText &&
-                branchBaseContent !== undefined ? (
-                  <DiffView before={branchBaseContent} after={branchText.content} />
-                ) : (
-                  <>
-                    <MarkdownEditor.Content initialValue={initialValue} />
-                    <Editor.Blocks />
-                  </>
-                )}
+                <MarkdownEditor.Content initialValue={initialValue} />
+                <Editor.Blocks />
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>

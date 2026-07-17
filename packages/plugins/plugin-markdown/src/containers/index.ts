@@ -10,5 +10,4 @@ export const MarkdownCard: ComponentType<any> = lazy(() => import('./MarkdownCar
 export const EditableMarkdownCard: ComponentType<any> = lazy(() => import('./EditableMarkdownCard'));
 export const MarkdownArticle: ComponentType<any> = lazy(() => import('./MarkdownArticle'));
 export const MarkdownSettings: ComponentType<any> = lazy(() => import('./MarkdownSettings'));
-export const DiffView: ComponentType<any> = lazy(() => import('./DiffView'));
 export const MarkdownProperties: ComponentType<any> = lazy(() => import('./MarkdownProperties'));
