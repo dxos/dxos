@@ -131,28 +131,26 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
-  // `buildMailboxSelection` returns the whole-thread semi-join filter (see its doc comment): a
+  // `buildMailboxSelection` returns the whole-thread semi-join query (see its doc comment): a
   // thread qualifies if any of its messages match the search/filter box, and the selection then
-  // pulls in every message sharing that thread's `threadId`, across the feed AND this space
-  // (drafts), so `count`/`items` reflect the whole thread rather than only its filter-matching
-  // members. The space branch can also surface another mailbox's draft that happens to share a
-  // `threadId` (thread ids are effectively globally unique, so this is rare) —
-  // `reconcileDrafts` below re-scopes drafts to this mailbox and drops ones already superseded
-  // by their synced copy.
+  // pulls in every message sharing that thread's `threadId`. `scopes` (feed + this space, so
+  // `count`/`items` reflect the whole thread rather than only its filter-matching members) is
+  // applied once here to avoid rebuilding it in both branches below. The space scope can also
+  // surface another mailbox's draft that happens to share a `threadId` (thread ids are
+  // effectively globally unique, so this is rare) — `reconcileDrafts` below re-scopes drafts to
+  // this mailbox and drops ones already superseded by their synced copy.
   const selection = useMemo(
     () => (feed ? buildMailboxSelection(debouncedFilterText, debouncedFilter, feed) : undefined),
     [debouncedFilterText, debouncedFilter, feed],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
-  const source =
-    feed && selection
-      ? Query.select(selection).from([Scope.feed(Obj.getURI(feed, { prefer: 'absolute' })), Scope.space()])
-      : undefined;
+  const scopes = feed ? [Scope.feed(Obj.getURI(feed, { prefer: 'absolute' })), Scope.space()] : undefined;
   const pagination = usePagination(
     db,
-    source
+    selection && scopes
       ? conversations
-        ? source
+        ? selection
+            .from(scopes)
             .orderBy(Order.property('created', 'desc'))
             .aggregate({
               threadId: Aggregate.group('threadId'),
@@ -162,7 +160,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             })
             .orderBy(Order.property('lastMessageAt', direction))
             .limit(MAILBOX_PAGE_SIZE)
-        : source.orderBy(Order.property('created', direction)).limit(MAILBOX_PAGE_SIZE)
+        : selection.from(scopes).orderBy(Order.property('created', direction)).limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
 

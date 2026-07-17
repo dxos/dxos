@@ -48,16 +48,18 @@ const buildMailboxViewFilter = (filterText: string, filter: Filter.Any | undefin
  * its messages match the view filter (see {@link buildMailboxViewFilter}), and the selection
  * pulls in every message sharing that thread's `threadId` — an uncorrelated
  * `threadId IN (SELECT threadId FROM feed WHERE <viewFilter>)` semi-join — so callers see whole
- * threads, not only the filter-matching members.
+ * threads, not only the filter-matching members. Callers apply their own `.from(scopes)` before
+ * continuing the chain (`.orderBy()`/`.aggregate()`/`.limit()`), since the scopes a caller reads
+ * from — feed only, feed + space, etc. — aren't this function's concern.
  */
 export const buildMailboxSelection = (
   filterText: string,
   filter: Filter.Any | undefined,
   feed: Feed.Feed,
-): Filter.Any => {
+): Query.Query<Message.Message> => {
   const viewFilter = buildMailboxViewFilter(filterText, filter);
   const matches = Query.select(viewFilter).from(feed);
-  return Filter.type(Message.Message, { threadId: Filter.in(matches.project('threadId')) });
+  return Query.select(Filter.type(Message.Message, { threadId: Filter.in(matches.project('threadId')) }));
 };
 
 /** The free-text term from a parsed filter (the first text-search node), or undefined. */
