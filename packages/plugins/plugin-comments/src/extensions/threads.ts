@@ -12,7 +12,7 @@ import { Doc } from '@dxos/echo-doc';
 import { OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown';
 import { AnchoredTo, Thread } from '@dxos/types';
-import { comments, createExternalCommentSync } from '@dxos/ui-editor';
+import { comments } from '@dxos/ui-editor';
 
 import { CommentOperation } from '#types';
 import { type CommentState } from '#types';
@@ -46,7 +46,7 @@ export const threads = (
   if (!doc || !db || !invokePromise) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
     // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
-    return [comments()];
+    return [comments({ id: 'noop' })];
   }
 
   const { registry, stateAtom } = store;
@@ -65,12 +65,6 @@ export const threads = (
       .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'));
 
   return [
-    EditorView.domEventHandlers({
-      destroy: () => {
-        // Note: cleanup functions for subscriptions are handled by createExternalCommentSync.
-      },
-    }),
-
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         getAnchors().forEach((anchor) => {
@@ -89,9 +83,20 @@ export const threads = (
       }
     }),
 
-    createExternalCommentSync(
-      objectId,
-      (sink) => {
+    comments({
+      id: objectId,
+      // Tag new comments with the review branch so they scope to the branch under review; main stays untagged.
+      reviewBranch,
+      // `getAnchors()` is already branch-scoped, so selection-style highlights show only the review
+      // branch's comments.
+      getComments: () =>
+        getAnchors()
+          .filter((anchor) => anchor.anchor)
+          .map((anchor) => ({
+            id: Obj.getURI(Relation.getSource(anchor)),
+            cursor: anchor.anchor,
+          })),
+      subscribe: (sink) => {
         // Subscribe to both query changes and store state changes.
         const unsubQuery = query.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);
@@ -100,19 +105,6 @@ export const threads = (
           unsubStore();
         };
       },
-      () =>
-        getAnchors()
-          .filter((anchor) => anchor.anchor)
-          .map((anchor) => ({
-            id: Obj.getURI(Relation.getSource(anchor)),
-            cursor: anchor.anchor,
-          })),
-    ),
-
-    comments({
-      id: objectId,
-      // Tag new comments with the review branch so they scope to the branch under review; main stays untagged.
-      reviewBranch,
       onCreate: ({ cursor, branch }) => {
         const name = getName(doc, cursor);
         void invokePromise(CommentOperation.Create, {

@@ -4,16 +4,24 @@
 
 import { invertedEffects } from '@codemirror/commands';
 import { getChunks } from '@codemirror/merge';
-import { type ChangeDesc, type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
+import {
+  type ChangeDesc,
+  EditorSelection,
+  type Extension,
+  StateEffect,
+  StateField,
+  type Text,
+} from '@codemirror/state';
 import {
   type Command,
   Decoration,
   EditorView,
   type PluginValue,
   type Rect,
+  RectangleMarker,
   ViewPlugin,
-  hoverTooltip,
   keymap,
+  layer,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 
@@ -21,9 +29,8 @@ import { type CleanupFn, debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
-import { type Comment, type Range, type RenderCallback } from '../types';
+import { type Comment, type Range } from '../types';
 import { Cursor, singleValueFacet, wrapWithCatch } from '../util';
-import { markerMark, markerTheme } from './marker';
 import { documentId } from './selection';
 
 //
@@ -101,16 +108,48 @@ export const commentsState = StateField.define<CommentsState>({
 /**
  * NOTE: Matches search.
  */
-// Surface/box-shadow come from the shared `markerTheme`, tinted by the mark's `data-hue`; the comment
-// just adds the pointer affordance.
+// The visible highlight is drawn by `commentsHighlightLayer` (below) as a layer of rectangle markers,
+// so — like a text selection — it fills wrapped lines to the line edge instead of stopping at the last
+// glyph. The inline `cm-comment` mark is now transparent and exists only to carry `data-comment-id`
+// (click routing) and the pointer affordance. No `border-radius`: the per-line rectangles abut, so
+// rounding each would pinch the interior edges into notches on a multi-line comment.
 const styles = EditorView.theme({
-  '.cm-comment > span': {
+  // The layer only paints the background; text colour comes from the inline mark, which wraps exactly
+  // the comment text. `!important` and the descendant selector win over markdown syntax-highlight tokens
+  // nested inside the range.
+  '.cm-comment, .cm-comment *': {
+    color: 'var(--color-teal-fg) !important',
+  },
+  '.cm-comment[data-current="1"], .cm-comment[data-current="1"] *': {
+    color: 'var(--color-orange-fg) !important',
+  },
+  '.cm-comment': {
     cursor: 'pointer',
+  },
+  // Layer wrapper: sit behind the text and never swallow clicks meant for the `cm-comment` mark.
+  '.cm-commentsHighlightLayer': {
+    pointerEvents: 'none',
+  },
+  // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour — visual
+  // padding without changing layout. Vertically adjacent line rectangles paint into each other's gap
+  // with the same colour, so a multi-line comment stays seamless.
+  '.cm-comment-highlight': {
+    backgroundColor: 'var(--color-teal-bg)',
+    boxShadow: '0 0 0 1px var(--color-teal-bg)',
+  },
+  '.cm-comment-highlight-current': {
+    backgroundColor: 'var(--color-orange-bg)',
+    boxShadow: '0 0 0 1px var(--color-orange-bg)',
+  },
+  // Only round a comment that occupies a single visual line: a multi-line comment is drawn as several
+  // abutting rectangles, so rounding each would notch the interior edges.
+  '.cm-comment-highlight-single': {
+    borderRadius: '0.25rem',
   },
 });
 
 const createCommentMark = (id: string, isCurrent: boolean) =>
-  markerMark(isCurrent ? 'orange' : 'teal', {
+  Decoration.mark({
     class: 'cm-comment',
     attributes: {
       'data-testid': 'cm-comment',
@@ -120,7 +159,8 @@ const createCommentMark = (id: string, isCurrent: boolean) =>
   });
 
 /**
- * Decorate ranges.
+ * Transparent inline marks that carry `data-comment-id` for click routing (see `handleCommentClick`).
+ * The colour comes from `commentsHighlightLayer`.
  */
 const commentsDecorations = EditorView.decorations.compute([commentsState], (state) => {
   const {
@@ -145,6 +185,46 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
     .filter(isNonNullable);
 
   return Decoration.set(decorations);
+});
+
+/**
+ * Selection-style highlight: draws each comment range as a layer of rectangle markers below the text.
+ * `RectangleMarker.forRange` extends wrapped (non-final) lines to the line edge, so a multi-line comment
+ * reads as one continuous block rather than ragged per-word inline backgrounds.
+ */
+const commentsHighlightLayer = layer({
+  above: false,
+  class: 'cm-commentsHighlightLayer',
+  update: (update) =>
+    update.docChanged ||
+    update.viewportChanged ||
+    update.geometryChanged ||
+    update.selectionSet ||
+    update.transactions.some((tr) =>
+      tr.effects.some((effect) => effect.is(setSelection) || effect.is(setComments) || effect.is(setCommentState)),
+    ),
+  markers: (view) => {
+    const {
+      selection: { current },
+      comments,
+    } = view.state.field(commentsState);
+
+    return sortBy(comments ?? [], (comment) => comment.range.from).flatMap((comment) => {
+      const { from, to } = comment.range;
+      if (from >= to) {
+        return [];
+      }
+
+      const className =
+        comment.comment.id === current ? 'cm-comment-highlight cm-comment-highlight-current' : 'cm-comment-highlight';
+      const range = EditorSelection.range(from, to);
+      const markers = RectangleMarker.forRange(view, className, range);
+      // A single rectangle means the comment fits on one visual line — round its corners.
+      return markers.length === 1
+        ? RectangleMarker.forRange(view, `${className} cm-comment-highlight-single`, range)
+        : markers;
+    });
+  },
 });
 
 export const commentClickedEffect = StateEffect.define<string>();
@@ -293,6 +373,8 @@ const mapTrackedComment = (comment: TrackedComment, changes: ChangeDesc) => ({
  */
 const restoreCommentEffect = StateEffect.define<TrackedComment>({ map: mapTrackedComment });
 
+const optionsFacet = singleValueFacet<CommentsOptions>();
+
 /**
  * Create comment thread action.
  */
@@ -346,15 +428,19 @@ export type CommentsOptions = {
   /**
    * Document id.
    */
-  id?: string;
+  id: string;
   /**
    * Key shortcut to create a new thread.
    */
   key?: string;
   /**
-   * Called to render tooltip.
+   * Get the current comments.
    */
-  renderTooltip?: RenderCallback<{ shortcut: string }>;
+  getComments?: () => Comment[];
+  /**
+   * Subscribe to external comment updates.
+   */
+  subscribe?: (sink: () => void) => CleanupFn;
   /**
    * The branch under review; new comments are tagged with it (undefined = main/unbranched). Scopes
    * a comment to the branch being reviewed so its visibility tracks the active diff.
@@ -378,7 +464,28 @@ export type CommentsOptions = {
   onSelect?: (state: CommentsState) => void;
 };
 
-const optionsFacet = singleValueFacet<CommentsOptions>();
+/**
+ * Manages external comment synchronization for the editor.
+ * This class subscribes to external comment updates and applies them to the editor view.
+ */
+class ExternalCommentSync implements PluginValue {
+  private readonly unsubscribe: () => void;
+
+  constructor(view: EditorView, options: Pick<CommentsOptions, 'id' | 'subscribe' | 'getComments'>) {
+    const updateComments = () => {
+      const comments = options.getComments?.() ?? [];
+      if (options.id === view.state.facet(documentId)) {
+        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id: options.id, comments }) }));
+      }
+    };
+
+    this.unsubscribe = options.subscribe?.(updateComments) ?? (() => {});
+  }
+
+  destroy = () => {
+    this.unsubscribe();
+  };
+}
 
 /**
  * Comment threads.
@@ -391,7 +498,7 @@ const optionsFacet = singleValueFacet<CommentsOptions>();
  *     b). Calls a handler to indicate which is the closest selection (e.g., to update the thread sidebar).
  * 5). Optionally, implements a hoverTooltip to show hints when creating a selection range.
  */
-export const comments = (options: CommentsOptions = {}): Extension => {
+export const comments = (options: CommentsOptions): Extension => {
   const { key: shortcut = "meta-'" } = options;
 
   const handleSelect = debounce((state: CommentsState) => options.onSelect?.(state), 200);
@@ -401,9 +508,34 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     options.id ? documentId.of(options.id) : undefined,
     commentsState,
     commentsDecorations,
+    commentsHighlightLayer,
     handleCommentClick,
-    markerTheme(),
     styles,
+
+    //
+    // External comment synchronization.
+    //
+    ViewPlugin.fromClass(
+      class {
+        private readonly unsubscribe: () => void;
+        constructor(view: EditorView) {
+          const { id } = options;
+          const updateComments = () => {
+            const comments = options.getComments?.() ?? [];
+            // Local `id` const so the truthiness narrowing survives into the microtask closure.
+            if (id && id === view.state.facet(documentId)) {
+              queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments }) }));
+            }
+          };
+
+          this.unsubscribe = options.subscribe?.(updateComments) ?? (() => {});
+        }
+
+        destroy = () => {
+          this.unsubscribe();
+        };
+      },
+    ),
 
     //
     // Keymap.
@@ -415,36 +547,6 @@ export const comments = (options: CommentsOptions = {}): Extension => {
           run: wrapWithCatch(createComment),
         },
       ]),
-
-    //
-    // Hover tooltip (for key shortcut hints, etc.)
-    // TODO(burdon): Factor out to generic hints extension for current selection/line.
-    //
-    options.renderTooltip &&
-      hoverTooltip(
-        (view, pos) => {
-          const selection = view.state.selection.main;
-          if (selection && pos >= selection.from && pos <= selection.to) {
-            return {
-              pos: selection.from,
-              end: selection.to,
-              above: true,
-              create: () => {
-                const el = document.createElement('div');
-                options.renderTooltip!(el, { shortcut }, view);
-                return { dom: el, offset: { x: 0, y: 8 } };
-              },
-            };
-          }
-
-          return null;
-        },
-        {
-          // TODO(burdon): Hide on change triggered immediately?
-          // hideOnChange: true,
-          hoverTime: 1_000,
-        },
-      ),
 
     //
     // Track deleted ranges and update ranges for decorations.
@@ -579,40 +681,3 @@ export const scrollThreadIntoView = (
     ].flat(),
   });
 };
-
-/**
- * Manages external comment synchronization for the editor.
- * This class subscribes to external comment updates and applies them to the editor view.
- */
-class ExternalCommentSync implements PluginValue {
-  private readonly unsubscribe: () => void;
-
-  constructor(view: EditorView, id: string, subscribe: (sink: () => void) => CleanupFn, getComments: () => Comment[]) {
-    const updateComments = () => {
-      const comments = getComments();
-      if (id === view.state.facet(documentId)) {
-        queueMicrotask(() => view.dispatch({ effects: setComments.of({ id, comments }) }));
-      }
-    };
-
-    this.unsubscribe = subscribe(updateComments);
-  }
-
-  destroy = () => {
-    this.unsubscribe();
-  };
-}
-
-// TODO(burdon): Needs comment.
-export const createExternalCommentSync = (
-  id: string,
-  subscribe: (sink: () => void) => CleanupFn,
-  getComments: () => Comment[],
-): Extension =>
-  ViewPlugin.fromClass(
-    class {
-      constructor(view: EditorView) {
-        return new ExternalCommentSync(view, id, subscribe, getComments);
-      }
-    },
-  );
