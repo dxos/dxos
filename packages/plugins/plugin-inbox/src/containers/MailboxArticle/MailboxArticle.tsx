@@ -47,7 +47,7 @@ import {
 import { useDebouncedValue } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox, Starred } from '#types';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
@@ -101,9 +101,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const tagsAtom = useMessageTagsAtomFamily(tagIndex, tagMap);
 
   // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const starredAtom = useMemo(() => Starred.atom(tagIndex, starredUri), [tagIndex, starredUri]);
+  const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -242,7 +242,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         case 'star': {
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
-            void Starred.toggleStarred(mailbox, message, db);
+            void SystemTags.toggleTag(mailbox, message, db, 'starred');
           }
           break;
         }

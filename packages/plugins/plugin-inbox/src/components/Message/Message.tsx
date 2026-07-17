@@ -19,7 +19,7 @@ import { Menu } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock } from '@dxos/types';
 
-import { InboxCapabilities, Mailbox, Starred } from '#types';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
@@ -214,7 +214,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 
   // Starring uses the owning mailbox's tag index (messages are feed objects). Subscribe to the index
   // via `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = mailbox?.tags?.target;
   const starredAtom = useMemo(
@@ -224,7 +224,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (mailbox && db) {
-      void Starred.toggleStarred(mailbox, message, db);
+      void SystemTags.toggleTag(mailbox, message, db, 'starred');
     }
   }, [mailbox, message, db]);
 

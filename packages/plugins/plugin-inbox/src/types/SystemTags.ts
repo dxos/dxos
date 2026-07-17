@@ -2,7 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Tag } from '@dxos/echo';
+import { Atom } from '@effect-atom/atom-react';
+
+import { type Database, Obj, Ref, Tag } from '@dxos/echo';
+import { type EntityId } from '@dxos/keys';
+import { Tagging, TagIndex } from '@dxos/schema';
 
 /**
  * Canonical, provider-agnostic system tags. Each provider maps its own vocabulary onto these — see
@@ -42,3 +46,63 @@ export const systemTagKey = (id: SystemTagId) => ({ source: SYSTEM_TAG_SOURCE, i
  */
 export const findOrCreateSystemTag = (db: Pick<Database.Database, 'query' | 'add'>, id: SystemTagId) =>
   Tag.findOrCreate(db, { key: systemTagKey(id), label: SystemTag[id].label, hue: SystemTag[id].hue });
+
+//
+// Generic tag-membership helpers over a container's TagIndex (e.g. a Mailbox's Messages, a Calendar's
+// Events). Each is generic over *any* tag uri, so callers pass a {@link SystemTagId} (via
+// {@link findOrCreateSystemTag}) or a user tag's uri interchangeably.
+//
+
+/**
+ * Object that owns a child {@link TagIndex} for tagging its immutable feed members. The `tags` ref is
+ * optional to tolerate containers created before the field existed (provisioned lazily by
+ * {@link toggleTag}).
+ */
+export type TagContainer = { tags?: Ref.Ref<TagIndex.TagIndex> };
+
+/** Member ids carrying the given tag (pass the resolved tag uri). */
+export const getTaggedIds = (container: TagContainer, tagUri: string | undefined): ReadonlySet<string> =>
+  tagUri && container.tags?.target ? new Set(TagIndex.bind(container.tags.target).objects(tagUri)) : new Set<string>();
+
+const NOT_TAGGED = Atom.make(() => false);
+
+/** Per-member tag-membership boolean atom family over a container's TagIndex. */
+export type TaggedFamily = (memberId: EntityId) => Atom.Atom<boolean>;
+
+/**
+ * Per-member tag-membership atom family. Each atom yields whether one object carries the given tag and
+ * re-renders only when that membership changes.
+ */
+export const tagAtom = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string | undefined): TaggedFamily => {
+  if (!tagIndex || !tagUri) {
+    return () => NOT_TAGGED;
+  }
+  return (memberId: EntityId) => TagIndex.atom(tagIndex, memberId, tagUri);
+};
+
+/** Toggles a canonical system tag on a member object, provisioning the container's tag index on first use. */
+export const toggleTag = async (
+  container: Obj.Any & TagContainer,
+  // Member is tagged via the container's index (keyed by id), so an immutable snapshot works too.
+  object: Obj.Any | Obj.Snapshot<Obj.Any>,
+  db: Database.Database,
+  tagId: SystemTagId,
+): Promise<void> => {
+  // Lazily provision the tag index for containers created before the `tags` field existed.
+  let index = container.tags?.target;
+  if (!index) {
+    index = db.add(TagIndex.make());
+    Obj.setParent(index, container);
+    Obj.update(container, (container) => {
+      container.tags = Ref.make(index!);
+    });
+  }
+
+  const tag = await findOrCreateSystemTag(db, tagId);
+  const uri = Obj.getURI(tag).toString();
+  if (Tagging.get(object, { index }).includes(uri)) {
+    Tagging.unset(object, uri, { index });
+  } else {
+    Tagging.set(object, uri, { index });
+  }
+};
