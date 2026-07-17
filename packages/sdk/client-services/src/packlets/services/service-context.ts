@@ -16,8 +16,8 @@ import {
   MeshEchoReplicatorLayer,
 } from '@dxos/echo-host';
 import {
-  EdgeApiService,
   type EdgeApiClientService,
+  EdgeApiService,
   type EdgeConnection,
   EdgeConnectionService,
   type EdgeHttpClient,

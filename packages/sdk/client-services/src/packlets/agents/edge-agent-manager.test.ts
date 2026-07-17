@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, describe, test } from 'vitest';
 
 import { EdgeApiService, EdgeRequestError, mapEdgeErrors } from '@dxos/edge-client';
+import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
 // Verifies the `agents`-group contract calls that `EdgeAgentManager` was migrated onto (the derived
@@ -27,7 +28,7 @@ describe('EdgeAgentManager agents client', () => {
   test('createAgent round-trips the success envelope', async ({ expect }) => {
     globalThis.fetch = async () => jsonResponse(200, { success: true, data: { deviceKey: 'aa', feedKey: 'bb' } });
     const { client } = EdgeApiService.make({ baseUrl: BASE_URL, clientTag: 'test' });
-    const { data } = await Effect.runPromise(
+    const { data } = await EffectEx.runPromise(
       mapEdgeErrors(
         client.agents.createAgent({
           payload: { identityDid: 'did:halo:test', haloSpaceId: SpaceId.random(), haloSpaceKey: 'cc' },
@@ -41,7 +42,7 @@ describe('EdgeAgentManager agents client', () => {
     globalThis.fetch = async () =>
       jsonResponse(200, { success: true, data: { agent: { deviceKey: 'dd', status: 'active' } } });
     const { client } = EdgeApiService.make({ baseUrl: BASE_URL, clientTag: 'test' });
-    const { data } = await Effect.runPromise(
+    const { data } = await EffectEx.runPromise(
       mapEdgeErrors(client.agents.agentStatus({ path: { identity: 'did:halo:test' } })),
     );
     expect(data.agent.status).toBe('active');
@@ -50,7 +51,7 @@ describe('EdgeAgentManager agents client', () => {
   test('agentStatus maps a graceful failure to a non-retryable EdgeRequestError', async ({ expect }) => {
     globalThis.fetch = async () => jsonResponse(400, { success: false, message: 'gone', data: { type: 'not_found' } });
     const { client } = EdgeApiService.make({ baseUrl: BASE_URL, clientTag: 'test' });
-    const error = await Effect.runPromise(
+    const error = await EffectEx.runPromise(
       mapEdgeErrors(client.agents.agentStatus({ path: { identity: 'did:halo:test' } })).pipe(Effect.flip),
     );
     expect(error).toBeInstanceOf(EdgeRequestError);

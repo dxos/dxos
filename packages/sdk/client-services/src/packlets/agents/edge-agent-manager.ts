@@ -10,8 +10,9 @@ import * as Option from 'effect/Option';
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
-import { EdgeApiService, type EdgeApiClientService, mapEdgeErrors } from '@dxos/edge-client';
+import { type EdgeApiClientService, EdgeApiService, mapEdgeErrors } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/edge-protocol';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -72,7 +73,7 @@ export class EdgeAgentManager extends Resource {
     invariant(this._edgeApiClient);
     invariant(this._edgeFeatures?.agents);
 
-    const { data: response } = await Effect.runPromise(
+    const { data: response } = await EffectEx.runPromise(
       mapEdgeErrors(
         this._edgeApiClient.client.agents.createAgent({
           payload: {
@@ -147,7 +148,7 @@ export class EdgeAgentManager extends Resource {
     // `EdgeRequestError`/`EdgeAuthChallengeError` are handled inside the effect via `catchTag` and
     // reduced to an outcome, so this never rejects for an edge failure. A non-retryable request
     // failure gives up quietly (agent status simply unavailable); everything else reschedules.
-    const outcome = await Effect.runPromise(
+    const outcome = await EffectEx.runPromise(
       mapEdgeErrors(this._edgeApiClient.client.agents.agentStatus({ path: { identity: this.identity.did } })).pipe(
         Effect.map(({ data }) => ({ tag: 'ok' as const, agent: data.agent })),
         Effect.catchTag('EdgeRequestError', (error) =>

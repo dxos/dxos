@@ -33,8 +33,8 @@ import {
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
 import {
-  EdgeApiService,
   type EdgeApiClientService,
+  EdgeApiService,
   EdgeClient,
   type EdgeConnection,
   EdgeHttpClient,
