@@ -225,6 +225,11 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
             if (!matched) {
               return yield* Effect.fail(new GoogleApiError(404, 'Requested entity was not found.'));
             }
+            // A chain that matches but does not reach the mailbox's current `historyId` means the start id
+            // is too old (a gap in the log) — treat it like an evicted id past retention.
+            if (latest !== undefined && chain !== latest) {
+              return yield* Effect.fail(new GoogleApiError(404, 'Requested entity was not found.'));
+            }
             const pageSize = dataset.historyPageSize ?? (records.length || 1);
             const offset = options.pageToken ? Number.parseInt(options.pageToken, 10) : 0;
             const page = records.slice(offset, offset + pageSize);

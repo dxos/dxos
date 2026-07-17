@@ -174,9 +174,12 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             const source: MailSyncSource = {
               buildSource: ({ windows, filter, tagIndex, maxMessages, onEnumerated, onRetrieved, onTaken }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
-                // backward backfill window, so each tick still makes backfill progress.
-                if (createdIds) {
-                  onEnumerated(createdIds.length);
+                // backward backfill window, so each tick still makes backfill progress. When a user filter
+                // is set, the delta's account-wide created ids would bypass it — so fall back to the
+                // filtered forward window scan for additions (the delta still drives reconcile).
+                const forwardIds = filter ? undefined : createdIds;
+                if (forwardIds) {
+                  onEnumerated(forwardIds.length);
                 }
                 const additions = additionsToChanges(
                   jmapEmails(target, folders, {
@@ -185,7 +188,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                     now,
                     onEnumerated,
                     onRetrieved,
-                    forwardIds: createdIds,
+                    forwardIds,
                   }).pipe(
                     Stream.map(toItem),
                     Stream.provideService(JmapMailApi, providerApi),

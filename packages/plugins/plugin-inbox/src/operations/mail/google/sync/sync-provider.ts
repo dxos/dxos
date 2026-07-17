@@ -32,6 +32,13 @@ import { decodeBody, mapToMessage } from '../mapper';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
 
 /**
+ * Upper bound on `history.list` pages drained in one incremental run. A delta larger than this (or a
+ * server that never clears `nextPageToken`) recovers via the stale-token path — clear + full window
+ * scan — rather than looping unboundedly.
+ */
+const MAX_HISTORY_PAGES = 100;
+
+/**
  * Gmail's {@link MailSyncProvider}: the message source, the label→tag map, and the fused decode+map.
  * Captures {@link GoogleMailApi} + {@link Resolver} so the harness never names them. Mirror of the JMAP
  * provider (`jmapMailSyncProvider`).
@@ -115,11 +122,18 @@ export const googleMailSyncProvider = (options: {
                   const records: GoogleMail.HistoryRecord[] = [];
                   let pageToken: string | undefined;
                   let historyId = token;
+                  let pages = 0;
                   do {
                     const page = yield* api.listHistory(userId, { startHistoryId: token, pageToken });
                     records.push(...(page.history ?? []));
                     historyId = page.historyId;
                     pageToken = page.nextPageToken;
+                    // Bound the drain (see MAX_HISTORY_PAGES): a 404 reroutes to the stale-token fallback.
+                    if (++pages >= MAX_HISTORY_PAGES && pageToken !== undefined) {
+                      return yield* Effect.fail(
+                        new GoogleApiError(404, 'history delta exceeded page cap; falling back to window scan'),
+                      );
+                    }
                   } while (pageToken !== undefined);
                   return { history: records, historyId };
                 }),
@@ -146,9 +160,12 @@ export const googleMailSyncProvider = (options: {
             const source: MailSyncSource = {
               buildSource: ({ windows, filter, maxMessages, onEnumerated, onRetrieved, onTaken }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
-                // backward backfill window, so each tick still makes backfill progress.
-                if (createdIds) {
-                  onEnumerated(createdIds.length);
+                // backward backfill window, so each tick still makes backfill progress. When a user filter
+                // is set, the delta's account-wide created ids would bypass it — so fall back to the
+                // filtered forward window scan for additions (the delta still drives reconcile).
+                const forwardIds = filter ? undefined : createdIds;
+                if (forwardIds) {
+                  onEnumerated(forwardIds.length);
                 }
                 const additions = additionsToChanges(
                   fetchMessages({
@@ -158,7 +175,7 @@ export const googleMailSyncProvider = (options: {
                     searchFilter: filter,
                     onEnumerated,
                     onRetrieved,
-                    forwardIds: createdIds,
+                    forwardIds,
                   }).pipe(
                     Stream.map(toItem),
                     Stream.provideService(GoogleMailApi, api),
