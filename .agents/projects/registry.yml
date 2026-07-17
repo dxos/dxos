@@ -48,6 +48,6 @@ projects:
     tasks: .agents/projects/document-revisions/TASKS.md
     design: packages/plugins/plugin-markdown/DESIGN.md
     prs: [12237, 12246]
-    resume: 'PR #12246 open with stages 1 AND 2 (echo core: time travel + subtree branching + BranchBinding; @dxos/versioning rewired onto the core API with plugin-markdown adaptation) — watch Check to green + wittjosiah review + CodeRabbit round addressed. Then stage 3: generic Branches/History companion in plugin-space slot, editable merge overlay, branch-aware comments + agent update op. Stages 3-4 in TASKS.md.'
+    resume: 'PR #12246 open with stages 1, 2, AND 3 complete (echo core branching + time-travel + BranchBinding; @dxos/versioning rewired onto the core API; stage 3 UI: branch-scoped agent edits + deployed BranchStore, generic plugin-space history companion, editable merge overlay, branch-aware comments + AcceptChange cherry-pick). ~120 files. Watch Check to green + wittjosiah review + any CodeRabbit round. Then stage 4 (retire textual fork path; migrate legacy content-copy branches) — likely a follow-up PR/session. Stage 4 + deferrals in TASKS.md.'
 
 ended: []
