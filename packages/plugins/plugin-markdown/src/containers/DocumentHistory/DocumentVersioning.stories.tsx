@@ -30,6 +30,8 @@ import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
 
+const concat = (...lines: string[]) => lines.join('\n');
+
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.makeMeta({
