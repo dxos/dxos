@@ -14,7 +14,7 @@ import * as Instructions from './Instructions';
 //
 // PRIORITIES
 //
-// TODO(burdon): Move type to compute; keep Project as generic/low-level.
+// - Track inbox topics.
 //
 // - Reconcile with Project (linear/github use cases).
 // - Model goals via instructions (ISSUE: Dependency on compute).
@@ -44,8 +44,6 @@ export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.topic'
     // `types → compute → ai → types` cycle), tighten this to `Ref.Ref(Instructions.Instructions)`.
     instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
 
-    // label: Schema.String,
-
     // TODO(burdon): Uncouple from Email; Model via Refs?
     // TODO(burdon): Refs to other objects in context?
     // threadIds: Schema.Array(Schema.String),
@@ -68,8 +66,6 @@ export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.topic'
 /** Factory wrapper around `Obj.make` for {@link Topic}. */
 export const make = (props: Partial<Obj.MakeProps<typeof Topic>> = {}): Topic =>
   Obj.make(Topic, {
-    // label: '',
-    // summary: '',
     // threadIds: [],
     // participants: [],
     // keywords: [],
