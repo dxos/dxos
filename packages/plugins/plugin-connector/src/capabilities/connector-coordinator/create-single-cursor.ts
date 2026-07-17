@@ -53,6 +53,9 @@ export const createSingleCursor = (
     // failure is not special-cased — a defect here is caught by this function's own outer
     // `catchAllDefect` below, same as any other step in this flow.
     yield* connector.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
+    // Flush the index so a caller that queries cursors right after (e.g. the mailbox/calendar
+    // article this navigates to) observes the new binding immediately, matching `reconcileCursors`.
+    yield* Database.flush({ indexes: true });
   }).pipe(
     Effect.provide(Database.layer(db)),
     Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
