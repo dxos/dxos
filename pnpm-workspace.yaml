@@ -747,6 +747,19 @@ overrides:
   # Preview build from dxos/edge#t3code/a092bc61 (Effect HttpApi contract), consumed while the
   # HttpApiClient-derived client is validated locally, ahead of a proper release.
   '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b
+  # edge-protocol's `@dxos/{compute,echo,echo-protocol,keys,protocols,timeframe}` peerDependencies
+  # use a bare "*" range. A bare-range peer is resolved relative to whatever ambient peer context
+  # the CONSUMER already sits in — so a consumer with its own large peer bucket (e.g. anything
+  # pulling in @effect-atom/atom) can cause pnpm to satisfy edge-protocol's peer with a *different*,
+  # peer-forked copy of these packages than the plain workspace one everyone else uses, producing
+  # dual-package-identity type errors (e.g. two unrelated `DXN` types) wherever the fork and the
+  # plain copy collide in the same compilation. Pin these to the workspace copies unconditionally.
+  '@dxos/edge-protocol>@dxos/compute': 'workspace:*'
+  '@dxos/edge-protocol>@dxos/echo': 'workspace:*'
+  '@dxos/edge-protocol>@dxos/echo-protocol': 'workspace:*'
+  '@dxos/edge-protocol>@dxos/keys': 'workspace:*'
+  '@dxos/edge-protocol>@dxos/protocols': 'workspace:*'
+  '@dxos/edge-protocol>@dxos/timeframe': 'workspace:*'
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/common': 'catalog:'
   '@lezer/highlight': 'catalog:'

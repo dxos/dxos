@@ -202,13 +202,15 @@ const edgeInputLayer = (
   edgeConnection: EdgeConnection,
   edgeHttpClient: EdgeHttpClient,
   edgeApiClient: EdgeApiClientService | undefined,
-): Layer.Layer<EdgeConnectionService | EdgeHttpClientService | EdgeApiService> =>
-  Layer.mergeAll(
+): Layer.Layer<EdgeConnectionService | EdgeHttpClientService> => {
+  const base = Layer.mergeAll(
     Layer.succeed(EdgeConnectionService, edgeConnection),
     Layer.succeed(EdgeHttpClientService, edgeHttpClient),
-    // Optional: `EdgeAgentManagerLayer` resolves it via `serviceOption`, so absence is fine.
-    edgeApiClient ? Layer.succeed(EdgeApiService, edgeApiClient) : Layer.empty,
   );
+  // `EdgeApiService` is consumed via `serviceOption` (optional), so it is only merged in when a
+  // derived client exists and does not appear in the declared requirements.
+  return edgeApiClient ? Layer.provideMerge(base, Layer.succeed(EdgeApiService, edgeApiClient)) : base;
+};
 
 /**
  * Optional feed syncer (only wired into the stack when edge is configured).

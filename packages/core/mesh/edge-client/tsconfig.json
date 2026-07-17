@@ -36,19 +36,7 @@
       "path": "../../../common/test-utils"
     },
     {
-      "path": "../../../common/timeframe"
-    },
-    {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../compute/compute"
-    },
-    {
-      "path": "../../echo/echo"
-    },
-    {
-      "path": "../../echo/echo-protocol"
     },
     {
       "path": "../../halo/credentials"
