@@ -70,4 +70,6 @@ export type MarkerProvider = {
   useMarkers: (subject: any, options: { attendableId?: string }) => MarkerSet;
 };
 
-export const MarkerProvider = Capability.make<MarkerProvider>(`${meta.profile.key}.capability.marker-provider`);
+// Multi capability: every plugin that can plot a subject on the map (map's own view provider,
+// plugin-trip, ...) contributes one entry.
+export const MarkerProvider = Capability.makeMulti<MarkerProvider>(`${meta.profile.key}.capability.marker-provider`);

@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AnchorSort,
@@ -27,29 +25,60 @@ import { Sheet } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCommentConfigModule({
+    requires: CommentConfig.requires,
+    provides: CommentConfig.provides,
+    activate: CommentConfig,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addUndoMappingsModule({
+    requires: UndoMappings.requires,
+    provides: UndoMappings.provides,
+    activate: UndoMappings,
+  }),
   AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
+    id: Capability.getModuleTag(SheetState),
+    requires: SheetState.requires,
+    provides: SheetState.provides,
     activate: SheetState,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ProcessManagerReady),
+    id: Capability.getModuleTag(ComputeGraphRegistry),
+    requires: ComputeGraphRegistry.requires,
+    provides: ComputeGraphRegistry.provides,
     activate: ComputeGraphRegistry,
   }),
   Plugin.addModule({
-    activatesOn: MarkdownEvents.SetupExtensions,
+    id: Capability.getModuleTag(Markdown),
+    requires: Markdown.requires,
+    provides: Markdown.provides,
     activate: Markdown,
   }),
   Plugin.addModule({
-    // TODO(wittjosiah): More relevant event?
-    activatesOn: AppActivationEvents.AppGraphReady,
+    id: Capability.getModuleTag(AnchorSort),
+    requires: AnchorSort.requires,
+    provides: AnchorSort.provides,
     activate: AnchorSort,
   }),
   AppPlugin.addPluginAssetModule({

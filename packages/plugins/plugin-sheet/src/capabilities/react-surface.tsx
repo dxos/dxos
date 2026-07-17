@@ -15,8 +15,8 @@ import { RangeList, SheetArticle } from '#containers';
 import { Sheet, SheetCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'sheet',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
@@ -44,5 +44,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <RangeList sheet={data.subject} />,
       }),
     ]),
-  ),
+  ]),
 );

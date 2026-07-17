@@ -10,7 +10,11 @@ import { meta } from '#meta';
 import { Map } from '#types';
 
 export const MapPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Map.Map] }),
   Plugin.make,
 );

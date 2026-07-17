@@ -13,8 +13,8 @@ import { Table } from '@dxos/react-ui-table/types';
 import { TableArticle, TableCard } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'table',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
@@ -33,5 +33,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,
       }),
     ]),
-  ),
+  ]),
 );

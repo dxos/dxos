@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -17,31 +17,58 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Map } from '#types';
+import { Map, MapEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MapPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Map.Map] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addSettingsModule({ activate: MapSettings }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
+  AppPlugin.addSettingsModule({
+    requires: MapSettings.requires,
+    provides: MapSettings.provides,
+    // Migration bridge for unmigrated SettingsReady listeners.
+    compatFires: [MapEvents.SettingsReady],
+    activate: MapSettings,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    id: 'marker-provider',
-    activatesOn: ActivationEvents.Startup,
+    id: Capability.getModuleTag(MarkerProvider),
+    requires: MarkerProvider.requires,
+    provides: MarkerProvider.provides,
     activate: MarkerProvider,
   }),
   Plugin.addModule({
-    id: 'state',
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: AppActivationEvents.SetupSettings,
+    id: Capability.getModuleTag(MapState),
+    requires: MapState.requires,
+    provides: MapState.provides,
+    // Migration bridge for unmigrated StateReady listeners.
+    compatFires: [MapEvents.StateReady],
     activate: MapState,
   }),
   AppPlugin.addPluginAssetModule({

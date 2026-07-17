@@ -14,8 +14,8 @@ import { GameArticle, GameCard } from '#containers';
 import { Game } from '../types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'game',
         filter: AppSurface.oneOf(
@@ -32,5 +32,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <GameCard role={role} subject={data.subject} />,
       }),
     ]),
-  ),
+  ]),
 );

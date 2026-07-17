@@ -10,7 +10,11 @@ import { meta } from '#meta';
 import { Kanban } from '#types';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
   Plugin.make,
 );

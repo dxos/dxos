@@ -10,10 +10,26 @@ import { meta } from '#meta';
 import { Kanban } from '#types';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addUndoMappingsModule({
+    requires: UndoMappings.requires,
+    provides: UndoMappings.provides,
+    activate: UndoMappings,
+  }),
   AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
   Plugin.make,
 );

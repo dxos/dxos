@@ -18,8 +18,8 @@ import { MapSurface, MapViewEditor } from '#containers';
 import { LocationAnnotationId, Map, MapInline } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.map',
         filter: AppSurface.oneOf(
@@ -117,5 +117,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ),
+  ]),
 );

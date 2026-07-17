@@ -14,12 +14,32 @@ import { Kanban } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addUndoMappingsModule({
+    requires: UndoMappings.requires,
+    provides: UndoMappings.provides,
+    activate: UndoMappings,
+  }),
   AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

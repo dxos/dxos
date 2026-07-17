@@ -18,7 +18,7 @@ import { SheetCapabilities } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
 
     // Async import removes direct dependency on hyperformula.
     const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(
@@ -37,6 +37,6 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.contributes(SheetCapabilities.ComputeGraphRegistry, computeGraphRegistry);
+    return [Capability.provide(SheetCapabilities.ComputeGraphRegistry, computeGraphRegistry)];
   }),
 );

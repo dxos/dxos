@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
-export const Surface = Capability.lazy('Surface', () => import('./surface'));
+export const Surface = Capability.lazyModule(
+  'Surface',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./surface'),
+);
