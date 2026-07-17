@@ -159,21 +159,34 @@ Operations (see `operations` skill) so agents can draft and propose changes:
 - Storybook stories rendered + console-checked for all new components.
 - `moon run plugin-markdown:build` / `:test` / `:lint` + `pnpm format` gates.
 
-## Phase 2: upstreaming
+## Convergence with ECHO-core branching (landed)
 
-See [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md)
-for the staged convergence with PR #11829's ECHO-core branching (true CRDT forks).
+The staged convergence with PR #11829's ECHO-core branching
+([`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md))
+has landed. The content-copy fork described above is superseded; the current model:
 
-Not built now; the phase-1 shapes are chosen to make this a lift, not a migration:
+- **True CRDT forks.** `Branch.create` forks the parent Text as an ECHO-core branch (same object
+  id, shared automerge history) via `db.createBranch`; the `Branch` record is product metadata
+  keyed into the space-root branch registry by `Branch.key`. `mergeBranch` is a conflict-free CRDT
+  merge (`db.mergeBranch`) — no marker conflicts between core branches.
+- **Per-surface bindings.** `db.branch(obj, name)` returns a caller-owned writable binding, so an
+  agent (or a second plank) edits a branch while the user stays on main; the editor and the
+  branch-scoped `Update`/`AcceptChange` operations write through it.
+- **Checkpoints** view via `setTimeTravel` pinning (not snapshot-swap); a checkpoint taken on a
+  branch carries `Version.branch` (its heads live in the branch doc) and resolves against it.
+- **Generic history companion.** The git-graph companion lives in plugin-space, gated per-type by
+  `SpaceCapabilities.HistoryProvider`; markdown contributes the provider.
+- **Review workflow.** Branch-aware comments (`AnchoredTo.branch`, scoped to the review branch) +
+  per-hunk `AcceptChange` cherry-pick; the editable unified merge overlay backs the sideBySide
+  compare. Instant CRDT merge is the default.
 
-- DONE: `Version`/`Branch` and the model now live in `@dxos/versioning`. Remaining: generalize
-  record refs over `Ref(Obj.Any)` targets so non-Text objects (sketches, sheets) can be versioned.
-- True CRDT forks: core ECHO API to fork a leaf doc with shared history (object-id
-  rewrite or fragment surgery) enabling `A.merge`-quality merge-back; replaces the
-  textual 3-way merge behind the same `mergeBranch` signature.
-- Alignment with subduction fragments (`FragmentMeta.checkpoints`) for history
-  compaction; branch-level access control (draft visible only to its author).
-- Generic history companion usable by any plugin.
+`merge3` and the conflict-marker editor are retained for **external/imported** content (and any
+legacy content-copy `Branch` record — `key` unset, `content` set — which stays mergeable via
+`merge3` until it drains); they are no longer the branch-merge path.
+
+Remaining: generalize record refs over `Ref(Obj.Any)` so non-Text objects (sketches, sheets) can be
+versioned; branch-level access control (draft visible only to its author); alignment with subduction
+fragments (`FragmentMeta.checkpoints`) for history compaction.
 
 ## Risks / notes
 
