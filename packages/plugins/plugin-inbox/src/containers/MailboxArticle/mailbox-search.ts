@@ -46,3 +46,11 @@ export const buildMailboxSelection = (filterText: string, filter: Filter.Any | u
 export const getSearchText = (filter: Filter.Any | undefined): string | undefined => {
   return filter && findTextSearch(filter.ast)?.text;
 };
+
+/**
+ * Selects a mailbox's draft messages: space-db `Message`s carrying `properties.mailbox` set to this
+ * mailbox's URI. Callers should still guard with `DraftMessage.belongsTo` — this property match is
+ * structural, not the full `DraftMessage.instanceOf` validity check.
+ */
+export const buildDraftFilter = (mailboxUri: string): Filter.Any =>
+  Filter.type(Message.Message, { properties: { mailbox: mailboxUri } });

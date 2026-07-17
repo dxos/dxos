@@ -7,7 +7,14 @@ import { describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { createDraftMessage, getMessageBodyText, getMessageProps, messageMatchesQuery, orderThreadItems } from './util';
+import {
+  createDraftMessage,
+  dedupeSupersededDrafts,
+  getMessageBodyText,
+  getMessageProps,
+  messageMatchesQuery,
+  orderThreadItems,
+} from './util';
 
 describe('createDraftMessage', () => {
   test('compose mode returns empty to and provided subject/body', ({ expect }) => {
@@ -148,6 +155,45 @@ describe('orderThreadItems', () => {
     const m2 = makeRead('2025-01-02T00:00:00.000Z');
     const messages = [m1, m2];
     expect(orderThreadItems(messages)).toBe(messages);
+  });
+});
+
+describe('dedupeSupersededDrafts', () => {
+  const MAILBOX_URI = 'echo:mailbox-1';
+  const OTHER_MAILBOX_URI = 'echo:mailbox-2';
+
+  const makeSynced = (foreignId: string) =>
+    Obj.make(Message.Message, {
+      [Obj.Meta]: { keys: [{ id: foreignId, source: 'test' }] },
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Alice', email: 'alice@example.com' },
+      blocks: [{ _tag: 'text' as const, text: 'Body' }],
+      properties: { subject: 'Topic' },
+    });
+
+  const makeDraft = (mailboxUri: string, sentMessageId?: string) =>
+    Obj.make(Message.Message, {
+      created: '2025-01-02T00:00:00.000Z',
+      sender: { name: 'Me' },
+      blocks: [{ _tag: 'text' as const, text: '' }],
+      properties: { subject: 'Re: Topic', mailbox: mailboxUri, ...(sentMessageId ? { sentMessageId } : {}) },
+    });
+
+  test('keeps synced messages and this mailbox\'s unsent drafts', ({ expect }) => {
+    const synced = makeSynced('foreign-1');
+    const draft = makeDraft(MAILBOX_URI);
+    expect(dedupeSupersededDrafts([synced, draft], MAILBOX_URI)).toEqual([synced, draft]);
+  });
+
+  test('drops a draft superseded by its synced sent copy', ({ expect }) => {
+    const synced = makeSynced('foreign-1');
+    const draft = makeDraft(MAILBOX_URI, 'foreign-1');
+    expect(dedupeSupersededDrafts([synced, draft], MAILBOX_URI)).toEqual([synced]);
+  });
+
+  test('drops a draft belonging to a different mailbox', ({ expect }) => {
+    const draft = makeDraft(OTHER_MAILBOX_URI);
+    expect(dedupeSupersededDrafts([draft], MAILBOX_URI)).toEqual([]);
   });
 });
 

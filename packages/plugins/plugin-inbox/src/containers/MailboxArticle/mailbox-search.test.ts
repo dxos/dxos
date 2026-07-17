@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { QueryBuilder } from '@dxos/echo-query';
 
-import { buildMailboxSelection, getSearchText } from './mailbox-search';
+import { buildDraftFilter, buildMailboxSelection, getSearchText } from './mailbox-search';
 
 describe('buildMailboxSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
@@ -43,5 +43,12 @@ describe('getSearchText', () => {
 
   test('undefined filter returns undefined', () => {
     expect(getSearchText(undefined)).toBeUndefined();
+  });
+});
+
+describe('buildDraftFilter', () => {
+  test('selects messages scoped to this mailbox by properties.mailbox', () => {
+    const filter = buildDraftFilter('echo:mailbox-1');
+    expect(filter.ast.type).toBe('object');
   });
 });

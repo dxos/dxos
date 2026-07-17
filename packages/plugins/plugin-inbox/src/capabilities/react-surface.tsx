@@ -17,7 +17,6 @@ import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types'
 import {
   CalendarArticle,
   CalendarProperties,
-  DraftsArticle,
   EditMessageArticle,
   EventArticle,
   EventCard,
@@ -35,12 +34,11 @@ import {
 import { Calendar, Mailbox } from '#types';
 
 import {
-  MAILBOX_DRAFTS_NODE_DATA,
   MAILBOX_SUBSCRIPTIONS_NODE_DATA,
   MAILBOX_TOPICS_NODE_DATA,
   POPOVER_SAVE_FILTER,
 } from '../constants';
-import { getDraftsId, getSubscriptionsId, getTopicsId } from '../paths';
+import { getSubscriptionsId, getTopicsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -54,25 +52,6 @@ const isMessageOrThread = (subject: unknown): subject is Message.Message | Messa
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'drafts',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const mailbox = data.properties?.mailbox;
-          const lastSegment = data.attendableId.split('/').pop();
-          return (
-            lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_DRAFTS_NODE_DATA
-          );
-        }),
-        component: ({ data, role }) => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-
-          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
-          return <DraftsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
-        },
-      }),
       Surface.create({
         id: 'topics',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
@@ -123,7 +102,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Mailbox.Mailbox),
         component: ({ data }) => {
           return (
-            <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
+            <MailboxArticle
+              subject={data.subject}
+              filter={data.properties?.filter}
+              draftsOnly={data.properties?.draftsOnly}
+              attendableId={data.attendableId}
+            />
           );
         },
       }),

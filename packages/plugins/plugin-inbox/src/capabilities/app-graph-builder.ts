@@ -27,7 +27,6 @@ import { meta } from '#meta';
 import { Calendar, InboxOperation, Mailbox } from '#types';
 
 import {
-  MAILBOX_DRAFTS_NODE_DATA,
   MAILBOX_DRAFTS_TYPE,
   MAILBOX_SUBSCRIPTIONS_NODE_DATA,
   MAILBOX_SUBSCRIPTIONS_TYPE,
@@ -37,14 +36,16 @@ import {
 } from '../constants';
 import { createSyncProgressKey } from '../operations/mail/mail-sync';
 import {
+  getAllMailId,
   getCalendarsPath,
   getDraftsId,
   getMailboxesPath,
   getMailboxesSectionId,
+  getSentId,
   getSubscriptionsId,
   getTopicsId,
 } from '../paths';
-import { syncTarget } from '../util';
+import { dedupeSupersededDrafts, syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -198,17 +199,45 @@ export default Capability.makeModule(
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
-                  // New-message badge stubbed pending a real read/unread signal (see Mailbox.ts).
+                  // Placeholder for a future "intelligent inbox" (important mail only); for now, the
+                  // provider inbox tag. New-message badge stubbed pending a real read/unread signal.
+                  filter: '#inbox',
                 },
                 nodes: [
+                  // Pre-seeded, non-removable filter nodes — the same mechanism as a saved user filter
+                  // (FILTER_TYPE, data: mailbox, properties.filter), just emitted statically with fixed
+                  // labels and no rename/delete actions.
+                  Node.make({
+                    id: getAllMailId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['all-mail.label', { ns: meta.profile.key }],
+                      icon: 'ph--tray--regular',
+                      iconHue: 'rose',
+                      filter: '',
+                    },
+                  }),
+                  Node.make({
+                    id: getSentId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['sent.label', { ns: meta.profile.key }],
+                      icon: 'ph--paper-plane-tilt--regular',
+                      iconHue: 'rose',
+                      filter: '#sent',
+                    },
+                  }),
                   Node.make({
                     id: getDraftsId(),
                     type: MAILBOX_DRAFTS_TYPE,
-                    data: MAILBOX_DRAFTS_NODE_DATA,
+                    data: mailbox,
                     properties: {
                       label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
                       iconHue: 'rose',
+                      draftsOnly: true,
                       mailbox,
                     },
                   }),
@@ -288,28 +317,11 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'mailboxDrafts',
+        id: 'mailboxDraftsActions',
+        // The companion (message thread) comes from `mailboxMessage` below — every node under a mailbox
+        // carries `data: mailbox`, drafts included. This extension only contributes the "create draft"
+        // action, scoped to the drafts node.
         match: NodeMatcher.whenNodeType(MAILBOX_DRAFTS_TYPE),
-        connector: (node, get) => {
-          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
-          if (!mailbox || !db) {
-            return Effect.succeed([]);
-          }
-
-          const mailboxUri = Obj.getURI(mailbox);
-          const messageId = get(selectedId(node.id));
-          const message = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
-          const draft = message && DraftMessage.belongsTo(message, mailboxUri) ? message : undefined;
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: linkedSegment('message'),
-              label: ['message.label', { ns: meta.profile.key }],
-              icon: 'ph--envelope-open--regular',
-              data: draft ?? 'message',
-            }),
-          ]);
-        },
         actions: (node) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
           const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
@@ -343,9 +355,13 @@ export default Capability.makeModule(
           }
 
           const messageId = get(selectedId(nodeId));
-          const message = get(
-            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
-          )[0];
+          const idFilter = messageId ? Filter.id(messageId) : Filter.nothing();
+          const fromFeed = get(db.query(Query.select(idFilter).from(feed)).atom)[0];
+          // Drafts live in the space db, not the feed (e.g. the Drafts view's rows); fall back to a db
+          // lookup so their companion resolves too (mirrors `calendarEvent` below).
+          const fromDb = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
+          const message = fromFeed ?? fromDb;
+
           // The selected message's whole conversation, assigned to the companion so the article renders
           // it directly. One combined-scope query (db-root drafts + this mailbox's feed) assembles it
           // via a single reactive subscription, oldest-first, correlated by `threadId`. Two same-shape
@@ -360,24 +376,10 @@ export default Capability.makeModule(
                 ).atom,
               );
 
-          // Synced messages (no `properties.mailbox`) always pass; drafts pass only when scoped to this
-          // mailbox and not yet superseded by their sent copy in the feed (matched on the provider id
-          // set at send time). Deleting the superseded draft is deferred to sync (`reconcileDrafts`).
-          const mailboxUri = Obj.getURI(mailbox);
-          const syncedIds = new Set(
-            conversation
-              .filter((item) => !DraftMessage.instanceOf(item))
-              .flatMap((item) => Obj.getMeta(item).keys.map((key) => key.id)),
-          );
-          const thread = conversation.filter((item) => {
-            if (!DraftMessage.instanceOf(item)) {
-              return true;
-            }
-            if (!DraftMessage.belongsTo(item, mailboxUri)) {
-              return false;
-            }
-            return !(item.properties?.sentMessageId && syncedIds.has(item.properties.sentMessageId));
-          });
+          // Synced messages always pass; drafts pass only when scoped to this mailbox and not yet
+          // superseded by their sent copy in the feed. Deleting the superseded draft is deferred to
+          // sync (`reconcileDrafts`).
+          const thread = dedupeSupersededDrafts(conversation, Obj.getURI(mailbox));
 
           return Effect.succeed([
             AppNode.makeCompanion({

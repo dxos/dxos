@@ -21,9 +21,10 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Icon, Panel } from '@dxos/react-ui';
+import { ElevationProvider, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { Empty } from '@dxos/react-ui-list';
 import {
   Menu,
   MenuBuilder,
@@ -33,7 +34,7 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { DraftMessage, Message } from '@dxos/types';
 
 import {
   MessageStack,
@@ -52,9 +53,9 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
-import { messageMatchesQuery } from '../../util';
+import { dedupeSupersededDrafts, messageMatchesQuery, sortByCreated } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
-import { buildMailboxSelection, getSearchText } from './mailbox-search';
+import { buildDraftFilter, buildMailboxSelection, getSearchText } from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -67,10 +68,23 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
   {
     filter?: string;
+    /**
+     * Drives the mailbox's Drafts view: the list is driven by this mailbox's drafts directly (grouped
+     * by thread; a draft with no thread is its own row) instead of the feed, and the filter editor is
+     * hidden. Otherwise, this mailbox's drafts are attached to feed threads already present in the list
+     * (see the `items` memo below) — a draft never appears as a standalone row outside this view.
+     */
+    draftsOnly?: boolean;
   }
 >;
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({
+  subject: mailbox,
+  filter: filterProp,
+  draftsOnly = false,
+  attendableId,
+}: MailboxArticleProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(InboxCapabilities.Settings);
   const id = attendableId ?? Obj.getURI(mailbox);
@@ -105,6 +119,33 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const starredAtom = useMemo(() => Starred.atom(tagIndex, starredUri), [tagIndex, starredUri]);
 
+  // This mailbox's drafts (space-db, not the feed). In the Drafts view (`draftsOnly`) they drive the
+  // list directly; otherwise each is attached to its thread if that thread is already present in the
+  // feed-paginated list below — a draft never appears as a standalone row outside the Drafts view (see
+  // the `items` memo).
+  const mailboxUri = Obj.getURI(mailbox);
+  const draftFilter = useMemo(() => buildDraftFilter(mailboxUri), [mailboxUri]);
+  const draftMessages = useQuery(db, draftFilter);
+  const drafts = useMemo(
+    () => draftMessages.filter((message) => DraftMessage.belongsTo(message, mailboxUri)),
+    [draftMessages, mailboxUri],
+  );
+  const draftsByThreadId = useMemo(() => {
+    const map = new Map<string, Message.Message[]>();
+    for (const draft of drafts) {
+      if (draft.threadId == null) {
+        continue;
+      }
+      const list = map.get(draft.threadId);
+      if (list) {
+        list.push(draft);
+      } else {
+        map.set(draft.threadId, [draft]);
+      }
+    }
+    return map;
+  }, [drafts]);
+
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
@@ -136,7 +177,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     [debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
-  const source = feed && Query.select(selection).from(feed);
+  // The Drafts view drives its list from `drafts` directly (below), not this feed-paginated query.
+  const source = !draftsOnly && feed ? Query.select(selection).from(feed) : undefined;
   const pagination = usePagination(
     db,
     source
@@ -160,6 +202,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // single `null`-key group; split them back into singleton conversations at that group's position.
   // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
   const items = useMemo<MessageStackItem[]>(() => {
+    if (draftsOnly) {
+      return applyPostFilters(groupDraftsOnly(drafts), mailbox, searchQuery);
+    }
+
     const result: MessageStackItem[] = [];
     for (const entry of pagination.items) {
       if (!isThreadGroup(entry)) {
@@ -167,29 +213,32 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       } else if (entry.threadId == null) {
         result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
+        // Attach this mailbox's drafts for the thread, if any (superseded ones excluded). The extra
+        // count only reflects surviving drafts — `entry.items` is always feed (non-draft) messages.
+        const merged = dedupeSupersededDrafts(
+          [...entry.items, ...(draftsByThreadId.get(entry.threadId) ?? [])],
+          mailboxUri,
+        );
+        result.push({
+          id: entry.threadId,
+          messages: merged.sort(sortByCreated('created', true)),
+          total: entry.count + (merged.length - entry.items.length),
+        });
       }
     }
     // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
     // During an active search, also drop messages that don't match in their plain/markdown body or
     // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
     // message can match the index yet have no matching (or any) plain/markdown text to display.
-    return result.flatMap((item): MessageStackItem[] => {
-      const matches = (message: Message.Message) =>
-        !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
-      if (isMessageGroup(item)) {
-        const messages = item.messages.filter(matches);
-        return messages.length > 0 ? [{ ...item, messages }] : [];
-      }
-      return matches(item) ? [item] : [];
-    });
-  }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
+    return applyPostFilters(result, mailbox, searchQuery);
+  }, [draftsOnly, drafts, pagination.items, draftsByThreadId, mailboxUri, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // Gates on the query settling, not on `messages.length`, so the empty-mailbox panel never renders mid-load.
-  const loading = !feed || pagination.isLoading;
+  // Gates on the query settling, not on `messages.length`, so the empty-mailbox panel never renders
+  // mid-load. The Drafts view has no paginated query to settle (it reads `drafts` directly).
+  const loading = !draftsOnly && (!feed || pagination.isLoading);
 
   const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
@@ -317,7 +366,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     [db, tagMap, filterText, filter, setFilterText, handleSaveFilter, handleClear],
   );
 
-  const menuActions = useMailboxActions(mailbox, { sortDescending, nodeId: id, filterElement });
+  const menuActions = useMailboxActions(mailbox, { sortDescending, nodeId: id, filterElement, draftsOnly });
 
   return (
     <Panel.Root>
@@ -345,12 +394,14 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
-            pagination={feed ? pagination : undefined}
+            pagination={!draftsOnly && feed ? pagination : undefined}
             enableIgnoreSender
             enableCreateTopic
             searchQuery={searchQuery}
             onAction={handleAction}
           />
+        ) : draftsOnly ? (
+          <Empty label={t('drafts.empty.message')} />
         ) : (
           <InitializeMailbox mailbox={mailbox} />
         )}
@@ -384,6 +435,51 @@ type ThreadGroup = {
 const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGroup =>
   !Obj.instanceOf(Message.Message, entry);
 
+/**
+ * Drops individually-filtered messages (e.g. "Ignore sender") and, during an active search, messages
+ * whose visible body/subject don't match; collapses a group to nothing if every message is dropped.
+ */
+const applyPostFilters = (
+  items: MessageStackItem[],
+  mailbox: Mailbox.Mailbox,
+  searchQuery: string | undefined,
+): MessageStackItem[] => {
+  const matches = (message: Message.Message) =>
+    !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
+  return items.flatMap((item): MessageStackItem[] => {
+    if (isMessageGroup(item)) {
+      const messages = item.messages.filter(matches);
+      return messages.length > 0 ? [{ ...item, messages }] : [];
+    }
+    return matches(item) ? [item] : [];
+  });
+};
+
+/** Groups this mailbox's drafts by thread for the Drafts view; a draft with no thread is its own row. */
+const groupDraftsOnly = (drafts: Message.Message[]): MessageStackItem[] => {
+  const byThreadId = new Map<string, Message.Message[]>();
+  const standalone: MessageStackItem[] = [];
+  for (const draft of drafts) {
+    if (draft.threadId == null) {
+      standalone.push({ id: draft.id, messages: [draft] });
+      continue;
+    }
+    const list = byThreadId.get(draft.threadId);
+    if (list) {
+      list.push(draft);
+    } else {
+      byThreadId.set(draft.threadId, [draft]);
+    }
+  }
+  return [
+    ...[...byThreadId.entries()].map(([threadId, messages]) => ({
+      id: threadId,
+      messages: messages.sort(sortByCreated('created', true)),
+    })),
+    ...standalone,
+  ];
+};
+
 const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
 
 /**
@@ -413,11 +509,13 @@ type MailboxActionsOptions = {
   nodeId: string;
   /** Search box, custom-rendered as a toolbar item so the connect group can sit to its right. */
   filterElement: ReactNode;
+  /** The Drafts view has no free-text filter over the feed; hide the search box. */
+  draftsOnly: boolean;
 };
 
 const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
-  { sortDescending, nodeId, filterElement }: MailboxActionsOptions,
+  { sortDescending, nodeId, filterElement, draftsOnly }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
@@ -487,12 +585,19 @@ const useMailboxActions = (
         );
 
       // The search box, custom-rendered as a toolbar item so the connect group can sit to its right.
-      // Always present (even for an empty mailbox — filtering an empty list is harmless).
-      builder.action(
-        'filter',
-        { variant: 'custom', label: ['mailbox-toolbar.title', { ns: meta.profile.key }], render: () => filterElement },
-        () => {},
-      );
+      // Always present (even for an empty mailbox — filtering an empty list is harmless) except in the
+      // Drafts view, which has no free-text filter over the feed.
+      if (!draftsOnly) {
+        builder.action(
+          'filter',
+          {
+            variant: 'custom',
+            label: ['mailbox-toolbar.title', { ns: meta.profile.key }],
+            render: () => filterElement,
+          },
+          () => {},
+        );
+      }
 
       return builder
         .separator('gap')
@@ -503,6 +608,7 @@ const useMailboxActions = (
       graph,
       nodeId,
       filterElement,
+      draftsOnly,
       sortDescending,
       loadRemoteImages,
       setSettings,
