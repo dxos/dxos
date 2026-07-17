@@ -206,3 +206,27 @@ nested/parent-aware registry key.
   same limit.
 - Restore/merge are plain edits, so they interleave safely with concurrent collaborator
   edits under normal CRDT semantics.
+
+## Status
+
+Current risk in the product/UI layer (plugin-markdown, plugin-space, plugin-comments, ui-editor).
+Echo-core-layer risk is tracked separately in
+[`@dxos/echo-client` VERSIONING.md § Status](../../core/echo/echo-client/docs/VERSIONING.md#status).
+
+- **Shared `Timeline` component change.** The `currentBranch`-effect guard (keep the highlight on an
+  explicitly selected commit) also affects plugin-assistant's `TracePanel`. Reasoned safe — it only
+  skips a redundant jump — and the Timeline's own stories pass, but `TracePanel` was not re-verified
+  end to end.
+- **Nested branch-of-branch is guarded, not solved.** "New branch" is disabled on a branch / branch
+  revision and the checkpoint banner's "Branch from" is hidden for branch revisions, so a fork can
+  never silently derive from main; true sub-branching is unavailable (see the ECHO-core
+  [nested-branches design](../../core/echo/echo-client/docs/VERSIONING.md#nested-branches-planned)).
+- **Merged-branch revision viewing** reads read-only against the root document after merge, relying
+  on the echo-core head-reachability guarantee; the UI never binds the deleted branch.
+- **Memoized LLM fixtures** regenerated for this change (assistant-toolkit, assistant-e2e,
+  crm-mailbox) are brittle and a plausible CI-failure source.
+- **Verification.** Only affected-package build/lint/tests were run locally; the full CI "Check" was
+  still pending at authoring time.
+- **`Branch` record type** does not yet enforce the core/legacy invariant (exactly one of
+  `key`/`content`); only the runtime `Branch.isCore` guard distinguishes them, pending the stage-4
+  legacy drain.
