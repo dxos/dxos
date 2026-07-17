@@ -12,6 +12,7 @@ import importAsNamespace from './rules/import-as-namespace.js';
 import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
+import requireSpanName from './rules/require-span-name.js';
 import translationKeyFormat from './rules/translation-key-format.js';
 
 const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
@@ -31,6 +32,7 @@ const plugin = {
     'no-bare-dot-imports': noBareDotImports,
     'no-effect-run-promise': noEffectRunPromise,
     'no-empty-promise-catch': noEmptyPromiseCatch,
+    'require-span-name': requireSpanName,
     'translation-key-format': translationKeyFormat,
   },
   configs: {

@@ -86,7 +86,7 @@ export class WsReplicant {
     log.info('left swarm', { topic });
   }
 
-  @trace.span()
+  @trace.span({ name: 'WsReplicant.testDuration' })
   async testDuration({
     topic,
     messageAmount,

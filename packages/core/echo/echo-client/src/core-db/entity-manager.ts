@@ -204,7 +204,7 @@ export class EntityManager implements IDatabaseBinding {
    * Performs initial AM document load after a rootUrl is known.
    * Called by DatabaseImpl when the first space root is available.
    */
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'EntityManager.openWithSpaceState', showInBrowserTimeline: true, op: 'lifecycle' })
   async openWithSpaceState(ctx: Context, spaceState: SpaceState): Promise<void> {
     const start = performance.now();
     try {
@@ -750,7 +750,7 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Document-handle private implementation ───────────────────────────────
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'EntityManager._loadSpaceRootDocHandle', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
     if (this._spaceRootDocHandle != null) {
       return;
@@ -1233,7 +1233,7 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Update scheduling ────────────────────────────────────────────────────
 
-  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
+  @trace.span({ name: 'EntityManager._emitDbUpdateEvents', showInBrowserTimeline: true, showInRemoteTracing: false })
   private _emitDbUpdateEvents(_ctx: Context): void {
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);

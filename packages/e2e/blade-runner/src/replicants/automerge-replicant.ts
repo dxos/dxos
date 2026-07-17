@@ -43,7 +43,7 @@ export class AutomergeReplicant {
 
   constructor(private readonly env: ReplicantEnv) {}
 
-  @trace.span()
+  @trace.span({ name: 'AutomergeReplicant.openRepo' })
   async openRepo({ storageAdaptor }: { storageAdaptor: StorageAdaptorKind }): Promise<void> {
     await this._repoCtx.dispose();
     this._repoCtx = new Context();
@@ -52,14 +52,14 @@ export class AutomergeReplicant {
     this._repoCtx.onDispose(() => this._repo?.shutdown());
   }
 
-  @trace.span()
+  @trace.span({ name: 'AutomergeReplicant.closeRepo' })
   async closeRepo(): Promise<void> {
     await this._repoCtx.dispose();
     this._repoCtx = new Context();
     this._repo = undefined;
   }
 
-  @trace.span()
+  @trace.span({ name: 'AutomergeReplicant.createDocument' })
   async createDocument({
     docsCount,
     mutationAmount,
@@ -106,7 +106,7 @@ export class AutomergeReplicant {
     };
   }
 
-  @trace.span()
+  @trace.span({ name: 'AutomergeReplicant.loadDocuments' })
   async loadDocuments({ docIds }: { docIds: DocumentId[] }): Promise<DocumentsResult> {
     performance.mark('load:begin');
     const docsLoaded: DocumentsResult['docsCreated'] = {};

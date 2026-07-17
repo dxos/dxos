@@ -149,6 +149,7 @@ export class CollectionSynchronizer extends Resource {
     // accrete every peer's sync activity into one session-long trace with a root that
     // only exports on close (DX-T2 in docs/design/tracing-improvement-spec.md).
     void trace.spanStart({
+      name: `CollectionSynchronizer.${SYNC_SPAN_METHOD}`,
       id: spanId,
       methodName: SYNC_SPAN_METHOD,
       instance: this,
@@ -242,6 +243,7 @@ export class CollectionSynchronizer extends Resource {
     } else {
       // Browser-timeline-only span; see note in onConnectionOpen.
       void trace.spanStart({
+        name: `CollectionSynchronizer.${SYNC_SPAN_METHOD}`,
         id: spanId,
         methodName: SYNC_SPAN_METHOD,
         instance: this,

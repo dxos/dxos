@@ -6,7 +6,14 @@ import { sleep } from '@dxos/async';
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
+import {
+  EDGE_CLIENT_TAG_HEADER,
+  EDGE_SESSION_ID_HEADER,
+  EdgeAuthChallengeError,
+  EdgeCallFailedError,
+  type EdgeFailure,
+} from '@dxos/protocols';
+import { SESSION_ID } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { encodeAuthHeader } from './http-client';
@@ -204,6 +211,7 @@ export abstract class BaseHttpClient {
         if (this._clientTag) {
           headers[EDGE_CLIENT_TAG_HEADER] = this._clientTag;
         }
+        headers[EDGE_SESSION_ID_HEADER] = SESSION_ID;
 
         const response = await fetch(url, { method: args.method, body: args.body, headers });
 
@@ -271,6 +279,10 @@ const createRequest = (
   if (clientTag) {
     headers[EDGE_CLIENT_TAG_HEADER] = clientTag;
   }
+
+  // Session correlation across telemetry (SC-2): the same value is the client-side OTEL
+  // `session.id` resource attribute; edge stamps it as `ctx.sessionId` on server spans.
+  headers[EDGE_SESSION_ID_HEADER] = SESSION_ID;
 
   return { method, body: requestBody, headers };
 };

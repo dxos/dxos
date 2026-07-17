@@ -219,7 +219,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     this._closingConnections.clear();
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ name: 'EchoEdgeSubductionReplicator.connectToSpace', showInBrowserTimeline: true })
   async connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void> {
     log('connectToSpace', { spaceId });
     using _guard = await this._spaceMutex(spaceId).acquire();

@@ -73,7 +73,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  @trace.span()
+  @trace.span({ name: 'SpaceList._open' })
   async _open(ctx: Context): Promise<void> {
     log('opening space list');
     this._ctx = new Context({
@@ -224,7 +224,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  @trace.span()
+  @trace.span({ name: 'SpaceList._close' })
   async _close(ctx: Context): Promise<void> {
     this._streamSubscriptions.clear();
     await this._ctx.dispose();
@@ -263,7 +263,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._createSpaceInternal(this._ctx, meta, options);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'SpaceList._createSpaceInternal', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _createSpaceInternal(
     ctx: Context,
     meta?: SpaceProperties,
@@ -325,7 +325,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._joinBySpaceKeyInternal(this._ctx, spaceKey);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'SpaceList._joinBySpaceKeyInternal', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _joinBySpaceKeyInternal(ctx: Context, spaceKey: PublicKey): Promise<Space> {
     const response = await runServiceCall(
       this._runtime,

@@ -114,7 +114,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     scheduleMicroTask(ctx, tryHandleInvitation);
   }
 
-  @trace.span({ op: 'invitation.edge' })
+  @trace.span({ name: 'EdgeInvitationHandler._handleSpaceInvitationFlow', op: 'invitation.edge' })
   private async _handleSpaceInvitationFlow(
     ctx: Context,
     guardedState: GuardedInvitationState,

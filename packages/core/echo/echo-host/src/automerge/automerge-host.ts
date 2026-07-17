@@ -876,7 +876,7 @@ export class AutomergeHost extends Resource {
    * callers needing an up-to-date sync-state view should subscribe to
    * {@link collectionStateUpdated} rather than sampling immediately after flush.
    */
-  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
+  @trace.span({ name: 'AutomergeHost.flush', showInBrowserTimeline: true, showInRemoteTracing: false })
   async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
     if (!this.isOpen) {
       return;

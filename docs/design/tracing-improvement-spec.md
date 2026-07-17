@@ -1,10 +1,33 @@
 # Distributed Tracing Improvement Spec — Composer ⇄ EDGE
 
-Status: draft v2 (2026-07-06) — evidence refreshed after the subduction migration; DX-T2/T3/G1
-implemented on this branch, EG items re-verified against edge main.
+Status: v3 (2026-07-17) — full implementation pass; the section texts below predate it, so the
+table here is authoritative for what is implemented on the paired branches
+(dxos `claude/pensive-jepsen-2b4c65`, edge `mykola/edge-dev-otlp`).
 Scope: `dxos` repo (client / Composer) and `edge` repo (Cloudflare Workers backend).
 Evidence: code inspection of both repos + SigNoz production data (24h windows, 2026-07-01/02 and
 2026-07-05/06).
+
+**Implementation status (2026-07-17):**
+
+| Item                        | Status                                                                                                                                                                                                                                                               |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DX-T1 explicit span names   | **DONE** — `name` option on `@trace.span`/`spanStart`; `@dxos/eslint-plugin-rules/require-span-name` oxlint rule (tests exempt); 72 call sites named repo-wide.                                                                                                      |
+| DX-T2 trace boundary        | **DONE** — subduction handshake carries per-operation ctx; `syncPeer` browser-timeline-only; lifecycle spans removed upstream. Links shipped as first-class: `TRACE_LINK_ATTRIBUTE`, `StartSpanOptions.links`, `trace.detach()`, OTEL link mapping in both backends. |
+| DX-T3 AI traceparent        | **DONE** — plus G3 client root span (`EdgeAiHttpClient.request`) parenting the edge `POST /ai/*` span.                                                                                                                                                               |
+| DX-T4 null ctx call sites   | **DONE** — shell `createAgent(null as any)` → `undefined` (void RPC request param).                                                                                                                                                                                  |
+| DX-T5 golden flows          | G1 **DONE** (state-transition spans); G2 **DONE** (subduction handshake); G3 **DONE**; G5 **DONE** (per-round notarization root spans); G4 client side existed, edge side unblocked by EG-T4.1.                                                                      |
+| DX-T6 `withSpan` API        | Dropped — both existing `spanStart` call-site families span method boundaries (start/end in different callbacks), which a callback API cannot express.                                                                                                               |
+| DX-T7 Effect-OTEL bridge    | Open (strategic).                                                                                                                                                                                                                                                    |
+| DX-T8 umbrella-parent drift | **DONE** for the two known offenders — agent-status polls and notarization rounds use `trace.detach()` + per-round root spans with links.                                                                                                                            |
+| SC-2 session attributes     | **DONE** both halves — shared `SESSION_ID` (`@dxos/util`) = OTEL `session.id` = `X-DXOS-Session-Id` header = WS `sessionId` param; edge stamps `ctx.sessionId` (HTTP + WS) and per-upgrade `ctx.connectionId`.                                                       |
+| SC-3 sampling               | Verified already parent-based (`createSampler` wraps `ParentBasedSampler`).                                                                                                                                                                                          |
+| EG-T1 tail-export loss      | **DONE** — tail-logger batches all events' spans into one OTLP POST with one retry (500s/network), logs dropped-span counts.                                                                                                                                         |
+| EG-T2 edge session attrs    | **DONE** (see SC-2).                                                                                                                                                                                                                                                 |
+| EG-T3 volume                | Partial — metering spans (`METERING writeDataPoint`) dropped via postProcessor; metrics conversion for relay/FeedSpace still open.                                                                                                                                   |
+| EG-T4 coverage              | 4.1 **DONE** (`FunctionsServiceEntrypoint` instrumented); lazy-DO enforcement + worker triage open.                                                                                                                                                                  |
+| EG-T5 link fallback         | Done upstream (verified).                                                                                                                                                                                                                                            |
+| EG-T6 edge timing fidelity  | Open.                                                                                                                                                                                                                                                                |
+| EG-T7 auth-challenge 401s   | **DONE** — postProcessor clears ERROR on 401 spans.                                                                                                                                                                                                                  |
 
 **Evidence refresh (2026-07-06, post-subduction-migration):**
 

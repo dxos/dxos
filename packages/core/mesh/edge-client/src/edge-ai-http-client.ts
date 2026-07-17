@@ -15,8 +15,12 @@ import { Context } from '@dxos/context';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { BYOK_HEADER } from '@dxos/protocols';
+import { trace } from '@dxos/tracing';
 
 import { type EdgeHttpClient } from './edge-http-client';
+
+/** Uniquifies manual span ids for concurrent AI requests. */
+let aiRequestCounter = 0;
 
 export type GetEdgeHttpClient = () => EdgeHttpClient;
 
@@ -123,20 +127,39 @@ export class EdgeAiHttpClient {
 
       const send = (body: BodyInit | undefined) =>
         Effect.tryPromise({
-          try: () =>
-            // Effect fibers carry no DXOS Context; a default one yields no trace headers, so
-            // the AI server span is a clean root (proper client parents arrive with the
-            // Effect-OTEL bridge — DX-T6 in docs/design/tracing-improvement-spec.md).
-            edgeClient.anthropicAiRequest(
-              Context.default(),
-              new Request(url, {
-                ...options,
-                method: request.method,
-                headers,
-                body: patchAnthropicMessagesRequestBody(body),
-                signal,
-              }),
-            ),
+          try: async () => {
+            // Client root span for the AI request (golden flow G3): Effect fibers carry no
+            // DXOS Context, so create a per-request root here and pass its ctx —
+            // `anthropicAiRequest` turns it into `traceparent` headers, parenting the edge
+            // `POST /ai/*` server span under this exported client span. (Replaced by the
+            // Effect-OTEL bridge when DX-T7 lands.)
+            const spanId = `edge-ai-request-${++aiRequestCounter}`;
+            const spanCtx =
+              trace.spanStart({
+                name: 'EdgeAiHttpClient.request',
+                id: spanId,
+                instance: null,
+                methodName: 'request',
+                parentCtx: Context.default(),
+                op: 'ai.request',
+                attributes: { url: request.url },
+              }) ?? Context.default();
+            try {
+              return await edgeClient.anthropicAiRequest(
+                spanCtx,
+                new Request(url, {
+                  ...options,
+                  method: request.method,
+                  headers,
+                  body: patchAnthropicMessagesRequestBody(body),
+                  signal,
+                }),
+              );
+            } finally {
+              // Ends when response headers arrive; the streamed body is not part of the span.
+              trace.spanEnd(spanId);
+            }
+          },
           catch: (cause) => {
             log.error('Failed to fetch', { cause });
             return new HttpClientError.RequestError({

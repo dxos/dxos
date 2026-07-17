@@ -34,7 +34,7 @@ export class SignalReplicant {
   constructor(private readonly env: ReplicantEnv) {}
 
   // TODO(mykola): Refactor to smaller methods.
-  @trace.span()
+  @trace.span({ name: 'SignalReplicant.run' })
   async run({
     replicants,
     peersPerReplicant,

@@ -99,6 +99,7 @@ const emitTransitionSpan = (
 ) => {
   const id = `invitation-state-${invitation.invitationId}-${transitionCounter++}`;
   void trace.spanStart({
+    name: `InvitationFlow.state.${stateToString(newState)}`,
     id,
     instance: SPAN_INSTANCE,
     methodName: `state.${stateToString(newState)}`,

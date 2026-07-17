@@ -423,7 +423,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     log('initialized', { space: this.key });
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ name: 'SpaceProxy._initializeDb', showInBrowserTimeline: true })
   private async _initializeDb(ctx: Context): Promise<void> {
     this._databaseOpen = true;
 
@@ -493,7 +493,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     await this._openInternal(this._ctx);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'SpaceProxy._openInternal', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _openInternal(ctx: Context): Promise<void> {
     await runServiceCall(
       this._runtime,
@@ -506,7 +506,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     await this._closeInternal(this._ctx);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'SpaceProxy._closeInternal', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _closeInternal(ctx: Context): Promise<void> {
     if (this._databaseOpen) {
       await this._db.flush();
@@ -522,7 +522,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     await this._deleteInternal(this._ctx);
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'SpaceProxy._deleteInternal', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _deleteInternal(ctx: Context): Promise<void> {
     if (this._databaseOpen) {
       await this._db.flush();
@@ -639,7 +639,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     await this._createEpochInternal(this._ctx, { migration, automergeRootUrl });
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'SpaceProxy._createEpochInternal', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _createEpochInternal(
     ctx: Context,
     {
