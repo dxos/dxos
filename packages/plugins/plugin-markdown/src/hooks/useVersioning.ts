@@ -93,11 +93,18 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
       ? history?.versions.find((version) => version.id === selection.versionId)
       : undefined;
 
+  // The branch a checkpoint was taken on, but only while it is still ACTIVE (bindable): once a branch
+  // is merged its registry entry is removed, so `db.branch` would throw. The merge folds the branch's
+  // history into the parent, so a merged-branch checkpoint's heads become reachable on the root doc
+  // (read there instead — see `checkpointText`).
+  const checkpointBranch = activeVersion?.branch
+    ? history?.branches.find((branch) => branch.key === activeVersion.branch && branch.status === 'active')
+    : undefined;
+
   // The core branch whose document backs the current view: the selected branch, or — when viewing a
-  // branch checkpoint — the branch that checkpoint was taken on (its heads live in the branch doc).
-  const boundBranch =
-    (activeBranch && Branch.isCore(activeBranch) ? activeBranch : undefined) ??
-    (activeVersion?.branch ? history?.branches.find((branch) => branch.key === activeVersion.branch) : undefined);
+  // branch checkpoint on an active branch — the branch that checkpoint was taken on (its heads live
+  // in the branch doc).
+  const boundBranch = (activeBranch && Branch.isCore(activeBranch) ? activeBranch : undefined) ?? checkpointBranch;
 
   // Core branches bind per-surface: the binding's reads/writes land on the branch document only,
   // independent of other surfaces and of the device-global selection.
@@ -143,10 +150,15 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     return Version.contentAt(branchParent, activeBranch.anchor);
   }, [activeBranch, branchParent]);
 
-  // A branch checkpoint's heads live in the branch document, so it must be read/pinned against the
-  // branch-bound Text; a base checkpoint resolves its root target directly.
+  // A checkpoint on an ACTIVE branch reads/pins against the branch-bound Text (its heads live in the
+  // branch document). A base checkpoint — or a checkpoint on a since-merged branch, whose heads the
+  // merge folded into the root — resolves against the root target directly.
   useObject(activeVersion?.target);
-  const checkpointText = activeVersion?.branch ? branchBinding?.object : activeVersion?.target.target;
+  const checkpointText = activeVersion
+    ? checkpointBranch
+      ? branchBinding?.object
+      : activeVersion.target.target
+    : undefined;
   const checkpointContent = useMemo(() => {
     if (!activeVersion || !checkpointText) {
       return undefined;

@@ -362,6 +362,16 @@ export const BranchMerge: Story = {
 
     // The merge auto-checkpoint appears in the timeline.
     await canvas.findByText('merge: draft');
+
+    // Regression: after merge the branch registry entry is gone, but its revisions stay in the
+    // timeline. Selecting one must NOT try to bind the deleted branch (it threw "branch not found").
+    // The merge folded the branch history into main, so the revision resolves against the root doc,
+    // read-only: 'draft-r1' predates the later branch edits and the concurrent parent edit.
+    await selectTimelineNode(canvasElement, 'draft-r1');
+    await canvas.findByText('Viewing checkpoint');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
+    await waitFor(() => expect(editorContent(canvasElement)).not.toContain('epsilon'));
+    await waitFor(() => expect(editorContent(canvasElement)).not.toContain('alpha edited'));
   },
 };
 
