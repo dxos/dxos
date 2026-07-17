@@ -11,4 +11,5 @@ export * from './MessageModule';
 export * from './StatsModule';
 export * from './SyncStateModule';
 export * from './TopicsModule';
+export * from './TraceModule';
 export * from './TriggersModule';

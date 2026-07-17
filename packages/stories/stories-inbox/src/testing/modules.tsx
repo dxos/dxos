@@ -20,6 +20,7 @@ import {
   StatsModule,
   SyncStateModule,
   TopicsModule,
+  TraceModule,
   TriggersModule,
 } from '../modules';
 
@@ -38,6 +39,7 @@ export const Module = {
   Archive: Role.make<Record<string, any>>('org.dxos.storybook.inbox.archive'),
   Stats: Role.make<Record<string, any>>('org.dxos.storybook.inbox.stats'),
   SyncState: Role.make<Record<string, any>>('org.dxos.storybook.inbox.syncState'),
+  Trace: Role.make<Record<string, any>>('org.dxos.storybook.inbox.trace'),
   Triggers: Role.make<Record<string, any>>('org.dxos.storybook.inbox.triggers'),
 };
 
@@ -88,6 +90,11 @@ const moduleSurfaces: Surface.Definition[] = [
     id: 'inbox.syncState',
     filter: Surface.makeFilter(Module.SyncState),
     component: withModuleProps(SyncStateModule),
+  }),
+  Surface.create({
+    id: 'inbox.trace',
+    filter: Surface.makeFilter(Module.Trace),
+    component: withModuleProps(TraceModule),
   }),
   Surface.create({
     id: 'inbox.triggers',

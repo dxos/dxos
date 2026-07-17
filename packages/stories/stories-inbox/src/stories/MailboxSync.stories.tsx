@@ -18,6 +18,7 @@ import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
@@ -57,7 +58,7 @@ const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
-    setupEvents: [AppActivationEvents.SetupSettings],
+    setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({
@@ -78,6 +79,7 @@ const DECORATORS = [
       InboxPlugin(),
       ConnectorPlugin(),
       DebugPlugin({}),
+      AssistantPlugin(),
       PreviewPlugin(),
       ProgressPlugin(),
       RoutinePlugin(),
@@ -94,6 +96,7 @@ const DefaultStory = () => (
       [Module.Mailbox, Module.Message],
       [Module.Archive, Module.Stats, Module.SyncState],
       [Module.Connector, Module.Triggers],
+      [Module.Trace],
     ]}
     compact
   />
