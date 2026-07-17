@@ -4,11 +4,11 @@
 
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import {
-  filterContainsInQuery,
   type GroupAggregates,
   GroupBy,
   type GroupKeyValue,
   type QueryPlan,
+  filterContainsInQuery,
 } from '@dxos/echo-host/query';
 import {
   EncodedReference,

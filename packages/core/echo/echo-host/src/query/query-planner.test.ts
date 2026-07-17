@@ -1948,7 +1948,8 @@ describe('QueryPlanner', () => {
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const tags = plan.steps.map((step) => step._tag);
-      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep']);
+      // _ensureOrderStep always appends a trailing natural OrderStep when none is present.
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep']);
 
       const filterStep = plan.steps.find((step) => step._tag === 'FilterStep');
       expect(filterStep).toMatchObject({
@@ -1992,7 +1993,11 @@ describe('QueryPlanner', () => {
       );
     });
 
-    test('limit-guard: limit is retained (not folded into SelectStep) when a nested in-query is present', () => {
+    test('limit-guard: limit is not folded into SelectStep when a nested in-query is present', () => {
+      // Mirrors the 'childOf with limit' regression test above: the guard only prevents pushing
+      // the limit into the SelectStep (which would slice candidates before the semi-join runs and
+      // starve the result set) — it does not forbid a *later*, unblocked OrderStep from absorbing
+      // the limit, since that OrderStep already sees the fully-filtered set.
       const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }))
         .orderBy(Order.natural('asc'))
         .limit(10);
@@ -2000,9 +2005,9 @@ describe('QueryPlanner', () => {
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const selectStep = plan.steps.find((step) => step._tag === 'SelectStep');
       expect((selectStep as any).limit).toBeUndefined();
-      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
-      expect((orderStep as any).limit).toBeUndefined();
-      expect(plan.steps.some((step) => step._tag === 'LimitStep')).toBe(true);
+      const hasLimitStep = plan.steps.some((step) => step._tag === 'LimitStep');
+      const orderWithLimit = plan.steps.some((step) => step._tag === 'OrderStep' && (step as any).limit === 10);
+      expect(hasLimitStep || orderWithLimit).toBe(true);
     });
 
     test('negative control: without in-query, the limit folds into the OrderStep', () => {
@@ -2023,8 +2028,9 @@ describe('QueryPlanner', () => {
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const tags = plan.steps.map((step) => step._tag);
-      // The group-level limit stays a distinct LimitStep after AggregateStep (AggregateStep is a
-      // BLOCKER in _optimizeLimits); the semi-join FilterStep runs before OrderStep/AggregateStep.
+      // Mirrors 'a post-aggregate orderBy is a group-level OrderStep after AggregateStep' above:
+      // the trailing group-level OrderStep absorbs the limit (it already pages over whole groups),
+      // so there is no separate LimitStep. The semi-join FilterStep still runs before OrderStep/AggregateStep.
       expect(tags).toEqual([
         'SelectStep',
         'FilterDeletedStep',
@@ -2032,12 +2038,14 @@ describe('QueryPlanner', () => {
         'OrderStep',
         'AggregateStep',
         'OrderStep',
-        'LimitStep',
       ]);
 
       const filterStepIndex = tags.indexOf('FilterStep');
       const aggregateStepIndex = tags.indexOf('AggregateStep');
       expect(filterStepIndex).toBeLessThan(aggregateStepIndex);
+
+      const groupOrderStep = plan.steps[plan.steps.length - 1];
+      expect(groupOrderStep).toMatchObject({ _tag: 'OrderStep', limit: 10 });
 
       const filterStep = plan.steps[filterStepIndex];
       expect(filterStep).toMatchObject({ filter: { type: 'object', props: { title: { type: 'in-query' } } } });
