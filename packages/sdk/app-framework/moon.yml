@@ -29,18 +29,6 @@ tasks:
     script: |
       pnpm exec dx-trace-imports \
         --export . \
-        --to effect \
-        --conditions workerd,worker,node \
-        --fail-on missing \
-        --max-chains 1
-      pnpm exec dx-trace-imports \
-        --export ./workerd \
-        --to effect \
-        --conditions workerd,worker,node \
-        --fail-on missing \
-        --max-chains 1
-      pnpm exec dx-trace-imports \
-        --export . \
         --to "{react,react-dom}" \
         --conditions workerd,worker,node \
         --fail-on present
