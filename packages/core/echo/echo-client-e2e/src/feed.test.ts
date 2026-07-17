@@ -610,6 +610,46 @@ describe('feeds', () => {
       expect(finalResult.name).toEqual('john');
     });
   });
+
+  describe('db.add({ to: feed })', () => {
+    test('synchronously adds to a feed and returns the same live instance', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      expect(john.name).toEqual('john');
+
+      // Live: Obj.update works synchronously on the returned instance.
+      Obj.update(john, (mutable) => {
+        mutable.name = 'john v2';
+      });
+      expect(john.name).toEqual('john v2');
+
+      // Confirmed by flush; a fresh query returns the same instance with the persisted value.
+      await db.flush();
+      const [result] = await queryFeed(db, feed, Filter.everything()).run();
+      expect(result).toBe(john);
+      expect(result.name).toEqual('john v2');
+    });
+
+    test('persists across reload', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+      await db.flush();
+
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      await db.flush();
+
+      await peer.reload();
+
+      const db2 = await peer.openLastDatabase();
+      const [feed2] = await db2.query(Filter.type(Feed.Feed)).run();
+      const [result] = await queryFeed(db2, feed2, Filter.everything()).run();
+      expect(result.name).toEqual('john');
+    });
+  });
 });
 
 /**

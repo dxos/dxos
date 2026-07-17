@@ -183,48 +183,22 @@ export class FeedHandle {
   }
 
   /**
-   * Insert into feed with optimistic update. Re-appending an id that already has a core is an
-   * update (see `EntityMetaIndex`'s upsert-by-id): the argument's state is applied onto the
-   * existing working-set instance, which stays canonical, rather than registering a second core.
+   * Insert into feed with optimistic update, awaiting the append RPC. Re-appending an id that
+   * already has a core is an update (see `EntityMetaIndex`'s upsert-by-id): the argument's state is
+   * applied onto the existing working-set instance, which stays canonical, rather than registering a
+   * second core.
    */
   async append(items: Entity.Unknown[]): Promise<void> {
-    for (const item of items) {
-      if (!isProxy(item) && !Entity.isEntity(item)) {
-        throw new TypeError(
-          'feed.append expects reactive ECHO objects. Plain objects must be created using Obj.make(Type, props).',
-        );
-      }
-    }
-    items.forEach((item) => assertObjectModel(item));
+    const cores = this.#registerItemsForAppend(items);
 
-    const batch: { core: FeedObjectCore; json: Record<string, unknown>; token: string }[] = [];
-    for (const item of items) {
-      setRefResolverOnData(item, this._refResolver);
-      defineHiddenProperty(item, SelfURIId, EID.make({ spaceId: this._spaceId, entityId: item.id }));
-      defineHiddenProperty(item, ObjectDatabaseId, this._database);
-      if (this._parentEntity) {
-        defineHiddenProperty(item, ParentId, this._parentEntity);
-      }
-
-      const id = item.id as EntityId;
-      const existingCore = this.#cores.get(id);
-      const core = existingCore ?? this.#registerCore(item);
-      if (existingCore && existingCore.entity !== item) {
-        existingCore.applyLocalUpdate(item);
-      }
+    const batch = cores.map((core) => {
       // Captured explicitly below — don't let the background scheduler also flush this core.
       this.#dirtyCores.delete(core);
       const { json, token } = core.captureForAppend();
-      batch.push({ core, json, token });
-    }
+      return { core, json, token };
+    });
 
-    // Optimistic update.
-    const existingIds = new Set(this._objects.map((obj) => obj.id));
-    this._objects = [
-      ...this._objects,
-      ...batch.map(({ core }) => core.entity).filter((obj) => !existingIds.has(obj.id)),
-    ];
-    this.updated.emit();
+    this.#addOptimistic(cores);
 
     const encoded = batch.map(({ json }) => JSON.stringify(json));
     const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
@@ -243,6 +217,64 @@ export class FeedHandle {
     } finally {
       this.#inFlight.delete(sendPromise);
     }
+  }
+
+  /**
+   * Synchronous alternative to {@link append}: registers each item as a live feed object and
+   * schedules the append in the background (no RPC awaited). Persistence is confirmed by
+   * {@link waitForPendingWrites} (which `db.flush()` awaits). Backs `db.add(obj, { to: feed })`.
+   */
+  appendSync(items: Entity.Unknown[]): void {
+    const cores = this.#registerItemsForAppend(items);
+    for (const core of cores) {
+      this.#onCoreDirty(core);
+    }
+    this.#addOptimistic(cores);
+  }
+
+  /**
+   * Shared preamble for {@link append}/{@link appendSync}: validate inputs, stamp feed metadata, and
+   * register (or update in place, for a re-append-by-id) the working-set core for each item.
+   */
+  #registerItemsForAppend(items: Entity.Unknown[]): FeedObjectCore[] {
+    for (const item of items) {
+      if (!isProxy(item) && !Entity.isEntity(item)) {
+        throw new TypeError(
+          'feed.append expects reactive ECHO objects. Plain objects must be created using Obj.make(Type, props).',
+        );
+      }
+    }
+    items.forEach((item) => assertObjectModel(item));
+
+    return items.map((item) => {
+      setRefResolverOnData(item, this._refResolver);
+      defineHiddenProperty(item, SelfURIId, EID.make({ spaceId: this._spaceId, entityId: item.id }));
+      defineHiddenProperty(item, ObjectDatabaseId, this._database);
+      if (this._parentEntity) {
+        defineHiddenProperty(item, ParentId, this._parentEntity);
+      }
+
+      const id = item.id as EntityId;
+      const existingCore = this.#cores.get(id);
+      const core = existingCore ?? this.#registerCore(item);
+      if (existingCore && existingCore.entity !== item) {
+        existingCore.applyLocalUpdate(item);
+      }
+      return core;
+    });
+  }
+
+  /** Append newly-tracked core entities to the ordered working-set view and notify subscribers. */
+  #addOptimistic(cores: FeedObjectCore[]): void {
+    const existingIds = new Set(this._objects.map((obj) => obj.id));
+    this._objects = [...this._objects, ...cores.map((core) => core.entity).filter((obj) => !existingIds.has(obj.id))];
+    this.updated.emit();
+  }
+
+  /** Enqueue a core for the next background append and wake the scheduler. */
+  #onCoreDirty(core: FeedObjectCore): void {
+    this.#dirtyCores.add(core);
+    this.#appendScheduler.trigger();
   }
 
   async delete(ids: string[]): Promise<void> {
@@ -470,10 +502,7 @@ export class FeedHandle {
   }
 
   #registerCore(entity: Entity.Unknown): FeedObjectCore {
-    const core = new FeedObjectCore(entity, (dirtyCore) => {
-      this.#dirtyCores.add(dirtyCore);
-      this.#appendScheduler.trigger();
-    });
+    const core = new FeedObjectCore(entity, (dirtyCore) => this.#onCoreDirty(dirtyCore));
     this.#cores.set(entity.id as EntityId, core);
     return core;
   }

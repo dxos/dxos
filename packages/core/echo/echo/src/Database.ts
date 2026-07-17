@@ -62,6 +62,14 @@ export type AddOptions = {
    * @default 'linked-doc'
    */
   placeIn?: ObjectPlacement;
+
+  /**
+   * Append the object to this feed instead of the automerge-backed space database. The object is
+   * returned synchronously (a live feed object) and persisted in the background — confirm the write
+   * completed with {@link Database.flush}. Synchronous alternative to the async
+   * {@link Database.appendToFeed}; `placeIn` is ignored when set.
+   */
+  to?: Feed.Feed;
 };
 
 /**
@@ -148,6 +156,8 @@ export interface Database extends Queryable {
    *
    * Only Object and Relation entities are accepted. To persist a Type definition use
    * {@link addType} — passing a Type entity is rejected at compile time (and at runtime).
+   *
+   * Pass `{ to: feed }` to append to a feed instead (synchronous; confirm with {@link flush}).
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T & RejectTypeEntity<T>, opts?: AddOptions): T;
 
@@ -349,8 +359,11 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
-export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
+export const add = <T extends Entity.Unknown>(
+  obj: T & RejectTypeEntity<T>,
+  opts?: AddOptions,
+): Effect.Effect<T, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.add<T>(obj, opts))).pipe(Effect.withSpan('Database.add'));
 
 /**
  * Persists a Type definition to the database.

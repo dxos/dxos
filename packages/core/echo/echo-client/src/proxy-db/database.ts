@@ -474,6 +474,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
+    if (opts?.to) {
+      // Synchronous feed append: registers the object as a live feed object and schedules the
+      // background write. Returns the same instance; confirm persistence with `db.flush()`.
+      this.#getFeedHandle(opts.to).appendSync([obj]);
+      return obj;
+    }
     return this._addObject(obj, opts);
   }
 
