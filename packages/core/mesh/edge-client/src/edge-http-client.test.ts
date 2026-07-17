@@ -44,6 +44,7 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
 
     const client = new EdgeHttpClient('https://edge.example.com');
     const response = await client.anthropicAiRequest(
+      Context.default(),
       new Request('http://edge/v1/messages?beta=true', {
         method: 'POST',
         body: JSON.stringify({ model: 'claude' }),
@@ -56,6 +57,35 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
     expect(targetCall).toBeDefined();
     expect(String(targetCall![0])).toBe('https://edge.example.com/ai/generate/anthropic/v1/messages?beta=true');
     expect(targetCall![1]?.method).toBe('POST');
+  });
+
+  test('drops inherited traceparent and sets headers from ctx', async ({ expect }) => {
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        return new Response(null, { status: 200 });
+      }
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    // Effect's HttpClient stamps traceparent for fiber spans that are never exported;
+    // it must not leak through to the edge request.
+    await client.anthropicAiRequest(
+      Context.default(),
+      new Request('http://edge/v1/messages', {
+        method: 'POST',
+        headers: { traceparent: '00-11111111111111111111111111111111-2222222222222222-01' },
+        body: JSON.stringify({ model: 'claude' }),
+      }),
+    );
+
+    const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
+    expect(targetCall).toBeDefined();
+    const headers = new Headers(targetCall![1]?.headers);
+    expect(headers.get('traceparent')).toBeNull();
+    expect(headers.get('tracestate')).toBeNull();
   });
 });
 

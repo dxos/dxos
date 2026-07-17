@@ -1,8 +1,20 @@
 # Distributed Tracing Improvement Spec — Composer ⇄ EDGE
 
-Status: draft (2026-07-02)
+Status: draft v2 (2026-07-06) — evidence refreshed after the subduction migration; DX-T2/T3/G1
+implemented on this branch, EG items re-verified against edge main.
 Scope: `dxos` repo (client / Composer) and `edge` repo (Cloudflare Workers backend).
-Evidence: code inspection of both repos + SigNoz production data (24h window, 2026-07-01/02).
+Evidence: code inspection of both repos + SigNoz production data (24h windows, 2026-07-01/02 and
+2026-07-05/06).
+
+**Evidence refresh (2026-07-06, post-subduction-migration):**
+
+| Original symptom    | Current state                                                                                                                                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Session mega-traces | 50× better: largest trace 1,910 spans (was 101,731) — subduction stopped connection-scoped parent accretion. Residual tail from `syncPeer`-on-lifecycle addressed by DX-T2.2 on this branch.                    |
+| WS propagation      | Flipped: **99.85%** of `webSocketMessage` spans parentless (was 92%) — subduction send path had no ctx plumbing. Handshake propagation added by DX-T2 on this branch; steady-state stays context-free per SC-1. |
+| Minified names      | Unchanged (`K._fetchTranscription`, `gw.syncPeer`, `Yk.connectToSpace`) — DX-T1 still open.                                                                                                                     |
+| AI dangling parents | Still present (27/day) — fixed by DX-T3 on this branch (headers stripped + ctx-driven).                                                                                                                         |
+| Silent flow stalls  | New: a guest invitation stall after edge admission emits zero spans — addressed by per-transition instant spans (G1) on this branch.                                                                            |
 
 ## 1. Problem statement
 
@@ -89,20 +101,22 @@ each side can then ship independently.
 
 ### DX-T2 (P0, M) — Stop parenting exported spans on lifecycle/connection spans
 
-- **Problem**: source of the mega-trace and missing roots.
+- **Problem**: source of the mega-trace and missing roots. (Retargeted 2026-07-06: the active
+  sync path is now `EchoEdgeSubductionReplicator` — the old `EchoEdgeReplicator` connection-ctx
+  capture is legacy; subduction shipped with NO send-path ctx at all, flipping the failure from
+  mega-traces to zero propagation.)
 - **Changes**:
-  1. `EchoEdgeReplicator` (`packages/core/echo/echo-host/src/edge/echo-edge-replicator.ts`): stop
-     capturing the `_openConnection` span ctx into the connection and embedding it in every
-     outgoing message. Steady-state sync messages go out with **no** `traceContext` (edge links
-     them to the connection per SC-1). Only operations that begin at a traced entry point (e.g.
-     explicit flush, initial space load) pass a per-operation ctx to `EdgeClient.send`.
-  2. `CollectionSynchronizer` (`…/automerge/collection-synchronizer.ts`): `syncPeer` manual spans
-     become browser-timeline-only (`showInRemoteTracing: false`) or root spans with a link to the
-     lifecycle span — not children of the lifecycle span.
+  1. **[IMPLEMENTED]** `EchoEdgeSubductionReplicator`
+     (`packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.ts`): the handshake
+     frame carries the `connectToSpace` operation's trace context (`handshakeCtx`); steady-state
+     frames are deliberately context-free — edge links them to the connection trace per SC-1.
+  2. **[IMPLEMENTED]** `CollectionSynchronizer` (`…/automerge/collection-synchronizer.ts`):
+     `syncPeer` manual spans are browser-timeline-only (`showInRemoteTracing: false`) — no longer
+     children of the lifecycle span in remote traces.
   3. `@dxos/tracing`: lifecycle spans (`@trace.resource({ lifecycle: true })`) no longer put their
      span context on `this._ctx` for **remote** parenting. Add a `trace.link()`-style mechanism so
      children reference the lifecycle span via OTEL span links instead. Browser-timeline behavior
-     is unchanged.
+     is unchanged. (Open — remaining lifecycle-parent producers beyond syncPeer.)
 - **Acceptance**: max spans per trace over 24h < 500; no composer-rooted trace spans > 15 minutes;
   edge `webSocketMessage` spans never parent on a client span that started > 60s earlier.
 
@@ -116,6 +130,9 @@ each side can then ship independently.
   deliberately via the same `getTraceHeaders` used by `BaseHttpClient._call` (also resolves the
   existing TODO to merge with `_call`).
 - **Change (superseded by DX-T7)**: once Effect spans are exported, remove the stripping.
+- **Status**: **[IMPLEMENTED]** — `anthropicAiRequest(ctx, request)` strips inherited
+  `traceparent`/`tracestate` and sets headers from `ctx`; the Effect-side caller passes
+  `Context.default()` until DX-T7 lands (AI server spans become clean roots).
 - **Acceptance**: 0 edge `POST /ai/*` spans with a `parentSpanID` that does not exist in the trace.
 
 ### DX-T4 (P1, S) — Make ctx non-optional at the edge-client seam; fix null call sites
@@ -139,11 +156,15 @@ each side can then ship independently.
   | #   | Flow                           | Client entry point                                             | Edge side                                  |
   | --- | ------------------------------ | -------------------------------------------------------------- | ------------------------------------------ |
   | G1  | Invitation accept / space join | `InvitationsHandler.acceptInvitation`                          | Router / SpaceStateMachine                 |
-  | G2  | Space open + initial sync      | `DataSpace.open` chain (exists today, trace `d9f0036d…` shape) | Router / AutomergeReplicator               |
+  | G2  | Space open + initial sync      | `DataSpace.open` chain (exists today, trace `d9f0036d…` shape) | Router / SubductionReplicator              |
   | G3  | AI chat request                | **missing — must be created** (assistant send path)            | `POST /ai/*` → AI_SERVICE binding          |
   | G4  | Function invocation            | `RemoteFunctionExecutionService.invokeFunction` (ctx exists)   | FunctionsServiceEntrypoint (needs EG-T4.1) |
   | G5  | Notarization round             | `NotarizationPlugin` write path                                | `GET/POST /spaces/:id/notarization`        |
 
+- **Status (G1, partial)**: **[IMPLEMENTED]** per-transition instant spans
+  (`InvitationFlow.state.*`, `invitation-state.ts`) parented on the invitation flow span — a
+  stalled flow's last transition now marks where it stopped (previously a silent stall emitted
+  nothing; observed live on a guest that hung after edge admission).
 - **Acceptance**: each of G1–G5 produces exactly one connected composer→edge trace with a present
   root, readable names, and < 500 spans; verified by running each flow against labs and checking
   the SigNoz trace.
@@ -167,15 +188,20 @@ each side can then ship independently.
 
 ## 5. EDGE repo workstream
 
-### EG-T1 (P0, S) — Parent-based sampling
+### EG-T1 (P1, S) — Dangling-parent root cause (was: parent-based sampling)
 
-- **Problem**: independent 0.5 head sampling per worker orphans service-binding children and
-  cross-service traces at random.
-- **Change**: in `packages/sdk/edge-platform/src/otel-instrument.ts` (lines ~115-122), replace the
-  ratio head sampler with `ParentBasedSampler(TraceIdRatioBased(r))` so sampling decisions follow
-  the incoming flag; ratio applies only to edge-originated roots. Keep the error-keeping tail
-  sampler.
-- **Acceptance**: 0 dangling `Service Binding *` parent references in sampled traces.
+- **Correction (2026-07-06)**: head sampling is **already parent-based** —
+  `@dxos/otel-cf-workers`'s `createSampler({ ratio })` wraps the ratio in
+  `ParentBasedSampler({ root: ratioSampler })`, so child decisions follow the incoming flag and
+  the originally-proposed change is a no-op.
+- **Revised problem**: dangling `Service Binding *` parent references therefore have a different
+  cause — candidates: tail-event export loss (per-event `fetch` to SigNoz with no retry in
+  `tail-logger/main.ts`), spans dropped at workerd tail buffering limits, or producers whose
+  traceparent-injecting hop is not instrumented.
+- **Change**: measure the dangling-parent rate excluding the AI path (fixed by DX-T3), attribute
+  the remainder to one of the candidates, and fix at the source (e.g. batch + retry in the
+  tail-logger exporter).
+- **Acceptance**: dangling-parent rate < 1% over 7 days.
 
 ### EG-T2 (P1, M) — Stamp session/connection attributes (SC-2, edge half)
 
@@ -211,11 +237,11 @@ each side can then ship independently.
 - **Acceptance**: a request entering any instrumented worker via HTTP/service-binding/RPC produces
   a connected trace; documented list of intentionally-uninstrumented workers.
 
-### EG-T5 (P2, S) — Canonicalize the link-based fallback
+### EG-T5 (P2, S) — Canonicalize the link-based fallback — **[DONE upstream]**
 
-- **Change**: document `_withWebSocketExecutionContext`'s no-traceContext path (root span + link to
-  connection trace, `router.ts:786-802`) as the canonical handling for steady-state messages per
-  SC-1; add the same link on `webSocketClose`/`webSocketError` spans.
+- Verified 2026-07-06 on edge main: `_withWebSocketExecutionContext`'s no-traceContext path
+  (root span + `websocket.connection` link) covers `webSocketClose`/`webSocketError` and is
+  documented as the canonical steady-state handling. No further change needed.
 
 ---
 

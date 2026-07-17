@@ -145,13 +145,16 @@ export class CollectionSynchronizer extends Resource {
     const spanId = getSpanId(peerId);
     // Browser-timeline-only span; the derived ctx is intentionally discarded because
     // the downstream `_queryCollectionState` hop is user-supplied callback land with
-    // no ctx plumbing.
+    // no ctx plumbing. Not exported remotely: as a child of the lifecycle span it would
+    // accrete every peer's sync activity into one session-long trace with a root that
+    // only exports on close (DX-T2 in docs/design/tracing-improvement-spec.md).
     void trace.spanStart({
       id: spanId,
       methodName: SYNC_SPAN_METHOD,
       instance: this,
       parentCtx: this._ctx,
       showInBrowserTimeline: true,
+      showInRemoteTracing: false,
       attributes: { peerId },
     });
     this._connectedPeers.add(peerId);
@@ -244,6 +247,7 @@ export class CollectionSynchronizer extends Resource {
         instance: this,
         parentCtx: this._ctx,
         showInBrowserTimeline: true,
+        showInRemoteTracing: false,
         attributes: { peerId },
       });
     }

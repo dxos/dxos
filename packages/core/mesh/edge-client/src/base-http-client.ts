@@ -275,7 +275,8 @@ const createRequest = (
   return { method, body: requestBody, headers };
 };
 
-const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
+/** W3C trace headers for the span carried by `ctx`, or undefined when it carries none. */
+export const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
   const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as TraceContextData | undefined;
   if (!traceCtx) {
     return undefined;

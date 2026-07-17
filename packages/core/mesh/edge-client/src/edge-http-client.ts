@@ -48,7 +48,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { createUrl } from '@dxos/util';
 
-import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
+import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs, getTraceHeaders } from './base-http-client';
 import { proxyFetchLegacy } from './cors-proxy';
 import { HttpConfig, withLogging, withRetryConfig } from './http-client';
 
@@ -525,7 +525,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    */
   // TODO(mykola): Merge into `BaseHttpClient._call` once it can return a streaming/raw `Response`;
   // the auth/retry loop below duplicates the one in `_call`.
-  public async anthropicAiRequest(request: Request): Promise<Response> {
+  public async anthropicAiRequest(ctx: Context, request: Request): Promise<Response> {
     const incoming = new URL(request.url);
     const base = this.baseUrl.replace(/\/$/, '');
     const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
@@ -543,6 +543,14 @@ export class EdgeHttpClient extends BaseHttpClient {
       }
 
       const headers = new Headers(request.headers);
+      // Effect's HttpClient injects `traceparent` for fiber spans that are never exported,
+      // leaving edge server spans with dangling parents. Drop the inherited headers and set
+      // them deliberately from `ctx` (DX-T3 in docs/design/tracing-improvement-spec.md).
+      headers.delete('traceparent');
+      headers.delete('tracestate');
+      for (const [key, value] of Object.entries(getTraceHeaders(ctx) ?? {})) {
+        headers.set(key, value);
+      }
       if (this._authHeader) {
         headers.set('Authorization', this._authHeader);
       }

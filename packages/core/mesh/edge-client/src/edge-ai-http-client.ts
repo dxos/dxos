@@ -11,6 +11,7 @@ import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
+import { Context } from '@dxos/context';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { BYOK_HEADER } from '@dxos/protocols';
@@ -123,7 +124,11 @@ export class EdgeAiHttpClient {
       const send = (body: BodyInit | undefined) =>
         Effect.tryPromise({
           try: () =>
+            // Effect fibers carry no DXOS Context; a default one yields no trace headers, so
+            // the AI server span is a clean root (proper client parents arrive with the
+            // Effect-OTEL bridge — DX-T6 in docs/design/tracing-improvement-spec.md).
             edgeClient.anthropicAiRequest(
+              Context.default(),
               new Request(url, {
                 ...options,
                 method: request.method,
