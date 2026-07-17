@@ -111,6 +111,9 @@ export const translations = [
         'calendar-toolbar-create-event.menu': 'Create event',
         'calendar-toolbar-sync.menu': 'Save events to calendar',
 
+        'conversation-toolbar.label': 'Conversation toolbar',
+        'collapse-all.menu': 'Collapse all',
+        'expand-all.menu': 'Expand all',
         'message-toolbar.label': 'Message toolbar',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
@@ -122,6 +125,7 @@ export const translations = [
         'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
+        'message-toolbar-collapse.label': 'Collapse message',
 
         'message-body.placeholder': 'Enter message text...',
 

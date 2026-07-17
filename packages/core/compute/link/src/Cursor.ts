@@ -9,6 +9,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import { Annotation, Database, DXN, Feed, Filter, Obj, Order, Query, Ref, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
@@ -43,6 +44,12 @@ export const ExternalSpec = Schema.Struct({
   options: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
   /** Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`); drives 3-way merge. */
   snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+  /**
+   * Opaque provider delta-resume token (Gmail `historyId`, JMAP `Email/get` `state`). An optional
+   * fast-path alongside `max`/`min`: when valid the provider fetches an exact delta, else it falls back
+   * to the date-window scan. Forward-only, so it cannot drive backfill.
+   */
+  token: Schema.String.pipe(Schema.optional),
 });
 export type ExternalSpec = Schema.Schema.Type<typeof ExternalSpec>;
 
@@ -110,6 +117,7 @@ export type MakeExternalProps = {
   readonly label?: string;
   readonly snapshots?: Record<string, any>;
   readonly options?: Record<string, any>;
+  readonly token?: string;
   readonly max?: string;
   readonly min?: string;
 };
@@ -127,6 +135,7 @@ export const makeExternal = (props: MakeExternalProps): Cursor =>
       label: props.label,
       snapshots: props.snapshots,
       options: props.options,
+      token: props.token,
     },
   });
 
@@ -183,6 +192,29 @@ export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapsho
     }
     const existing = (cursor.spec.snapshots ?? {}) as Record<string, unknown>;
     cursor.spec.snapshots = { ...existing, [foreignId]: snapshot };
+  });
+};
+
+/** Reads the opaque delta-resume token, or undefined when no incremental sync has captured one yet. */
+export const readToken = (cursor: ExternalCursor): string | undefined => cursor.spec.token;
+
+/** Writes the opaque delta-resume token — the incremental resume position, independent of `max`/`min`. */
+export const writeToken = (cursor: ExternalCursor, token: string): void => {
+  Obj.update(cursor, (cursor) => {
+    if (cursor.spec.kind !== 'external') {
+      return;
+    }
+    cursor.spec.token = token;
+  });
+};
+
+/** Clears the delta-resume token, forcing the next run back onto the `max`/`min` date-window scan. */
+export const clearToken = (cursor: ExternalCursor): void => {
+  Obj.update(cursor, (cursor) => {
+    if (cursor.spec.kind !== 'external') {
+      return;
+    }
+    cursor.spec.token = undefined;
   });
 };
 
@@ -367,6 +399,12 @@ export type State = {
   readonly trackRange: boolean;
   /** Foreign ids already committed (seeded from the feed, extended as pages commit). */
   readonly dedupSet: Set<string>;
+  /**
+   * foreignId → EntityId map for the delta's messages, built only when a `reconcileFilter` is supplied so
+   * the reconcile branch can resolve an already-committed message's EntityId to retag/remove it. Absent
+   * on the add-only path.
+   */
+  readonly foreignIndex?: ReadonlyMap<string, Obj.ID>;
   /** Serializes the advanced cursor key for storage on the cursor. */
   readonly formatCursor: (key: number) => string;
   /** Mutable run tally, read back by the caller after the run. */
@@ -377,8 +415,12 @@ export type State = {
 
 /** Terminal unit produced by the pipeline for one source item: everything the commit needs to write. */
 export type CommitUnit = {
-  /** The mapped ECHO object to append to the feed. */
-  readonly object: Obj.Any;
+  /**
+   * The mapped ECHO object to append to the feed. Optional: an *objectless* unit (no feed append) carries
+   * only `commitEffects` that mutate already-committed objects (e.g. a retag by EntityId), and carries
+   * `key: 0` so it never moves `max`/`min`.
+   */
+  readonly object?: Obj.Any;
   /** Provider foreign id (the dedup key; matches `Obj.Meta.keys[].id`). */
   readonly foreignId: string;
   /** Monotonic provider key (e.g. `internalDate` / `updated` epoch-ms) used to advance the cursor. */
@@ -401,7 +443,10 @@ export class Service extends Context.Tag('@dxos/link/Cursor')<Service, State>() 
  * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor`,
  * `minKey`, `trackRange`, `extent` for a single-directional caller unaware of range-tracking.
  */
-export type LayerOptions = Omit<State, 'dedupSet' | 'formatCursor' | 'minKey' | 'trackRange' | 'extent'> & {
+export type LayerOptions = Omit<
+  State,
+  'dedupSet' | 'foreignIndex' | 'formatCursor' | 'minKey' | 'trackRange' | 'extent'
+> & {
   readonly formatCursor?: (key: number) => string;
   /** Low-water key at run start. Only relevant with `trackRange: true`. Defaults to 0 (unset). */
   readonly minKey?: number;
@@ -411,6 +456,13 @@ export type LayerOptions = Omit<State, 'dedupSet' | 'formatCursor' | 'minKey' | 
   readonly extent?: Extent;
   /** Overrides {@link DEFAULT_DEDUP_SEED_TAIL} — set per pipeline when its commit page size warrants it. */
   readonly dedupSeedTail?: number;
+  /**
+   * Selects the already-committed feed messages a reconcile run must resolve to EntityIds (caller builds
+   * it as `Filter.foreignKeys(<message schema>, <delta keys>)`). {@link State.foreignIndex} is built from
+   * this query rather than the whole feed, so the cost is O(delta) once the engine supports feed filter
+   * pushdown. Absent on the add-only path.
+   */
+  readonly reconcileFilter?: Filter.Any;
 };
 
 /**
@@ -427,6 +479,11 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
       const { feed, dedupSeedTail = DEFAULT_DEDUP_SEED_TAIL } = options;
       // DB-target runs (no feed) dedup via the cursor + idempotent write; nothing to seed.
       const dedupSet = feed ? yield* seedDedupSet(feed, options.foreignKeySource, dedupSeedTail) : new Set<string>();
+      // Only reconcile runs build the foreignId → EntityId map, and only for the delta's messages.
+      const foreignIndex =
+        feed && options.reconcileFilter
+          ? yield* seedForeignIndex(feed, options.foreignKeySource, options.reconcileFilter)
+          : undefined;
       return {
         ...options,
         minKey: options.minKey ?? 0,
@@ -434,6 +491,7 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
         formatCursor: options.formatCursor ?? formatKey,
         extent: options.extent ?? { maxKey: 0, minKey: 0 },
         dedupSet,
+        foreignIndex,
       };
     }),
   );
@@ -443,10 +501,11 @@ const appendObjects = Effect.fn('cursor.commit.appendToFeed')(function* (
   feed: Feed.Feed,
   units: readonly CommitUnit[],
 ) {
-  yield* Feed.append(
-    feed,
-    units.map((unit) => unit.object),
-  );
+  // Objectless units (e.g. retag/delete of an already-committed message) append nothing.
+  const objects = units.map((unit) => unit.object).filter((object): object is Obj.Any => object !== undefined);
+  if (objects.length > 0) {
+    yield* Feed.append(feed, objects);
+  }
 });
 
 // TODO(wittjosiah): Remove — bound the reactive cascade instead of forcing a paint gap per page.
@@ -484,16 +543,20 @@ const recordCommitted = Effect.fn('cursor.commit.recordCommitted')(function* (
   state: State,
   units: readonly CommitUnit[],
 ) {
-  const keys = units.map((unit) => unit.key);
-  extendRange(
-    state.cursor,
-    { maxKey: Math.max(...keys), minKey: state.trackRange ? Math.min(...keys) : 0 },
-    state.formatCursor,
-  );
+  // Fold only real keys — objectless units carry `key: 0` and must not disturb `max`/`min`.
+  const keys = units.map((unit) => unit.key).filter((key) => key > 0);
+  if (keys.length > 0) {
+    extendRange(
+      state.cursor,
+      { maxKey: Math.max(...keys), minKey: state.trackRange ? Math.min(...keys) : 0 },
+      state.formatCursor,
+    );
+  }
   for (const unit of units) {
     state.dedupSet.add(unit.foreignId);
   }
-  state.stats.newMessages += units.length;
+  // Count only object-bearing units as new messages; retag/delete units don't add to the feed.
+  state.stats.newMessages += units.filter((unit) => unit.object !== undefined).length;
 });
 
 /**
@@ -606,6 +669,20 @@ export const dedupStage = <In>(
   );
 
 /**
+ * Caps a stream at `limit`, reporting each surviving item via `onTaken` so the caller can tell a
+ * truncated run (`taken === limit` → re-run) from an exhausted one. Placed after {@link dedupStage} so it
+ * counts only genuinely-new items. Reads no {@link Service}, but lives here as part of the per-run
+ * bounding family.
+ */
+export const boundStage =
+  <In>(limit: number, onTaken: (count: number) => void): Stage.Stage<In, In, never, never> =>
+  <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
+    self.pipe(
+      Stream.take(limit),
+      Stream.tap(() => Effect.sync(() => onTaken(1))),
+    );
+
+/**
  * Default dedup-seed bound, applied to *each* end of the feed's insertion order (see
  * {@link seedDedupSet}). Only the two re-fetched boundaries (`key === max`, `key === min`) plus a
  * crash-orphaned page need seeding; the strict interior is dropped by {@link dedupStage}'s range check.
@@ -623,6 +700,34 @@ const DEFAULT_DEDUP_SEED_TAIL = 500;
  * the newest message every run. Seeding both ends covers both boundaries however forward/backward
  * interleave.
  */
+/**
+ * Builds a foreignId → EntityId map for the messages a reconcile run targets, selected by the caller's
+ * `reconcileFilter`. Unlike {@link seedDedupSet}'s bounded tail read, reconciliation must resolve *any*
+ * already-committed message (a label change can target one far older than the seed tail), but only the
+ * delta's messages, not the whole feed. Foreign ids come off `Obj.getMeta(item)` (feed messages live in a
+ * queue). A feed query still decodes the whole feed today, so this expresses O(delta) intent for when the
+ * engine gains filter pushdown.
+ */
+const seedForeignIndex = (
+  feed: Feed.Feed,
+  foreignKeySource: string,
+  reconcileFilter: Filter.Any,
+): Effect.Effect<ReadonlyMap<string, Obj.ID>, never, Database.Service> =>
+  Feed.query(feed, Query.select(reconcileFilter)).run.pipe(
+    Effect.map((items) => {
+      const index = new Map<string, Obj.ID>();
+      for (const item of items) {
+        for (const key of Obj.getMeta(item).keys) {
+          if (key.source === foreignKeySource) {
+            index.set(key.id, item.id);
+          }
+        }
+      }
+      return index;
+    }),
+    Effect.withSpan('cursor.seedForeignIndex'),
+  );
+
 const seedDedupSet = (
   feed: Feed.Feed,
   foreignKeySource: string,

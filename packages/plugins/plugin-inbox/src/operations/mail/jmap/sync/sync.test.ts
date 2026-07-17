@@ -13,6 +13,8 @@ import { Operation, RunAgainError, Trace } from '@dxos/compute';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
+import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { JMAP_MAIL_CONNECTOR_ID, JMAP_MESSAGE_SOURCE } from '../../../../constants';
@@ -24,8 +26,9 @@ import {
   runJmapSync,
   seedMailboxBinding,
 } from '../../../../testing/sync-fixture';
-import { InboxOperation, Mailbox } from '../../../../types';
+import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
 import { createSyncProgressKey } from '../../mail-sync';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -62,6 +65,11 @@ const withFaultAfterEmails = (n: number, dataset: JmapDataset): Layer.Layer<Jmap
       return JmapMailApi.of({
         ...inner,
         emailGet: (target, ids, properties) => {
+          // The empty-ids call is the first-tick state-token capture, not a message fetch — don't count
+          // it toward the injected fetch fault.
+          if (ids.length === 0) {
+            return inner.emailGet(target, ids, properties);
+          }
           count += 1;
           return count > n ? Effect.die(new Error('injected fault')) : inner.emailGet(target, ids, properties);
         },
@@ -143,9 +151,19 @@ describe('runJmapSync against a mock JMAP API', () => {
     const people = await db.query(Filter.type(Person.Person)).run();
     expect(people.length).toBe(senderEmails.size);
 
-    // Folder tags: the folder→Tag sync materializes one Tag per JMAP folder (independent of the walk).
+    // Folder tags: well-known roles (inbox/sent) map onto shared canonical tags — dropped roles
+    // (archive/drafts/trash/junk) produce none — and custom folders become provider-scoped tags.
+    // Keyword canonical tags (starred) are materialized up front alongside the folder tags.
     const tags = await db.query(Filter.type(Tag.Tag)).run();
-    expect(tags.length).toBe(dataset.folders.length);
+    const canonical = new Set([
+      ...dataset.folders.flatMap((folder) => {
+        const id = folder.role ? JMAP_ROLE_TAGS[folder.role] : undefined;
+        return id ? [id] : [];
+      }),
+      ...Object.values(JMAP_KEYWORD_TAGS).flatMap((id) => (id ? [id] : [])),
+    ]);
+    const customCount = dataset.folders.filter((folder) => !folder.role).length;
+    expect(tags.length).toBe(canonical.size + customCount);
 
     // Cursor advanced to the last synced key; backfill completed within the run (small dataset).
     expect(binding.max).toBeDefined();
@@ -472,5 +490,275 @@ describe('runJmapSync against a mock JMAP API', () => {
 
   test('JmapSync is marked idempotent for durable-execution retry', ({ expect }) => {
     expect(Operation.isIdempotent(InboxOperation.JmapSync)).toBe(true);
+  });
+
+  //
+  // Incremental (Email/changes) sync.
+  //
+
+  const tokenOf = (binding: Cursor.Cursor): string | undefined =>
+    binding.spec.kind === 'external' ? binding.spec.token : undefined;
+
+  test('the first tick captures the Email/get state token (before backfill)', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = { ...generateJmapDataset({ count: 6, seed: 81, start, end }), state: 'state-0' };
+    const { db, mailbox, binding } = await seed();
+
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(inboxJmapSyncTestServices(db, dataset))),
+    );
+
+    // The state token is captured and the (window) backfill still ran normally.
+    expect(tokenOf(binding)).toBe('state-0');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(dataset.emails.length);
+  });
+
+  test('an incremental run syncs only the delta created messages and advances the token', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 5, seed: 82, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+
+    // First tick: window backfill + capture 'state-0'.
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(db, { ...base, state: 'state-0' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('state-0');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(base.emails.length);
+
+    // A new message arrives; the change log advances state-0 → state-1 with it created.
+    const arrival = generateJmapDataset({ count: 1, seed: 83, start: subDays(now, 1), end: now, idPrefix: 'new' })
+      .emails[0];
+    const run2 = {
+      ...base,
+      emails: [...base.emails, arrival],
+      state: 'state-1',
+      changeLog: [{ sinceState: 'state-0', newState: 'state-1', created: [arrival.id] }],
+    };
+    const r2 = await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxJmapSyncTestServices(db, run2))),
+    );
+
+    // Only the delta's created message synced; the token advanced to the new state.
+    expect(r2.newMessages).toBe(1);
+    expect(tokenOf(binding)).toBe('state-1');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(ids).toContain(arrival.id);
+    expect(ids.length).toBe(base.emails.length + 1);
+  });
+
+  test('a stale state token clears it, falls back to the window scan, and recaptures', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 5, seed: 84, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+
+    // A prior run left a token the server can no longer resolve (evicted past its retention window).
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind === 'external') {
+        binding.spec.token = 'evicted';
+      }
+    });
+
+    // No change-log chain from 'evicted' → the mock fails with `cannotCalculateChanges`.
+    const dataset = { ...base, state: 'state-current', changeLog: [] };
+    const result = await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxJmapSyncTestServices(db, dataset))),
+    );
+
+    // Fell back to the full window scan and recaptured the fresh token.
+    expect(result.newMessages).toBe(base.emails.length);
+    expect(tokenOf(binding)).toBe('state-current');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(base.emails.length);
+  });
+
+  test('a crash mid-incremental leaves the token unadvanced and recovers with no duplicate', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+
+    // First tick: backfill + capture 'state-0'.
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(db, { ...base, state: 'state-0' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('state-0');
+
+    // A large delta arrives; fault after the first commit page (10) lands.
+    const arrivals = generateJmapDataset({
+      count: 15,
+      seed: 86,
+      start: subDays(now, 1),
+      end: now,
+      idPrefix: 'new',
+    }).emails;
+    const run2Dataset = {
+      ...base,
+      emails: [...base.emails, ...arrivals],
+      state: 'state-1',
+      changeLog: [{ sinceState: 'state-0', newState: 'state-1', created: arrivals.map((email) => email.id) }],
+    };
+    const exit = await EffectEx.runPromise(
+      Effect.exit(runJmapSync({ binding: Ref.make(binding), now })).pipe(
+        Effect.provide(ambientSyncServices(db)),
+        Effect.provide(withFaultAfterEmails(10, run2Dataset)),
+      ),
+    );
+    expect(Exit.isFailure(exit)).toBe(true);
+    // Token NOT advanced — a crash before the delta fully drained keeps it at 'state-0'.
+    expect(tokenOf(binding)).toBe('state-0');
+
+    // Recovery: the next run re-fetches the whole delta, dedups the committed prefix, finishes clean.
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxJmapSyncTestServices(db, run2Dataset))),
+    );
+    expect(tokenOf(binding)).toBe('state-1');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.length).toBe(base.emails.length + arrivals.length);
+  });
+
+  test('an incremental mailbox move retags an existing message (remote-wins) with no new feed append', async ({
+    expect,
+  }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 3, seed: 90, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(db, { ...base, state: 'state-0' })),
+      ),
+    );
+    const before = (await syncedIdsOf(db, mailbox)).length;
+    const targetId = base.emails[0].id;
+
+    // The target email was moved from Inbox to the 'Work' folder (mb-custom-1) on the server.
+    const movedEmails = base.emails.map((email) =>
+      email.id === targetId ? { ...email, mailboxIds: { 'mb-custom-1': true } } : email,
+    );
+    const run2 = {
+      ...base,
+      emails: movedEmails,
+      state: 'state-1',
+      changeLog: [{ sinceState: 'state-0', newState: 'state-1', updated: [targetId] }],
+    };
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxJmapSyncTestServices(db, run2))),
+    );
+
+    // No new feed message and the token advanced.
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(before);
+    expect(tokenOf(binding)).toBe('state-1');
+
+    // Remote-wins: the message now carries the Work tag and no longer the Inbox tag.
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    const target = feedMessages.find((message) => jmapKeyIds(message).includes(targetId))!;
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const uriFor = (folderId: string) =>
+      Obj.getURI(tags.find((tag) => Obj.getMeta(tag).keys.some((key) => key.id === folderId))!).toString();
+    // The inbox role maps onto the canonical tag, not a folder-keyed provider tag.
+    const inboxUri = Obj.getURI(
+      tags.find((tag) =>
+        Obj.getMeta(tag).keys.some((key) => key.source === SystemTags.SYSTEM_TAG_SOURCE && key.id === 'inbox'),
+      )!,
+    ).toString();
+    const localTags = TagIndex.bind(tagIndex).tags(target.id);
+    expect(localTags).toContain(uriFor('mb-custom-1'));
+    expect(localTags).not.toContain(inboxUri);
+  });
+
+  test('an incremental $flagged keyword add stars an existing message (canonical starred tag)', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 3, seed: 93, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(db, { ...base, state: 'state-0' })),
+      ),
+    );
+    const targetId = base.emails[0].id;
+
+    // The target email was flagged (starred) on the server.
+    const flaggedEmails = base.emails.map((email) =>
+      email.id === targetId ? { ...email, keywords: { $flagged: true } } : email,
+    );
+    const run2 = {
+      ...base,
+      emails: flaggedEmails,
+      state: 'state-1',
+      changeLog: [{ sinceState: 'state-0', newState: 'state-1', updated: [targetId] }],
+    };
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxJmapSyncTestServices(db, run2))),
+    );
+
+    // The message gained the canonical starred tag — the same one the local star toggle resolves.
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    const target = feedMessages.find((message) => jmapKeyIds(message).includes(targetId))!;
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const starredUri = Obj.getURI(
+      tags.find((tag) =>
+        Obj.getMeta(tag).keys.some((key) => key.source === SystemTags.SYSTEM_TAG_SOURCE && key.id === 'starred'),
+      )!,
+    ).toString();
+    expect(TagIndex.bind(tagIndex).tags(target.id)).toContain(starredUri);
+  });
+
+  test('a created delta larger than the per-run budget syncs across bounded runs (maxChanges)', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 3, seed: 94, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxJmapSyncTestServices(db, { ...base, state: 'state-0' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('state-0');
+
+    // Four new emails arrive across two change steps; with a budget of 3, `Email/changes` returns them in
+    // bounded chunks (`hasMoreChanges` → runAgain), advancing the state token to each chunk's `newState`.
+    const arrivals = generateJmapDataset({
+      count: 4,
+      seed: 95,
+      start: subDays(now, 1),
+      end: now,
+      idPrefix: 'new',
+    }).emails;
+    const dataset = {
+      ...base,
+      emails: [...base.emails, ...arrivals],
+      state: 'state-2',
+      changeLog: [
+        { sinceState: 'state-0', newState: 'state-1', created: [arrivals[0].id, arrivals[1].id] },
+        { sinceState: 'state-1', newState: 'state-2', created: [arrivals[2].id, arrivals[3].id] },
+      ],
+    };
+
+    let runs = 0;
+    let exit: Exit.Exit<unknown, unknown>;
+    do {
+      exit = await EffectEx.runPromise(
+        Effect.exit(runJmapSync({ binding: Ref.make(binding), maxMessages: 3, now })).pipe(
+          Effect.provide(inboxJmapSyncTestServices(db, dataset)),
+        ),
+      );
+      runs += 1;
+      if (Exit.isFailure(exit)) {
+        expect(RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
+      }
+    } while (Exit.isFailure(exit) && runs < 10);
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(runs).toBeGreaterThan(1);
+    expect(tokenOf(binding)).toBe('state-2');
+    const ids = await syncedIdsOf(db, mailbox);
+    for (const arrival of arrivals) {
+      expect(ids).toContain(arrival.id);
+    }
+    expect(ids.length).toBe(base.emails.length + 4);
   });
 });

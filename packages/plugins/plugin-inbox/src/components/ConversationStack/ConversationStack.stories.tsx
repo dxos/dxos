@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -14,6 +14,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useResolveRef, useSpaces } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -21,7 +22,7 @@ import { initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { MessageArticle } from './MessageArticle';
+import { ConversationStack } from './ConversationStack';
 
 type StoryArgs = {
   /** Number of messages seeded into the single fake thread. */
@@ -29,9 +30,11 @@ type StoryArgs = {
 };
 
 /**
- * Renders the seeded mailbox's one thread. Mirrors the `mailboxMessage` graph connector's query (one
- * combined space+feed scope, oldest-first) so a reply added at the db root (see `MessageArticle`'s
- * `openDraft`) is picked up reactively, exactly as it would be via the real companion node.
+ * Renders the seeded mailbox's one thread through `ConversationStack` in isolation. The whole-thread
+ * toolbar (view controls, collapse-all) belongs to `MessageArticle`, not the stack, so it is left out
+ * here to keep the component's own surface — the message tiles and their per-message toolbars — clear.
+ * Starts with every message collapsed; expand one by clicking its summary. (Deciding which message is
+ * expanded by default — the most recent — is `MessageArticle`'s concern, exercised in its own story.)
  */
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -46,15 +49,42 @@ const DefaultStory = () => {
       : Query.select(Filter.nothing()),
   );
 
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
+  const handleExpandedChange = useCallback((id: string, isExpanded: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (isExpanded) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+
   if (!space?.db || !mailbox || messages.length === 0) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox, messages: messages.length }} />;
   }
 
-  return <MessageArticle role='article' subject={messages} mailbox={mailbox} attendableId='story' />;
+  return (
+    <Panel.Root role='article'>
+      <Panel.Content asChild>
+        <ConversationStack
+          attendableId='story'
+          items={messages}
+          mailbox={mailbox}
+          viewMode='html'
+          expanded={expanded}
+          onExpandedChange={handleExpandedChange}
+          onContactCreate={() => {}}
+        />
+      </Panel.Content>
+    </Panel.Root>
+  );
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/containers/MessageArticle',
+  title: 'plugins/plugin-inbox/components/ConversationStack',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
@@ -101,20 +131,15 @@ export const Spec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Wait for identity/client/mailbox seeding (all async) to finish and the thread to render. Only the
-    // most recent message is expanded by default, so exactly one Reply All shows; the two older messages
-    // render as collapsed summaries.
-    const replyButtons = await canvas.findAllByRole('button', { name: 'Reply All' }, { timeout: 12_000 });
-    await expect(replyButtons).toHaveLength(1);
-    await expect(canvas.getAllByTestId('message.expand')).toHaveLength(2);
+    // Everything starts collapsed: one summary card per message, and no per-message toolbars yet.
+    const cards = await canvas.findAllByTestId('message.expand', undefined, { timeout: 12_000 });
+    await expect(cards).toHaveLength(3);
+    await expect(canvas.queryAllByRole('button', { name: 'Reply All' })).toHaveLength(0);
 
-    // Reply All on the newest message appends a draft composer inline at the bottom — no navigation.
-    await userEvent.click(replyButtons[0]);
-    await canvas.findByText('Draft', undefined, { timeout: 5_000 });
-    await expect(await canvas.findAllByTestId('edit-email-form', undefined, { timeout: 5_000 })).toHaveLength(1);
-
-    // Pressing it again appends a second draft — multiple drafts per thread are allowed.
-    await userEvent.click(canvas.getByRole('button', { name: 'Reply All' }));
-    await waitFor(() => expect(canvas.getAllByTestId('edit-email-form')).toHaveLength(2), { timeout: 5_000 });
+    // Expanding a message reveals its body and its own toolbar (Reply All).
+    await userEvent.click(cards[cards.length - 1]);
+    await waitFor(() => expect(canvas.getAllByRole('button', { name: 'Reply All' })).toHaveLength(1), {
+      timeout: 5_000,
+    });
   },
 };
