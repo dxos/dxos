@@ -16,6 +16,26 @@ Evidence: code inspection of both repos + SigNoz production data (24h windows, 2
 | AI dangling parents | Still present (27/day) — fixed by DX-T3 on this branch (headers stripped + ctx-driven).                                                                                                                         |
 | Silent flow stalls  | New: a guest invitation stall after edge admission emits zero spans — addressed by per-transition instant spans (G1) on this branch.                                                                            |
 
+**Shape-analysis findings (2026-07-17, from the first fully-connected validated traces):**
+
+- **DX-T8 (P2, M) — Umbrella-parent drift.** `ClientServicesHost._initialize` (316µs) parents
+  spans arriving 25s+ later (agent-status polls, `connectToSpace`) because its ctx keeps flowing
+  into recurring/background work. Long-lived apps will slowly accrete unrelated operations onto
+  entry-point traces — a milder relative of the mega-trace. Recurring client work (polling loops,
+  scheduled reconnects) must start its own root spans with links instead of riding the caller ctx.
+- **EG-T6 (P2, M) — Edge span timing fidelity.** Edge spans are ms-truncated and mostly 0ns
+  (workerd coarse clock; the tail-logger `fixSpanTimings` hack self-admits inaccuracy). Latency
+  analysis below ~5ms is impossible on the edge side. Candidates: allocate durations from the tail
+  event's `wallTime`, or stamp wrangler's request duration onto Server spans.
+- **EG-T7 (P2, S) — Auth-challenge 401s must not be span errors.** The edge auth dance
+  (401 + `WWW-Authenticate` → retry) marks a span error on every fresh session, flagging fully
+  successful traces as `hasError`. Record an `auth.challenge` attribute instead of ERROR status.
+- **EG-T3 addendum**: `Analytics Engine METERING writeDataPoint` client spans (0ns, per-request)
+  add volume with no diagnostic value — include in the metrics-not-spans conversion.
+- **Trace-driven product finding**: `POST /spaces/:spaceId/join` returned 500 mid-flow in a run
+  whose invitation ultimately succeeded (client retry recovered) — the join handler appears to
+  race space admission; file separately in the edge repo.
+
 ## 1. Problem statement
 
 Trace context propagation mechanically works across all three transports (HTTP headers,
