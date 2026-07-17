@@ -4,7 +4,6 @@
 
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
@@ -27,6 +26,14 @@ import { type MailSyncItem, MailSyncProvider, type MailSyncSource, additionsToCh
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateJmapTag } from '../tags';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
+
+/** The resolved delta for one run — either a fresh capture (no delta) or a fetched `Email/changes` chunk. */
+type DeltaPlan = {
+  readonly token: string | undefined;
+  readonly createdIds: readonly string[] | undefined;
+  readonly updatedIds: readonly string[];
+  readonly hasMoreDelta: boolean;
+};
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -140,43 +147,57 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               process: toMapped(email).pipe(Effect.provide(context)),
             });
 
-            // Resolve the delta plan. First tick captures the current `Email/get` state before backfill
-            // (so mail arriving during backfill is caught by the next incremental, not missed). An
-            // incremental run fetches one bounded `Email/changes` chunk since the token (`maxChanges` =
-            // the per-run budget); `hasMoreChanges` drives the harness's `runAgain`, and `newState` is the
-            // chunk boundary the token advances to — so a large delta drains across runs. A stale token
-            // (`cannotCalculateChanges`) clears + recaptures and falls back to the window scan.
-            let capturedToken: string | undefined = token;
-            let createdIds: readonly string[] | undefined;
-            let updatedIds: readonly string[] = [];
-            let hasMoreDelta = false;
-            if (token === undefined) {
-              capturedToken = (yield* api.emailGet(target, [])).state;
-            } else {
-              const result = yield* Effect.either(api.emailChanges(target, token, maxMessages));
-              if (Either.isRight(result)) {
-                capturedToken = result.right.newState;
-                createdIds = result.right.created;
-                // `updated` are ids whose keywords/mailboxIds may have changed — re-fetched + diffed
-                // against local tags in the reconcile branch. Exclude ids that are also newly created
-                // (their full fetch already carries current tags).
-                const created = new Set(result.right.created);
-                updatedIds = result.right.updated.filter((id) => !created.has(id));
-                hasMoreDelta = result.right.hasMoreChanges;
-                log('jmap sync: incremental delta', {
-                  created: result.right.created.length,
-                  updated: result.right.updated.length,
-                  destroyed: result.right.destroyed.length,
-                  hasMoreDelta,
-                });
-              } else if (result.left.type === 'cannotCalculateChanges') {
-                log('jmap sync: state token stale, falling back to window scan');
-                Cursor.clearToken(binding);
-                capturedToken = (yield* api.emailGet(target, [])).state;
-              } else {
-                return yield* Effect.fail(result.left);
-              }
-            }
+            // The first-tick baseline (and stale-token fallback): the current `Email/get` state with no
+            // delta applied (so mail arriving during backfill is caught by the next incremental, not
+            // missed). Defined once so both call sites share the same capture.
+            const captureFreshDelta = Effect.map(
+              api.emailGet(target, []),
+              (result): DeltaPlan => ({
+                token: result.state,
+                createdIds: undefined,
+                updatedIds: [],
+                hasMoreDelta: false,
+              }),
+            );
+
+            // Resolve the delta plan. An incremental run fetches one bounded `Email/changes` chunk since
+            // the token (`maxChanges` = the per-run budget); `hasMoreChanges` drives the harness's
+            // `runAgain`, and `newState` is the chunk boundary the token advances to — so a large delta
+            // drains across runs. A stale token (`cannotCalculateChanges`) falls back to
+            // `captureFreshDelta` — `Effect.catchIf` recovers only that case, propagating anything else.
+            const resolveDelta: Effect.Effect<DeltaPlan, JmapApiError, never> =
+              token === undefined
+                ? captureFreshDelta
+                : api.emailChanges(target, token, maxMessages).pipe(
+                    Effect.map((result): DeltaPlan => {
+                      // `updated` are ids whose keywords/mailboxIds may have changed — re-fetched + diffed
+                      // against local tags in the reconcile branch. Exclude ids that are also newly
+                      // created (their full fetch already carries current tags).
+                      const created = new Set(result.created);
+                      const updatedIds = result.updated.filter((id) => !created.has(id));
+                      log('jmap sync: incremental delta', {
+                        created: result.created.length,
+                        updated: result.updated.length,
+                        destroyed: result.destroyed.length,
+                        hasMoreDelta: result.hasMoreChanges,
+                      });
+                      return {
+                        token: result.newState,
+                        createdIds: result.created,
+                        updatedIds,
+                        hasMoreDelta: result.hasMoreChanges,
+                      };
+                    }),
+                    Effect.catchIf(
+                      (error) => error.type === 'cannotCalculateChanges',
+                      () => {
+                        log('jmap sync: state token stale, falling back to window scan');
+                        Cursor.clearToken(binding);
+                        return captureFreshDelta;
+                      },
+                    ),
+                  );
+            const { token: capturedToken, createdIds, updatedIds, hasMoreDelta } = yield* resolveDelta;
 
             const source: MailSyncSource = {
               buildSource: ({ windows, filter, tagIndex, maxMessages, onEnumerated, onRetrieved, onTaken }) => {

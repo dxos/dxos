@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
@@ -17,7 +16,7 @@ import { Person } from '@dxos/types';
 import { GoogleMail } from '../../../../apis';
 import { GMAIL_SOURCE } from '../../../../constants';
 import { GoogleApiError, MailSyncError } from '../../../../errors';
-import { GoogleMailApi } from '../../../../services';
+import { type GoogleMailApiError, GoogleMailApi } from '../../../../services';
 import { Mailbox, SystemTags } from '../../../../types';
 import { parseFromHeader } from '../../../util';
 import {
@@ -32,6 +31,14 @@ import { decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateGmailTag } from '../tags';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
 import { GMAIL_SYSTEM_TAGS } from './system-tags';
+
+/** The resolved delta for one run — either a fresh capture (no delta) or a fetched `history.list` page. */
+type DeltaPlan = {
+  readonly token: string | undefined;
+  readonly createdIds: readonly string[] | undefined;
+  readonly reconcileItems: readonly ReconcileItem[];
+  readonly hasMoreDelta: boolean;
+};
 
 /**
  * Gmail's {@link MailSyncProvider}: the message source, the label→tag map, and the fused decode+map.
@@ -102,45 +109,61 @@ export const googleMailSyncProvider = (options: {
               process: toMapped(message).pipe(Effect.provide(context)),
             });
 
+            // The first-tick baseline (and stale-token fallback): the mailbox's current `historyId`
+            // with no delta applied. Defined once so both call sites share the same capture.
+            const captureFreshDelta = Effect.map(
+              api.getProfile(userId),
+              (profile): DeltaPlan => ({
+                token: profile.historyId,
+                createdIds: undefined,
+                reconcileItems: [],
+                hasMoreDelta: false,
+              }),
+            );
+
             // Resolve the delta plan. First tick captures the current `historyId` before backfill. An
             // incremental run fetches one bounded `history.list` page since the token (`maxResults` = the
             // per-run budget); `nextPageToken` drives the harness's `runAgain`, and the token advances to
             // the last processed record's id (not the mailbox's current `historyId`) so a large delta
-            // drains across runs without skipping unread pages. A stale token (HTTP 404) clears +
-            // recaptures and falls back to the window scan.
-            let capturedToken: string | undefined = token;
-            let createdIds: readonly string[] | undefined;
-            let reconcileItems: readonly ReconcileItem[] = [];
-            let hasMoreDelta = false;
-            if (token === undefined) {
-              capturedToken = (yield* api.getProfile(userId)).historyId;
-            } else {
-              const result = yield* Effect.either(
-                api.listHistory(userId, { startHistoryId: token, maxResults: maxMessages }),
-              );
-              if (Either.isRight(result)) {
-                const history = result.right.history ?? [];
-                createdIds = history.flatMap((record) => (record.messagesAdded ?? []).map((entry) => entry.message.id));
-                reconcileItems = collectLabelChanges(history, labelMap);
-                hasMoreDelta = result.right.nextPageToken !== undefined;
-                // Advance to the last processed record while more remain; otherwise to the mailbox's
-                // current id (fully caught up).
-                const lastRecord = history[history.length - 1];
-                capturedToken = hasMoreDelta && lastRecord ? lastRecord.id : result.right.historyId;
-                log('gmail sync: incremental delta', {
-                  records: history.length,
-                  created: createdIds.length,
-                  retag: reconcileItems.length,
-                  hasMoreDelta,
-                });
-              } else if (result.left instanceof GoogleApiError && result.left.code === 404) {
-                log('gmail sync: history id stale, falling back to window scan');
-                Cursor.clearToken(binding);
-                capturedToken = (yield* api.getProfile(userId)).historyId;
-              } else {
-                return yield* Effect.fail(result.left);
-              }
-            }
+            // drains across runs without skipping unread pages. A stale token (HTTP 404) falls back to
+            // `captureFreshDelta` — `Effect.catchIf` recovers only that case, propagating anything else.
+            const resolveDelta: Effect.Effect<DeltaPlan, GoogleMailApiError, never> =
+              token === undefined
+                ? captureFreshDelta
+                : api.listHistory(userId, { startHistoryId: token, maxResults: maxMessages }).pipe(
+                    Effect.map((result): DeltaPlan => {
+                      const history = result.history ?? [];
+                      const createdIds = history.flatMap((record) =>
+                        (record.messagesAdded ?? []).map((entry) => entry.message.id),
+                      );
+                      const reconcileItems = collectLabelChanges(history, labelMap);
+                      const hasMoreDelta = result.nextPageToken !== undefined;
+                      // Advance to the last processed record while more remain; otherwise to the
+                      // mailbox's current id (fully caught up).
+                      const lastRecord = history[history.length - 1];
+                      log('gmail sync: incremental delta', {
+                        records: history.length,
+                        created: createdIds.length,
+                        retag: reconcileItems.length,
+                        hasMoreDelta,
+                      });
+                      return {
+                        token: hasMoreDelta && lastRecord ? lastRecord.id : result.historyId,
+                        createdIds,
+                        reconcileItems,
+                        hasMoreDelta,
+                      };
+                    }),
+                    Effect.catchIf(
+                      (error) => error instanceof GoogleApiError && error.code === 404,
+                      () => {
+                        log('gmail sync: history id stale, falling back to window scan');
+                        Cursor.clearToken(binding);
+                        return captureFreshDelta;
+                      },
+                    ),
+                  );
+            const { token: capturedToken, createdIds, reconcileItems, hasMoreDelta } = yield* resolveDelta;
 
             const source: MailSyncSource = {
               buildSource: ({ windows, filter, maxMessages, onEnumerated, onRetrieved, onTaken }) => {

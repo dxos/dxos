@@ -68,18 +68,12 @@ export type MailSyncItem = {
 };
 
 /**
- * One reconcile change: a label add/remove on an already-committed message (or a stubbed deletion),
- * keyed by `foreignId`. {@link reconcileToChanges} resolves the `foreignId` to its feed message's
- * EntityId (via `Cursor.State.foreignIndex`) and produces an `EmailStage.Change`.
+ * The pre-resolution shape of a `retag`/`delete` {@link EmailStage.Change} — everything a provider can
+ * know before its `foreignId` is resolved to a feed message's `entityId` (the one field a provider can't
+ * supply yet). {@link reconcileToChanges} performs that resolution (via `Cursor.State.foreignIndex`) and
+ * attaches `entityId` to produce the full `Change`.
  */
-export type ReconcileItem =
-  | {
-      readonly _tag: 'retag';
-      readonly foreignId: string;
-      readonly addTagIds: readonly string[];
-      readonly removeTagIds: readonly string[];
-    }
-  | { readonly _tag: 'delete'; readonly foreignId: string };
+export type ReconcileItem = Omit<EmailStage.Retag, 'entityId'> | Omit<EmailStage.Delete, 'entityId'>;
 
 /** The run's change source, produced by {@link MailSyncProviderService.prepare} once ready. */
 export type MailSyncSource = {
