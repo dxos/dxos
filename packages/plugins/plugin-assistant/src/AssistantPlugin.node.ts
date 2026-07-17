@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
@@ -26,14 +26,30 @@ import {
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
-import { AssistantEvents, type AssistantPluginOptions } from '#types';
+import { type AssistantPluginOptions } from '#types';
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-    AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-    AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+    AppPlugin.addAppGraphModule({
+      requires: AppGraphBuilder.requires,
+      provides: AppGraphBuilder.provides,
+      activate: AppGraphBuilder,
+    }),
+    AppPlugin.addSkillDefinitionModule({
+      requires: SkillDefinition.requires,
+      provides: SkillDefinition.provides,
+      activate: SkillDefinition,
+    }),
+    AppPlugin.addCreateObjectModule({
+      requires: CreateObject.requires,
+      provides: CreateObject.provides,
+      activate: CreateObject,
+    }),
+    AppPlugin.addOperationHandlerModule({
+      requires: OperationHandler.requires,
+      provides: OperationHandler.provides,
+      activate: OperationHandler,
+    }),
     AppPlugin.addSchemaModule({
       schema: [
         Chat.Chat,
@@ -53,35 +69,41 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       ],
     }),
     Plugin.addModule({
-      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      requires: EdgeModelResolver.requires,
+      provides: EdgeModelResolver.provides,
       activate: EdgeModelResolver,
     }),
     Plugin.addModule({
-      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      requires: LocalModelResolver.requires,
+      provides: LocalModelResolver.provides,
       activate: LocalModelResolver,
     }),
     Plugin.addModule((options) => ({
       id: Capability.getModuleTag(AiService),
-      firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
-      activatesOn: ActivationEvents.SetupProcessManager,
+      requires: AiService.requires,
+      provides: AiService.provides,
       activate: () => AiService(options),
     })),
     Plugin.addModule({
-      activatesOn: ActivationEvents.SetupProcessManager,
+      requires: AiContextCapability.requires,
+      provides: AiContextCapability.provides,
       activate: AiContextCapability,
     }),
     Plugin.addModule({
-      activatesOn: ActivationEvents.Startup,
+      requires: Toolkit.requires,
+      provides: Toolkit.provides,
       activate: Toolkit,
     }),
     Plugin.addModule({
-      activatesOn: ActivationEvents.SetupProcessManager,
+      requires: AgentRuntime.requires,
+      provides: AgentRuntime.provides,
       activate: AgentRuntime,
     }),
   )
   .pipe(
     Plugin.addModule({
-      activatesOn: ActivationEvents.ProcessManagerReady,
+      requires: AgentHydrator.requires,
+      provides: AgentHydrator.provides,
       activate: AgentHydrator,
     }),
     Plugin.make,

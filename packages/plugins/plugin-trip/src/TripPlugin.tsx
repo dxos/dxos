@@ -4,9 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { InboxCapabilities } from '@dxos/plugin-inbox';
 
 import {
@@ -28,27 +27,46 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TripPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: [],
+    provides: [AppCapabilities.SkillDefinition],
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Trip.Trip, Segment.Segment, Booking.Booking] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addSettingsModule({ activate: Settings }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
+  AppPlugin.addSettingsModule({ requires: Settings.requires, provides: Settings.provides, activate: Settings }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.addModule({
     id: 'trip-extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, TripMessageExtractor)),
+    requires: [],
+    provides: [InboxCapabilities.ObjectExtractor],
+    activate: () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
   }),
   Plugin.addModule({
-    id: 'marker-provider',
-    activatesOn: ActivationEvents.Startup,
+    id: Capability.getModuleTag(MarkerProvider),
+    requires: MarkerProvider.requires,
+    provides: MarkerProvider.provides,
     activate: MarkerProvider,
   }),
   Plugin.make,

@@ -4,22 +4,24 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+// Explicit imports so the emitted `.d.ts` references the packages via their public
+// aliases instead of relative `node_modules` paths (TS2883).
 import { type Observability, ObservabilityProvider } from '@dxos/observability';
+import type { OperationInvoker } from '@dxos/operation';
 
 import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
-export type ClientReadyOptions = {
-  namespace: string;
-  observability: Observability.Observability;
-};
-
+// The `observability` instance is read from `ObservabilityCapabilities.Observability` (contributed
+// once, at Startup, by the `observability` module) rather than re-created here — a capability is a
+// singleton and two independent contributions would trigger `DuplicateProviderError`.
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ observability }: ClientReadyOptions) {
-    const manager = yield* Capability.get(Capabilities.PluginManager);
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const client = yield* Capability.get(ObservabilityCapabilities.ClientCapability);
+  Effect.fnUntraced(function* () {
+    const manager = yield* Capabilities.PluginManager;
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
+    const client = yield* ObservabilityCapabilities.ClientCapability;
+    const observability = yield* ObservabilityCapabilities.Observability;
 
     // Ensure errors are tagged with enabled plugins to help with reproductions.
     const enabledPlugins = manager.getEnabled();
@@ -60,7 +62,6 @@ export default Capability.makeModule(
     yield* observability.addDataProvider(ObservabilityProvider.Client.spacesMetricsProvider(client));
     log('client-ready: space metrics data provider added');
 
-    log('client-ready: contributing observability capability');
-    return Capability.contributes(ObservabilityCapabilities.Observability, observability, () => observability.close());
+    return [];
   }),
 );

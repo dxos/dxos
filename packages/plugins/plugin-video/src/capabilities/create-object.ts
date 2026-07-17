@@ -20,18 +20,20 @@ const CreateVideoSchema = Schema.Struct({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Type.getTypename(Video.Video),
-      inputSchema: CreateVideoSchema,
-      createObject: (props, options) =>
-        Effect.gen(function* () {
-          const object = Video.make({ name: props.name, url: props.url });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
-        }),
-    });
+    return [
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+        id: Type.getTypename(Video.Video),
+        inputSchema: CreateVideoSchema,
+        createObject: (props, options) =>
+          Effect.gen(function* () {
+            const object = Video.make({ name: props.name, url: props.url });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              targetNodeId: options.targetNodeId,
+            });
+          }),
+      }),
+    ];
   }),
 );

@@ -15,8 +15,8 @@ import { ObservabilityOperation } from '#types';
 import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'root',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
@@ -31,5 +31,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ),
+  ]),
 );

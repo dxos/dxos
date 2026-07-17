@@ -13,18 +13,16 @@ import { ObservabilityOperation } from '#types';
 
 export const ObservabilityPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({
-    activate: Capability.lazy('OperationHandler', () =>
-      Promise.resolve({
-        default: Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
-          Effect.fnUntraced(function* () {
-            return Capability.contributes(
-              Capabilities.OperationHandler,
-              OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
-            );
-          }),
+    id: 'OperationHandler',
+    requires: [],
+    provides: [Capabilities.OperationHandler],
+    activate: () =>
+      Effect.succeed([
+        Capability.provide(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
         ),
-      }),
-    ),
+      ]),
   }),
   Plugin.make,
 );

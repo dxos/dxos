@@ -8,9 +8,13 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type AiModelResolver } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import { type Credential } from '@dxos/compute';
 
 /**
  * To start LM Studio server:
@@ -23,9 +27,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
  * OLLAMA_ORIGINS="*" ollama serve
  * ```
  */
-const localModelResolver = Capability.makeModule<[]>(() =>
+const localModelResolver = Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(
+    Capability.provide(
       AppCapabilities.AiModelResolver,
       LMStudioResolver.make().pipe(
         Layer.provide(
@@ -36,7 +40,7 @@ const localModelResolver = Capability.makeModule<[]>(() =>
         Layer.provide(FetchHttpClient.layer),
       ),
     ),
-    Capability.contributes(
+    Capability.provide(
       AppCapabilities.AiModelResolver,
       OllamaResolver.make({
         transformClient: HttpClient.withTracerPropagation(false),

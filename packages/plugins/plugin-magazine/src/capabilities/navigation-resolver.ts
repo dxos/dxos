@@ -12,7 +12,7 @@ import { Magazine } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(
+      Capability.provide(
         AppCapabilities.NavigationPathResolver,
         TypeSection.createTypeSectionPathResolver(Magazine.Magazine, { groupId: Paths.GroupSegments.content }),
       ),

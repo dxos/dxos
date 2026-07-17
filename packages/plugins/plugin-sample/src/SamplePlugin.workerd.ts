@@ -10,7 +10,11 @@ import { meta } from '#meta';
 import { SampleItem } from '#types';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [SampleItem.SampleItem] }),
   Plugin.make,
 );

@@ -6,6 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { OnboardingManager } from '../onboarding-manager';
@@ -13,8 +16,8 @@ import { OnboardingCapabilities } from './capabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
+    const client = yield* ClientCapabilities.Client;
     const searchProps = new URLSearchParams(window.location.search);
     const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 
@@ -40,8 +43,6 @@ export default Capability.makeModule(
     // wired up in the constructor.
     void manager.initialize().catch((error) => log.catch(error));
 
-    return Capability.contributes(OnboardingCapabilities.Onboarding, manager, () =>
-      Effect.sync(() => manager.destroy()),
-    );
+    return [Capability.provide(OnboardingCapabilities.Onboarding, manager, () => Effect.sync(() => manager.destroy()))];
   }),
 );

@@ -9,7 +9,11 @@ import { AppGraphBuilder } from '#capabilities';
 import { meta } from '#meta';
 
 export const DevtoolsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
   Plugin.make,
 );
 

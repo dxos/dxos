@@ -32,41 +32,44 @@ import {
   WebSearchSkill,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationHandlerSet, Skill } from '@dxos/compute';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 
 import { AssistantSkill } from '#skills';
 
 const skillDefinition = () =>
   Effect.succeed([
-    Capability.contributes(AppCapabilities.SkillDefinition, AssistantSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, BrowserSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, ConnectorsSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, DatabaseSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, WebSearchSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, DiscordSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, LinearSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, AgentSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, PlanningSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, MemorySkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, AutomationSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, SkillManagerSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, AgentWizardSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, DelegationSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, AlarmSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, AssistantSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, BrowserSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, ConnectorsSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, DatabaseSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, WebSearchSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, DiscordSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, LinearSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, AgentSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, PlanningSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, MemorySkill),
+    Capability.provide(AppCapabilities.SkillDefinition, AutomationSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, SkillManagerSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, AgentWizardSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, DelegationSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, AlarmSkill),
 
-    Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
-    Capability.contributes(Capabilities.OperationHandler, AgentSkillHandlers),
-    Capability.contributes(Capabilities.OperationHandler, SkillManagerHandlers),
-    Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
-    Capability.contributes(Capabilities.OperationHandler, WebSearchHandlers),
-    Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
-    Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
-    Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
-    Capability.contributes(Capabilities.OperationHandler, AlarmHandlers),
+    Capability.provide(Capabilities.OperationHandler, AgentHandlers),
+    Capability.provide(Capabilities.OperationHandler, AgentSkillHandlers),
+    Capability.provide(Capabilities.OperationHandler, SkillManagerHandlers),
+    Capability.provide(Capabilities.OperationHandler, DatabaseHandlers),
+    Capability.provide(Capabilities.OperationHandler, WebSearchHandlers),
+    Capability.provide(Capabilities.OperationHandler, AgentWizardHandlers),
+    Capability.provide(Capabilities.OperationHandler, DelegationHandlers),
+    Capability.provide(Capabilities.OperationHandler, PlanningHandlers),
+    Capability.provide(Capabilities.OperationHandler, AlarmHandlers),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
-    Capability.contributes(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
+    Capability.provide(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
   ]);
 
 export default skillDefinition;

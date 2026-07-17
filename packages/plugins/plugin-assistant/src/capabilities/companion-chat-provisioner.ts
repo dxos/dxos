@@ -7,11 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Graph, type Node } from '@dxos/app-graph';
+import { Graph, type GraphBuilder, type Node } from '@dxos/app-graph';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
   COMPANION_VIEW_STATE_CONTEXT,
@@ -32,15 +35,15 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const deckStateAtom = yield* Capability.get(DeckCapabilities.State);
-    const cacheAtom = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
-    const stateAtom = yield* Capability.get(AssistantCapabilities.State);
+    const operationInvoker = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
+    const deckStateAtom = yield* DeckCapabilities.State;
+    const cacheAtom = yield* AssistantCapabilities.CompanionChatCache;
+    const stateAtom = yield* AssistantCapabilities.State;
     // The selected companion variant moved off deck state into a global view-state aspect; read and
     // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
     const variantAtom = viewState.atom(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
 
     const plankSubs = new Map<string, () => void>();
@@ -141,7 +144,7 @@ export default Capability.makeModule(
     const unsub2 = registry.subscribe(stateAtom, provision);
     const unsub3 = registry.subscribe(variantAtom, provision);
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsub1();
         unsub2();
@@ -149,6 +152,7 @@ export default Capability.makeModule(
         unsubAllPlanks();
       }),
     );
+    return [];
   }),
 );
 

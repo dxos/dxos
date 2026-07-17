@@ -14,7 +14,7 @@ import { Trip } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Trip.Trip),
         createObject: (props, options) =>
           Effect.gen(function* () {

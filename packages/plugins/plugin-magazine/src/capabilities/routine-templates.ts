@@ -11,6 +11,6 @@ import { magazineCuration } from '../templates/magazine-curation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.contributes(RoutineCapabilities.Template, magazineCuration)];
+    return [Capability.provide(RoutineCapabilities.Template, magazineCuration)];
   }),
 );

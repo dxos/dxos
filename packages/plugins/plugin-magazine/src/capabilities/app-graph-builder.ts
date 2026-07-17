@@ -23,7 +23,7 @@ import { getMagazinesPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
         const selection = get(viewState.atom(selectionAspect, nodeId));
@@ -120,6 +120,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

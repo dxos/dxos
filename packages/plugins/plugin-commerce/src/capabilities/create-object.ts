@@ -26,7 +26,7 @@ const CreateProviderSchema = Schema.Struct({
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Search.Search),
         inputSchema: CreateSearchSchema,
         createObject: (props, options) =>
@@ -39,7 +39,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Provider.Provider),
         inputSchema: CreateProviderSchema,
         createObject: (props, options) =>

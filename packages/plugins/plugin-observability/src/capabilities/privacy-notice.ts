@@ -6,6 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 
 import { meta } from '#meta';
 import { ObservabilityCapabilities } from '#types';
@@ -18,10 +21,10 @@ import { ObservabilityCapabilities } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const stateAtom = yield* Capability.get(ObservabilityCapabilities.State);
-    const client = yield* Capability.get(ObservabilityCapabilities.ClientCapability);
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* ObservabilityCapabilities.State;
+    const client = yield* ObservabilityCapabilities.ClientCapability;
 
     const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
     const notify =

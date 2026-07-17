@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
@@ -29,35 +29,61 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Support.Ticket] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
+    id: Capability.getModuleTag(HelpState),
+    requires: HelpState.requires,
+    provides: HelpState.provides,
     activate: HelpState,
   }),
   Plugin.addModule(({ helpSteps = [] }) => ({
     id: 'react-root',
-    activatesOn: ActivationEvents.Startup,
+    requires: ReactRoot.requires,
+    provides: ReactRoot.provides,
     activate: () => ReactRoot(helpSteps),
   })),
+  // Genuine runtime event: fired imperatively by `plugin-space`'s create-space operation.
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
+    provides: [SpaceCapabilities.OnCreateSpace],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+      Effect.succeed([
+        Capability.provide(SpaceCapabilities.OnCreateSpace, (params) =>
           Operation.invoke(SupportOperation.OnCreateSpace, params),
         ),
-      ),
+      ]),
   }),
   Plugin.addModule({
     id: 'settings',
-    activatesOn: AppActivationEvents.SetupSettings,
+    requires: SupportSettings.requires,
+    provides: SupportSettings.provides,
     activate: SupportSettings,
   }),
   AppPlugin.addPluginAssetModule({

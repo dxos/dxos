@@ -13,13 +13,13 @@ import { BrainSurface } from '#types';
 
 /** React surfaces contributed by plugin-brain — the standalone per-space facts panel. */
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'brain.facts',
         filter: Surface.makeFilter(BrainSurface.Facts),
         component: () => <FactsCompanion />,
       }),
     ]),
-  ),
+  ]),
 );

@@ -21,25 +21,45 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).
-  // Activates during `SetupAppGraph` event.
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  // Activates when the app graph builder capability can be resolved.
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
 
   // Registers type metadata for the framework's object system.
   // `createObject` is the factory called when users create this type via the UI.
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
 
-  // Registers operation handlers. Activates during `SetupProcessManager` event.
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  // Registers operation handlers.
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
 
   // Registers ECHO schemas so the framework knows about this type.
   // Required for queries, serialization, and type resolution.
   AppPlugin.addSchemaModule({ schema: [SampleItem.SampleItem] }),
 
-  // Registers the settings module. Activates during `SetupSettings` event.
-  AppPlugin.addSettingsModule({ activate: SampleSettings }),
+  // Registers the settings module.
+  AppPlugin.addSettingsModule({
+    requires: SampleSettings.requires,
+    provides: SampleSettings.provides,
+    activate: SampleSettings,
+  }),
 
-  // Registers React surface contributions. Activates during `SetupReactSurface` event.
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  // Registers React surface contributions.
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
 
   // Registers i18n translations.
   AppPlugin.addTranslationsModule({ translations }),

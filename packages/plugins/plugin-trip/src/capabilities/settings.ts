@@ -31,7 +31,7 @@ export default Capability.makeModule(
       defaultValue: (): Settings => ({}),
     });
 
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
     const sync = () => {
       const settings = registry.get(settingsAtom);
       setTripGapDays(settings.tripGapDays ?? DEFAULT_TRIP_GAP_DAYS);
@@ -39,14 +39,14 @@ export default Capability.makeModule(
     };
     sync();
     const unsubscribe = registry.subscribe(settingsAtom, sync);
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
 
     return [
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.provide(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings,
         atom: settingsAtom,
       }),
-      Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => unsubscribe())),
     ];
   }),
 );

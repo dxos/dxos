@@ -2,17 +2,52 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationHandlerSet, Skill } from '@dxos/compute';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const HelpState = Capability.lazy('HelpState', () => import('./help-state'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+import { HelpCapabilities, SupportCapabilities } from '#types';
+
+export const AppGraphBuilder = Capability.lazyModule(
+  'AppGraphBuilder',
+  { requires: [SupportCapabilities.Settings], provides: [AppCapabilities.AppGraphBuilder] },
+  () => import('./app-graph-builder'),
+);
+export const SkillDefinition = Capability.lazyModule(
+  'SkillDefinition',
+  { provides: [AppCapabilities.SkillDefinition] },
+  () => import('./skill-definition'),
+);
+export const CreateObject = Capability.lazyModule(
+  'CreateObject',
+  { provides: [SpaceCapabilities.CreateObjectEntry] },
+  () => import('./create-object'),
+);
+export const HelpState = Capability.lazyModule(
+  'HelpState',
+  { provides: [HelpCapabilities.State] },
+  () => import('./help-state'),
+);
+export const OperationHandler = Capability.lazyModule(
   'OperationHandler',
+  { provides: [Capabilities.OperationHandler] },
   () => import('./operation-handler'),
 );
-export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const SupportSettings = Capability.lazy('SupportSettings', () => import('./settings'));
+export const ReactRoot = Capability.lazyModule(
+  'ReactRoot',
+  { provides: [Capabilities.ReactRoot] },
+  () => import('./react-root'),
+);
+export const ReactSurface = Capability.lazyModule(
+  'ReactSurface',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./react-surface'),
+);
+export const SupportSettings = Capability.lazyModule(
+  'SupportSettings',
+  { provides: [AppCapabilities.Settings, SupportCapabilities.Settings] },
+  () => import('./settings'),
+);

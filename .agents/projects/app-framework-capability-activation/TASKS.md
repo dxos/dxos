@@ -78,8 +78,14 @@ Gate recipe per wave: per-package build+test → framework suites → Composer b
 - [x] Leaf batch 1 (content types) + batch 3 (connectors) — committed e7ae6a5a89
 - [x] Leaf batch 7 (tools) — committed 51270b5c37 (arity flips: DiagnosticProvider, RoutineCapabilities.Template)
 - [x] Leaf batch 2 (kanban family) — committed 1beaf57e2c
-- [ ] Leaf batches 4, 5, 6, 8, 9, 10 (see work-list)
-- [ ] Special cases: assistant, brain, observability (architectural call), code (imperative SetupPluginAssets fire)
+- [x] Leaf batches 4+5 (games, markdown consumers) — committed 54e1bf7cf2 (arity flips: VariantProvider, FileCapabilities.Backend; comments' storybook agent stub stays legacy-shadowed pending override flag)
+- [x] Leaf batches 6+8 (communication, platform) — committed c1aa6426ac (arity flips: CallTransportProvider, ObjectExtractor, MailboxAction, PageAction; boot 3/3)
+- [x] Leaf batch 9 (shell/dev/onboarding): devtools (+.node), debug, onboarding (default-content stays event-mode on PersonalSpaceReady + requires), support (on-space-created stays event-mode on SpaceCreated)
+- [x] Leaf batch 10 (misc): payments, preview, search (fixed unhoisted layout atom in connector), trip (hoisted state/cache atoms; hard rule at app-graph-builder.ts), commerce (AttentionCapabilities.Attention requires kept per work-list despite no direct read), magazine (+.workerd; hard rule fix; NavigationPathResolver/NavigationTargetResolver mismatch caught+fixed), video, sample (+.node/.workerd; dead `capabilities` var removed; node.ts barrel also converted)
+- [x] Special case: plugin-brain — LayerSpec idiom in fact-store.ts (provides FactStoreRegistry + LayerSpec)
+- [x] Special case: plugin-assistant (+.node/.workerd) — 3 LayerSpec providers (ai-context, agent-service, ai-service); hybrid `get(yield* Capability.get(State))` in app-graph-builder.ts collapsed to hoisted atoms (:99 action-closure get is fine, :141-142 was the real violation); EdgeModelResolver/LocalModelResolver → dependency-mode (AiModelResolver already multi); AssistantEvents.SetupAiServiceProviders deprecated; SetupArtifactDefinition firesBeforeActivation dropped (all producers already migrated, confirmed via repo-wide grep); CompanionChatProvisioner's 4-event allOf → 7 requires (drops event entirely)
+- [x] Special case: plugin-observability — architectural decision: plugin-client depends on plugin-observability (confirmed via subagent + repo cycle checker), so mirrored `ObservabilityCapabilities.ClientCapability`/`IdentityCreatedEvent` (by identifier, already precedented for ClientCapability) instead of a real package dep; found+fixed a genuine duplicate-provider bug (both `observability` Startup module and `client-ready` module contributed the singleton `ObservabilityCapabilities.Observability`) by consolidating to one owner; ClientReadyEvent deprecated
+- [ ] Special case: plugin-code (imperative SetupPluginAssets fire) — not in this batch's scope
 - [ ] Scaffolding: app-toolkit playground, stories-*, story-modules
 - [ ] ui-editor: confirmed out of scope (CodeMirror ViewPlugin, not app-framework)
 

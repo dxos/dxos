@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capabilities, Plugin } from '@dxos/app-framework';
+import { AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
+import { RoutineCapabilities } from '@dxos/plugin-routine';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
@@ -19,11 +20,26 @@ import SkillDefinition from './capabilities/skill-definition';
 import Toolkit from './capabilities/toolkit';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ id: 'skill-definition', activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ id: 'operation-handler', activate: OperationHandler }),
+  AppPlugin.addSkillDefinitionModule({
+    id: 'skill-definition',
+    requires: [],
+    provides: [
+      AppCapabilities.SkillDefinition,
+      Capabilities.OperationHandler,
+      RoutineCapabilities.AgentDelegationStrategy,
+    ],
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    id: 'operation-handler',
+    requires: [],
+    provides: [Capabilities.OperationHandler],
+    activate: OperationHandler,
+  }),
   Plugin.addModule({
     id: 'toolkit',
-    activatesOn: ActivationEvents.Startup,
+    requires: [],
+    provides: [AppCapabilities.Toolkit],
     activate: Toolkit,
   }),
   AppPlugin.addSchemaModule({

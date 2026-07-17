@@ -84,116 +84,117 @@ type ReactSurfaceOptions = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
-    const capabilities = yield* Capability.Service;
-    const registry = capabilities.get(Capabilities.AtomRegistry);
-    const settingsAtom = capabilities.get(DebugCapabilities.Settings);
-    const fileUploader = capabilities.getAll(AppCapabilities.FileUploader)[0];
+    const registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* DebugCapabilities.Settings;
+    const fileUploader = (yield* AppCapabilities.FileUploader).get()[0];
 
-    return Capability.contributes(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return (
-            <DebugSettings
-              settings={settings}
-              onSettingsChange={updateSettings}
-              logStore={logStore}
-              onUpload={fileUploader}
-            />
-          );
-        },
-      }),
-      Surface.create({
-        id: 'space',
-        filter: AppSurface.subject(AppSurface.Article, isSpaceDebug),
-        component: ({ role, data }) => {
-          const { invokePromise } = useOperationInvoker();
+    return [
+      Capability.provide(Capabilities.ReactSurface, [
+        Surface.create({
+          id: 'pluginSettings',
+          filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+          component: ({ data: { subject } }) => {
+            const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+            return (
+              <DebugSettings
+                settings={settings}
+                onSettingsChange={updateSettings}
+                logStore={logStore}
+                onUpload={fileUploader}
+              />
+            );
+          },
+        }),
+        Surface.create({
+          id: 'space',
+          filter: AppSurface.subject(AppSurface.Article, isSpaceDebug),
+          component: ({ role, data }) => {
+            const { invokePromise } = useOperationInvoker();
 
-          const handleCreateObject = useCallback(
-            (objects: Obj.Unknown[]) => {
-              if (!isSpace(data.subject.space)) {
-                return;
-              }
+            const handleCreateObject = useCallback(
+              (objects: Obj.Unknown[]) => {
+                if (!isSpace(data.subject.space)) {
+                  return;
+                }
 
-              const collection =
-                data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                Annotation.get(data.subject.space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
-                  Option.getOrUndefined,
-                )?.target;
-              if (!Obj.instanceOf(Collection.Collection, collection)) {
-                return;
-              }
+                const collection =
+                  data.subject.space.state.get() === SpaceState.SPACE_READY &&
+                  Annotation.get(data.subject.space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+                    Option.getOrUndefined,
+                  )?.target;
+                if (!Obj.instanceOf(Collection.Collection, collection)) {
+                  return;
+                }
 
-              objects.forEach((object) => {
-                void invokePromise(SpaceOperation.AddObject, {
-                  target: collection,
-                  object,
+                objects.forEach((object) => {
+                  void invokePromise(SpaceOperation.AddObject, {
+                    target: collection,
+                    object,
+                  });
                 });
-              });
-            },
-            [data.subject.space, invokePromise],
-          );
+              },
+              [data.subject.space, invokePromise],
+            );
 
-          return <SpaceGenerator role={role} space={data.subject.space} onCreateObjects={handleCreateObject} />;
-        },
-      }),
-      Surface.create({
-        id: 'wireframe',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        filter: AppSurface.oneOf(
-          AppSurface.subject(AppSurface.Article, (value): value is Obj.Unknown => {
-            const settings = registry.get(settingsAtom);
-            return Obj.isObject(value) && !!settings.wireframe;
-          }),
-          AppSurface.subject(AppSurface.Section, (value): value is Obj.Unknown => {
-            const settings = registry.get(settingsAtom);
-            return Obj.isObject(value) && !!settings.wireframe;
-          }),
-        ),
-        position: Position.first,
-        component: ({ data, role, name }) => (
-          <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
-        ),
-      }),
-      Surface.create({
-        id: 'objectDebug',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'debug'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        component: ({ role, data }) => {
-          const { invokePromise } = useOperationInvoker();
-          const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
-          return <DebugObjectPanel role={role} companionTo={data.companionTo} onOpen={onOpen} canOpen={canOpen} />;
-        },
-      }),
-      Surface.create({
-        id: 'spaceObjects',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
-        component: () => {
-          const space = useActiveSpace();
-          const { invokePromise } = useOperationInvoker();
-          const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
-          if (!space) {
-            return null;
-          }
+            return <SpaceGenerator role={role} space={data.subject.space} onCreateObjects={handleCreateObject} />;
+          },
+        }),
+        Surface.create({
+          id: 'wireframe',
+          // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+          filter: AppSurface.oneOf(
+            AppSurface.subject(AppSurface.Article, (value): value is Obj.Unknown => {
+              const settings = registry.get(settingsAtom);
+              return Obj.isObject(value) && !!settings.wireframe;
+            }),
+            AppSurface.subject(AppSurface.Section, (value): value is Obj.Unknown => {
+              const settings = registry.get(settingsAtom);
+              return Obj.isObject(value) && !!settings.wireframe;
+            }),
+          ),
+          position: Position.first,
+          component: ({ data, role, name }) => (
+            <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
+          ),
+        }),
+        Surface.create({
+          id: 'objectDebug',
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, 'debug'),
+            AppSurface.companion(AppSurface.Article),
+          ),
+          component: ({ role, data }) => {
+            const { invokePromise } = useOperationInvoker();
+            const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
+            return <DebugObjectPanel role={role} companionTo={data.companionTo} onOpen={onOpen} canOpen={canOpen} />;
+          },
+        }),
+        Surface.create({
+          id: 'spaceObjects',
+          filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
+          component: () => {
+            const space = useActiveSpace();
+            const { invokePromise } = useOperationInvoker();
+            const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
+            if (!space) {
+              return null;
+            }
 
-          return <DebugSpaceObjectsPanel space={space} onOpen={onOpen} canOpen={canOpen} />;
-        },
-      }),
-      Surface.create({
-        id: 'debugStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        position: Position.first,
-        component: () => <DebugStatus />,
-      }),
-      Surface.create({
-        id: 'statsPanel',
-        filter: Surface.makeFilter(DebugSurface.Stats),
-        component: () => <StatsPanel />,
-      }),
-    ]);
+            return <DebugSpaceObjectsPanel space={space} onOpen={onOpen} canOpen={canOpen} />;
+          },
+        }),
+        Surface.create({
+          id: 'debugStatus',
+          filter: Surface.makeFilter(AppSurface.StatusIndicator),
+          position: Position.first,
+          component: () => <DebugStatus />,
+        }),
+        Surface.create({
+          id: 'statsPanel',
+          filter: Surface.makeFilter(DebugSurface.Stats),
+          component: () => <StatsPanel />,
+        }),
+      ]),
+    ];
   }),
 );

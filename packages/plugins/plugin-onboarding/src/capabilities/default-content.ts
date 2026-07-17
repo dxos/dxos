@@ -6,8 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+// Explicit imports so the emitted `.d.ts` references the packages via their public
+// aliases instead of relative `node_modules` paths (TS2883).
+import type { GraphBuilder } from '@dxos/app-graph';
 import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import type { OperationInvoker } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
@@ -31,13 +35,13 @@ export default Capability.makeModule(
       AppSpace: { getPersonalSpace },
     } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
 
-    const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const operationInvoker = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const client = yield* ClientCapabilities.Client;
 
     const personalSpace = getPersonalSpace(client);
     if (!personalSpace) {
-      return Capability.contributes(Capabilities.Null, null);
+      return [];
     }
     Obj.update(personalSpace.properties, (obj) => {
       obj.icon = PERSONAL_SPACE_ICON;
@@ -82,5 +86,7 @@ export default Capability.makeModule(
     } else {
       graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'));
     }
+
+    return [];
   }),
 );

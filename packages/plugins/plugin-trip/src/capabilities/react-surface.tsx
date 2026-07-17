@@ -13,8 +13,8 @@ import { SegmentArticle, TripArticle } from '#containers';
 import { Segment, Trip } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.trip',
         filter: AppSurface.oneOf(
@@ -48,5 +48,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ),
+  ]),
 );

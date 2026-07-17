@@ -15,9 +15,17 @@ import { meta } from '#meta';
 import { SampleItem } from '#types';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
   AppPlugin.addSchemaModule({ schema: [SampleItem.SampleItem] }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   Plugin.make,
 );
 

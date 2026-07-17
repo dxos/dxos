@@ -44,7 +44,11 @@ const whenNonChatObject = NodeMatcher.whenAll(
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    // Read through their atoms so the "companionChat" extension establishes a reactive dependency
+    // and re-evaluates once these capabilities land (dependency modules contribute individually,
+    // not batched per wave) or their values change.
+    const stateCapabilityAtom = yield* Capability.atom(AssistantCapabilities.State);
+    const cacheCapabilityAtom = yield* Capability.atom(AssistantCapabilities.CompanionChatCache);
 
     const extensions = yield* Effect.all([
       // AI section group — created here so it shows only when the assistant plugin is active.
@@ -138,8 +142,13 @@ export default Capability.makeModule(
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
-            const state = get(yield* Capability.get(AssistantCapabilities.State));
-            const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
+            const [stateAtom] = get(stateCapabilityAtom);
+            const [cacheAtom] = get(cacheCapabilityAtom);
+            if (!stateAtom || !cacheAtom) {
+              return [];
+            }
+            const state = get(stateAtom);
+            const cache = get(cacheAtom);
             const objectUri = Obj.getURI(object);
 
             // Resolve chat from persisted state or transient cache.
@@ -247,6 +256,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

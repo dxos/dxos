@@ -26,7 +26,7 @@ const STORAGE_KEY = `${meta.profile.key}.statsPanel`;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ persist = true }: StatsPanelOptions = {}) {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
     const canPersist = persist && typeof localStorage !== 'undefined';
 
     const hydrate = (): Record<string, unknown> => {
@@ -55,20 +55,22 @@ export default Capability.makeModule(
       }
     };
 
-    return Capability.contributes(AppCapabilities.StatsPanel, {
-      statsAtom,
-      get: (pluginKey) => registry.get(statsAtom)[pluginKey],
-      compartment: (pluginKey) => ({
-        set: (stats) => {
-          registry.set(statsAtom, { ...registry.get(statsAtom), [pluginKey]: stats });
-          save();
-        },
-        clear: () => {
-          const { [pluginKey]: _removed, ...rest } = registry.get(statsAtom);
-          registry.set(statsAtom, rest);
-          save();
-        },
+    return [
+      Capability.provide(AppCapabilities.StatsPanel, {
+        statsAtom,
+        get: (pluginKey) => registry.get(statsAtom)[pluginKey],
+        compartment: (pluginKey) => ({
+          set: (stats) => {
+            registry.set(statsAtom, { ...registry.get(statsAtom), [pluginKey]: stats });
+            save();
+          },
+          clear: () => {
+            const { [pluginKey]: _removed, ...rest } = registry.get(statsAtom);
+            registry.set(statsAtom, rest);
+            save();
+          },
+        }),
       }),
-    });
+    ];
   }),
 );

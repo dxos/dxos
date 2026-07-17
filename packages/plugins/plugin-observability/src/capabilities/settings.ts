@@ -22,8 +22,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(ObservabilityCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.provide(ObservabilityCapabilities.Settings, settingsAtom),
+      Capability.provide(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

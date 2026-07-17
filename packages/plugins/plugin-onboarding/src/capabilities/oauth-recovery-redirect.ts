@@ -142,7 +142,7 @@ export default Capability.makeModule(
         }),
       );
     }
-    return Capability.contributes(Capabilities.Null, null);
+    return [];
   }),
 );
 

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import { FactStore, MailboxAction, OperationHandler, ReactSurface, Settings, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
@@ -13,9 +13,21 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BrainPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
@@ -24,18 +36,22 @@ export const BrainPlugin = Plugin.define(meta).pipe(
   // (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever analysis
   // runs.
   Plugin.addModule({
-    activatesOn: ActivationEvents.SetupProcessManager,
+    id: Capability.getModuleTag(FactStore),
+    requires: FactStore.requires,
+    provides: FactStore.provides,
     activate: FactStore,
   }),
   // Owns the fact-analysis settings (model/provider/strict) and registers them in the settings UI.
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
+    requires: Settings.requires,
+    provides: Settings.provides,
     activate: Settings,
   }),
   // Injects the `Analyze` action into plugin-inbox's mailbox toolbar menu (fact analysis is owned by
   // brain); reads the settings atom live at invoke time. Shares the atom with the Settings module.
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
+    requires: MailboxAction.requires,
+    provides: MailboxAction.provides,
     activate: MailboxAction,
   }),
   Plugin.make,

@@ -11,7 +11,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(
+      Capability.provide(
         AppCapabilities.NavigationPathResolver,
         TypeSection.createTypeSectionPathResolver(Chat.Chat, { groupId: Paths.GroupSegments.ai }),
       ),

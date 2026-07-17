@@ -28,8 +28,6 @@ const SAMPLE_SECTION_TYPE = 'sample-section';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
     const extensions = yield* Effect.all([
       // --- Root-level action ---
       // `NodeMatcher.whenRoot` matches the graph root, making this action appear
@@ -175,6 +173,6 @@ export default Capability.makeModule(
     ]);
 
     // All extensions are flattened and contributed as a single array.
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions.flat())];
   }),
 );

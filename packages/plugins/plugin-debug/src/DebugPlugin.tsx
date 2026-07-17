@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, DebugSettings, ReactSurface, StatsPanel } from '#capabilities';
@@ -14,17 +14,27 @@ import { type DebugPluginOptions } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSettingsModule({ activate: DebugSettings }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addSettingsModule({
+    requires: DebugSettings.requires,
+    provides: DebugSettings.provides,
+    activate: DebugSettings,
+  }),
   Plugin.addModule(({ logStore }) => ({
     id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
     activate: () => ReactSurface({ logStore }),
   })),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ persistStats }) => ({
     id: 'stats-panel',
-    activatesOn: ActivationEvents.Startup,
+    requires: StatsPanel.requires,
+    provides: StatsPanel.provides,
     activate: () => StatsPanel({ persist: persistStats ?? true }),
   })),
   AppPlugin.addPluginAssetModule({

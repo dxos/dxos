@@ -2,11 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Instructions } from '@dxos/compute';
-import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
 import { StateMap, TagIndex } from '@dxos/schema';
 
 import {
@@ -27,12 +25,25 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addNavigationResolverModule({
+    requires: NavigationResolver.requires,
+    provides: NavigationResolver.provides,
+    activate: NavigationResolver,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
@@ -47,12 +58,21 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       TagIndex.TagIndex,
     ],
   }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'magazine-automation-templates',
-    activatesOn: AppActivationEvents.SetupSchema,
+    requires: RoutineTemplates.requires,
+    provides: RoutineTemplates.provides,
     activate: RoutineTemplates,
   }),
   Plugin.make,

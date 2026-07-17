@@ -11,8 +11,12 @@ import { translations } from '#translations';
 
 export const PaymentsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addSettingsModule({ activate: Settings }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSettingsModule({ requires: Settings.requires, provides: Settings.provides, activate: Settings }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   Plugin.make,
 );
 

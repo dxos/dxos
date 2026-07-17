@@ -22,8 +22,8 @@ const isVideoPart = (data: unknown, part: string): boolean => {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article.video',
         // The Section arm must exclude data that has `part` set — those are the internal sub-surfaces
@@ -65,5 +65,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SummarySection subject={data.subject} attendableId={data.attendableId} />,
       }),
     ]),
-  ),
+  ]),
 );

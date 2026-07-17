@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { type Observability } from '@dxos/observability';
 
 import {
@@ -31,58 +31,70 @@ export type ObservabilityPluginOptions = {
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ observability }) => ({
     id: 'observability',
-    activatesOn: ActivationEvents.Startup,
+    requires: [],
+    provides: [ObservabilityCapabilities.Observability],
     activate: () =>
       Effect.gen(function* () {
         const obs = yield* Effect.tryPromise(() => observability());
-        return Capability.contributes(ObservabilityCapabilities.Observability, obs);
+        return [Capability.provide(ObservabilityCapabilities.Observability, obs, () => obs.close())];
       }),
   })),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
+    requires: ObservabilitySettings.requires,
+    provides: ObservabilitySettings.provides,
     activate: ObservabilitySettings,
   }),
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(ObservabilityState),
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [ObservabilityEvents.StateReady],
+    requires: ObservabilityState.requires,
+    provides: ObservabilityState.provides,
+    // Migration bridge for any unmigrated `StateReady` listener.
+    compatFires: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
   })),
   Plugin.addModule(({ namespace }) => ({
     id: 'namespace',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(ObservabilityCapabilities.Namespace, namespace)),
+    requires: [],
+    provides: [ObservabilityCapabilities.Namespace],
+    activate: () => Effect.succeed([Capability.provide(ObservabilityCapabilities.Namespace, namespace)]),
   })),
   Plugin.addModule(({ downloadLogs }) => ({
     id: 'log-downloader',
-    activatesOn: ActivationEvents.Startup,
+    requires: [],
+    provides: downloadLogs !== undefined ? [ObservabilityCapabilities.LogDownloader] : [],
     activate: () =>
       Effect.succeed(
-        downloadLogs !== undefined ? Capability.contributes(ObservabilityCapabilities.LogDownloader, downloadLogs) : [],
+        downloadLogs !== undefined ? [Capability.provide(ObservabilityCapabilities.LogDownloader, downloadLogs)] : [],
       ),
   })),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  // Genuine runtime event: fired imperatively by `plugin-client`'s create-identity operation
+  // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
   Plugin.addModule({
-    activatesOn: ActivationEvent.make('org.dxos.plugin.client.event.identityCreated'),
+    id: Capability.getModuleTag(PrivacyNotice),
+    activatesOn: ObservabilityEvents.IdentityCreatedEvent,
+    requires: PrivacyNotice.requires,
+    provides: PrivacyNotice.provides,
     activate: PrivacyNotice,
   }),
-  Plugin.addModule(({ namespace, observability }) => ({
+  Plugin.addModule({
     id: Capability.getModuleTag(ClientReady),
-    activatesOn: ActivationEvent.allOf(
-      ActivationEvents.ProcessManagerReady,
-      ObservabilityEvents.StateReady,
-      ObservabilityEvents.ClientReadyEvent,
-    ),
-    activate: () =>
-      Effect.gen(function* () {
-        const obs = yield* Effect.tryPromise(() => observability());
-        return yield* ClientReady({ namespace, observability: obs });
-      }),
-  })),
+    requires: ClientReady.requires,
+    provides: ClientReady.provides,
+    activate: ClientReady,
+  }),
   Plugin.make,
 );
 

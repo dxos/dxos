@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/react-client';
 
@@ -16,17 +16,22 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const DevtoolsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addReactContextModule({ activate: ReactContext }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => ReactSurface(),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
   }),
+  AppPlugin.addReactContextModule({
+    requires: ReactContext.requires,
+    provides: ReactContext.provides,
+    activate: ReactContext,
+  }),
+  Plugin.addLazyModule(ReactSurface),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'setup-devtools',
-    activatesOn: ActivationEvents.Startup,
+    requires: [],
+    provides: [],
     activate: () => Effect.sync(() => setupDevtools()),
   }),
   AppPlugin.addPluginAssetModule({

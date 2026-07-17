@@ -16,8 +16,8 @@ import { SearchContextProvider } from '#hooks';
 import { SEARCH_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: SEARCH_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof SearchDialog>>(AppSurface.Dialog, SEARCH_DIALOG),
@@ -67,5 +67,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ),
+  ]),
 );

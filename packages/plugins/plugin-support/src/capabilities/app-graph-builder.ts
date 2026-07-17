@@ -36,8 +36,10 @@ const HIDE_WELCOME_LABEL: LabelTuple = ['hide-welcome.button', { ns: meta.profil
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-    const settingsAtom = capabilities.get(SupportCapabilities.Settings);
+    // Read the settings through their atom so the "discord" extension establishes a reactive
+    // dependency and re-evaluates when the setting changes or the capability lands (dependency
+    // modules contribute individually, not batched per wave).
+    const settingsCapabilityAtom = yield* Capability.atom(SupportCapabilities.Settings);
 
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
@@ -125,6 +127,10 @@ export default Capability.makeModule(
         id: 'discord',
         match: NodeMatcher.whenRoot,
         connector: (_root, get) => {
+          const [settingsAtom] = get(settingsCapabilityAtom);
+          if (!settingsAtom) {
+            return Effect.succeed([]);
+          }
           const settings = get(settingsAtom);
           if (!settings.showDiscordCompanion) {
             return Effect.succeed([]);
@@ -194,6 +200,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

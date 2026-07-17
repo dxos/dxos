@@ -2,16 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
-import { DeckEvents } from '@dxos/plugin-deck';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
@@ -39,20 +36,42 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { AssistantEvents, type AssistantPluginOptions } from '#types';
+import { type AssistantPluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
+// Legacy compat window kept for any straggling unmigrated listener; the sole in-plugin
+// consumer (CompanionChatProvisioner) now requires `AssistantCapabilities.State` directly.
 const StateReady = AppActivationEvents.createStateEvent(meta.profile.key);
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-    AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-    AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-    AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+    AppPlugin.addAppGraphModule({
+      requires: AppGraphBuilder.requires,
+      provides: AppGraphBuilder.provides,
+      activate: AppGraphBuilder,
+    }),
+    AppPlugin.addNavigationResolverModule({
+      requires: NavigationResolver.requires,
+      provides: NavigationResolver.provides,
+      activate: NavigationResolver,
+    }),
+    AppPlugin.addSkillDefinitionModule({
+      requires: SkillDefinition.requires,
+      provides: SkillDefinition.provides,
+      activate: SkillDefinition,
+    }),
+    AppPlugin.addCreateObjectModule({
+      requires: CreateObject.requires,
+      provides: CreateObject.provides,
+      activate: CreateObject,
+    }),
+    AppPlugin.addOperationHandlerModule({
+      requires: OperationHandler.requires,
+      provides: OperationHandler.provides,
+      activate: OperationHandler,
+    }),
     AppPlugin.addSchemaModule({
       schema: [
         Chat.Chat,
@@ -71,43 +90,49 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Text.Text,
       ],
     }),
-    AppPlugin.addSettingsModule({ activate: Settings }),
+    AppPlugin.addSettingsModule({ requires: Settings.requires, provides: Settings.provides, activate: Settings }),
     AppPlugin.addSurfaceModule({
+      requires: ReactSurface.requires,
+      provides: ReactSurface.provides,
       activate: ReactSurface,
-      firesBeforeActivation: [AppActivationEvents.SetupArtifactDefinition],
     }),
     AppPlugin.addTranslationsModule({ translations }),
     Plugin.addModule({
       id: 'automation-templates',
-      activatesOn: AppActivationEvents.SetupSchema,
+      requires: AutomationTemplates.requires,
+      provides: AutomationTemplates.provides,
       activate: AutomationTemplates,
     }),
     Plugin.addModule({
       id: 'markdown',
-      activatesOn: MarkdownEvents.SetupExtensions,
+      requires: MarkdownExtension.requires,
+      provides: MarkdownExtension.provides,
       activate: MarkdownExtension,
     }),
     Plugin.addModule({
       // TODO(wittjosiah): Does not integrate with settings store.
       //   Should this be a different event?
       //   Should settings store be renamed to be more generic?
-      activatesOn: AppActivationEvents.SetupSettings,
-      firesAfterActivation: [StateReady],
+      requires: AssistantState.requires,
+      provides: AssistantState.provides,
+      // Migration bridge for any unmigrated `StateReady` listener.
+      compatFires: [StateReady],
       activate: AssistantState,
     }),
     Plugin.addModule({
-      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      requires: EdgeModelResolver.requires,
+      provides: EdgeModelResolver.provides,
       activate: EdgeModelResolver,
     }),
     Plugin.addModule({
-      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      requires: LocalModelResolver.requires,
+      provides: LocalModelResolver.provides,
       activate: LocalModelResolver,
     }),
     Plugin.addModule((options) => ({
       id: Capability.getModuleTag(AiService),
-      firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
-      // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
-      activatesOn: ActivationEvents.SetupProcessManager,
+      requires: AiService.requires,
+      provides: AiService.provides,
       activate: () => AiService(options),
     })),
     Plugin.addModule({
@@ -116,39 +141,40 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
       // conversation-scoped services without an inline `Effect.provideService`
       // upstream. See `capabilities/ai-context.ts` for the rationale.
-      activatesOn: ActivationEvents.SetupProcessManager,
+      requires: AiContextCapability.requires,
+      provides: AiContextCapability.provides,
       activate: AiContextCapability,
     }),
     Plugin.addModule({
-      activatesOn: ActivationEvents.SetupProcessManager,
+      requires: AgentRuntime.requires,
+      provides: AgentRuntime.provides,
       activate: AgentRuntime,
     }),
   )
   .pipe(
     Plugin.addModule({
-      // TODO(wittjosiah): Use a different event.
-      activatesOn: ActivationEvents.Startup,
+      requires: Toolkit.requires,
+      provides: Toolkit.provides,
       activate: Toolkit,
     }),
     Plugin.addModule({
-      activatesOn: ActivationEvents.ProcessManagerReady,
+      requires: AgentHydrator.requires,
+      provides: AgentHydrator.provides,
       activate: AgentHydrator,
     }),
     Plugin.addModule({
-      activatesOn: ActivationEvent.allOf(
-        ActivationEvents.ProcessManagerReady,
-        AppActivationEvents.AppGraphReady,
-        DeckEvents.StateReady,
-        StateReady,
-      ),
+      requires: CompanionChatProvisioner.requires,
+      provides: CompanionChatProvisioner.provides,
       activate: CompanionChatProvisioner,
     }),
     Plugin.addModule({
-      activatesOn: ClientEvents.SetupMigration,
+      requires: Migrations.requires,
+      provides: Migrations.provides,
       activate: Migrations,
     }),
     Plugin.addModule({
-      activatesOn: AppActivationEvents.SetupConnectors,
+      requires: Connector.requires,
+      provides: Connector.provides,
       activate: Connector,
     }),
     AppPlugin.addPluginAssetModule({

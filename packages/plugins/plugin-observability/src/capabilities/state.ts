@@ -21,9 +21,9 @@ export default Capability.makeModule(
 
     // NOTE: Group is set at runtime, not persisted.
     const group = yield* Effect.tryPromise(() => Observability.getObservabilityGroup(namespace));
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
     registry.set(stateAtom, { ...registry.get(stateAtom), group });
 
-    return Capability.contributes(ObservabilityCapabilities.State, stateAtom);
+    return [Capability.provide(ObservabilityCapabilities.State, stateAtom)];
   }),
 );

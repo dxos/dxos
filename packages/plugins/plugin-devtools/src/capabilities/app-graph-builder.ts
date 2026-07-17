@@ -15,6 +15,11 @@ import { Devtools } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Read the app graph through its atom so the extension establishes a reactive dependency
+    // and re-evaluates once the capability lands (dependency modules contribute individually,
+    // not batched per wave).
+    const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'root',
@@ -40,7 +45,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.system)),
         connector: (_nodeOrSpace: Node.Node | Space, get) =>
           Effect.gen(function* () {
-            const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));
+            const [graph] = get(appGraphAtom);
 
             return [
               Node.make({
@@ -383,6 +388,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

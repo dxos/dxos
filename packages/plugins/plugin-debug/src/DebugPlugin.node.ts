@@ -10,8 +10,16 @@ import { meta } from '#meta';
 import { type DebugPluginOptions } from '#types';
 
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSettingsModule({ activate: DebugSettings }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addSettingsModule({
+    requires: DebugSettings.requires,
+    provides: DebugSettings.provides,
+    activate: DebugSettings,
+  }),
   Plugin.make,
 );
 
