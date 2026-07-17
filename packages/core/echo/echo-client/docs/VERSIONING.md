@@ -11,6 +11,44 @@ the git-graph UI in `@dxos/plugin-space` / `@dxos/plugin-markdown`.
   shares change ancestry with the original, so it merges back as a true CRDT 3-way merge. Selection
   of which branch a surface views is device-local; the branch documents themselves replicate.
 
+## Mechanism at a glance
+
+How the pieces fit, end to end:
+
+1. **Objects are automerge subtrees.** An object lives at a mount path inside an automerge document;
+   its state at any point is addressed by `heads` (the change-DAG frontier). `A.view(doc, heads)`
+   reconstructs a past state; `A.save`/`A.load` copies a document while preserving its change
+   ancestry. Everything below is built from these two.
+
+2. **Time travel = a read pin on `ObjectCore`.** `setTimeTravel(heads)` memoizes an `A.view` and
+   redirects `data`/`meta` reads to it; `system` reads, indexing, and edit history stay live, and
+   writes throw. Nothing is copied or rewound — the pin is a lens over the live document.
+
+3. **Two reactive channels keep scrubbing safe.** A pin fires the **display** channel (`EventId`, via
+   `ObjectCore.displayUpdates`) so editors/labels re-render on the historical value, but not the
+   **latest** channel (`LatestEventId`, via `ObjectCore.updates`). Side-effecting subscribers opt into
+   `{ latestOnly: true }` and read through an ambient `withLatestRead` context, so they never act on
+   scrubbed data. A real change fires both channels.
+
+4. **A branch = a forked document that shares ancestry.** `createBranch` walks the object's
+   referenced subtree and, per member, `A.save`s the member's document (`forkDump`) and re-imports it
+   as a new synced document. Because ancestry is preserved, `A.merge` back into main is a genuine
+   CRDT 3-way merge (same object ids, no new objects), not a two-roots conflict.
+
+5. **The space-root `branches` registry ties it together.** `branchName → { objectId → branchDocUrl }`
+   on the root document is the single synced source of truth for both branch membership and the set
+   of documents to replicate. Branch docs deliberately sit outside `links` (so they never load as
+   phantom objects); every path that enumerates space documents (replication, export, import remap)
+   also walks the registry.
+
+6. **Selection is device-local; edits are per-surface.** `switchBranch` rebinds a subtree's live
+   cores to a branch's documents for this device only (persisted via the injected `BranchStore`,
+   never synced). Independently, `db.branch(obj, name)` hands a caller a disposable **binding** whose
+   reads/writes target one branch document only — so an agent can edit a draft while the user stays
+   on main, with multiple bindings coexisting.
+
+The rest of this document details each layer.
+
 ## Background: the storage model
 
 Each ECHO object is a subtree inside an automerge document. The **space root** document
