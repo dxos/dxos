@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AccessToken, Cursor } from '@dxos/link';
 import { Topic } from '@dxos/pipeline-email';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -45,6 +46,8 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
       Topic,
+      AccessToken.AccessToken,
+      Cursor.Cursor,
     ],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
