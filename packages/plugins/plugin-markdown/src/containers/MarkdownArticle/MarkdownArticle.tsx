@@ -60,18 +60,18 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
 
-    // Version selection: swap the editor's subject to the active branch Text, or show a
-    // read-only snapshot when viewing a checkpoint. Selection is per-user session state.
+    // Version selection: swap the editor's subject to the active branch (a per-surface binding
+    // for core branches, the forked Text for legacy ones); viewing a checkpoint pins the live
+    // Text to historical heads (the hook manages the pin). Selection is per-user session state.
     const versioning = useVersioning(object);
-    const { document, activeBranch, activeVersion, checkpointContent, branchBaseContent, setSelection, setCompare } =
-      versioning;
+    const { document, activeBranch, activeVersion, branchBaseContent, setSelection, setCompare } = versioning;
     const diffViewMode = settings.diffView ?? 'inline';
     const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
-    const branchText = activeBranch?.content.target;
-    const editorObject = activeVersion
-      ? { id: `${id}--${activeVersion.id}`, text: checkpointContent ?? '' }
-      : (branchText ?? object);
-    const initialValue = activeVersion ? checkpointContent : (branchText?.content ?? docContent ?? textContent);
+    const branchText = activeBranch ? versioning.activeText : undefined;
+    const editorObject = activeVersion ? object : (branchText ?? object);
+    const initialValue = activeVersion
+      ? (docContent ?? textContent)
+      : (branchText?.content ?? docContent ?? textContent);
     const effectiveViewMode = activeVersion ? 'readonly' : viewMode;
     // Remount the editor when the selection or compare overlay changes so CodeMirror state rebinds cleanly.
     const editorKey = `${
@@ -89,12 +89,11 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       (name: string) => {
         const target = activeVersion?.target.target;
         if (document && activeVersion && target) {
-          const branch = Branch.create(document, {
+          void Branch.create(document, {
             name: name.trim(),
             parent: target,
             heads: activeVersion.heads,
-          });
-          setSelection({ kind: 'branch', branchId: branch.id });
+          }).then((branch) => setSelection({ kind: 'branch', branchId: branch.id }));
         }
       },
       [document, activeVersion, setSelection],
@@ -102,8 +101,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     const handleMerge = useCallback(() => {
       if (document && activeBranch) {
-        Branch.merge(document, activeBranch);
-        setSelection({ kind: 'current' });
+        void Branch.merge(document, activeBranch).then(() => setSelection({ kind: 'current' }));
       }
     }, [document, activeBranch, setSelection]);
 

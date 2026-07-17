@@ -9,7 +9,7 @@ import React from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Obj, Query } from '@dxos/echo';
+import { Text as EchoText, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -79,13 +79,12 @@ const meta = {
                 });
                 Version.create(doc, { name: 'v2 outline', target: root });
 
-                const branch = Branch.create(doc, { name: 'agent-draft', parent: root });
-                const branchText = branch.content.target;
-                if (branchText) {
-                  Obj.update(branchText, (branchText) => {
-                    branchText.content = 'alpha edited\nbravo\ncharlie\ndelta\nepsilon\n';
-                  });
-                }
+                const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'agent-draft', parent: root }));
+                const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
+                Obj.update(binding.object, () => {
+                  EchoText.update(binding.object, 'content', 'alpha edited\nbravo\ncharlie\ndelta\nepsilon\n');
+                });
+                binding.dispose();
               }
 
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));

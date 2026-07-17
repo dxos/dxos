@@ -34,8 +34,12 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
     ? createTimelineModel(document, { nowLabel: t('now.label') })
     : { commits: [], branches: [] };
 
-  // Timeline for the Text the user is currently viewing (root or selected branch).
-  const timelineTarget = activeBranch?.content.target ?? document?.content.target;
+  // Checkpoints/branches created from the panel target the legacy branch Text when one is
+  // selected, otherwise the root. Core branches share the root's object — creation targets the
+  // root (branch-state checkpoints and branch-of-branch arrive with the stage-3 convergence).
+  const timelineTarget =
+    (activeBranch && !Branch.isCore(activeBranch) ? activeBranch.content?.target : undefined) ??
+    document?.content.target;
 
   const handleCreate = useCallback(
     (name: string) => {
@@ -50,8 +54,9 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
         // Unnamed revisions are allowed; they display as their formatted creation time.
         Version.create(document, { name: name.trim(), target: timelineTarget });
       } else if (naming === 'branch') {
-        const branch = Branch.create(document, { name: name.trim(), parent: timelineTarget });
-        setSelection({ kind: 'branch', branchId: branch.id });
+        void Branch.create(document, { name: name.trim(), parent: timelineTarget }).then((branch) =>
+          setSelection({ kind: 'branch', branchId: branch.id }),
+        );
       }
     },
     [document, naming, timelineTarget, setSelection],
@@ -72,8 +77,7 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
 
   const handleMerge = useCallback(() => {
     if (document && activeBranch) {
-      Branch.merge(document, activeBranch);
-      setSelection({ kind: 'current' });
+      void Branch.merge(document, activeBranch).then(() => setSelection({ kind: 'current' }));
     }
   }, [document, activeBranch, setSelection]);
 

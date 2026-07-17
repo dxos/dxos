@@ -39,10 +39,12 @@ export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel
     return branch ? Branch.label(branch) : MAIN_BRANCH;
   };
 
-  // Archived (discarded) branches are dropped from the graph.
+  // Archived (discarded) branches are dropped from the graph. Only legacy content-copy branches
+  // carry their own Text (and hence a lane keyed by Text id); core branches share the root's
+  // object and appear via their fork/merge nodes only.
   const branches = history.branches.filter((branch) => branch.status !== 'archived');
   for (const branch of branches) {
-    const textId = branch.content.target?.id;
+    const textId = branch.content?.target?.id;
     if (textId) {
       branchByTextId.set(textId, branch);
     }
@@ -160,7 +162,9 @@ const branchStats = (branch: Branch.Branch) => {
   if (branch.status !== 'active') {
     return undefined;
   }
-  const branchText = branch.content.target;
+  // Core branches have no separate Text to diff synchronously; per-branch stats need a binding
+  // and arrive with the stage-3 binding-aware timeline.
+  const branchText = branch.content?.target;
   const parentText = branch.parent.target;
   if (!branchText || !parentText) {
     return undefined;

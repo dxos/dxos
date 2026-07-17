@@ -134,47 +134,12 @@ export interface EchoDatabase extends Database.Database {
   _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
 
   //
-  // Branching. A branch is a writable alternate timeline of an object subtree; the registry is
-  // synced on the space root while the currently-viewed branch stays device-local.
+  // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
+  // `mergeBranch`/`deleteBranch`/`listBranches`/`getCurrentBranch`/`branch`). Client-only extras:
   //
 
   /** Fires after any branch operation (create / switch / merge / delete) for reactive branch UI. */
   readonly branchesChanged: ReadOnlyEvent<void>;
-
-  /** The branch name this device currently views the object on (`'main'` by default). */
-  getCurrentBranch(objectId: string): string;
-
-  /** All branch names available for an object, including the implicit `'main'` (always first). */
-  listBranches(objectId: string): string[];
-
-  /**
-   * Fork the object and its referenced subtree into a new branch (does not switch to it).
-   * @param opts.fromHeads Fork from a historical frontier instead of the tip (a bare `Heads` applies
-   *   to the root only; a map forks each member from its own frontier).
-   */
-  createBranch(rootObjectId: string, name: string, opts?: { fromHeads?: Heads | Record<string, Heads> }): Promise<void>;
-
-  /** Switch the object's subtree to a branch (or back to `'main'`). Device-local; cascades to children. */
-  switchBranch(rootObjectId: string, name: string): Promise<void>;
-
-  /** Merge a branch back into main across the subtree, then switch back to main. */
-  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void>;
-
-  /** Delete a branch (its documents lose their sync reference). Cannot delete `'main'`. */
-  deleteBranch(rootObjectId: string, name: string): void;
-
-  /**
-   * Create a caller-owned, writable binding to one branch of one object — a live object whose reads
-   * resolve the branch document and whose writes land on the branch document only. Multiple bindings
-   * to different branches of the same object may coexist in a process; the device-global current
-   * branch ({@link switchBranch}) and other bindings are unaffected. Binding to `'main'` returns the
-   * canonical live object. Bindings are ephemeral and never persisted — the caller must `dispose()`
-   * (releases the doc-handle listener; never deletes the branch doc).
-   *
-   * NOTE: Refs on the bound object resolve to canonical (device-current) targets; bind each subtree
-   * member separately to read/write children on the branch.
-   */
-  branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>>;
 
   /**
    * Insert new objects.
@@ -203,16 +168,9 @@ export interface EchoDatabase extends Database.Database {
 
 /**
  * A caller-owned, writable per-surface binding to one branch of one object.
- * @see EchoDatabase.branch
+ * @see Database.BranchBinding
  */
-export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
-  /** Live object bound to the branch document (`'main'` -> the canonical live object). */
-  readonly object: T;
-  /** The branch this binding resolves. */
-  readonly branch: string;
-  /** Release the binding (drops the doc-handle listener; never deletes the branch document). */
-  dispose(): void;
-};
+export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.BranchBinding<T>;
 
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
@@ -21,7 +21,11 @@ export type UseVersioningResult = {
   setCompare: (compare: boolean) => void;
   /** The branch being viewed (selection.kind === 'branch'). */
   activeBranch?: Branch.Branch;
-  /** The Text object the editor should bind to (branch Text or the root). */
+  /**
+   * The Text object the editor should bind to: a per-surface branch binding for core branches,
+   * the legacy branch Text for content-copy branches, or the root (pinned to the checkpoint's
+   * heads while a checkpoint is selected).
+   */
   activeText?: Text.Text;
   /** The checkpoint being viewed (selection.kind === 'checkpoint'). */
   activeVersion?: Version.Version;
@@ -78,9 +82,37 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
       ? history?.versions.find((version) => version.id === selection.versionId)
       : undefined;
 
-  // Load the branch Text (triggers re-render when the ref resolves).
+  // Core branches bind per-surface: the binding's reads/writes land on the branch document only,
+  // independent of other surfaces and of the device-global selection.
+  const [branchBinding, setBranchBinding] = useState<Database.BranchBinding<Text.Text> | undefined>(undefined);
+  useEffect(() => {
+    if (!document || !activeBranch || !Branch.isCore(activeBranch)) {
+      return;
+    }
+    let disposed = false;
+    let binding: Database.BranchBinding<Text.Text> | undefined;
+    void Branch.bind(document, activeBranch).then((next) => {
+      if (disposed) {
+        next.dispose();
+        return;
+      }
+      binding = next;
+      setBranchBinding(next);
+    });
+    return () => {
+      disposed = true;
+      binding?.dispose();
+      setBranchBinding(undefined);
+    };
+  }, [document, activeBranch]);
+
+  // Load the legacy branch Text (triggers re-render when the ref resolves).
   useObject(activeBranch?.content);
-  const activeText = activeBranch?.content.target ?? rootText;
+  const activeText = activeBranch
+    ? Branch.isCore(activeBranch)
+      ? branchBinding?.object
+      : activeBranch.content?.target
+    : rootText;
 
   // The compare/merge base: parent content at the branch anchor.
   useObject(activeBranch?.parent);
@@ -99,6 +131,18 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
       return undefined;
     }
     return Version.contentAt(versionTarget, activeVersion.heads);
+  }, [activeVersion, versionTarget]);
+
+  // Viewing a checkpoint pins the live Text to the checkpoint's heads: every read on the object
+  // (editor text, label) resolves the historical value and writes throw until the pin clears.
+  useEffect(() => {
+    if (!activeVersion || !versionTarget) {
+      return;
+    }
+    Version.view(activeVersion);
+    return () => {
+      Version.clearView(activeVersion);
+    };
   }, [activeVersion, versionTarget]);
 
   return {

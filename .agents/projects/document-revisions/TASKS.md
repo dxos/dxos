@@ -45,10 +45,32 @@ only — the HistoryCompanion/plugin UI stays with stage 3.
       list via the registry so they replicate/export like linked docs).
 - [ ] Open stage-1 PR tagging @wittjosiah (reviewer; original author of #11829 commits).
 
+## Stage 2 (this branch) — rewire `@dxos/versioning` onto the core API
+
+- [x] Core `Database.Database` interface gains the branching surface + `BranchBinding` (so
+      `Obj.getDatabase` suffices for versioning; echo-client re-exports).
+- [x] `Branch.create` forks a core branch (record.id = registry key; `key` field discriminates
+      core vs legacy); `Branch.bind` returns a writable per-surface binding; `Branch.merge` is
+      CRDT for core branches (registry entry removed) with the `merge3` marker fallback for
+      legacy content-copy records (until stage 4); `discard` keeps the registry entry for
+      recovery. `content` ref is now optional (legacy only).
+- [x] Checkpoint viewing via `setTimeTravel` pinning (`Version.view`/`clearView`);
+      `Version.restore` clears any active pin first (restore-while-pinned covered).
+- [x] `forkDump` hardening: unreachable fork frontier throws instead of silently forking at tip.
+- [x] plugin-markdown: `useVersioning` manages the branch binding + checkpoint pin; editor binds
+      `activeText`; async create/merge handlers; timeline tolerates core records (per-branch diff
+      stats deferred to stage 3); ConflictResolution story exercises the marker editor on seeded
+      conflicts (core merges cannot produce markers).
+- [x] Tests: versioning 31 (CRDT merge, same-line no-markers, legacy fallback, view/restore
+      pinning), plugin-markdown 23 + 15 storybook play tests (Time Travel / Branch Merge /
+      Conflict Resolution) green.
+
+Deferred to stage 3: branch-scoped agent edits (CreateBranch op returns the canonical content
+DXN; a generic update against it writes main), per-branch timeline diff stats, checkpoints of
+branch state / branch-of-branch, deployed-app BranchStore backend.
+
 ## Next stages
 
-- [ ] Stage 2: rewire `@dxos/versioning` onto the core API (registry=docs, records=metadata;
-      checkpoint viewing via `setTimeTravel`; restore clears pin first).
 - [ ] Stage 3: companion to plugin-space generic slot (markdown provider first); editable merge
-      overlay; branch-aware comments + AcceptChange.
+      overlay; branch-aware comments + AcceptChange; branch-aware agent update operation.
 - [ ] Stage 4: retire the textual fork path; migrate legacy content-copy branches.

@@ -5,6 +5,7 @@
 import { next as A, type Doc, type Heads } from '@automerge/automerge';
 
 import { EncodedReference, EntityStructure } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 
 /**
@@ -36,13 +37,18 @@ export const forkDump = (sourceDoc: Doc<any>, atHeads?: Heads): Uint8Array => {
   }
   const target = new Set(atHeads);
   let forked = A.init<any>();
+  let reached = false;
   for (const change of A.getAllChanges(sourceDoc)) {
     [forked] = A.applyChanges(forked, [change]);
     const heads = A.getHeads(forked);
     if (heads.length === atHeads.length && heads.every((hash) => target.has(hash))) {
+      reached = true;
       break;
     }
   }
+  // An unreachable frontier (heads from a different doc, e.g. a branch doc) would otherwise
+  // silently fork at the tip with wrong provenance.
+  invariant(reached, 'fork frontier not reachable in the source document');
   return A.save(forked);
 };
 

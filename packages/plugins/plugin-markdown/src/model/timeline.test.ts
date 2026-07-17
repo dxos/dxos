@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Collection, Database, Feed, Obj } from '@dxos/echo';
+import { Collection, Database, Text as EchoText, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -36,12 +36,13 @@ describe('timeline model', () => {
         const root = yield* Database.load(doc.content);
 
         const v1 = Version.create(doc, { name: 'v1', target: root });
-        const branch = Branch.create(doc, { name: 'draft', parent: root });
-        const branchText = yield* Database.load(branch.content);
-        Obj.update(branchText, (branchText) => {
-          branchText.content = 'alpha\nbravo\n';
+        const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'draft', parent: root }));
+        const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
+        Obj.update(binding.object, () => {
+          EchoText.update(binding.object, 'content', 'alpha\nbravo\n');
         });
-        Branch.merge(doc, branch);
+        yield* Effect.promise(() => Branch.merge(doc, branch));
+        binding.dispose();
         Obj.update(root, (root) => {
           root.content = 'alpha\nbravo\ncharlie\n';
         });
@@ -91,24 +92,25 @@ describe('timeline model', () => {
   );
 
   it.effect(
-    'active branch commit selects the branch and carries diff stats',
+    'active branch commit selects the branch',
     Effect.fnUntraced(
       function* (_) {
         const doc = Markdown.make({ name: 'Doc', content: 'alpha\n' });
         yield* Database.add(doc);
         const root = yield* Database.load(doc.content);
 
-        const branch = Branch.create(doc, { name: 'draft', parent: root });
-        const branchText = yield* Database.load(branch.content);
-        Obj.update(branchText, (branchText) => {
-          branchText.content = 'alpha\nbravo\n';
+        const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'draft', parent: root }));
+        const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
+        Obj.update(binding.object, () => {
+          EchoText.update(binding.object, 'content', 'alpha\nbravo\n');
         });
+        binding.dispose();
 
         const { commits } = createTimelineModel(doc);
         const branchCommit = commits.find((commit) => commit.id === `branch-${branch.id}`);
         invariant(branchCommit);
+        // Core branches carry no synchronous diff stats (needs a binding; stage-3 timeline work).
         expect(branchCommit.message).toContain('draft');
-        expect(branchCommit.message).toContain('+6');
         expect(commitToSelection(doc, branchCommit)).toEqual({ kind: 'branch', branchId: branch.id });
       },
       WithProperties,

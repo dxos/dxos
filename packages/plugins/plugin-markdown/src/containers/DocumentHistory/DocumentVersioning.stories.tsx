@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Query } from '@dxos/echo';
+import { Text as EchoText, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -21,6 +21,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { Branch } from '@dxos/versioning';
 
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
@@ -52,21 +53,25 @@ const getDoc = (): Markdown.Document => {
   return currentDoc;
 };
 
+// Splice-based edits (as the editor produces) so concurrent branch/parent changes CRDT-merge;
+// whole-string assignment would be a scalar PUT that merges last-writer-wins.
 const setRootContent = (content: string) => {
   const root = getDoc().content.target;
   invariant(root, 'root text not loaded');
-  Obj.update(root, (root) => {
-    root.content = content;
+  Obj.update(root, () => {
+    EchoText.update(root, 'content', content);
   });
 };
 
-const setBranchContent = (branchName: string, content: string) => {
-  const branch = getDoc().history?.branches.find((branch) => branch.name === branchName);
-  const branchText = branch?.content.target;
-  invariant(branchText, 'branch text not loaded');
-  Obj.update(branchText, (branchText) => {
-    branchText.content = content;
+const setBranchContent = async (branchName: string, content: string) => {
+  const doc = getDoc();
+  const branch = doc.history?.branches.find((branch) => branch.name === branchName);
+  invariant(branch, 'branch not found');
+  const binding = await Branch.bind(doc, branch);
+  Obj.update(binding.object, () => {
+    EchoText.update(binding.object, 'content', content);
   });
+  binding.dispose();
 };
 
 const editorContent = (canvasElement: HTMLElement): string => {
@@ -221,8 +226,8 @@ export const BranchMerge: Story = {
     await createBranchViaUi(canvasElement, 'draft');
     await canvas.findByText('Editing branch');
 
-    // Edit the branch (visible in the editor, which is bound to the branch Text).
-    setBranchContent('draft', 'alpha\nbravo\ncharlie\n');
+    // Edit the branch (visible in the editor, which is bound to the branch via a binding).
+    await setBranchContent('draft', 'alpha\nbravo\ncharlie\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
 
     // Concurrent edit on the parent (not visible while the branch is selected).
@@ -243,8 +248,9 @@ export const BranchMerge: Story = {
 };
 
 /**
- * A conflicting merge leaves marker blocks in the document; the editor renders them with
- * inline resolution buttons (and merge markers must not be styled as blockquotes).
+ * Conflict-marker blocks in the document render with inline resolution buttons (and merge markers
+ * must not be styled as blockquotes). Core branches CRDT-merge without conflicts, so markers now
+ * arise only from external/imported content (or legacy content-copy merges) — seeded directly here.
  */
 export const ConflictResolution: Story = {
   args: {
@@ -255,15 +261,8 @@ export const ConflictResolution: Story = {
 
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
 
-    // Both sides edit the same line to force a conflict.
-    await createBranchViaUi(canvasElement, 'draft');
-    await canvas.findByText('Editing branch');
-    setBranchContent('draft', 'alpha theirs\nbravo\n');
-    await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha theirs'));
-    setRootContent('alpha ours\nbravo\n');
-
-    const banner = canvas.getByRole('status');
-    await userEvent.click(within(banner).getByText('Merge'));
+    // Seed a git-style conflict block (as a legacy textual merge or an external import would).
+    setRootContent('<<<<<<< branch\nalpha theirs\n=======\nalpha ours\n>>>>>>> current\nbravo\n');
 
     // The conflict block renders with markers and both sides.
     await waitFor(() => expect(editorContent(canvasElement)).toContain('<<<<<<< branch'), { timeout: 10_000 });
