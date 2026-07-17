@@ -127,4 +127,29 @@ describe('connectorAuthActions', () => {
     expect(input.target.id).toBe(target.id);
     expect(input.cursor.id).toBe(cursors[0].id);
   });
+
+  test('reuse renames the existing target after the connection account', async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Connection.Connection, AccessToken.AccessToken, Cursor.Cursor]);
+    const token = db.add(
+      Obj.make(AccessToken.AccessToken, { source: 'b.example', token: 'tok', account: 'me@example.com' }),
+    );
+    const connection = db.add(Obj.make(Connection.Connection, { connectorId: 'b', accessToken: Ref.make(token) }));
+    const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
+    const connector: ConnectorEntry = makeConnector('b');
+
+    const actions = connectorAuthActions({
+      connectorIds: ['b'],
+      db,
+      spaceId: db.spaceId,
+      existingTarget: Ref.make(target),
+      allConnectors: [connector],
+      allConnections: [connection],
+    });
+    const [reuse] = actions[0].actions ?? [];
+    invariant(Node.isAction(reuse));
+    await EffectEx.runAndForwardErrors(reuse.data());
+
+    expect(Obj.getLabel(target)).toBe('me@example.com');
+  });
 });
