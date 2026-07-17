@@ -311,7 +311,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                   name={Version.label(activeVersion)}
                   detail={activeVersion.name ? new Date(activeVersion.createdAt).toLocaleString() : undefined}
                   onRestore={handleRestore}
-                  onBranchFrom={handleBranchFrom}
+                  // Branching from a BRANCH revision would fork a sub-branch, which is unsupported
+                  // (flat core registry) — offer it only for main revisions. See DESIGN.md.
+                  onBranchFrom={activeVersion.branch ? undefined : handleBranchFrom}
                   onClose={handleCloseBanner}
                 />
               )}

@@ -127,6 +127,8 @@ Deferred from the CodeRabbit round (stage 3/4):
   Unsupported today: the core `DatabaseDirectory.branches` registry is flat, keyed by the root
   object id, and forks always derive from the root doc (forking at a sub-branch frontier hits an
   unreachable frontier). Chained fork→merge sequences work. Needs a nested/parent-aware registry
-  key + fork-from-branch-doc support in `EntityManager.createBranch`.
+  key + fork-from-branch-doc support in `EntityManager.createBranch`. UNTIL then the UI guards it:
+  the "New branch" button is disabled on a branch / branch revision, and the checkpoint banner's
+  "Branch from" is hidden for branch revisions (previously they silently forked from main).
 - Generalize `@dxos/versioning` record refs over `Ref(Obj.Any)` so non-Text objects (sketches,
   sheets) can be versioned; branch-level access control; subduction fragment compaction alignment.

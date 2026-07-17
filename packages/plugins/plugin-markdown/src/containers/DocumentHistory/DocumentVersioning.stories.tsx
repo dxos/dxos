@@ -264,6 +264,10 @@ export const BranchRevisions: Story = {
     await createBranchViaUi(canvasElement, 'draft');
     await canvas.findByText('Editing branch');
 
+    // Sub-branching is unsupported (flat core registry): the New branch button is disabled while on a
+    // branch, so a fork cannot silently derive from main instead of the branch.
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'New branch' })).toBeDisabled());
+
     // Two edit→revision cycles ON the branch (each checkpoints the branch's heads, laned on the branch).
     await setBranchContent('draft', 'alpha\nbravo\ncharlie\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
@@ -279,6 +283,8 @@ export const BranchRevisions: Story = {
     await canvas.findByText('Viewing checkpoint');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('delta'));
+    // Still no sub-branching from a branch revision (would fork from main).
+    await expect(canvas.getByRole('button', { name: 'New branch' })).toBeDisabled();
 
     // Return to the branch TIP via the per-branch tip node: editable again, latest branch content.
     await selectTimelineNode(canvasElement, 'Tip');
