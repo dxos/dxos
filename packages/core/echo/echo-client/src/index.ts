@@ -10,6 +10,7 @@ export {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type BindOptions,
+  type BranchStore,
   type DecodedAutomergePrimaryValue,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
