@@ -83,13 +83,15 @@ export const PreviewComponent = ({
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
   const { invokePromise } = useOperationInvoker();
+
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
   const defaultIsSurfaceAvailable = Surface.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
-  const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
+
   // Resolve relative to the containing document's own space so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
+  const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
   const ref = useMemo(() => (uri && space ? space.db.makeRef<Obj.Unknown>(uri) : undefined), [uri, space]);
   const object = useResolveRef(ref);
   const subject = useObject(object);
@@ -98,8 +100,8 @@ export const PreviewComponent = ({
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
   const { height } = parseEmbedLabel(labelProp);
 
-  // `min-content` keeps the embed at its intrinsic height until the user resizes it; the handle then
-  // measures the rendered box and switches to an explicit height.
+  // `min-content` keeps the embed at its intrinsic height until the user resizes it;
+  // the handle then measures the rendered box and switches to an explicit height.
   const [size, setSize] = useState<Size>(height != null ? height / remSize : 'min-content');
 
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
@@ -112,11 +114,11 @@ export const PreviewComponent = ({
     setSize(height != null ? height / remSize : 'min-content');
   }, [height, remSize]);
 
-  // Persist the height (px) into the alt text on drop by rewriting the image node in the source. The
-  // node bounds and base label are re-derived from the live document (the captured `range`/`label`
-  // can lag a prior edit before React re-renders the widget). When the same object is transcluded
-  // more than once, the node whose start is NEAREST the widget's range is chosen so a duplicate
-  // embed isn't rewritten by mistake.
+  // Persist the height (px) into the alt text on drop by rewriting the image node in the source.
+  // The node bounds and base label are re-derived from the live document (the captured `range`/`label`
+  // can lag a prior edit before React re-renders the widget).
+  // When the same object is transcluded more than once, the node whose start is NEAREST the widget's
+  //  range is chosen so a duplicate embed isn't rewritten by mistake.
   const handleResize = useCallback(
     (next: Size, commit?: boolean) => {
       setSize(next);
@@ -125,9 +127,9 @@ export const PreviewComponent = ({
       }
 
       const doc = view.state.doc.toString();
-      const marker = `](${dxn})`;
       let open = -1;
       let close = -1;
+      const marker = `](${dxn})`;
       for (let at = doc.indexOf(marker); at >= 0; at = doc.indexOf(marker, at + marker.length)) {
         const start = doc.lastIndexOf('![', at);
         if (start >= 0 && (open < 0 || Math.abs(start - range.from) < Math.abs(open - range.from))) {
@@ -174,8 +176,8 @@ export const PreviewComponent = ({
     return null;
   }
 
-  const objectLabel = Obj.getLabel(object);
   const objectIcon = Obj.getIcon(object);
+  const objectLabel = Obj.getLabel(object);
 
   // Section preview.
   if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
