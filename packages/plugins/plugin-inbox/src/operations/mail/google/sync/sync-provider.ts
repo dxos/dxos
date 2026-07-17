@@ -29,8 +29,9 @@ import {
   reconcileToChanges,
 } from '../../mail-sync';
 import { decodeBody, mapToMessage } from '../mapper';
+import { findOrCreateGmailTag } from '../tags';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
-import { GMAIL_SYSTEM_TAGS } from './tags';
+import { GMAIL_SYSTEM_TAGS } from './system-tags';
 
 /**
  * Gmail's {@link MailSyncProvider}: the message source, the label→tag map, and the fused decode+map.
@@ -253,9 +254,7 @@ const syncLabels = Effect.fn('google-sync.labels')(function* (mailbox: Mailbox.M
         // Intentionally dropped system label (read-state, drafts, trash/spam) — no tag, no map entry.
         continue;
       } else {
-        const tag = yield* Effect.promise(() =>
-          Mailbox.findOrCreateGmailTag(db, { id: labelItem.id, name: labelItem.name }),
-        );
+        const tag = yield* Effect.promise(() => findOrCreateGmailTag(db, { id: labelItem.id, name: labelItem.name }));
         labelMap.set(labelItem.id, Mailbox.tagUri(tag));
       }
     }

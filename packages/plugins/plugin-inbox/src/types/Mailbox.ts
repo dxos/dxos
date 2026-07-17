@@ -17,26 +17,12 @@ import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
 import { systemTagKey } from './SystemTags';
 
 /**
- * Foreign-key source for Gmail provider labels. A Gmail label maps to a {@link Tag} object carrying
- * a foreign key `{ source: GMAIL_TAG_SOURCE, id: <gmail-label-id> }`; "provider" tags are those with
- * such a key, "user" tags are those without.
- */
-export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
-
-/**
  * Foreign key that marks a message as person-to-person ("personal") mail, used to tell it from
  * bulk/marketing when deciding how aggressively to restyle a message body (see the HTML viewer). Gmail's
  * "Personal"/Primary inbox category maps onto the canonical {@link SystemTags.SystemTag} `personal`
  * during label sync; a future provider that distinguishes person-to-person mail maps onto the same tag.
  */
 export const PERSONAL_TAG_KEYS = [systemTagKey('personal')] as const;
-
-/**
- * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}
- * object carrying a foreign key `{ source: JMAP_TAG_SOURCE, id: <jmap-mailbox-id> }`; mirrors
- * {@link GMAIL_TAG_SOURCE}.
- */
-export const JMAP_TAG_SOURCE = 'org.ietf.jmap.mailbox';
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
@@ -142,25 +128,6 @@ export const make = (props: MailboxProps = {}) => {
 //
 // Tag application API.
 //
-
-/**
- * Finds an existing Gmail provider {@link Tag} object by its Gmail label-id foreign key, or creates
- * one carrying that key. Keeps the label in sync with Gmail's dictionary on re-sync.
- */
-export const findOrCreateGmailTag = (
-  db: Database.Database,
-  { id, name }: { id: string; name: string },
-): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: GMAIL_TAG_SOURCE, id }, label: name });
-
-/**
- * Finds an existing JMAP provider {@link Tag} object by its JMAP mailbox-id foreign key, or creates
- * one carrying that key. Keeps the folder label in sync with the server on re-sync. Mirrors
- * {@link findOrCreateGmailTag}.
- */
-export const findOrCreateJmapTag = (
-  db: Database.Database,
-  { id, name }: { id: string; name: string },
-): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: JMAP_TAG_SOURCE, id }, label: name });
 
 /** Returns the URI used to index a {@link Tag} object on a Mailbox. */
 export const tagUri = (tag: Tag.Tag): string => Obj.getURI(tag).toString();

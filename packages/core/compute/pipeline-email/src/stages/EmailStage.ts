@@ -94,8 +94,13 @@ export type Delete = {
  */
 export type Change = Upsert | Retag | Delete;
 
-/** Wraps a decoded {@link Mapped} as an `upsert` {@link Change}. */
-export const upsert = (mapped: Mapped): Upsert => ({ _tag: 'upsert', ...mapped });
+/**
+ * Wraps each decoded {@link Mapped} item as an `upsert` {@link Change}. Directly pipeable — like
+ * {@link htmlToMarkdown} — so callers compose it with `.pipe(...)` alongside the other stages rather
+ * than a separate `Stream.map`.
+ */
+export const upsert = <E, R>(self: Stream.Stream<Mapped, E, R>): Stream.Stream<Change, E, R> =>
+  Stage.map('upsert', (mapped: Mapped) => Effect.succeed({ _tag: 'upsert' as const, ...mapped }))(self);
 
 /** A decoded email attachment, ready for {@link processAttachments} to turn into a Blob. */
 export type Attachment = {

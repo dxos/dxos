@@ -25,7 +25,8 @@ import { JmapMailApi } from '../../../../services';
 import { Mailbox, type SyncStreamConfig, SystemTags } from '../../../../types';
 import { type MailSyncItem, MailSyncProvider, type MailSyncSource, additionsToChanges } from '../../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
-import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './tags';
+import { findOrCreateJmapTag } from '../tags';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -81,9 +82,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               } else if (folder.role) {
                 continue;
               } else {
-                const tag = yield* Effect.promise(() =>
-                  Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }),
-                );
+                const tag = yield* Effect.promise(() => findOrCreateJmapTag(db, { id: folder.id, name: folder.name }));
                 folderTagMap.set(folder.id, Mailbox.tagUri(tag));
               }
             }

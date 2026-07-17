@@ -11,7 +11,8 @@ import { log } from '@dxos/log';
 import { Jmap, JmapMail } from '../../../../apis';
 import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../../errors';
 import { JmapCredentials } from '../../../../services';
-import { InboxOperation, Mailbox } from '../../../../types';
+import { InboxOperation } from '../../../../types';
+import { JMAP_TAG_SOURCE } from '../tags';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -84,7 +85,7 @@ export default InboxOperation.JmapSend.pipe(
         threadId: result.threadId ?? '',
         // The Sent folder the submission filed the message into; the same tag its canonical synced copy
         // will carry, so the caller can tag the local draft to match.
-        sentTag: { source: Mailbox.JMAP_TAG_SOURCE, id: sent.id, label: sent.name },
+        sentTag: { source: JMAP_TAG_SOURCE, id: sent.id, label: sent.name },
       };
     }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(JmapCredentials.fromConnection(connectionRef))),
   ),

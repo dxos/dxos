@@ -172,7 +172,7 @@ export const additionsToChanges = (
     Stream.take(options.maxMessages),
     Stream.tap(() => Effect.sync(() => options.onTaken(1))),
     Stage.map('process', (item: MailSyncItem) => item.process),
-    Stream.map(EmailStage.upsert),
+    EmailStage.upsert,
   );
 
 /**

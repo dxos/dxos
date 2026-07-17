@@ -9,7 +9,8 @@ import { type Database, Tag } from '@dxos/echo';
  * `operations/mail/google/sync/tags.ts` (Gmail labels) and `operations/mail/jmap/sync/tags.ts` (JMAP
  * mailbox roles + keywords) — so a Gmail star, a JMAP `$flagged` keyword, and a locally-toggled star
  * resolve to the *same* {@link Tag} object, likewise for inbox/sent/etc. Custom user labels/folders keep
- * their own provider-scoped tags (see {@link Mailbox.findOrCreateGmailTag}/{@link Mailbox.findOrCreateJmapTag}).
+ * their own provider-scoped tags (see `findOrCreateGmailTag` in `operations/mail/google/tags.ts` and
+ * `findOrCreateJmapTag` in `operations/mail/jmap/tags.ts`).
  *
  * The source is space-general (`org.dxos.tag`), not mail-specific: the same tag identities apply to any
  * object in the space.

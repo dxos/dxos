@@ -28,7 +28,7 @@ import {
 } from '../../../../testing/sync-fixture';
 import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
 import { createSyncProgressKey } from '../../mail-sync';
-import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './tags';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
