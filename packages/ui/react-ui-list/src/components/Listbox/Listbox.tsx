@@ -54,7 +54,6 @@ import React, {
   type KeyboardEvent,
   type MouseEvent,
   type PropsWithChildren,
-  type SyntheticEvent,
   forwardRef,
   useCallback,
   useMemo,
@@ -244,7 +243,7 @@ type ItemProps = PropsWithChildren<{
   /** Disable the row — focusable but doesn't update selection, dimmed. */
   disabled?: boolean;
   /** Optional click handler in addition to selection; also fired by Enter/Space when interactive. */
-  onClick?: (event: SyntheticEvent<HTMLLIElement>) => void;
+  onClick?: (event: MouseEvent<HTMLLIElement>) => void;
   /** Optional focus handler in addition to selection-follows-focus. */
   onFocus?: (event: FocusEvent<HTMLLIElement>) => void;
   /**
@@ -269,8 +268,8 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   // wire-ups stay synchronized: selection happens before user code so a click that also runs
   // imperative side effects sees the selected value first. Skipped entirely when not selectable
   // so a plain row click doesn't mutate hidden selection state.
-  const activate = useCallback(
-    (event: SyntheticEvent<HTMLLIElement>) => {
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLLIElement>) => {
       if (selectable) {
         binding.rowProps.onClick(event);
       }
@@ -293,16 +292,18 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
 
   // Options aren't natively-interactive elements (unlike `<button>`), so the browser won't fire
   // Enter/Space clicks on their own — wire that up for every interactive row (selectable or not),
-  // matching `<button>`'s native activation keys per WAI-ARIA APG listbox guidance.
+  // matching `<button>`'s native activation keys per WAI-ARIA APG listbox guidance. Dispatches a
+  // real click (rather than calling `handleClick` directly) so `onClick` keeps its native
+  // `MouseEvent` type — matches the same `.click()` pattern `MessageStack`'s row navigation uses.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLLIElement>) => {
       if (!interactive || disabled || (event.key !== 'Enter' && event.key !== ' ')) {
         return;
       }
       event.preventDefault();
-      activate(event);
+      event.currentTarget.click();
     },
-    [interactive, disabled, activate],
+    [interactive, disabled],
   );
 
   const composed = composableProps<HTMLLIElement>(rest, {
@@ -324,7 +325,7 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
         tabIndex={interactive ? 0 : -1}
         aria-selected={selectable ? selected : undefined}
         aria-disabled={disabled || undefined}
-        onClick={activate}
+        onClick={handleClick}
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         onMouseDown={onMouseDown}

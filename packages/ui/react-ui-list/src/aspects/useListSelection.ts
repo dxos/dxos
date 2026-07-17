@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FocusEvent, type SyntheticEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { type FocusEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 export type ListSelectionMode = 'single' | 'multi';
 
@@ -30,7 +30,7 @@ export type SelectionItemBinding = {
   /** Spread onto the row element to bind click + focus + ARIA. */
   rowProps: {
     'aria-selected': boolean;
-    'onClick': (event: SyntheticEvent) => void;
+    'onClick': (event: MouseEvent) => void;
     'onFocus'?: (event: FocusEvent) => void;
   };
 };
