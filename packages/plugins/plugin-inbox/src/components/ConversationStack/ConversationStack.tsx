@@ -133,6 +133,7 @@ export const ConversationStack = composable<HTMLDivElement, ConversationStackPro
     forwardedRef,
   ) => {
     const viewportRef = useRef<HTMLDivElement>(null);
+    const seenIds = useRef<ReadonlySet<string>>(new Set());
 
     const tileItems = useMemo<ConversationTileData[]>(
       () => items.map((message) => ({ id: keyOf(message), message })),
@@ -141,16 +142,30 @@ export const ConversationStack = composable<HTMLDivElement, ConversationStackPro
 
     const getId = useCallback((item: ConversationTileData) => item.id, []);
 
-    // Scroll to a newly-appended draft at the tail (each Reply/Reply All/Forward appends one); the
-    // composer autofocuses (`Form.Root autoFocus` in `EditMessage`) once scrolled into view.
-    const tail = items[items.length - 1];
-    const tailId = tail ? keyOf(tail) : undefined;
-    const tailIsDraft = tail ? DraftMessage.instanceOf(tail) : false;
+    // Smooth-scroll a newly-appended draft fully into view (its composer autofocuses once visible). A
+    // reply draft renders directly after the message it answers, so it may be mid-thread — scroll to
+    // it by id, aligning its bottom (`block: 'end'`) so the whole composer shows rather than just its
+    // top. The composer mounts asynchronously and grows the tile, so re-pin its bottom via a
+    // ResizeObserver for a short settle window; each smooth scroll retargets the previous one, so the
+    // animation stays continuous as the tile grows rather than snapping at the end.
     useEffect(() => {
-      if (tailIsDraft) {
-        viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
+      const newDraft = tileItems.find((item) => !seenIds.current.has(item.id) && DraftMessage.instanceOf(item.message));
+      seenIds.current = new Set(tileItems.map((item) => item.id));
+      const tile = newDraft && viewportRef.current?.querySelector(`[data-object-id="${CSS.escape(newDraft.id)}"]`);
+      if (!(tile instanceof HTMLElement)) {
+        return;
       }
-    }, [tailId, tailIsDraft]);
+
+      const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
+      scrollIntoView();
+      const observer = new ResizeObserver(scrollIntoView);
+      observer.observe(tile);
+      const timeout = setTimeout(() => observer.disconnect(), 1_000);
+      return () => {
+        observer.disconnect();
+        clearTimeout(timeout);
+      };
+    }, [tileItems]);
 
     const contextValue = useMemo<ConversationStackContextValue>(
       () => ({ attendableId, mailbox, viewMode, expanded, onExpandedChange, onContactCreate, companion }),

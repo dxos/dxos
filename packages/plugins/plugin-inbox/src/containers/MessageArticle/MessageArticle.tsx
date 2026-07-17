@@ -14,6 +14,8 @@ import { DraftMessage, type Message as MessageType } from '@dxos/types';
 import { ConversationStack, ConversationToolbar, type MessageHeaderProps, type ViewMode, keyOf } from '#components';
 import { InboxOperation, Mailbox } from '#types';
 
+import { orderThreadItems } from '../../util';
+
 /** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
 const DEFAULT_VIEW_MODE: ViewMode = 'html';
 
@@ -53,11 +55,15 @@ export const MessageArticle = ({
   // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).
   const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
 
+  // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
+  // bottom (the connector delivers everything in chronological order).
+  const orderedMessages = useMemo(() => orderThreadItems(messages), [messages]);
+
   // View mode is owned here and shared across every message body (the switch lives on the thread
   // toolbar), so switching applies to all bodies at once.
   const [viewMode, setViewMode] = useState<ViewMode>(DEFAULT_VIEW_MODE);
 
-  const messageIds = useMemo(() => messages.map(keyOf), [messages]);
+  const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
 
   // The most recent non-draft message is the one worth reading first; expand it by default and leave
   // the rest collapsed. Drafts always render their composer, so they are irrelevant to the anchor.
@@ -109,7 +115,7 @@ export const MessageArticle = ({
       <Panel.Content asChild>
         <ConversationStack
           attendableId={toolbarAttendableId}
-          items={messages}
+          items={orderedMessages}
           mailbox={mailbox}
           viewMode={viewMode}
           expanded={expanded}

@@ -7,7 +7,27 @@ import { describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { createDraftMessage, getMessageBodyText, getMessageProps, messageMatchesQuery } from './util';
+import { createDraftMessage, getMessageBodyText, getMessageProps, messageMatchesQuery, orderThreadItems } from './util';
+
+const makeRead = (created: string) =>
+  Obj.make(Message.Message, {
+    created,
+    sender: { name: 'Sender' },
+    blocks: [{ _tag: 'text' as const, text: '' }],
+    properties: { subject: 'Topic' },
+  });
+
+// A draft is a message with an EID `properties.mailbox` (see DraftMessage); any `echo:`-prefixed
+// string is a valid EID. A reply draft also carries `parentMessage`.
+const DRAFT_MAILBOX = 'echo:mailbox';
+const makeDraft = (created: string, parent?: Message.Message) =>
+  Obj.make(Message.Message, {
+    created,
+    sender: { name: 'Me' },
+    ...(parent ? { parentMessage: parent.id } : {}),
+    blocks: [{ _tag: 'text' as const, text: '' }],
+    properties: { subject: 'Re: Topic', mailbox: DRAFT_MAILBOX },
+  });
 
 describe('createDraftMessage', () => {
   test('compose mode returns empty to and provided subject/body', ({ expect }) => {
@@ -109,6 +129,45 @@ describe('createDraftMessage', () => {
   test('compose mode sets no threadId', ({ expect }) => {
     const props = createDraftMessage({ mode: 'compose', subject: 'Hi', body: 'Hello' });
     expect(props.threadId).toBeUndefined();
+  });
+});
+
+describe('orderThreadItems', () => {
+  test('renders a reply draft immediately after the message it answers', ({ expect }) => {
+    const m1 = makeRead('2025-01-01T00:00:00.000Z');
+    const m2 = makeRead('2025-01-02T00:00:00.000Z');
+    const m3 = makeRead('2025-01-03T00:00:00.000Z');
+    // Draft replies to m1 but was created last (chronologically at the bottom).
+    const draft = makeDraft('2025-01-04T00:00:00.000Z', m1);
+
+    const ordered = orderThreadItems([m1, m2, m3, draft]);
+    expect(ordered.map((message) => message.id)).toEqual([m1.id, draft.id, m2.id, m3.id]);
+  });
+
+  test('keeps a draft with no parent in the thread at its chronological position', ({ expect }) => {
+    const m1 = makeRead('2025-01-01T00:00:00.000Z');
+    const m2 = makeRead('2025-01-02T00:00:00.000Z');
+    const orphan = makeDraft('2025-01-03T00:00:00.000Z');
+
+    const ordered = orderThreadItems([m1, m2, orphan]);
+    expect(ordered.map((message) => message.id)).toEqual([m1.id, m2.id, orphan.id]);
+  });
+
+  test('groups multiple drafts under the same parent in order', ({ expect }) => {
+    const m1 = makeRead('2025-01-01T00:00:00.000Z');
+    const m2 = makeRead('2025-01-02T00:00:00.000Z');
+    const first = makeDraft('2025-01-03T00:00:00.000Z', m1);
+    const second = makeDraft('2025-01-04T00:00:00.000Z', m1);
+
+    const ordered = orderThreadItems([m1, m2, first, second]);
+    expect(ordered.map((message) => message.id)).toEqual([m1.id, first.id, second.id, m2.id]);
+  });
+
+  test('returns the input unchanged when there are no attachable drafts', ({ expect }) => {
+    const m1 = makeRead('2025-01-01T00:00:00.000Z');
+    const m2 = makeRead('2025-01-02T00:00:00.000Z');
+    const messages = [m1, m2];
+    expect(orderThreadItems(messages)).toBe(messages);
   });
 });
 
