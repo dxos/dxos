@@ -13,7 +13,7 @@ import * as Instructions from './Instructions';
 
 //
 // PRIORITIES
-//
+// - [Goals/OKRS] [Tasks/Outliner] [Activity/Summaries/Insights] [Facts]
 // - Track inbox topics; activity (Inbox/Calendar).
 //
 // - Reconcile with Project (linear/github use cases).
