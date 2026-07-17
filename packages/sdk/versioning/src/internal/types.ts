@@ -18,6 +18,12 @@ export const Version = Schema.mutable(
     name: Schema.String,
     target: Ref.Ref(Text.Text),
     heads: Schema.mutable(Schema.Array(Schema.String)),
+    /**
+     * Core-branch registry key when the checkpoint was taken on a branch (the branch's heads live in
+     * the branch document, not the root's, so viewing must resolve the branch). Absent = the base
+     * document. Matches {@link Branch.key}.
+     */
+    branch: Schema.optional(Schema.String),
     createdAt: Schema.String,
     creator: Schema.optional(Schema.String),
     message: Schema.optional(Schema.String),
@@ -64,7 +70,7 @@ export const History = Schema.mutable(
 export interface History extends Schema.Schema.Type<typeof History> {}
 
 export type MakeVersionProps = Pick<Version, 'target' | 'heads' | 'name'> &
-  Partial<Pick<Version, 'creator' | 'message'>>;
+  Partial<Pick<Version, 'branch' | 'creator' | 'message'>>;
 
 /** Constructs a Version checkpoint record with a generated id and creation timestamp. */
 export const makeVersion = (props: MakeVersionProps): Version => ({

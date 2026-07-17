@@ -9,8 +9,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Text as EchoText, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -21,8 +21,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
@@ -82,23 +81,16 @@ const editorContent = (canvasElement: HTMLElement): string => {
 };
 
 const DefaultStory = () => {
-  const { invokePromise } = useOperationInvoker();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const id = doc && Obj.getURI(doc);
-
-  useAsyncEffect(async () => {
-    if (space) {
-      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
-    }
-  }, [space, invokePromise]);
-
   if (!doc) {
-    return <></>;
+    return <Loading />;
   }
 
+  const id = Obj.getURI(doc);
+
   return (
-    <div role='none' className='grid grid-cols-[1fr_20rem] bs-full is-full overflow-hidden divide-x divide-separator'>
+    <div className='dx-container grid grid-cols-2 divide-x divide-separator'>
       <Surface.Surface type={AppSurface.Article} data={{ subject: doc, attendableId: id }} limit={1} />
       <ObjectHistory role='article' subject={doc} attendableId={id} />
     </div>
@@ -168,6 +160,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+export const Default: Story = {
+  args: {
+    content: '# Hello World\n',
+  },
+};
+
 /**
  * Edit the document, create multiple checkpoints, then time-travel back and forward.
  */
@@ -214,7 +212,10 @@ export const TimeTravel: Story = {
 };
 
 /**
- * Edit the document, branch it, edit both sides, then merge the branch back.
+ * Edit the document, branch it, then make SEVERAL edit→revision cycles ON the branch: each revision
+ * is a checkpoint created through the panel while the branch is in view. A branch revision must
+ * record the branch's heads and lane on the branch (not the parent) — the bug this guards. Then a
+ * concurrent parent edit and a merge: every branch edit plus the parent edit survive the CRDT merge.
  */
 export const BranchMerge: Story = {
   args: {
@@ -229,20 +230,44 @@ export const BranchMerge: Story = {
     await createBranchViaUi(canvasElement, 'draft');
     await canvas.findByText('Editing branch');
 
-    // Edit the branch (visible in the editor, which is bound to the branch via a binding).
+    // Edit → create a named revision, repeated. Each revision is created via the panel while the
+    // branch is selected, so it checkpoints the BRANCH (records the branch's heads, tagged with the
+    // branch key) and appears on the branch lane. A later edit only builds on the earlier ones if
+    // the branch document truly accumulates them.
     await setBranchContent('draft', 'alpha\nbravo\ncharlie\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
+    await createRevisionViaUi(canvasElement, 'draft-r1');
 
-    // Concurrent edit on the parent (not visible while the branch is selected).
+    await setBranchContent('draft', 'alpha\nbravo\ncharlie\ndelta\n');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('delta'));
+    await createRevisionViaUi(canvasElement, 'draft-r2');
+
+    await setBranchContent('draft', 'alpha\nbravo\ncharlie\ndelta\nepsilon\n');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('epsilon'));
+    await createRevisionViaUi(canvasElement, 'draft-r3');
+
+    // Both named branch revisions are listed in the timeline, and the editor still shows the branch
+    // tip (creating a revision does not change the selection away from the branch).
+    await canvas.findByText('draft-r1');
+    await canvas.findByText('draft-r2');
+    await canvas.findByText('draft-r3');
+    await canvas.findByText('Editing branch');
+    await waitFor(() =>
+      ['charlie', 'delta', 'epsilon'].forEach((line) => expect(editorContent(canvasElement)).toContain(line)),
+    );
+
+    // Concurrent edit on the parent, isolated from the branch view (main's first line only).
     setRootContent('alpha edited\nbravo\n');
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('alpha edited'));
 
     // Merge via the banner ('Merge' also labels the panel row's icon button, so scope the query);
-    // both edits land on main and the editor returns to it.
+    // the concurrent parent edit AND every branch edit land on main, and the editor returns to it.
     const banner = canvas.getByRole('status');
     await userEvent.click(within(banner).getByText('Merge'));
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha edited'), { timeout: 10_000 });
-    await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
+    await waitFor(() =>
+      ['charlie', 'delta', 'epsilon'].forEach((line) => expect(editorContent(canvasElement)).toContain(line)),
+    );
     await waitFor(() => expect(canvas.queryByText('Editing branch')).toBeNull());
 
     // The merge auto-checkpoint appears in the timeline.

@@ -65,7 +65,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // for core branches, the forked Text for legacy ones); viewing a checkpoint pins the live
     // Text to historical heads (the hook manages the pin). Selection is per-user session state.
     const versioning = useVersioning(object);
-    const { document, activeBranch, activeVersion, branchBaseContent, setSelection, setCompare } = versioning;
+    const { document, activeBranch, activeVersion, checkpointText, branchBaseContent, setSelection, setCompare } =
+      versioning;
     const diffViewMode = settings.diffView ?? 'inline';
     const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
     const branchText = activeBranch ? versioning.activeText : undefined;
@@ -88,10 +89,12 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     const handleRestore = useCallback(() => {
       if (document && activeVersion) {
-        Version.restore(document, activeVersion);
+        // A branch checkpoint restores onto the branch document (checkpointText is the branch-bound
+        // Text); a base checkpoint onto the root.
+        Version.restore(document, activeVersion, checkpointText);
         setSelection({ kind: 'current' });
       }
-    }, [document, activeVersion, setSelection]);
+    }, [document, activeVersion, checkpointText, setSelection]);
 
     const handleBranchFrom = useCallback(
       (name: string) => {

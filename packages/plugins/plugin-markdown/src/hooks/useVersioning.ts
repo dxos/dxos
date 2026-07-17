@@ -31,6 +31,12 @@ export type UseVersioningResult = {
   activeText?: Text.Text;
   /** The checkpoint being viewed (selection.kind === 'checkpoint'). */
   activeVersion?: Version.Version;
+  /**
+   * The Text the active checkpoint resolves against: the branch-bound Text for a branch checkpoint,
+   * else the checkpoint's root target. Pass to `Version.view`/`restore` so a branch checkpoint acts
+   * on the branch document.
+   */
+  checkpointText?: Text.Text;
   /** Read-only content at the selected checkpoint. */
   checkpointContent?: string;
   /** Parent content at the active branch's anchor (the compare/merge base). */
@@ -84,16 +90,22 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
       ? history?.versions.find((version) => version.id === selection.versionId)
       : undefined;
 
+  // The core branch whose document backs the current view: the selected branch, or — when viewing a
+  // branch checkpoint — the branch that checkpoint was taken on (its heads live in the branch doc).
+  const boundBranch =
+    (activeBranch && Branch.isCore(activeBranch) ? activeBranch : undefined) ??
+    (activeVersion?.branch ? history?.branches.find((branch) => branch.key === activeVersion.branch) : undefined);
+
   // Core branches bind per-surface: the binding's reads/writes land on the branch document only,
   // independent of other surfaces and of the device-global selection.
   const [branchBinding, setBranchBinding] = useState<Database.BranchBinding<Text.Text> | undefined>(undefined);
   useEffect(() => {
-    if (!document || !activeBranch || !Branch.isCore(activeBranch)) {
+    if (!document || !boundBranch) {
       return;
     }
     let disposed = false;
     let binding: Database.BranchBinding<Text.Text> | undefined;
-    Branch.bind(document, activeBranch)
+    Branch.bind(document, boundBranch)
       .then((next) => {
         if (disposed) {
           next.dispose();
@@ -108,7 +120,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
       binding?.dispose();
       setBranchBinding(undefined);
     };
-  }, [document, activeBranch]);
+  }, [document, boundBranch]);
 
   // Load the legacy branch Text (triggers re-render when the ref resolves).
   useObject(activeBranch?.content);
@@ -128,26 +140,28 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     return Version.contentAt(branchParent, activeBranch.anchor);
   }, [activeBranch, branchParent]);
 
-  const versionTarget = activeVersion?.target.target;
+  // A branch checkpoint's heads live in the branch document, so it must be read/pinned against the
+  // branch-bound Text; a base checkpoint resolves its root target directly.
   useObject(activeVersion?.target);
+  const checkpointText = activeVersion?.branch ? branchBinding?.object : activeVersion?.target.target;
   const checkpointContent = useMemo(() => {
-    if (!activeVersion || !versionTarget) {
+    if (!activeVersion || !checkpointText) {
       return undefined;
     }
-    return Version.contentAt(versionTarget, activeVersion.heads);
-  }, [activeVersion, versionTarget]);
+    return Version.contentAt(checkpointText, activeVersion.heads);
+  }, [activeVersion, checkpointText]);
 
   // Viewing a checkpoint pins the live Text to the checkpoint's heads: every read on the object
   // (editor text, label) resolves the historical value and writes throw until the pin clears.
   useEffect(() => {
-    if (!activeVersion || !versionTarget) {
+    if (!activeVersion || !checkpointText) {
       return;
     }
-    Version.view(activeVersion);
+    Version.view(activeVersion, checkpointText);
     return () => {
-      Version.clearView(activeVersion);
+      Version.clearView(activeVersion, checkpointText);
     };
-  }, [activeVersion, versionTarget]);
+  }, [activeVersion, checkpointText]);
 
   return {
     document,
@@ -159,6 +173,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     activeBranch,
     activeText,
     activeVersion,
+    checkpointText,
     checkpointContent,
     branchBaseContent,
   };

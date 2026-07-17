@@ -118,4 +118,48 @@ describe('timeline model', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'a checkpoint taken on a core branch lands on the branch lane, not the parent',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({ name: 'Doc', content: 'alpha\n' });
+        yield* Database.add(doc);
+        const root = yield* Database.load(doc.content);
+
+        // A checkpoint on main, then a branch, then a checkpoint taken ON the branch.
+        Version.create(doc, { name: 'on-main', target: root });
+        const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'draft', parent: root }));
+        const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
+        Obj.update(binding.object, () => {
+          EchoText.update(binding.object, 'content', 'alpha\nbravo\n');
+        });
+        // Checkpoint the branch-bound Text, tagged with the branch key (what ObjectHistory does).
+        const branchCheckpoint = Version.create(doc, {
+          name: 'on-branch',
+          target: binding.object,
+          branch: branch.key,
+        });
+        binding.dispose();
+
+        expect(branchCheckpoint.branch).toBe(branch.key);
+        // The branch checkpoint's heads differ from the root's (they live in the branch document).
+        expect(branchCheckpoint.heads).not.toEqual(Version.create(doc, { name: 'x', target: root }).heads);
+
+        const { commits } = createTimelineModel(doc, root);
+        const onMain = commits.find((commit) => commit.message === 'on-main');
+        const onBranch = commits.find((commit) => commit.message === 'on-branch');
+        invariant(onMain && onBranch);
+        // The main checkpoint lanes on main; the branch checkpoint lanes on the branch — NOT main.
+        expect(onMain.branch).toBe(MAIN_BRANCH);
+        expect(onBranch.branch).toBe(Branch.label(branch));
+        expect(onBranch.branch).not.toBe(MAIN_BRANCH);
+        // It descends from the branch fork node (or an earlier branch commit), never from main.
+        expect(onBranch.parents ?? []).toContain(`branch-${branch.id}`);
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

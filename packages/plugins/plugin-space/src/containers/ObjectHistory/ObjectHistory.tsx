@@ -60,11 +60,11 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
     ? createTimelineModel(object, rootText, { nowLabel: t('now.label') })
     : { commits: [], branches: [] };
 
-  // Checkpoints/branches created from the panel target the legacy branch Text when one is
-  // selected, otherwise the root. Core branches share the root's object — creation targets the
-  // root (branch-state checkpoints and branch-of-branch arrive with the stage-3 convergence).
-  const timelineTarget =
-    (activeBranch && !Branch.isCore(activeBranch) ? activeBranch.content?.target : undefined) ?? rootText;
+  // Branch/checkpoint creation targets the active branch when one is selected, else the root.
+  // For a legacy content-copy branch the target is its own Text; a core branch shares the root's
+  // object, so we bind to it (below) to read the branch's heads.
+  const legacyBranchText = activeBranch && !Branch.isCore(activeBranch) ? activeBranch.content?.target : undefined;
+  const timelineTarget = legacyBranchText ?? rootText;
 
   const handleCreate = useCallback(
     (name: string) => {
@@ -73,15 +73,29 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
         return;
       }
       if (naming === 'checkpoint') {
-        // Unnamed revisions are allowed; they display as their formatted creation time.
-        Version.create(object, { name: name.trim(), target: timelineTarget });
+        // A checkpoint on a core branch must record the BRANCH's heads (and be tagged with the
+        // branch), so bind to it and checkpoint the branch-bound Text; otherwise the revision would
+        // record the parent's heads and land on the main lane. Unnamed revisions are allowed.
+        if (activeBranch && Branch.isCore(activeBranch)) {
+          Branch.bind(object, activeBranch)
+            .then((binding) => {
+              try {
+                Version.create(object, { name: name.trim(), target: binding.object, branch: activeBranch.key });
+              } finally {
+                binding.dispose();
+              }
+            })
+            .catch((error) => log.catch(error));
+        } else {
+          Version.create(object, { name: name.trim(), target: timelineTarget });
+        }
       } else if (naming === 'branch') {
         Branch.create(object, { name: name.trim(), parent: timelineTarget })
           .then((branch) => setSelection({ kind: 'branch', branchId: branch.id }))
           .catch((error) => log.catch(error));
       }
     },
-    [object, naming, timelineTarget, setSelection],
+    [object, naming, activeBranch, timelineTarget, setSelection],
   );
 
   const handleSelect = useCallback(
@@ -122,8 +136,8 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
       <Panel.Toolbar>
         <Toolbar.Root classNames='dx-document'>
           <NamePopover
-            open={naming === 'checkpoint'}
             placeholder={t('revision-name.placeholder')}
+            open={naming === 'checkpoint'}
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
           >
@@ -134,8 +148,8 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             />
           </NamePopover>
           <NamePopover
-            open={naming === 'branch'}
             placeholder={t('branch-name.placeholder')}
+            open={naming === 'branch'}
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
           >
@@ -147,13 +161,8 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
           </NamePopover>
           {activeBranch && (
             <>
-              <IconButton icon='ph--git-merge--regular' iconOnly label={t('merge.label')} onClick={handleMerge} />
-              <IconButton
-                icon='ph--archive--regular'
-                iconOnly
-                label={t('discard-branch.label')}
-                onClick={handleDiscard}
-              />
+              <IconButton icon='ph--git-merge--regular' label={t('merge.label')} onClick={handleMerge} />
+              <IconButton icon='ph--trash--regular' label={t('discard-branch.label')} onClick={handleDiscard} />
             </>
           )}
         </Toolbar.Root>

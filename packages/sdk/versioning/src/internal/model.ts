@@ -42,7 +42,17 @@ export const contentAt = (text: Text.Text, heads: readonly string[]): string => 
   return '';
 };
 
-export type CreateCheckpointProps = { target: Text.Text; name: string; message?: string; creator?: string };
+export type CreateCheckpointProps = {
+  target: Text.Text;
+  name: string;
+  message?: string;
+  creator?: string;
+  /**
+   * Core-branch key when checkpointing a branch: `target` must be the branch-bound Text (its
+   * `automergeHeads` are the branch's, and viewing later resolves that branch). Omit for the base.
+   */
+  branch?: string;
+};
 
 /**
  * Records a named checkpoint of the target Text's current automerge heads and appends it to
@@ -54,6 +64,7 @@ export const createCheckpoint = (doc: VersionedObject, props: CreateCheckpointPr
     name: props.name,
     target: Ref.make(text),
     heads: getHeads(text),
+    ...(props.branch !== undefined && { branch: props.branch }),
     ...(props.message !== undefined && { message: props.message }),
     ...(props.creator !== undefined && { creator: props.creator }),
   });
@@ -142,24 +153,29 @@ export const createBranch = async (doc: VersionedObject, props: CreateBranchProp
  * Pin the checkpoint's target to its heads: the live object's reads resolve the historical value
  * until {@link clearVersionView} (writes throw while pinned). Replaces snapshot-swap viewing so
  * every surface bound to the object — editor text, label, fields — reflects the checkpoint.
+ *
+ * A branch checkpoint's heads live in the branch document, not the root's, so the caller must pass
+ * `text` = the branch-bound Text (from `db.branch`) for a `version.branch` checkpoint; otherwise it
+ * defaults to `version.target.target` (the base document).
  */
-export const viewVersion = (version: Versioning.Version): void => {
-  const text = version.target.target;
+export const viewVersion = (version: Versioning.Version, text = version.target.target): void => {
   invariant(text, 'checkpoint target not loaded');
   setTimeTravel(text, [...version.heads]);
 };
 
-/** Return the checkpoint's target to its live (latest) value. */
-export const clearVersionView = (version: Versioning.Version): void => {
-  const text = version.target.target;
+/** Return the checkpoint's target to its live (latest) value. See {@link viewVersion} for `text`. */
+export const clearVersionView = (version: Versioning.Version, text = version.target.target): void => {
   if (text) {
     clearTimeTravel(text);
   }
 };
 
-/** Applies the checkpoint's content to the tip as a new forward edit — history is never rewritten. */
-export const restore = (doc: VersionedObject, version: Versioning.Version): void => {
-  const text = version.target.target;
+/**
+ * Applies the checkpoint's content to the tip as a new forward edit — history is never rewritten.
+ * For a branch checkpoint, `text` is the branch-bound Text (see {@link viewVersion}); the restore
+ * then lands on the branch, not the base.
+ */
+export const restore = (doc: VersionedObject, version: Versioning.Version, text = version.target.target): void => {
   invariant(text, 'checkpoint target not loaded');
   // Writes never go through a pinned object (they throw by design): restoring while viewing a
   // checkpoint first returns the object to the live tip, then applies the historical content as a

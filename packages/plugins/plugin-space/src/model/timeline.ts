@@ -45,7 +45,7 @@ export const createTimelineModel = (
 
   // Archived (discarded) branches are dropped from the graph. Only legacy content-copy branches
   // carry their own Text (and hence a lane keyed by Text id); core branches share the root's
-  // object and appear via their fork/merge nodes only.
+  // object and are laned by their registry `key` (see `branchForVersion`).
   const branches = history.branches.filter((branch) => branch.status !== 'archived');
   for (const branch of branches) {
     const textId = branch.content?.target?.id;
@@ -53,6 +53,13 @@ export const createTimelineModel = (
       branchByTextId.set(textId, branch);
     }
   }
+  const branchByKey = new Map(branches.filter((branch) => branch.key).map((branch) => [branch.key!, branch]));
+
+  // The branch a checkpoint was taken on: a core checkpoint carries the branch `key` (its target id
+  // equals the root's), while a legacy checkpoint is identified by its target Text id.
+  const branchForVersion = (version: Version.Version): Branch.Branch | undefined =>
+    (version.branch ? branchByKey.get(version.branch) : undefined) ??
+    (version.target.target?.id ? branchByTextId.get(version.target.target.id) : undefined);
 
   // Versions are stored in creation order, which is the authoritative topological order.
   // Branch fork commits are emitted lazily: right before the first commit that needs them
@@ -85,14 +92,13 @@ export const createTimelineModel = (
   };
 
   for (const version of history.versions) {
-    const targetId = version.target.target?.id;
-    const target = branchName(targetId);
-    if (!target) {
-      continue;
-    }
+    // The lane is the branch the checkpoint was taken on (core: via `branch` key; legacy: via
+    // target Text id), else main. A core branch checkpoint shares the root's target id, so it must
+    // be laned by `branch` — otherwise it wrongly lands on main.
+    const targetBranch = branchForVersion(version);
+    const target = targetBranch ? Branch.label(targetBranch) : MAIN_BRANCH;
 
-    // A checkpoint on a branch's own Text needs its fork commit first.
-    const targetBranch = targetId ? branchByTextId.get(targetId) : undefined;
+    // A checkpoint on a branch needs the branch's fork commit emitted first.
     if (targetBranch) {
       emitBranch(targetBranch);
     }
@@ -102,10 +108,7 @@ export const createTimelineModel = (
     // TODO(burdon): Replace the label match with a structural version→branch link if branch
     // renaming is introduced (labels are currently immutable: name set once, else createdAt).
     const merged = branches.find(
-      (branch) =>
-        branch.status === 'merged' &&
-        version.name === `merge: ${Branch.label(branch)}` &&
-        branch.parent.target?.id === targetId,
+      (branch) => branch.status === 'merged' && version.name === `merge: ${Branch.label(branch)}`,
     );
     if (merged) {
       emitBranch(merged);
