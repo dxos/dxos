@@ -130,5 +130,7 @@ Deferred from the CodeRabbit round (stage 3/4):
   key + fork-from-branch-doc support in `EntityManager.createBranch`. UNTIL then the UI guards it:
   the "New branch" button is disabled on a branch / branch revision, and the checkpoint banner's
   "Branch from" is hidden for branch revisions (previously they silently forked from main).
+  Design + estimate (~5–6.5 eng-days, parent-pointer model, 3-part PR):
+  [`agents/superpowers/specs/2026-07-17-nested-branches-design.md`](../../../agents/superpowers/specs/2026-07-17-nested-branches-design.md).
 - Generalize `@dxos/versioning` record refs over `Ref(Obj.Any)` so non-Text objects (sketches,
   sheets) can be versioned; branch-level access control; subduction fragment compaction alignment.
