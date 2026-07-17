@@ -181,7 +181,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             void invokePromise(commentConfig.scrollToAnchor, {
               subject: attendableId,
               cursor: anchor.anchor,
-              ref: threadId,
+              id: threadId,
             });
           }
         }

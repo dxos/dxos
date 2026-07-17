@@ -657,7 +657,7 @@ export type ScrollThreadOptions = {
  * Scroll the comment thread with the given id into view (if not already entirely
  * visible) and mark it the current comment so the editor highlights it.
  */
-export const scrollThreadIntoView = (
+export const scrollCommentIntoView = (
   view: EditorView,
   id: string,
   { y = 'center', yMargin }: ScrollThreadOptions = {},

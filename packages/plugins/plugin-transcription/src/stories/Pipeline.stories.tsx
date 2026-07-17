@@ -283,8 +283,8 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   }
 
   return (
-    <div role='none' className='dx-container grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
-      <div role='none' className='dx-expander'>
+    <div className='dx-container grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
+      <div className='dx-expander'>
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
       <PipelineStatus

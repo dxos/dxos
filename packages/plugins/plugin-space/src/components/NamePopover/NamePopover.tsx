@@ -38,7 +38,7 @@ export const NamePopover = ({ children, open, placeholder, onSubmit, onCancel }:
       <Popover.Trigger asChild>{children}</Popover.Trigger>
       <Popover.Portal>
         <Popover.Content>
-          <div role='none' className='flex items-center gap-1 p-2'>
+          <div className='flex items-center gap-1 p-2'>
             <Input.Root>
               <Input.Label srOnly>{placeholder}</Input.Label>
               <Input.TextInput
