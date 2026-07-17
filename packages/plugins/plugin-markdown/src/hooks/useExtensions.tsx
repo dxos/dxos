@@ -196,7 +196,7 @@ const createBaseExtensions = ({
           // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
           skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
-        linkTooltip(renderLinkTooltip),
+        linkTooltip({ render: renderLinkTooltip }),
         xmlTags({
           registry: {
             'dxn-preview': {
