@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { registerSW } from 'virtual:pwa-register';
 
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Plugin } from '@dxos/app-framework';
 import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
@@ -16,9 +16,10 @@ export const PwaPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'register-pwa',
-    activatesOn: ActivationEvents.ProcessManagerReady,
+    requires: [Capabilities.OperationInvoker],
+    provides: [],
     activate: Effect.fnUntraced(function* () {
-      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+      const { invokePromise } = yield* Capabilities.OperationInvoker;
 
       const updateSW = registerSW({
         onNeedRefresh: () => {

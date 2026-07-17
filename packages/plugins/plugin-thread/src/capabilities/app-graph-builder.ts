@@ -22,7 +22,9 @@ const channelTypename = Type.getTypename(Channel.Channel);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    // Read reactively so the extension establishes a dependency and heals once this
+    // capability lands (dependency modules contribute individually, not batched per wave).
+    const callManagerAtom = yield* Capability.atom(CallsCapabilities.Manager);
 
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Channel.Channel, {
@@ -39,7 +41,7 @@ export default Capability.makeModule(
         id: 'channelChatCompanion',
         type: Channel.Channel,
         connector: (channel, get) => {
-          const [callManager] = get(capabilities.atom(CallsCapabilities.Manager));
+          const [callManager] = get(callManagerAtom);
           if (!callManager) {
             return Effect.succeed([]);
           }
@@ -62,6 +64,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

@@ -82,23 +82,25 @@ export const createWnfsBlobBackend = ({ client, blockstore, instances }: CreateW
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const blockstore = yield* Capability.get(WnfsCapabilities.Blockstore);
-    const instances = yield* Capability.get(WnfsCapabilities.Instances);
+    const client = yield* ClientCapabilities.Client;
+    const blockstore = yield* WnfsCapabilities.Blockstore;
+    const instances = yield* WnfsCapabilities.Instances;
 
     const cleanup = client.graph.registerBlobBackend(
       WnfsCapabilities.WNFS_BACKEND,
       createWnfsBlobBackend({ client, blockstore, instances }),
     );
 
-    return Capability.contributes(
-      FileCapabilities.Backend,
-      {
-        name: 'WNFS',
-        description: 'Decentralized, end-to-end encrypted storage via Web Native File System.',
-        storage: WnfsCapabilities.WNFS_BACKEND,
-      },
-      () => Effect.sync(() => cleanup()),
-    );
+    return [
+      Capability.provide(
+        FileCapabilities.Backend,
+        {
+          name: 'WNFS',
+          description: 'Decentralized, end-to-end encrypted storage via Web Native File System.',
+          storage: WnfsCapabilities.WNFS_BACKEND,
+        },
+        () => Effect.sync(() => cleanup()),
+      ),
+    ];
   }),
 );

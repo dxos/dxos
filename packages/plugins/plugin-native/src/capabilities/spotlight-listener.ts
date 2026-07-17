@@ -7,6 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 
 // TODO(wittjosiah): Formalize with a stricter schema if we evolve this protocol.
 type SpotlightInvokePayload = {
@@ -19,7 +22,7 @@ type SpotlightInvokePayload = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
 
     const unlisten = yield* Effect.promise(async () => {
       const { listen } = await import('@tauri-apps/api/event');
@@ -49,10 +52,11 @@ export default Capability.makeModule(
       });
     });
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unlisten();
       }),
     );
+    return [];
   }),
 );

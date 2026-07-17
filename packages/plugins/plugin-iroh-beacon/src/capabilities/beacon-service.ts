@@ -27,8 +27,8 @@ const INITIAL_STATE: BeaconState = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const client = yield* ClientCapabilities.Client;
+    const registry = yield* Capabilities.AtomRegistry;
 
     const stateAtom = Atom.make<BeaconState>(INITIAL_STATE).pipe(Atom.keepAlive);
 
@@ -53,6 +53,6 @@ export default Capability.makeModule(
       void service.open();
     }
 
-    return Capability.contributes(BeaconCapabilities.State, stateAtom);
+    return [Capability.provide(BeaconCapabilities.State, stateAtom)];
   }),
 );

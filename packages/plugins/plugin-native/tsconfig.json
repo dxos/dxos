@@ -34,6 +34,12 @@
       "path": "../../core/compute/ai"
     },
     {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

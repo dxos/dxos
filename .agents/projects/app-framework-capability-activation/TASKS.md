@@ -74,7 +74,11 @@ Gate recipe per wave: per-package build+test → framework suites → Composer b
 - [x] Foundational wave 1: attention, graph, theme, settings, status-bar, progress (Sonnet agent; committed 2c3ce4db59; boot check stable)
 - [x] Foundational wave 2: spotlight, simple-layout, testing (layout role), deck (careful), navtree (committed a073380f44; boot 3/3)
 - [x] Foundational wave 3: plugin-space, plugin-registry, plugin-markdown (committed d9dac04902; boot 5/5, 182/182 dependency modules). Framework fixes found by the gate: dependency-pass failures now publish error activation messages (silent-hang fix); **compatFires are fire-and-forget tracked fibers** (awaiting legacy waves stalled startup); multi-consumed singleton definitions flipped (CreateObjectEntry, OnCreateSpace, OnTypeAdded) — arity rule added to MIGRATION-BRIEF.
-- [ ] Leaf batches 1-10 (parallelize after foundational; see work-list)
+- [x] **Unified activation model rewrite (1222d4c2c5, user-directed):** startup = default root event; requires-modules are chain members activating whenever providers contribute (any event's chain); event = special require that provides nothing (latching); pend-and-cascade replaces event-gated errors and bounded waits; structural problems (global+per-round cycles, duplicate providers, impossible requires) → plugin error state + continue, `_structurallyFailed` exclusion set; same-event topo ordering; in-flight modules excluded from cascades (deadlock fix). Residual boot flake = pre-existing composer ResetDialog race (startup.spec.ts documents it).
+- [x] Leaf batch 1 (content types) + batch 3 (connectors) — committed e7ae6a5a89
+- [x] Leaf batch 7 (tools) — committed 51270b5c37 (arity flips: DiagnosticProvider, RoutineCapabilities.Template)
+- [x] Leaf batch 2 (kanban family) — committed 1beaf57e2c
+- [ ] Leaf batches 4, 5, 6, 8, 9, 10 (see work-list)
 - [ ] Special cases: assistant, brain, observability (architectural call), code (imperative SetupPluginAssets fire)
 - [ ] Scaffolding: app-toolkit playground, stories-*, story-modules
 - [ ] ui-editor: confirmed out of scope (CodeMirror ViewPlugin, not app-framework)

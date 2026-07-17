@@ -41,6 +41,12 @@ const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.Meeti
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Read reactively so extensions establish a dependency and heal once these capabilities
+    // land (dependency modules contribute individually, not batched per wave).
+    const callManagerAtom = yield* Capability.atom(CallsCapabilities.Manager);
+    const meetingStateAtom = yield* Capability.atom(MeetingCapabilities.State);
+    const operationInvokerAtom = yield* Capability.atom(Capabilities.OperationInvoker);
+
     const extensions = yield* Effect.all([
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
       GraphBuilder.createTypeExtension({
@@ -77,7 +83,10 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: (channel, get) =>
           Effect.gen(function* () {
-            const callManager = yield* Capability.get(CallsCapabilities.Manager);
+            const [callManager] = get(callManagerAtom);
+            if (!callManager) {
+              return [];
+            }
             const channelUri = Obj.getURI(channel);
             const joined = get(callManager.joinedAtom);
             const roomId = get(callManager.roomIdAtom);
@@ -85,7 +94,10 @@ export default Capability.makeModule(
               return [];
             }
 
-            const store = yield* Capability.get(MeetingCapabilities.State);
+            const [store] = get(meetingStateAtom);
+            if (!store) {
+              return [];
+            }
             const data = get(activeMeetingOrPlaceholderFamily(store));
 
             return [
@@ -108,7 +120,10 @@ export default Capability.makeModule(
         type: Channel.Channel,
         actions: (channel, get) =>
           Effect.gen(function* () {
-            const store = yield* Capability.get(MeetingCapabilities.State);
+            const [store] = get(meetingStateAtom);
+            if (!store) {
+              return [];
+            }
             const transcriptionManager = get(transcriptionManagerFamily(store));
             const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
             return [
@@ -161,7 +176,10 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
         connector: (channel, get) =>
           Effect.gen(function* () {
-            const store = yield* Capability.get(MeetingCapabilities.State);
+            const [store] = get(meetingStateAtom);
+            if (!store) {
+              return [];
+            }
             const meeting = get(activeMeetingFamily(store));
             if (!meeting) {
               return [];
@@ -186,7 +204,10 @@ export default Capability.makeModule(
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.gen(function* () {
-            const callManager = yield* Capability.get(CallsCapabilities.Manager);
+            const [callManager] = get(callManagerAtom);
+            if (!callManager) {
+              return [];
+            }
             const joined = get(callManager.joinedAtom);
             const roomId = get(callManager.roomIdAtom);
             if (!joined || roomId !== Obj.getURI(meeting)) {
@@ -224,7 +245,10 @@ export default Capability.makeModule(
 
             // Graph-action Effects lack `Operation.Service` in context, so `Operation.invoke` fails here;
             // call the captured `OperationInvoker` capability directly instead.
-            const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+            const [invoker] = get(operationInvokerAtom);
+            if (!invoker) {
+              return [];
+            }
 
             if (meeting) {
               return [
@@ -260,6 +284,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

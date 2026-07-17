@@ -6,14 +6,17 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { Skill } from '@dxos/compute';
 
 import { CalendarSkill, InboxSendSkill, InboxSkill } from '#skills';
 
 const skillDefinition = () =>
   Effect.succeed([
-    Capability.contributes(AppCapabilities.SkillDefinition, InboxSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, InboxSendSkill),
-    Capability.contributes(AppCapabilities.SkillDefinition, CalendarSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, InboxSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, InboxSendSkill),
+    Capability.provide(AppCapabilities.SkillDefinition, CalendarSkill),
   ]);
 
 export default skillDefinition;

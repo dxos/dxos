@@ -14,14 +14,15 @@ import { CallsCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    // Read reactively so the extension establishes a dependency and heals once this
+    // capability lands (dependency modules contribute individually, not batched per wave).
+    const callManagerAtom = yield* Capability.atom(CallsCapabilities.Manager);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'activeCall',
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const callManagerAtom = capabilities.atom(CallsCapabilities.Manager);
           const [call] = get(callManagerAtom);
           if (!call) {
             return Effect.succeed([]);
@@ -44,6 +45,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

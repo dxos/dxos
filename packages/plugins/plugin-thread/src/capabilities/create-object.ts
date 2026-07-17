@@ -21,25 +21,27 @@ type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObjec
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Type.getTypename(Channel.Channel),
-      customPanel: ChannelCreatePanel,
-      createObject: (
-        { name, kind, options }: { name?: string; kind?: string; options?: Record<string, unknown> },
-        opts: CreateOptions,
-      ) =>
-        Effect.gen(function* () {
-          const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
-          const provider = kind ? resolveProvider(providers, kind) : undefined;
-          const object = provider
-            ? Channel.make({ name, backend: { kind: provider.kind, config: provider.makeConfig(options ?? {}) } })
-            : Channel.make({ name });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: opts.target,
-            targetNodeId: opts.targetNodeId ?? getChannelsPath(opts.db.spaceId),
-          });
-        }),
-    });
+    return [
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+        id: Type.getTypename(Channel.Channel),
+        customPanel: ChannelCreatePanel,
+        createObject: (
+          { name, kind, options }: { name?: string; kind?: string; options?: Record<string, unknown> },
+          opts: CreateOptions,
+        ) =>
+          Effect.gen(function* () {
+            const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
+            const provider = kind ? resolveProvider(providers, kind) : undefined;
+            const object = provider
+              ? Channel.make({ name, backend: { kind: provider.kind, config: provider.makeConfig(options ?? {}) } })
+              : Channel.make({ name });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: opts.target,
+              targetNodeId: opts.targetNodeId ?? getChannelsPath(opts.db.spaceId),
+            });
+          }),
+      }),
+    ];
   }),
 );

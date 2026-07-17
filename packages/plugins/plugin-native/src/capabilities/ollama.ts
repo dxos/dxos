@@ -22,6 +22,9 @@ import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { Credential } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { AssistantCapabilities, type Ollama } from '@dxos/plugin-assistant';
 
@@ -34,7 +37,7 @@ export type OllamaCapabilities =
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
 
     const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
 
@@ -262,12 +265,12 @@ export default Capability.makeModule(
     return [
       // The runtime-dispose finalizer lives on the resolver contribution only; the manager closes
       // over the same runtime, so there is a single disposal path.
-      Capability.contributes(
+      Capability.provide(
         AppCapabilities.AiModelResolver,
         OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
         () => Effect.tryPromise(() => runtime.dispose()),
       ),
-      Capability.contributes(AssistantCapabilities.OllamaManager, manager),
+      Capability.provide(AssistantCapabilities.OllamaManager, manager),
     ];
   }),
 );

@@ -20,9 +20,9 @@ describe('MeetingPlugin', () => {
       plugins: [ClientPlugin({}), MeetingPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('schema'), moduleId('ReactSurface')]),
-    );
+    // AppGraphBuilder requires CallsCapabilities.Manager, which the headless (node) variant of
+    // plugin-calls does not provide, so it does not activate in this harness.
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]));
 
     await harness.fire(ActivationEvents.SetupProcessManager);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));

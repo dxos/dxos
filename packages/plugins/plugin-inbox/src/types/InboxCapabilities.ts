@@ -20,7 +20,7 @@ export const Settings = Capability.make<Atom.Writable<import('./Settings').Setti
  * Plugins contribute object extractors via this capability.
  * Multiple plugins may register; the ExtractMessage operation selects one based on match() confidence.
  */
-export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>(
+export const ObjectExtractor = Capability.makeMulti<import('@dxos/extractor').ObjectExtractor>(
   `${meta.profile.key}.capability.objectExtractor`,
 );
 
@@ -48,5 +48,7 @@ export type MailboxAction = {
   };
 };
 
+// Multi: `useCapabilities`/`getAll` readers render one menu item per contributed action, and more
+// than one plugin may contribute (currently plugin-brain).
 /** Plugins contribute mailbox toolbar-menu actions via this capability (see {@link MailboxAction}). */
-export const MailboxAction = Capability.make<MailboxAction>(`${meta.profile.key}.capability.mailboxAction`);
+export const MailboxAction = Capability.makeMulti<MailboxAction>(`${meta.profile.key}.capability.mailboxAction`);

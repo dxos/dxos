@@ -4,11 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Topic } from '@dxos/pipeline-email';
-import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
 import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';
 
@@ -29,13 +27,30 @@ import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox } from
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addNavigationResolverModule({
+    requires: NavigationResolver.requires,
+    provides: NavigationResolver.provides,
+    activate: NavigationResolver,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({
     schema: [
       Event.Event,
@@ -47,27 +62,32 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Topic,
     ],
   }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
-    firesAfterActivation: [InboxEvents.SettingsReady],
+    id: Capability.getModuleTag(InboxSettings),
+    requires: InboxSettings.requires,
+    provides: InboxSettings.provides,
+    // Migration bridge for unmigrated SettingsReady listeners.
+    compatFires: [InboxEvents.SettingsReady],
     activate: InboxSettings,
   }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupConnectors,
-    activate: Connector,
-  }),
+  Plugin.addLazyModule(Connector),
   Plugin.addModule({
     id: 'contact-extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)),
+    requires: [],
+    provides: [InboxCapabilities.ObjectExtractor],
+    activate: () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
   }),
   Plugin.addModule({
     id: 'summarize-extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () =>
-      Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)),
+    requires: [],
+    provides: [InboxCapabilities.ObjectExtractor],
+    activate: () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
   }),
   Plugin.make,
 );

@@ -133,85 +133,87 @@ const onCursorCreated =
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
-      {
-        id: GMAIL_CONNECTOR_ID,
-        source: GOOGLE_INTEGRATION_SOURCE,
-        label: 'Gmail',
-        oauth: {
-          provider: OAuthProvider.GOOGLE,
-          scopes: [
-            'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/gmail.send',
-            // `gmail.modify` is required to move messages to the trash (delete).
-            'https://www.googleapis.com/auth/gmail.modify',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+    return [
+      Capability.provide(Connector, [
+        {
+          id: GMAIL_CONNECTOR_ID,
+          source: GOOGLE_INTEGRATION_SOURCE,
+          label: 'Gmail',
+          oauth: {
+            provider: OAuthProvider.GOOGLE,
+            scopes: [
+              'https://www.googleapis.com/auth/gmail.readonly',
+              'https://www.googleapis.com/auth/gmail.send',
+              // `gmail.modify` is required to move messages to the trash (delete).
+              'https://www.googleapis.com/auth/gmail.modify',
+              'https://www.googleapis.com/auth/userinfo.email',
+            ],
+          },
+          optionsSchema: SyncOptions,
+          // Single-target connector: no `getSyncTargets`. The coordinator calls
+          // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
+          materializeTarget: InboxOperation.MaterializeGmailTarget,
+          sync: InboxOperation.GoogleMailSync,
+          onTokenCreated,
+          onCursorCreated: onCursorCreated(InboxOperation.GoogleMailSync),
+          testConnection: testGoogleConnection,
         },
-        optionsSchema: SyncOptions,
-        // Single-target connector: no `getSyncTargets`. The coordinator calls
-        // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
-        materializeTarget: InboxOperation.MaterializeGmailTarget,
-        sync: InboxOperation.GoogleMailSync,
-        onTokenCreated,
-        onCursorCreated: onCursorCreated(InboxOperation.GoogleMailSync),
-        testConnection: testGoogleConnection,
-      },
-      {
-        id: JMAP_MAIL_CONNECTOR_ID,
-        // Nominal default; the real `AccessToken.source` (host) is captured by the credential form.
-        source: JMAP_DEFAULT_HOST,
-        label: 'JMAP Mail',
-        // Non-OAuth: host + email + Bearer API token, validated against the live session on submit.
-        credentialForm: jmapCredentialForm,
-        optionsSchema: SyncOptions,
-        // Single-target connector (the account inbox): no `getSyncTargets`. The coordinator calls
-        // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
-        materializeTarget: InboxOperation.MaterializeJmapTarget,
-        sync: InboxOperation.JmapSync,
-        onCursorCreated: onCursorCreated(InboxOperation.JmapSync),
-      },
-      {
-        id: GOOGLE_CALENDAR_CONNECTOR_ID,
-        source: GOOGLE_INTEGRATION_SOURCE,
-        label: 'Google Calendar',
-        oauth: {
-          provider: OAuthProvider.GOOGLE,
-          scopes: [
-            // `calendar.readonly` is required to list the user's calendars (GetGoogleCalendars);
-            // `calendar.events` adds read/write on events so draft events can be created remotely.
-            'https://www.googleapis.com/auth/calendar.readonly',
-            'https://www.googleapis.com/auth/calendar.events',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+        {
+          id: JMAP_MAIL_CONNECTOR_ID,
+          // Nominal default; the real `AccessToken.source` (host) is captured by the credential form.
+          source: JMAP_DEFAULT_HOST,
+          label: 'JMAP Mail',
+          // Non-OAuth: host + email + Bearer API token, validated against the live session on submit.
+          credentialForm: jmapCredentialForm,
+          optionsSchema: SyncOptions,
+          // Single-target connector (the account inbox): no `getSyncTargets`. The coordinator calls
+          // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
+          materializeTarget: InboxOperation.MaterializeJmapTarget,
+          sync: InboxOperation.JmapSync,
+          onCursorCreated: onCursorCreated(InboxOperation.JmapSync),
         },
-        optionsSchema: CalendarSyncOptions,
-        getSyncTargets: InboxOperation.GetGoogleCalendars,
-        materializeTarget: InboxOperation.MaterializeCalendarTarget,
-        sync: InboxOperation.GoogleCalendarSync,
-        onTokenCreated,
-        onCursorCreated: onCursorCreated(InboxOperation.GoogleCalendarSync),
-        testConnection: testGoogleConnection,
-      },
-      {
-        id: GOOGLE_CONTACTS_CONNECTOR_ID,
-        source: GOOGLE_INTEGRATION_SOURCE,
-        label: 'Google Contacts',
-        oauth: {
-          provider: OAuthProvider.GOOGLE,
-          scopes: [
-            'https://www.googleapis.com/auth/contacts.readonly',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+        {
+          id: GOOGLE_CALENDAR_CONNECTOR_ID,
+          source: GOOGLE_INTEGRATION_SOURCE,
+          label: 'Google Calendar',
+          oauth: {
+            provider: OAuthProvider.GOOGLE,
+            scopes: [
+              // `calendar.readonly` is required to list the user's calendars (GetGoogleCalendars);
+              // `calendar.events` adds read/write on events so draft events can be created remotely.
+              'https://www.googleapis.com/auth/calendar.readonly',
+              'https://www.googleapis.com/auth/calendar.events',
+              'https://www.googleapis.com/auth/userinfo.email',
+            ],
+          },
+          optionsSchema: CalendarSyncOptions,
+          getSyncTargets: InboxOperation.GetGoogleCalendars,
+          materializeTarget: InboxOperation.MaterializeCalendarTarget,
+          sync: InboxOperation.GoogleCalendarSync,
+          onTokenCreated,
+          onCursorCreated: onCursorCreated(InboxOperation.GoogleCalendarSync),
+          testConnection: testGoogleConnection,
         },
-        // Targetless connector: no dedicated local root type. `reconcileCursors`
-        // binds the connection itself; synced `Person` objects land directly in the
-        // space keyed by foreign id.
-        getSyncTargets: InboxOperation.GetGoogleContactGroups,
-        sync: InboxOperation.SyncContacts,
-        onTokenCreated,
-        testConnection: testGoogleConnection,
-      },
-    ]);
+        {
+          id: GOOGLE_CONTACTS_CONNECTOR_ID,
+          source: GOOGLE_INTEGRATION_SOURCE,
+          label: 'Google Contacts',
+          oauth: {
+            provider: OAuthProvider.GOOGLE,
+            scopes: [
+              'https://www.googleapis.com/auth/contacts.readonly',
+              'https://www.googleapis.com/auth/userinfo.email',
+            ],
+          },
+          // Targetless connector: no dedicated local root type. `reconcileCursors`
+          // binds the connection itself; synced `Person` objects land directly in the
+          // space keyed by foreign id.
+          getSyncTargets: InboxOperation.GetGoogleContactGroups,
+          sync: InboxOperation.SyncContacts,
+          onTokenCreated,
+          testConnection: testGoogleConnection,
+        },
+      ]),
+    ];
   }),
 );

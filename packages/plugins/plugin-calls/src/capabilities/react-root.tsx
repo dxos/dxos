@@ -13,9 +13,11 @@ import { Call } from '../components/Call';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    return Capability.contributes(Capabilities.ReactRoot, {
-      id: meta.profile.key,
-      root: () => <Call.Audio />,
-    });
+    return [
+      Capability.provide(Capabilities.ReactRoot, {
+        id: meta.profile.key,
+        root: () => <Call.Audio />,
+      }),
+    ];
   }),
 );

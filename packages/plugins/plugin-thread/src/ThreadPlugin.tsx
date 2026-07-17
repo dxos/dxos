@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { Channel, Message, Thread } from '@dxos/types';
 
@@ -25,22 +24,38 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 // TODO(wittjosiah): Rename to ChatPlugin.
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addNavigationResolverModule({
+    requires: NavigationResolver.requires,
+    provides: NavigationResolver.provides,
+    activate: NavigationResolver,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({
     schema: [Channel.Channel, Message.Message, Thread.Thread],
   }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
   // Default local-feed channel backend. Other plugins contribute additional
   // `ChannelBackend` providers (e.g. ATProto) earlier in plugin order.
-  Plugin.addModule({
-    id: 'channel-backend-feed',
-    activatesOn: ActivationEvents.Startup,
-    activate: ChannelBackendFeed,
-  }),
+  Plugin.addLazyModule(ChannelBackendFeed),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

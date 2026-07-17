@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import { CrxSettings, InstallPageActions, OperationHandler, PageActionProvider, ReactSurface } from '#capabilities';
@@ -13,20 +13,24 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSettingsModule({ activate: CrxSettings }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSettingsModule({
+    requires: CrxSettings.requires,
+    provides: CrxSettings.provides,
+    activate: CrxSettings,
+  }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'install-page-actions',
-    activatesOn: ActivationEvents.ProcessManagerReady,
-    activate: InstallPageActions,
+  Plugin.addLazyModule(InstallPageActions),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
   }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  Plugin.addModule({
-    id: 'page-action-provider',
-    activatesOn: ActivationEvents.Startup,
-    activate: PageActionProvider,
-  }),
+  Plugin.addLazyModule(PageActionProvider),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

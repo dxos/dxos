@@ -13,15 +13,17 @@ import { CallManager } from '../calls';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const client = yield* ClientCapabilities.Client;
+    const registry = yield* Capabilities.AtomRegistry;
     const callManager = new CallManager(client, registry);
     yield* Effect.tryPromise(() => callManager.open());
 
-    return Capability.contributes(CallsCapabilities.Manager, callManager, () =>
-      Effect.sync(() => {
-        void callManager.close();
-      }),
-    );
+    return [
+      Capability.provide(CallsCapabilities.Manager, callManager, () =>
+        Effect.sync(() => {
+          void callManager.close();
+        }),
+      ),
+    ];
   }),
 );

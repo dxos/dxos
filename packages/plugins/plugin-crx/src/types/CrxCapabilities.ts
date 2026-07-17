@@ -19,8 +19,8 @@ export const Settings = Capability.make<Atom.Writable<import('./Settings').Setti
 
 /**
  * Page actions contributed by plugins for the browser extension to surface.
- * Contributions are arrays; consumers flatten via `getAll`.
+ * Multi: each contributor provides one array (e.g. plugin-bookmarks); consumers flatten via `getAll`.
  */
-export const PageAction = Capability.make<import('./PageAction').PageAction[]>(
+export const PageAction = Capability.makeMulti<import('./PageAction').PageAction[]>(
   `${meta.profile.key}.capability.page-action`,
 );

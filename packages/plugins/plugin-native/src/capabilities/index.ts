@@ -2,10 +2,46 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+// Explicit imports so the emitted `.d.ts` references the packages via their public
+// aliases instead of relative `node_modules` paths (TS2883).
+import type { AiModelResolver } from '@dxos/ai';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import type { Credential } from '@dxos/compute';
+import type { OperationInvoker } from '@dxos/operation';
+import { AssistantCapabilities } from '@dxos/plugin-assistant';
+import type { Ollama as OllamaTypes } from '@dxos/plugin-assistant';
 
-export const NativeSettings = Capability.lazy('NativeSettings', () => import('./settings'));
-export const Ollama = Capability.lazy('Ollama', () => import('./ollama'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const SpotlightListener = Capability.lazy('SpotlightListener', () => import('./spotlight-listener'));
-export const Updater = Capability.lazy('Updater', () => import('./updater'));
+import { NativeCapabilities } from '#types';
+
+export const NativeSettings = Capability.lazyModule(
+  'NativeSettings',
+  { provides: [NativeCapabilities.Settings, AppCapabilities.Settings] },
+  () => import('./settings'),
+);
+export const Ollama = Capability.lazyModule(
+  'Ollama',
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.OllamaManager],
+  },
+  () => import('./ollama'),
+);
+export const ReactSurface = Capability.lazyModule(
+  'ReactSurface',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./react-surface'),
+);
+export const SpotlightListener = Capability.lazyModule(
+  'SpotlightListener',
+  { requires: [Capabilities.OperationInvoker], provides: [] },
+  () => import('./spotlight-listener'),
+);
+export const Updater = Capability.lazyModule(
+  'Updater',
+  {
+    requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker],
+    provides: [NativeCapabilities.UpdateManager],
+  },
+  () => import('./updater'),
+);

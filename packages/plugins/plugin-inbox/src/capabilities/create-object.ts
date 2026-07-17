@@ -19,7 +19,7 @@ import { getCalendarsPath } from '../paths';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Mailbox.Mailbox),
         inputSchema: Mailbox.CreateMailboxSchema,
         createObject: (props, options) =>
@@ -31,7 +31,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Message.Message),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -43,7 +43,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Calendar.Calendar),
         inputSchema: Calendar.CreateCalendarSchema,
         createObject: (props, options) =>
@@ -56,7 +56,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Event.Event),
         createObject: (props, options) =>
           Effect.gen(function* () {

@@ -12,13 +12,13 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { BeaconStatusIndicator } from '#components';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'beaconStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => <BeaconStatusIndicator />,
       }),
     ]),
-  ),
+  ]),
 );

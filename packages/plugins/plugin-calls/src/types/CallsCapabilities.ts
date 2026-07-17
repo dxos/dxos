@@ -39,7 +39,9 @@ export type CallTransportProvider = {
   leave: () => Promise<void>;
 };
 
-export const CallTransportProvider = Capability.make<CallTransportProvider>(
+// Multi: consumers (`plugin-thread`, `plugin-meeting`) read the full registry via
+// `useCapabilities`/`getAll` to check availability and pick a provider.
+export const CallTransportProvider = Capability.makeMulti<CallTransportProvider>(
   `${meta.profile.key}.capability.call-transport-provider`,
 );
 

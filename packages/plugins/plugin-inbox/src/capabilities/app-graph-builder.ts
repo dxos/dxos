@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
+import { type Client } from '@dxos/client';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
@@ -75,6 +76,7 @@ type FeedObjectNodeConfig<Parent extends Obj.Unknown, Child extends Obj.Unknown>
  */
 const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends Obj.Unknown>(
   config: FeedObjectNodeConfig<Parent, Child>,
+  clientAtom: Atom.Atom<Client[]>,
 ) =>
   GraphBuilder.createExtension({
     id: config.id,
@@ -96,8 +98,8 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
           return null;
         }
 
-        const client = yield* Capability.get(ClientCapabilities.Client);
-        const space = client.spaces.get(spaceId);
+        const [client] = get(clientAtom);
+        const space = client?.spaces.get(spaceId);
         if (!space) {
           return null;
         }
@@ -141,7 +143,10 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
+    // Read reactively so the resolvers below establish a dependency and heal once the client
+    // capability lands (dependency modules contribute individually, not batched per wave).
+    const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
     // Derive a single-mode selected id per context from the ViewStateManager selection slice.
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
@@ -413,20 +418,23 @@ export default Capability.makeModule(
         },
       }),
 
-      createFeedObjectNodeExtension<Mailbox.Mailbox, Message.Message>({
-        id: 'feedObjectNode',
-        parentType: Mailbox.Mailbox,
-        // Mailboxes live under a custom 'mailboxes' section segment, not their ECHO typename.
-        parentSegmentName: getMailboxesSectionId(),
-        childType: Message.Message,
-        getFeed: (mailbox, get) => (mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined),
-        // obj is cast to Message.Message because DraftMessage.belongsTo checks message-specific structure;
-        // the type guard itself is the runtime proof.
-        isDbChild: (mailbox, obj): obj is Message.Message =>
-          DraftMessage.belongsTo(obj as Message.Message, Obj.getURI(mailbox)),
-        getNodeLabel: (message) => message.properties?.subject ?? ['message.label', { ns: meta.profile.key }],
-        nodeIcon: 'ph--envelope-open--regular',
-      }),
+      createFeedObjectNodeExtension<Mailbox.Mailbox, Message.Message>(
+        {
+          id: 'feedObjectNode',
+          parentType: Mailbox.Mailbox,
+          // Mailboxes live under a custom 'mailboxes' section segment, not their ECHO typename.
+          parentSegmentName: getMailboxesSectionId(),
+          childType: Message.Message,
+          getFeed: (mailbox, get) => (mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined),
+          // obj is cast to Message.Message because DraftMessage.belongsTo checks message-specific structure;
+          // the type guard itself is the runtime proof.
+          isDbChild: (mailbox, obj): obj is Message.Message =>
+            DraftMessage.belongsTo(obj as Message.Message, Obj.getURI(mailbox)),
+          getNodeLabel: (message) => message.properties?.subject ?? ['message.label', { ns: meta.profile.key }],
+          nodeIcon: 'ph--envelope-open--regular',
+        },
+        clientAtom,
+      ),
 
       GraphBuilder.createExtension({
         id: 'mailboxesSectionActions',
@@ -530,8 +538,8 @@ export default Capability.makeModule(
               return null;
             }
 
-            const client = yield* Capability.get(ClientCapabilities.Client);
-            const space = client.spaces.get(spaceId);
+            const [client] = get(clientAtom);
+            const space = client?.spaces.get(spaceId);
             if (!space) {
               return null;
             }
@@ -574,15 +582,18 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      createFeedObjectNodeExtension<Calendar.Calendar, Event.Event>({
-        id: 'calendarFeedObjectNode',
-        parentType: Calendar.Calendar,
-        childType: Event.Event,
-        getFeed: (calendar, get) => (calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined),
-        isDbChild: (_, obj): obj is Event.Event => Obj.instanceOf(Event.Event, obj),
-        getNodeLabel: (event) => event.title ?? ['event.label', { ns: meta.profile.key }],
-        nodeIcon: 'ph--calendar-dot--regular',
-      }),
+      createFeedObjectNodeExtension<Calendar.Calendar, Event.Event>(
+        {
+          id: 'calendarFeedObjectNode',
+          parentType: Calendar.Calendar,
+          childType: Event.Event,
+          getFeed: (calendar, get) => (calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined),
+          isDbChild: (_, obj): obj is Event.Event => Obj.instanceOf(Event.Event, obj),
+          getNodeLabel: (event) => event.title ?? ['event.label', { ns: meta.profile.key }],
+          nodeIcon: 'ph--calendar-dot--regular',
+        },
+        clientAtom,
+      ),
 
       GraphBuilder.createExtension({
         id: 'syncMailbox',
@@ -725,6 +736,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

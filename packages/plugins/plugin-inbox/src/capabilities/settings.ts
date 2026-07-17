@@ -23,8 +23,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(InboxCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.provide(InboxCapabilities.Settings, settingsAtom),
+      Capability.provide(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

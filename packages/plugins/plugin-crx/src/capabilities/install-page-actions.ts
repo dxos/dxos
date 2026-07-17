@@ -7,6 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import type { OperationInvoker } from '@dxos/operation';
 
 import { meta } from '#meta';
 import { CrxCapabilities, Settings } from '#types';
@@ -16,9 +19,9 @@ import { installPageActionListeners } from '../page-actions';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const settingsAtom = yield* Capability.get(CrxCapabilities.Settings);
+    const invoker = yield* Capabilities.OperationInvoker;
+    const registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* CrxCapabilities.Settings;
 
     // NOTE: The `Label` tuple only supports `ns`/`count`/`defaultValue`, so the
     // success toast uses a plain key rather than interpolating the action label.

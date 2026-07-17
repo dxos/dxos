@@ -20,8 +20,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(NativeCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.provide(NativeCapabilities.Settings, settingsAtom),
+      Capability.provide(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

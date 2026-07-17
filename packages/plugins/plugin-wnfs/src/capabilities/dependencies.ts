@@ -13,7 +13,7 @@ import * as Blockstore from '../blockstore';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
     const apiHost = client.config.values.runtime?.services?.edge?.url || 'http://localhost:8787';
     const blockstore = Blockstore.create(apiHost);
     yield* Effect.tryPromise(() => blockstore.open());
@@ -21,8 +21,8 @@ export default Capability.makeModule(
     const instances: WnfsCapabilities.Instances = {};
 
     return [
-      Capability.contributes(WnfsCapabilities.Blockstore, blockstore),
-      Capability.contributes(WnfsCapabilities.Instances, instances),
+      Capability.provide(WnfsCapabilities.Blockstore, blockstore),
+      Capability.provide(WnfsCapabilities.Instances, instances),
     ];
   }),
 );

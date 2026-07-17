@@ -52,8 +52,8 @@ const isMessageOrThread = (subject: unknown): subject is Message.Message | Messa
     : isNonDraftMessage(subject);
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'drafts',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
@@ -241,5 +241,5 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
       }),
     ]),
-  ),
+  ]),
 );

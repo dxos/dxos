@@ -95,17 +95,14 @@ export default Capability.makeModule(
     };
 
     return [
-      Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),
-      Capability.contributes(AppCapabilities.NavigationPathResolver, mailboxPathResolver),
-      Capability.contributes(
-        AppCapabilities.NavigationPathResolver,
-        createFeedObjectPathResolver(getMailboxesSectionId()),
-      ),
-      Capability.contributes(
+      Capability.provide(AppCapabilities.NavigationTargetResolver, resolver),
+      Capability.provide(AppCapabilities.NavigationPathResolver, mailboxPathResolver),
+      Capability.provide(AppCapabilities.NavigationPathResolver, createFeedObjectPathResolver(getMailboxesSectionId())),
+      Capability.provide(
         AppCapabilities.NavigationPathResolver,
         createFeedObjectPathResolver(Type.getTypename(Calendar.Calendar)),
       ),
-      Capability.contributes(
+      Capability.provide(
         AppCapabilities.NavigationPathResolver,
         TypeSection.createTypeSectionPathResolver(Calendar.Calendar, { groupId: Paths.GroupSegments.communications }),
       ),

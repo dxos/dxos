@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { AnchoredTo } from '@dxos/types';
 
 import {
@@ -16,37 +16,46 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Meeting, MeetingCapabilities } from '#types';
+import { Meeting, MeetingEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-const StateReady = AppActivationEvents.createStateEvent(meta.profile.key);
-const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
-
 export const MeetingPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Meeting.Meeting, AnchoredTo.AnchoredTo] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
-    firesAfterActivation: [SettingsReady],
+    id: Capability.getModuleTag(MeetingSettings),
+    requires: MeetingSettings.requires,
+    provides: MeetingSettings.provides,
+    // Migration bridge for unmigrated SettingsReady listeners.
+    compatFires: [MeetingEvents.SettingsReady],
     activate: MeetingSettings,
   }),
   Plugin.addModule({
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    firesAfterActivation: [StateReady],
+    id: Capability.getModuleTag(MeetingState),
+    requires: MeetingState.requires,
+    provides: MeetingState.provides,
+    // Migration bridge for unmigrated StateReady listeners.
+    compatFires: [MeetingEvents.StateReady],
     activate: MeetingState,
   }),
-  Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(SettingsReady, StateReady),
-    activate: CallExtension,
-  }),
+  Plugin.addLazyModule(CallExtension),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
