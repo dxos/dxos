@@ -6,7 +6,7 @@ import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import {
   Aggregate,
   Collection,
@@ -949,12 +949,15 @@ describe('Query', () => {
       );
       ctx.onTestFinished(unsub);
 
-      await db.flush({ updates: true });
+      // This is a feed-scoped, host-routed query (the nested in-query forces isSimple=false), so
+      // the initial event is deferred until the async round trip arrives — db.flush({ updates: true })
+      // does not await it (see the equivalent note in echo-client/src/feed/feed.test.ts). Poll instead.
+      await waitForCondition({ condition: () => updates.length > 0, timeout: 2000 });
       expect(updates.at(-1)).toEqual(0);
 
       // A new completed "t1" task now makes the whole thread qualify.
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 't1', completed: true })]);
-      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => updates.at(-1) === 2, timeout: 2000 });
 
       expect(updates.at(-1)).toEqual(2);
     });
