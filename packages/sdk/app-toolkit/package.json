@@ -21,11 +21,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./workerd": {
-      "types": "./dist/types/src/index.d.ts",
-      "workerd": "./dist/lib/index.mjs",
-      "default": "./dist/lib/index.mjs"
-    },
     "./events": {
       "source": "./src/app-framework/AppActivationEvents.ts",
       "types": "./dist/types/src/app-framework/AppActivationEvents.d.ts",
