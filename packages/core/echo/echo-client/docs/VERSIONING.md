@@ -115,7 +115,7 @@ scrub a subtree.
 
 `DatabaseDirectory.branches` (`SpaceBranchRegistry`) is a synced map on the space root:
 
-```
+```ts
 branches[rootObjectId][branchName] = {
   members: { [objectId]: docUrl },  // one branch doc per subtree member
   baseHeads?: string[],             // root's heads at fork time (provenance)
@@ -220,7 +220,7 @@ or a branch revision) rather than silently forking from main.
 The planned model is a **parent pointer**, keeping the registry flat (still keyed by
 `(rootObjectId, branchName)`) and forming a branch _tree_ via one added field:
 
-```
+```ts
 branches[rootObjectId][branchName] = {
   members, baseHeads?, createdAt?,
   parent?: string,   // parent branch name; absent ⇒ main. baseHeads become the parent's fork heads.

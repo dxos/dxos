@@ -42,7 +42,8 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
-          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          const typename = Obj.getTypename(node.data);
+          const commentConfig = typename ? getCommentConfig(typename) : undefined;
           return commentConfig ? Option.some(node) : Option.none();
         },
         connector: () =>
@@ -62,7 +63,8 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
-          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          const typename = Obj.getTypename(node.data);
+          const commentConfig = typename ? getCommentConfig(typename) : undefined;
           return commentConfig ? Option.some(node) : Option.none();
         },
         actions: (matched) => {
@@ -74,7 +76,11 @@ export default Capability.makeModule(
             {
               id: 'comment',
               data: Effect.fnUntraced(function* () {
-                const config = getCommentConfig(Obj.getTypename(object)!)!;
+                const typename = Obj.getTypename(object);
+                const config = typename ? getCommentConfig(typename) : undefined;
+                if (!config) {
+                  return;
+                }
 
                 // Route editor-backed objects through the editor's create-comment command so the
                 // anchor snaps to the largest logical region (the diff hunk under the cursor, else

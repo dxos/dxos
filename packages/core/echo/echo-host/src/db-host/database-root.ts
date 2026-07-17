@@ -9,6 +9,7 @@ import {
   type DocumentId,
   type DocumentQuery,
   interpretAsDocumentId,
+  isValidAutomergeUrl,
 } from '@automerge/automerge-repo';
 
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -19,19 +20,22 @@ import { type DocMetrics, measureDocMetrics } from './automerge-metrics';
 export class DatabaseRoot {
   static mapLinks(doc: DocHandle<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
     const remap = (url: string): string | undefined => {
-      const documentId = interpretAsDocumentId(url as any);
+      if (!isValidAutomergeUrl(url)) {
+        return undefined;
+      }
+      const documentId = interpretAsDocumentId(url);
       return mapping[documentId] ? `automerge:${mapping[documentId]}` : undefined;
     };
-    doc.change((d) => {
-      for (const [key, value] of Object.entries(d.links ?? {})) {
+    doc.change((draft) => {
+      for (const [key, value] of Object.entries(draft.links ?? {})) {
         const mapped = remap(value.toString());
-        if (mapped) {
-          d.links![key] = mapped;
+        if (mapped && draft.links) {
+          draft.links[key] = mapped;
         }
       }
       // Branch documents live in the `branches` registry, not `links`, so they must be remapped here
       // too — otherwise an imported/copied space's branches point at the source space's documents.
-      for (const byName of Object.values(d.branches ?? {})) {
+      for (const byName of Object.values(draft.branches ?? {})) {
         for (const record of Object.values(byName)) {
           for (const [objectId, value] of Object.entries(record.members ?? {})) {
             const mapped = remap(value.toString());
