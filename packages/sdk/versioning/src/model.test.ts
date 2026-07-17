@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { DXN, Text as EchoText, Entity, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
 import * as Branch from './Branch';
@@ -142,6 +143,9 @@ describe('versioning model', () => {
     const result = await Branch.merge(doc, branch);
     expect(result.conflicts).toBe(0);
     expect(root.content).not.toContain('<<<<<<<');
+    // Character-level CRDT merge: both sides' insertions survive (interleaved, no markers).
+    expect(root.content).toContain('theirs');
+    expect(root.content).toContain('ours');
     expect(root.content).toContain('bravo');
     expect(branch.status).toBe('merged');
   });
@@ -162,7 +166,8 @@ describe('versioning model', () => {
     Obj.update(doc, () => {
       history.branches.push(legacy);
     });
-    const stored = history.branches.find(({ id }) => id === legacy.id)!;
+    const stored = history.branches.find(({ id }) => id === legacy.id);
+    invariant(stored, 'legacy branch not stored');
     expect(Branch.isCore(stored)).toBe(false);
 
     Obj.update(branchText, (branchText) => {

@@ -26,29 +26,42 @@ export interface BranchStore {
  * path) preserves the source's change ancestry, so the branch shares history with the main document
  * and `A.merge` later is a true CRDT 3-way merge rather than an unrelated "two roots" conflict.
  *
- * @param atHeads If provided, fork from this historical frontier instead of the tip. The frontier is
- * reached by replaying the source's changes onto a fresh document until the accumulator's heads
- * match (the same technique as `getEditHistoryWithDiffs`); `A.save(A.view(...))` cannot be used as it
- * serializes the full underlying history regardless of the view's heads.
+ * @param atHeads If provided, fork from this historical frontier instead of the tip. The fork is
+ * built from the ancestor closure of `atHeads` (via change dependency metadata) — a linear replay
+ * of the full history can interleave concurrent siblings before the frontier and never reproduce
+ * it exactly. `A.save(A.view(...))` cannot be used either, as it serializes the full underlying
+ * history regardless of the view's heads. Heads not present in the source document (e.g. heads of
+ * a different doc) throw rather than silently forking at the tip with wrong provenance.
  */
 export const forkDump = (sourceDoc: Doc<any>, atHeads?: Heads): Uint8Array => {
   if (!atHeads) {
     return A.save(sourceDoc);
   }
-  const target = new Set(atHeads);
-  let forked = A.init<any>();
-  let reached = false;
-  for (const change of A.getAllChanges(sourceDoc)) {
-    [forked] = A.applyChanges(forked, [change]);
-    const heads = A.getHeads(forked);
-    if (heads.length === atHeads.length && heads.every((hash) => target.has(hash))) {
-      reached = true;
-      break;
+  const decoded = A.getAllChanges(sourceDoc).map((change) => ({ change, meta: A.decodeChange(change) }));
+  const byHash = new Map(decoded.map((entry) => [entry.meta.hash, entry]));
+  const include = new Set<string>();
+  const queue = [...atHeads];
+  while (queue.length > 0) {
+    const hash = queue.pop()!;
+    if (include.has(hash)) {
+      continue;
     }
+    const entry = byHash.get(hash);
+    invariant(entry, 'fork frontier not reachable in the source document');
+    include.add(hash);
+    queue.push(...entry.meta.deps);
   }
-  // An unreachable frontier (heads from a different doc, e.g. a branch doc) would otherwise
-  // silently fork at the tip with wrong provenance.
-  invariant(reached, 'fork frontier not reachable in the source document');
+  // The filtered subset preserves the source's topological order, so dependencies apply first.
+  let forked = A.init<any>();
+  [forked] = A.applyChanges(
+    forked,
+    decoded.filter(({ meta }) => include.has(meta.hash)).map(({ change }) => change),
+  );
+  const heads = A.getHeads(forked);
+  invariant(
+    heads.length === atHeads.length && heads.every((hash) => atHeads.includes(hash)),
+    'fork frontier not reachable in the source document',
+  );
   return A.save(forked);
 };
 

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { type Database, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
@@ -91,14 +92,16 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     }
     let disposed = false;
     let binding: Database.BranchBinding<Text.Text> | undefined;
-    void Branch.bind(document, activeBranch).then((next) => {
-      if (disposed) {
-        next.dispose();
-        return;
-      }
-      binding = next;
-      setBranchBinding(next);
-    });
+    Branch.bind(document, activeBranch)
+      .then((next) => {
+        if (disposed) {
+          next.dispose();
+          return;
+        }
+        binding = next;
+        setBranchBinding(next);
+      })
+      .catch((error) => log.catch(error));
     return () => {
       disposed = true;
       binding?.dispose();

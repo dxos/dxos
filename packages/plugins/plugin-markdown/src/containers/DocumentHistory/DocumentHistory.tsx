@@ -5,6 +5,7 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { log } from '@dxos/log';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Branch, Version } from '@dxos/versioning';
@@ -54,9 +55,9 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
         // Unnamed revisions are allowed; they display as their formatted creation time.
         Version.create(document, { name: name.trim(), target: timelineTarget });
       } else if (naming === 'branch') {
-        void Branch.create(document, { name: name.trim(), parent: timelineTarget }).then((branch) =>
-          setSelection({ kind: 'branch', branchId: branch.id }),
-        );
+        Branch.create(document, { name: name.trim(), parent: timelineTarget })
+          .then((branch) => setSelection({ kind: 'branch', branchId: branch.id }))
+          .catch((error) => log.catch(error));
       }
     },
     [document, naming, timelineTarget, setSelection],
@@ -77,7 +78,9 @@ export const DocumentHistory = forwardRef<HTMLElement, DocumentHistoryProps>(({ 
 
   const handleMerge = useCallback(() => {
     if (document && activeBranch) {
-      void Branch.merge(document, activeBranch).then(() => setSelection({ kind: 'current' }));
+      Branch.merge(document, activeBranch)
+        .then(() => setSelection({ kind: 'current' }))
+        .catch((error) => log.catch(error));
     }
   }, [document, activeBranch, setSelection]);
 

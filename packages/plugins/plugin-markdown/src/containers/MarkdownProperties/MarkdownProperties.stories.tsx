@@ -78,7 +78,7 @@ const meta = {
               const root = doc.content.target;
               if (root) {
                 Version.create(doc, { name: 'first draft', target: root });
-                Branch.create(doc, { name: 'agent-draft', parent: root });
+                yield* Effect.promise(() => Branch.create(doc, { name: 'agent-draft', parent: root }));
               }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),

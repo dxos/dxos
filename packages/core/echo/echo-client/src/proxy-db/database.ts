@@ -866,6 +866,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>> {
     assertArgument(isEchoObject(obj), 'obj', 'expected ECHO object stored in the database');
+    // Guard against foreign/unbound objects: 'main' would hand back an unrelated live object as a
+    // valid binding, and other branches resolve by id only (an id collision could bind another
+    // space's data).
+    assertArgument(getObjectCore(obj).database === this, 'obj', 'object is not bound to this database');
     if (name === 'main') {
       // The live object IS the main binding; nothing to release.
       return { object: obj, branch: 'main', dispose: () => {} };

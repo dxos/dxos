@@ -26,7 +26,7 @@ describe('branch bindings (per-surface)', () => {
     const child = db.add(Obj.make(TestSchema.Expando, { content: 'child-v0' }));
     const root = db.add(Obj.make(TestSchema.Expando, { title: 'root-v0', child: Ref.make(child) }));
     await db.flush();
-    return { db, root: root as any, child: child as any };
+    return { db, root, child };
   };
 
   test('a binding reads and writes the branch while the device stays on main', async () => {
@@ -36,7 +36,7 @@ describe('branch bindings (per-surface)', () => {
     const binding = await db.branch(root, 'b1');
     try {
       // The binding starts at the fork content; the device selection is untouched.
-      expect((binding.object as any).title).toBe('root-v0');
+      expect(binding.object.title).toBe('root-v0');
       expect(getCurrentBranch(root)).toBe('main');
 
       // Writes land on the branch doc only.
@@ -44,7 +44,7 @@ describe('branch bindings (per-surface)', () => {
         obj.title = 'root-b1';
       });
       await db.flush();
-      expect((binding.object as any).title).toBe('root-b1');
+      expect(binding.object.title).toBe('root-b1');
       expect(root.title).toBe('root-v0');
       expect(getCurrentBranch(root)).toBe('main');
     } finally {
@@ -68,8 +68,8 @@ describe('branch bindings (per-surface)', () => {
       });
       await db.flush();
 
-      expect((binding1.object as any).title).toBe('root-b1');
-      expect((binding2.object as any).title).toBe('root-b2');
+      expect(binding1.object.title).toBe('root-b1');
+      expect(binding2.object.title).toBe('root-b2');
       expect(root.title).toBe('root-v0');
     } finally {
       binding1.dispose();
@@ -103,13 +103,13 @@ describe('branch bindings (per-surface)', () => {
       await db.flush();
 
       expect(root.title).toBe('root-b1');
-      expect((binding.object as any).title).toBe('root-b2');
+      expect(binding.object.title).toBe('root-b2');
       expect(getCurrentBranch(root)).toBe('b1');
 
       // Back on main, neither branch's edit is visible.
       await switchBranch(root, 'main');
       expect(root.title).toBe('root-v0');
-      expect((binding.object as any).title).toBe('root-b2');
+      expect(binding.object.title).toBe('root-b2');
     } finally {
       binding.dispose();
     }

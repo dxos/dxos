@@ -48,6 +48,6 @@ projects:
     tasks: .agents/projects/document-revisions/TASKS.md
     design: packages/plugins/plugin-markdown/DESIGN.md
     prs: [12237, 12246]
-    resume: 'Stage 1 PR #12246 open (echo core: time travel + subtree branching + BranchBinding; port of 11829 commits 1-3 onto EntityManager, 29 tests) — watch Check to green + wittjosiah review. Then stage 2: rewire @dxos/versioning onto the core API (registry=docs, records=metadata; checkpoints via setTimeTravel). Stages 2-4 in TASKS.md.'
+    resume: 'PR #12246 open with stages 1 AND 2 (echo core: time travel + subtree branching + BranchBinding; @dxos/versioning rewired onto the core API with plugin-markdown adaptation) — watch Check to green + wittjosiah review + CodeRabbit round addressed. Then stage 3: generic Branches/History companion in plugin-space slot, editable merge overlay, branch-aware comments + agent update op. Stages 3-4 in TASKS.md.'
 
 ended: []

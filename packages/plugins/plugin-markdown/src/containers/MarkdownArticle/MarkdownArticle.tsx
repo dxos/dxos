@@ -10,6 +10,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -68,6 +69,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const diffViewMode = settings.diffView ?? 'inline';
     const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
     const branchText = activeBranch ? versioning.activeText : undefined;
+    // While a core-branch binding is resolving, the editor must not mount against the root object
+    // — edits would silently land on main. Render an empty panel until the binding is ready.
+    const branchLoading = !!activeBranch && !branchText;
     const editorObject = activeVersion ? object : (branchText ?? object);
     const initialValue = activeVersion
       ? (docContent ?? textContent)
@@ -89,11 +93,13 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       (name: string) => {
         const target = activeVersion?.target.target;
         if (document && activeVersion && target) {
-          void Branch.create(document, {
+          Branch.create(document, {
             name: name.trim(),
             parent: target,
             heads: activeVersion.heads,
-          }).then((branch) => setSelection({ kind: 'branch', branchId: branch.id }));
+          })
+            .then((branch) => setSelection({ kind: 'branch', branchId: branch.id }))
+            .catch((error) => log.catch(error));
         }
       },
       [document, activeVersion, setSelection],
@@ -101,7 +107,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     const handleMerge = useCallback(() => {
       if (document && activeBranch) {
-        void Branch.merge(document, activeBranch).then(() => setSelection({ kind: 'current' }));
+        Branch.merge(document, activeBranch)
+          .then(() => setSelection({ kind: 'current' }))
+          .catch((error) => log.catch(error));
       }
     }, [document, activeBranch, setSelection]);
 
@@ -222,6 +230,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       },
       [onSelectObject, invokePromise, attendableId],
     );
+
+    if (branchLoading) {
+      return <Panel.Root role={role} ref={forwardedRef} />;
+    }
 
     return (
       <MarkdownEditorProvider

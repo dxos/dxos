@@ -13,6 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { EchoTestBuilder } from '../testing';
 import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching';
 import { getEditHistoryWithDiffs } from './edit-history';
+import { clearTimeTravel, setTimeTravel } from './time-travel';
 import { getVersion } from './version';
 
 describe('branching', () => {
@@ -35,7 +36,7 @@ describe('branching', () => {
     const root = db.add(Obj.make(TestSchema.Expando, { title: 'root-v0', child: Ref.make(child) }));
     await db.flush();
 
-    return { db, root: root as any, child: child as any };
+    return { db, root, child };
   };
 
   test('createBranch forks the root and its referenced child without creating new objects', async () => {
@@ -232,7 +233,43 @@ describe('branching', () => {
 
     // Scrubbing within the branch reads the branch's history.
     const diffs = getEditHistoryWithDiffs(root);
-    expect(diffs.length).toBeGreaterThan(0);
+    expect(diffs.length).toBeGreaterThan(1);
+
+    // Pin to a historical point on the branch: reads resolve the past, writes throw.
+    setTimeTravel(root, diffs.at(-2)!.heads);
+    expect(root.title).not.toBe('root-b1-v1');
+    expect(() =>
+      Obj.update(root, (root: any) => {
+        root.title = 'nope';
+      }),
+    ).toThrow();
+    clearTimeTravel(root);
+    expect(root.title).toBe('root-b1-v1');
+  });
+
+  test('createBranch from a frontier with concurrent siblings in history', async () => {
+    const { db, root } = await setup();
+    // Create a concurrent edit in the root's history: edit the tip, then edit again from the
+    // pre-edit frontier. Linear replay of all changes interleaves the siblings and can never
+    // reproduce the single-head frontier — the fork must use the ancestor closure.
+    const baseHeads = getVersion(root).heads;
+    Obj.update(root, (root: any) => {
+      root.title = 'root-live';
+    });
+    const liveHeads = getVersion(root).heads;
+    const core = db._entityManager.getObjectCoreById(root.id);
+    core!.changeAt(baseHeads, (doc: any) => {
+      doc.objects[root.id].data.subtitle = 'concurrent';
+    });
+    await db.flush();
+    expect(getVersion(root).heads.length).toBe(2);
+
+    await createBranch(root, 'from-live', { fromHeads: liveHeads });
+    await switchBranch(root, 'from-live');
+    // The fork contains the live edit but not the concurrent sibling.
+    expect(root.title).toBe('root-live');
+    expect(root.subtitle).toBeUndefined();
+    await switchBranch(root, 'main');
   });
 });
 

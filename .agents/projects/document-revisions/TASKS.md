@@ -74,3 +74,6 @@ branch state / branch-of-branch, deployed-app BranchStore backend.
 - [ ] Stage 3: companion to plugin-space generic slot (markdown provider first); editable merge
       overlay; branch-aware comments + AcceptChange; branch-aware agent update operation.
 - [ ] Stage 4: retire the textual fork path; migrate legacy content-copy branches.
+- [ ] Keep the textual merge logic (`merge3` + conflict markers) for non-automerge cases —
+      external/imported content and any text without shared CRDT history — even after stage 4
+      retires it as the branch-merge path.

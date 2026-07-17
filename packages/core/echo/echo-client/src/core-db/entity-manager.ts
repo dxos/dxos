@@ -257,9 +257,9 @@ export class EntityManager implements IDatabaseBinding {
   private async _hydrateCurrentBranches(): Promise<void> {
     try {
       const entries = await this._branchStore!.load();
-      for (const [objectId, name] of Object.entries(entries)) {
-        this._currentBranches.set(objectId, name);
-      }
+      // Only selections whose branch still exists are installed — `switchBranch` records the
+      // selection itself, so a stale entry (deleted branch) never leaves `getCurrentBranch`
+      // reporting a branch the core is not actually bound to.
       const reapplied = new Set<string>();
       for (const [objectId, name] of Object.entries(entries)) {
         if (name === 'main' || reapplied.has(objectId) || !this.getBranchRegistry(objectId)?.[name]) {
@@ -273,12 +273,19 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
+  /**
+   * Chains {@link BranchStore.save} calls so writes land in selection order — concurrent saves
+   * resolving out of order could otherwise persist a stale selection map.
+   */
+  private _persistChain: Promise<void> = Promise.resolve();
+
   private _persistCurrentBranches(): void {
     if (!this._branchStore) {
       return;
     }
-    void this._branchStore
-      .save(Object.fromEntries(this._currentBranches))
+    const entries = Object.fromEntries(this._currentBranches);
+    this._persistChain = this._persistChain
+      .then(() => this._branchStore!.save(entries))
       .catch((err) => log.warn('failed to persist current branches', { err }));
   }
 
@@ -891,11 +898,31 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
+   * Chains branch transitions (switch, merge, delete fallback) so concurrent operations cannot
+   * interleave their per-member rebinds and leave a subtree bound to mixed branches.
+   */
+  #branchOpChain: Promise<void> = Promise.resolve();
+
+  #enqueueBranchOp<T>(op: () => Promise<T>): Promise<T> {
+    const result = this.#branchOpChain.then(op);
+    this.#branchOpChain = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+
+  /**
    * Switch the object's subtree to a branch (or back to `'main'`). Cascades to every subtree member
    * and rebinds each `ObjectCore` to that branch's document, so the object shows the branch
    * consistently regardless of how it is later accessed. The selection is device-local.
+   * Transitions are serialized: concurrent switches apply one after another.
    */
   async switchBranch(rootObjectId: string, name: string): Promise<void> {
+    return this.#enqueueBranchOp(() => this.#switchBranchInternal(rootObjectId, name));
+  }
+
+  async #switchBranchInternal(rootObjectId: string, name: string): Promise<void> {
     const registry = this.getBranchRegistry(rootObjectId);
     if (name !== 'main') {
       invariant(registry?.[name], `branch not found: ${name}`);
@@ -926,19 +953,21 @@ export class EntityManager implements IDatabaseBinding {
    */
   async mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void> {
     invariant(name !== 'main', 'cannot merge main into itself');
-    const record = this.getBranchRegistry(rootObjectId)?.[name];
-    invariant(record, `branch not found: ${name}`);
-    for (const [memberId, urlData] of Object.entries(record.members)) {
-      const branchHandle = this._repoProxy.find<DatabaseDirectory>(urlData.toString() as DocumentId);
-      await branchHandle.whenReady();
-      const branchDoc = branchHandle.doc();
-      const mainHandle = await this._mainDocHandle(memberId);
-      mainHandle.update((doc) => A.merge(doc, branchDoc));
-    }
-    await this.switchBranch(rootObjectId, 'main');
-    if (opts?.deleteAfter) {
-      this.deleteBranch(rootObjectId, name);
-    }
+    return this.#enqueueBranchOp(async () => {
+      const record = this.getBranchRegistry(rootObjectId)?.[name];
+      invariant(record, `branch not found: ${name}`);
+      for (const [memberId, urlData] of Object.entries(record.members)) {
+        const branchHandle = this._repoProxy.find<DatabaseDirectory>(urlData.toString() as DocumentId);
+        await branchHandle.whenReady();
+        const branchDoc = branchHandle.doc();
+        const mainHandle = await this._mainDocHandle(memberId);
+        mainHandle.update((doc) => A.merge(doc, branchDoc));
+      }
+      await this.#switchBranchInternal(rootObjectId, 'main');
+      if (opts?.deleteAfter) {
+        this.deleteBranch(rootObjectId, name);
+      }
+    });
   }
 
   /** Remove a branch from the registry (its documents lose their sync reference). Cannot delete main. */
@@ -954,10 +983,20 @@ export class EntityManager implements IDatabaseBinding {
         }
       }
     });
-    // Members currently viewing the deleted branch fall back to main.
+    // Members currently viewing the deleted branch fall back to main. The member list was
+    // captured before the registry entry was removed (a post-deletion switch could no longer
+    // enumerate the deleted branch's membership), and the rebind is serialized with other
+    // branch transitions.
     const orphaned = memberIds.filter((id) => this._currentBranches.get(id) === name);
     if (orphaned.length > 0) {
-      void this.switchBranch(rootObjectId, 'main');
+      this.#enqueueBranchOp(async () => {
+        for (const memberId of orphaned) {
+          await this._rebindMemberToBranch(memberId, 'main', undefined);
+          this._currentBranches.delete(memberId);
+        }
+        this._persistCurrentBranches();
+        this._scheduleThrottledDbUpdate(orphaned);
+      }).catch((err) => log.warn('failed to fall back to main after branch deletion', { err }));
     }
     this.branchesChanged.emit();
   }
