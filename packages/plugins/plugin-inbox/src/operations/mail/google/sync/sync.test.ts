@@ -654,8 +654,13 @@ describe('runGoogleSync against a mock Gmail API', () => {
     // page, the delta spans three pages, and Gmail reports the *current* historyId ('1003') on every
     // page — so a caller that read only page one would advance the token to '1003' and drop the last two
     // arrivals. Draining every page picks up all three.
-    const arrivals = generateGmailDataset({ count: 3, seed: 86, start: subDays(now, 1), end: now, idPrefix: 'multi' })
-      .messages;
+    const arrivals = generateGmailDataset({
+      count: 3,
+      seed: 86,
+      start: subDays(now, 1),
+      end: now,
+      idPrefix: 'multi',
+    }).messages;
     const run2 = {
       ...base,
       messages: [...base.messages, ...arrivals],
@@ -716,8 +721,13 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(tokenOf(binding)).toBe('1000');
 
     // A large delta arrives; fault after the first commit page (10) lands.
-    const arrivals = generateGmailDataset({ count: 15, seed: 86, start: subDays(now, 1), end: now, idPrefix: 'new' })
-      .messages;
+    const arrivals = generateGmailDataset({
+      count: 15,
+      seed: 86,
+      start: subDays(now, 1),
+      end: now,
+      idPrefix: 'new',
+    }).messages;
     const run2Dataset = {
       ...base,
       messages: [...base.messages, ...arrivals],
@@ -760,7 +770,9 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const run2 = {
       ...base,
       historyId: '2001',
-      historyLog: [{ startHistoryId: '2000', historyId: '2001', labelsAdded: [{ id: targetId, labelIds: ['Label_1'] }] }],
+      historyLog: [
+        { startHistoryId: '2000', historyId: '2001', labelsAdded: [{ id: targetId, labelIds: ['Label_1'] }] },
+      ],
     };
     await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2))),

@@ -22,7 +22,7 @@ import { Jmap, JmapMail } from '../../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../../constants';
 import { type JmapApiError, MailSyncError } from '../../../../errors';
 import { JmapMailApi } from '../../../../services';
-import { Mailbox, SystemTags, type SyncStreamConfig } from '../../../../types';
+import { Mailbox, type SyncStreamConfig, SystemTags } from '../../../../types';
 import { type MailSyncItem, MailSyncProvider, type MailSyncSource, additionsToChanges } from '../../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 
@@ -179,12 +179,18 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                   onEnumerated(createdIds.length);
                 }
                 const additions = additionsToChanges(
-                  jmapEmails(target, folders, { windows, filter, now, onEnumerated, onRetrieved, forwardIds: createdIds })
-                    .pipe(
-                      Stream.map(toItem),
-                      Stream.provideService(JmapMailApi, providerApi),
-                      Stream.mapError(MailSyncError.wrap()),
-                    ),
+                  jmapEmails(target, folders, {
+                    windows,
+                    filter,
+                    now,
+                    onEnumerated,
+                    onRetrieved,
+                    forwardIds: createdIds,
+                  }).pipe(
+                    Stream.map(toItem),
+                    Stream.provideService(JmapMailApi, providerApi),
+                    Stream.mapError(MailSyncError.wrap()),
+                  ),
                   { maxMessages, onTaken },
                 );
                 // Merge the label-change reconcile branch (empty on non-incremental runs).
@@ -255,9 +261,7 @@ const jmapReconcile = (
         // Add any remote folder/keyword tag the message lacks.
         const addTagIds = [...remoteFolderUris, ...remoteKeywordUris].filter((tagUri) => !localTags.includes(tagUri));
         // Remove only folder tags the remote no longer has; user tags and starred are never auto-removed.
-        const removeTagIds = localTags.filter(
-          (tagUri) => folderProviderUris.has(tagUri) && !remoteFolders.has(tagUri),
-        );
+        const removeTagIds = localTags.filter((tagUri) => folderProviderUris.has(tagUri) && !remoteFolders.has(tagUri));
         if (addTagIds.length === 0 && removeTagIds.length === 0) {
           return undefined;
         }

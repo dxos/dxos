@@ -235,7 +235,14 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
           Effect.gen(function* () {
             const latest = dataset.state ?? sinceState;
             if (sinceState === latest) {
-              return { oldState: sinceState, newState: latest, hasMoreChanges: false, created: [], updated: [], destroyed: [] };
+              return {
+                oldState: sinceState,
+                newState: latest,
+                hasMoreChanges: false,
+                created: [],
+                updated: [],
+                destroyed: [],
+              };
             }
             const created: string[] = [];
             const updated: string[] = [];

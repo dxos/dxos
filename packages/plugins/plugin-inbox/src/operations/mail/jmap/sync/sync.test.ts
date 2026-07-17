@@ -586,8 +586,13 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(tokenOf(binding)).toBe('state-0');
 
     // A large delta arrives; fault after the first commit page (10) lands.
-    const arrivals = generateJmapDataset({ count: 15, seed: 86, start: subDays(now, 1), end: now, idPrefix: 'new' })
-      .emails;
+    const arrivals = generateJmapDataset({
+      count: 15,
+      seed: 86,
+      start: subDays(now, 1),
+      end: now,
+      idPrefix: 'new',
+    }).emails;
     const run2Dataset = {
       ...base,
       emails: [...base.emails, ...arrivals],
@@ -664,9 +669,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(localTags).not.toContain(inboxUri);
   });
 
-  test('an incremental $flagged keyword add stars an existing message (canonical starred tag)', async ({
-    expect,
-  }) => {
+  test('an incremental $flagged keyword add stars an existing message (canonical starred tag)', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateJmapDataset({ count: 3, seed: 93, start: subDays(now, 6), end: subDays(now, 2) });
     const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });

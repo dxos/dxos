@@ -72,7 +72,12 @@ export type MailSyncItem = {
  * EntityId (via `Cursor.State.foreignIndex`) and produces an `EmailStage.Change`.
  */
 export type ReconcileItem =
-  | { readonly _tag: 'retag'; readonly foreignId: string; readonly addTagIds: readonly string[]; readonly removeTagIds: readonly string[] }
+  | {
+      readonly _tag: 'retag';
+      readonly foreignId: string;
+      readonly addTagIds: readonly string[];
+      readonly removeTagIds: readonly string[];
+    }
   | { readonly _tag: 'delete'; readonly foreignId: string };
 
 /** The run's change source, produced by {@link MailSyncProviderService.prepare} once ready. */

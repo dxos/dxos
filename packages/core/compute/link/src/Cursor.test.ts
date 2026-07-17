@@ -407,9 +407,7 @@ describe('foreignIndex (buildEntityMap)', () => {
     const state = await Effect.gen(function* () {
       return yield* Cursor.Service;
     }).pipe(
-      Effect.provide(
-        Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } }),
-      ),
+      Effect.provide(Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } })),
       Effect.provide(Database.layer(db)),
       EffectEx.runAndForwardErrors,
     );
