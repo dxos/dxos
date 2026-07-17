@@ -48,6 +48,7 @@ export {
   getEditHistory,
   getEditHistoryWithDiffs,
   getObjectCore,
+  getObjectOnBranch,
   getVersion,
   initEchoReactiveObjectRootProxy,
   isEchoObject,

@@ -7,6 +7,7 @@ import { type Heads } from '@automerge/automerge';
 import { type Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 
+import { type DecodedAutomergePrimaryValue } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { getObjectCore } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';
@@ -73,4 +74,20 @@ export const mergeBranch = (obj: Obj.Unknown, name: string, opts?: { deleteAfter
 export const deleteBranch = (obj: Obj.Unknown, name: string): void => {
   const { db, id } = resolve(obj);
   db.deleteBranch(id, name);
+};
+
+/**
+ * Read the object's CURRENT decoded data on a branch, without switching the device selection or
+ * holding a binding open — a one-shot read for review workflows (e.g. recomputing a diff against
+ * the compare branch to cherry-pick a hunk). Binding to `'main'` reads the live object.
+ */
+export const getObjectOnBranch = async (obj: Obj.Unknown, name: string): Promise<DecodedAutomergePrimaryValue> => {
+  const { db } = resolve(obj);
+  const binding = await db.branch(obj, name);
+  try {
+    // Snapshot the decoded `data` section; the binding's live object is disposed below.
+    return getObjectCore(binding.object).getDecoded(['data']);
+  } finally {
+    binding.dispose();
+  }
 };
