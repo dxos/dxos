@@ -699,6 +699,14 @@ export interface DxConfigOptions {
   /** JSX runtime for `.tsx`/`.jsx` source files. */
   jsx?: 'react' | 'solid';
   /**
+   * React JSX transform. Defaults to `'automatic'` (emits `react/jsx-runtime` imports). Use
+   * `'classic'` (`React.createElement`) for code that runs against a React the bundler externalizes
+   * to a global — notably Storybook manager addons, whose manager bundle runs on Storybook's own
+   * React 18 while automatic-runtime code would inline this repo's React 19 jsx-runtime and crash
+   * (`recentlyCreatedOwnerStacks`). Only meaningful when `jsx === 'react'`.
+   */
+  jsxRuntime?: 'automatic' | 'classic';
+  /**
    * Emit raw-asset imports (`?url` / `?raw` / `?inline`) as separate files instead of
    * base64-inlining them into the JS bundle. Matches esbuild's `file` loader. Required
    * for packages that import large binary assets (e.g. plugin-zen's `.m4a` soundscapes).
@@ -747,10 +755,22 @@ const buildTestConfig = (
  * - Tests → vitest projects (`node` / `browser` / `storybook`) wired in when `test` is set.
  */
 export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
-  const { entry = 'src/index.ts', outDir = 'dist/lib', nodeTarget = false, jsx, assetsAsFiles = false, test } = options;
+  const {
+    entry = 'src/index.ts',
+    outDir = 'dist/lib',
+    nodeTarget = false,
+    jsx,
+    jsxRuntime,
+    assetsAsFiles = false,
+    test,
+  } = options;
   // Solid: ssr-aware client transform.
   const jsxPlugin: Plugin[] =
-    jsx === 'react' ? [react()] : jsx === 'solid' ? [solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` })] : [];
+    jsx === 'react'
+      ? [react(jsxRuntime ? { jsxRuntime } : undefined)]
+      : jsx === 'solid'
+        ? [solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` })]
+        : [];
   return viteDefineConfig({
     // Worker output config. Library packages that use `new Worker(new URL('#x',
     // import.meta.url))` rely on vite's worker bundler to lift the referenced source

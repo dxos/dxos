@@ -9,9 +9,10 @@ import React from 'react';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { blast, defaultOptions, dropFile, join, snippets } from '@dxos/ui-editor';
+import { annotations, blast, defaultOptions, dropFile, join, snippets } from '@dxos/ui-editor';
 
-import { EditorStory, content } from './components';
+import { str } from '../util';
+import { EditorStory, content, longText } from './components';
 
 const meta = {
   title: 'ui/react-ui-editor/Experimental',
@@ -84,5 +85,15 @@ export const DND: Story = {
         }),
       ]}
     />
+  ),
+};
+
+//
+// Annotations
+//
+
+export const Annotations: Story = {
+  render: () => (
+    <EditorStory text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />
   ),
 };
