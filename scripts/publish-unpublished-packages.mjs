@@ -25,8 +25,8 @@ import { globby } from 'globby';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
+import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const NPM_REGISTRY = 'https://registry.npmjs.org';
@@ -315,7 +315,9 @@ const main = async () => {
     console.error(`ERROR: failed to query the npm registry: ${detail}`);
     process.exit(1);
   }
-  const unpublished = queried.filter((entry) => !entry.published).sort((left, right) => left.name.localeCompare(right.name));
+  const unpublished = queried
+    .filter((entry) => !entry.published)
+    .sort((left, right) => left.name.localeCompare(right.name));
 
   if (unpublished.length === 0) {
     console.log('OK: all publishable packages are already on npm.');
