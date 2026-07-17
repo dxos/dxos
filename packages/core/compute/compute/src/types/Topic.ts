@@ -14,7 +14,7 @@ import * as Instructions from './Instructions';
 //
 // PRIORITIES
 //
-// - Track inbox topics.
+// - Track inbox topics; activity (Inbox/Calendar).
 //
 // - Reconcile with Project (linear/github use cases).
 // - Model goals via instructions (ISSUE: Dependency on compute).
