@@ -246,6 +246,7 @@ export const translations = [
 
         'history-panel.title': 'History',
         'now.label': 'Now',
+        'branch-tip.label': 'Tip',
         'create.label': 'Create',
         'create-checkpoint.label': 'Create revision',
         'create-branch.label': 'New branch',

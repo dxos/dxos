@@ -63,7 +63,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
   // cheap at panel scale (a handful of records).
   const rootText = provider?.getTarget(subject);
   const { commits, branches } = provider
-    ? createTimelineModel(object, rootText, { nowLabel: t('now.label') })
+    ? createTimelineModel(object, rootText, { nowLabel: t('now.label'), branchTipLabel: t('branch-tip.label') })
     : { commits: [], branches: [] };
 
   // Branch/checkpoint creation targets the active branch when one is selected, else the root.

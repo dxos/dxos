@@ -111,8 +111,22 @@ Deferred from the CodeRabbit round (stage 3/4):
       storybook play test.
 - [x] Flaky concurrent-siblings forkDump test: relaxed the environment-dependent head-count
       assertion.
+- [x] Branch-navigation bugs (reported): (a) selecting a revision on a branch rendered empty —
+      the editor mounted before the async branch binding resolved and never rebound; guarded the
+      mount (`branchLoading` now also covers a resolving branch-checkpoint). (b) No way back to the
+      editable branch tip — added a synthetic per-branch `Tip` node to the timeline and made
+      banner-close / restore on a branch checkpoint return to the branch, not main.
+- [x] Comprehensive versioning storybook plan (DocumentVersioning.stories): case 1 TimeTravel,
+      case 2 BranchRevisions (select revision + return to Tip) & BranchMerge, case 3 ChainedBranches
+      (fork→merge×2), case 4 ConflictAutoResolve (CRDT no-markers) & ConflictResolution (markers).
+      Every action driven through the real UI. 7 play tests green in chromium.
 
 ## Future
 
+- **True nested branch-of-branch** (fork off a branch tip, keep live, merge child→parent→main).
+  Unsupported today: the core `DatabaseDirectory.branches` registry is flat, keyed by the root
+  object id, and forks always derive from the root doc (forking at a sub-branch frontier hits an
+  unreachable frontier). Chained fork→merge sequences work. Needs a nested/parent-aware registry
+  key + fork-from-branch-doc support in `EntityManager.createBranch`.
 - Generalize `@dxos/versioning` record refs over `Ref(Obj.Any)` so non-Text objects (sketches,
   sheets) can be versioned; branch-level access control; subduction fragment compaction alignment.

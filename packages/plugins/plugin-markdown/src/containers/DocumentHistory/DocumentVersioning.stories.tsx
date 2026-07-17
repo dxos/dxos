@@ -2,6 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
+//
+// Versioning storybook test plan.
+//
+// Every action runs through the real UI (panel buttons, timeline nodes, banners) rather than the
+// data layer, so a passing story means the manual flow works. Document edits are the one exception:
+// they are spliced through the automerge binding to simulate the editor's live typing (concurrent
+// branch/parent edits must CRDT-merge, which whole-string assignment would not).
+//
+//   1. main revisions            — TimeTravel: checkpoints on main, travel back/forward, return to Now.
+//   2. sub-branch revisions       — BranchRevisions: revisions ON a branch; select one (read-only),
+//                                    then return to the branch TIP (editable). BranchMerge: merge back.
+//   3. chained branches + merges  — ChainedBranches: fork → merge → fork again → merge (flat registry).
+//                                    True nested branch-of-branch is a follow-up (see DESIGN.md).
+//   4. merge conflict             — ConflictAutoResolve: concurrent same-line edits CRDT-merge with no
+//                                    markers. ConflictResolution: the marker-resolution UI for a
+//                                    legacy/external conflict block.
+//
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
@@ -100,7 +118,7 @@ const DefaultStory = () => {
 };
 
 // The name popover portals to document.body, outside the story canvas.
-const createRevisionViaUi = async (canvasElement: HTMLElement, name: string) => {
+const createRevisionViaUi = async (canvasElement: HTMLElement, name = '') => {
   const canvas = within(canvasElement);
   const body = within(canvasElement.ownerDocument.body);
   await userEvent.click(await canvas.findByText('Create revision', undefined, { timeout: 15_000 }));
@@ -108,6 +126,7 @@ const createRevisionViaUi = async (canvasElement: HTMLElement, name: string) => 
   if (name) {
     await userEvent.type(input, name);
   }
+
   await userEvent.click(body.getByText('Create'));
   if (name) {
     // The new revision appears in the timeline.
@@ -122,6 +141,19 @@ const createBranchViaUi = async (canvasElement: HTMLElement, name: string) => {
   const input = await body.findByPlaceholderText('Branch name…');
   await userEvent.type(input, name);
   await userEvent.click(body.getByText('Create'));
+};
+
+/** Click a timeline node (checkpoint, fork, branch tip, or `Now`) by its label. */
+const selectTimelineNode = async (canvasElement: HTMLElement, label: string) => {
+  const canvas = within(canvasElement);
+  await userEvent.click(await canvas.findByText(label, undefined, { timeout: 15_000 }));
+};
+
+/** Merge the active branch via the version banner ('Merge' also labels a panel icon button). */
+const mergeViaBanner = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  const banner = canvas.getByRole('status');
+  await userEvent.click(within(banner).getByText('Merge'));
 };
 
 const meta = {
@@ -173,42 +205,85 @@ export const Default: Story = {
  */
 export const TimeTravel: Story = {
   args: {
-    content: 'one',
+    content: concat('1'),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Wait for the editor to render the initial content.
-    await waitFor(() => expect(editorContent(canvasElement)).toContain('one'), { timeout: 20_000 });
-
-    // Revision 1.
+    // Wait for initial content then create revision 1.
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('1'), { timeout: 20_000 });
     await createRevisionViaUi(canvasElement, 'v1');
 
-    // Edit + revision 2 (the live editor reflects the data-layer edit).
-    setRootContent('one two');
-    await waitFor(() => expect(editorContent(canvasElement)).toContain('one two'));
+    // Edit + revision 2.
+    setRootContent('1 2');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('1 2'));
     await createRevisionViaUi(canvasElement, 'v2');
 
-    // Further edits leave the tip ahead of both checkpoints.
-    setRootContent('one two three');
-    await waitFor(() => expect(editorContent(canvasElement)).toContain('one two three'));
+    // Edit + revision 3.
+    setRootContent('1 2 3');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('1 2 3'));
+    await createRevisionViaUi(canvasElement, 'v3');
 
-    // An unnamed revision displays as its formatted creation date.
-    await createRevisionViaUi(canvasElement, '');
-    await canvas.findByText(new RegExp(new Date().toLocaleDateString()));
-
-    // Travel back to v1: read-only banner + historical content.
+    // Travel back to v1 (readonly).
+    // TODO(burdon): Check readonly.
     await userEvent.click(canvas.getByText('v1'));
     await canvas.findByText('Viewing checkpoint');
-    await waitFor(() => expect(editorContent(canvasElement)).toBe('one'));
+    await waitFor(() => expect(editorContent(canvasElement)).toBe('1'));
 
-    // Forward to v2.
+    // Forward to v2 (readonly).
     await userEvent.click(canvas.getByText('v2'));
-    await waitFor(() => expect(editorContent(canvasElement)).toBe('one two'));
+    await waitFor(() => expect(editorContent(canvasElement)).toBe('1 2'));
 
-    // Back to the present: banner gone, tip content restored.
+    // Forward to v3 (readonly).
+    await userEvent.click(canvas.getByText('v3'));
+    await waitFor(() => expect(editorContent(canvasElement)).toBe('1 2 3'));
+
+    // Back to the present: banner gone, tip content restored (editable).
     await userEvent.click(canvas.getByText('Now'));
-    await waitFor(() => expect(editorContent(canvasElement)).toContain('one two three'));
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('1 2 3'));
+    await waitFor(() => expect(canvas.queryByText('Viewing checkpoint')).toBeNull());
+  },
+};
+
+/**
+ * Case 2 (navigation): revisions ON a branch, then time-travel among them and back to the branch
+ * TIP. Reproduces the reported bug: after creating a revision on a branch you must be able to (a)
+ * select that revision (it renders the branch's historical content, not empty), and (b) return to
+ * the editable branch tip — the timeline's per-branch `Tip` node, not main's `Now`.
+ */
+export const BranchRevisions: Story = {
+  args: {
+    content: 'alpha\nbravo\n',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
+
+    // Fork a branch through the panel; the editor switches to it.
+    await createBranchViaUi(canvasElement, 'draft');
+    await canvas.findByText('Editing branch');
+
+    // Two edit→revision cycles ON the branch (each checkpoints the branch's heads, laned on the branch).
+    await setBranchContent('draft', 'alpha\nbravo\ncharlie\n');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
+    await createRevisionViaUi(canvasElement, 'draft-r1');
+
+    await setBranchContent('draft', 'alpha\nbravo\ncharlie\ndelta\n');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('delta'));
+    await createRevisionViaUi(canvasElement, 'draft-r2');
+
+    // Select the FIRST branch revision: the editor shows that historical branch content (read-only),
+    // not empty and not the parent — the binding must resolve before the editor mounts.
+    await selectTimelineNode(canvasElement, 'draft-r1');
+    await canvas.findByText('Viewing checkpoint');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
+    await waitFor(() => expect(editorContent(canvasElement)).not.toContain('delta'));
+
+    // Return to the branch TIP via the per-branch tip node: editable again, latest branch content.
+    await selectTimelineNode(canvasElement, 'Tip');
+    await canvas.findByText('Editing branch');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('delta'));
     await waitFor(() => expect(canvas.queryByText('Viewing checkpoint')).toBeNull());
   },
 };
@@ -262,10 +337,9 @@ export const BranchMerge: Story = {
     setRootContent('alpha edited\nbravo\n');
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('alpha edited'));
 
-    // Merge via the banner ('Merge' also labels the panel row's icon button, so scope the query);
-    // the concurrent parent edit AND every branch edit land on main, and the editor returns to it.
-    const banner = canvas.getByRole('status');
-    await userEvent.click(within(banner).getByText('Merge'));
+    // Merge via the banner; the concurrent parent edit AND every branch edit land on main, and the
+    // editor returns to it.
+    await mergeViaBanner(canvasElement);
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha edited'), { timeout: 10_000 });
     await waitFor(() =>
       ['charlie', 'delta', 'epsilon'].forEach((line) => expect(editorContent(canvasElement)).toContain(line)),
@@ -278,9 +352,84 @@ export const BranchMerge: Story = {
 };
 
 /**
- * Conflict-marker blocks in the document render with inline resolution buttons (and merge markers
- * must not be styled as blockquotes). Core branches CRDT-merge without conflicts, so markers now
- * arise only from external/imported content (or legacy content-copy merges) — seeded directly here.
+ * Case 3: a CHAIN of branches and merges. Fork a branch off main and merge it; then fork a second
+ * branch off the (now-updated) main and merge that too. Each merge folds its branch into main and
+ * leaves a `merge:` node, so main accumulates every branch's edits and the timeline records both
+ * merges. (True nested branch-of-branch — a branch forked off another branch's tip — is a follow-up;
+ * the core branch registry is flat, keyed by the root object. See DESIGN.md.)
+ */
+export const ChainedBranches: Story = {
+  args: {
+    content: 'a\n',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('a'), { timeout: 20_000 });
+
+    // First branch: add a line, merge back to main.
+    await createBranchViaUi(canvasElement, 'first');
+    await canvas.findByText('Editing branch');
+    await setBranchContent('first', 'a\nb\n');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('b'));
+    await mergeViaBanner(canvasElement);
+    await waitFor(() => expect(canvas.queryByText('Editing branch')).toBeNull());
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('b'), { timeout: 10_000 });
+    await canvas.findByText('merge: first');
+
+    // Second branch forks off the updated main (which now contains the first merge) and merges too.
+    await createBranchViaUi(canvasElement, 'second');
+    await canvas.findByText('Editing branch');
+    await setBranchContent('second', 'a\nb\nc\n');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('c'));
+    await mergeViaBanner(canvasElement);
+    await waitFor(() => expect(canvas.queryByText('Editing branch')).toBeNull());
+
+    // Main accumulates both branches' edits; both merges are recorded in the timeline.
+    await waitFor(() => ['a', 'b', 'c'].forEach((line) => expect(editorContent(canvasElement)).toContain(line)));
+    await canvas.findByText('merge: first');
+    await canvas.findByText('merge: second');
+  },
+};
+
+/**
+ * Case 4 (auto-resolve): concurrent edits to the SAME line on a branch and its parent. Core branches
+ * share fork ancestry, so `A.merge` interleaves both sides at character level — both survive with NO
+ * conflict markers. This is the default (conflict-free) merge behaviour; the marker path below is
+ * only for legacy/external content.
+ */
+export const ConflictAutoResolve: Story = {
+  args: {
+    content: 'alpha\nbravo\n',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
+
+    await createBranchViaUi(canvasElement, 'draft');
+    await canvas.findByText('Editing branch');
+
+    // Branch edits the first line; parent edits the SAME line concurrently (isolated from the view).
+    await setBranchContent('draft', 'alpha theirs\nbravo\n');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('theirs'));
+    setRootContent('alpha ours\nbravo\n');
+
+    // Merge: both edits interleave via the CRDT — no markers, both words present.
+    await mergeViaBanner(canvasElement);
+    await waitFor(() => expect(canvas.queryByText('Editing branch')).toBeNull());
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('ours'), { timeout: 10_000 });
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('theirs'));
+    await waitFor(() => expect(editorContent(canvasElement)).not.toContain('<<<<<<<'));
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('bravo'));
+  },
+};
+
+/**
+ * Case 4 (markers): the inline conflict-marker resolution UI. Core branches CRDT-merge without
+ * conflicts (see ConflictAutoResolve), so git-style markers arise only from legacy content-copy
+ * merges or externally-imported content — seeded directly here. Marker blocks render with inline
+ * resolution buttons (and must not be styled as blockquotes).
  */
 export const ConflictResolution: Story = {
   args: {

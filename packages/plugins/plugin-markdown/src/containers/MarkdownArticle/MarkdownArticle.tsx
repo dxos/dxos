@@ -12,6 +12,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
+import { type SpaceCapabilities } from '@dxos/plugin-space';
 import { useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
@@ -83,8 +84,11 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // comments) scope to the branch in view.
     const reviewBranch = activeBranch && Branch.isCore(activeBranch) ? activeBranch.key : undefined;
     // While a core-branch binding is resolving, the editor must not mount against the root object
-    // — edits would silently land on main. Render an empty panel until the binding is ready.
-    const branchLoading = !!activeBranch && !branchText;
+    // — edits would silently land on main. Render an empty panel until the binding is ready. The
+    // same applies to a branch CHECKPOINT: its content is read from the branch-bound Text, which
+    // resolves asynchronously; mounting before it is ready would seed the editor with empty text and
+    // never recover (the editor key does not change when the binding later resolves).
+    const branchLoading = (!!activeBranch && !branchText) || (!!activeVersion?.branch && !checkpointText);
     // A checkpoint is shown read-only from a DETACHED content snapshot, not the live (pinned) object:
     // binding CodeMirror's automerge sync to a time-travelled doc mismatches (CM holds the tip text
     // while the pinned doc reads the shorter historical text → out-of-range splice). The pin still
@@ -99,14 +103,27 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       activeVersion ? `checkpoint-${activeVersion.id}` : activeBranch ? `branch-${activeBranch.id}` : 'current'
     }${compareActive ? `--compare-${diffViewMode}` : ''}`;
 
+    // Leaving a checkpoint view returns to the tip it belongs to: the branch the checkpoint was
+    // taken on (so the reviewer lands back on the editable branch tip), else main's present.
+    const branchOfActiveVersion = useCallback(() => {
+      const branchKey = activeVersion?.branch;
+      return branchKey
+        ? document?.history?.branches.find((branch) => branch.key === branchKey && branch.status === 'active')
+        : undefined;
+    }, [document, activeVersion]);
+    const tipSelection = useCallback((): SpaceCapabilities.VersionSelection => {
+      const branch = branchOfActiveVersion();
+      return branch ? { kind: 'branch', branchId: branch.id } : { kind: 'current' };
+    }, [branchOfActiveVersion]);
+
     const handleRestore = useCallback(() => {
       if (document && activeVersion) {
         // A branch checkpoint restores onto the branch document (checkpointText is the branch-bound
         // Text); a base checkpoint onto the root.
         Version.restore(document, activeVersion, checkpointText);
-        setSelection({ kind: 'current' });
+        setSelection(tipSelection());
       }
-    }, [document, activeVersion, checkpointText, setSelection]);
+    }, [document, activeVersion, checkpointText, setSelection, tipSelection]);
 
     const handleBranchFrom = useCallback(
       (name: string) => {
@@ -135,9 +152,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const handleCompare = useCallback(() => setCompare(!versioning.compare), [setCompare, versioning.compare]);
 
     const handleCloseBanner = useCallback(() => {
-      setSelection({ kind: 'current' });
+      // Closing a branch-checkpoint banner returns to the branch tip, not main.
+      setSelection(tipSelection());
       setCompare(false);
-    }, [setSelection, setCompare]);
+    }, [setSelection, setCompare, tipSelection]);
 
     // Extensions from other plugins.
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);

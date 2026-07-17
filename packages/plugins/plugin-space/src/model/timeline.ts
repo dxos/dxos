@@ -10,6 +10,10 @@ import { type SpaceCapabilities } from '#types';
 
 export const MAIN_BRANCH = 'main';
 export const NOW_COMMIT_ID = 'now';
+/** Prefix of the synthetic per-branch tip node (the editable present of a branch lane). */
+export const BRANCH_TIP_PREFIX = 'branch-tip-';
+/** Prefix of a branch fork node (the point a branch diverged from its parent). */
+export const BRANCH_PREFIX = 'branch-';
 
 export type TimelineModel = {
   /** Oldest-first, topologically ordered (parents precede children) — the Timeline contract. */
@@ -26,7 +30,7 @@ export type TimelineModel = {
 export const createTimelineModel = (
   object: History.VersionedObject,
   rootText: Text.Text | undefined,
-  options?: { nowLabel?: string },
+  options?: { nowLabel?: string; branchTipLabel?: string },
 ): TimelineModel => {
   const history = object.history;
   if (!history || !rootText) {
@@ -82,7 +86,7 @@ export const createTimelineModel = (
     const stats = branchStats(branch);
     const label = Branch.label(branch);
     push({
-      id: `branch-${branch.id}`,
+      id: `${BRANCH_PREFIX}${branch.id}`,
       branch: label,
       message: stats ? `${label} (+${stats.insertions} −${stats.deletions})` : label,
       timestamp: new Date(branch.createdAt),
@@ -145,6 +149,27 @@ export const createTimelineModel = (
   // latest commit on the parent lane.
   branches.forEach(emitBranch);
 
+  // Synthetic tip per active branch lane: the editable present of that branch. Without it the last
+  // node on a branch lane is its latest checkpoint (a read-only pin), leaving no obvious way back to
+  // the live, editable branch tip — the reviewer would have to click the fork node far upstream.
+  for (const branch of branches) {
+    if (branch.status !== 'active') {
+      continue;
+    }
+    const label = Branch.label(branch);
+    const parent = lastOnBranch.get(label);
+    if (!parent) {
+      continue;
+    }
+    push({
+      id: `${BRANCH_TIP_PREFIX}${branch.id}`,
+      branch: label,
+      message: options?.branchTipLabel ?? options?.nowLabel ?? 'Now',
+      icon: 'ph--record--regular',
+      parents: [parent],
+    });
+  }
+
   // Synthetic tip: the editable present of main.
   push({
     id: NOW_COMMIT_ID,
@@ -168,8 +193,14 @@ export const commitToSelection = (
   if (commit.id === NOW_COMMIT_ID) {
     return { kind: 'current' };
   }
-  if (commit.id.startsWith('branch-')) {
-    const branchId = commit.id.slice('branch-'.length);
+  // The tip prefix subsumes the fork prefix, so match it first.
+  if (commit.id.startsWith(BRANCH_TIP_PREFIX)) {
+    const branchId = commit.id.slice(BRANCH_TIP_PREFIX.length);
+    const branch = object.history?.branches.find((branch) => branch.id === branchId);
+    return branch?.status === 'active' ? { kind: 'branch', branchId } : { kind: 'current' };
+  }
+  if (commit.id.startsWith(BRANCH_PREFIX)) {
+    const branchId = commit.id.slice(BRANCH_PREFIX.length);
     const branch = object.history?.branches.find((branch) => branch.id === branchId);
     // Merged/archived branch Texts are no longer editable targets; fall back to the present.
     return branch?.status === 'active' ? { kind: 'branch', branchId } : { kind: 'current' };

@@ -10,7 +10,13 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Text as EchoText, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { MAIN_BRANCH, NOW_COMMIT_ID, commitToSelection, createTimelineModel } from '@dxos/plugin-space';
+import {
+  BRANCH_TIP_PREFIX,
+  MAIN_BRANCH,
+  NOW_COMMIT_ID,
+  commitToSelection,
+  createTimelineModel,
+} from '@dxos/plugin-space';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { Branch, Version } from '@dxos/versioning';
@@ -112,6 +118,42 @@ describe('timeline model', () => {
         // Core branches carry no synchronous diff stats (needs a binding; stage-3 timeline work).
         expect(branchCommit.message).toContain('draft');
         expect(commitToSelection(doc, branchCommit)).toEqual({ kind: 'branch', branchId: branch.id });
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'an active branch has a tip node at the end of its lane that selects the branch',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({ name: 'Doc', content: 'alpha\n' });
+        yield* Database.add(doc);
+        const root = yield* Database.load(doc.content);
+
+        const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'draft', parent: root }));
+        const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
+        Obj.update(binding.object, () => {
+          EchoText.update(binding.object, 'content', 'alpha\nbravo\n');
+        });
+        const branchCheckpoint = Version.create(doc, { name: 'draft-r1', target: binding.object, branch: branch.key });
+        binding.dispose();
+
+        const { commits } = createTimelineModel(doc, root);
+        const tipId = `${BRANCH_TIP_PREFIX}${branch.id}`;
+        const tip = commits.find((commit) => commit.id === tipId);
+        invariant(tip);
+        // The tip lanes on the branch and selecting it returns to the (editable) branch.
+        expect(tip.branch).toBe(Branch.label(branch));
+        expect(commitToSelection(doc, tip)).toEqual({ kind: 'branch', branchId: branch.id });
+        // It sits after the last branch checkpoint on the lane (parents precede children).
+        const index = (id: string) => commits.findIndex((commit) => commit.id === id);
+        expect(index(tipId)).toBeGreaterThan(index(branchCheckpoint.id));
+        expect(tip.parents).toContain(branchCheckpoint.id);
+        // Main's synthetic Now remains the final commit.
+        expect(commits[commits.length - 1].id).toBe(NOW_COMMIT_ID);
       },
       WithProperties,
       Effect.provide(TestLayer),

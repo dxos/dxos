@@ -11,7 +11,7 @@ the git-graph UI in `@dxos/plugin-space` / `@dxos/plugin-markdown`.
   shares change ancestry with the original, so it merges back as a true CRDT 3-way merge. Selection
   of which branch a surface views is device-local; the branch documents themselves replicate.
 
-## Mechanism at a glance
+## Overview
 
 How the pieces fit, end to end:
 

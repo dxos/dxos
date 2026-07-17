@@ -84,7 +84,8 @@ history: Schema.optional(Schema.Struct({
 
 - `Document.content` remains the canonical root ("main").
 - The branch **tree** is formed by `Branch.parent` references; branch-of-branch works
-  without extra machinery.
+  without extra machinery. (Superseded by the ECHO-core model below, whose flat registry does
+  **not** yet support true nested branch-of-branch — see the "landed" section's Remaining.)
 - Branch Texts are children of the Document (`Obj.setParent`) so they load and delete
   with it.
 - **Selection is local state.** Which branch/checkpoint a user is viewing is per-user UI
@@ -175,7 +176,10 @@ has landed. The content-copy fork described above is superseded; the current mod
 - **Checkpoints** view via `setTimeTravel` pinning (not snapshot-swap); a checkpoint taken on a
   branch carries `Version.branch` (its heads live in the branch doc) and resolves against it.
 - **Generic history companion.** The git-graph companion lives in plugin-space, gated per-type by
-  `SpaceCapabilities.HistoryProvider`; markdown contributes the provider.
+  `SpaceCapabilities.HistoryProvider`; markdown contributes the provider. Each lane ends in a
+  synthetic tip node — `Now` on main, `Tip` on each active branch — that reselects the editable
+  present of that lane; selecting a branch checkpoint pins the branch-bound Text and closing the
+  banner returns to the branch tip (not main).
 - **Review workflow.** Branch-aware comments (`AnchoredTo.branch`, scoped to the review branch) +
   per-hunk `AcceptChange` cherry-pick; the editable unified merge overlay backs the sideBySide
   compare. Instant CRDT merge is the default.
@@ -186,7 +190,12 @@ legacy content-copy `Branch` record — `key` unset, `content` set — which sta
 
 Remaining: generalize record refs over `Ref(Obj.Any)` so non-Text objects (sketches, sheets) can be
 versioned; branch-level access control (draft visible only to its author); alignment with subduction
-fragments (`FragmentMeta.checkpoints`) for history compaction.
+fragments (`FragmentMeta.checkpoints`) for history compaction. **True nested branch-of-branch** (a
+branch forked off another branch's tip, kept live, merged child→parent→main) is not yet supported:
+the core registry (`DatabaseDirectory.branches`) is flat, keyed by the root object id, and forks
+always derive from the root doc, so forking at a sub-branch's frontier hits an unreachable frontier.
+Chained fork→merge→fork→merge sequences work today (`ChainedBranches` story); true nesting needs a
+nested/parent-aware registry key.
 
 ## Risks / notes
 
