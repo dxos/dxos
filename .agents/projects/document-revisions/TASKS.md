@@ -69,6 +69,15 @@ Deferred to stage 3: branch-scoped agent edits (CreateBranch op returns the cano
 DXN; a generic update against it writes main), per-branch timeline diff stats, checkpoints of
 branch state / branch-of-branch, deployed-app BranchStore backend.
 
+Deferred from the CodeRabbit round (stage 3/4):
+
+- `DatabaseRoot.mapLinks` import-time doc-id remapping does not rewrite `branches` registry urls;
+  review index/reindex document enumeration for branch docs.
+- Ref atom families: return `undefined` when the initially resolved target is already deleted
+  (consistency change to the shared `loadRefTarget` contract, both `refFamily` variants).
+- Encode the core/legacy Branch record invariant as a discriminated union once the stage-4
+  migration converts legacy records (runtime guards cover it until then).
+
 ## Next stages
 
 - [ ] Stage 3: companion to plugin-space generic slot (markdown provider first); editable merge
