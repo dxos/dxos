@@ -14,6 +14,9 @@ import { PanelContainer, Searchbar } from '../../../components';
 // import { DataSpaceSelector } from '../../../containers';
 // import { useDevtoolsState } from '../../../hooks';
 
+// TODO(queue-to-feed-migration): retains "Queue" naming — `FeedsPanel` already names the unrelated
+// hypercore feed-pipeline devtools panel (see ../FeedsPanel), so renaming this to `FeedsPanel` would
+// collide; needs a distinct name once this panel is rebuilt against `Feed.Feed`.
 export const QueuesPanel = () => {
   // const { space } = useDevtoolsState();
   const [_queueInput, setQueueInput] = useState('');

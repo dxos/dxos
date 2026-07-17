@@ -14,9 +14,8 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -40,8 +39,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -83,8 +80,8 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

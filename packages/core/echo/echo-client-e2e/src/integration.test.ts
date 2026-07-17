@@ -7,7 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
+import { Entity, Feed, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder, createDataAssertion } from '@dxos/echo-client/testing';
 import { MeshEchoReplicator } from '@dxos/echo-host';
 import {
@@ -445,14 +445,14 @@ describe('Integration tests', () => {
 
       await expect
         .poll(async () => {
-          const state = await db2.getSyncState();
+          const state = await db2.getAutomergeSyncState();
           return state.peers!.length;
         })
         .toBe(1);
 
       await expect
         .poll(async () => {
-          const state = await db2.getSyncState();
+          const state = await db2.getAutomergeSyncState();
           return state.peers![0].differentDocuments + state.peers![0].missingOnRemote + state.peers![0].missingOnLocal;
         })
         .toEqual(0);
@@ -752,6 +752,20 @@ describe('Integration tests', () => {
       expect(deletedObjects[0].name).to.eq('Alice');
       expect(Obj.isDeleted(deletedObjects[0])).to.be.true;
     }
+  });
+
+  test('db.add and db.appendToFeed throw when adding plain objects', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+
+    const plainObj = { name: 'john' };
+    // Cast to any to bypass static type-checking and verify runtime validation.
+    expect(() => db.add(plainObj as any)).toThrow(TypeError);
+
+    const feed = db.add(Feed.make({ name: 'people' }));
+    await db.flush();
+    // Cast to any to bypass static type-checking and verify runtime validation.
+    await expect(db.appendToFeed(feed, [plainObj as any])).rejects.toThrow(TypeError);
   });
 });
 

@@ -4,7 +4,7 @@
 
 import * as Stream from 'effect/Stream';
 
-import { TranscriptEvent } from '../TranscriptEvent';
+import { TranscriptEvent } from '../types';
 
 export type ScriptedBlock = { text: string; started?: string };
 

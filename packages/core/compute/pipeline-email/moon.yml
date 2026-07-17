@@ -1,17 +1,29 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
 tasks:
-  # Checkout the Enron email dataset into ./data for the ROOT_DIR-gated email-pipeline test.
+  # Provision everything the ROOT_DIR-gated tests need: the Enron dataset and the benchmark models.
   setup:
-    command: 'sh scripts/setup.sh'
+    command: 'true'
+    deps:
+      - '~:pull-data'
+      - '~:pull-models'
     options:
       runInCI: false
       cache: false
 
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=neutral'
+  # Checkout the Enron email dataset into ./data.
+  pull-data:
+    command: 'sh scripts/pull-data.sh'
+    options:
+      runInCI: false
+      cache: false
+
+  # Pull the non-reasoning Ollama models used by the extraction benchmark.
+  pull-models:
+    command: 'sh scripts/pull-models.sh'
+    options:
+      runInCI: false
+      cache: false

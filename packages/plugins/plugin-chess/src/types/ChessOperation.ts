@@ -7,10 +7,11 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, DXN } from '@dxos/echo';
-import { GameRef } from '@dxos/plugin-game/types';
+import { Database, DXN, Ref } from '@dxos/echo';
+import { Game } from '@dxos/plugin-game/types';
 
 import * as Chess from './Chess';
+import * as PlayerReview from './PlayerReview';
 
 export const Move = Operation.make({
   meta: {
@@ -20,7 +21,7 @@ export const Move = Operation.make({
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
-    game: GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotations({
       description: 'The ID of the game object (variant must be Chess).',
     }),
     move: Schema.String.annotations({
@@ -44,7 +45,7 @@ export const Play = Operation.make({
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
-    game: GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotations({
       description: 'The ID of the game object (variant must be Chess).',
     }),
     side: Schema.optional(Schema.Literal('white', 'black', 'any')).annotations({
@@ -86,3 +87,23 @@ export const Print = Operation.make({
     ascii: Schema.String,
   }),
 });
+
+/** Rebuilds a player review position index from all chess games in the space. */
+export const RebuildPositionIndex = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.plugin.chess.operation.rebuildPositionIndex'),
+    name: 'Rebuild Position Index',
+    description: 'Scans chess games and updates the player review position index.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    review: Ref.Ref(PlayerReview.Review).annotations({
+      description: 'Player review whose position index should be rebuilt.',
+    }),
+  }),
+  output: Schema.Struct({
+    gamesScanned: Schema.Number,
+    positionsUpdated: Schema.Number,
+  }),
+}).pipe(Operation.visible);

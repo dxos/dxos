@@ -7,13 +7,21 @@ import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } 
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import {
+  Menu,
+  MenuBuilder,
+  TOOLBAR_DISPOSITION,
+  graphActions,
+  isToolbarAction,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
@@ -22,7 +30,7 @@ import { meta } from '#meta';
 import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
 
 import { getCalendarEventPath, getCalendarRangeSelectionId } from '../../paths';
-import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
+import { InitializeCalendar } from './InitializeCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -43,7 +51,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const [selectedDate, setSelectedDate] = useState<Date>();
   const calendarRef = useRef<CalendarController>(null);
   const eventStackRef = useRef<MosaicScrollController>(null);
-  // Syncing drafts to Google Calendar requires a connection bound to this calendar.
+  // Pushing draft events to Google Calendar requires a connection bound to this calendar.
   const { connection } = useTargetConnection(subject);
 
   const feed = calendar.feed?.target;
@@ -175,28 +183,37 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     void invokePromise(InboxOperation.SyncDraftEvents, { calendar }, { spaceId: db?.spaceId });
   }, [invokePromise, calendar, db]);
 
-  const menuActions = useMenuBuilder(() => {
-    let builder = MenuBuilder.make()
-      .root({ label: ['calendar-toolbar.menu', { ns: meta.profile.key }] })
-      .action(
-        'create-event',
-        { label: ['calendar-toolbar-create-event.menu', { ns: meta.profile.key }], icon: 'ph--pen--regular' },
-        handleCreate,
-      );
-    if (draftEvents.length > 0) {
-      builder = builder.action(
-        'sync-draft',
-        {
-          label: ['calendar-toolbar-sync.menu', { ns: meta.profile.key }],
-          icon: 'ph--cloud-arrow-up--regular',
-          // Pushing drafts to Google Calendar requires a connection bound to this calendar.
-          disabled: !connection,
-        },
-        handleSyncDraft,
-      );
-    }
-    return builder.build();
-  }, [handleCreate, handleSyncDraft, draftEvents.length, connection]);
+  const { graph } = useAppGraph();
+  const runAction = useActionRunner();
+  const menuActions = useMenuBuilder(
+    (get) => {
+      // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.
+      const builder = MenuBuilder.make()
+        .root({ label: ['calendar-toolbar.menu', { ns: meta.profile.key }] })
+        .action(
+          'create-event',
+          { label: ['calendar-toolbar-create-event.menu', { ns: meta.profile.key }], icon: 'ph--pen--regular' },
+          handleCreate,
+        );
+      if (draftEvents.length > 0) {
+        builder.action(
+          'sync-draft',
+          {
+            label: ['calendar-toolbar-sync.menu', { ns: meta.profile.key }],
+            icon: 'ph--cloud-arrow-up--regular',
+            // Pushing drafts to Google Calendar requires a connection bound to this calendar.
+            disabled: !connection,
+          },
+          handleSyncDraft,
+        );
+      }
+      return builder
+        .separator('gap')
+        .subgraph(graphActions(graph, get, id, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
+        .build();
+    },
+    [graph, id, handleCreate, handleSyncDraft, draftEvents.length, connection],
+  );
 
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 
@@ -214,12 +231,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           </NaturalCalendar.Root>
         </Panel.Root>
         <Panel.Root>
-          <Menu.Root {...menuActions} attendableId={id}>
+          <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
             <Panel.Toolbar asChild>
-              <Menu.Toolbar>
-                <Toolbar.Separator />
-                <InitializeCalendarAction calendar={subject} />
-              </Menu.Toolbar>
+              <Menu.Toolbar />
             </Panel.Toolbar>
           </Menu.Root>
           <Panel.Content asChild>
@@ -241,3 +255,5 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     </div>
   );
 };
+
+CalendarArticle.displayName = 'CalendarArticle';

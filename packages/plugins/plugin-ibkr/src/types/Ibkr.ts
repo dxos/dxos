@@ -9,9 +9,10 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
 
 import { EdgarAdditionalFactsAnnotation, EdgarAsOfConceptsAnnotation, EdgarFieldAnnotation } from '../annotations';
-import { IBKR_FEED_KIND } from '../constants';
+import { IBKR_CONNECTOR_ID, IBKR_FEED_KIND } from '../constants';
 
 /** An open position parsed from a Flex report. */
 export const Position = Schema.Struct({
@@ -44,15 +45,9 @@ export const Trade = Schema.Struct({
 });
 export type Trade = Schema.Schema.Type<typeof Trade>;
 
-/**
- * A single tax lot (one acquisition). An OPEN lot — still held, parsed from a `levelOfDetail="LOT"`
- * Open Positions row — has no `sold` date and carries the current `markPrice`/`value` and
- * `unrealizedPnl`. A CLOSED lot — a realized disposal, parsed from a `<Lot>` row in the Trades
- * section — has a `sold` date plus `proceeds` and `realizedPnl`; it is the capital-gains data for
- * tax reporting, with long-vs-short term derived from the holding period. The presence of `sold`
- * discriminates the two.
- */
-export const Lot = Schema.Struct({
+/** Shared lot fields parsed from Flex XML before materializing a persisted {@link Lot}. */
+// TODO(dmaretskyi): Re-use the Lot type instead of duplicating. Make `Ttpe.fields` typesafe and add `type.propertiesSchema`.
+export const LotSnapshot = Schema.Struct({
   symbol: Schema.String,
   quantity: Schema.Number,
   /** Acquisition date (IBKR `openDateTime`). */
@@ -73,7 +68,7 @@ export const Lot = Schema.Struct({
   realizedPnl: Schema.optional(Schema.Number),
   currency: Schema.optional(Schema.String),
 });
-export type Lot = Schema.Schema.Type<typeof Lot>;
+export type LotSnapshot = Schema.Schema.Type<typeof LotSnapshot>;
 
 export const AssetClass = Schema.Literal('stock', 'etf', 'mutual_fund', 'adr', 'reit', 'warrant', 'other');
 export type AssetClass = Schema.Schema.Type<typeof AssetClass>;
@@ -237,6 +232,9 @@ export const Portfolio = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--chart-line--regular', hue: 'green' }),
+  // Offer "Connect Interactive Brokers" in the portfolio toolbar. IBKR has no external-sync Cursor, so
+  // the connection is detected space-wide by connectorId (bindTarget omitted).
+  ConnectorAuthAnnotation.set({ connectorIds: [IBKR_CONNECTOR_ID] }),
   Type.makeObject(DXN.make('org.dxos.type.ibkr.Portfolio', '0.1.0')),
 );
 
@@ -257,3 +255,30 @@ export const makePortfolio = (props: PortfolioProps = {}): Portfolio => {
   Obj.setParent(feed, portfolio);
   return portfolio;
 };
+
+/**
+ * A persisted tax lot synced from the portfolio's latest Flex report. An OPEN lot — still held —
+ * has no `sold` date and carries the current `markPrice`/`value` and `unrealizedPnl`. A CLOSED lot
+ * — a realized disposal — has a `sold` date plus `proceeds` and `realizedPnl`. The presence of
+ * `sold` discriminates the two.
+ */
+export class Lot extends Type.makeObject<Lot>(DXN.make('org.dxos.type.ibkr.Lot', '0.1.0'))(
+  Schema.Struct({
+    portfolio: Ref.Ref(Portfolio),
+    instrument: Ref.Ref(Instrument),
+    symbol: Schema.String.pipe(Schema.annotations({ title: 'Symbol' })),
+    quantity: Schema.Number.pipe(Schema.annotations({ title: 'Quantity' })),
+    acquired: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Acquired' }))),
+    sold: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Sold' }))),
+    costBasis: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Cost basis' }))),
+    markPrice: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Mark price' }))),
+    value: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Value' }))),
+    proceeds: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Proceeds' }))),
+    unrealizedPnl: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Unrealized P/L' }))),
+    realizedPnl: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Realized P/L' }))),
+    currency: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Currency' }))),
+  }).pipe(
+    LabelAnnotation.set(['symbol', 'quantity']),
+    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
+  ),
+) {}

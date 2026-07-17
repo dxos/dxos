@@ -16,17 +16,22 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/browser/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./manager": {
       "source": "./src/manager.tsx",
       "types": "./dist/types/src/manager.d.ts",
-      "default": "./dist/lib/browser/manager.mjs"
+      "import": "./dist/lib/manager.mjs"
     },
     "./preview": {
       "source": "./src/preview.tsx",
       "types": "./dist/types/src/preview.d.ts",
-      "default": "./dist/lib/browser/preview.mjs"
+      "import": "./dist/lib/preview.mjs"
+    },
+    "./download": {
+      "source": "./src/download.ts",
+      "types": "./dist/types/src/download.d.ts",
+      "import": "./dist/lib/download.mjs"
     }
   },
   "files": [

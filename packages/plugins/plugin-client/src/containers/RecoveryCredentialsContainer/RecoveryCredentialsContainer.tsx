@@ -73,3 +73,5 @@ export const RecoveryCredentialsContainer = () => {
     </Form.Root>
   );
 };
+
+RecoveryCredentialsContainer.displayName = 'RecoveryCredentialsContainer';

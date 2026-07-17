@@ -18,21 +18,18 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs",
-      "types": "./dist/types/src/testing/index.d.ts"
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -115,7 +112,7 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

@@ -2,52 +2,53 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf/stream';
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryService } from '@dxos/protocols/rpc';
 
-export class QueryServiceImpl implements QueryService {
-  private _queryCount = 0;
+export class QueryServiceImpl implements QueryService.Handlers {
+  private '_queryCount' = 0;
 
-  constructor(
+  'constructor'(
     private readonly _executionContext: EdgeFunctionEnv.TraceContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
   ) {}
 
-  execQuery(request: QueryRequest): Stream<QueryResponse> {
-    log.info('execQuery', { request });
+  ['QueryService.execQuery'](request: QueryRequest): EffectStream.Stream<QueryResponse, Error> {
+    log('execQuery', { request });
 
-    return Stream.fromPromise<QueryResponse>(
-      (async () => {
-        try {
+    return EffectStream.fromEffect(
+      Effect.tryPromise({
+        try: async () => {
           this._queryCount++;
-          log.info('begin query', { request });
+          log.verbose('begin query', { request });
           using queryResponse = await this._dataService.execQuery(this._executionContext, request);
-          log.info('query response', { resultCount: queryResponse.results?.length });
+          log.verbose('query response', { resultCount: queryResponse.results?.length });
           return structuredClone(queryResponse);
-        } catch (error) {
+        },
+        catch: (error) => {
           log.error('query failed', { err: error });
-          throw new RuntimeServiceError({
+          return new RuntimeServiceError({
             message: `Query execution failed (queryCount=${this._queryCount})`,
             context: { queryCount: this._queryCount },
             cause: error,
           });
-        }
-      })(),
+        },
+      }),
     );
   }
 
-  async reindex() {
-    throw new NotImplementedError({
-      message: 'Reindex is not implemented.',
-    });
+  ['QueryService.setConfig'](_request: IndexConfig): Effect.Effect<void, Error> {
+    return Effect.fail(new NotImplementedError({ message: 'SetConfig is not implemented.' }));
   }
 
-  async setConfig() {
-    throw new NotImplementedError({
-      message: 'SetConfig is not implemented.',
-    });
+  ['QueryService.reindex'](): Effect.Effect<void, Error> {
+    return Effect.fail(new NotImplementedError({ message: 'Reindex is not implemented.' }));
   }
 }

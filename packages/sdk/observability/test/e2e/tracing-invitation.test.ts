@@ -59,7 +59,7 @@ const createEdgeConfig = () =>
       },
       client: {
         edgeFeatures: {
-          echoReplicator: true,
+          subductionReplicator: true,
           feedReplicator: true,
           signaling: true,
           agents: true,

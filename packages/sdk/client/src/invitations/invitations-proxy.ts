@@ -216,7 +216,12 @@ export class InvitationsProxy implements Invitations {
 
     const observable = new AuthenticatingInvitation({
       initialInvitation: invitation,
-      subscriber: createObservable(this._invitationsService.acceptInvitation({ invitation, deviceProfile })),
+      // Omit `deviceProfile` when absent (space invitations): an explicit `undefined` would still
+      // drive the optional protobuf codec, which dereferences the missing message and throws,
+      // silently stalling the accept RPC.
+      subscriber: createObservable(
+        this._invitationsService.acceptInvitation(deviceProfile ? { invitation, deviceProfile } : { invitation }),
+      ),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
         invariant(invitationId, 'Invitation missing identifier');

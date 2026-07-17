@@ -7,18 +7,23 @@ import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Scope from 'effect/Scope';
 import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Filter, type Obj, Query, type Type } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { makeInProcessClient } from '@dxos/protocols';
+import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -35,6 +40,7 @@ type OpenDatabaseOptions = {
 
 type PeerOptions = {
   types?: Type.AnyEntity[];
+  registry?: Entity.Unknown[];
   assignQueuePositions?: boolean;
   /** Path to a file-based SQLite database for persistence tests. Uses in-memory SQLite when omitted. */
   storagePath?: string;
@@ -78,11 +84,14 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _types: Type.AnyEntity[];
+  private readonly _registry: Entity.Unknown[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
+  /** Owns the in-process effect-rpc clients bridged from the host handlers. */
+  private _serviceScope?: Scope.CloseableScope;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
@@ -92,10 +101,11 @@ export class EchoTestPeer extends Resource {
     never
   >;
 
-  constructor({ types, assignQueuePositions, storagePath }: PeerOptions = {}) {
+  constructor({ types, registry, assignQueuePositions, storagePath }: PeerOptions = {}) {
     super();
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
+    this._registry = registry ?? [];
     this._assignQueuePositions = assignQueuePositions;
     this._storagePath = storagePath;
   }
@@ -141,6 +151,7 @@ export class EchoTestPeer extends Resource {
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
     void this._echoClient.graph.registry.add(this._types);
+    void this._echoClient.graph.registry.add(this._registry);
   }
 
   get client() {
@@ -153,13 +164,26 @@ export class EchoTestPeer extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     this._initEcho();
-    this._echoClient.connectToService({
-      dataService: this._echoHost.dataService,
-      queryService: this._echoHost.queryService,
-      queueService: this._echoHost.queuesService,
-    });
+    this._serviceScope = Effect.runSync(Scope.make());
+    await this._connectServices(this._echoClient);
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
+  }
+
+  /**
+   * Bridges the host's effect-rpc Handlers to the effect-rpc client surface in-process (no wire),
+   * and connects the given client. The bridged clients live on {@link _serviceScope}.
+   */
+  private async _connectServices(client: EchoClient): Promise<void> {
+    invariant(this._serviceScope, 'Service scope not initialized');
+    const [dataService, queryService, feedService] = await EffectEx.runPromise(
+      Effect.all([
+        makeInProcessClient(DataService.Rpcs, this._echoHost.dataService),
+        makeInProcessClient(QueryService.Rpcs, this._echoHost.queryService),
+        makeInProcessClient(FeedService.Rpcs, this._echoHost.feedService),
+      ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
+    );
+    client.connectToService({ dataService, queryService, feedService });
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -168,6 +192,10 @@ export class EchoTestPeer extends Resource {
       client.disconnectFromService();
     }
     await this._echoHost.close(ctx);
+    if (this._serviceScope) {
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
+      this._serviceScope = undefined;
+    }
     await this._managedRuntime.dispose();
     // _persistentRuntime is intentionally preserved here so that data survives close()/open() cycles.
     // EchoTestBuilder._close() calls disposeStorage() for final cleanup.
@@ -223,11 +251,7 @@ export class EchoTestPeer extends Resource {
     const client = new EchoClient();
     await client.graph.registry.add(this._types);
     this._clients.add(client);
-    client.connectToService({
-      dataService: this._echoHost.dataService,
-      queryService: this._echoHost.queryService,
-      queueService: this._echoHost.queuesService,
-    });
+    await this._connectServices(client);
     await client.open();
     return client;
   }
@@ -246,26 +270,58 @@ export class EchoTestPeer extends Resource {
 
     this._lastDatabaseSpaceKey = spaceKey;
     this._lastDatabaseRootUrl = root.url;
+    if (this._storagePath) {
+      await this.setStorageMetadata('lastDatabaseSpaceKey', spaceKey.toHex());
+      await this.setStorageMetadata('lastDatabaseRootUrl', root.url);
+    }
+
     return db;
   }
 
   async openDatabase(
     spaceKey: PublicKey,
-    rootUrl: string,
+    rootUrl?: string,
     { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
     // TODO(burdon): Return Promise<EchoDatabase>
   ) {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    await this.host.openSpaceRoot(this._ctx, spaceId, rootUrl as AutomergeUrl);
+    let resolvedRootUrl = rootUrl;
+    if (resolvedRootUrl) {
+      await this.host.updateSpaceRoot(this._ctx, spaceId, resolvedRootUrl as AutomergeUrl);
+    } else {
+      await this.host.openSpaceRoot(this._ctx, spaceId);
+      resolvedRootUrl = this.host.spaces.find((s) => s.spaceId === spaceId)?.rootDocUrl;
+      invariant(resolvedRootUrl, 'Root URL not found on host');
+    }
     const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
-    await db.setSpaceRoot(rootUrl);
+    await db.setSpaceRoot(resolvedRootUrl);
     await db.open();
+
+    this._lastDatabaseSpaceKey = spaceKey;
+    this._lastDatabaseRootUrl = resolvedRootUrl;
+    if (this._storagePath) {
+      await this.setStorageMetadata('lastDatabaseSpaceKey', spaceKey.toHex());
+      await this.setStorageMetadata('lastDatabaseRootUrl', resolvedRootUrl);
+    }
+
     return db;
   }
 
   async openLastDatabase({ client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {}) {
-    return this.openDatabase(this._lastDatabaseSpaceKey!, this._lastDatabaseRootUrl!, {
+    if (this._storagePath && (!this._lastDatabaseSpaceKey || !this._lastDatabaseRootUrl)) {
+      const storedKeyHex = await this.getStorageMetadata('lastDatabaseSpaceKey');
+      const storedUrl = await this.getStorageMetadata('lastDatabaseRootUrl');
+      if (storedKeyHex && storedUrl) {
+        this._lastDatabaseSpaceKey = PublicKey.fromHex(storedKeyHex);
+        this._lastDatabaseRootUrl = storedUrl;
+      }
+    }
+    const spaceKey = this._lastDatabaseSpaceKey;
+    const rootUrl = this._lastDatabaseRootUrl;
+    invariant(spaceKey, 'lastDatabaseSpaceKey not set');
+    invariant(rootUrl, 'lastDatabaseRootUrl not set');
+    return this.openDatabase(spaceKey, rootUrl, {
       client,
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
@@ -297,7 +353,9 @@ export const createDataAssertion = ({
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx } as any));
+      seedObjects = range(numObjects).map((idx) =>
+        db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })),
+      );
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {

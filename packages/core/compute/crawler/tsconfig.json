@@ -16,7 +16,10 @@
       "path": "../ai"
     },
     {
-      "path": "../semantic-index"
+      "path": "../pipeline"
+    },
+    {
+      "path": "../pipeline-rdf"
     }
   ]
 }

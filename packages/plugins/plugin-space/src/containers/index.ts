@@ -16,7 +16,6 @@ export const ImportSpaceDialog: ComponentType<any> = lazy(() => import('./Import
 export const InlineSyncStatus: ComponentType<any> = lazy(() => import('./InlineSyncStatus'));
 export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog'));
 export const MembersContainer: ComponentType<any> = lazy(() => import('./MembersContainer'));
-export const MenuFooter: ComponentType<any> = lazy(() => import('./MenuFooter'));
 export const ObjectCardStack: ComponentType<any> = lazy(() => import('./ObjectCardStack'));
 export const RecordArticle: ComponentType<any> = lazy(() => import('./RecordArticle'));
 export const RelatedArticle: ComponentType<any> = lazy(() => import('./RelatedArticle'));
@@ -30,5 +29,5 @@ export const SpaceHomeRecent: ComponentType<any> = lazy(() => import('./SpaceHom
 export const SpaceSettings: ComponentType<any> = lazy(() => import('./SpaceSettings'));
 export const SpaceSettingsContainer: ComponentType<any> = lazy(() => import('./SpaceSettingsContainer'));
 export const SyncStatus: ComponentType<any> = lazy(() => import('./SyncStatus'));
-export const TypeCollectionArticle: ComponentType<any> = lazy(() => import('./TypeCollectionArticle'));
+export const TypeArticle: ComponentType<any> = lazy(() => import('./TypeArticle'));
 export const ViewEditor: ComponentType<any> = lazy(() => import('./ViewEditor'));

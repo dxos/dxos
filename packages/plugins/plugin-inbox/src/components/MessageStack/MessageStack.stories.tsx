@@ -16,7 +16,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -27,30 +27,59 @@ import { Builder, MessagesOptions, initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { MessageStack, MessageStackProps } from './MessageStack';
+import { MessageStack, type MessageStackItem, MessageStackProps } from './MessageStack';
 
-const DefaultStory = ({
-  count = 0,
-  options,
-  ...props
-}: MessageStackProps & { count?: number; options?: MessagesOptions }) => {
-  const [messages] = useState(() =>
-    count ? new Builder().createMessages(count, options).build().messages : undefined,
-  );
+type DefaultStoryProps = MessageStackProps & {
+  count?: number;
+  options?: MessagesOptions;
+  /** Group the generated messages by thread id, mirroring the mailbox's conversation query. */
+  groupByThread?: boolean;
+};
 
-  return <MessageStack {...props} messages={messages} />;
+const DefaultStory = ({ count = 0, options, groupByThread, ...props }: DefaultStoryProps) => {
+  const [items] = useState<MessageStackItem[] | undefined>(() => {
+    if (!count) {
+      return undefined;
+    }
+    const { messages } = new Builder().createMessages(count, options).build();
+    if (!groupByThread) {
+      return messages;
+    }
+    const groups = new Map<string, Message.Message[]>();
+    for (const message of messages) {
+      const key = message.threadId ?? message.id;
+      const group = groups.get(key);
+      if (group) {
+        group.push(message);
+      } else {
+        groups.set(key, [message]);
+      }
+    }
+    // Mirror the mailbox: each conversation card previews at most `THREAD_PREVIEW_COUNT` messages
+    // and carries the full thread size as `total` so the card can render a "+N more" affordance.
+    const THREAD_PREVIEW_COUNT = 4;
+    return Array.from(groups, ([id, groupMessages]) => {
+      const sorted = groupMessages.sort((a, b) => b.created.localeCompare(a.created));
+      return {
+        id,
+        messages: sorted.slice(0, THREAD_PREVIEW_COUNT),
+        total: sorted.length,
+      };
+    });
+  });
+
+  return <MessageStack {...props} items={items} />;
 };
 
 const CompanionStory = () => {
   const [space] = useSpaces();
-  const db = useDatabase(space?.id);
-  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
+  const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
 
   // Selected message.
   const selected = useSelection(feed ? Obj.getURI(feed) : undefined, 'single');
   const message = useQuery(
-    db,
+    space?.db,
     feed ? Query.select(selected ? Filter.id(selected) : Filter.nothing()).from(feed) : Query.select(Filter.nothing()),
   )[0];
 
@@ -63,8 +92,8 @@ const CompanionStory = () => {
   // NOTE: Attention required for scrolling.
   const attentionAttrs = useAttentionAttributes(feed ? Obj.getURI(feed) : undefined);
 
-  if (!db || !feed) {
-    return <Loading data={{ db: !!db, feed: !!feed }} />;
+  if (!space?.db || !feed) {
+    return <Loading data={{ db: !!space?.db, feed: !!feed }} />;
   }
 
   return (
@@ -77,13 +106,12 @@ const CompanionStory = () => {
 
 const meta = {
   title: 'plugins/plugin-inbox/components/MessageStack',
-  component: MessageStack,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof MessageStack>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -105,7 +133,7 @@ export const WithMessages: Story = {
 export const WithConversations: Story = {
   args: {
     id: 'story',
-    conversations: true,
+    groupByThread: true,
     count: 100,
     options: {
       threads: 10,

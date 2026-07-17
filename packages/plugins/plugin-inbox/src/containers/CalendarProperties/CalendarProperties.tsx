@@ -22,11 +22,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
 
-  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
-    db,
-    subject,
-    functionKey: 'org.dxos.function.inbox.google-calendar-sync',
-  });
+  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject });
 
   const handleViewTrigger = useCallback(() => {
     if (!db) {
@@ -66,3 +62,5 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
     </Form.Section>
   );
 };
+
+CalendarProperties.displayName = 'CalendarProperties';

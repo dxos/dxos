@@ -29,7 +29,7 @@ const createEdgeConfig = () =>
       },
       client: {
         edgeFeatures: {
-          echoReplicator: true,
+          subductionReplicator: true,
           feedReplicator: true,
           signaling: true,
           agents: true,
@@ -181,13 +181,13 @@ const waitForSync = async (db: Database.Database, timeout = 60_000) => {
 
       interval = setInterval(async () => {
         try {
-          handleSyncState(await db.getSyncState());
+          handleSyncState(await db.getAutomergeSyncState());
         } catch (error) {
           console.error(error);
         }
       }, 500);
 
-      db.getSyncState()
+      db.getAutomergeSyncState()
         .then(handleSyncState)
         .catch((error) => console.error(error));
     });

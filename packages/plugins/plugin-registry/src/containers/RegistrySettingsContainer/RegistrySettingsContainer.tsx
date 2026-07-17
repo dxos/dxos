@@ -57,3 +57,5 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
     />
   );
 };
+
+RegistrySettingsContainer.displayName = 'RegistrySettingsContainer';

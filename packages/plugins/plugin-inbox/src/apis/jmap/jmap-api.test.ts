@@ -18,6 +18,7 @@ const API_URL = 'https://api.fastmail.com/jmap/api/';
 
 const SESSION = {
   apiUrl: API_URL,
+  downloadUrl: 'https://api.fastmail.com/jmap/download/{accountId}/{blobId}/{name}?type={type}',
   username: 'alice@fastmail.com',
   primaryAccounts: {
     'urn:ietf:params:jmap:mail': ACCOUNT_ID,
@@ -129,13 +130,14 @@ describe('JMAP API', () => {
   );
 
   it.effect(
-    'emailGet requests text body values and decodes emails',
+    'emailGet requests html + text body values and decodes emails',
     Effect.fnUntraced(function* ({ expect }) {
       respond = ({ body }) => {
         const [name, args] = body.methodCalls[0];
         expect(name).toBe('Email/get');
         expect(args.ids).toEqual(['e1']);
         expect(args.fetchTextBodyValues).toBe(true);
+        expect(args.fetchHTMLBodyValues).toBe(true);
         return {
           body: {
             methodResponses: [

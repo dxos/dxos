@@ -17,45 +17,45 @@
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/neutral/skills/index.mjs"
+      "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
       "source": "./src/SandboxPlugin.ts",
       "types": "./dist/types/src/SandboxPlugin.d.ts",
-      "default": "./dist/lib/neutral/SandboxPlugin.mjs"
+      "default": "./dist/lib/SandboxPlugin.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -73,6 +73,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -80,9 +81,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/vitest": "catalog:",

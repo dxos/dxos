@@ -19,7 +19,7 @@
     "dx-trace-imports": "cli.js"
   },
   "dependencies": {
-    "madge": "catalog:",
+    "@swc/core": "catalog:",
     "picomatch": "catalog:",
     "yargs": "catalog:"
   },

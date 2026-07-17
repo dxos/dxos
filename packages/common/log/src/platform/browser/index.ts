@@ -8,8 +8,8 @@ import { type LogOptions } from '../../config';
 export const loadOptions = (filepath?: string): LogOptions | undefined => {
   try {
     let dxlog: string | undefined;
-    // if running in a worker, use the localStorage.dxlog setting forwarded on worker initilization in
-    // @dxos/client/src/worker/onconnect.ts
+    // Workers have no `localStorage`; a host may forward the `dxlog` setting by assigning
+    // `globalThis.localStorage_dxlog` before the log module initializes.
     if (typeof localStorage === 'undefined') {
       if ((globalThis as any).localStorage_dxlog) {
         dxlog = (globalThis as any).localStorage_dxlog;

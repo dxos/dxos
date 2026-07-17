@@ -10,8 +10,9 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { Mosaic, type MosaicEventHandler } from '@dxos/react-ui-mosaic';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { arrayMove, isNonNullable } from '@dxos/util';
 
 import { Stack, type StackSectionItem } from '#components';
@@ -46,7 +47,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   // Reorder sections in place. Placeholder/tile drop locations are 1-based with half-step placeholders
   // between tiles, so the floor of the drop location is the destination array index (see Mosaic.Stack).
-  const eventHandler = useMemo<MosaicEventHandler<StackSectionItem>>(
+  const eventHandler = useMemo<DndContainerHandler<StackSectionItem>>(
     () => ({
       id: `${Obj.getURI(collection)}:${instanceId}`,
       canDrop: ({ source }) =>
@@ -227,3 +228,5 @@ const createCollectionObjects = Atom.family((collection: Collection.Collection) 
     return snapshot.objects.map((ref) => get(Obj.atomReactive(ref))).filter(isNonNullable);
   }),
 );
+
+StackArticle.displayName = 'StackArticle';

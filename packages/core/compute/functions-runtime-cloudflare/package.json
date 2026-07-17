@@ -16,8 +16,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -34,6 +33,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

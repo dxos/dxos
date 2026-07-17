@@ -8,12 +8,13 @@ import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type URI } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 
+import type * as Aggregate from './Aggregate';
 import type * as Collection from './Collection';
 import * as Database from './Database';
 import type * as Dataset from './Dataset';
-import * as Feed from './Feed';
+import type * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
@@ -45,12 +46,25 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
       ? Ref.Target<RefArrayElement<P>>
       : never;
 
+/**
+ * Phantom brand on the flat row produced by {@link Query.aggregate}. Present only at the type level
+ * (never at runtime), it lets hooks like `useQuery`/`usePagination` distinguish an aggregate-row
+ * query from an entity query and avoid wrapping the row in `Entity.Entity`. The brand is a required
+ * property so `T extends AggregateResult` discriminates — an optional one would be satisfied by any
+ * type. Consumers never read it.
+ */
+export interface AggregateResult {
+  readonly '~@dxos/echo/Query.AggregateResult': true;
+}
+
+export const QueryTypeId = '~@dxos/echo/Query' as const;
+export type QueryTypeId = typeof QueryTypeId;
+
 // TODO(burdon): Narrow T to Entity.Unknown?
 export interface Query<T> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Query': { value: T };
+  readonly [QueryTypeId]: { value: T };
 
-  'ast': QueryAST.Query;
+  ast: QueryAST.Query;
 
   /**
    * Filter the current selection based on a filter.
@@ -131,10 +145,46 @@ export interface Query<T> {
   /**
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
+   *
+   * `Order.property` orders by the current result shape's fields, so it works both before and after
+   * an {@link aggregate}: before, by member (row) properties; after, by the flat record's fields
+   * (any group or aggregate field — e.g. `Order.property('lastMessageAt')` reorders the groups by
+   * that aggregate).
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
   'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+
+  /**
+   * Aggregate the query results into flat records. {@link Aggregate.group} entries partition the
+   * results into contiguous groups (one record each), keyed by the record field the group is named
+   * after; with no `group` entries the entire input aggregates into a single record. Each declared
+   * aggregate becomes a top-level field and can be ordered by with a following {@link orderBy} using
+   * {@link Order.property}.
+   *
+   * Groups are ordered by the first occurrence of their key in the incoming stream, so a preceding
+   * `orderBy` controls group order too. For example, message threads ordered by their most recent
+   * message, each retaining up to 20 members newest-first:
+   *
+   * ```ts
+   * Query.type(Message)
+   *   .orderBy(Order.property('created', 'desc'))
+   *   .aggregate({
+   *     threadId: Aggregate.group('threadId'),
+   *     lastMessageAt: Aggregate.max('created'),
+   *     items: Aggregate.items({ limit: 20 }),
+   *   })
+   *   .orderBy(Order.property('lastMessageAt', 'desc'));
+   * ```
+   *
+   * Must be the last data-selecting clause in the chain — only `from`/`options`/`orderBy`/`limit`/
+   * `skip` may follow.
+   * @param aggregates - Record of aggregate declarations keyed by result field name.
+   * @returns Query whose flat result records carry the named aggregates as fields.
+   */
+  'aggregate'<const A extends Record<string, Aggregate.Aggregate<T, any>>>(
+    aggregates: A,
+  ): Query<Aggregate.AggregationResult<A>>;
 
   /**
    * Limit the number of results.
@@ -142,6 +192,14 @@ export interface Query<T> {
    * @returns Query for the limited results.
    */
   'limit'(limit: number): Query<T>;
+
+  /**
+   * Skip a number of results (offset). Combined with `orderBy` and `limit`, expresses a windowed
+   * (paginated) read.
+   * @param skip - Number of leading results to skip.
+   * @returns Query for the remaining results.
+   */
+  'skip'(skip: number): Query<T>;
 
   /**
    * Query from selected databases only.
@@ -236,13 +294,13 @@ export type Any = Query<any>;
 export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
 class QueryClass implements Any {
-  private static 'variance': Any['~Query'] = {} as Any['~Query'];
+  private static 'variance': Any[QueryTypeId] = {} as Any[QueryTypeId];
 
-  'constructor'(public readonly ast: QueryAST.Query) {}
+  constructor(public readonly ast: QueryAST.Query) {}
 
-  '~Query' = QueryClass.variance;
+  [QueryTypeId] = QueryClass.variance;
 
-  'select'(filter: Filter.Any | Filter.Props<any>): Any {
+  select(filter: Filter.Any | Filter.Props<any>): Any {
     if (Filter.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -258,7 +316,7 @@ class QueryClass implements Any {
     }
   }
 
-  'reference'(key: string): Any {
+  reference(key: string): Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -266,7 +324,7 @@ class QueryClass implements Any {
     });
   }
 
-  'referencedBy'(target?: Type$.AnyEntity | URI.URI, key?: string): Any {
+  referencedBy(target?: Type$.AnyEntity | URI.URI, key?: string): Any {
     const uri = target !== undefined ? internal.getTypeURIFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
@@ -276,7 +334,7 @@ class QueryClass implements Any {
     });
   }
 
-  'sourceOf'(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
+  sourceOf(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -285,7 +343,7 @@ class QueryClass implements Any {
     });
   }
 
-  'targetOf'(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
+  targetOf(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -294,7 +352,7 @@ class QueryClass implements Any {
     });
   }
 
-  'source'(): Any {
+  source(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -302,7 +360,7 @@ class QueryClass implements Any {
     });
   }
 
-  'target'(): Any {
+  target(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -310,7 +368,7 @@ class QueryClass implements Any {
     });
   }
 
-  'parent'(): Any {
+  parent(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -318,7 +376,7 @@ class QueryClass implements Any {
     });
   }
 
-  'children'(): Any {
+  children(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -326,7 +384,7 @@ class QueryClass implements Any {
     });
   }
 
-  'orderBy'(...order: Order.Order<any>[]): Any {
+  orderBy(...order: Order.Any[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -334,7 +392,15 @@ class QueryClass implements Any {
     });
   }
 
-  'limit'(limit: number): Any {
+  aggregate(aggregates: Record<string, Aggregate.Any>): Any {
+    return new QueryClass({
+      type: 'aggregate',
+      query: this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
+    });
+  }
+
+  limit(limit: number): Any {
     return new QueryClass({
       type: 'limit',
       query: this.ast,
@@ -342,7 +408,15 @@ class QueryClass implements Any {
     });
   }
 
-  'from'(
+  skip(skip: number): Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
+    });
+  }
+
+  from(
     ...args:
       | [
           (
@@ -451,11 +525,13 @@ class QueryClass implements Any {
       if (typename === 'org.dxos.type.collection') {
         throw new Error('Query.from(collection) is not yet supported.');
       }
-      // Validate that the items are Feed.Feed instances.
+      // Validate that the items are feed objects. Checked by typename rather than schema instanceof
+      // to keep this module free of a runtime dependency on the Feed module (avoids an import cycle).
       for (const item of items) {
-        if (!Obj.instanceOf(Feed.Feed, item)) {
+        const itemTypename = Obj.getTypename(item as Obj.Unknown);
+        if (itemTypename !== 'org.dxos.type.feed') {
           throw new TypeError(
-            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${typename ?? 'unknown'}'.`,
+            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${itemTypename ?? 'unknown'}'.`,
           );
         }
       }
@@ -463,10 +539,11 @@ class QueryClass implements Any {
 
     const feedItems = items as Feed.Feed[];
     const feedScopes = feedItems.map((feed) => {
-      const uri = Feed.getQueueUri(feed);
+      // Inlined Feed.getFeedUri to avoid a runtime import cycle with the Feed module.
+      const uri = EID.tryParse(Obj.getURI(feed));
       if (!uri) {
         throw new TypeError(
-          `Query.from() expects persisted Feed objects with a queue URI; got feed without a space (id=${Obj.getURI(feed)}).`,
+          `Query.from() expects persisted Feed objects with a feed URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
       return { _tag: 'feed' as const, feedUri: String(uri) };
@@ -478,7 +555,7 @@ class QueryClass implements Any {
     });
   }
 
-  'options'(options: QueryAST.QueryOptions): Any {
+  options(options: QueryAST.QueryOptions): Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,
@@ -486,7 +563,7 @@ class QueryClass implements Any {
     });
   }
 
-  'debugLabel'(label: string): Any {
+  debugLabel(label: string): Any {
     if (this.ast.type === 'options') {
       return new QueryClass({
         type: 'options',
@@ -503,7 +580,7 @@ class QueryClass implements Any {
 }
 
 export const is = (value: unknown): value is Any => {
-  return typeof value === 'object' && value !== null && '~Query' in value;
+  return typeof value === 'object' && value !== null && QueryTypeId in value;
 };
 
 /** Construct a query from an ast. */

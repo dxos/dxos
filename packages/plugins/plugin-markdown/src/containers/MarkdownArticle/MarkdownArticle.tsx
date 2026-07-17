@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
@@ -12,19 +12,33 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
-import { Editor } from '@dxos/react-ui-editor';
+import { Editor, useEditorContext } from '@dxos/react-ui-editor';
+import {
+  type ToolbarMenuActionGroupProperties,
+  createMenuAction,
+  createMenuItemGroup,
+  graphActions,
+  isToolbarAction,
+} from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
+import { Branch, Version } from '@dxos/versioning';
 
 import {
   MarkdownEditor,
   type MarkdownEditorContentProps,
   MarkdownEditorProvider,
   type MarkdownEditorProviderProps,
+  VersionBanner,
 } from '#components';
-import { useLinkQuery } from '#hooks';
+import { useLinkQuery, useVersioning } from '#hooks';
+import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
+
+import { mergeConflicts, versionDiff } from '../../extensions';
+import { DiffView } from '../DiffView';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
@@ -45,7 +59,60 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
-    const initialValue = docContent ?? textContent;
+
+    // Version selection: swap the editor's subject to the active branch Text, or show a
+    // read-only snapshot when viewing a checkpoint. Selection is per-user session state.
+    const versioning = useVersioning(object);
+    const { document, activeBranch, activeVersion, checkpointContent, branchBaseContent, setSelection, setCompare } =
+      versioning;
+    const diffViewMode = settings.diffView ?? 'inline';
+    const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
+    const branchText = activeBranch?.content.target;
+    const editorObject = activeVersion
+      ? { id: `${id}--${activeVersion.id}`, text: checkpointContent ?? '' }
+      : (branchText ?? object);
+    const initialValue = activeVersion ? checkpointContent : (branchText?.content ?? docContent ?? textContent);
+    const effectiveViewMode = activeVersion ? 'readonly' : viewMode;
+    // Remount the editor when the selection or compare overlay changes so CodeMirror state rebinds cleanly.
+    const editorKey = `${
+      activeVersion ? `checkpoint-${activeVersion.id}` : activeBranch ? `branch-${activeBranch.id}` : 'current'
+    }${compareActive ? `--compare-${diffViewMode}` : ''}`;
+
+    const handleRestore = useCallback(() => {
+      if (document && activeVersion) {
+        Version.restore(document, activeVersion);
+        setSelection({ kind: 'current' });
+      }
+    }, [document, activeVersion, setSelection]);
+
+    const handleBranchFrom = useCallback(
+      (name: string) => {
+        const target = activeVersion?.target.target;
+        if (document && activeVersion && target) {
+          const branch = Branch.create(document, {
+            name: name.trim(),
+            parent: target,
+            heads: activeVersion.heads,
+          });
+          setSelection({ kind: 'branch', branchId: branch.id });
+        }
+      },
+      [document, activeVersion, setSelection],
+    );
+
+    const handleMerge = useCallback(() => {
+      if (document && activeBranch) {
+        Branch.merge(document, activeBranch);
+        setSelection({ kind: 'current' });
+      }
+    }, [document, activeBranch, setSelection]);
+
+    const handleCompare = useCallback(() => setCompare(!versioning.compare), [setCompare, versioning.compare]);
+
+    const handleCloseBanner = useCallback(() => {
+      setSelection({ kind: 'current' });
+      setCompare(false);
+    }, [setSelection, setCompare]);
 
     // Extensions from other plugins.
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
@@ -67,17 +134,62 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         }, []);
     }, [extensionProviders, otherExtensionProviders, object, viewMode]);
 
-    // Toolbar actions from app graph.
+    // Diff overlay (inline/gutter variants render inside the editor; sideBySide replaces it).
+    const combinedExtensions = useMemo<Extension[]>(() => {
+      const list = [...extensions, mergeConflicts()];
+      if (compareActive && branchBaseContent !== undefined && diffViewMode !== 'sideBySide') {
+        list.push(versionDiff({ base: branchBaseContent, variant: diffViewMode }));
+      }
+      return list;
+    }, [extensions, compareActive, branchBaseContent, diffViewMode]);
+
+    // Toolbar actions from app graph, plus the branch switcher dropdown.
     const { graph } = useAppGraph();
     const runAction = useActionRunner();
+    const activeBranches = document?.history?.branches.filter((branch) => branch.status === 'active') ?? [];
+    const branchesKey = activeBranches.map((branch) => `${branch.id}:${branch.name}`).join(',');
     const customActions = useMemo(() => {
       return Atom.make((get) => {
-        const actions = get(graph.actions(attendableId ?? id));
-        const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-        const edges = nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' }));
-        return { nodes, edges };
+        const base = graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction });
+        if (!document || activeBranches.length === 0) {
+          return base;
+        }
+
+        const groupId = 'versions';
+        const group = createMenuItemGroup(groupId, {
+          label: ['versions.title', { ns: meta.profile.key }],
+          icon: 'ph--git-branch--regular',
+          iconOnly: true,
+          variant: 'dropdownMenu',
+          applyActive: false,
+          selectCardinality: 'single',
+        } satisfies ToolbarMenuActionGroupProperties);
+        const actions = [
+          createMenuAction('versions--current', () => setSelection({ kind: 'current' }), {
+            label: ['main-branch.label', { ns: meta.profile.key }],
+            icon: 'ph--git-branch--regular',
+            checked: !activeBranch && !activeVersion,
+          }),
+          ...activeBranches.map((branch) =>
+            createMenuAction(`versions--${branch.id}`, () => setSelection({ kind: 'branch', branchId: branch.id }), {
+              label: Branch.label(branch),
+              icon: 'ph--git-branch--regular',
+              checked: activeBranch?.id === branch.id,
+            }),
+          ),
+        ];
+
+        return {
+          nodes: [...base.nodes, group, ...actions],
+          edges: [
+            ...base.edges,
+            { source: 'root', target: groupId, relation: 'child' as const },
+            ...actions.map((action) => ({ source: groupId, target: action.id, relation: 'child' as const })),
+          ],
+        };
       });
-    }, [graph]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [graph, attendableId, id, document, branchesKey, activeBranch?.id, activeVersion?.id, setSelection]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);
@@ -88,6 +200,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
       return async (file: File) => upload(db, file);
     }, [db, upload]);
+
+    // Local identity for collaboration awareness.
+    const identity = useIdentity();
 
     // Query for @ refs.
     const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
@@ -112,13 +227,15 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     return (
       <MarkdownEditorProvider
+        key={editorKey}
         id={id}
         attendableId={attendableId}
-        object={object}
+        object={editorObject}
         compact={role !== AppSurface.Article.role}
-        extensions={extensions}
+        extensions={combinedExtensions}
         settings={settings}
-        viewMode={viewMode}
+        viewMode={effectiveViewMode}
+        identity={identity}
         onAction={runAction}
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
@@ -127,15 +244,45 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       >
         {(editorRootProps) => (
           <Editor.Root {...editorRootProps}>
+            <RegisterEditorView id={id} attendableId={attendableId} />
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar>
                   <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
                 </Panel.Toolbar>
               )}
+              {activeVersion && (
+                <VersionBanner
+                  mode='checkpoint'
+                  name={Version.label(activeVersion)}
+                  detail={activeVersion.name ? new Date(activeVersion.createdAt).toLocaleString() : undefined}
+                  onRestore={handleRestore}
+                  onBranchFrom={handleBranchFrom}
+                  onClose={handleCloseBanner}
+                />
+              )}
+              {activeBranch && (
+                <VersionBanner
+                  mode='branch'
+                  name={Branch.label(activeBranch)}
+                  detail={new Date(activeBranch.createdAt).toLocaleString()}
+                  onMerge={handleMerge}
+                  onCompare={handleCompare}
+                  onClose={handleCloseBanner}
+                />
+              )}
               <Panel.Content>
-                <MarkdownEditor.Content initialValue={initialValue} />
-                <MarkdownEditor.Blocks />
+                {versioning.compare &&
+                diffViewMode === 'sideBySide' &&
+                branchText &&
+                branchBaseContent !== undefined ? (
+                  <DiffView before={branchBaseContent} after={branchText.content} />
+                ) : (
+                  <>
+                    <MarkdownEditor.Content initialValue={initialValue} />
+                    <Editor.Blocks />
+                  </>
+                )}
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>
@@ -144,3 +291,23 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     );
   },
 );
+
+MarkdownArticle.displayName = 'MarkdownArticle';
+
+/**
+ * Registers the mounted editor view in the shared `EditorViews` registry so operations (e.g.
+ * `ScrollToAnchor` from comments/navigation) can target it by id. Must render inside `Editor.Root`.
+ */
+const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: string }) => {
+  const { controller } = useEditorContext('MarkdownArticle.RegisterEditorView');
+  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
+  const view = controller?.view;
+  useEffect(() => {
+    if (view && editorViews) {
+      editorViews.register(attendableId ?? id, view, id);
+      return () => editorViews.unregister(attendableId ?? id);
+    }
+  }, [view, editorViews, attendableId, id]);
+
+  return null;
+};

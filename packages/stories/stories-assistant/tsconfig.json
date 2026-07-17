@@ -68,10 +68,7 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
@@ -261,6 +258,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../story-modules"
     }
   ]
 }

@@ -34,7 +34,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   // TODO(burdon): Clear input feed also.
   const resetHistory = useSpaceCallback(
     spaceId,
-    [Database.Service] as const,
+    [Database.Service],
     Effect.fnUntraced(function* () {
       yield* Agent.resetChatHistory(agent);
       if (!agent.feed) {
@@ -190,3 +190,5 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
 );
 
 StackTile.displayName = 'StackTile';
+
+AgentArticle.displayName = 'AgentArticle';

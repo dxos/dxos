@@ -19,33 +19,33 @@
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "node": "./dist/lib/neutral/capabilities/node.mjs",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "node": "./dist/lib/capabilities/node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#capabilities/node": {
       "source": "./src/capabilities/node.ts",
       "types": "./dist/types/src/capabilities/node.d.ts",
-      "default": "./dist/lib/neutral/capabilities/node.mjs"
+      "default": "./dist/lib/capabilities/node.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
+      "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/neutral/operations/index.mjs"
+      "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": {
@@ -54,46 +54,46 @@
         "default": "./src/ClientPlugin.ts"
       },
       "types": "./dist/types/src/ClientPlugin.d.ts",
-      "workerd": "./dist/lib/neutral/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/neutral/ClientPlugin.node.mjs",
-      "default": "./dist/lib/neutral/ClientPlugin.mjs"
+      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
+      "node": "./dist/lib/ClientPlugin.node.mjs",
+      "default": "./dist/lib/ClientPlugin.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "default": "./dist/lib/testing.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -111,6 +111,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -119,7 +120,6 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -154,8 +154,8 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",

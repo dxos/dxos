@@ -19,6 +19,7 @@ import { Annotation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { SerializedError } from '@dxos/protocols';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
@@ -491,10 +492,10 @@ export interface Info {
   readonly state: State;
 
   /**
-   * Error of the process.
-   * Only for process in FAILED state.
+   * How the process failed as a serializable {@link SerializedError} (its `context` carries any
+   * structured detail, e.g. a notify override), or `null` unless it is in FAILED state.
    */
-  readonly error: string | null;
+  readonly error: SerializedError | null;
 
   /**
    * UNIX timestamp in milliseconds.
@@ -579,7 +580,7 @@ export const prettyProcessTree = (tree: readonly Info[]): string => {
       parts.push(node.params.name);
     }
     if (node.error != null) {
-      parts.push(`(${node.error})`);
+      parts.push(`(${node.error.message ?? node.error.name ?? 'error'})`);
     }
     const { inputCount, outputCount, wallTime } = node.metrics;
     parts.push(`[in:${inputCount} out:${outputCount} wall:${Math.round(wallTime)}ms]`);

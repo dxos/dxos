@@ -1,0 +1,325 @@
+---
+id: org.dxos.plugin.typefully
+name: TypefullyPlugin
+version: 0.1.0
+---
+
+Implements `plugin-blogger`'s provider-agnostic `Publisher.PublisherService`
+capability against the Typefully v1 REST API (`https://api.typefully.com`),
+authenticating via a `plugin-connector` `Connection` built from a
+user-submitted API key (Typefully has no OAuth flow).
+
+**As-built limitation, stated up front:** the Typefully v1 API supports only
+creating a draft and listing recently-published drafts. It has no
+get-by-id, update, or delete endpoint. `getDraft`, `updateDraft`, and
+`deleteDraft` are implemented to reject unconditionally with
+`Publisher.PublisherError` rather than fabricate an endpoint — see Features
+F-3 through F-5 and the composition impact called out in F-6.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term      | URI                          |
+|-----------|-------------------------------|
+| `type`    | `org.dxos.mdl.type@1.0`      |
+| `feat`    | `org.dxos.mdl.feat@1.0`      |
+| `test`    | `org.dxos.mdl.test@1.0`      |
+| `op`      | `org.dxos.mdl.op@1.0`        |
+| `service` | `org.dxos.mdl.service@1.0`   |
+
+### Existing types used by this plugin
+
+| Type                              | Source                        | Notes                                                                    |
+| ---------------------------------- | ------------------------------ | --------------------------------------------------------------------------- |
+| `Connection`                      | `@dxos/plugin-connector`      | Built by the connector entry; passed to every PublisherService call.    |
+| `AccessToken`                     | `@dxos/types`                 | Holds the raw API key as `.token`; `.source` = "typefully.com".         |
+| `Publisher.PublisherService`      | `@dxos/plugin-blogger/types`  | Interface this plugin implements.                                       |
+| `Publisher.PublisherDraft`        | `@dxos/plugin-blogger/types`  | Provider-neutral draft DTO returned by every method.                    |
+| `Publisher.PublisherDraftInput`   | `@dxos/plugin-blogger/types`  | Input to createDraft / updateDraft.                                     |
+| `Publisher.PublisherError`        | `@dxos/plugin-blogger/types`  | Thrown by every unsupported verb and on request/decode failure.         |
+
+## Types
+
+```mdl
+type TypefullyDraftResponse
+  desc: >
+    Permissive view of a Typefully v1 draft response. The API returns a
+    numeric `id` and carries the body under `content`; some responses echo
+    it as `text`. Both are accepted and normalised to a
+    Publisher.PublisherDraft (id stringified; text = text ?? content ?? "").
+  fields:
+    id: number | string
+    content?: string
+    text?: string
+    title?: string
+    share_url?: string           # maps to PublisherDraft.url
+    scheduled-date?: string      # maps to PublisherDraft.scheduledAt
+```
+
+## Operations
+
+```mdl
+op SubmitTypefullyCredentials
+  desc: >
+    credentialForm.onSubmit for the Typefully ConnectorEntry (id
+    "typefully", source "typefully.com"), contributed on
+    AppActivationEvents.SetupConnectors. Non-OAuth: builds an AccessToken
+    from the trimmed API key and a Connection linking to the connector,
+    returned as { kind: 'complete' }.
+  input:
+    apiKey: string
+  output:
+    kind: 'complete'
+    accessToken: AccessToken
+    connection: Connection
+  note: >
+    Rejects with a plain Error ("Typefully connection requires an API
+    key.") — NOT a PublisherError — when apiKey is blank after trimming.
+    No AccessToken or Connection is built in that case.
+```
+
+## Services
+
+```mdl
+service TypefullyPublisherService
+  desc: >
+    Implements Publisher.PublisherService against the Typefully v1 REST
+    API. id: "typefully"; label: "Typefully"; source: "typefully.com"
+    (matches AccessToken.source and the connector entry above). Every
+    request authenticates via TypefullyCredentials.fromConnection, which
+    loads the Connection then its linked AccessToken, and sends
+    `X-API-KEY: Bearer <token>` (verified against the Typefully v1 docs —
+    NOT a bare Bearer token).
+  loading: lazy
+  ops:
+    createDraft(connection: Ref<Connection>, input: PublisherDraftInput) → PublisherDraft
+    listDrafts(connection: Ref<Connection>) → PublisherDraft[]
+    getDraft(connection: Ref<Connection>, id: string) → PublisherDraft
+    updateDraft(connection: Ref<Connection>, id: string, input: PublisherDraftInput) → PublisherDraft
+    deleteDraft(connection: Ref<Connection>, id: string) → void
+  errors:
+    PublisherError: >
+      thrown UNCONDITIONALLY by getDraft / updateDraft / deleteDraft (no
+      request issued — see F-5), and by createDraft / listDrafts on
+      request failure, decode failure, or exhausted retries
+    MissingCredentialError: connection ref unresolved, or not attached to a database
+  note: >
+    ONLY createDraft (POST /v1/drafts/) and listDrafts (GET
+    /v1/drafts/recently-published/) call the network. The v1 API has no
+    get-by-id, update, or delete endpoint — v2 (Dec 2025) adds full CRUD
+    but scopes every draft under a social_set_id the Connection does not
+    carry — so those three verbs reject rather than fabricate an endpoint.
+```
+
+## Features
+
+```mdl
+feat F-1: Credential Entry
+
+  req F-1.1: The Typefully ConnectorEntry (id "typefully", source "typefully.com", label "Typefully") is contributed on AppActivationEvents.SetupConnectors.
+  req F-1.2: Submitting a non-blank API key via op:SubmitTypefullyCredentials builds an AccessToken (source "typefully.com") and a Connection linked to the "typefully" connector, returned as { kind: 'complete' }.
+  req F-1.3: Submitting a blank (or whitespace-only) API key rejects before any AccessToken or Connection is built.
+```
+
+```mdl
+feat F-2: Publisher Service Registration
+
+  req F-2.1: service:TypefullyPublisherService is contributed under plugin-blogger's BloggerCapabilities.PublisherService.
+  req F-2.2: Every request authenticates via TypefullyCredentials.fromConnection: loads the Connection then its linked AccessToken, and sends X-API-KEY: Bearer <token>.
+```
+
+```mdl
+feat F-3: Create Draft (real)
+
+  req F-3.1:
+    when: createDraft is called with { text, scheduledAt? }
+    then: POSTs /v1/drafts/ with body { content: text } (+ "schedule-date": scheduledAt when set), decodes the response, and normalises it to a PublisherDraft.
+```
+
+```mdl
+feat F-4: List Drafts (real, limited)
+
+  req F-4.1:
+    when: listDrafts is called
+    then: GETs /v1/drafts/recently-published/ — the v1 API's closest analogue to a general list-all-drafts endpoint — and normalises each entry to a PublisherDraft.
+```
+
+```mdl
+feat F-5: Unsupported CRUD Verbs (honest limitation)
+
+  req F-5.1: getDraft always rejects with PublisherError("getDraft is not supported by the Typefully v1 API.") without issuing any HTTP request.
+  req F-5.2: updateDraft always rejects with PublisherError("updateDraft is not supported by the Typefully v1 API.") without issuing any HTTP request.
+  req F-5.3: deleteDraft always rejects with PublisherError("deleteDraft is not supported by the Typefully v1 API.") without issuing any HTTP request.
+```
+
+```mdl
+feat F-6: Composition Impact on plugin-blogger Sync Operations
+
+  desc: >
+    Derived from reading both packages together (op:PublishDraft /
+    op:ImportDrafts / op:UnpublishDraft in plugin-blogger call
+    getDraft / updateDraft / deleteDraft on the resolved
+    PublisherService). No automated test exercises this combined path
+    end-to-end; the requirements below follow deterministically from
+    F-5 and plugin-blogger's op definitions.
+
+  req F-6.1: A Draft's FIRST op:PublishDraft against a Typefully Connection succeeds (createDraft, unlinked → linked).
+  req F-6.2: Any SUBSEQUENT op:PublishDraft on the same (now-linked) Draft calls updateDraft and fails with PublisherError — Typefully re-publish/update is NOT supported.
+  req F-6.3: op:ImportDrafts against a Typefully Connection fails with PublisherError as soon as listDrafts returns any remote draft not yet linked to a local Draft, because the handler then calls getDraft for its body. Only a Post where every remote draft is already linked completes without error (and imports nothing).
+  req F-6.4: op:UnpublishDraft against a Typefully Connection fails with PublisherError whenever the Draft is linked (deleteDraft always rejects); it remains a no-op only when the Draft was never linked.
+```
+
+```mdl
+feat F-7: Resilience
+
+  req F-7.1:
+    when: an HTTP request fails with 429 or 5xx, or times out (15s)
+    then: exponential back-off retry with jitter, up to 3 attempts
+  req F-7.2:
+    when: response decoding fails (Schema.decodeUnknown)
+    then: no retry; the ParseError propagates immediately
+```
+
+## Acceptance
+
+```mdl
+test T-1: Connector entry maps apiKey to AccessToken.token
+  given: a submitted apiKey "test-key"
+  when: op:SubmitTypefullyCredentials invoked with { apiKey: "test-key" }
+  then:
+    - result.kind === 'complete'
+    - result.accessToken.token === 'test-key'; result.accessToken.source === 'typefully.com'
+    - result.connection.connectorId === 'typefully'; result.connection.accessToken resolves to the same AccessToken
+```
+
+```mdl
+test T-2: Connector entry rejects a blank API key
+  given: a submitted apiKey "   " (whitespace only)
+  when: op:SubmitTypefullyCredentials invoked
+  then: rejects with an Error whose message contains "requires an API key"; no AccessToken or Connection is built
+```
+
+```mdl
+test T-3: createDraft POSTs with X-API-KEY Bearer auth
+  given: a Connection whose AccessToken.token === "test-key"
+  when: service.createDraft(connection, { text: "Hello world" })
+  then:
+    - POST https://api.typefully.com/v1/drafts/ issued
+    - request header X-API-KEY === "Bearer test-key"
+    - request body === { content: "Hello world" }
+    - result: { id: "123", text: "Hello world" } (numeric id stringified)
+```
+
+```mdl
+test T-4: createDraft forwards scheduledAt as schedule-date
+  when: service.createDraft(connection, { text: "later", scheduledAt: "2026-01-25T10:00:00Z" })
+  then: request body includes "schedule-date" === "2026-01-25T10:00:00Z"
+```
+
+```mdl
+test T-5: listDrafts GETs recently-published
+  when: service.listDrafts(connection)
+  then:
+    - GET https://api.typefully.com/v1/drafts/recently-published/ issued with X-API-KEY Bearer auth
+    - each response item normalised to a PublisherDraft
+```
+
+```mdl
+test T-6: getDraft, updateDraft, deleteDraft reject without any network call
+  given: fetch is stubbed to throw if called
+  when: service.getDraft / service.updateDraft / service.deleteDraft invoked
+  then: each rejects with an instance of Publisher.PublisherError; fetch is never invoked
+```
+
+```mdl
+test T-7: PublishDraft against Typefully — create-once, no re-publish
+  given: an unlinked Draft published via plugin-blogger's op:PublishDraft against a Typefully Connection
+  then:
+    - first call: createDraft runs; the Draft's foreign key is set to the returned Typefully id
+    - a second op:PublishDraft call on the same (now-linked) Draft: updateDraft runs and rejects with PublisherError
+  tags: [known-limitation, derived]
+```
+
+```mdl
+test T-8: ImportDrafts against Typefully fails on any unlinked remote draft
+  given: plugin-blogger's op:ImportDrafts invoked against a Typefully Connection whose listDrafts result includes at least one remote draft not yet linked to a local Draft
+  then: the operation fails with PublisherError raised from getDraft — ImportDrafts cannot currently pull unlinked Typefully drafts into local Posts
+  tags: [known-limitation, derived]
+```
+
+```mdl
+test T-9: UnpublishDraft against Typefully fails once linked
+  given: a Draft linked to a Typefully remote id
+  when: plugin-blogger's op:UnpublishDraft invoked
+  then: deleteDraft rejects with PublisherError; the foreign key is NOT cleared
+  tags: [known-limitation, derived]
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```

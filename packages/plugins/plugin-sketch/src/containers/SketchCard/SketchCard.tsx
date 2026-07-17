@@ -17,7 +17,7 @@ export const SketchCard = ({ subject, editable = false }: SketchCardProps) => {
     <Card.Body>
       <Card.Section classNames='aspect-square'>
         <Card.Row fullWidth>
-          <SketchComponent sketch={subject} autoZoom maxZoom={1} readonly={!editable} hideUi={!editable} />
+          <SketchComponent sketch={subject} autoCenter readonly={!editable} hideUi={!editable} />
         </Card.Row>
       </Card.Section>
     </Card.Body>
@@ -25,3 +25,5 @@ export const SketchCard = ({ subject, editable = false }: SketchCardProps) => {
 };
 
 export default SketchCard;
+
+SketchCard.displayName = 'SketchCard';

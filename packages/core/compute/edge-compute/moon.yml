@@ -1,0 +1,18 @@
+layer: library
+language: typescript
+tags:
+  - ts-vite-build
+  - ts-test
+  - pack
+tasks:
+  # Executed manually as part of runtime deploy: builds the vendored script packages.
+  build-runtime:
+    command: node ./scripts/build-modules.mjs
+    deps:
+      - ^:compile
+
+  # Executed manually: moon edge-compute:upload-runtime -- --env dev
+  upload-runtime:
+    command: node scripts/upload-modules.mjs
+    deps:
+      - build-runtime

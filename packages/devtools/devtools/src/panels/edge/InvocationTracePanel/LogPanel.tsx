@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type TraceEvent } from '@dxos/functions-runtime';
+import { type TraceEvent } from '@dxos/compute-runtime';
 
 type LogPanelProps = {
   objects?: TraceEvent[];

@@ -5,11 +5,11 @@
 // Fetches a pinned Ollama macOS runtime for the Tauri sidecar.
 //
 // Modern Ollama is not a single binary: the `ollama` launcher loads sibling `llama-server` and
-// `libggml*/libllama*/mlx_metal_*` libraries at runtime. The launcher is bundled as a Tauri
-// sidecar (signed, in the app's MacOS dir); the libraries ship as bundle resources and the
-// sidecar is pointed at them via `OLLAMA_LIBRARY_PATH` (see capabilities/ollama.ts). The runtime
-// is large and version-specific, so it is downloaded at build time (gitignored) rather than
-// committed.
+// `libggml*/libllama*/mlx_metal_*` libraries relative to its own executable path, ignoring
+// `OLLAMA_LIBRARY_PATH` (see capabilities/ollama.ts). The launcher is bundled as a Tauri sidecar
+// (signed, in the app's MacOS dir); the libraries ship as bundle resources at the exact relative
+// path it looks up. The runtime is large and version-specific, so it is downloaded at build time
+// (gitignored) rather than committed.
 //
 // Pinned to an exact version + SHA-256 for reproducibility and supply-chain integrity. To bump:
 // update VERSION and SHA256 together (compute via `shasum -a 256 ollama-darwin.tgz`).
@@ -17,8 +17,8 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { access, chmod, copyFile, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { access, chmod, copyFile, lstat, mkdir, readFile, readlink, rm, symlink, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
@@ -31,12 +31,45 @@ const URL = `https://github.com/ollama/ollama/releases/download/${VERSION}/${ASS
 // Tauri matches sidecars by `<name>-<target-triple>`; the universal launcher serves both arches.
 const SIDECAR_TARGETS = ['aarch64-apple-darwin', 'x86_64-apple-darwin'];
 
+// Metal shader libraries (mlx.metallib) aren't Mach-O, so codesign can only attach their
+// signature via an extended attribute. Tauri's macOS bundler strips all extended attributes from
+// the assembled .app (`xattr -crs`) before it signs anything, which destroys that signature —
+// verified locally; plain dylibs/executables are unaffected since their signature is embedded in
+// the binary itself. Tauri also never signs files placed via `bundle.macOS.files` (only entries
+// under `bundle.macOS.frameworks`), so the fix is to ship the metallib files inside a minimal real
+// framework (registered in tauri.conf.json, individually signed by Tauri like any other framework
+// member) and symlink them back to the path the ollama launcher actually looks for.
+const METAL_VARIANTS = ['mlx_metal_v3', 'mlx_metal_v4'];
+
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const srcTauriDir = join(scriptDir, '..', 'src-tauri');
 const sidecarDir = join(srcTauriDir, 'sidecar');
 const runtimeDir = join(sidecarDir, 'ollama-runtime');
-const marker = join(runtimeDir, '.ollama-version');
+// Kept outside runtimeDir: `bundle.macOS.files` copies that whole directory into the bundle
+// wholesale, and this marker is our own fetch-time cache bookkeeping, not part of the shipped
+// runtime — a plain text file here would otherwise hit the same "not signed at all" failure as
+// mlx.metallib once nested under Contents/MacOS/, since Tauri's final codesign pass requires every
+// file it finds there to already carry its own signature, whatever its type.
+const marker = join(sidecarDir, '.ollama-version');
 const launcher = join(runtimeDir, 'ollama');
+const frameworkDir = join(sidecarDir, 'ollama-metal.framework');
+const frameworkLibrariesDir = join(frameworkDir, 'Libraries');
+// Resource-only framework: an Info.plist without CFBundleExecutable is enough for codesign to
+// accept the directory as a well-formed framework bundle (verified locally) — no main binary
+// needed. Tauri signs the framework bundle itself with `is_an_executable: false` (no hardened
+// runtime), so a real binary there would fail Apple's notarization ("signature of the binary is
+// invalid" — verified against a real notarization run); omitting it avoids that entirely, since
+// the only executable code left is the metallib files in Libraries/, which do get hardened
+// runtime via Tauri's normal per-file framework signing.
+const frameworkInfoPlist = join(frameworkDir, 'Info.plist');
+
+// Packaged builds place the runtime at `Contents/MacOS/lib/ollama` and the framework at
+// `Contents/Frameworks/ollama-metal.framework` (4 levels up, then down into Frameworks/); local
+// dev runs the runtime directly out of `sidecar/ollama-runtime`, 2 levels from the framework (a
+// sibling directory, see ensureDevRuntimeLink). Pass `--packaged` (done by deploy-tauri.yaml) to
+// target the former.
+const packaged = process.argv.includes('--packaged');
+const metallibSymlinkPrefix = packaged ? '../../../../Frameworks/' : '../../';
 
 const exists = async (path) =>
   access(path).then(
@@ -87,6 +120,55 @@ const ensureSidecars = async () => {
   }
 };
 
+// Move each variant's mlx.metallib into the framework and leave a symlink in its place, so the
+// launcher's hardcoded lookup path is unaffected while the real bytes live somewhere Tauri signs.
+const ensureMetalFramework = async () => {
+  await mkdir(frameworkLibrariesDir, { recursive: true });
+  // Clean up the stub binary from a checkout that predates the resource-only framework — its
+  // unhardened signature is what notarization rejected, so a stale copy would defeat this fix.
+  await rm(join(frameworkDir, 'ollama-metal'), { force: true });
+
+  if (!(await exists(frameworkInfoPlist))) {
+    await writeFile(
+      frameworkInfoPlist,
+      [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">',
+        '<plist version="1.0">',
+        '<dict>',
+        '  <key>CFBundleIdentifier</key><string>org.dxos.composer.ollama-metal</string>',
+        '  <key>CFBundlePackageType</key><string>FMWK</string>',
+        '</dict>',
+        '</plist>',
+        '',
+      ].join('\n'),
+    );
+  }
+
+  for (const variant of METAL_VARIANTS) {
+    const metallib = join(runtimeDir, variant, 'mlx.metallib');
+    const dest = join(frameworkLibrariesDir, `${variant}_metallib`);
+    const expectedTarget = `${metallibSymlinkPrefix}${basename(frameworkDir)}/Libraries/${variant}_metallib`;
+
+    const stat = await lstat(metallib).catch(() => null);
+    if (!stat) {
+      continue; // This variant doesn't ship a metallib.
+    }
+    if (stat.isSymbolicLink()) {
+      // Re-point an already-migrated symlink if it targets the wrong layout (dev vs --packaged).
+      if ((await readlink(metallib)) !== expectedTarget) {
+        await rm(metallib);
+        await symlink(expectedTarget, metallib);
+      }
+      continue;
+    }
+    await rm(dest, { force: true });
+    await copyFile(metallib, dest);
+    await rm(metallib);
+    await symlink(expectedTarget, metallib);
+  }
+};
+
 // Dev only: Tauri runs the sidecar from `target/<profile>/` and `bundle.macOS.files` is not applied,
 // so Ollama (which finds llama-server relative to its own exe) can't see the runtime. Symlink it
 // into `target/<profile>/lib/ollama` — the location the launcher searches. Packaged builds use
@@ -103,4 +185,5 @@ const ensureDevRuntimeLink = async () => {
 
 await ensureRuntime();
 await ensureSidecars();
+await ensureMetalFramework();
 await ensureDevRuntimeLink();

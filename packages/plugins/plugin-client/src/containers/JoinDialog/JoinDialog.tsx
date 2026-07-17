@@ -54,3 +54,5 @@ export const JoinDialog = (props: JoinPanelProps) => {
     </Dialog.Content>
   );
 };
+
+JoinDialog.displayName = 'JoinDialog';

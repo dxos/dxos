@@ -10,7 +10,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { meta } from '#meta';
 
 import { JOIN_DIALOG } from '../constants';
-import { type JoinDialogProps } from '../containers/JoinDialog';
+import type { JoinDialogProps } from '../containers/JoinDialog';
 import { NoIdentityError } from '../errors';
 import { SpaceOperation } from './definitions';
 
