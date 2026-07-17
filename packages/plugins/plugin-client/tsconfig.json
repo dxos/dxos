@@ -46,7 +46,7 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/functions"
+      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/echo/echo"

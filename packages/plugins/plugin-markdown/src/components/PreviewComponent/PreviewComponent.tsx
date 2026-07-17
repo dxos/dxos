@@ -7,25 +7,18 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { useClient } from '@dxos/react-client';
-import { Icon, IconButton } from '@dxos/react-ui';
+import { useResolveRef } from '@dxos/react-client/echo';
+import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
-
-export type PreviewComponentProps = XmlWidgetProps<{
-  label: string;
-  dxn: string;
-  block?: boolean;
-  suggest?: boolean;
-  onOpen?: (dxn: URI.URI) => void;
-}>;
 
 // Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](dxn)`.
 const HEIGHT_PATTERN = /^(.*)\|(\d+)$/;
 
-const parseEmbedLabel = (alt: string): { baseLabel: string; height?: number } => {
+export const parseEmbedLabel = (alt: string): { baseLabel: string; height?: number } => {
   const match = HEIGHT_PATTERN.exec(alt ?? '');
   if (match) {
     const height = Number.parseInt(match[2], 10);
@@ -63,21 +56,45 @@ const scrollTopIntoViewIfNeeded = (element: HTMLElement): void => {
   }
 };
 
+export type PreviewComponentProps = XmlWidgetProps<{
+  space?: Space;
+  dxn: string;
+  label: string;
+  block?: boolean;
+  suggest?: boolean;
+  onOpen?: (dxn: URI.URI) => void;
+  /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
+  isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
+}>;
+
 /**
  * Registry-backed block widget for URL-scheme preview slots.
  * Replaces the addBlockContainer callback pattern.
  * Used as the Component entry in a urlSchemes XmlWidgetDef.
  */
-export const PreviewComponent = ({ dxn, label: alt, onOpen, view, range }: PreviewComponentProps) => {
-  const client = useClient();
+export const PreviewComponent = ({
+  view,
+  range,
+  space,
+  dxn,
+  label: labelProp,
+  onOpen,
+  isSurfaceAvailable: isSurfaceAvailableProp,
+}: PreviewComponentProps) => {
   const { invokePromise } = useOperationInvoker();
+  // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
+  const defaultIsSurfaceAvailable = Surface.useIsAvailable();
+  const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
-  const uri = dxn ? URI.make(dxn) : undefined;
-  const subject = uri ? client.graph.makeRef<Obj.Unknown>(uri).target : undefined;
+  const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
+  // Resolve relative to the containing document's own space so space-relative embeds
+  // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
+  const ref = useMemo(() => (uri && space ? space.db.makeRef<Obj.Unknown>(uri) : undefined), [uri, space]);
+  const subject = useResolveRef(ref);
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
-  const { height } = parseEmbedLabel(alt);
+  const { height } = parseEmbedLabel(labelProp);
 
   // `min-content` keeps the embed at its intrinsic height until the user resizes it; the handle then
   // measures the rendered box and switches to an explicit height.
@@ -104,6 +121,7 @@ export const PreviewComponent = ({ dxn, label: alt, onOpen, view, range }: Previ
       if (!commit || typeof next !== 'number' || !view) {
         return;
       }
+
       const doc = view.state.doc.toString();
       const marker = `](${dxn})`;
       let open = -1;
@@ -118,6 +136,7 @@ export const PreviewComponent = ({ dxn, label: alt, onOpen, view, range }: Previ
       if (open < 0) {
         return;
       }
+
       const { baseLabel: currentBaseLabel } = parseEmbedLabel(doc.slice(open + 2, close));
       const insert = `![${formatEmbedLabel(currentBaseLabel, Math.round(next * remSize))}](${dxn})`;
       view.dispatch({ changes: { from: open, to: close + marker.length, insert } });
@@ -155,41 +174,61 @@ export const PreviewComponent = ({ dxn, label: alt, onOpen, view, range }: Previ
   const objectLabel = Obj.getLabel(subject);
   const objectIcon = Obj.getIcon(subject);
 
-  // Frame transcluded block embeds so they read as a self-contained card within the document flow.
-  // The clip/border live on an inner element so they don't clip the resize handle (which straddles the
-  // bottom edge); the inner grid stretches the surface to fill the resizable box, overriding any
-  // intrinsic aspect.
-  return (
-    <div
-      className='relative grid scroll-mt-16'
-      style={sizeStyle(size, 'vertical')}
-      {...resizeAttributes}
-      ref={containerRef}
-    >
-      <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
-        <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
-      </div>
-      <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-        <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
-          {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
-          {objectLabel}
-        </span>
-        <IconButton
-          density='sm'
-          icon='ph--arrow-square-out--regular'
-          iconOnly
-          label='Open'
-          variant='ghost'
-          onClick={handleOpen}
+  if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
+    return (
+      <div
+        className='relative grid scroll-mt-16'
+        style={sizeStyle(size, 'vertical')}
+        {...resizeAttributes}
+        ref={containerRef}
+      >
+        <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
+          <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+        </div>
+
+        <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
+          <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
+            {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
+            {objectLabel}
+          </span>
+        </div>
+        <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
+          <IconButton
+            density='sm'
+            icon='ph--arrow-square-out--regular'
+            iconOnly
+            label='Open'
+            variant='ghost'
+            onClick={handleOpen}
+          />
+        </div>
+
+        <ResizeHandle
+          side='block-end'
+          fallbackSize={FALLBACK_SIZE}
+          minSize={MIN_SIZE}
+          size={size}
+          onSizeChange={handleResize}
         />
       </div>
-      <ResizeHandle
-        side='block-end'
-        fallbackSize={FALLBACK_SIZE}
-        minSize={MIN_SIZE}
-        size={size}
-        onSizeChange={handleResize}
-      />
-    </div>
-  );
+    );
+  }
+
+  if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
+    return (
+      <div>
+        <Card.Root>
+          <Card.Header>
+            <Card.Block />
+            <Card.Title>{Obj.getLabel(data.subject)}</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+          </Card.Body>
+        </Card.Root>
+      </div>
+    );
+  }
+
+  return null;
 };

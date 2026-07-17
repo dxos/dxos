@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as SqlClient from '@effect/sql/SqlClient';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { StateError } from './errors';
+import { makeSql, migrate } from './internal/agent-registry-sql';
 import type * as Type from './types';
 
 /** A single identifier for an agent, in some namespace (e.g. discord-user:1234567890). */
@@ -31,7 +33,7 @@ export type Profile = {
   /** ISO-8601 of the earliest/most-recent observed message. */
   readonly firstSeen?: string;
   readonly lastSeen?: string;
-  /** DXN of a canonical ECHO Person, when resolved. */
+  /** URI/DXN of the canonical ECHO object (Person) this agent resolves to, when known. */
   readonly ref?: string;
 };
 
@@ -43,6 +45,7 @@ export type Observation = {
   readonly at?: string;
 };
 
+// TODO(burdon): Rename Actor?
 export interface AgentRegistryApi {
   /** Resolve identifiers to a canonical agent, creating one if none of them is known. */
   readonly resolve: (identifiers: readonly Identifier[], label?: string) => Effect.Effect<Profile, StateError>;
@@ -53,11 +56,24 @@ export interface AgentRegistryApi {
   readonly list: () => Effect.Effect<Profile[], StateError>;
   /** Union two agents under one canonical id (normalization); records a sameAs alias. */
   readonly merge: (keepId: string, mergeId: string) => Effect.Effect<Profile, StateError>;
+  /** Record the URI/DXN of the canonical ECHO object (Person) this agent resolves to. */
+  readonly setRef: (id: string, ref: string) => Effect.Effect<void, StateError>;
 }
 
 export class AgentRegistry extends Context.Tag('@dxos/crawler/AgentRegistry')<AgentRegistry, AgentRegistryApi>() {
   /** In-memory registry (tests, demos). Browser path will back this with ECHO Person objects. */
   static layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
+
+  /** SQLite-backed registry over a shared SqlClient. */
+  static layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient> = Layer.scoped(
+    AgentRegistry,
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+      yield* migrate(sql).pipe(Effect.orDie);
+      return makeSql(sql);
+    }),
+  );
 }
 
 /**
@@ -182,6 +198,14 @@ const makeMemory = (): AgentRegistryApi => {
           index.set(key(identifier), keepId);
         }
         return merged;
+      }),
+    setRef: (id, ref) =>
+      Effect.sync(() => {
+        const canonical = index.get(id) ?? id;
+        const agent = agents.get(canonical);
+        if (agent) {
+          agents.set(canonical, { ...agent, ref });
+        }
       }),
   };
 };

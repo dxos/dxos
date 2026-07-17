@@ -5,9 +5,9 @@
 import { formatDate } from 'date-fns/format';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
+import { type InvocationSpan } from '@dxos/compute-runtime';
+import { InvocationOutcome } from '@dxos/compute-runtime';
 import { type Database } from '@dxos/echo';
-import { type InvocationSpan } from '@dxos/functions-runtime';
-import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 
 import { useFunctionNameResolver } from './hooks';
@@ -53,20 +53,20 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
   const outcomeLabel = useMemo(() => span.outcome.charAt(0).toUpperCase() + span.outcome.slice(1), [span.outcome]);
 
   return (
-    <div className='p-2 overflow-auto' role='none'>
-      <div className='flex justify-between items-start' role='none'>
-        <div className='w-full flex flex-row justify-between' role='none'>
+    <div className='p-2 overflow-auto'>
+      <div className='flex justify-between items-start'>
+        <div className='w-full flex flex-row justify-between'>
           <h3 className='text-lg font-medium mb-1'>{targetName}</h3>
           <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
         </div>
-        <div className='flex gap-2 items-center' role='none'>
+        <div className='flex gap-2 items-center'>
           <Tag hue={outcomeColor}>{outcomeLabel}</Tag>
           <span className='text-sm text-neutral'>{timestamp}</span>
           <span className='text-sm'>{currentDuration && `${formatDuration(currentDuration)}s`}</span>
         </div>
 
         {span.trigger && (
-          <div className='mt-2 text-sm' role='none'>
+          <div className='mt-2 text-sm'>
             Trigger ID: <span className='font-mono'>{span.trigger.uri?.toString().split(':').pop()}</span>
           </div>
         )}

@@ -1,0 +1,53 @@
+# Project registry — every active work-stream, one entry each. Managed via the `task-planning` skill
+# ($project new/list/end; $resume/$hydrate key off it). Each project has a TASKS.md (ledger) and a
+# DESIGN.md (spec + decisions) — the `tasks`/`design` fields record where they live (a package file,
+# or .agents/projects/<name>/{TASKS,DESIGN}.md). Keep this committed and current.
+#
+# status: active | paused | blocked | ended
+
+projects:
+  - name: mailbox-research
+    status: active
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-05
+    summary: Open-weight vs premier model routing for the mailbox pipelines (labeling / summaries / drafts).
+    tasks: packages/stories/stories-brain/TASKS.md
+    design: packages/stories/stories-brain/fixtures/REPORT.md
+    prs: [12163, 12167, 12178]
+    resume: 'PR #12178 (Topics UX v2: bulk triage, opt-in suggestions, TopicArticle master/detail, create-from-message) opened — watch the Check workflow to green + surface the Composer preview. Deferred follow-ups in TASKS.md: Phase A live-feed thread resolution + deck-peer path; Phase C fact extraction; AnchoredTo cleanup on topic delete. Earlier open work: private-corpus evals + two-tier latency design.'
+
+  - name: task-planning-skill-update
+    status: active
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-12
+    summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
+    tasks: .agents/skills/task-planning/TASKS.md
+    design: .agents/skills/task-planning/SKILL.md
+    prs: [12174]
+    resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
+
+  - name: composer-search
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-07-14
+    summary: Unify Composer search (lexical/semantic/structured/agent) + tiered client↔EDGE vector index synced via feeds.
+    tasks: packages/plugins/plugin-search/TASKS.md
+    design: packages/plugins/plugin-search/docs/DESIGN.md
+    prs: []
+    resume: 'Audit + design + roadmap + M1 implementation plan authored in packages/plugins/plugin-search/docs. Next: execute Milestone 1 (real lexical search) per docs/M1-lexical-search-plan.md.'
+
+  - name: document-revisions
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-07-15
+    summary: Document revisions & branches (checkpoints, draft branches, merge) for markdown + @dxos/versioning; convergence with PR 11829 core branching.
+    tasks: .agents/projects/document-revisions/TASKS.md
+    design: packages/plugins/plugin-markdown/DESIGN.md
+    prs: [12237]
+    resume: 'PR #12237 in merge queue (auto-merge enabled; blockers cleared, exports-map fix pushed). After landing, in a fresh session: stage 1 of agents/superpowers/plans/2026-07-17-branching-convergence.md — revive PR 11829 commits 1-3 rebased on main, add coverage + writable per-surface BranchBinding API (spec in plan), wittjosiah reviews. Stages 2-4 in TASKS.md.'
+
+ended: []

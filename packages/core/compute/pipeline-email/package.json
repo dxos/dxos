@@ -1,7 +1,6 @@
 {
   "name": "@dxos/pipeline-email",
   "version": "0.9.0",
-  "private": true,
   "description": "Worked email pipeline over the Enron dataset (parquet source → summarize/extract/stats stages).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,9 +14,14 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -26,25 +30,32 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
+    "@dxos/link": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/markdown": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/pipeline": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:",
     "hyparquet": "catalog:"
   },
   "devDependencies": {
-    "@dxos/ai": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/extractor-lib": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
     "effect": "catalog:",
     "hyparquet-writer": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

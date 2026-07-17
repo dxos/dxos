@@ -118,9 +118,8 @@ export const useObject: {
    */
   <T, K extends keyof T>(ref: Ref.Ref<T> | undefined, property: K): [T[K] | undefined, ObjectPropUpdateCallback<T[K]>];
 } = (<T extends Obj.Unknown, K extends keyof T>(objOrRef: T | Ref.Ref<T> | undefined, property?: K): any => {
-  // Get the live object for the callback (refs need to dereference).
   const isRef = Ref.isRef(objOrRef);
-  const liveObj = isRef ? (objOrRef as Ref.Ref<T>)?.target : (objOrRef as T | undefined);
+  const liveObj = useResolveRef(objOrRef);
 
   const callback: ObjectPropUpdateCallback<unknown> = useCallback(
     (updateOrValue: unknown | ((obj: unknown) => unknown)) => {
@@ -150,51 +149,54 @@ export const useObject: {
   );
 
   if (property !== undefined) {
-    // For refs, subscribe to load event only (not full mutation tracking).
-    // Property-level updates are handled by useObjectProperty once the ref loads.
-    useRefLoad(objOrRef);
-    return [useObjectProperty(liveObj, property as any), callback];
+    return [useObjectProperty(liveObj, property), callback];
   } else {
     return [useObjectValue(objOrRef), callback];
   }
 }) as any;
 
 /**
- * Internal hook for subscribing to an Echo object or Ref.
+ * Hook for subscribing to an Echo object or Ref.
  */
-const useObjectValue = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Obj.Snapshot<T> | undefined => {
+export const useObjectValue = <T extends Obj.Unknown | Obj.Snapshot>(
+  objOrRef: T | Ref.Ref<T> | undefined,
+): T extends Obj.Snapshot ? T : Obj.Snapshot<T & Obj.Unknown> | undefined => {
   const atom = useMemo(() => {
     if (objOrRef == null) {
-      return Atom.make<Obj.Snapshot<T> | undefined>(() => undefined);
+      return Atom.make<Obj.Snapshot<T & Obj.Unknown> | undefined>(() => undefined);
     }
     if (Ref.isRef(objOrRef)) {
       return Obj.atom(objOrRef);
     }
-    return Obj.atom(objOrRef);
+    if (Obj.isSnapshot(objOrRef)) {
+      return Atom.make<T>(() => objOrRef);
+    }
+    return Obj.atom(objOrRef as T & Obj.Unknown);
   }, [objOrRef]);
-  return useAtomValue(atom) as Obj.Snapshot<T> | undefined;
+  return useAtomValue(atom as any);
 };
 
 /**
- * Internal hook for subscribing to ref resolution only (load-once).
- * Triggers a re-render when the ref target first becomes available,
- * without subscribing to subsequent target mutations.
- * For non-refs, this is a no-op.
+ * Resolves a Ref to its live target object, or returns the input when it is already an object.
+ * For refs, subscribes to load events only (not full mutation tracking).
  */
-const useRefLoad = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): void => {
+export const useResolveRef = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): T | undefined => {
   const atom = useMemo(() => {
-    if (objOrRef == null || !Ref.isRef(objOrRef)) {
+    if (objOrRef == null) {
       return Atom.make<T | undefined>(() => undefined);
+    }
+    if (!Ref.isRef(objOrRef)) {
+      return Atom.make<T | undefined>(() => objOrRef as T);
     }
     return objOrRef.atom;
   }, [objOrRef]);
-  useAtomValue(atom);
+  return useAtomValue(atom);
 };
 
 /**
  * Internal hook for subscribing to a specific property of an Echo object.
  */
-const useObjectProperty = <T extends Obj.Unknown, K extends keyof T>(
+const useObjectProperty = <T extends Obj.Unknown | Obj.Snapshot, K extends keyof T>(
   obj: T | undefined,
   property: K,
 ): T[K] | undefined => {
@@ -202,7 +204,10 @@ const useObjectProperty = <T extends Obj.Unknown, K extends keyof T>(
     if (obj == null) {
       return Atom.make<T[K] | undefined>(() => undefined);
     }
-    return Obj.atomProperty(obj, property);
+    if (Obj.isSnapshot(obj)) {
+      return Atom.make<T[K]>(() => obj[property]);
+    }
+    return Obj.atomProperty(obj as T & Obj.Unknown, property);
   }, [obj, property]);
   return useAtomValue(atom);
 };

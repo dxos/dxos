@@ -47,6 +47,8 @@ export type Target = {
   readonly parentMessageId?: string;
   /** Last message id processed; the resume point. */
   readonly cursor?: string;
+  /** ISO-8601 of the most recent successful cursor advance. */
+  readonly lastRunAt?: string;
   /** Depth-first descent depth (0 = top-level channel). */
   readonly depth: number;
   readonly status: TargetStatus;

@@ -4,7 +4,7 @@
 
 import { EditorView } from '@codemirror/view';
 
-import { fontMono } from '../../styles';
+import { fontBody, fontMono } from '../../styles';
 
 export const bulletListIndentationWidth = 24;
 export const orderedListIndentationWidth = 36; // TODO(burdon): Make variable length based on number of digits.
@@ -27,13 +27,21 @@ export const formattingStyles = EditorView.theme({
    */
   '& .cm-list-item': {},
   '& .cm-list-mark': {
-    display: 'inline-block',
+    display: 'inline',
     textAlign: 'right',
     paddingRight: '0.5em',
     fontVariant: 'tabular-nums',
+    // Anchor to the line top (not the baseline) so the inline-block marker — whose height already
+    // equals the line-height — fills the line box exactly instead of extending it and making a
+    // bulleted line taller than a plain one.
+    verticalAlign: 'top',
+    lineHeight: 'inherit',
   },
   '& .cm-list-mark-bullet': {
     width: `${bulletListIndentationWidth}px`,
+    // The rendered bullet widget sits inside the `ListMark` font-mono highlight span; a direct
+    // font-family on the widget overrides that inherited monospace so the bullet uses the body font.
+    fontFamily: fontBody,
   },
   '& .cm-list-mark-ordered': {
     width: `${orderedListIndentationWidth}px`,
@@ -111,26 +119,38 @@ export const formattingStyles = EditorView.theme({
   /**
    * Table.
    */
+  '.cm-table': {
+    borderCollapse: 'separate',
+    borderSpacing: '2px',
+  },
   '.cm-table *': {
-    fontFamily: fontMono,
     lineHeight: 1.5,
-    textDecoration: 'none !important',
+  },
+  '.cm-table-editor *': {
+    fontFamily: fontMono,
   },
   '.cm-table-head': {
-    padding: '2px 16px 2px 0px',
+    padding: '4px 8px',
+    paddingRight: '24px',
     overflowWrap: 'break-word',
     whiteSpace: 'pre-wrap',
     wordBreak: 'keep-all',
     textAlign: 'left',
-    color: 'var(--color-subdued)',
-    borderBottom: '1px solid var(--color-cm-separator)',
+    textDecoration: 'none !important',
+    fontSize: 'small',
+    textTransform: 'uppercase',
+    color: 'var(--color-description)',
+    backgroundColor: 'var(--color-input-surface)',
+    // borderBottom: '1px solid var(--color-cm-separator)',
   },
   '.cm-table-cell': {
-    padding: '2px 16px 2px 0px',
+    padding: '4px 8px',
     overflowWrap: 'break-word',
     whiteSpace: 'pre-wrap',
     wordBreak: 'keep-all',
     verticalAlign: 'top',
+    backgroundColor: 'var(--color-base-surface)',
+    fontVariantNumeric: 'tabular-nums',
   },
 
   /**

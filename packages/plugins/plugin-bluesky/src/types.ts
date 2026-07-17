@@ -24,7 +24,7 @@ export const makeBlueskyChannel = (handle: string): BlueskyChannel => Obj.make(B
 
 /**
  * Per-target sync options exposed to the user via the connector's
- * `optionsSchema`. Stored under `SyncBinding.options` (free-form record).
+ * `optionsSchema`. Stored under `Cursor.spec.options` (free-form record).
  */
 export const BlueskyTargetOptions = Schema.Struct({
   /**

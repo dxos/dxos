@@ -5,6 +5,8 @@
 import { Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
 
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+
 export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
 
 export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));

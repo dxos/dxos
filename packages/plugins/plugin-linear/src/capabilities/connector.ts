@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants';
@@ -37,12 +37,26 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   }).pipe(Effect.orDie);
 
 /**
+ * Linear `testConnection`: run the `viewer` query with the stored token. A
+ * rejected token or transport failure surfaces as a user-facing error so the
+ * connection UI can offer to reauthenticate.
+ */
+const testConnection: TestConnection = ({ accessToken }) =>
+  LinearApi.fetchViewer().pipe(
+    Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token: accessToken.token })),
+    Effect.asVoid,
+    Effect.mapError(
+      () => new ConnectionTestError({ message: 'Linear rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
+  );
+
+/**
  * Contributes a single `Connector` entry that wires Linear's discovery,
  * materialization, and sync operations plus the token-created hook to the
  * `'linear.app'` source.
  *
- * Sync targets are Linear teams; each is bound by one `SyncBinding` whose
- * target is the team's local root Project. Per-binding `SyncOptions.maxDaysBack`
+ * Sync targets are Linear teams; each is bound by one external-sync `Cursor` whose
+ * `spec.target` is the team's local root Project. Per-binding `SyncOptions.maxDaysBack`
  * caps how far back issues are pulled by `Issue.updatedAt`.
  *
  * Scopes:
@@ -71,6 +85,7 @@ export default Capability.makeModule(
         sync: LinearOperation.SyncLinearTeams,
         optionsSchema: LinearOperation.SyncOptions,
         onTokenCreated,
+        testConnection,
       },
     ]);
   }),

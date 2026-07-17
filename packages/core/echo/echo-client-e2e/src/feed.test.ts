@@ -56,7 +56,7 @@ describe('feeds', () => {
 
     {
       const resolved = await peer.client.graph
-        .createRefResolver({ context: { space: db.spaceId, feed: Feed.getQueueUri(feed)! } })
+        .createRefResolver({ context: { space: db.spaceId, feed: Feed.getFeedUri(feed)! } })
         .resolve(EID.make({ entityId: obj.id }), { source: 'network' })
         .wait();
       expect(resolved?.id).toEqual(obj.id);
@@ -250,6 +250,43 @@ describe('feeds', () => {
     });
   });
 
+  describe('Update by id', () => {
+    test('appending an item with an existing id updates it in place', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      // Append the original object, then append a second object reusing the same id — this is an update.
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { id: john.id, name: 'john v2' })]);
+
+      // The query collapses entries by id and returns a single object holding the latest state.
+      const result = await queryFeed(db, feed, Filter.everything()).run();
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toEqual(john.id);
+      expect((result[0] as TestSchema.Person).name).toEqual('john v2');
+    });
+
+    test('the latest state survives indexing after flush', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { id: john.id, name: 'john v2' })]);
+
+      // Flush so the query is served by the indexer rather than the in-memory feed handle.
+      await db.flush();
+
+      const result = await queryFeed(db, feed, Filter.everything()).run();
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toEqual(john.id);
+      expect((result[0] as TestSchema.Person).name).toEqual('john v2');
+    });
+  });
+
   describe('Durability', () => {
     test('feed objects survive reload', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
@@ -275,4 +312,4 @@ describe('feeds', () => {
  * Queries a feed through the database with a feed scope — the canonical non-Effect feed query.
  */
 const queryFeed = (db: EchoDatabase, feed: Feed.Feed, filter: Filter.Any) =>
-  db.query(Query.select(filter).from(Scope.feed(Feed.getQueueUri(feed)!)));
+  db.query(Query.select(filter).from(Scope.feed(Feed.getFeedUri(feed)!)));

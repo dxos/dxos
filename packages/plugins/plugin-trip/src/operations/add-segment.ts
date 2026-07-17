@@ -11,26 +11,6 @@ import { invariant } from '@dxos/invariant';
 import { Segment, Trip, TripOperation } from '../types';
 import { type Place } from '../types/Place';
 
-export default TripOperation.AddSegment.pipe(
-  Operation.withHandler(
-    Effect.fnUntraced(function* ({ trip: tripRef, kind, title, origin, destination, departAt, arriveAt, notes }) {
-      const trip = yield* Database.load(tripRef);
-      const db = Obj.getDatabase(trip);
-      invariant(db, 'Trip is not attached to a database.');
-
-      const segment = Segment.make({
-        details: buildDetails({ kind, title, origin, destination, departAt, arriveAt }),
-        notes,
-      });
-      db.add(segment);
-      Trip.addSegment(trip, segment);
-
-      return { segmentId: segment.id };
-    }),
-  ),
-  Operation.opaqueHandler,
-);
-
 type DetailsInput = {
   kind: Segment.Kind;
   title?: string;
@@ -70,3 +50,25 @@ const buildDetails = ({ kind, title, origin, destination, departAt, arriveAt }: 
       return { _tag: kind, origin: place(origin), destination: place(destination), departAt, arriveAt };
   }
 };
+
+const handler = TripOperation.AddSegment.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ trip: tripRef, kind, title, origin, destination, departAt, arriveAt, notes }) {
+      const trip = yield* Database.load(tripRef);
+      const db = Obj.getDatabase(trip);
+      invariant(db, 'Trip is not attached to a database.');
+
+      const segment = Segment.make({
+        details: buildDetails({ kind, title, origin, destination, departAt, arriveAt }),
+        notes,
+      });
+      db.add(segment);
+      Trip.addSegment(trip, segment);
+
+      return { segmentId: segment.id };
+    }),
+  ),
+  Operation.opaqueHandler,
+);
+
+export default handler;

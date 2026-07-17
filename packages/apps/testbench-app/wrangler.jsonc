@@ -1,0 +1,15 @@
+{
+  // Cloudflare Workers (Static Assets) config for testbench — assets-only (no Worker script).
+  // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
+  // Local dev: `moon run testbench-app:bundle && wrangler dev`.
+  "name": "testbench",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./out/testbench-app",
+    "not_found_handling": "single-page-application",
+  },
+  "env": {
+    "production": { "name": "testbench" },
+    "main": { "name": "testbench-main" },
+  },
+}

@@ -16,122 +16,127 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./internal": {
       "source": "./src/internal/index.ts",
       "types": "./dist/types/src/internal/index.d.ts",
-      "default": "./dist/lib/neutral/internal/index.mjs"
+      "import": "./dist/lib/internal.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     },
     "./Annotation": {
       "source": "./src/Annotation.ts",
       "types": "./dist/types/src/Annotation.d.ts",
-      "default": "./dist/lib/neutral/Annotation.mjs"
+      "import": "./dist/lib/Annotation.mjs"
+    },
+    "./Blob": {
+      "source": "./src/Blob.ts",
+      "types": "./dist/types/src/Blob.d.ts",
+      "import": "./dist/lib/Blob.mjs"
     },
     "./Database": {
       "source": "./src/Database.ts",
       "types": "./dist/types/src/Database.d.ts",
-      "default": "./dist/lib/neutral/Database.mjs"
+      "import": "./dist/lib/Database.mjs"
     },
     "./Entity": {
       "source": "./src/Entity.ts",
       "types": "./dist/types/src/Entity.d.ts",
-      "default": "./dist/lib/neutral/Entity.mjs"
+      "import": "./dist/lib/Entity.mjs"
     },
     "./Err": {
       "source": "./src/Err.ts",
       "types": "./dist/types/src/Err.d.ts",
-      "default": "./dist/lib/neutral/Err.mjs"
+      "import": "./dist/lib/Err.mjs"
     },
     "./Feed": {
       "source": "./src/Feed.ts",
       "types": "./dist/types/src/Feed.d.ts",
-      "default": "./dist/lib/neutral/Feed.mjs"
+      "import": "./dist/lib/Feed.mjs"
     },
     "./Filter": {
       "source": "./src/Filter.ts",
       "types": "./dist/types/src/Filter.d.ts",
-      "default": "./dist/lib/neutral/Filter.mjs"
+      "import": "./dist/lib/Filter.mjs"
     },
     "./Format": {
       "source": "./src/Format.ts",
       "types": "./dist/types/src/Format.d.ts",
-      "default": "./dist/lib/neutral/Format.mjs"
+      "import": "./dist/lib/Format.mjs"
     },
     "./JsonSchema": {
       "source": "./src/JsonSchema.ts",
       "types": "./dist/types/src/JsonSchema.d.ts",
-      "default": "./dist/lib/neutral/JsonSchema.mjs"
+      "import": "./dist/lib/JsonSchema.mjs"
     },
     "./Key": {
       "source": "./src/Key.ts",
       "types": "./dist/types/src/Key.d.ts",
-      "default": "./dist/lib/neutral/Key.mjs"
+      "import": "./dist/lib/Key.mjs"
     },
     "./Migration": {
       "source": "./src/Migration.ts",
       "types": "./dist/types/src/Migration.d.ts",
-      "default": "./dist/lib/neutral/Migration.mjs"
+      "import": "./dist/lib/Migration.mjs"
     },
     "./Obj": {
       "source": "./src/Obj.ts",
       "types": "./dist/types/src/Obj.d.ts",
-      "default": "./dist/lib/neutral/Obj.mjs"
+      "import": "./dist/lib/Obj.mjs"
     },
     "./Order": {
       "source": "./src/Order.ts",
       "types": "./dist/types/src/Order.d.ts",
-      "default": "./dist/lib/neutral/Order.mjs"
+      "import": "./dist/lib/Order.mjs"
     },
     "./Query": {
       "source": "./src/Query.ts",
       "types": "./dist/types/src/Query.d.ts",
-      "default": "./dist/lib/neutral/Query.mjs"
+      "import": "./dist/lib/Query.mjs"
     },
     "./QueryResult": {
       "source": "./src/QueryResult.ts",
       "types": "./dist/types/src/QueryResult.d.ts",
-      "default": "./dist/lib/neutral/QueryResult.mjs"
+      "import": "./dist/lib/QueryResult.mjs"
     },
     "./Ref": {
       "source": "./src/Ref.ts",
       "types": "./dist/types/src/Ref.d.ts",
-      "default": "./dist/lib/neutral/Ref.mjs"
+      "import": "./dist/lib/Ref.mjs"
     },
     "./Registry": {
       "source": "./src/Registry.ts",
       "types": "./dist/types/src/Registry.d.ts",
-      "default": "./dist/lib/neutral/Registry.mjs"
+      "import": "./dist/lib/Registry.mjs"
     },
     "./Relation": {
       "source": "./src/Relation.ts",
       "types": "./dist/types/src/Relation.d.ts",
-      "default": "./dist/lib/neutral/Relation.mjs"
+      "import": "./dist/lib/Relation.mjs"
     },
     "./Scope": {
       "source": "./src/Scope.ts",
       "types": "./dist/types/src/Scope.d.ts",
-      "default": "./dist/lib/neutral/Scope.mjs"
+      "import": "./dist/lib/Scope.mjs"
     },
     "./Tag": {
       "source": "./src/Tag.ts",
       "types": "./dist/types/src/Tag.d.ts",
-      "default": "./dist/lib/neutral/Tag.mjs"
+      "import": "./dist/lib/Tag.mjs"
     },
     "./Text": {
       "source": "./src/Text.ts",
       "types": "./dist/types/src/Text.d.ts",
-      "default": "./dist/lib/neutral/Text.mjs"
+      "import": "./dist/lib/Text.mjs"
     },
     "./Type": {
       "source": "./src/Type.ts",
       "types": "./dist/types/src/Type.d.ts",
-      "default": "./dist/lib/neutral/Type.mjs"
+      "import": "./dist/lib/Type.mjs"
     }
   },
   "files": [

@@ -197,3 +197,5 @@ const TranscriptTabs = ({
     </Panel.Root>
   );
 };
+
+VideoArticle.displayName = 'VideoArticle';

@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
@@ -203,6 +204,44 @@ export const Toast = Schema.Struct({
 export interface Toast extends Omit<Schema.Schema.Type<typeof Toast>, 'onAction'> {
   onAction?: () => void;
 }
+
+/**
+ * Structured override for the toast shown when a process fails. A failing operation carries it as
+ * `context.notifyOverride` on its error (built with {@link setNotifyOverride}); the notification
+ * tracker reads it back from the process's raw failure with {@link getNotifyOverride} and renders it
+ * in place of the default title + `Cause.pretty` dump. Every field is plain serializable data —
+ * the override rides on an error across the process failure boundary — so the click action is a
+ * {@link Operation.SerializedInvocation} the tracker runs via its own invoker, not a live callback.
+ */
+export interface NotifyOverride {
+  readonly title?: Translations.Label;
+  readonly description?: Translations.Label;
+  readonly actionLabel?: Translations.Label;
+  /** Accessibility alt text for the action button; defaults to `actionLabel` when omitted. */
+  readonly actionAlt?: Translations.Label;
+  /** Operation invoked when the toast's action button is clicked. */
+  readonly action?: Operation.SerializedInvocation;
+}
+
+/**
+ * Builds the `context` fragment an error merges in (e.g. `context: { ...setNotifyOverride(o), … }`) to
+ * set its {@link NotifyOverride} — the counterpart to {@link getNotifyOverride}, so the
+ * `notifyOverride` key is only ever spelled in one place.
+ */
+export const setNotifyOverride = (override: NotifyOverride): { notifyOverride: NotifyOverride } => ({
+  notifyOverride: override,
+});
+
+/** Extracts a {@link NotifyOverride} from a failed process's `error` (`Process.Info.error`, a `SerializedError` whose `context` carries it), if present. */
+export const getNotifyOverride = (failure: unknown): NotifyOverride | null => {
+  if (!Predicate.isRecord(failure) || !Predicate.isRecord(failure.context)) {
+    return null;
+  }
+  const override = failure.context.notifyOverride;
+  // `context` is an untyped bag on a foreign error value; `Predicate.isRecord` is the only structural
+  // check available at this boundary, so the field shape beyond "is a record" can't be verified.
+  return Predicate.isRecord(override) ? (override as NotifyOverride) : null;
+};
 
 export const AddToast = Operation.make({
   meta: {

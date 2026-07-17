@@ -10,7 +10,6 @@ import { AiService } from '@dxos/ai';
 
 import { assembleDocument } from './align';
 import { type Document, Upos } from './Document';
-import { stubParse } from './stub';
 
 const PARSE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -53,5 +52,3 @@ export const parseText = (text: string) =>
 
 /** The pluggable parser contract consumed by the editor extension and pipeline. */
 export type Parser = (text: string) => Promise<Document>;
-
-export { stubParse };

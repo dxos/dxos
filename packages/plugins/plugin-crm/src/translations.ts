@@ -11,6 +11,7 @@ export const translations = [
     'en-US': {
       [meta.profile.key]: {
         'plugin.name': 'CRM',
+        'nav-tree-group-crm.label': 'CRM',
       },
     },
   },

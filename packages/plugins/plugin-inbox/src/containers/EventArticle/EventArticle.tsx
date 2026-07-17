@@ -16,7 +16,7 @@ import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
-import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
+import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
 import { getCalendarEventPath, getEventNodeId } from '../../paths';
 
@@ -41,7 +41,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   // Starring uses the calendar's TagIndex (events are feed objects). Subscribe to the index via
   // `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
   const eventCalendar = calendar && Calendar.instanceOf(calendar) ? calendar : undefined;
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = eventCalendar?.tags?.target;
   const starredAtom = useMemo(
@@ -51,7 +51,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (eventCalendar && db) {
-      void Starred.toggleStarred(eventCalendar, event, db);
+      void SystemTags.toggleTag(eventCalendar, event, db, 'starred');
     }
   }, [eventCalendar, event, db]);
 
@@ -143,3 +143,5 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     </Event.Root>
   );
 };
+
+EventArticle.displayName = 'EventArticle';

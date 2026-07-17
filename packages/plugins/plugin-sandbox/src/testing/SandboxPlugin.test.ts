@@ -5,10 +5,10 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Operation, Skill } from '@dxos/compute';
-import { Collection, Database, Feed, Ref } from '@dxos/echo';
+import { Blob, Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestContextService } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { File } from '@dxos/types';
 
@@ -20,7 +20,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: SandboxHandlers,
-  types: [Sandbox.Sandbox, File.File, Collection.Collection, Skill.Skill, Feed.Feed],
+  types: [Sandbox.Sandbox, File.File, Blob.Blob, Collection.Collection, Skill.Skill, Feed.Feed],
   skills: [SandboxSkill.make()],
 });
 
@@ -64,12 +64,7 @@ describe.skip('SandboxPlugin', () => {
 
         const content = 'Hello from ECHO!';
         const bytes = new TextEncoder().encode(content);
-        const fileObj = File.make({
-          name: 'test.txt',
-          type: 'text/plain',
-          size: bytes.byteLength,
-          data: File.inlineData(bytes),
-        });
+        const fileObj = yield* File.fromBytes(bytes, { name: 'test.txt', type: 'text/plain' });
         yield* Database.add(fileObj);
 
         yield* Operation.invoke(UploadFile, {

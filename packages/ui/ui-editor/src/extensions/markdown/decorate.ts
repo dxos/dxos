@@ -338,6 +338,13 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       //
 
       case 'Blockquote': {
+        // Only a single leading '>' denotes a quote — runs of '>' (nested-quote syntax, and
+        // notably '>>>>>>>' merge-conflict markers) are left undecorated.
+        const startLine = state.doc.lineAt(node.from);
+        if (/^\s{0,3}>{2,}/.test(startLine.text)) {
+          break;
+        }
+
         const editing = editingRange(state, node, focus);
         const quoteMark = node.node.getChild('QuoteMark');
         const paragraph = node.node.getChild('Paragraph');

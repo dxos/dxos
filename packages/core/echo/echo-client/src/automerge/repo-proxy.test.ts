@@ -4,16 +4,23 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Record from 'effect/Record';
+import * as Runtime from 'effect/Runtime';
+import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { makeInProcessClient } from '@dxos/protocols';
+import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createTmpPath } from '../testing';
@@ -443,11 +450,21 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
   const host = new AutomergeHost({ runtime });
   await openAndClose(host);
 
-  const dataService = new DataServiceImpl({
+  const dataServiceImpl = new DataServiceImpl({
     automergeHost: host,
-    spaceStateManager: new SpaceStateManager(),
+    spaceStateManager: new SpaceStateManager({ runtime }),
     updateIndexes: async () => {},
   });
+
+  // Bridge the host's DataService handlers to an in-process effect-rpc client (no wire hop).
+  // The bridged client lives on a scope that is closed when the test finishes.
+  const serviceScope = Effect.runSync(Scope.make());
+  onTestFinished(async () => {
+    await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
+  });
+  const dataService = await EffectEx.runPromise(
+    makeInProcessClient(DataService.Rpcs, dataServiceImpl).pipe(Effect.provideService(Scope.Scope, serviceScope)),
+  );
 
   const refreshCollectionState = async () => {
     const documentIds = Record.keys(host.handles);
@@ -457,10 +474,10 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
   return { host, dataService, refreshCollectionState };
 };
 
-function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {
+function* createProxyRepos(dataService: DataService.Client): Generator<RepoProxy> {
   for (let i = 0; i < 1_00; i++) {
     // Counter just to protect against infinite loops.
-    yield new RepoProxy(dataService, SpaceId.random());
+    yield new RepoProxy(dataService, Runtime.defaultRuntime, SpaceId.random());
   }
   throw new Error('Too many repos requested');
 }

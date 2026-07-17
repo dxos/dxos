@@ -4,7 +4,7 @@
 
 import { join } from 'path';
 
-import { createConfig, packages } from '../../.storybook/main';
+import { createConfig, packages } from '../../.storybook/main.ts';
 
 export default createConfig({
   stories: [

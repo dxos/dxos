@@ -7,12 +7,14 @@ import * as Schema from 'effect/Schema';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { CollectionItemAnnotation, Text } from '@dxos/schema';
+import { CardAnnotation, CollectionItemAnnotation, Text } from '@dxos/schema';
+import { History } from '@dxos/versioning';
 
 export const SKILL_KEY = 'org.dxos.skill.markdown';
 
 // Re-export Settings as merged const/type (not as namespace).
 import * as SettingsModule from './Settings';
+
 export const Settings = SettingsModule.Settings;
 export type Settings = SettingsModule.Settings;
 
@@ -25,13 +27,14 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     description: Schema.optional(Schema.String),
     fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    history: History.History.pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name', 'fallbackName']),
     DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
-    AppAnnotation.CardAnnotation.set(true),
+    CardAnnotation.set(true),
     CollectionItemAnnotation.set(true),
   ),
 ) {}

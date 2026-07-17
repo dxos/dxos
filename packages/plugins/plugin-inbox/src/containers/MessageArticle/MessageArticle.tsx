@@ -2,47 +2,95 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Panel } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
-import { type Message as MessageType } from '@dxos/types';
+import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, ObjectArticle, type ViewMode } from '#components';
-import { useActorContact } from '#hooks';
-import { InboxOperation } from '#types';
-import { Mailbox } from '#types';
+import { ConversationStack, ConversationToolbar, type MessageHeaderProps, type ViewMode, keyOf } from '#components';
+import { InboxOperation, Mailbox } from '#types';
 
-import { getMailboxMessagePath } from '../../paths';
+import { orderThreadItems } from '../../util';
 
-export type MessageArticleProps = AppSurface.ObjectArticleProps<
-  MessageType.Message,
+/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
+const DEFAULT_VIEW_MODE: ViewMode = 'html';
+
+/**
+ * `subject` is either a single message or its whole conversation (thread). The companion graph node
+ * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
+ * re-querying; section/other callers may pass a single message. The thread already includes any
+ * inline reply/forward drafts (the connector merges synced feed messages and local drafts in one
+ * combined-scope query), interleaved chronologically.
+ */
+export type MessageArticleProps = AppSurface.ArticleProps<
+  MessageType.Message | MessageType.Message[],
   {
     mailbox?: Mailbox.Mailbox;
+    testId?: string;
   }
 >;
 
+/**
+ * Message/conversation detail view. Renders the opened conversation as a Mosaic stack (see
+ * {@link ConversationStack}) — one tile per message, each with its own toolbar so reply/forward/delete
+ * act on that specific message. This container owns the thread-wide state (body view mode, which
+ * messages are expanded) and surfaces it through the top {@link ConversationToolbar}. Only the most
+ * recent message is expanded by default; the rest start collapsed.
+ */
 export const MessageArticle = ({
   role,
-  subject: message,
+  subject,
   attendableId,
   companionTo,
   mailbox: mailboxProp,
+  testId,
 }: MessageArticleProps) => {
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
-  const viewMode = useMemo<ViewMode>(() => {
-    const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
-    return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'markdown';
-  }, [message]);
+  // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).
+  const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
 
-  const db = Obj.getDatabase(message);
-  const sender = useActorContact(db, message.sender);
+  // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
+  // bottom (the connector delivers everything in chronological order).
+  const orderedMessages = useMemo(() => orderThreadItems(messages), [messages]);
 
+  // View mode is owned here and shared across every message body (the switch lives on the thread
+  // toolbar), so switching applies to all bodies at once.
+  const [viewMode, setViewMode] = useState<ViewMode>(DEFAULT_VIEW_MODE);
+
+  const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
+
+  // The most recent non-draft message is the one worth reading first; expand it by default and leave
+  // the rest collapsed. Drafts always render their composer, so they are irrelevant to the anchor.
+  const mostRecentId = useMemo(() => {
+    const recent = [...messages].reverse().find((message) => !DraftMessage.instanceOf(message));
+    return recent ? keyOf(recent) : undefined;
+  }, [messages]);
+
+  // Expanded state is owned here so the thread toolbar's collapse-all/expand-all can fold or unfold
+  // every message. Default: only the most recent message is expanded.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(mostRecentId ? [mostRecentId] : []));
+  const handleExpandedChange = useCallback((id: string, isExpanded: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (isExpanded) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+  const handleCollapseAll = useCallback(() => setExpanded(new Set()), []);
+  const handleExpandAll = useCallback(() => setExpanded(new Set(messageIds)), [messageIds]);
+
+  // Contact extraction targets the conversation's space; any message resolves the same db.
+  const db = Obj.getDatabase(messages[0]);
   const { invokePromise } = useOperationInvoker();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
@@ -53,55 +101,31 @@ export const MessageArticle = ({
     [db, invokePromise],
   );
 
-  const handleOpen = useCallback(() => {
-    if (!mailbox || !db) {
-      return;
-    }
-    void invokePromise(LayoutOperation.Open, { subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)] });
-  }, [mailbox, db, message.id, invokePromise]);
-
-  const openDraft = useCallback(
-    (mode: 'reply' | 'reply-all' | 'forward') => {
-      if (db) {
-        void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode, message, mailbox });
-      }
-    },
-    [db, invokePromise, message, mailbox],
-  );
-
-  const handleReply = useCallback(() => openDraft('reply'), [openDraft]);
-  const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
-  const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
-
-  // Delete the message (draft locally; synced message is trashed on Gmail and removed from the feed).
-  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
-  // (Database/Feed/Credentials) can materialize.
-  const handleDelete = useCallback(() => {
-    if (mailbox) {
-      void invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
-    }
-  }, [invokePromise, mailbox, message, db]);
-
   return (
-    <Message.Root
-      attendableId={toolbarAttendableId}
-      viewMode={viewMode}
-      message={message}
-      mailbox={mailbox}
-      sender={sender}
-      onOpen={companionTo ? handleOpen : undefined}
-      onReply={handleReply}
-      onReplyAll={handleReplyAll}
-      onForward={handleForward}
-      onDelete={mailbox ? handleDelete : undefined}
-    >
-      <ObjectArticle
-        role={role}
-        toolbar={<Message.Toolbar />}
-        header={<Message.Header onContactCreate={handleContactCreate} />}
-      >
-        <Message.Body />
-      </ObjectArticle>
-    </Message.Root>
+    <Panel.Root role={role} data-testid={testId}>
+      <Panel.Toolbar asChild>
+        <ConversationToolbar
+          attendableId={toolbarAttendableId}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onCollapseAll={handleCollapseAll}
+          onExpandAll={handleExpandAll}
+        />
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <ConversationStack
+          attendableId={toolbarAttendableId}
+          items={orderedMessages}
+          mailbox={mailbox}
+          viewMode={viewMode}
+          expanded={expanded}
+          onExpandedChange={handleExpandedChange}
+          onContactCreate={handleContactCreate}
+          companion={!!companionTo}
+        />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
+
+MessageArticle.displayName = 'MessageArticle';

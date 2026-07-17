@@ -78,8 +78,19 @@ jobs:
       - name: Check for import cycles
         run: pnpm run check-cycles
 
+      - name: Check public packages don't depend on private packages
+        run: pnpm run check-public-dependencies
+
       - name: Check publish config
         run: pnpm run check-publish-config
+
+      - name: Check public packages are published
+        run: pnpm run check-packages-published
+
+      - name: Check version files in sync
+        # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by
+        # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.
+        run: node scripts/sync-versions.mjs --check
 
       - name: Check package.json paths
         run: pnpm run pkg-lint
@@ -121,7 +132,7 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
-      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e && !compiler && !manual'
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
       VITEST_ENV: 'node'
       VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
@@ -218,7 +229,7 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       # Opt in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
-      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e && !compiler && !manual'
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
       VITEST_ENV: 'node'
       VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
@@ -297,18 +308,14 @@ jobs:
           verbose: true
 
   e2e:
-    # e2e runs on pushes/schedules to release branches AND on release-please PRs.
-    # For push events github.ref is refs/heads/<branch>; for pull_request events
-    # github.ref is refs/pull/N/merge so we also check github.head_ref (the source
-    # branch name, set only on pull_request events) to catch release-please PRs.
+    # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
+    # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
+    # github.ref is refs/pull/N/merge so we also check github.head_ref (the source branch name, set only
+    # on pull_request events) to catch the changesets/action PR branch (changeset-release/<base>).
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
-      startsWith(github.ref, 'refs/heads/rc-') ||
-      startsWith(github.ref, 'refs/heads/hotfix-') ||
-      startsWith(github.ref, 'refs/heads/release-please-') ||
-      startsWith(github.head_ref, 'rc-') ||
-      startsWith(github.head_ref, 'hotfix-') ||
-      startsWith(github.head_ref, 'release-please-') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
       inputs.e2e
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -424,3 +431,62 @@ jobs:
         with:
           name: storybook-24.11.1
           result: ${{ needs.storybook.result }}
+
+  # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
+  # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.
+  # A change that needs no release just omits the changeset — no empty changeset required.
+  # Same-repo PRs only — fork PRs get a read-only token and cannot be commented on.
+  changeset-reminder:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect missing changeset
+        id: detect
+        env:
+          CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-changeset.mjs
+
+      - name: Post or remove reminder comment
+        uses: actions/github-script@v7
+        env:
+          MISSING: ${{ steps.detect.outputs.missing }}
+          PACKAGES: ${{ steps.detect.outputs.packages }}
+        with:
+          script: |
+            const marker = '<!-- changeset-reminder -->';
+            const missing = process.env.MISSING === 'true';
+            const packages = process.env.PACKAGES || '';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (missing) {
+              const body = [
+                marker,
+                '### 🦋 No changeset found',
+                '',
+                'This PR changes publishable source but has no `.changeset/*.md`.',
+                packages ? `Affected: ${packages}` : '',
+                '',
+                '- If the change is consumer-relevant (worth a changelog entry), run `pnpm changeset` and commit the file.',
+                "- If it isn't changelog-relevant (chore / refactor / internal), you can ignore this — the code still ships with the next release.",
+              ].filter(Boolean).join('\n');
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }

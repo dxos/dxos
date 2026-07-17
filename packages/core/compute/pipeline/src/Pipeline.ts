@@ -5,7 +5,10 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import * as Stream from 'effect/Stream';
+
+import { log } from '@dxos/log';
 
 import * as Stage from './Stage';
 
@@ -14,17 +17,11 @@ import * as Stage from './Stage';
  * typed `Out` descriptions and the sink performs the side effect (in-memory capture in tests, a
  * database write in production).
  */
-export type Sink<Out, Ctx, E = never> = (out: Out, ctx: Ctx) => Effect.Effect<void, E>;
+export type Sink<Out, E = never, R = never> = (out: Out) => Effect.Effect<void, E, R>;
 
-export type RunOptions<In, Out, Ctx, E = never> = {
-  /** Source items; the run drains and resolves when this stream ends. */
-  readonly source: Stream.Stream<In, E>;
-  /** Ordered stages; each stage's `Out` is the next stage's `In`. */
-  readonly stages: readonly Stage.Stage<any, any, Ctx, E>[];
+export type RunOptions<Out, E = never, R = never> = {
   /** Terminal commit for the final stage output. */
-  readonly sink: Sink<Out, Ctx, E>;
-  /** Shared context injected into every stage and the sink. */
-  readonly context: Ctx;
+  readonly sink: Sink<Out, E, R>;
   /** Pipeline-level overflow policy. Defaults to `suspend` (back pressure, never drop). */
   readonly overflow?: Stage.Overflow;
   /** Pipeline-level bounded-buffer capacity. */
@@ -32,32 +29,72 @@ export type RunOptions<In, Out, Ctx, E = never> = {
 };
 
 /**
- * Run a pipeline: fold the stages over the source, apply the overflow buffer, and drain to the
- * sink. Cancellation is structural — interrupting the returned effect interrupts the stream and
- * all in-flight stage work; there are no daemon fibers to leak.
- *
- * `undefined` emitted by any stage means "no output for that item" and is dropped between stages
- * and before the sink, so a pipeline can never deliver `undefined` as a meaningful value. The
- * source, all stages, and the sink share one error type `E`; mixing stages with distinct error
- * types requires widening to their union at the call site.
+ * Drain a composed stream to a sink: apply the pipeline-level overflow buffer and run to
+ * completion. Cancellation is structural — interrupting the returned effect interrupts the stream
+ * and all in-flight stage work; there are no daemon fibers to leak. Compose with `pipe`, chaining
+ * `Stage` transforms ahead of it: `pipe(source, Stage.map(...), Stage.window(...), Pipeline.run({
+ * sink }))`. Mirrors `Stream.runForEach`'s own shape: the sink's `E`/`R` (bound once, from `options`)
+ * are kept independent of — and unioned with — the piped-in stream's own `E`/`R`, so the incoming
+ * stream's generics aren't forced to unify with the sink's at the call site.
  */
-export const run = <In, Out, Ctx, E = never>(options: RunOptions<In, Out, Ctx, E>): Effect.Effect<void, E> => {
-  const { source, stages, sink, context, overflow = 'suspend', bufferSize = Stage.DEFAULT_BUFFER_SIZE } = options;
+export const run: {
+  <Out, E2, R2>(
+    options: RunOptions<Out, E2, R2>,
+  ): <E, R>(source: Stream.Stream<Out, E, R>) => Effect.Effect<void, E2 | E, R2 | R>;
+  <Out, E, R, E2, R2>(
+    source: Stream.Stream<Out, E, R>,
+    options: RunOptions<Out, E2, R2>,
+  ): Effect.Effect<void, E2 | E, R2 | R>;
+} = Function.dual(2, (source: Stream.Stream<any, any, any>, options: RunOptions<any, any, any>) =>
+  source.pipe(
+    Stream.buffer({
+      capacity: options.bufferSize ?? Stage.DEFAULT_BUFFER_SIZE,
+      strategy: options.overflow ?? 'suspend',
+    }),
+    Stream.runForEach(options.sink),
+  ),
+);
 
-  // Fold stages left-to-right; each stage's Out is the next stage's In. A stage may emit
-  // `undefined` to no-op for an item; that value is dropped before it reaches the next stage
-  // (and before the sink), so no-op is well-defined at every position in the chain, not only
-  // the terminal stage. The `unknown`/`any` here are the heterogeneous-chain type-system
-  // boundary — confined to this fold, never surfacing in stage-author or caller signatures.
-  const chained = stages.reduce<Stream.Stream<unknown, E>>(
-    (stream, stage) => stage.transform(stream, context).pipe(Stream.filter((item) => item !== undefined)),
-    source,
-  );
+/**
+ * Abort a pipeline with an `AbortSignal`.
+ *
+ * Races the wrapped effect against the signal; losing the race resolves as a genuine fiber
+ * interrupt, which skips every subsequent `yield*`/pipe step in the wrapped effect (an interrupt is
+ * not a failure — `Effect.tapError` and friends never see it). `onCancel` runs via `Effect.onInterrupt`
+ * so every caller gets cancellation cleanup (e.g. resetting a progress monitor stuck at its last
+ * `running` snapshot) without each one having to remember to add its own `Effect.onInterrupt`.
+ */
+export const abortWith =
+  (
+    signal: AbortSignal,
+    onCancel: Effect.Effect<void> = Effect.void,
+  ): (<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>) =>
+  (effect) =>
+    effect.pipe(
+      Effect.raceFirst(
+        Effect.async<never>((resume) => {
+          if (signal.aborted) {
+            resume(Effect.interrupt);
+            return;
+          }
 
-  return chained.pipe(
-    Stream.buffer({ capacity: bufferSize, strategy: overflow }),
-    // Narrow the chain's final output to `Out` for the sink (upstream already dropped `undefined`).
-    Stream.filter((out): out is Out => out !== undefined),
-    Stream.runForEach((out) => sink(out, context)),
-  );
-};
+          const onAbort = () => {
+            resume(
+              Effect.gen(function* () {
+                log.info('aborting pipeline', {
+                  span: yield* Effect.currentSpan.pipe(
+                    Effect.map((span) => span.name),
+                    Effect.catchAll((_) => Effect.succeed(undefined)),
+                  ),
+                });
+                return yield* Effect.interrupt;
+              }),
+            );
+          };
+
+          signal.addEventListener('abort', onAbort, { once: true });
+          return Effect.sync(() => signal.removeEventListener('abort', onAbort));
+        }),
+      ),
+      Effect.onInterrupt(() => onCancel),
+    );

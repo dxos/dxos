@@ -2,27 +2,13 @@ layer: library
 language: typescript
 tags:
   - pack
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - typedoc
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/cli/index.ts'
-      - '--entryPoint=src/core/activation-event.ts'
-      - '--entryPoint=src/core/capability.ts'
-      - '--entryPoint=src/core/plugin.ts'
-      - '--entryPoint=src/core/plugin-manager.ts'
-      - '--entryPoint=src/common/capabilities.ts'
-      - '--entryPoint=src/common/activation-events.ts'
-      - '--entryPoint=src/ui/index.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--entryPoint=src/testing/react.tsx'
-      - '--entryPoint=src/core/url-loader.ts'
-      - '--entryPoint=src/config/index.ts'
+  build:
     deps:
       - compile-plugin
   compile-plugin:
@@ -36,3 +22,23 @@ tasks:
       - dx-compile:compile
     outputs:
       - dist/plugin
+  check-module-structure:
+    # Fail when the root export pulls in React. The main entry point must stay
+    # React-free (headless consumers like Role, Capabilities, Plugin) — React
+    # lives only behind the ./ui entrypoint.
+    command: >-
+      pnpm exec dx-trace-imports
+      --export .
+      --to "{react,react-dom}"
+      --conditions workerd,worker,node
+      --fail-on present
+    deps:
+      - dx-trace-imports:compile
+      - compile
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - '^@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60

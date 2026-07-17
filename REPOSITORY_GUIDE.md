@@ -24,7 +24,7 @@ eval "$(proto activate zsh --config-mode all)"
 
 ## Monorepo workspace
 
-This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [`release-please`](https://github.com/googleapis/release-please) for release automation.
+This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [Changesets](https://github.com/changesets/changesets) for release automation (see [Releasing](#releasing)).
 
 Setup:
 
@@ -94,8 +94,38 @@ Examples of ways to run different test workloads:
 The following command generates storybooks across the individual packages:
 
 ```bash
-moon run storybook:serve
+moon run storybook-react:serve
 ```
+
+### Fast dev mode (`serve-fast`)
+
+Long React sessions can slow down and eventually wedge the browser tab. By
+default Storybook resolves every `@dxos/*` package to source (via the
+`importSource` plugin in `tools/storybook-react/.storybook/main.ts`), producing a
+huge live module graph that the renderer accumulates until it locks up. For a
+lighter session, use the fast variant:
+
+```bash
+moon run storybook-react:serve-fast
+```
+
+This sets `DX_FASTBUNDLE=1`, which skips `importSource` and pre-bundles heavy
+deps (react, effect, codemirror, radix, automerge, atlaskit). One-off use without
+the task: `DX_FASTBUNDLE=1 moon run storybook-react:serve`.
+
+**Tradeoff:** `serve-fast` reduces renderer memory and HMR churn, but you get
+less granular HMR on DXOS source (edits to `@dxos/*` internals no longer
+hot-reload from source). It's best when iterating on a single package's stories,
+not when editing deep DXOS internals — use plain `serve` for the latter.
+
+**Known accumulation sources** (present in either mode):
+
+- **WASM stories** (`@dxos/wa-sqlite`, `manifold-3d`) don't free their memory on
+  unmount.
+- **StrictMode** double-mounts effects, so per-story state accumulates faster.
+
+Either way, hard-reload the tab periodically during long sessions to reclaim
+memory.
 
 ### Playwright
 
@@ -154,30 +184,105 @@ The filter consists of a series of filename pattern/level tuples separated by co
 
 ## Branches
 
-- In general, features are developed on feature branches starting with the author's nickname e.g.: `alice/some-feature`.
-- Features merge to `main` via PRs and checks like `pnpm test` and `pnpm lint` must pass.
-- PRs have to be [titled conventionally](https://www.conventionalcommits.org/en/v1.0.0/).
-- The default branch for development is `main`, if you are contributing this is where you make PRs to.
-- Feature branches within the repo are prefixed with the contributors username.
-- External contributors may contribute by forking the repo and sending PRs from their fork.
-- All feature branches are squashed when being merged to `main`.
-- When preparing a new release, a release candidate is cut from `main` using a Github action, these branches are prefixed with `rc-`.
-- On `rc-` branches Release Please runs and calculates what the next version should be.
-- Any further bug fixes merged to the `rc-` branch will also be pushed to `main`.
-- Once the Release Please PR is merged and the release is tagged, the `rc-` branch is merged into `main` and `production` before the branch is deleted.
-- The workflow for hotfixes is identical except it starts by branching from `production` and the branch is prefixed with `hotfix-`.
-- The current workflow for `staging` is force pushing any branch there as needed, the expectation is that this would generally be only be done from `rc-` or `hotfix-` branches.
+DXOS is **trunk-based**: `main` is the only long-lived integration branch.
 
-## Publishing
+- Work happens on feature branches that merge to `main` via PRs; the **Check** workflow (build, test, lint, fmt) must pass. External contributors fork and PR from their fork.
+- Feature branches are **squashed** on merge, keeping `main` linear.
+- Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). PR titles and commit messages use `scope: description`.
+- `labs` / `staging` / `production` are **deploy environments**, not long-lived branches — you deploy a chosen commit to one via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
 
-- All merges to `main` automatically publish apps to dev environment and publish npm packages under the `main` tag.
-- All merges to `staging` automatically publish apps to staging environment and publish npm packages under the `next` tag.
-- All merges to `production` automatically publish apps to production environment and publish npm packages under the `latest` tag.
+Full design (versioning policy, publish groups, cross-repo contract): [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md).
 
-### Apps
+## Releasing
 
-The apps published are defined in [`.github/workflows/scripts/apps.sh`](https://github.com/dxos/dxos/blob/main/.github/workflows/scripts/apps.sh).
-In order to include a new app in the publish loop it needs to be added to the `APPS` list in this file.
+Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` / `git tag` on a laptop. The _why_ is in [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md); how to write a changeset is in the [authoring guide](./agents/instructions/changesets.md).
+
+Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/client`, …) and **B: Plugins + CLI** (`@dxos/plugin-*`, `@dxos/cli`). Naming one member in a changeset bumps its whole group, and both share one "Version Packages" PR. **Apps are not in a group — they deploy, never publish.**
+
+**npm `@latest`.** Add a `.changeset/*.md` to feature PRs (optional — CI nudges if a publishable change lacks one). Pushes to `main` keep a **"Version Packages" PR** open; **merge it** and `publish-all.yml` publishes the bumped packages to `@latest` (OIDC + provenance) and pushes tags.
+
+**npm `@next`.** A manual dispatch of `publish-all.yml` (Actions → **Publish** → Run workflow) cuts an ephemeral snapshot (`0.9.1-next-<datetime>`) — nothing committed, no tags. Both channels live in `publish-all.yml` because npm's OIDC trusted publisher is bound to that filename; the trigger picks the channel (push → `@latest`, dispatch → `@next`).
+
+**Previews.** Every push to `main` publishes all public packages to [pkg.pr.new](https://pkg.pr.new) (`pkg-pr-new.yml`) — an ephemeral per-commit install channel.
+
+**Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
+
+Because these tags are force-moved on every deploy, a plain `git pull`/`git fetch` will reject them once your local clone has a stale copy (`! [rejected] composer/labs -> composer/labs (would clobber existing tag)`). Turn off automatic tag-following once per clone so routine fetches stay quiet:
+
+```bash
+git config remote.origin.tagOpt --no-tags
+```
+
+You can still pull a specific one on demand: `git fetch origin tag composer/labs --force` (still needs
+`--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
+check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
+
+| Env            | Trigger                | Apps               | Notes                                    |
+| -------------- | ---------------------- | ------------------ | ---------------------------------------- |
+| **main**       | auto on push to `main` | all `main`-enabled | rolling preview; no native build         |
+| **labs**       | manual → `labs`        | composer           | prerelease Tauri build; iOS → TestFlight |
+| **staging**    | manual → `staging`     | composer + docs    | prerelease Tauri build                   |
+| **production** | manual → `production`  | all                | cuts a versioned Composer release        |
+
+**Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `deploy-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
+
+**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`labs` \| `staging` \| `production`, default `labs`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
+
+```bash
+# Composer → labs (the default env). `app` defaults to `all`, which for labs is just composer.
+gh workflow run deploy-apps.yml -f environment=labs
+
+# Composer + docs → staging.
+gh workflow run deploy-apps.yml -f environment=staging
+
+# Full production deploy AND cut a Composer release with a minor version bump.
+gh workflow run deploy-apps.yml -f environment=production -f bump=minor
+
+# Hotfix a single app to production (no Composer release; only that app's pointer tag moves).
+gh workflow run deploy-apps.yml -f environment=production -f app=docs
+
+# Deploy a specific tag/commit instead of main's HEAD (e.g. re-deploy a prior Composer release).
+gh workflow run deploy-apps.yml --ref composer-v1.4.0 -f environment=production
+
+# Watch the run you just started.
+gh run list --workflow=deploy-apps.yml --limit 1
+gh run watch
+```
+
+Handy as aliases — e.g. `gh alias set deploy-labs 'workflow run deploy-apps.yml -f environment=labs'`, then just `gh deploy-labs`.
+
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+
+```bash
+# Push secrets to the deployed composer-labs Worker.
+pnpm secrets remote labs
+
+# See what would be pushed without making any change.
+pnpm secrets remote main --dry-run
+
+# Write .dev.vars for local `wrangler dev`.
+pnpm secrets dev
+
+# Target a different 1Password item.
+pnpm secrets remote labs --item "some other item"
+```
+
+### New npm packages
+
+New packages are created with `"private": true` in their `package.json` (see [New Packages](./AGENTS.md#new-packages)). Publishing a package to npm for the first time requires an initial manual publish, since npm's OIDC trusted publishing (used by [`publish-all.yml`](https://github.com/dxos/dxos/blob/main/.github/workflows/publish-all.yml)) can only be configured for a package that already exists on the registry:
+
+1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
+2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
+3. Run `npm login && pnpm publish-package @dxos/<PACKAGE>`
+4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
+   - Repository: `dxos/dxos`
+   - Workflow file: `publish-all.yml`
+   - Environment: leave blank unless the workflow specifies one.
+   - Allowed actions: `npm publish` only — do not enable `npm stage publish` (staged/review release flow that `publish-all.yml` does not use).
+   - Click "Setup Connection"
+5. Revert the package's `version` back to align with the rest of the packages in the monorepo, now that the trusted publisher is configured and `publish-all.yml` will handle future releases.
+
+For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-publisher) Chrome extension automates step 4 across many packages. Below that threshold, doing it manually per package is faster.
 
 ## Dependencies
 
@@ -190,27 +295,6 @@ Examples:
 ## CI
 
 See [CI docs](./.github/workflows/README.md).
-
-## Branch Diagram
-
-![release flow diagram](./docs/content/design/diagrams/release-flow.drawio.svg)
-
-Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branching-model/).
-
-## Workflow:
-
-- merge release candidates and hot fixes w/ `git merge --no-ff`
-- merge feature branches by squashing
-- staging is force pushed to from other branches
-- main/production maintain history
-
-| branch       | purpose                                                                               |
-| :----------- | :------------------------------------------------------------------------------------ |
-| `main`       | the only feature integration branch                                                   |
-| `production` | reflects what code is in production (npm, docs sites, apps, etc) e.g. `docs.dxos.org` |
-| `staging`    | reflects what code is in staging `docs.staging.dxos.org`                              |
-| `rc-*`       | release branches created from main and to merge with `production` or `stating`        |
-| `hotfix-*`   | a hotfix branch created from `production` and destined for `production`               |
 
 ## Patching third-party repos
 
@@ -328,3 +412,32 @@ This is currently how the HALO vault's service worker is setup (though it will l
 ```bash
 pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck --quiet --skip-missing=true --oneline  --ignores=@dxos/node-std,@bufbuild/protoc-gen-es
 ```
+
+## Cloud / headless environments (Cursor Cloud, CI VMs)
+
+### Toolchain
+
+This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
+
+```bash
+export PROTO_HOME="$HOME/.proto"
+export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+```
+
+Do **not** use nvm; proto shims must take precedence.
+
+### Running services
+
+- **Composer app** (main app): `moon run composer-app:serve --quiet` starts a Vite dev server on port 5173. The app auto-creates a local identity on first load; no external auth is required.
+- **Tasks app**: `moon run tasks-app:serve`
+- **Docs site**: `moon run docs:serve`
+
+See the [Run commands](#run-commands) section above for the full list.
+
+### Gotchas
+
+- `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git-hooks setup prompt.
+- The `DEPOT_TOKEN` warning from moon is expected and harmless (remote-cache auth token).
+- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
+- Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
+- No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

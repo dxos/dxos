@@ -125,3 +125,5 @@ const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'sub
     }
   }, [binder, skillKeys, pluginSkills, companionTo]);
 };
+
+ChatCompanion.displayName = 'ChatCompanion';

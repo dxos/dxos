@@ -73,9 +73,15 @@ const Url = Schema.Struct({
   formattedType: Schema.optional(Schema.String),
 });
 
+/** Per-contact provenance; `sources[].updateTime` is the last-modified time used as the sync cursor. */
+const PersonMetadata = Schema.Struct({
+  sources: Schema.optional(Schema.Array(Schema.Struct({ updateTime: Schema.optional(Schema.String) }))),
+});
+
 export const Person = Schema.Struct({
   resourceName: Schema.String,
   etag: Schema.optional(Schema.String),
+  metadata: Schema.optional(PersonMetadata),
   names: Schema.optional(Schema.Array(Name)),
   emailAddresses: Schema.optional(Schema.Array(EmailAddress)),
   phoneNumbers: Schema.optional(Schema.Array(PhoneNumber)),

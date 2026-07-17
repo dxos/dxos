@@ -283,22 +283,19 @@ const useMarkdownStreamTextEditor = (
           [
             extendedMarkdown({ registry }),
             decorateMarkdown({
-              // `echo:`/`dxn:` links/images are handled by the `link-preview` entry in the
-              // registry via `xmlTags` `urlSchemes`. Skipping them here avoids `decorateMarkdown`
-              // adding a non-functional `LinkButton` anchor on top of the same node.
+              // xmlTags extension will handle `dxn:`/`echo:` links/images.
               skip: (node) =>
                 (node.name === 'Link' || node.name === 'Image') &&
                 (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
             }),
             // TODO(burdon): Make optional; Removes need for '\n\n'.
             lineSpacing(),
-            // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
-            // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
-            // up these utility classes from this source file.
             xmlBlockDecoration({
               tag: 'prompt',
-              lineClass: 'cm-prompt-line',
-              contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 box-decoration-clone rounded-sm [&_*]:text-inherit!',
+              lineClass:
+                'cm-prompt-line cm-prompt-bubble dx-panel bg-group-surface text-base-fg border-l-[8px] pl-[8px]! pr-2 [&_*]:text-inherit!',
+              firstLineClass: 'pt-1.5 rounded-t-sm',
+              lastLineClass: 'pb-1.5 rounded-b-sm',
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),

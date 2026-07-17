@@ -224,7 +224,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
           />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator' role='none'>
+          <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator'>
             <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-separator'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-container grid overflow-auto'>
                 <FileTree
@@ -293,3 +293,5 @@ const FileEditor = ({ file, role }: FileEditorProps) => {
     </Editor.Root>
   );
 };
+
+CodeArticle.displayName = 'CodeArticle';

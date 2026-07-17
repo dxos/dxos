@@ -92,3 +92,5 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
     </Panel.Root>
   );
 };
+
+SupportCompanion.displayName = 'SupportCompanion';

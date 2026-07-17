@@ -135,3 +135,5 @@ export const CustomTokenDialog = ({
     </Dialog.Content>
   );
 };
+
+CustomTokenDialog.displayName = 'CustomTokenDialog';

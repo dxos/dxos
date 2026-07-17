@@ -3,6 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
+import { Topic } from '@dxos/pipeline-email';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { Message } from '@dxos/types';
@@ -35,6 +36,17 @@ export const translations = [
         'delete-object.label': 'Delete message',
         'object-deleted.label': 'Message deleted',
       },
+      [Type.getTypename(Topic)]: {
+        'typename.label': 'Topic',
+        'typename.label_zero': 'Topics',
+        'typename.label_one': 'Topic',
+        'typename.label_other': 'Topics',
+        'object-name.placeholder': 'New topic',
+        'add-object.label': 'Add topic',
+        'rename-object.label': 'Rename topic',
+        'delete-object.label': 'Delete topic',
+        'object-deleted.label': 'Topic deleted',
+      },
       [Type.getTypename(Calendar.Calendar)]: {
         'typename.label': 'Calendar',
         'typename.label_zero': 'Calendars',
@@ -56,18 +68,15 @@ export const translations = [
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
         'event.label': 'Event',
+        'facts.label': 'Facts',
         'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
 
-        'sync-mailbox.label': 'Sync mailbox',
-        'sync-mailbox-error.title': 'Failed to sync mailbox',
-        'sync-mailbox-success.title': 'Mailbox sync complete',
+        'sync-mailbox.label': 'Sync',
         'empty-mailbox.message': 'Mailbox empty',
 
         'sync-calendar.label': 'Sync calendar',
-        'sync-calendar-error.title': 'Failed to sync calendar',
-        'sync-calendar-success.title': 'Calendar sync complete',
         'empty-calendar.message': 'Calendar empty',
 
         'sync-contacts.label': 'Sync contacts',
@@ -93,6 +102,7 @@ export const translations = [
         'view-trigger.label': 'View trigger',
 
         'view-mode.menu': 'View mode',
+        'view-mode-html.menu': 'HTML',
         'view-mode-enriched.menu': 'Enriched',
         'view-mode-markdown.menu': 'Markdown',
         'view-mode-plain.menu': 'Plain text',
@@ -113,14 +123,21 @@ export const translations = [
         'calendar-toolbar-create-event.menu': 'Create event',
         'calendar-toolbar-sync.menu': 'Save events to calendar',
 
+        'conversation-toolbar.label': 'Conversation toolbar',
+        'collapse-all.menu': 'Collapse all',
+        'expand-all.menu': 'Expand all',
         'message-toolbar.label': 'Message toolbar',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
+        'message-toolbar-ai-reply.menu': 'AI reply',
+        'draft-toolbar.label': 'Draft toolbar',
+        'draft-toolbar-generate.menu': 'Generate reply',
         'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
+        'message-toolbar-collapse.label': 'Collapse message',
 
         'message-body.placeholder': 'Enter message text...',
 
@@ -141,6 +158,29 @@ export const translations = [
         'drafts.label': 'Drafts',
         'drafts.article.description': 'Draft list (coming soon).',
         'drafts.empty.message': 'No drafts yet.',
+        'topics.label': 'Topics',
+        'topic.label': 'Topic',
+        'topics.toolbar.title': 'Topics toolbar',
+        'analyze-topics.label': 'Analyze Topics',
+        'analyze-topics-success.title': 'Topics updated.',
+        'analyze-topics-error.title': 'Failed to analyze topics.',
+        'topics.empty.message': 'No topics yet. Run "Analyze Topics" from the mailbox toolbar.',
+        'topics.count.label':
+          '{{threads}} threads · {{participants}} participants · {{questions}} questions · {{tasks}} tasks',
+        'topics.delete.label': 'Delete topic',
+        'topics.threads.label': 'Threads',
+        'topics.questions.label': 'Questions',
+        'topics.tasks.label': 'Tasks',
+        'topics.suggested.title': 'Suggested',
+        'topics.accept.label': 'Accept',
+        'topics.dismiss.label': 'Dismiss',
+        'subscriptions.label': 'Subscriptions',
+        'subscriptions.toolbar.title': 'Subscriptions toolbar',
+        'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
+        'subscriptions.count.label': '{{email}} · {{count}} messages',
+        'subscriptions.remove.label_zero': 'Remove',
+        'subscriptions.remove.label_one': 'Remove ({{count}})',
+        'subscriptions.remove.label_other': 'Remove ({{count}})',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',
@@ -152,8 +192,10 @@ export const translations = [
         'compose-email-dialog.title': 'Compose Email',
         'close.label': 'Close',
         'send-email-button.label': 'Send',
+        'send-email-success.title': 'Message sent',
         'send-email-error.title': 'Failed to send email',
-        'send-email-error-unknown.message': 'An unknown error occurred',
+        'draft-message.title': 'Draft',
+        'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 
         'draft-subject.label': 'Subject',

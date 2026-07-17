@@ -15,20 +15,13 @@ import React, {
 
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { type DndContainerHandler, type GetId, useDndRootContext } from '@dxos/react-ui-dnd';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks';
 import { Focus } from '../Focus';
-import {
-  type GetId,
-  Mosaic,
-  type MosaicEventHandler,
-  type MosaicPlaceholderProps,
-  type MosaicStackProps,
-  mosaicStyles,
-  useMosaic,
-} from '../Mosaic';
+import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles } from '../Mosaic';
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn, useBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
 
@@ -91,14 +84,13 @@ const BoardRoot = BoardRootInner as <TColumn = any, TItem = any>(props: BoardRoo
 const BOARD_CONTENT_NAME = 'Board.Content';
 
 type BoardContentProps<TColumn = any> = ThemedClassName<{
-  id: string;
   debug?: boolean;
-  eventHandler?: MosaicEventHandler<TColumn>;
+  eventHandler?: DndContainerHandler<TColumn>;
   Tile?: MosaicStackProps<TColumn>['Tile'];
 }>;
 
 const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
-  ({ id: _id, debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
+  ({ debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
     const { model } = useBoardContext(BOARD_CONTENT_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -115,6 +107,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
             autoScroll={viewport}
             eventHandler={eventHandler}
             debug={debugHandler}
+            placeholderDebug={debug}
           >
             <ScrollArea.Root orientation='horizontal' centered padding>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
@@ -160,7 +153,7 @@ BoardPlaceholder.displayName = BOARD_PLACEHOLDER_NAME;
 const BOARD_DEBUG_NAME = 'Board.Debug';
 
 export const BoardDebug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const { containers, dragging } = useMosaic(BOARD_DEBUG_NAME);
+  const { containers, dragging } = useDndRootContext(BOARD_DEBUG_NAME);
   const counter = useRef(0);
   return (
     <JsonHighlighter

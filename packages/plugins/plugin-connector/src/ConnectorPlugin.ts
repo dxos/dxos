@@ -4,8 +4,9 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Feed } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 import { ClientEvents } from '@dxos/plugin-client';
-import { AccessToken } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -17,7 +18,7 @@ import {
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, SyncBinding } from '#types';
+import { Connection } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -31,7 +32,9 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken, Connection.Connection, SyncBinding.SyncBinding] }),
+  AppPlugin.addSchemaModule({
+    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
+  }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({

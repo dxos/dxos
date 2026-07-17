@@ -14,14 +14,14 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
-      "default": "./dist/lib/neutral/testing/index.mjs",
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts"
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -30,7 +30,11 @@
     "src"
   ],
   "scripts": {},
-  "dependencies": {},
+  "dependencies": {
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/progress": "workspace:*"
+  },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
     "effect": "catalog:",

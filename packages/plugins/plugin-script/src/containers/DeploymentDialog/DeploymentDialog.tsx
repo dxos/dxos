@@ -6,9 +6,9 @@ import React, { useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AccessToken } from '@dxos/link';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
-import { type AccessToken } from '@dxos/types';
 
 import { useCreateAndDeployScriptTemplates } from '#hooks';
 import { meta } from '#meta';
@@ -103,3 +103,5 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     </Dialog.Content>
   );
 };
+
+DeploymentDialog.displayName = 'DeploymentDialog';

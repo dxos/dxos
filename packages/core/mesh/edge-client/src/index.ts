@@ -20,3 +20,4 @@ export * from './hub-http-client';
 export * from './edge-identity';
 export * from './edge-ws-muxer';
 export * from './http-client';
+export * from './browser-rendering';

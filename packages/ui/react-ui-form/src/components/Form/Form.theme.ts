@@ -31,10 +31,10 @@ const formStyles = tv({
     // Standalone submit row (full-width primary button).
     submit: 'flex w-full pt-form-padding',
     // Collapsible field-set body: indented column of sub-fields.
-    fieldSetBody: 'flex flex-col gap-2 px-2 pb-2',
+    fieldSetBody: 'flex flex-col px-2 pb-2',
     // Bordered container wrapping a collapsible nested group, plus its top spacing.
     fieldSetBox: 'border border-subdued-separator rounded-sm',
-    fieldSetBoxOuter: 'pt-trim-md',
+    fieldSetBoxOuter: '',
   },
   variants: {
     variant: {
@@ -58,7 +58,7 @@ const formStyles = tv({
         fieldLabel: '[grid-area:header]',
         fieldLabelText: 'text-base-fg text-lg',
         fieldDescription: '[grid-area:description] pt-1 text-description',
-        fieldControl: '[grid-area:control] flex justify-end items-start md:text-right pt-3 md:pt-0',
+        fieldControl: '[grid-area:control] flex justify-end items-start pt-3 md:pt-0',
         fieldValidation: '[grid-area:validation]',
       },
     },

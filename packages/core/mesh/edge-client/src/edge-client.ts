@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+
 import {
   Event,
   PersistentLifecycle,
@@ -51,8 +53,24 @@ export interface EdgeConnection extends Required<Lifecycle> {
   setIdentity(identity: EdgeIdentity): void;
   send(ctx: Context, message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
-  onReconnected(listener: ReconnectListener): () => void;
+  /**
+   * Subscribe to connection (re-)establishment.
+   *
+   * By default the listener also fires once immediately when the connection is already ready at
+   * subscription time — a current-state notification for late subscribers. Pass
+   * `emitCurrentState: false` for reconnect-reaction logic (e.g. restarting a session): reacting
+   * to the subscribe-time firing there causes restart loops, since each restart re-subscribes.
+   */
+  onReconnected(listener: ReconnectListener, opts?: { emitCurrentState?: boolean }): () => void;
 }
+
+/**
+ * Effect service tag for {@link EdgeConnection}.
+ */
+export class EdgeConnectionService extends EffectContext.Tag('@dxos/edge-client/EdgeConnection')<
+  EdgeConnectionService,
+  EdgeConnection
+>() {}
 
 /**
  * Messenger client for EDGE:
@@ -165,9 +183,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return () => this._messageListeners.delete(listener);
   }
 
-  public onReconnected(listener: ReconnectListener) {
+  public onReconnected(listener: ReconnectListener, opts?: { emitCurrentState?: boolean }) {
     this._reconnectListeners.add(listener);
-    if (this._ready.state === TriggerState.RESOLVED) {
+    if ((opts?.emitCurrentState ?? true) && this._ready.state === TriggerState.RESOLVED) {
       // Microtask so that listener is always called asynchronously, no matter the state of the ready trigger
       // at the moment of registration.
       scheduleMicroTask(this._ctx, () => {

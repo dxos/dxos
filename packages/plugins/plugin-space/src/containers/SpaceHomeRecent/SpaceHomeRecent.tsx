@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { HomeSection, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
@@ -22,6 +22,7 @@ const RECENT_LIMIT = 10;
 
 type SpaceScopedProps = {
   space?: Space;
+  onClose?: () => void;
 };
 
 /**
@@ -30,7 +31,7 @@ type SpaceScopedProps = {
  * tiles. Renders nothing (no heading) when the space has no recent objects — the starter-prompt
  * contributor (plugin-assistant) fills the empty state instead.
  */
-export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
+export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   const schemas = useCapabilities(AppCapabilities.Schema);
@@ -59,16 +60,14 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
   }
 
   return (
-    <div className='flex justify-center w-full'>
-      <div className='flex flex-col w-full max-w-[40rem]'>
-        <h2 className='text-sm font-medium text-description'>{t('space-home.recent.heading')}</h2>
-        <Masonry.Root Tile={RecentObjectTile}>
-          <Masonry.Content classNames='pt-trim-sm' padding={false} scrollbars={false}>
-            <Masonry.Viewport items={recent} getId={(object) => object.id} />
-          </Masonry.Content>
-        </Masonry.Root>
-      </div>
-    </div>
+    <HomeSection.Root>
+      <HomeSection.Header title={t('space-home.recent.heading')} onClose={onClose} />
+      <Masonry.Root Tile={RecentObjectTile}>
+        <Masonry.Content padding={false} scrollbars={false}>
+          <Masonry.Viewport items={recent} getId={(object) => object.id} />
+        </Masonry.Content>
+      </Masonry.Root>
+    </HomeSection.Root>
   );
 };
 
@@ -101,3 +100,5 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
 };
 
 RecentObjectTile.displayName = 'RecentObjectTile';
+
+SpaceHomeRecent.displayName = 'SpaceHomeRecent';
