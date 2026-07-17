@@ -22,7 +22,7 @@ import { JMAP_MESSAGE_SOURCE } from '../../../../constants';
 import { type JmapApiError, MailSyncError } from '../../../../errors';
 import { JmapMailApi } from '../../../../services';
 import { Mailbox, type SyncStreamConfig, SystemTags } from '../../../../types';
-import { type MailSyncItem, MailSyncProvider, type MailSyncSource, additionsToChanges } from '../../mail-sync';
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource } from '../../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateJmapTag } from '../tags';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
@@ -200,7 +200,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             const { token: capturedToken, createdIds, updatedIds, hasMoreDelta } = yield* resolveDelta;
 
             const source: MailSyncSource = {
-              buildSource: ({ windows, filter, tagIndex, maxMessages, onEnumerated, onRetrieved, onTaken }) => {
+              buildSource: ({ windows, filter, tagIndex, onEnumerated, onRetrieved }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
                 // is set, the delta's account-wide created ids would bypass it — so fall back to the
@@ -209,8 +209,8 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 if (forwardIds) {
                   onEnumerated(forwardIds.length);
                 }
-                const additions = additionsToChanges(
-                  jmapEmails(target, folders, {
+                return {
+                  additions: jmapEmails(target, folders, {
                     windows,
                     filter,
                     now,
@@ -222,14 +222,13 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                     Stream.provideService(JmapMailApi, providerApi),
                     Stream.mapError(MailSyncError.wrap()),
                   ),
-                  { maxMessages, onTaken },
-                );
-                // Merge the label-change reconcile branch (empty on non-incremental runs).
-                const reconciles = jmapReconcile(updatedIds, target, folderTagMap, keywordTagMap, tagIndex).pipe(
-                  Stream.provideService(JmapMailApi, providerApi),
-                  Stream.mapError(MailSyncError.wrap()),
-                );
-                return Stream.merge(additions, reconciles);
+                  // Empty on non-incremental runs; `jmapReconcile` re-fetches + diffs each `updated` id
+                  // and resolves it to a `Change` itself (it needs the entityId to read local tags).
+                  reconciles: jmapReconcile(updatedIds, target, folderTagMap, keywordTagMap, tagIndex).pipe(
+                    Stream.provideService(JmapMailApi, providerApi),
+                    Stream.mapError(MailSyncError.wrap()),
+                  ),
+                };
               },
               nextToken: () => capturedToken,
               reconcileForeignIds: updatedIds,

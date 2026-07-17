@@ -24,7 +24,6 @@ import {
   MailSyncProvider,
   type MailSyncSource,
   type ReconcileItem,
-  additionsToChanges,
   reconcileToChanges,
 } from '../../mail-sync';
 import { decodeBody, mapToMessage } from '../mapper';
@@ -166,7 +165,7 @@ export const googleMailSyncProvider = (options: {
             const { token: capturedToken, createdIds, reconcileItems, hasMoreDelta } = yield* resolveDelta;
 
             const source: MailSyncSource = {
-              buildSource: ({ windows, filter, maxMessages, onEnumerated, onRetrieved, onTaken }) => {
+              buildSource: ({ windows, filter, onEnumerated, onRetrieved }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
                 // is set, the delta's account-wide created ids would bypass it — so fall back to the
@@ -175,8 +174,8 @@ export const googleMailSyncProvider = (options: {
                 if (forwardIds) {
                   onEnumerated(forwardIds.length);
                 }
-                const additions = additionsToChanges(
-                  fetchMessages({
+                return {
+                  additions: fetchMessages({
                     userId,
                     label,
                     windows,
@@ -189,10 +188,9 @@ export const googleMailSyncProvider = (options: {
                     Stream.provideService(GoogleMailApi, api),
                     Stream.mapError(MailSyncError.wrap()),
                   ),
-                  { maxMessages, onTaken },
-                );
-                // Merge the label-change reconcile branch into the single stream (empty on non-incremental runs).
-                return Stream.merge(additions, reconcileToChanges(Stream.fromIterable(reconcileItems)));
+                  // Empty on non-incremental runs; resolved to `Change`s by the shared `reconcileToChanges`.
+                  reconciles: reconcileToChanges(Stream.fromIterable(reconcileItems)),
+                };
               },
               nextToken: () => capturedToken,
               reconcileForeignIds: reconcileItems.map((item) => item.foreignId),

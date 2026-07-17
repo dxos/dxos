@@ -9,6 +9,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import { Annotation, Database, DXN, Feed, Filter, Obj, Order, Query, Ref, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
@@ -664,6 +665,20 @@ export const dedupStage = <In>(
       return item;
     }),
   );
+
+/**
+ * Caps a stream at `limit` items and reports each item that survives the cap via `onTaken`. The caller
+ * uses that count to tell a truncated run (`taken === limit` → re-run) from an exhausted one. Placed
+ * after {@link dedupStage} so it counts only genuinely-new items. Unlike its siblings it reads no
+ * {@link Service} — it lives here because it's part of the same per-run bounding family.
+ */
+export const boundStage =
+  <In>(limit: number, onTaken: (count: number) => void): Stage.Stage<In, In, never, never> =>
+  <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
+    self.pipe(
+      Stream.take(limit),
+      Stream.tap(() => Effect.sync(() => onTaken(1))),
+    );
 
 /**
  * Default dedup-seed bound, applied to *each* end of the feed's insertion order (see
