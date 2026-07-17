@@ -89,9 +89,30 @@ Deferred from the CodeRabbit round (stage 3/4):
 - [x] 3d: branch-aware comments (AnchoredTo.branch, scoped to the review branch from the shared
       version selection) + AcceptChange per-hunk cherry-pick (CollaborationOperation.AcceptChange + cherryPickHunk); getObjectOnBranch read helper. Memoized fixtures regenerated.
 
-## Next stages
+## Stage 4 (this branch) — cleanup
 
-- [ ] Stage 4: retire the textual fork path; migrate legacy content-copy branches.
-- [ ] Keep the textual merge logic (`merge3` + conflict markers) for non-automerge cases —
-      external/imported content and any text without shared CRDT history — even after stage 4
-      retires it as the branch-merge path.
+- [x] Textual-fork CREATION path already retired in stage 2 (`Branch.create` is core-only); no
+      residual code creates content-copy branches. No `HistoryScrubber` exists (nothing to fold).
+- [x] `merge3` + conflict-marker editor retained for external/imported content and legacy
+      content-copy records (which stay mergeable via `merge3` until they drain) — NOT a destructive
+      migration (no real persisted content-copy data; format shipped <2 days ago).
+- [x] `DatabaseRoot.mapLinks` remaps the `branches` registry doc urls on space import/copy.
+- [x] Ref atom families resolve to `undefined` on the initial read of an already-deleted target.
+- [x] DESIGN.md updated to the landed converged model.
+- [ ] Deferred (needs legacy records gone first): encode core/legacy `Branch` as a discriminated
+      union / make `key` required. Left optional so legacy records still load.
+
+## Post-merge fixes on the stage-1..3 PR (#12246)
+
+- [x] Merge with origin/main: resolved plugin-comments threads.ts (branch-review scoping +
+      main's selection-style highlights) + lockfile.
+- [x] Branch-checkpoint bug: revisions on a branch record the branch's heads and lane on the
+      branch (Version.branch); view/restore resolve the branch doc. Multi-revision BranchMerge
+      storybook play test.
+- [x] Flaky concurrent-siblings forkDump test: relaxed the environment-dependent head-count
+      assertion.
+
+## Future
+
+- Generalize `@dxos/versioning` record refs over `Ref(Obj.Any)` so non-Text objects (sketches,
+  sheets) can be versioned; branch-level access control; subduction fragment compaction alignment.
