@@ -91,6 +91,11 @@ export const createTimelineModel = (
     });
   };
 
+  // A branch forked from a checkpoint anchors at that checkpoint's heads; emit its fork node right
+  // after that revision so it descends from the correct commit (not the latest main commit).
+  const sameHeads = (a: readonly string[], b: readonly string[]) =>
+    a.length === b.length && a.every((head) => b.includes(head));
+
   for (const version of history.versions) {
     // The lane is the branch the checkpoint was taken on (core: via `branch` key; legacy: via
     // target Text id), else main. A core branch checkpoint shares the root's target id, so it must
@@ -125,9 +130,19 @@ export const createTimelineModel = (
       icon: merged ? 'ph--git-merge--regular' : 'ph--bookmark-simple--regular',
       parents,
     });
+
+    // Emit any branch forked at exactly this revision right after it: `emitBranch` parents to the
+    // parent lane's last commit, which is this version we just pushed — so the fork descends from
+    // the checkpoint it was created from rather than from the latest commit.
+    for (const branch of branches) {
+      if (branch.parent.target?.id === version.target.target?.id && sameHeads(branch.anchor, version.heads)) {
+        emitBranch(branch);
+      }
+    }
   }
 
-  // Branches never referenced by a checkpoint or merge (fresh drafts).
+  // Branches not anchored at a checkpoint (forked from an un-checkpointed tip): fork from the
+  // latest commit on the parent lane.
   branches.forEach(emitBranch);
 
   // Synthetic tip: the editable present of main.

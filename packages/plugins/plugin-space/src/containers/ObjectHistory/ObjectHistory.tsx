@@ -52,6 +52,12 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
     selection.kind === 'branch'
       ? object.history?.branches.find((branch) => branch.id === selection.branchId && branch.status === 'active')
       : undefined;
+  // The checkpoint being viewed (selection.kind === 'checkpoint'). A new branch created while
+  // viewing a checkpoint forks from THAT revision, not the live tip.
+  const activeVersion =
+    selection.kind === 'checkpoint'
+      ? object.history?.versions.find((version) => version.id === selection.versionId)
+      : undefined;
 
   // Recomputed per render: the component subscribes to history mutations and the model is
   // cheap at panel scale (a handful of records).
@@ -90,12 +96,21 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
           Version.create(object, { name: name.trim(), target: timelineTarget });
         }
       } else if (naming === 'branch') {
-        Branch.create(object, { name: name.trim(), parent: timelineTarget })
+        // Fork from the viewed checkpoint's revision when one is selected (a base checkpoint's heads
+        // live in the root doc); otherwise from the live tip. Branch-of-branch (a checkpoint tagged
+        // with a branch) is not yet supported here, so it falls back to the tip.
+        const forkFrom = activeVersion && !activeVersion.branch ? activeVersion : undefined;
+        const parent = forkFrom?.target.target ?? timelineTarget;
+        Branch.create(object, {
+          name: name.trim(),
+          parent,
+          ...(forkFrom ? { heads: forkFrom.heads } : {}),
+        })
           .then((branch) => setSelection({ kind: 'branch', branchId: branch.id }))
           .catch((error) => log.catch(error));
       }
     },
-    [object, naming, activeBranch, timelineTarget, setSelection],
+    [object, naming, activeBranch, activeVersion, timelineTarget, setSelection],
   );
 
   const handleSelect = useCallback(

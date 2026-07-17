@@ -162,4 +162,40 @@ describe('timeline model', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'a branch forked from an earlier checkpoint descends from that checkpoint, not the latest commit',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({ name: 'Doc', content: '1' });
+        yield* Database.add(doc);
+        const root = yield* Database.load(doc.content);
+
+        // Three checkpoints on main, then a branch forked from the SECOND (v2), not the tip.
+        Version.create(doc, { name: 'v1', target: root });
+        Obj.update(root, () => EchoText.update(root, 'content', '1 2'));
+        const v2 = Version.create(doc, { name: 'v2', target: root });
+        Obj.update(root, () => EchoText.update(root, 'content', '1 2 3'));
+        const v3 = Version.create(doc, { name: 'v3', target: root });
+
+        const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'b', parent: root, heads: v2.heads }));
+        expect(branch.anchor).toEqual([...v2.heads]);
+
+        const { commits } = createTimelineModel(doc, root);
+        const forkId = `branch-${branch.id}`;
+        const fork = commits.find((commit) => commit.id === forkId);
+        invariant(fork);
+        // The fork descends from v2 — NOT from v3 (the latest main commit) or Now.
+        expect(fork.parents).toEqual([v2.id]);
+        expect(fork.parents).not.toContain(v3.id);
+        // And it is ordered right after v2, before v3 (parents precede children; topological).
+        const index = (id: string) => commits.findIndex((commit) => commit.id === id);
+        expect(index(forkId)).toBeGreaterThan(index(v2.id));
+        expect(index(forkId)).toBeLessThan(index(v3.id));
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
