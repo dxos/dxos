@@ -30,6 +30,7 @@ import {
 } from '../../mail-sync';
 import { decodeBody, mapToMessage } from '../mapper';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
+import { GMAIL_SYSTEM_TAGS } from './tags';
 
 /**
  * Gmail's {@link MailSyncProvider}: the message source, the label→tag map, and the fused decode+map.
@@ -233,7 +234,7 @@ const collectLabelChanges = (
  * index messages by tag. A known system label (`STARRED`, `INBOX`, `CATEGORY_*`, …) maps onto the
  * shared canonical {@link SystemTags.SystemTag}; a custom user label gets a Gmail-scoped provider tag;
  * an unmapped system label (read-state, drafts, trash/spam) is intentionally dropped — see
- * {@link SystemTags.GMAIL_SYSTEM_TAGS}.
+ * {@link GMAIL_SYSTEM_TAGS}.
  */
 // TODO(wittjosiah): Migrate this label→Tag sync onto a pipeline too (source: labels; sink:
 //   find-or-create Tag), rather than the imperative loop below.
@@ -244,7 +245,7 @@ const syncLabels = Effect.fn('google-sync.labels')(function* (mailbox: Mailbox.M
   const db = Obj.getDatabase(mailbox);
   if (db) {
     for (const labelItem of labels) {
-      const canonical = SystemTags.GMAIL_SYSTEM_TAGS[labelItem.id];
+      const canonical = GMAIL_SYSTEM_TAGS[labelItem.id];
       if (canonical) {
         const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, canonical));
         labelMap.set(labelItem.id, Mailbox.tagUri(tag));

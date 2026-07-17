@@ -5,10 +5,11 @@
 import { type Database, Tag } from '@dxos/echo';
 
 /**
- * Canonical, provider-agnostic system tags. Gmail labels, JMAP mailbox roles, and JMAP keywords all map
- * onto these, so a Gmail star, a JMAP `$flagged` keyword, and a locally-toggled star resolve to the
- * *same* {@link Tag} object — likewise for inbox/sent/etc. Custom user labels/folders keep their own
- * provider-scoped tags (see {@link Mailbox.findOrCreateGmailTag}/{@link Mailbox.findOrCreateJmapTag}).
+ * Canonical, provider-agnostic system tags. Each provider maps its own vocabulary onto these — see
+ * `operations/mail/google/sync/tags.ts` (Gmail labels) and `operations/mail/jmap/sync/tags.ts` (JMAP
+ * mailbox roles + keywords) — so a Gmail star, a JMAP `$flagged` keyword, and a locally-toggled star
+ * resolve to the *same* {@link Tag} object, likewise for inbox/sent/etc. Custom user labels/folders keep
+ * their own provider-scoped tags (see {@link Mailbox.findOrCreateGmailTag}/{@link Mailbox.findOrCreateJmapTag}).
  *
  * The source is space-general (`org.dxos.tag`), not mail-specific: the same tag identities apply to any
  * object in the space.
@@ -40,38 +41,3 @@ export const systemTagKey = (id: SystemTagId) => ({ source: SYSTEM_TAG_SOURCE, i
  */
 export const findOrCreateSystemTag = (db: Pick<Database.Database, 'query' | 'add'>, id: SystemTagId) =>
   Tag.findOrCreate(db, { key: systemTagKey(id), label: SystemTag[id].label, hue: SystemTag[id].hue });
-
-/**
- * Gmail system label id → canonical system tag. A system label absent here is intentionally dropped
- * (read-state `UNREAD`; `DRAFT`; `TRASH`/`SPAM` — never synced; there is no archive label, so archive
- * is derived as "not in inbox"), never turned into a provider tag.
- */
-export const GMAIL_SYSTEM_TAGS: Partial<Record<string, SystemTagId>> = {
-  STARRED: 'starred',
-  INBOX: 'inbox',
-  IMPORTANT: 'important',
-  SENT: 'sent',
-  CATEGORY_PERSONAL: 'personal',
-  CATEGORY_SOCIAL: 'social',
-  CATEGORY_PROMOTIONS: 'promotions',
-  CATEGORY_UPDATES: 'updates',
-  CATEGORY_FORUMS: 'forums',
-};
-
-/**
- * JMAP mailbox role → canonical system tag. Roles absent here are intentionally dropped: `archive` is
- * derived as "not in inbox" (Gmail's model), and `drafts`/`trash`/`junk` are never synced.
- */
-export const JMAP_ROLE_TAGS: Partial<Record<string, SystemTagId>> = {
-  inbox: 'inbox',
-  sent: 'sent',
-};
-
-/**
- * JMAP keyword → canonical system tag. Only `$flagged` (starred) is projected. Read-state (`$seen`) and
- * the rest (`$answered`, `$draft`, `$forwarded`, …) are intentionally dropped — high-churn and noisier
- * than useful. Kept as an explicit omission in case we want them later.
- */
-export const JMAP_KEYWORD_TAGS: Partial<Record<string, SystemTagId>> = {
-  $flagged: 'starred',
-};

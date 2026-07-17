@@ -25,6 +25,7 @@ import { JmapMailApi } from '../../../../services';
 import { Mailbox, type SyncStreamConfig, SystemTags } from '../../../../types';
 import { type MailSyncItem, MailSyncProvider, type MailSyncSource, additionsToChanges } from '../../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './tags';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -73,7 +74,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             const { list: folders } = yield* api.mailboxGet(target);
             const folderTagMap = new Map<string, string>();
             for (const folder of folders) {
-              const canonical = folder.role ? SystemTags.JMAP_ROLE_TAGS[folder.role] : undefined;
+              const canonical = folder.role ? JMAP_ROLE_TAGS[folder.role] : undefined;
               if (canonical) {
                 const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, canonical));
                 folderTagMap.set(folder.id, Mailbox.tagUri(tag));
@@ -90,7 +91,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             // Keyword → canonical system tag uri (only `$flagged`/starred today). Built once so the
             // initial map and the reconcile diff resolve the same tags.
             const keywordTagMap = new Map<string, string>();
-            for (const [keyword, canonical] of Object.entries(SystemTags.JMAP_KEYWORD_TAGS)) {
+            for (const [keyword, canonical] of Object.entries(JMAP_KEYWORD_TAGS)) {
               if (!canonical) {
                 continue;
               }

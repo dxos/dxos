@@ -28,6 +28,7 @@ import {
 } from '../../../../testing/sync-fixture';
 import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
 import { createSyncProgressKey } from '../../mail-sync';
+import { GMAIL_SYSTEM_TAGS } from './tags';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -150,7 +151,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const tags = await db.query(Filter.type(Tag.Tag)).run();
     const canonical = new Set(
       dataset.labels.flatMap((label) => {
-        const id = SystemTags.GMAIL_SYSTEM_TAGS[label.id];
+        const id = GMAIL_SYSTEM_TAGS[label.id];
         return id ? [id] : [];
       }),
     );

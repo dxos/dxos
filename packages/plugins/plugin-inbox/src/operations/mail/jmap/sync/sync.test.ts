@@ -28,6 +28,7 @@ import {
 } from '../../../../testing/sync-fixture';
 import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
 import { createSyncProgressKey } from '../../mail-sync';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './tags';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -156,10 +157,10 @@ describe('runJmapSync against a mock JMAP API', () => {
     const tags = await db.query(Filter.type(Tag.Tag)).run();
     const canonical = new Set([
       ...dataset.folders.flatMap((folder) => {
-        const id = folder.role ? SystemTags.JMAP_ROLE_TAGS[folder.role] : undefined;
+        const id = folder.role ? JMAP_ROLE_TAGS[folder.role] : undefined;
         return id ? [id] : [];
       }),
-      ...Object.values(SystemTags.JMAP_KEYWORD_TAGS).flatMap((id) => (id ? [id] : [])),
+      ...Object.values(JMAP_KEYWORD_TAGS).flatMap((id) => (id ? [id] : [])),
     ]);
     const customCount = dataset.folders.filter((folder) => !folder.role).length;
     expect(tags.length).toBe(canonical.size + customCount);
