@@ -32,7 +32,7 @@ import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
+import { Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
 
 const TYPES = [
   AccessToken.AccessToken,
@@ -40,7 +40,6 @@ const TYPES = [
   Cursor.Cursor,
   Feed.Feed,
   Mailbox.Mailbox,
-  MailboxTriggerRelation,
   Message.Message,
   Operation.PersistentOperation,
   Organization.Organization,
