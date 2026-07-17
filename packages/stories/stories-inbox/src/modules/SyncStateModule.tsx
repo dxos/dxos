@@ -17,12 +17,9 @@ export const SyncStateModule = ({ space }: ModuleProps) => {
   const [syncState, setSyncState] = useState<Database.SyncState>();
 
   useEffect(() => {
-    console.log('getSyncState');
     void space.db.getSyncState().then(setSyncState);
     return space.db.subscribeToSyncState(setSyncState);
   }, [space.db]);
-
-  console.log('syncState', syncState);
 
   return (
     <Panel.Root>
