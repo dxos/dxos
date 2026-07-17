@@ -6891,6 +6891,12 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../echo/echo-protocol
       '@dxos/edge-protocol':
         specifier: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b
         version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)(@dxos/keys@packages+common+keys)(@dxos/protocols@packages+core+protocols)(@dxos/timeframe@packages+common+timeframe)(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
@@ -6918,6 +6924,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/timeframe':
+        specifier: workspace:*
+        version: link:../../../common/timeframe
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util

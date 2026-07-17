@@ -834,6 +834,7 @@ peerDependencyRules:
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'
+    - '@dxos/compute'
     - '@effect/experimental'
     - '@effect/platform'
     - '@effect/rpc'
