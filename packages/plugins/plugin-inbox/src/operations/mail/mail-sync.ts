@@ -57,7 +57,7 @@ export type MailSyncSourceOptions = {
 /**
  * One candidate message: its dedup key fields plus a self-contained `process` effect. `process` fuses
  * the provider's decode + map (API + resolver already provided) into an `EmailStage.Change` (always an
- * `upsert`, tagged at construction), or `undefined` to drop the item (no body, filtered sender,
+ * `insert`, tagged at construction), or `undefined` to drop the item (no body, filtered sender,
  * unmappable). Fed through {@link additionsToChanges}, which dedups on `foreignId`/`key` and caps before
  * running `process`, so dedup/decode stay cheap.
  */
@@ -155,7 +155,7 @@ export class MailSyncProvider extends Context.Tag('@dxos/plugin-inbox/MailSyncPr
 
 /**
  * The add-specific head, shared by both providers: dedups raw candidates on foreignId/key, caps at
- * `maxMessages`, and runs the provider decode (which constructs each survivor's `upsert` change
+ * `maxMessages`, and runs the provider decode (which constructs each survivor's `insert` change
  * directly — see `MailSyncItem.process`). Providers apply this inside `buildSource` (after their
  * windows/list/skipCommitted/fetch) so the harness never manipulates streams. `dedupStage`/`take`/decode
  * are add-only — a retag targets an already-committed message — so they live here rather than in the
@@ -383,7 +383,7 @@ export const runMailSync = (
     const collectStats = Stage.map('collect-stats', (change: EmailStage.Change) =>
       Effect.sync(() => {
         // Telemetry counts new messages only; retag/delete changes pass through.
-        if (change._tag !== 'upsert') {
+        if (change._tag !== 'insert') {
           return change;
         }
         const mapped = change;

@@ -89,11 +89,11 @@ describe('sync pipeline harness', () => {
     return { db, feed, tagIndex, binding };
   };
 
-  // Provider-agnostic mapping stage: raw → an `upsert` Change (no contact resolution needed here).
+  // Provider-agnostic mapping stage: raw → an `insert` Change (no contact resolution needed here).
   const mapStage: Stage.Stage<Raw, EmailStage.Change, never, never> = Stage.map('map', (raw: Raw) =>
     Effect.sync(
       (): EmailStage.Change => ({
-        _tag: 'upsert',
+        _tag: 'insert',
         message: Obj.make(Message.Message, {
           [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
           created: new Date(raw.key).toISOString(),
@@ -269,7 +269,7 @@ describe('sync pipeline harness', () => {
       (raw: AttachmentRaw) =>
         Effect.sync(
           (): EmailStage.Change => ({
-            _tag: 'upsert',
+            _tag: 'insert',
             message: Obj.make(Message.Message, {
               [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
               created: new Date(raw.key).toISOString(),
@@ -347,7 +347,7 @@ describe('sync pipeline harness', () => {
       (item: AttachmentRaw) =>
         Effect.sync(
           (): EmailStage.Change => ({
-            _tag: 'upsert',
+            _tag: 'insert',
             message: Obj.make(Message.Message, {
               [Obj.Meta]: { keys: [{ id: item.id, source: TEST_SOURCE }] },
               created: new Date(item.key).toISOString(),
@@ -427,8 +427,8 @@ describe('reconcileDrafts stage', () => {
     });
 
   /** A synced message flowing in from a provider, carrying its provider foreign id. */
-  const makeSyncedUpsert = (foreignId: string, key: number): EmailStage.Change => ({
-    _tag: 'upsert',
+  const makeSyncedInsert = (foreignId: string, key: number): EmailStage.Change => ({
+    _tag: 'insert',
     message: Obj.make(Message.Message, {
       [Obj.Meta]: { keys: [{ id: foreignId, source: GMAIL_SOURCE }] },
       created: new Date(key).toISOString(),
@@ -495,7 +495,7 @@ describe('reconcileDrafts stage', () => {
     db.add(makeSentDraft(mailboxUri, 'gmail-msg-1'));
     await db.flush({ indexes: true });
 
-    await runReconcile(db, mailbox, binding, [makeSyncedUpsert('gmail-msg-1', 10)]);
+    await runReconcile(db, mailbox, binding, [makeSyncedInsert('gmail-msg-1', 10)]);
     await db.flush({ indexes: true });
 
     expect(await queryDrafts(db, mailboxUri)).toHaveLength(0);
@@ -515,7 +515,7 @@ describe('reconcileDrafts stage', () => {
     );
     await db.flush({ indexes: true });
 
-    await runReconcile(db, mailbox, binding, [makeSyncedUpsert('gmail-msg-1', 10)]);
+    await runReconcile(db, mailbox, binding, [makeSyncedInsert('gmail-msg-1', 10)]);
     await db.flush({ indexes: true });
 
     expect(await queryDrafts(db, mailboxUri)).toHaveLength(1);
@@ -529,7 +529,7 @@ describe('reconcileDrafts stage', () => {
     await db.flush({ indexes: true });
 
     // A synced message with an unrelated foreign id — must not match the sent draft above.
-    await runReconcile(db, mailbox, binding, [makeSyncedUpsert('gmail-msg-other', 10)]);
+    await runReconcile(db, mailbox, binding, [makeSyncedInsert('gmail-msg-other', 10)]);
     await db.flush({ indexes: true });
 
     expect(await queryDrafts(db, mailboxUri)).toHaveLength(1);

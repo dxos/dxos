@@ -23,7 +23,7 @@ import { DraftMessage, Message, Person } from '@dxos/types';
  * order, each simply recording what it found (`message.attachments`, `contact`, …) rather than writing
  * directly. {@link toCommitUnit} is the terminal stage that turns those into a generic
  * `Cursor.CommitUnit`, and must run last. Provider-specific decode/map stages construct the initial
- * `Change` (an `Upsert`, tagged from the start) and stay in each sync op.
+ * `Change` (an `Insert`, tagged from the start) and stay in each sync op.
  */
 
 /** An item carrying a body string that may contain HTML. */
@@ -38,13 +38,15 @@ export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, 
   Stage.map('html-to-markdown', (item: In) => Effect.sync(() => ({ ...item, body: normalizeText(item.body) })))(self);
 
 /**
- * A new message to append, tagged `upsert` from the moment a provider decodes it. The generic email
- * stages (attachments, contact extraction, …) act only on this variant of {@link Change}, each simply
- * recording what it found (`attachments`, `contact`) rather than building its own deferred write;
+ * A new message to append, tagged `insert` from the moment a provider decodes it — the dedup stage
+ * upstream (`Cursor.dedupStage`) guarantees a message reaching this variant was never previously
+ * committed, so this is a one-time insert, never a resync/overwrite of an existing message. The generic
+ * email stages (attachments, contact extraction, …) act only on this variant of {@link Change}, each
+ * simply recording what it found (`attachments`, `contact`) rather than building its own deferred write;
  * {@link toCommitUnit} turns those into a `Cursor.CommitUnit`'s `commitEffects` and must run last.
  */
-export type Upsert = {
-  readonly _tag: 'upsert';
+export type Insert = {
+  readonly _tag: 'insert';
   readonly message: Message.Message;
   readonly foreignId: string;
   readonly key: number;
@@ -83,11 +85,11 @@ export type Delete = {
 };
 
 /**
- * The discriminated item flowing through the shared email tail. `upsert` is a new message; `retag`/
+ * The discriminated item flowing through the shared email tail. `insert` is a new message; `retag`/
  * `delete` act on existing feed messages by `entityId`. All converge on the single {@link toCommitUnit}
  * → `Cursor.commit`.
  */
-export type Change = Upsert | Retag | Delete;
+export type Change = Insert | Retag | Delete;
 
 /** A decoded email attachment, ready for {@link processAttachments} to turn into a Blob. */
 export type Attachment = {
@@ -101,7 +103,7 @@ export type Attachment = {
 
 /**
  * Builds a Person (+ Organization link by domain) from the message sender and records it on the
- * item as {@link Upsert.contact} — the stage writes nothing itself; {@link toCommitUnit} defers
+ * item as {@link Insert.contact} — the stage writes nothing itself; {@link toCommitUnit} defers
  * the actual `db.add` to commit. A stage factory: call it once per pipeline run so its
  * {@link ContactLookup} is scoped to that run.
  *
@@ -118,7 +120,7 @@ export const extractContacts = (): Stage.Stage<Change, Change, never, Database.S
   return Stage.map('extract-contacts', (change: Change) =>
     Effect.gen(function* () {
       // Only new messages carry a body/sender; retag/delete pass through untouched.
-      if (change._tag !== 'upsert') {
+      if (change._tag !== 'insert') {
         return change;
       }
       const { db } = yield* Database.Service;
@@ -146,7 +148,7 @@ export const processAttachments = (): Stage.Stage<Change, Change, never, Databas
   Stage.map('process-attachments', (change: Change) =>
     Effect.gen(function* () {
       // Only new messages carry attachments; retag/delete pass through untouched.
-      if (change._tag !== 'upsert') {
+      if (change._tag !== 'insert') {
         return change;
       }
       const mapped = change;
@@ -231,7 +233,7 @@ export const reconcileDrafts = (
   Stage.map('reconcile-drafts', (change: Change) =>
     Effect.sync(() => {
       // Only new messages can supersede a draft; retag/delete pass through untouched.
-      if (change._tag !== 'upsert') {
+      if (change._tag !== 'insert') {
         return change;
       }
       const drafts = draftPool.get(change.foreignId);
@@ -241,7 +243,7 @@ export const reconcileDrafts = (
 
 /**
  * Terminal stage converting a run's {@link Change} into the generic `Cursor.CommitUnit` the commit sink
- * consumes. For an `upsert`: `message.attachments` (populated by {@link processAttachments}) becomes a
+ * consumes. For an `insert`: `message.attachments` (populated by {@link processAttachments}) becomes a
  * feed-append commit effect for the referenced blobs, `mapped.contact` (from {@link extractContacts})
  * becomes a `db.add` commit effect, and `mapped.supersededDrafts` (from {@link reconcileDrafts})
  * becomes a `db.remove` commit effect. Every other email stage is Change → Change and composes in
@@ -331,7 +333,7 @@ export const toCommitUnit = (
       const commitEffects: Cursor.CommitEffect[] = [];
 
       // Each attachment's ref is inlined (its blob isn't attached to a database yet), so `.target`
-      // resolves it synchronously without an Upsert.attachmentBlobs field to carry it separately.
+      // resolves it synchronously without an Insert.attachmentBlobs field to carry it separately.
       const blobs = (mapped.message.attachments ?? [])
         .map((attachment) => attachment.ref.target)
         .filter((target): target is Blob.Blob => Obj.instanceOf(Blob.Blob, target));
