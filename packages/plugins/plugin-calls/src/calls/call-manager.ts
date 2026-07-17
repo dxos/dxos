@@ -3,7 +3,7 @@
 //
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
-import { type Context } from 'effect';
+import type * as Context from 'effect/Context';
 import * as Option from 'effect/Option';
 
 import { Event, synchronized } from '@dxos/async';

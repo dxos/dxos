@@ -3,7 +3,7 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
-import { type Context } from 'effect';
+import type * as Context from 'effect/Context';
 
 import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
