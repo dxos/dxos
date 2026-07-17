@@ -10,10 +10,26 @@ import { AppGraphBuilder, CreateObject, OperationHandler, SkillDefinition } from
 import { meta } from '#meta';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Script.Script] }),
   Plugin.make,
 );

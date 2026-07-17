@@ -11,8 +11,6 @@ import { DoctorCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return builtInDiagnostics.map((provider) =>
-      Capability.contributes(DoctorCapabilities.DiagnosticProvider, provider),
-    );
+    return builtInDiagnostics.map((provider) => Capability.provide(DoctorCapabilities.DiagnosticProvider, provider));
   }),
 );

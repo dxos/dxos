@@ -10,7 +10,11 @@ import { CreateObject } from '#capabilities';
 import { meta } from '#meta';
 
 export const PipelinePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
   AppPlugin.addSchemaModule({ schema: [Pipeline.Pipeline] }),
   Plugin.make,
 );

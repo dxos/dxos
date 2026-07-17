@@ -7,15 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { CodeProject, Spec } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Spec.Spec),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -27,7 +26,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(CodeProject.CodeProject),
         createObject: (props, options) =>
           Effect.gen(function* () {

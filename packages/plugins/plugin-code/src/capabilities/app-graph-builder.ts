@@ -26,12 +26,14 @@ import { makePluginSpecSubject } from '../plugin-spec';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Fire the asset-contribution event so each plugin's `addPluginAssetModule`
-    // has activated by the time the graph queries the registry.
+    // `addPluginAssetModule` is dependency-mode (declared in `requires`), so migrated plugins'
+    // assets are already contributed by the time this module runs. The imperative fire below is
+    // a legacy-window shim for plugins whose asset module hasn't migrated yet — it only reaches
+    // listeners still on the old Startup event wave, and is removed with the legacy API.
     yield* Plugin.activate(AppActivationEvents.SetupPluginAssets);
     // Subscribe to the reactive asset atom so the connector re-runs when a
     // plugin enabled later in the session contributes (or removes) its spec.
-    const pluginAssetsAtom = yield* Capability.atom(AppCapabilities.PluginAsset);
+    const pluginAssetsAtom = (yield* AppCapabilities.PluginAsset).atom;
 
     const extensions = yield* Effect.all([
       // Per-plugin `spec` child node, attached to the registry's
@@ -150,6 +152,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

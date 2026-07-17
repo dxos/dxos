@@ -14,8 +14,8 @@ import { DiagnosticsPanel } from '#containers';
 import { DIAGNOSTICS_DECK_COMPANION_ID } from './app-graph-builder';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'doctorDiagnostics',
         filter: AppSurface.literal(
@@ -25,5 +25,5 @@ export default Capability.makeModule(() =>
         component: () => <DiagnosticsPanel />,
       }),
     ]),
-  ),
+  ]),
 );

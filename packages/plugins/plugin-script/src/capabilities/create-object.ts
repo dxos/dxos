@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation, Script } from '@dxos/compute';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { ScriptOperation } from '#types';
 import { Notebook } from '#types';
@@ -16,7 +15,7 @@ import { Notebook } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Script.Script),
         inputSchema: ScriptOperation.ScriptProps,
         createObject: (props, options) =>
@@ -29,7 +28,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Notebook.Notebook),
         inputSchema: ScriptOperation.NotebookProps,
         createObject: (props, options) =>

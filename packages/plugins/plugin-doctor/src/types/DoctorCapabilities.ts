@@ -13,6 +13,6 @@ import { type DiagnosticProvider as DiagnosticProviderType } from '../diagnostic
 /**
  * Plugins contribute diagnostic providers via this capability.
  */
-export const DiagnosticProvider = Capability.make<DiagnosticProviderType>(
+export const DiagnosticProvider = Capability.makeMulti<DiagnosticProviderType>(
   `${meta.profile.key}.capability.diagnostic-provider`,
 );

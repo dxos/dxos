@@ -13,8 +13,8 @@ import { ScoreArticle } from '#containers';
 import { Score } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article',
         filter: AppSurface.oneOf(
@@ -26,5 +26,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ),
+  ]),
 );

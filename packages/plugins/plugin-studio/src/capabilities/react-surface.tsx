@@ -38,8 +38,8 @@ const isArtifactCollection = (collection?: Collection.Collection): boolean => {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+  Effect.succeed([
+    Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'artifactArticle',
         filter: AppSurface.object(AppSurface.Article, Artifact.Artifact),
@@ -100,5 +100,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <VideoVariant variant={data.variant} />,
       }),
     ]),
-  ),
+  ]),
 );

@@ -19,6 +19,6 @@ import { CodeCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const atom = Atom.make<CodeCapabilities.BuildRunState>({}).pipe(Atom.keepAlive);
-    return Capability.contributes(CodeCapabilities.BuildRun, atom);
+    return [Capability.provide(CodeCapabilities.BuildRun, atom)];
   }),
 );

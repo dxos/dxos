@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Script } from '@dxos/compute';
 
 import {
@@ -23,21 +23,40 @@ import { ScriptEvents } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
+  AppPlugin.addSkillDefinitionModule({
+    requires: SkillDefinition.requires,
+    provides: SkillDefinition.provides,
+    activate: SkillDefinition,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
   AppPlugin.addSchemaModule({ schema: [Script.Script] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
+  AppPlugin.addSettingsModule({
+    requires: ScriptSettings.requires,
+    provides: ScriptSettings.provides,
     activate: ScriptSettings,
   }),
-  Plugin.addModule({
-    activatesOn: ScriptEvents.SetupCompiler,
-    activate: Compiler,
-  }),
+  // Genuine runtime event: the compiler is only loaded on demand (`hooks/useCompiler.ts`), not at startup.
+  Plugin.addLazyModule(Compiler, { activatesOn: ScriptEvents.SetupCompiler }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

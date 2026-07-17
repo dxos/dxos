@@ -48,4 +48,4 @@ export type Template = {
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };
 
-export const Template = Capability.make<Template>('org.dxos.plugin.routine.capability.template');
+export const Template = Capability.makeMulti<Template>('org.dxos.plugin.routine.capability.template');

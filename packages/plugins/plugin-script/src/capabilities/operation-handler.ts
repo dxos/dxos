@@ -11,11 +11,13 @@ import { ScriptOperationHandlerSet } from '#operations';
 
 import { ScriptHandlers } from '../skills/functions';
 
-export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(
-      Capabilities.OperationHandler,
-      OperationHandlerSet.merge(ScriptOperationHandlerSet, ScriptHandlers),
-    );
+    return [
+      Capability.provide(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.merge(ScriptOperationHandlerSet, ScriptHandlers),
+      ),
+    ];
   }),
 );

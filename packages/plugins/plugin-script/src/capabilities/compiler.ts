@@ -59,7 +59,7 @@ export default Capability.makeModule(() =>
       }
     }
 
-    return Capability.contributes(ScriptCapabilities.Compiler, compiler);
+    return [Capability.provide(ScriptCapabilities.Compiler, compiler)];
   }),
 );
 

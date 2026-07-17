@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
       const artifactObj = yield* Database.load(artifact);
 
       // Resolve the provider by the artifact's kind, then by explicit id, else the first for the kind.
-      const services = yield* Capability.getAll(StudioCapabilities.GenerationService);
+      const services = (yield* Capability.contributions(StudioCapabilities.GenerationService)).get();
       const forKind = services.filter((candidate) => candidate.kind === artifactObj.kind);
       const service = provider ? forKind.find((candidate) => candidate.id === provider) : forKind[0];
       if (!service) {

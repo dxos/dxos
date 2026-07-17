@@ -19,10 +19,12 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({}),
     });
 
-    return Capability.contributes(AppCapabilities.Settings, {
-      prefix: meta.profile.key,
-      schema: Settings.Settings,
-      atom: settingsAtom,
-    });
+    return [
+      Capability.provide(AppCapabilities.Settings, {
+        prefix: meta.profile.key,
+        schema: Settings.Settings,
+        atom: settingsAtom,
+      }),
+    ];
   }),
 );
