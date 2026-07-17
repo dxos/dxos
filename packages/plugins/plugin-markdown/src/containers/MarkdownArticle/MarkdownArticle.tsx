@@ -69,6 +69,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const diffViewMode = settings.diffView ?? 'inline';
     const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
     const branchText = activeBranch ? versioning.activeText : undefined;
+    // The core branch the editor is showing (undefined = main, or a legacy content-copy branch which
+    // carries no registry key). Threaded to extension providers so branch-review affordances (e.g.
+    // comments) scope to the branch in view.
+    const reviewBranch = activeBranch && Branch.isCore(activeBranch) ? activeBranch.key : undefined;
     // While a core-branch binding is resolving, the editor must not mount against the root object
     // — edits would silently land on main. Render an empty panel until the binding is ready.
     const branchLoading = !!activeBranch && !branchText;
@@ -131,14 +135,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return [...(otherExtensionProviders ?? []), ...(extensionProviders ?? [])]
         .flat()
         .reduce((acc: Extension[], provider) => {
-          const extension = typeof provider === 'function' ? provider({ document, viewMode }) : provider;
+          const extension = typeof provider === 'function' ? provider({ document, viewMode, reviewBranch }) : provider;
           if (extension) {
             acc.push(extension);
           }
 
           return acc;
         }, []);
-    }, [extensionProviders, otherExtensionProviders, object, viewMode]);
+    }, [extensionProviders, otherExtensionProviders, object, viewMode, reviewBranch]);
 
     // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants
     // use the custom versionDiff decorations; sideBySide uses the richer editable unified merge

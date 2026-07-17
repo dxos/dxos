@@ -3,6 +3,7 @@
 //
 
 import { invertedEffects } from '@codemirror/commands';
+import { getChunks } from '@codemirror/merge';
 import { type ChangeDesc, type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
 import {
   type Command,
@@ -297,25 +298,40 @@ const restoreCommentEffect = StateEffect.define<TrackedComment>({ map: mapTracke
  */
 export const createComment: Command = (view) => {
   const options = view.state.facet(optionsFacet);
-  const { from, to } = view.state.selection.main;
+  let { from, to } = view.state.selection.main;
+
+  // Snap to the largest logical region so commenting never depends on a precise selection. Inside a
+  // (unified) diff hunk the comment covers the whole changed hunk (a bare cursor in the hunk is
+  // enough); otherwise, with no selection, it expands to the word under the cursor. The diff case
+  // takes precedence so a comment on a change visibly covers it.
+  const merge = getChunks(view.state);
+  const chunk = merge?.chunks.find((candidate) => candidate.fromB <= to && candidate.endB >= from);
+  if (chunk) {
+    from = chunk.fromB;
+    to = Math.min(chunk.endB, view.state.doc.length);
+  } else if (from === to) {
+    const word = view.state.wordAt(from);
+    if (word) {
+      from = word.from;
+      to = word.to;
+    }
+  }
+
+  // Exclude trailing newlines so the anchor stays within content and never reaches the document end.
+  // Anchoring at the very end previously required inserting a newline to stabilise the end cursor — a
+  // visible, unwanted mutation; the end cursor instead associates with the preceding character.
+  while (to > from && view.state.doc.sliceString(to - 1, to) === '\n') {
+    to--;
+  }
+
   if (from === to) {
     return false;
   }
 
-  // Don't allow selection at end of document.
-  if (to === view.state.doc.length) {
-    view.dispatch({
-      changes: {
-        from: to,
-        insert: '\n',
-      },
-    });
-  }
-
   const cursor = Cursor.getCursorFromRange(view.state, { from, to });
   if (cursor) {
-    // Create thread via callback.
-    options.onCreate?.({ cursor, from, location: view.coordsAtPos(from) });
+    // Create thread via callback; branch-tag it with the branch under review (undefined = main).
+    options.onCreate?.({ cursor, from, location: view.coordsAtPos(from), branch: options.reviewBranch });
     return true;
   }
 
@@ -340,9 +356,14 @@ export type CommentsOptions = {
    */
   renderTooltip?: RenderCallback<{ shortcut: string }>;
   /**
+   * The branch under review; new comments are tagged with it (undefined = main/unbranched). Scopes
+   * a comment to the branch being reviewed so its visibility tracks the active diff.
+   */
+  reviewBranch?: string;
+  /**
    * Called to create a new thread and return the thread id.
    */
-  onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => void;
+  onCreate?: (params: { cursor: string; from: number; location?: Rect | null; branch?: string }) => void;
   /**
    * Selection cut/deleted.
    */

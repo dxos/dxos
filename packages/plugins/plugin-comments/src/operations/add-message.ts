@@ -54,7 +54,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
           schema: AnchoredTo.AnchoredTo,
           source: thread,
           target: subject,
-          fields: { anchor: draft.anchor },
+          fields: { anchor: draft.anchor, branch: draft.branch },
         });
         yield* Operation.schedule(ObservabilityOperation.SendEvent, {
           name: 'comments.create',

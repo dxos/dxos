@@ -11,6 +11,8 @@ import { type Document } from './Markdown';
 export type MarkdownExtensionProvider = (props: {
   document?: Document;
   viewMode?: EditorViewMode;
+  /** The core branch the editor is currently showing (the branch under review); undefined = main. */
+  reviewBranch?: string;
 }) => Extension | undefined;
 
 export type MarkdownPluginState = {

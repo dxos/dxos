@@ -78,10 +78,20 @@ Deferred from the CodeRabbit round (stage 3/4):
 - Encode the core/legacy Branch record invariant as a discriminated union once the stage-4
   migration converts legacy records (runtime guards cover it until then).
 
+## Stage 3 (this branch) — UI + review-workflow convergence
+
+- [x] 3a: branch-scoped agent edits (MarkdownOperation.Update branchId) + deployed device-local
+      BranchStore (localStorage in space-proxy).
+- [x] 3b: generic version-history companion in plugin-space (SpaceCapabilities.HistoryProvider
+      gate; markdown contributes the provider); ObjectHistory + moved timeline model/NamePopover.
+- [x] 3c: editable unified merge overlay (ui-editor diffView) for the sideBySide compare, on the
+      live branch editor; read-only DiffView removed.
+- [x] 3d: branch-aware comments (AnchoredTo.branch, scoped to the review branch from the shared
+      version selection) + AcceptChange per-hunk cherry-pick (CollaborationOperation.AcceptChange
+      + cherryPickHunk); getObjectOnBranch read helper. Memoized fixtures regenerated.
+
 ## Next stages
 
-- [ ] Stage 3: companion to plugin-space generic slot (markdown provider first); editable merge
-      overlay; branch-aware comments + AcceptChange; branch-aware agent update operation.
 - [ ] Stage 4: retire the textual fork path; migrate legacy content-copy branches.
 - [ ] Keep the textual merge logic (`merge3` + conflict markers) for non-automerge cases —
       external/imported content and any text without shared CRDT history — even after stage 4
