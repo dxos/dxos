@@ -12,6 +12,8 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Query, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
@@ -83,6 +85,8 @@ const meta = {
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
+        // Contributes the versioning-state atom consumed by useVersioning.
+        SpacePlugin({}),
         MarkdownPlugin(),
       ],
     })),
@@ -90,7 +94,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations,
+    translations: [...translations, ...spaceTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

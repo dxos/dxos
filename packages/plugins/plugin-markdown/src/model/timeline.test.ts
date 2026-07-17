@@ -10,6 +10,7 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Text as EchoText, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
+import { MAIN_BRANCH, NOW_COMMIT_ID, commitToSelection, createTimelineModel } from '@dxos/plugin-space';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { Branch, Version } from '@dxos/versioning';
@@ -18,7 +19,6 @@ import { WithProperties } from '#testing';
 
 import { MarkdownOperationHandlerSet } from '../operations';
 import { Markdown } from '../types';
-import { MAIN_BRANCH, NOW_COMMIT_ID, commitToSelection, createTimelineModel } from './timeline';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
@@ -48,7 +48,7 @@ describe('timeline model', () => {
         });
         Version.create(doc, { name: 'v2', target: root });
 
-        const { commits, branches } = createTimelineModel(doc);
+        const { commits, branches } = createTimelineModel(doc, root);
 
         expect(branches[0]).toBe(MAIN_BRANCH);
         expect(branches).toContain('draft');
@@ -106,7 +106,7 @@ describe('timeline model', () => {
         });
         binding.dispose();
 
-        const { commits } = createTimelineModel(doc);
+        const { commits } = createTimelineModel(doc, root);
         const branchCommit = commits.find((commit) => commit.id === `branch-${branch.id}`);
         invariant(branchCommit);
         // Core branches carry no synchronous diff stats (needs a binding; stage-3 timeline work).

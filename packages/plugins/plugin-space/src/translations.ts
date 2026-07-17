@@ -244,6 +244,16 @@ export const translations = [
         'companion-selected-objects.label': 'Selected',
         'field-deleted.label': 'Field deleted',
 
+        'history-panel.title': 'History',
+        'now.label': 'Now',
+        'create.label': 'Create',
+        'create-checkpoint.label': 'Create revision',
+        'create-branch.label': 'New branch',
+        'merge.label': 'Merge',
+        'discard-branch.label': 'Discard branch',
+        'revision-name.placeholder': 'Revision name (optional)',
+        'branch-name.placeholder': 'Branch name…',
+
         'members-panel.label': 'Members',
         'members-verbose.label': 'Manage space members',
         'members.description': 'Current space members and pending invitations.',

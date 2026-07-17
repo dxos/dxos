@@ -4,12 +4,11 @@
 
 import React, { useState } from 'react';
 
+import { NamePopover } from '@dxos/plugin-space/components';
 import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import { NamePopover } from '../NamePopover';
 
 export type VersionBannerProps = ThemedClassName<{
   /** Checkpoint mode is read-only time travel; branch mode is an editable draft. */

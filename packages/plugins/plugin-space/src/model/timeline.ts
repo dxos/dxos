@@ -3,9 +3,10 @@
 //
 
 import { type Commit } from '@dxos/react-ui-components';
-import { Branch, Version, diffSpans, diffStats } from '@dxos/versioning';
+import { type Text } from '@dxos/schema';
+import { Branch, type History, Version, diffSpans, diffStats } from '@dxos/versioning';
 
-import { type Markdown, type MarkdownCapabilities } from '../types';
+import { type SpaceCapabilities } from '#types';
 
 export const MAIN_BRANCH = 'main';
 export const NOW_COMMIT_ID = 'now';
@@ -18,13 +19,16 @@ export type TimelineModel = {
 };
 
 /**
- * Maps a document's version history onto Timeline commits:
+ * Maps an object's version history onto Timeline commits:
  * checkpoints → commits, branch records → fork nodes, `merge:` auto-checkpoints → two-parent
  * merge commits, plus a synthetic tip for the current state of main.
  */
-export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel?: string }): TimelineModel => {
-  const history = doc.history;
-  const rootText = doc.content.target;
+export const createTimelineModel = (
+  object: History.VersionedObject,
+  rootText: Text.Text | undefined,
+  options?: { nowLabel?: string },
+): TimelineModel => {
+  const history = object.history;
   if (!history || !rootText) {
     return { commits: [], branches: [MAIN_BRANCH] };
   }
@@ -140,19 +144,19 @@ export const createTimelineModel = (doc: Markdown.Document, options?: { nowLabel
 
 /** Maps a Timeline commit back onto a version selection. */
 export const commitToSelection = (
-  doc: Markdown.Document,
+  object: History.VersionedObject,
   commit: Commit,
-): MarkdownCapabilities.VersionSelection | undefined => {
+): SpaceCapabilities.VersionSelection | undefined => {
   if (commit.id === NOW_COMMIT_ID) {
     return { kind: 'current' };
   }
   if (commit.id.startsWith('branch-')) {
     const branchId = commit.id.slice('branch-'.length);
-    const branch = doc.history?.branches.find((branch) => branch.id === branchId);
+    const branch = object.history?.branches.find((branch) => branch.id === branchId);
     // Merged/archived branch Texts are no longer editable targets; fall back to the present.
     return branch?.status === 'active' ? { kind: 'branch', branchId } : { kind: 'current' };
   }
-  if (doc.history?.versions.some((version) => version.id === commit.id)) {
+  if (object.history?.versions.some((version) => version.id === commit.id)) {
     return { kind: 'checkpoint', versionId: commit.id };
   }
   return undefined;

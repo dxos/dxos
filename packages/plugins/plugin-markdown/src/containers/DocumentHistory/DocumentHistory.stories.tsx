@@ -12,6 +12,9 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Text as EchoText, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { ObjectHistory } from '@dxos/plugin-space/containers';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -22,7 +25,6 @@ import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
-import { DocumentHistory } from './DocumentHistory';
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define(
@@ -46,7 +48,7 @@ const DefaultStory = () => {
     return <></>;
   }
 
-  return <DocumentHistory role='article' subject={doc} attendableId={Obj.getURI(doc)} />;
+  return <ObjectHistory role='article' subject={doc} attendableId={Obj.getURI(doc)} />;
 };
 
 const meta = {
@@ -90,6 +92,7 @@ const meta = {
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
+        SpacePlugin({}),
         MarkdownPlugin(),
       ],
     })),
@@ -97,7 +100,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations,
+    translations: [...translations, ...spaceTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

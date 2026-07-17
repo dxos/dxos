@@ -226,6 +226,10 @@ describe('branching', () => {
     const { db, root } = await setup();
     await createBranch(root, 'b1');
     await switchBranch(root, 'b1');
+    // Capture the branch tip BEFORE the edit — a content-addressed frontier that is guaranteed to
+    // show `root-v0` (deriving the historical point from `getEditHistoryWithDiffs` indices is
+    // fragile: automerge change-batching varies, so the second-to-last entry may not differ).
+    const beforeEditHeads = getVersion(root).heads;
     Obj.update(root, (root: any) => {
       root.title = 'root-b1-v1';
     });
@@ -235,9 +239,9 @@ describe('branching', () => {
     const diffs = getEditHistoryWithDiffs(root);
     expect(diffs.length).toBeGreaterThan(1);
 
-    // Pin to a historical point on the branch: reads resolve the past, writes throw.
-    setTimeTravel(root, diffs.at(-2)!.heads);
-    expect(root.title).not.toBe('root-b1-v1');
+    // Pin to the pre-edit point on the branch: reads resolve the past, writes throw.
+    setTimeTravel(root, beforeEditHeads);
+    expect(root.title).toBe('root-v0');
     expect(() =>
       Obj.update(root, (root: any) => {
         root.title = 'nope';

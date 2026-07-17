@@ -7,17 +7,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 import { useObject } from '@dxos/react-client/echo';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
-import { Markdown, MarkdownCapabilities } from '../types';
+import { Markdown } from '../types';
 
 export type UseVersioningResult = {
   document?: Markdown.Document;
   history?: History.History;
-  selection: MarkdownCapabilities.VersionSelection;
-  setSelection: (selection: MarkdownCapabilities.VersionSelection) => void;
+  selection: SpaceCapabilities.VersionSelection;
+  setSelection: (selection: SpaceCapabilities.VersionSelection) => void;
   compare: boolean;
   setCompare: (compare: boolean) => void;
   /** The branch being viewed (selection.kind === 'branch'). */
@@ -42,7 +43,7 @@ export type UseVersioningResult = {
  */
 export const useVersioning = (subject?: unknown): UseVersioningResult => {
   const document = Obj.instanceOf(Markdown.Document, subject) ? (subject as Markdown.Document) : undefined;
-  const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.VersioningState);
+  const [state, setState] = useAtomCapabilityState(SpaceCapabilities.VersioningState);
 
   // Subscribe to history mutations (checkpoints/branches added elsewhere).
   useObject(document, 'history');
@@ -54,7 +55,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   const compare = (documentId && state.compare[documentId]) || false;
 
   const setSelection = useCallback(
-    (next: MarkdownCapabilities.VersionSelection) => {
+    (next: SpaceCapabilities.VersionSelection) => {
       if (!documentId) {
         return;
       }
