@@ -231,7 +231,16 @@ export const MailboxArticle = ({
     // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
     // message can match the index yet have no matching (or any) plain/markdown text to display.
     return applyPostFilters(result, mailbox, searchQuery);
-  }, [draftsOnly, drafts, pagination.items, draftsByThreadId, mailboxUri, mailbox, mailbox.messageFilters, searchQuery]);
+  }, [
+    draftsOnly,
+    drafts,
+    pagination.items,
+    draftsByThreadId,
+    mailboxUri,
+    mailbox,
+    mailbox.messageFilters,
+    searchQuery,
+  ]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);

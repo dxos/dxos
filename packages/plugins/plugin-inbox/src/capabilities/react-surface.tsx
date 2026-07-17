@@ -33,11 +33,7 @@ import {
 } from '#containers';
 import { Calendar, Mailbox } from '#types';
 
-import {
-  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
-  MAILBOX_TOPICS_NODE_DATA,
-  POPOVER_SAVE_FILTER,
-} from '../constants';
+import { MAILBOX_SUBSCRIPTIONS_NODE_DATA, MAILBOX_TOPICS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
 import { getSubscriptionsId, getTopicsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>

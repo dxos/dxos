@@ -179,7 +179,7 @@ describe('dedupeSupersededDrafts', () => {
       properties: { subject: 'Re: Topic', mailbox: mailboxUri, ...(sentMessageId ? { sentMessageId } : {}) },
     });
 
-  test('keeps synced messages and this mailbox\'s unsent drafts', ({ expect }) => {
+  test("keeps synced messages and this mailbox's unsent drafts", ({ expect }) => {
     const synced = makeSynced('foreign-1');
     const draft = makeDraft(MAILBOX_URI);
     expect(dedupeSupersededDrafts([synced, draft], MAILBOX_URI)).toEqual([synced, draft]);
