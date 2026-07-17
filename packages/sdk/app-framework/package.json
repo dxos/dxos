@@ -20,7 +20,8 @@
     },
     "./workerd": {
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/browser/index.mjs"
+      "workerd": "./dist/lib/index.mjs",
+      "default": "./dist/lib/index.mjs"
     },
     "./ActivationEvent": {
       "source": "./src/core/activation-event.ts",

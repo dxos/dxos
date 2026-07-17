@@ -23,7 +23,8 @@
     },
     "./workerd": {
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/browser/index.mjs"
+      "workerd": "./dist/lib/index.mjs",
+      "default": "./dist/lib/index.mjs"
     },
     "./events": {
       "source": "./src/app-framework/AppActivationEvents.ts",
