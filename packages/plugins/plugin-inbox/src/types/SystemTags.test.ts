@@ -14,9 +14,9 @@ import { Message } from '@dxos/types';
 
 import { Builder } from '../testing/builder';
 import * as Mailbox from './Mailbox';
-import * as Starred from './Starred';
+import * as SystemTags from './SystemTags';
 
-describe('Starred', () => {
+describe('SystemTags', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -27,7 +27,7 @@ describe('Starred', () => {
     await builder.close();
   });
 
-  test('atom family reflects starred membership per message', async ({ expect }) => {
+  test('tag atom family reflects a canonical system tag membership per message', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Feed.Feed, Tag.Tag, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
     });
@@ -39,15 +39,15 @@ describe('Starred', () => {
     const [message] = messages;
     await EffectEx.runAndForwardErrors(Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db))));
 
-    const starredTag = await Tag.findOrCreate(db, Starred.TAG_STARRED);
+    const starredTag = await SystemTags.findOrCreateSystemTag(db, 'starred');
     const starredUri = Obj.getURI(starredTag).toString();
-    await Starred.toggleStarred(mailbox, message, db);
+    await SystemTags.toggleTag(mailbox, message, db, 'starred');
 
-    const starred = Starred.atom(mailbox.tags!.target!, starredUri);
+    const starred = SystemTags.tagAtom(mailbox.tags!.target!, starredUri);
     const registry = Registry.make();
     expect(registry.get(starred(message.id))).toBe(true);
 
-    await Starred.toggleStarred(mailbox, message, db);
+    await SystemTags.toggleTag(mailbox, message, db, 'starred');
     expect(registry.get(starred(message.id))).toBe(false);
   });
 });
