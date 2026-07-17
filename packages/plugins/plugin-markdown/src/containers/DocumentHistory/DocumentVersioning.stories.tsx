@@ -285,6 +285,20 @@ export const BranchRevisions: Story = {
     await canvas.findByText('Editing branch');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('delta'));
     await waitFor(() => expect(canvas.queryByText('Viewing checkpoint')).toBeNull());
+
+    // Regression: from the branch tip, clicking a branch revision must highlight THAT revision — not
+    // snap the highlight to the main-lane 'fork: draft' checkpoint (the timeline was jumping to the
+    // first commit of the highlighted lane on every selection change).
+    await selectTimelineNode(canvasElement, 'draft-r2');
+    await canvas.findByText('Viewing checkpoint');
+    // The label also appears in the checkpoint banner, so pick the timeline row (an aria-current ancestor).
+    const currentRow = (label: string) =>
+      canvas
+        .getAllByText(label)
+        .map((element) => element.closest('[aria-current]'))
+        .find((element): element is Element => element !== null);
+    await waitFor(() => expect(currentRow('draft-r2')?.getAttribute('aria-current')).toBe('true'));
+    await expect(currentRow('fork: draft')?.getAttribute('aria-current')).toBe('false');
   },
 };
 

@@ -231,9 +231,15 @@ export const Timeline = memo(
         el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
       }, [onChange, current]);
 
-      // When the controlled `currentBranch` changes, jump to the first commit on that branch.
+      // When the controlled `currentBranch` changes, jump to the first commit on that branch — but
+      // never override an explicit commit selection that already sits on that branch. Otherwise a
+      // click that selects a commit (and drives `currentBranch` via the parent) would be snapped
+      // back to the branch's first commit.
       useEffect(() => {
         if (!currentBranch) {
+          return;
+        }
+        if (currentRef.current !== undefined && commits[currentRef.current]?.branch === currentBranch) {
           return;
         }
 

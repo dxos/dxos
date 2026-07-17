@@ -59,6 +59,24 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
       ? object.history?.versions.find((version) => version.id === selection.versionId)
       : undefined;
 
+  // The lane the current selection sits on. The timeline highlights this branch; it must match the
+  // SELECTED commit's lane, or the timeline would snap the highlight to the lane's first commit
+  // (e.g. selecting a branch revision would jump to the main-lane fork checkpoint). A branch
+  // checkpoint lanes on its branch; base checkpoints and `current` lane on main.
+  const currentBranch: string | null =
+    selection.kind === 'branch'
+      ? activeBranch
+        ? Branch.label(activeBranch)
+        : null
+      : activeVersion?.branch
+        ? (() => {
+            const branch = object.history?.branches.find(
+              (branch) => branch.key === activeVersion.branch && branch.status !== 'archived',
+            );
+            return branch ? Branch.label(branch) : MAIN_BRANCH;
+          })()
+        : MAIN_BRANCH;
+
   // Recomputed per render: the component subscribes to history mutations and the model is
   // cheap at panel scale (a handful of records).
   const rootText = provider?.getTarget(subject);
@@ -186,12 +204,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='overflow-y-auto'>
-        <Timeline
-          commits={commits}
-          branches={branches}
-          currentBranch={selection.kind === 'branch' ? (activeBranch ? Branch.label(activeBranch) : null) : MAIN_BRANCH}
-          onSelect={handleSelect}
-        />
+        <Timeline commits={commits} branches={branches} currentBranch={currentBranch} onSelect={handleSelect} />
       </Panel.Content>
     </Panel.Root>
   );
