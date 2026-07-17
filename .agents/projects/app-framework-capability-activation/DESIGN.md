@@ -24,6 +24,28 @@ Capabilities become yieldable Effect services (`yield* Capabilities.Foo`), so ac
 
 ## Key design decisions
 
+**REVISED ACTIVATION MODEL (2026-07-17, user-directed).** "Startup" is not a mode — it is the
+default root event. A module with no `requires` is a root triggered by `activatesOn`
+(implicitly Startup). A module with `requires` is a **chain member**: it activates once every
+declared singleton capability has been contributed — by whichever event's chain produced the
+providers — additionally gated on `activatesOn` when declared (an event is a special require
+that provides nothing; fired events latch). Consequences implemented in the manager:
+- Consumers of event-gated providers **pend** (no error, no bounded wait) and **cascade**
+  alive when the provider contributes; every event wave triggers a cascade round; activation
+  rounds run to a fixpoint. Requires-only modules (`{requires, activate}`) are valid.
+- Structural problems never hard-fail startup: cycle members (detected globally across event
+  boundaries and per-round), duplicate singleton providers, and impossible requires put the
+  owning plugins into an **error state** (failed atom + error activation message) and are
+  excluded from further rounds (`_structurallyFailed`, re-evaluated on enable) while
+  everything else proceeds.
+- Same-event provider/consumer pairs are topologically ordered (event waves route typed
+  modules through the wave machinery with per-module contribution).
+- In-flight modules (memoized loads) are excluded from cascade candidates — a cascade
+  awaiting a module that is itself awaiting the triggering event wave would deadlock.
+- compatFires and legacy contribution windows inside dependency modules must never be
+  awaited by the pass (fire-and-forget tracked fibers) unless the module snapshots the
+  contributions (process-manager's LayerSpec window is the awaited exception).
+
 - **Runtime-event modules** may declare `requires` (resolved when the event fires; inactive dependency-mode providers are pulled on demand) and `provides` (land in the shared registry but do not participate in startup ordering — a dependency-mode module requiring a capability provided only by an event-gated module fails startup with `MissingProviderError { hint: 'event-gated' }`).
 - **Startup roots**: the startup pass activates ALL enabled dependency-mode modules (topo order); `provides: []` + no `requires` is the `activatesOn: Startup` replacement. `provides` is the required discriminant of dependency mode.
 - **`activate` returns an unordered array of `Capability.provide(...)` contributions** (not a Layer/Context/positional tuple): multi capabilities are registry entries not services, per-contribution `deactivate` hooks survive, and ~500 existing `contributes(...)` returns migrate mechanically. Completeness is checked by an `EnsureProvides` conditional-type intersection on the activate function; the runtime validator is authoritative.

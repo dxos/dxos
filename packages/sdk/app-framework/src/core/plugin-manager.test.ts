@@ -2074,7 +2074,7 @@ describe('PluginManager', () => {
       }),
     );
 
-    it.effect('fails fast with MissingProviderError when a singleton has no provider', () =>
+    it.effect('records MissingProviderError when a singleton has no possible provider', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
           Plugin.define(testMeta).pipe(
@@ -2090,15 +2090,19 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        const error = yield* Effect.flip(manager.start());
-        assert.instanceOf(error, MissingProviderError);
-        assert.strictEqual(error.context.capability, String.identifier);
-        assert.deepStrictEqual(error.context.requiredBy, ['org.dxos.plugin.test.module.consumer']);
+        // Structural problems put the plugin into an error state; startup continues.
+        yield* manager.start();
+        assert.deepStrictEqual(manager.getActive(), []);
+        const failures = manager.getFailed();
+        assert.strictEqual(failures.length, 1);
+        assert.instanceOf(failures[0].error, MissingProviderError);
+        assert.strictEqual(failures[0].error.context.capability, String.identifier);
       }),
     );
 
-    it.effect('flags event-gated providers when they cannot satisfy startup', () =>
+    it.effect('consumers of event-gated providers pend until the event fires', () =>
       Effect.gen(function* () {
+        let received: string | undefined;
         const Test = Plugin.make(
           Plugin.define(testMeta).pipe(
             Plugin.addModule({
@@ -2106,7 +2110,8 @@ describe('PluginManager', () => {
               requires: [String],
               provides: [],
               activate: Effect.fnUntraced(function* () {
-                yield* String;
+                const { string } = yield* String;
+                received = string;
               }),
             }),
             Plugin.addModule({
@@ -2119,13 +2124,22 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        const error = yield* Effect.flip(manager.start());
-        assert.instanceOf(error, MissingProviderError);
-        assert.strictEqual(error.context.hint, 'event-gated');
+        // The consumer's chain roots at the provider's event: it pends through startup...
+        assert.isFalse(yield* manager.start());
+        assert.deepStrictEqual(manager.getActive(), []);
+        assert.deepStrictEqual(manager.getFailed(), []);
+
+        // ...and cascades alive once the event fires and the provider contributes.
+        yield* manager.activate(CountEvent);
+        assert.strictEqual(received, 'gated');
+        assert.includeMembers([...manager.getActive()], [
+          'org.dxos.plugin.test.module.gated-provider',
+          'org.dxos.plugin.test.module.consumer',
+        ]);
       }),
     );
 
-    it.effect('fails fast with DependencyCycleError on a requires cycle', () =>
+    it.effect('puts cycle members into an error state and continues', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
           Plugin.define(testMeta).pipe(
@@ -2151,15 +2165,18 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        const error = yield* Effect.flip(manager.start());
-        assert.instanceOf(error, DependencyCycleError);
-        const path = error.context.path;
+        yield* manager.start();
+        assert.deepStrictEqual(manager.getActive(), []);
+        const failures = manager.getFailed();
+        assert.isAbove(failures.length, 0);
+        assert.instanceOf(failures[0].error, DependencyCycleError);
+        const path = failures[0].error.context.path;
         assert.isArray(path);
         assert.isAbove((path as unknown[]).length, 0);
       }),
     );
 
-    it.effect('fails fast with DuplicateProviderError on two singleton providers', () =>
+    it.effect('puts duplicate singleton providers into an error state and continues', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
           Plugin.define(testMeta).pipe(
@@ -2177,9 +2194,12 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        const error = yield* Effect.flip(manager.start());
-        assert.instanceOf(error, DuplicateProviderError);
-        assert.strictEqual(error.context.capability, String.identifier);
+        yield* manager.start();
+        assert.deepStrictEqual(manager.getActive(), []);
+        const failures = manager.getFailed();
+        assert.isAbove(failures.length, 0);
+        assert.instanceOf(failures[0].error, DuplicateProviderError);
+        assert.strictEqual(failures[0].error.context.capability, String.identifier);
       }),
     );
 

@@ -185,12 +185,13 @@ export type PluginModuleOptions = {
 };
 
 /**
- * Structural authoring shape for typed modules — dependency mode (`provides` present, no
- * `activatesOn`; activates during the startup dependency pass, ordered by the capability
- * graph — an empty `provides` consciously declares a startup root) or runtime-event mode
- * (`activatesOn` present; activates when the event fires, `requires` resolved on demand,
- * `provides` land in the registry without participating in startup ordering).
- * Mode validity and activate-channel enforcement happen in {@link ValidateModuleOptions}.
+ * Structural authoring shape for typed modules. A module without `requires` is a root,
+ * triggered by `activatesOn` (implicitly Startup). A module with `requires` is a chain
+ * member: it activates once every declared capability has been contributed — by whichever
+ * event's chain produced the providers, not necessarily during startup — additionally gated
+ * on `activatesOn` when declared. Consumers of event-gated providers stay pending until the
+ * event fires and the provider contributes; capability cycles fail at runtime
+ * (DependencyCycleError). Channel enforcement happens in {@link ValidateModuleOptions}.
  */
 export type TypedModuleOptions = {
   readonly id?: string;
@@ -226,6 +227,7 @@ type OptProvides<Opts> = Opts extends { provides: infer P extends readonly Capab
  */
 export type ValidateModuleOptions<Opts extends TypedModuleOptions> = Opts extends
   | { provides: readonly Capability.AnyTag[] }
+  | { requires: readonly Capability.AnyTag[] }
   | { activatesOn: ActivationEvent.Events; requires: readonly Capability.AnyTag[] }
   ? Opts['activate'] extends (props?: any) => Effect.Effect<infer A, infer E, infer R>
     ? [R] extends [Capability.Requirements<OptRequires<Opts>>]
@@ -248,9 +250,7 @@ export type ValidateModuleOptions<Opts extends TypedModuleOptions> = Opts extend
         : { readonly 'activate error channel must extend Error': E }
       : { readonly 'activate requires undeclared capabilities': Exclude<R, Capability.Requirements<OptRequires<Opts>>> }
     : { readonly 'activate must be an effect-returning function': Opts['activate'] }
-  : Opts extends { requires: readonly Capability.AnyTag[] }
-    ? { readonly 'module with requires must declare provides or activatesOn': Opts }
-    : true;
+  : true;
 
 /**
  * Erased module authoring record stored on the builder. Type enforcement happens at the
@@ -539,11 +539,13 @@ const normalizeActivation = (meta: Meta, options: ModuleEntry): ActivationSpec =
     };
   }
 
-  invariant(options.provides !== undefined, `Dependency-mode module missing provides. Plugin: ${meta.profile.key}`);
+  // A chain member without `activatesOn`: roots (no requires) activate at startup; modules
+  // with requires activate whenever their providers have contributed, whichever event's
+  // chain produced them.
   return {
     mode: 'dependency',
     requires: options.requires ?? [],
-    provides: options.provides,
+    provides: options.provides ?? [],
     compatFires: options.compatFires,
   };
 };

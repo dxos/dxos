@@ -150,17 +150,23 @@ describe('Plugin module authoring', () => {
   });
 
   describe('type-level enforcement', () => {
-    it('rejects invalid module shapes', () => {
+    it('accepts requires-only chain members and rejects invalid shapes', () => {
       const builder = Plugin.define(testMeta);
 
       builder.pipe(
-        // @ts-expect-error requires without provides or activatesOn matches no mode.
+        // A chain member: activates when String becomes available, whichever chain provides it.
         Plugin.addModule({
-          id: 'invalid',
+          id: 'chain-member',
           requires: [String],
-          activate: () => Effect.void,
+          activate: Effect.fnUntraced(function* () {
+            yield* String;
+          }),
         }),
       );
+      const [chainMember] = Plugin.make(builder)().modules;
+      assert(chainMember.activation.mode === 'dependency');
+      expect(chainMember.activation.requires).toEqual([String]);
+      expect(chainMember.activation.provides).toEqual([]);
 
       builder.pipe(
         // fires* wiring cannot be combined with capability declarations.
