@@ -9,6 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { decorateMarkdown } from '../markdown';
 import { commands } from './commands';
+import { outlinerDnd } from './dnd';
 import { editor } from './editor';
 import { menu } from './menu';
 import { selectionCompartment, selectionEquals, selectionFacet } from './selection';
@@ -26,7 +27,6 @@ import { outlinerTree, treeFacet } from './tree';
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Convert to task object and insert link (menu button).
 // TODO(burdon): Smart Cut-and-paste.
-// TODO(burdon): DND.
 
 export type OutlinerProps = {};
 
@@ -52,6 +52,9 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
 
   // Floating menu.
   menu(),
+
+  // Drag-to-reorder items.
+  outlinerDnd(),
 
   // Line decorations.
   decorations(),

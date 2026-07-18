@@ -9,6 +9,8 @@ import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
+  blockDrag,
+  blockOutline,
   blocks,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -22,9 +24,25 @@ import { Editor, type EditorViewProps } from '../components';
 
 random.seed(123);
 
-type StoryArgs = Pick<EditorViewProps, 'value'>;
+// The boxes (`blockOutline`) and the drag gutter (`blockDrag`) are independent extensions; `blocks`
+// composes both. Each story wires a different combination to show them working alone or together.
+type Variant = 'both' | 'outline' | 'drag';
 
-const DefaultStory = (props: StoryArgs) => {
+type StoryArgs = Pick<EditorViewProps, 'value'> & { variant?: Variant };
+
+const variantExtension = (variant: Variant) => {
+  switch (variant) {
+    case 'outline':
+      return blockOutline();
+    case 'drag':
+      return blockDrag();
+    case 'both':
+    default:
+      return blocks();
+  }
+};
+
+const DefaultStory = ({ variant = 'both', ...props }: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
@@ -32,9 +50,9 @@ const DefaultStory = (props: StoryArgs) => {
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      blocks(),
+      variantExtension(variant),
     ],
-    [themeMode],
+    [themeMode, variant],
   );
 
   return (
@@ -58,17 +76,35 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const content = Array.from({ length: 30 }, (_, i) => {
+  const n = random.number.int(10);
+  if (i == 0 || n < 2) {
+    return `# Header ${i + 1}`;
+  }
+
+  if (n > 8) {
+    return Array.from(
+      {
+        length: random.number.int({ min: 2, max: 8 }),
+      },
+      (_, i) => `- Item ${i + 1}`,
+    ).join('\n');
+  }
+
+  return random.lorem.paragraph();
+}).join('\n\n');
+
+// Boxes + drag gutter.
 export const Default: Story = {
-  args: {
-    value: Array.from({ length: 30 }, (_, i) => {
-      const n = random.number.int(10);
-      if (i == 0 || n < 2) {
-        return `# Header ${i + 1}`;
-      }
-      if (n > 8) {
-        return Array.from({ length: random.number.int({ min: 2, max: 8 }) }, (_, i) => `- Item ${i + 1}`).join('\n');
-      }
-      return random.lorem.paragraph();
-    }).join('\n\n'),
-  },
+  args: { variant: 'both', value: content },
+};
+
+// Boxes only (no drag gutter).
+export const Outline: Story = {
+  args: { variant: 'outline', value: content },
+};
+
+// Drag gutter only (no boxes).
+export const Drag: Story = {
+  args: { variant: 'drag', value: content },
 };
