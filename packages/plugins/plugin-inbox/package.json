@@ -99,7 +99,7 @@
     "./testing/http-mock": {
       "source": "./src/testing/http-mock.ts",
       "types": "./dist/types/src/testing/http-mock.d.ts",
-      "default": "./dist/lib/neutral/testing/http-mock.mjs"
+      "import": "./dist/lib/testing/http-mock.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

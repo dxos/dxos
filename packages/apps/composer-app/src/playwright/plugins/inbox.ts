@@ -47,6 +47,8 @@ export const Inbox = {
 
   /** Draft and send a reply to the currently-open thread. Reply-mode prefills the recipient. */
   reply: async (page: Page, body: string) => {
+    // Reply lives in the message toolbar's "more" overflow (only Reply All is directly visible).
+    await page.getByTestId('inbox.message.more').first().click();
     await page.getByTestId('inbox.message.reply').first().click();
     await page.getByTestId('edit-email-form').waitFor();
     // The body is a CodeMirror editor rendered as a sibling of the form (Form.Root puts the testid on
