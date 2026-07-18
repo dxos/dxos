@@ -9,12 +9,12 @@ import { expect, within } from 'storybook/test';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -55,7 +55,6 @@ const meta = {
         Capability.contributes(AppCapabilities.Translations, translations),
         Capability.contributes(Capabilities.OperationHandler, BloggerOperationHandlerSet),
       ],
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

@@ -18,7 +18,8 @@ export const ProgressPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'trace-progress-sink',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    requires: [],
+    provides: [Capabilities.TraceSink],
     activate: () => TraceProgressSink(),
   }),
   Plugin.addModule({

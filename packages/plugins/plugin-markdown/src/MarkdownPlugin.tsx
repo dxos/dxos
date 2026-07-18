@@ -67,7 +67,11 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     provides: AnchorSort.provides,
     activate: AnchorSort,
   }),
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addAppGraphModule({
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
+    activate: AppGraphBuilder,
+  }),
   Plugin.make,
 );
 

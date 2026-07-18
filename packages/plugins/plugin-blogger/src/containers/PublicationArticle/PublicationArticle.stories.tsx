@@ -9,11 +9,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -55,7 +55,6 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

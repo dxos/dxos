@@ -8,7 +8,6 @@ import React from 'react';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Query, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -20,7 +19,7 @@ import { Text } from '@dxos/schema';
 import { Branch, Version } from '@dxos/versioning';
 
 import { translations } from '#translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
 import { MarkdownProperties } from './MarkdownProperties';
@@ -33,8 +32,8 @@ const MarkdownExtensionsPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extensions',
-    activatesOn: MarkdownEvents.SetupExtensions,
-    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.ExtensionProvider, [])),
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activate: () => Effect.succeed([Capability.provide(MarkdownCapabilities.ExtensionProvider, [])]),
   }),
   Plugin.make,
 );
@@ -63,7 +62,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

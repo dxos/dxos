@@ -2,10 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -21,17 +19,24 @@ export const BloggerPlugin = Plugin.define(meta).pipe(
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  // The graph builder queries the personal space for publications (needs the client) and reads the
-  // attention ViewState to derive the draft-anchored comments companion (needs attention ready).
+  AppPlugin.addSurfaceModule({
+    requires: ReactSurface.requires,
+    provides: ReactSurface.provides,
+    activate: ReactSurface,
+  }),
+  AppPlugin.addOperationHandlerModule({
+    requires: OperationHandler.requires,
+    provides: OperationHandler.provides,
+    activate: OperationHandler,
+  }),
+  AppPlugin.addCreateObjectModule({
+    requires: CreateObject.requires,
+    provides: CreateObject.provides,
+    activate: CreateObject,
+  }),
   AppPlugin.addAppGraphModule({
-    activatesOn: ActivationEvent.allOf(
-      AppActivationEvents.SetupAppGraph,
-      ClientEvents.ClientReady,
-      AttentionEvents.AttentionReady,
-    ),
+    requires: AppGraphBuilder.requires,
+    provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
   Plugin.make,

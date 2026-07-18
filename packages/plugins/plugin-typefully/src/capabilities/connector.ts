@@ -66,6 +66,6 @@ export const createTypefullyConnectorEntry = () => ({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [createTypefullyConnectorEntry()]);
+    return [Capability.provide(Connector, [createTypefullyConnectorEntry()])];
   }),
 );
