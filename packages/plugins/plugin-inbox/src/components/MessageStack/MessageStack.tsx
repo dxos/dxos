@@ -523,7 +523,6 @@ type ConversationMessageRowProps = {
  */
 const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: ConversationMessageRowProps) => {
   const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
-
   const searchSnippet = useMemo(
     () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
     [message, searchQuery],
