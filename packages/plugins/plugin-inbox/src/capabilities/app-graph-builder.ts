@@ -16,7 +16,7 @@ import { Cursor } from '@dxos/link';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { DraftMessage, Event, Message } from '@dxos/types';
