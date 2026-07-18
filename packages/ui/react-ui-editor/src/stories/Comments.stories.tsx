@@ -11,9 +11,9 @@ import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 import {
   comments,
   createBasicExtensions,
@@ -118,7 +118,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
 const meta = {
   title: 'ui/react-ui-editor/Comments',
   render: (args) => <DefaultStory {...args} />,
-  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withAttention(DOCUMENT_ID), withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
