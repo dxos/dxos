@@ -746,7 +746,7 @@ overrides:
   '@dxos/docs>vite': ^7.3.2
   # Preview build from dxos/edge#t3code/a092bc61 (Effect HttpApi contract), consumed while the
   # HttpApiClient-derived client is validated locally, ahead of a proper release.
-  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b
+  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a
   # edge-protocol's `@dxos/{compute,echo,echo-protocol,keys,protocols,timeframe}` peerDependencies
   # use a bare "*" range. A bare-range peer is resolved relative to whatever ambient peer context
   # the CONSUMER already sits in — so a consumer with its own large peer bucket (e.g. anything

@@ -1907,7 +1907,7 @@ overrides:
   '@automerge/automerge': 3.3.0-fragments.2
   '@automerge/automerge-subduction': 0.16.0
   '@dxos/docs>vite': ^7.3.2
-  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b
+  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a
   '@dxos/edge-protocol>@dxos/compute': workspace:*
   '@dxos/edge-protocol>@dxos/echo': workspace:*
   '@dxos/edge-protocol>@dxos/echo-protocol': workspace:*
@@ -6898,8 +6898,8 @@ importers:
         specifier: workspace:*
         version: link:../../echo/echo-protocol
       '@dxos/edge-protocol':
-        specifier: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b
-        version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)(@dxos/keys@packages+common+keys)(@dxos/protocols@packages+core+protocols)(@dxos/timeframe@packages+common+timeframe)(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+        specifier: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a
+        version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)(@dxos/keys@packages+common+keys)(@dxos/protocols@packages+core+protocols)(@dxos/timeframe@packages+common+timeframe)(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -18930,8 +18930,8 @@ importers:
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
       '@dxos/edge-protocol':
-        specifier: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b
-        version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)(@dxos/keys@packages+common+keys)(@dxos/protocols@packages+core+protocols)(@dxos/timeframe@packages+common+timeframe)(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+        specifier: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a
+        version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)(@dxos/keys@packages+common+keys)(@dxos/protocols@packages+core+protocols)(@dxos/timeframe@packages+common+timeframe)(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -27220,12 +27220,12 @@ packages:
     peerDependencies:
       react: ~19.2.7
 
-  '@dxos/debug@https://pkg.pr.new/dxos/dxos/@dxos/debug@d8b67339245eece5762c749f56d8873be4bc1ce9':
-    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/debug@d8b67339245eece5762c749f56d8873be4bc1ce9}
-    version: 0.9.0
+  '@dxos/debug@https://pkg.pr.new/dxos/dxos/@dxos/debug@ea17086':
+    resolution: {integrity: sha512-MmxTegfSkpeSVgjmpUzNy4+ngQ+eg6RzQTWp9ERUtGF2/UZK5dEg+8+NgDow8gUAKRRRImMLUgCodWaWrLxspg==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/debug@ea17086}
+    version: 0.10.0
 
-  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b':
-    resolution: {tarball: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b}
+  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a':
+    resolution: {integrity: sha512-bXSE4+4mRvwTI5sBV2WRBB0fZHwOajguGZD6iVYClqe2vusbMFg/v155Ct+XztRW/1gimjjMVoFU44F3y6tEIQ==, tarball: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a}
     version: 0.1.0
     peerDependencies:
       '@dxos/compute': workspace:*
@@ -27234,34 +27234,42 @@ packages:
       '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/timeframe': workspace:*
-      '@effect/platform': 0.96.1
+      '@effect/platform': 0.96.2
       effect: 3.21.4
 
-  '@dxos/errors@https://pkg.pr.new/dxos/dxos/@dxos/errors@d8b67339245eece5762c749f56d8873be4bc1ce9':
-    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/errors@d8b67339245eece5762c749f56d8873be4bc1ce9}
-    version: 0.9.0
+  '@dxos/errors@https://pkg.pr.new/dxos/dxos/@dxos/errors@ea1708639b1eedd88df19b175257a19a76818f9b':
+    resolution: {integrity: sha512-eYZPLHdldcGNycaHrfifusxuJdLjAmA1VntfdP65fNzqcuZGXvs3m2bSXmkUTvkAlClPT2aMrds6+Yz+v96f3A==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/errors@ea1708639b1eedd88df19b175257a19a76818f9b}
+    version: 0.10.0
 
-  '@dxos/invariant@https://pkg.pr.new/dxos/dxos/@dxos/invariant@d8b67339245eece5762c749f56d8873be4bc1ce9':
-    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/invariant@d8b67339245eece5762c749f56d8873be4bc1ce9}
-    version: 0.9.0
+  '@dxos/invariant@https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea17086':
+    resolution: {integrity: sha512-FhjYdN8bpsmLYOZ8fALsIY25vEBQoJAgOF69rUEf3/2ZT6t/ksRDKa3mGCWmmpHx9bM6eCHqmGeYJyTG4xUA7w==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea17086}
+    version: 0.10.0
 
-  '@dxos/keys@https://pkg.pr.new/dxos/dxos/@dxos/keys@d8b67339245eece5762c749f56d8873be4bc1ce9':
-    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/keys@d8b67339245eece5762c749f56d8873be4bc1ce9}
-    version: 0.9.0
+  '@dxos/invariant@https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea1708639b1eedd88df19b175257a19a76818f9b':
+    resolution: {integrity: sha512-FhjYdN8bpsmLYOZ8fALsIY25vEBQoJAgOF69rUEf3/2ZT6t/ksRDKa3mGCWmmpHx9bM6eCHqmGeYJyTG4xUA7w==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea1708639b1eedd88df19b175257a19a76818f9b}
+    version: 0.10.0
+
+  '@dxos/keys@https://pkg.pr.new/dxos/dxos/@dxos/keys@ea17086':
+    resolution: {integrity: sha512-Zzy1LqpCikc5jhS50+Gg56MqN/aZkl1pn+lVP5/JObQ9MxD9D4gK+kwGtl0TWX9zFro3B0CM2hu21LmJBuaCBg==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/keys@ea17086}
+    version: 0.10.0
     peerDependencies:
       effect: 3.21.4
 
-  '@dxos/log@https://pkg.pr.new/dxos/dxos/@dxos/log@d8b67339245eece5762c749f56d8873be4bc1ce9':
-    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/log@d8b67339245eece5762c749f56d8873be4bc1ce9}
-    version: 0.9.0
+  '@dxos/log@https://pkg.pr.new/dxos/dxos/@dxos/log@ea1708639b1eedd88df19b175257a19a76818f9b':
+    resolution: {integrity: sha512-1rjv/dyri1WS/TGMF6Wjm/eHTAzKo7zRr6ZpEGn0YeBn34lTRnXu4cl5flre7DQhh31isQsHhAENMUq75H6Sfw==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/log@ea1708639b1eedd88df19b175257a19a76818f9b}
+    version: 0.10.0
 
-  '@dxos/node-std@https://pkg.pr.new/dxos/dxos/@dxos/node-std@d8b67339245eece5762c749f56d8873be4bc1ce9':
-    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/node-std@d8b67339245eece5762c749f56d8873be4bc1ce9}
-    version: 0.9.0
+  '@dxos/node-std@https://pkg.pr.new/dxos/dxos/@dxos/node-std@ea17086':
+    resolution: {integrity: sha512-jHbqEVjtH4Z7jKyZx8wl33f7TsH//vxkyCzvLFjC8B6X1Bo+I5MmiANQfXg2W5LbiyFcHbPqo2xoS0r4Y5r1RA==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/node-std@ea17086}
+    version: 0.10.0
 
-  '@dxos/util@https://pkg.pr.new/dxos/dxos/@dxos/util@d8b67339245eece5762c749f56d8873be4bc1ce9':
-    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/util@d8b67339245eece5762c749f56d8873be4bc1ce9}
-    version: 0.9.0
+  '@dxos/util@https://pkg.pr.new/dxos/dxos/@dxos/util@ea17086':
+    resolution: {integrity: sha512-TAR3TfbL/zulOIaeGpAUDabebNQlSniBfhtsIqZydeU2iw0hSZkt62HvG5xJMVVSPxfVaXhBOEEeFV+HJjBerg==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/util@ea17086}
+    version: 0.10.0
+
+  '@dxos/util@https://pkg.pr.new/dxos/dxos/@dxos/util@ea1708639b1eedd88df19b175257a19a76818f9b':
+    resolution: {integrity: sha512-TAR3TfbL/zulOIaeGpAUDabebNQlSniBfhtsIqZydeU2iw0hSZkt62HvG5xJMVVSPxfVaXhBOEEeFV+HJjBerg==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/util@ea1708639b1eedd88df19b175257a19a76818f9b}
+    version: 0.10.0
 
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
@@ -49811,47 +49819,49 @@ snapshots:
       react: 19.2.7
       tslib: 2.8.1
 
-  '@dxos/debug@https://pkg.pr.new/dxos/dxos/@dxos/debug@d8b67339245eece5762c749f56d8873be4bc1ce9':
+  '@dxos/debug@https://pkg.pr.new/dxos/dxos/@dxos/debug@ea17086':
     dependencies:
-      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@d8b67339245eece5762c749f56d8873be4bc1ce9
+      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@ea17086
 
-  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@bbd2d7b(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)(@dxos/keys@packages+common+keys)(@dxos/protocols@packages+core+protocols)(@dxos/timeframe@packages+common+timeframe)(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)':
+  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@e8ba00a(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)(@dxos/keys@packages+common+keys)(@dxos/protocols@packages+core+protocols)(@dxos/timeframe@packages+common+timeframe)(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)':
     dependencies:
       '@dxos/echo': link:packages/core/echo/echo
       '@dxos/echo-protocol': link:packages/core/echo/echo-protocol
-      '@dxos/errors': https://pkg.pr.new/dxos/dxos/@dxos/errors@d8b67339245eece5762c749f56d8873be4bc1ce9
-      '@dxos/invariant': https://pkg.pr.new/dxos/dxos/@dxos/invariant@d8b67339245eece5762c749f56d8873be4bc1ce9
+      '@dxos/errors': https://pkg.pr.new/dxos/dxos/@dxos/errors@ea1708639b1eedd88df19b175257a19a76818f9b
+      '@dxos/invariant': https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea1708639b1eedd88df19b175257a19a76818f9b
       '@dxos/keys': link:packages/common/keys
-      '@dxos/log': https://pkg.pr.new/dxos/dxos/@dxos/log@d8b67339245eece5762c749f56d8873be4bc1ce9(effect@3.21.4)
+      '@dxos/log': https://pkg.pr.new/dxos/dxos/@dxos/log@ea1708639b1eedd88df19b175257a19a76818f9b(effect@3.21.4)
       '@dxos/protocols': link:packages/core/protocols
       '@dxos/timeframe': link:packages/common/timeframe
-      '@dxos/util': https://pkg.pr.new/dxos/dxos/@dxos/util@d8b67339245eece5762c749f56d8873be4bc1ce9(effect@3.21.4)
+      '@dxos/util': https://pkg.pr.new/dxos/dxos/@dxos/util@ea1708639b1eedd88df19b175257a19a76818f9b(effect@3.21.4)
       '@effect/platform': 0.96.2(effect@3.21.4)
       effect: 3.21.4
 
-  '@dxos/errors@https://pkg.pr.new/dxos/dxos/@dxos/errors@d8b67339245eece5762c749f56d8873be4bc1ce9': {}
+  '@dxos/errors@https://pkg.pr.new/dxos/dxos/@dxos/errors@ea1708639b1eedd88df19b175257a19a76818f9b': {}
 
-  '@dxos/invariant@https://pkg.pr.new/dxos/dxos/@dxos/invariant@d8b67339245eece5762c749f56d8873be4bc1ce9': {}
+  '@dxos/invariant@https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea17086': {}
 
-  '@dxos/keys@https://pkg.pr.new/dxos/dxos/@dxos/keys@d8b67339245eece5762c749f56d8873be4bc1ce9(effect@3.21.4)':
+  '@dxos/invariant@https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea1708639b1eedd88df19b175257a19a76818f9b': {}
+
+  '@dxos/keys@https://pkg.pr.new/dxos/dxos/@dxos/keys@ea17086(effect@3.21.4)':
     dependencies:
-      '@dxos/debug': https://pkg.pr.new/dxos/dxos/@dxos/debug@d8b67339245eece5762c749f56d8873be4bc1ce9
-      '@dxos/invariant': https://pkg.pr.new/dxos/dxos/@dxos/invariant@d8b67339245eece5762c749f56d8873be4bc1ce9
-      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@d8b67339245eece5762c749f56d8873be4bc1ce9
+      '@dxos/debug': https://pkg.pr.new/dxos/dxos/@dxos/debug@ea17086
+      '@dxos/invariant': https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea17086
+      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@ea17086
       effect: 3.21.4
       ulidx: 2.3.0
 
-  '@dxos/log@https://pkg.pr.new/dxos/dxos/@dxos/log@d8b67339245eece5762c749f56d8873be4bc1ce9(effect@3.21.4)':
+  '@dxos/log@https://pkg.pr.new/dxos/dxos/@dxos/log@ea1708639b1eedd88df19b175257a19a76818f9b(effect@3.21.4)':
     dependencies:
-      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@d8b67339245eece5762c749f56d8873be4bc1ce9
-      '@dxos/util': https://pkg.pr.new/dxos/dxos/@dxos/util@d8b67339245eece5762c749f56d8873be4bc1ce9(effect@3.21.4)
+      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@ea17086
+      '@dxos/util': https://pkg.pr.new/dxos/dxos/@dxos/util@ea17086(effect@3.21.4)
       chalk: 4.1.2
       js-yaml: 4.1.1
       lodash.defaultsdeep: 4.6.1
     transitivePeerDependencies:
       - effect
 
-  '@dxos/node-std@https://pkg.pr.new/dxos/dxos/@dxos/node-std@d8b67339245eece5762c749f56d8873be4bc1ce9':
+  '@dxos/node-std@https://pkg.pr.new/dxos/dxos/@dxos/node-std@ea17086':
     dependencies:
       assert: 2.0.0
       events: 3.3.0
@@ -49859,12 +49869,22 @@ snapshots:
       readable-stream: 3.6.2
       util: 0.12.5
 
-  '@dxos/util@https://pkg.pr.new/dxos/dxos/@dxos/util@d8b67339245eece5762c749f56d8873be4bc1ce9(effect@3.21.4)':
+  '@dxos/util@https://pkg.pr.new/dxos/dxos/@dxos/util@ea17086(effect@3.21.4)':
     dependencies:
-      '@dxos/debug': https://pkg.pr.new/dxos/dxos/@dxos/debug@d8b67339245eece5762c749f56d8873be4bc1ce9
-      '@dxos/invariant': https://pkg.pr.new/dxos/dxos/@dxos/invariant@d8b67339245eece5762c749f56d8873be4bc1ce9
-      '@dxos/keys': https://pkg.pr.new/dxos/dxos/@dxos/keys@d8b67339245eece5762c749f56d8873be4bc1ce9(effect@3.21.4)
-      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@d8b67339245eece5762c749f56d8873be4bc1ce9
+      '@dxos/debug': https://pkg.pr.new/dxos/dxos/@dxos/debug@ea17086
+      '@dxos/invariant': https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea17086
+      '@dxos/keys': https://pkg.pr.new/dxos/dxos/@dxos/keys@ea17086(effect@3.21.4)
+      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@ea17086
+      '@hazae41/symbol-dispose-polyfill': 1.1.2
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/util@https://pkg.pr.new/dxos/dxos/@dxos/util@ea1708639b1eedd88df19b175257a19a76818f9b(effect@3.21.4)':
+    dependencies:
+      '@dxos/debug': https://pkg.pr.new/dxos/dxos/@dxos/debug@ea17086
+      '@dxos/invariant': https://pkg.pr.new/dxos/dxos/@dxos/invariant@ea17086
+      '@dxos/keys': https://pkg.pr.new/dxos/dxos/@dxos/keys@ea17086(effect@3.21.4)
+      '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@ea17086
       '@hazae41/symbol-dispose-polyfill': 1.1.2
     transitivePeerDependencies:
       - effect

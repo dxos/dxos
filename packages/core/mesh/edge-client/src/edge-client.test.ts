@@ -6,12 +6,11 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Keyring } from '@dxos/keyring';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth';
+import { createEphemeralEdgeIdentity } from './auth';
 import { protocol } from './defs';
 import { EdgeClient } from './edge-client';
 import { type EdgeIdentity } from './edge-identity';
@@ -144,17 +143,8 @@ describe('EdgeClient', () => {
     expect(messageSourceLog.map((m) => m.peerKey)).toStrictEqual([oldIdentity.peerKey, newIdentity.peerKey]);
   });
 
-  test.skipIf(!process.env.EDGE_ENDPOINT)('connect to local edge server', async () => {
-    // const identity = await createEphemeralEdgeIdentity();
-
-    const keyring = new Keyring();
-    const identity = await createTestHaloEdgeIdentity(keyring, await keyring.createKey(), await keyring.createKey());
-
-    const client = new EdgeClient(identity, { socketEndpoint: process.env.EDGE_ENDPOINT! });
-    await openAndClose(client);
-    await client.send(Context.default(), textMessage('Hello world 1'));
-    expect(client.isOpen).is.true;
-  });
+  // Live tests against a real edge server (`wrangler dev`) live in `edge-ws.e2e.test.ts`,
+  // gated by DX_EDGE_TEST_URL.
 
   const textMessage = (message: string, source?: EdgeIdentity) =>
     protocol.createMessage(TextMessageSchema, {
