@@ -454,10 +454,16 @@ const createDragPlugin = (
         this.#preview.style.transform = `translate(${left}px, ${top}px)`;
       }
 
-      // The slot the pointer is over: the first block whose vertical midpoint is below the pointer.
+      // The slot the pointer is over: the first non-source block whose vertical midpoint is below the
+      // pointer. The dragged (collapsed) blocks are skipped, so the drop gap — and thus the placeholder —
+      // always lands on a visible block, above or below the pointer, never inside the lifted group.
       #dropIndexAt(clientY: number): number {
         const blocks = getBlocks(this.view.state);
+        const sources = new Set(this.#sourceIndices ?? []);
         for (let index = 0; index < blocks.length; index++) {
+          if (sources.has(index)) {
+            continue;
+          }
           const top = this.view.coordsAtPos(blocks[index].from);
           const bottom = this.view.coordsAtPos(blocks[index].to);
           if (!top || !bottom) {
