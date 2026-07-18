@@ -10,7 +10,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { useResolveRef } from '@dxos/react-client/echo';
+import { useObject, useResolveRef } from '@dxos/react-client/echo';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
@@ -36,7 +36,7 @@ const MIN_SIZE = 6;
 const FALLBACK_SIZE = 320;
 
 /** Scroll the element's top into view (honoring its `scroll-margin`) only if that top is not already visible. */
-const scrollTopIntoViewIfNeeded = (element: HTMLElement): void => {
+const maybeScrollIntoView = (element: HTMLElement): void => {
   let parent = element.parentElement;
   while (parent) {
     const { overflowY } = getComputedStyle(parent);
@@ -48,6 +48,7 @@ const scrollTopIntoViewIfNeeded = (element: HTMLElement): void => {
     }
     parent = parent.parentElement;
   }
+
   const elementTop = element.getBoundingClientRect().top;
   const viewTop = parent ? parent.getBoundingClientRect().top : 0;
   const viewBottom = parent ? parent.getBoundingClientRect().bottom : window.innerHeight;
@@ -82,22 +83,25 @@ export const PreviewComponent = ({
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
   const { invokePromise } = useOperationInvoker();
+
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
   const defaultIsSurfaceAvailable = Surface.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
-  const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
+
   // Resolve relative to the containing document's own space so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
+  const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
   const ref = useMemo(() => (uri && space ? space.db.makeRef<Obj.Unknown>(uri) : undefined), [uri, space]);
-  const subject = useResolveRef(ref);
+  const object = useResolveRef(ref);
+  const subject = useObject(object);
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
   const { height } = parseEmbedLabel(labelProp);
 
-  // `min-content` keeps the embed at its intrinsic height until the user resizes it; the handle then
-  // measures the rendered box and switches to an explicit height.
+  // `min-content` keeps the embed at its intrinsic height until the user resizes it;
+  // the handle then measures the rendered box and switches to an explicit height.
   const [size, setSize] = useState<Size>(height != null ? height / remSize : 'min-content');
 
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
@@ -110,11 +114,11 @@ export const PreviewComponent = ({
     setSize(height != null ? height / remSize : 'min-content');
   }, [height, remSize]);
 
-  // Persist the height (px) into the alt text on drop by rewriting the image node in the source. The
-  // node bounds and base label are re-derived from the live document (the captured `range`/`label`
-  // can lag a prior edit before React re-renders the widget). When the same object is transcluded
-  // more than once, the node whose start is NEAREST the widget's range is chosen so a duplicate
-  // embed isn't rewritten by mistake.
+  // Persist the height (px) into the alt text on drop by rewriting the image node in the source.
+  // The node bounds and base label are re-derived from the live document (the captured `range`/`label`
+  // can lag a prior edit before React re-renders the widget).
+  // When the same object is transcluded more than once, the node whose start is NEAREST the widget's
+  //  range is chosen so a duplicate embed isn't rewritten by mistake.
   const handleResize = useCallback(
     (next: Size, commit?: boolean) => {
       setSize(next);
@@ -123,9 +127,9 @@ export const PreviewComponent = ({
       }
 
       const doc = view.state.doc.toString();
-      const marker = `](${dxn})`;
       let open = -1;
       let close = -1;
+      const marker = `](${dxn})`;
       for (let at = doc.indexOf(marker); at >= 0; at = doc.indexOf(marker, at + marker.length)) {
         const start = doc.lastIndexOf('![', at);
         if (start >= 0 && (open < 0 || Math.abs(start - range.from) < Math.abs(open - range.from))) {
@@ -145,7 +149,7 @@ export const PreviewComponent = ({
       // actually scrolls (cm-scroller or an outer panel); defer a frame so the new height applies first.
       requestAnimationFrame(() => {
         if (containerRef.current) {
-          scrollTopIntoViewIfNeeded(containerRef.current);
+          maybeScrollIntoView(containerRef.current);
         }
       });
     },
@@ -154,26 +158,28 @@ export const PreviewComponent = ({
 
   // Open the referenced object: defer to the caller's handler when provided, else navigate to it.
   const handleOpen = useCallback(() => {
-    if (!uri || !subject) {
+    if (!uri || !object) {
       return;
     }
+
     if (onOpen) {
       onOpen(uri);
     } else {
       void invokePromise?.(LayoutOperation.Open, {
-        subject: [Paths.getObjectPathFromObject(subject)],
+        subject: [Paths.getObjectPathFromObject(object)],
         navigation: 'immediate',
       });
     }
-  }, [uri, subject, onOpen, invokePromise]);
+  }, [uri, object, onOpen, invokePromise]);
 
-  if (!uri || !subject || !data) {
+  if (!uri || !object || !data) {
     return null;
   }
 
-  const objectLabel = Obj.getLabel(subject);
-  const objectIcon = Obj.getIcon(subject);
+  const objectIcon = Obj.getIcon(object);
+  const objectLabel = Obj.getLabel(object);
 
+  // Section preview.
   if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
     return (
       <div
@@ -214,13 +220,14 @@ export const PreviewComponent = ({
     );
   }
 
+  // Card preview.
   if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
     return (
       <div>
         <Card.Root>
           <Card.Header>
             <Card.Block />
-            <Card.Title>{Obj.getLabel(data.subject)}</Card.Title>
+            <Card.Title>{objectLabel}</Card.Title>
           </Card.Header>
           <Card.Body>
             <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />

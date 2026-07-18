@@ -15,9 +15,14 @@ to [[composer-plugins]] (which owns plugin _structure_: capabilities, surfaces, 
 and [[composite-components]] (which owns _authoring_ new `@dxos/react-ui` primitives). When you're
 laying out a container, picking a color class, wiring a toolbar, or writing a story, the rules live here.
 
-**Golden rule:** the design system already has a primitive, a token, or a layout for what you need.
+**Golden rule:** If the design system already has a primitive, a token, or a layout for what you need you must use it.
 Reaching for a raw `<div>` with custom classes, a native `<input>`, or a guessed color token is almost
 always a sign you missed an existing piece. Find it (grep an existing themed component) before inventing.
+
+Low-level components (plugin/_/src/components, react-ui-_). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit` capabilitiess.
+Instead aspects that may be derived from capabilites must be passed as properties.
+Each component lives in its own subdirectory with an `index.ts` barrel.
+Use named exports; no default exports.
 
 ## Package family
 

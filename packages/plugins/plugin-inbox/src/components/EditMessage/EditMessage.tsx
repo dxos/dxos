@@ -135,10 +135,10 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               <Form.FieldSet />
             </Form.Content>
           </Column.Center>
-          <Column.Center classNames='pbs-form-gap'>
+          <Column.Center classNames='pbs-3'>
             <Editor.Root>
               <Editor.View
-                classNames='dx-expander border border-separator'
+                classNames='dx-expander border border-separator min-h-[16lh]'
                 extensions={extension}
                 value={message.blocks?.find((b) => b._tag === 'text')?.text ?? ''}
                 onChange={(value) => {
