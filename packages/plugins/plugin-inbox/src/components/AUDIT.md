@@ -12,14 +12,14 @@ This audit tracks the divergence ahead of reconciling them (staged)._
 
 ## The three, compared
 
-|               | **MessageTile** (list)            | **CollapsedCard** (folded thread)          | **Message.Header** (expanded)       |
-| ------------- | --------------------------------- | ------------------------------------------ | ----------------------------------- |
-| Container     | `Tile.Root` / `Tile.Header` (Card) | `Listbox.Root` / `Listbox.Item`            | `Header.Root` (Card rows)           |
-| Lead line     | **subject** + date                | avatar + **sender name** + snippet + date  | star + **subject** `<h2>`           |
-| Sender        | `Row.Person avatar` (in body)     | hand-rolled `DxAvatar` + `Listbox.ItemContent` | `Row.Person role='from'`        |
-| Date          | in title line                     | trailing span                              | own `Card.Row`                      |
-| Avatar hue    | `Row.Person` → `hashToHue(name)`  | `getMessageProps.hue` → `toHue(from)`      | (anchor, no avatar)                 |
-| Data source   | `getMessageProps`                 | `getMessageProps`                          | reads `message.properties` + `Row.Person` |
+|             | **MessageTile** (list)             | **CollapsedCard** (folded thread)              | **Message.Header** (expanded)             |
+| ----------- | ---------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| Container   | `Tile.Root` / `Tile.Header` (Card) | `Listbox.Root` / `Listbox.Item`                | `Header.Root` (Card rows)                 |
+| Lead line   | **subject** + date                 | avatar + **sender name** + snippet + date      | star + **subject** `<h2>`                 |
+| Sender      | `Row.Person avatar` (in body)      | hand-rolled `DxAvatar` + `Listbox.ItemContent` | `Row.Person role='from'`                  |
+| Date        | in title line                      | trailing span                                  | own `Card.Row`                            |
+| Avatar hue  | `Row.Person` → `hashToHue(name)`   | `getMessageProps.hue` → `toHue(from)`          | (anchor, no avatar)                       |
+| Data source | `getMessageProps`                  | `getMessageProps`                              | reads `message.properties` + `Row.Person` |
 
 ## What stands out
 
@@ -46,5 +46,5 @@ This audit tracks the divergence ahead of reconciling them (staged)._
 
 - [x] Stage 0 — audit (this file).
 - [ ] Stage 1 — remove the wrapper `<div>` collapse affordance around `Message.Toolbar` in `ReadTile`
-  (move the collapse behavior into `Message.Toolbar`).
+      (move the collapse behavior into `Message.Toolbar`).
 - [ ] Stage 2+ — reconcile the header representations (per an option above).
