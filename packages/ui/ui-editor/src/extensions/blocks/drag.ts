@@ -325,17 +325,15 @@ const createDragPlugin = (
 
       // A press without drag: move the caret to the end of the block (collapsing any text selection) and
       // update the block selection in the same transaction (so the field doesn't treat the caret move as a
-      // clear). The block's `from` is its selection identity; the caret goes to its `to`.
+      // clear). A plain press selects only this block (clearing any other selection); shift toggles it in
+      // the set. The block's `from` is its selection identity; the caret goes to its `to`.
       #click(index: number, shiftKey: boolean) {
         const block = getBlocks(this.view.state)[index];
         if (!block) {
           return;
         }
         const anchor = block.from;
-        const current = this.view.state.field(blockSelectionField, false) ?? [];
-        const effect = shiftKey
-          ? toggleBlockSelection.of(anchor)
-          : setBlockSelection.of(current.length === 1 && current[0] === anchor ? [] : [anchor]);
+        const effect = shiftKey ? toggleBlockSelection.of(anchor) : setBlockSelection.of([anchor]);
         this.view.dispatch({ selection: { anchor: block.to }, effects: effect });
       }
 
