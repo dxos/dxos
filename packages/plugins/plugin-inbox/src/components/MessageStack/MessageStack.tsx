@@ -11,11 +11,12 @@ import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
 import { type Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';
 
-import { getMessageProps } from '../../util';
+import { getMessageBodyText, getMessageProps } from '../../util';
 import { Row } from '../Row';
 import { Tile } from '../Tile';
 
@@ -90,6 +91,8 @@ export type MessageStackProps = {
   enableIgnoreSender?: boolean;
   /** Show the "Create Topic" tile menu item. Off by default (only the mailbox handles `create-topic`). */
   enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, tiles render a highlighted best-match snippet instead of the default preview. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
@@ -107,6 +110,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       pagination,
       enableIgnoreSender,
       enableCreateTopic,
+      searchQuery,
       onAction,
       ...props
     },
@@ -127,6 +131,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   starredAtom: starredAtom?.(item.messages[0]?.id),
                   enableIgnoreSender,
                   enableCreateTopic,
+                  searchQuery,
                   onAction,
                 }
               : {
@@ -135,10 +140,11 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   starredAtom: starredAtom?.(item.id),
                   enableIgnoreSender,
                   enableCreateTopic,
+                  searchQuery,
                   onAction,
                 },
         ),
-      [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, onAction],
+      [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction],
     );
 
     // The incoming `currentId` is a message ID (set when a specific message becomes selected),
@@ -262,13 +268,15 @@ type MessageTileData = {
   starredAtom?: Atom.Atom<boolean>;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, the tile renders a highlighted best-match snippet. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, onAction } = data;
+  const { message, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
@@ -297,6 +305,11 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   );
 
   const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
+
+  const searchSnippet = useMemo(
+    () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
+    [message, searchQuery],
+  );
 
   const menuItems = useMemo(() => {
     if (!onAction) {
@@ -345,9 +358,12 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       <Card.Body>
         <Row.Person actor={message.sender} avatar role='from' onClick={handleAvatarClick} />
 
+        {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
           <Card.Row>
-            <Card.Text variant='description'>{snippet}</Card.Text>
+            <Card.Text variant='description'>
+              {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
+            </Card.Text>
           </Card.Row>
         )}
 
@@ -371,6 +387,8 @@ type ConversationTileData = {
   starredAtom?: Atom.Atom<boolean>;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, each message's snippet renders a highlighted best-match. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
@@ -378,7 +396,16 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, total, starredAtom, enableIgnoreSender, enableCreateTopic, onAction } = data;
+    const {
+      conversationId,
+      messages,
+      total,
+      starredAtom,
+      enableIgnoreSender,
+      enableCreateTopic,
+      searchQuery,
+      onAction,
+    } = data;
     const latest = messages[0];
     // `messages` is already the capped preview; `total` (when larger) is the full thread size.
     const remaining = total !== undefined ? total - messages.length : 0;
@@ -459,28 +486,14 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           title={<span className='grow truncate font-medium'>{subject}</span>}
         />
         <Card.Body>
-          {messages.map((message) => {
-            const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
-            return (
-              <Card.Row key={message.id}>
-                <Card.Block>
-                  <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
-                </Card.Block>
-                <div className='flex flex-col' onClick={(event) => handleMessageClick(event, message.id)}>
-                  <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
-                    {from && <span className='truncate'>{from}</span>}
-                    <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
-                  </button>
-
-                  {snippet && (
-                    <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
-                      {snippet}
-                    </button>
-                  )}
-                </div>
-              </Card.Row>
-            );
-          })}
+          {messages.map((message) => (
+            <ConversationMessageRow
+              key={message.id}
+              message={message}
+              searchQuery={searchQuery}
+              onMessageClick={handleMessageClick}
+            />
+          ))}
           {remaining > 0 && (
             <Card.Row>
               <Card.Text variant='description'>{`+${remaining} more`}</Card.Text>
@@ -493,3 +506,50 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
 );
 
 ConversationTile.displayName = 'ConversationTile';
+
+//
+// ConversationMessageRow
+//
+
+type ConversationMessageRowProps = {
+  message: Message.Message;
+  /** Active mailbox search term; when set, renders a highlighted best-match snippet. */
+  searchQuery?: string;
+  onMessageClick: (event: MouseEvent, messageId: string) => void;
+};
+
+/**
+ * One message row within a {@link ConversationTile}. Extracted so the search snippet can be
+ * memoized per message via `useMemo` — inlining it in the `messages.map` would recompute the
+ * snippet on every keystroke for every message in the conversation.
+ */
+const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: ConversationMessageRowProps) => {
+  const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
+  const searchSnippet = useMemo(
+    () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
+    [message, searchQuery],
+  );
+
+  return (
+    <Card.Row>
+      <Card.Block>
+        <DxAvatar hue={hue} hueVariant='surface' variant='circle' size={6} fallback={from} />
+      </Card.Block>
+      <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
+        <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
+          {from && <span className='truncate'>{from}</span>}
+          <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
+        </button>
+
+        {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
+        {snippet && (
+          <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
+            {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
+          </button>
+        )}
+      </div>
+    </Card.Row>
+  );
+};
+
+ConversationMessageRow.displayName = 'ConversationMessageRow';

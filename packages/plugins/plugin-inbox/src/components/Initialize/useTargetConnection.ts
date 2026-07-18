@@ -2,16 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type Operation } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { Connection, ConnectorOperation, isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, type ConnectorEntry, isCursorForTarget } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
-import { useAtomState } from '@dxos/react-hooks';
 
 /**
  * Find the {@link Connection} bound to the given `target` object via an external-sync
@@ -27,64 +23,34 @@ export const useTargetConnection = <T extends Obj.Any>(
 ): { connection: Connection.Connection | undefined } => {
   const db = target ? Obj.getDatabase(target) : undefined;
   const cursors = useQuery(db, Filter.type(Cursor.Cursor));
-  const connections = useQuery(db, Filter.type(Connection.Connection));
-  const connection = useMemo(() => {
-    if (!target) {
-      return undefined;
-    }
-    const cursor = cursors.find(
-      (candidate): candidate is Cursor.ExternalCursor =>
-        Cursor.isExternal(candidate) && isCursorForTarget(candidate, target),
-    );
-    if (!cursor) {
-      return undefined;
-    }
-    return connections.find((candidate) => candidate.accessToken.uri === cursor.spec.source.uri);
-  }, [target, cursors, connections]);
-  return { connection };
+  const cursor = useMemo(
+    () =>
+      target
+        ? cursors.find(
+            (candidate): candidate is Cursor.ExternalCursor =>
+              Cursor.isExternal(candidate) && isCursorForTarget(candidate, target),
+          )
+        : undefined,
+    [target, cursors],
+  );
+  const connections = useQuery(
+    db,
+    cursor ? Filter.type(Connection.Connection, { accessToken: cursor.spec.source }) : Filter.nothing(),
+  );
+  return { connection: connections[0] };
 };
 
 /**
- * Build a `sync` callback for `target`: resolves its bound {@link Connection} and invokes
- * {@link ConnectorOperation.SyncConnection} — the same shared fan-out handler the connection settings'
- * "Sync now" and the mailbox node's context-menu action use — so the action works for any connector
- * with no per-provider branching, and picks up connector-agnostic failure handling (e.g. retagging an
- * expired credential) in one place rather than duplicating it here. Tracks an in-flight `syncing` flag
- * for the empty-state UI.
- *
- * `connection` exposes whether the target is bound (drives "connect vs. sync").
- *
- * Used by `MailboxArticle` and `CalendarArticle` for their inline "Sync" toolbar action.
+ * The {@link ConnectorEntry} backing `connection`, resolved from the registered `Connector` capability
+ * list. `connectors` is resolved by the container (this hook lives under `components/`, which must not
+ * call capability hooks) and threaded down via `useSyncTrigger` — see the properties-panel wiring.
  */
-export const useTargetSync = <T extends Obj.Any>(
-  target: T,
-  notify?: Operation.NotifyOptions,
-): {
-  connection: Connection.Connection | undefined;
-  sync: () => Promise<void>;
-  /** In-flight flag as an atom so a menu builder can read it reactively via `get`. */
-  syncing: Atom.Atom<boolean>;
-} => {
-  const { connection } = useTargetConnection(target);
-  const db = Obj.getDatabase(target);
-  const { invokePromise } = useOperationInvoker();
-  const { atom: syncing, set: setSyncing } = useAtomState(false);
-
-  const sync = useCallback(async () => {
-    if (!connection) {
-      return;
-    }
-    setSyncing(true);
-    try {
-      await invokePromise(
-        ConnectorOperation.SyncConnection,
-        { connection: Ref.make(connection) },
-        { spaceId: db?.spaceId, notify },
-      );
-    } finally {
-      setSyncing(false);
-    }
-  }, [invokePromise, connection, db, notify, setSyncing]);
-
-  return { connection, sync, syncing };
+export const useConnectorEntry = (
+  connection: Connection.Connection | undefined,
+  connectors: readonly ConnectorEntry[][] = [],
+): ConnectorEntry | undefined => {
+  return useMemo(
+    () => connectors.flat().find((entry) => entry.id === connection?.connectorId),
+    [connectors, connection],
+  );
 };

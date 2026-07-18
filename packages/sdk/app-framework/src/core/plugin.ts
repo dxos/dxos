@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
+import type * as Scope from 'effect/Scope';
 
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -140,7 +141,9 @@ export interface PluginModule {
    * @param props Optional props passed to the module.
    * @returns The capabilities of the module.
    */
-  activate: (props?: any) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | never>;
+  activate: (
+    props?: any,
+  ) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | Scope.Scope | never>;
 }
 
 export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };

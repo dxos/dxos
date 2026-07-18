@@ -108,6 +108,7 @@ Deeper conventions:
 - Effect-TS services, layers, and typed domain errors → `effect` skill.
 - React components, theme tokens, and Composer UI primitives → `composer-ui`
   skill.
+- Do not use deprecated functions if an alternative is available.
 
 ## Git & PR workflow
 

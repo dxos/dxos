@@ -35,6 +35,9 @@
       "path": "../ai"
     },
     {
+      "path": "../compute"
+    },
+    {
       "path": "../extractor-lib"
     },
     {

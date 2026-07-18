@@ -61,25 +61,21 @@ const useTopLevelNavItems = (root?: Node.Node) => {
     const outboundPinnedItems: Node.Node[] = [];
     let userAccountItem: Node.Node | undefined;
     for (const node of rootOutboundItems) {
-      switch (node.properties.disposition) {
-        case 'workspace':
-          topLevelWorkspaces.push(node);
-          break;
-        case 'pin-end':
-          outboundPinnedItems.push(node);
-          break;
-        case 'user-account':
-          userAccountItem ??= node;
-          break;
+      if (Node.hasDisposition(node, 'workspace')) {
+        topLevelWorkspaces.push(node);
+      } else if (Node.hasDisposition(node, 'pin-end')) {
+        outboundPinnedItems.push(node);
+      } else if (Node.hasDisposition(node, 'user-account')) {
+        userAccountItem ??= node;
       }
     }
 
     const topLevelActions = rootActions
-      .filter((action) => action.properties.disposition === 'menu')
+      .filter((action) => Node.hasDisposition(action, 'menu'))
       .toSorted((a, b) => Position.compare(a.properties, b.properties));
     const pinnedItems = [
       ...outboundPinnedItems,
-      ...rootActions.filter((action) => action.properties.disposition === 'pin-end'),
+      ...rootActions.filter((action) => Node.hasDisposition(action, 'pin-end')),
     ].toSorted((a, b) => Position.compare(a.properties, b.properties));
 
     return {

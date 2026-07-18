@@ -10,6 +10,7 @@ import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
+  AppGraphBuilder,
   CommentConfig,
   CreateObject,
   MarkdownSettings,
@@ -49,6 +50,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
   }),
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );
 

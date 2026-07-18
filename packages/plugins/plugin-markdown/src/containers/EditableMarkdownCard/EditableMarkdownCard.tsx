@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useIdentity } from '@dxos/halo-react';
 import { useObject } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
@@ -27,11 +28,12 @@ export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => 
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');
   const initialValue = docContent ?? textContent;
+  const identity = useIdentity();
 
   return (
     <Card.Section classNames='overflow-hidden'>
       <Card.Row fullWidth>
-        <MarkdownEditorProvider id={id} object={subject} viewMode='source'>
+        <MarkdownEditorProvider id={id} object={subject} viewMode='source' identity={identity}>
           {(editorRootProps) => (
             <Editor.Root {...editorRootProps}>
               <MarkdownEditor.Content compact initialValue={initialValue} />

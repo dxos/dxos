@@ -13,6 +13,7 @@ import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
@@ -32,7 +33,7 @@ import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
+import { Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
 
 const TYPES = [
   AccessToken.AccessToken,
@@ -40,7 +41,6 @@ const TYPES = [
   Cursor.Cursor,
   Feed.Feed,
   Mailbox.Mailbox,
-  MailboxTriggerRelation,
   Message.Message,
   Operation.PersistentOperation,
   Organization.Organization,
@@ -52,17 +52,13 @@ const TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'local' }));
 
-type DecoratorOptions = {
-  trigger?: boolean;
-};
-
-const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
+const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
-    setupEvents: [AppActivationEvents.SetupSettings],
+    setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({
@@ -83,9 +79,10 @@ const createDecorators = ({ trigger = false }: DecoratorOptions = {}) => [
       InboxPlugin(),
       ConnectorPlugin(),
       DebugPlugin({}),
+      AssistantPlugin(),
       PreviewPlugin(),
       ProgressPlugin(),
-      ...(trigger ? [RoutinePlugin()] : []),
+      RoutinePlugin(),
       StorySyncPlugin(),
       StoryModulesPlugin(),
       StorybookPlugin({}),
@@ -97,8 +94,9 @@ const DefaultStory = () => (
   <ModuleContainer
     layout={[
       [Module.Mailbox, Module.Message],
-      [Module.Archive, Module.Stats],
+      [Module.Archive, Module.Stats, Module.SyncState],
       [Module.Connector, Module.Triggers],
+      [Module.Trace],
     ]}
     compact
   />
@@ -107,7 +105,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
   component: DefaultStory,
-  decorators: createDecorators(),
+  decorators: DECORATORS,
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -121,12 +119,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: DefaultStory,
-};
-
-export const WithSyncTrigger: Story = {
-  render: DefaultStory,
-  decorators: createDecorators({ trigger: true }),
-  args: {
-    batch: 10,
-  },
 };

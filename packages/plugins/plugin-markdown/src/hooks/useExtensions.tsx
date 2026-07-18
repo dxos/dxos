@@ -10,9 +10,9 @@ import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext } from '@dxos/react-ui';
 import { type ViewStateManager, selectionAspect } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
@@ -43,7 +43,11 @@ import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
-import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
+import {
+  PreviewComponent,
+  type PreviewComponentProps,
+  parseEmbedLabel,
+} from '../components/PreviewComponent/PreviewComponent';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -59,6 +63,11 @@ export type ExtensionsOptions = {
   editorStateStore?: EditorStateStore;
   setWidgets?: (widgets: XmlWidgetState[]) => void;
   platform?: 'mobile' | 'desktop';
+  /**
+   * Local identity for collaboration awareness. Optional so the editor can bind to a raw ECHO object
+   * with no client (awareness only activates when both a space and an identity are present).
+   */
+  identity?: Identity.Info | null;
   /** Callback when an internal link is clicked. */
   onSelectObject?: (objectId: string) => void;
 };
@@ -73,10 +82,10 @@ export const useExtensions = ({
   viewState,
   editorStateStore,
   setWidgets,
+  identity,
   onSelectObject,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
-  const identity = useIdentity();
   const space = getSpace(object);
 
   // Get the content reference from Document objects.
@@ -187,12 +196,16 @@ const createBaseExtensions = ({
           // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
           skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
-        linkTooltip(renderLinkTooltip),
+        linkTooltip({ render: renderLinkTooltip }),
         xmlTags({
           registry: {
             'dxn-preview': {
               block: true,
               urlSchemes: ['dxn:', 'echo:'],
+              // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+              // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) =>
+                label ? parseEmbedLabel(label).height : undefined,
               Component: (props: Omit<PreviewComponentProps, 'space'>) => <PreviewComponent {...props} space={space} />,
             },
             'link-preview': {

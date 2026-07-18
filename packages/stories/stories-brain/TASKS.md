@@ -368,6 +368,116 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
       attachment fetch (never committed to the feed). Unit-tested. FOLLOW-UP: a settings/toolbar UI to
       edit the skip list (currently set programmatically on the Mailbox).
 
+## plugin-inbox article surface pattern (ObjectArticleProps)
+
+**Direction (2026-07-14):** converge every inbox folder article on the `ObjectArticleProps<Mailbox>`
+pattern — the article receives the mailbox as `subject` and derives its db via `Obj.getDatabase(subject)`,
+never a `space` prop (reference: `SubscriptionsArticle`). Folder graph nodes now carry `data: mailbox`
+(sentinels dropped), so the plank passes the mailbox as `subject`; surface filters narrow by the node's
+trailing path segment + `Mailbox.instanceOf(data.subject)`. Props types live next to the component.
+
+- [x] **`TopicsArticle` → `ObjectArticleProps<Mailbox>`** (secured the pattern) — `subject: mailbox`,
+      `db = Obj.getDatabase(mailbox)`, `useQuery` from `@dxos/echo-react` (accepts an `EchoDatabase`;
+      `react-client/echo` `useQuery` expects a Space and threw on the raw db). Guards on `db`.
+- [x] **`DraftsArticle` → `ObjectArticleProps<Mailbox>`** — same conversion; `useQuery` from echo-react.
+- [x] **Graph nodes carry the mailbox** — drafts/topics/subscriptions folder nodes set `data: mailbox`
+      (dropped the `MAILBOX_*_NODE_DATA` sentinels + constants); surface filters match
+      `Mailbox.instanceOf(data.subject)` + `lastSegment === getXId()`. Folder surfaces precede the generic
+      `mailbox` object surface and the plank uses `limit={1}`, so no match collision. `useActiveSpace`
+      dropped from `react-surface`.
+- [x] **`SubscriptionsArticle` unsubscribe removes on success** — `removeSelected` awaits each
+      `UnsubscribeSender`; a returned `{ filtered: true }` adds the sender to a local `removed` set that the
+      subscriptions `useMemo` excludes. Needed because `mailbox.messageFilters` is a stable proxy ref
+      (contents mutate in place) so the `isFiltered` filter alone never recomputes reactively.
+- [x] **Stories/modules updated** — `TopicsModule`, `TopicsArticle.stories`, `CreateTopic.stories` pass
+      `subject={mailbox}`. Build/lint/fmt clean; 167 inbox unit tests green.
+- [ ] **Pre-existing storybook play-test failures (NOT this change).** `TopicsArticle.stories` "Delete Test"
+      and `CreateTopic.stories` "Test" fail identically on the committed baseline (`6dd1aa8a1e`) in this
+      headless env — the topic `useQuery` returns empty so no topic card renders (Default + "Suggestions
+      Test" pass). Verified by stashing all edits and re-running. Investigate the indexing/timing the topic
+      query needs headlessly.
+
+## Topics → plugin-brain / Project refactor (2026-07-14 asks)
+
+**Direction:** promote `Topic` from the inbox stack into a first-class, reusable domain object. The type
+moves to `@dxos/types` (Project-style class), the UI moves to `plugin-brain`, and Topics get their own
+app-graph subtree (virtual root + a node per Topic) rendered via a regular object/article surface. Longer
+term Topic may be renamed `Project` and generalized beyond email (threads, task lists).
+
+- [ ] **track: Fix companions and master/detail for topics.** (`TopicsArticle` → `TopicArticle`
+      master/detail; companion vs deck-peer opening across layout modes.)
+- [ ] **track: Break `Topic` out into plugin-brain; consider renaming to `Project`; track threads (not
+      just email); add a task list, etc.**
+- [ ] **track: Reconcile `Project` + `Task`; make a primary "nexus" type that brings together analysis —
+      Threads, Contacts, Summaries, Tasks, Agent.** Design captured in `plugin-brain/DESIGN.md`.
+- [x] **Audit current `Topic` usages → `plugin-brain/AUDIT.md`** — inventory of every importer + component
+      (type def, operations, surfaces, app-graph, stories) + the existing `@dxos/types` `Project` model. (#8)
+- [x] **Move `Topic` type → `@dxos/types`, Project-style class** (#6/#7) — class with inline title/label/icon
+      annotations + `make` factory; shared `Topic.Props` kept annotation-free (Mailbox serialization
+      unchanged); DXN preserved. All ~20 importers moved to `@dxos/types` (`Topic.Topic`/`Topic.Props`), no
+      compat shim. DECISION: kept the shared props struct (option A). Type test moved to `@dxos/types`.
+      Verified: types/pipeline-email/plugin-inbox builds + tests green (`6f904da7d3`).
+- [x] **2A — Move `TopicArticle` → plugin-brain** (#5, part 1) — detail view now in plugin-brain, rendered
+      via a regular `AppSurface.object(Article, Topic.Topic)` surface (keyword chips inlined, no inbox `Row`
+      dep). Topic schema reg + typename/detail translations moved to BrainPlugin; `./containers` export
+      added. Removed from inbox. Builds + inbox(167)/brain(13) tests green (`2b92f80605`). DECISION: suggestions
+      stay in inbox (brain TopicsArticle will list accepted Topics only).
+- [x] **2B — Topics as a space-level type section (plugin-brain)** — used
+      `TypeSection.createTypeSectionExtension(Topic.Topic)` (idiomatic; no new deps) → a per-space Topics
+      section (root + a child per Topic, icon/label from the schema annotations), each opening via the
+      regular object/article surface (`TopicArticle`). Added the matching nav path resolver; registered in
+      BrainPlugin (`fa13dc315e`). Chose the type-section nav over a bespoke mosaic list-panel (consistent
+      with Chats/Calendars); a standalone Topics list-panel is optional follow-up.
+- [x] **2C — plugin-inbox cleanup** — inbox `TopicsArticle` → `TopicSuggestionsArticle` (suggestions +
+      Accept/Dismiss + Analyze only; accepted topics now live in the space-level section). Removed the
+      redundant `mailboxTopics` companion; relabeled the mailbox Topics node → "Topic Suggestions"
+      (lightbulb). Reworked `CreateTopic` + new `TopicSuggestions` stories. Builds + inbox(167)/brain(13)
+      tests + lint + fmt green. Kept a mailbox nav node for suggestions (repurposed, not a companion) —
+      full companion-ization is the companions/master-detail track. Headless storybook Topic play-tests
+      stay stuck at Loading in this env (pre-existing; CI-green through Phase 1/2A/2B) — verify in CI/app.
+- [x] **`TopicArticle` storybook** (#3) — existing `TopicArticle.stories.tsx` now targets the brain
+      component (`Default`/`Minimal` render; `Test` hits the known headless topic-query issue). Relocating
+      it into a brain-owned stories package is optional polish.
+
+### Nexus Phase 1 — instructions + nav-create + storybooks (2026-07-16)
+
+- [x] **`Topic.instructions` ref (agent config)** — added `instructions: Ref<Obj.Unknown>` to `Topic.Props`
+      (untyped to avoid a `types → compute → ai → types` cycle; FLAGGED in Topic.ts + here). The typed
+      `Instructions` object is created + linked at the plugin layer.
+- [ ] **FLAG: type `Topic.instructions` as `Ref<Instructions>`** — blocked by the layering cycle; needs
+      Topic to move to its nexus home (a package that can depend on `@dxos/compute`, below the plugins).
+      Deferred with the `Topic`↔`Project` reconciliation.
+- [ ] **FactStore ref on Topic — DEFERRED** (no FactStore ECHO type today; per-space registry). Revisit
+      with the nexus schema.
+- [x] **Create Topic from the nav menu** — plugin-brain `CreateObject` capability (`SpaceCapabilities.CreateObjectEntry`
+      for `Topic.Topic`) creates the Topic + an `Instructions` (seeded default brief, drives the agent) and
+      links them; wired the `+` action into the Topics type-section (`OpenCreateObject`). Registered via
+      `addCreateObjectModule`. Added `@dxos/plugin-space` dep.
+- [x] **Storybooks in plugin-brain** — co-located `TopicArticle.stories.tsx` + `FactsCompanion.stories.tsx`
+      (contributes a seeded `FactStoreRegistry`); added the `storybook`/`ts-test-storybook` tags,
+      `.storybook/main.mts`, `vitest storybook: true`, and story dev-deps. Removed the stories-inbox
+      `TopicArticle.stories.tsx`. `Default`/`Minimal` render; `Test` plays hit the known headless
+      space/query Loading limitation (CI/real storybook exercise them).
+
+### Nexus Phase 2 — decouple inbox, Topic as ECHO class (2026-07-16)
+
+- [x] **Removed `topicSuggestions` from `Mailbox` + all suggestions functionality from plugin-inbox** —
+      dropped the `Mailbox.topicSuggestions` field, `TopicSuggestionsArticle` + its surface, the mailbox
+      "Topic Suggestions" folder node + Analyze toolbar action, the `AnalyzeTopics` operation (its only
+      output was suggestions), `suggestions.ts` (+ test), the topic-suggestions/analyze translations, and
+      the `#topics` progress meter in `MailboxArticle`. `MAILBOX_TOPICS_TYPE`/`getTopicsId` removed. Topics
+      are now created via the nav menu (`CreateObject`) and from a message (`CreateTopicFromMessage`).
+- [x] **`Topic` → standard ECHO class** — now that nothing imports `Topic.Props`, inlined the struct into
+      the `Type.makeObject` class (dropped the separate `Props` export), matching the `Project.ts` standard.
+      Builds green across types/pipeline-email/inbox/brain/stories (364 tasks); types(12)/brain(13)/inbox(193)
+      tests pass.
+- [x] **Top-level Topics virtual node + per-Topic children** — provided by the plugin-brain
+      `TypeSection.createTypeSectionExtension(Topic.Topic)` (per-space root node + a child per `Topic`, each
+      opening via the object/article `TopicArticle` surface) with the `+` create action. With the inbox
+      folder removed, this is now the sole Topics nav presence. (Suppressed when empty; the first Topic is
+      created via the space's global create menu — Topic is registered — or the section `+` once ≥1 exists.
+      An always-visible bespoke node is an option if wanted.)
+
 ## Bugs
 
 - [ ] **MailboxArticle search/filtering isn't working.** The filter/query editor in

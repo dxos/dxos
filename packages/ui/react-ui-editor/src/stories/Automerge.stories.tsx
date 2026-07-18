@@ -2,41 +2,43 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Repo, initSubduction } from '@automerge/automerge-repo';
-import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { Obj, Query, Ref } from '@dxos/echo';
+import { createObject } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { TestSchema } from '@dxos/echo/testing';
 import { type Messenger } from '@dxos/protocols';
 import { useQuery, useResolveRef, useSpace } from '@dxos/react-client/echo';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { Text } from '@dxos/schema';
+import {
+  type DataExtensionsIdentity,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
 import { useTextEditor } from '../hooks';
 
-const initialContent = 'Hello world!';
+const initialContent = ['# Hello world!', 'Hello Automerge', ''].join('\n\n');
 
-type TestObject = {
-  text: string;
-};
-
-type EditorProps = {
+type EditorProps = ThemedClassName<{
   source: Doc.Accessor;
   messenger?: Messenger;
-  identity?: Identity;
+  identity?: DataExtensionsIdentity;
   autoFocus?: boolean;
-};
+}>;
 
-const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
+const Editor = ({ classNames, source, messenger, identity, autoFocus }: EditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(
     () => ({
@@ -51,42 +53,29 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
     [source, themeMode],
   );
 
-  return <div ref={parentRef} className='flex w-full' />;
+  return <div ref={parentRef} className={mx('w-full', classNames)} />;
 };
 
+/**
+ * Two editors bound to the same in-process Automerge document (no client or networking). Editing
+ * either column mutates the shared handle; the automerge data extension on the other column observes
+ * the handle's `change` event and reconciles, so the columns stay in sync. For true cross-peer
+ * replication over a transport, see the `WithEcho` story.
+ */
 const DefaultStory = () => {
-  const [object1, setObject1] = useState<Doc.Accessor<TestObject>>();
-  const [object2, setObject2] = useState<Doc.Accessor<TestObject>>();
-
-  useEffect(() => {
-    queueMicrotask(async () => {
-      // Subduction-fork `Repo` constructs a `MemorySigner` internally; WASM must be
-      // initialized first or the constructor throws `'set_subduction_logger' of undefined`.
-      await initSubduction();
-      const repo1 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
-      const repo2 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
-
-      const object1 = repo1.create<TestObject>();
-      object1.change((doc: TestObject) => {
-        doc.text = initialContent;
-      });
-
-      const object2 = await repo2.find<TestObject>(object1.url);
-      await object2.whenReady();
-
-      setObject1({ handle: object1, path: ['text'] });
-      setObject2({ handle: object2, path: ['text'] });
-    });
-  }, []);
-
-  if (!object1 || !object2) {
-    return <Loading data={{ object1: !!object1, object2: !!object2 }} />;
-  }
+  const source = useMemo<Doc.Accessor>(
+    () => Doc.createAccessor(createObject(Text.make({ content: initialContent })), ['content']),
+    [],
+  );
 
   return (
-    <div className='h-full w-full grid grid-cols-2 gap-4'>
-      <Editor source={object1} autoFocus />
-      <Editor source={object2} />
+    <div className='dx-container grid grid-cols-2 gap-3 p-3'>
+      <div className='dx-container p-2 bg-base-surface rounded-md border border-subdued-separator'>
+        <Editor source={source} autoFocus />
+      </div>
+      <div className='dx-container p-2 bg-base-surface rounded-md border border-subdued-separator'>
+        <Editor source={source} />
+      </div>
     </div>
   );
 };
@@ -114,7 +103,15 @@ const EchoStory = () => {
       </pre>
       {identity && source ? (
         <div className='p-2 flex grow overflow-hidden'>
-          <Editor identity={identity} messenger={space} source={source} />
+          <Editor
+            identity={{
+              identityKey: identity.identityKey.toHex(),
+              displayName: identity.profile?.displayName,
+              data: identity.profile?.data,
+            }}
+            messenger={space}
+            source={source}
+          />
         </div>
       ) : (
         <Loading data={{ identity: !!identity, content: !!content }} />
@@ -123,24 +120,21 @@ const EchoStory = () => {
   );
 };
 
-const meta = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-editor/Automerge',
-  component: Editor as any,
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof DefaultStory>;
+};
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// TODO(burdon): ERROR: factories.ts:126 Error: Non-base58 character
-export const Default: Story = {
-  render: DefaultStory,
-};
+export const Default: Story = {};
 
 /**
  * Two in-memory ECHO peers (no real networking, see `withMultiClientProvider`) sharing a
@@ -179,9 +173,13 @@ export const WithEcho: Story = {
 
     const [contentA, contentB] = editors.map((editor) => editor.querySelector<HTMLElement>('.cm-content')!);
 
-    // Initial content replicated from the host's space to the guest.
-    await expect(contentA).toHaveTextContent(initialContent);
-    await expect(contentB).toHaveTextContent(initialContent);
+    // Initial content replicated from the host's space to the guest. CodeMirror concatenates its
+    // per-line elements without newline separators, so the multiline `initialContent` (with literal
+    // `\n`s) never matches as substring text content; assert on each non-empty line instead.
+    for (const line of initialContent.split('\n').filter(Boolean)) {
+      await expect(contentA).toHaveTextContent(line);
+      await expect(contentB).toHaveTextContent(line);
+    }
 
     // Focusing peer A broadcasts its cursor position over the gossip channel; peer B renders it
     // as a `.cm-collab-selectionInfo` decoration.

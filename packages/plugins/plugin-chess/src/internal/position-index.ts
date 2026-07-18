@@ -68,7 +68,7 @@ export const positionsForSide = ({
 };
 
 /** Resolves which side the reviewed player played in a game, if any. */
-export const playerSideInGame = (review: PlayerReview.Review, game: Game): ChessPositionIndex.Side | undefined => {
+export const playerSideInGame = (review: PlayerReview.Review, game: Game.Game): ChessPositionIndex.Side | undefined => {
   for (const player of game.players ?? []) {
     if (review.playerIdentity && player.identity === review.playerIdentity) {
       return player.role === 'black' ? 'black' : 'white';
@@ -80,13 +80,13 @@ export const playerSideInGame = (review: PlayerReview.Review, game: Game): Chess
   return undefined;
 };
 
-export type BuiltSideIndex = Record<string, Game[]>;
+export type BuiltSideIndex = Record<string, Game.Game[]>;
 
 export type BuiltIndex = Record<ChessPositionIndex.Side, BuiltSideIndex>;
 
 /** Builds a fresh side→fen→games index from processed games. */
 export const buildIndex = (
-  entries: ReadonlyArray<{ game: Game; side: ChessPositionIndex.Side; fens: readonly string[] }>,
+  entries: ReadonlyArray<{ game: Game.Game; side: ChessPositionIndex.Side; fens: readonly string[] }>,
 ): BuiltIndex => {
   const index: BuiltIndex = { white: {}, black: {} };
   for (const { game, side, fens } of entries) {
@@ -107,7 +107,7 @@ const gameIdsKey = (games: ReadonlyArray<{ id: string }>): string =>
     .toSorted()
     .join('\0');
 
-const refsGameIdsKey = (games: ReadonlyArray<Ref.Ref<Game>>): string =>
+const refsGameIdsKey = (games: ReadonlyArray<Ref.Ref<Game.Game>>): string =>
   games
     .map((gameRef) => gameRef.target?.id ?? gameRef.uri)
     .toSorted()

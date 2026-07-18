@@ -1,17 +1,30 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - pack
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/app-framework/AppActivationEvents.ts'
-      - '--entryPoint=src/echo/Query.ts'
-      - '--entryPoint=src/ui/index.ts'
+  check-module-structure:
+    # Verify headless entrypoints resolve under workerd conditions, then fail when the
+    # root export pulls in React (Composer UI lives only behind `./ui`).
+    script: |
+      pnpm exec dx-trace-imports \
+        --export . \
+        --to "{react,react-dom}" \
+        --conditions workerd,worker,node \
+        --fail-on present
+    deps:
+      - dx-trace-imports:compile
+      - compile
+    inputs:
+      - tsconfig.json
+      - package.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
   test:
     inputs:
       - .storybook/*

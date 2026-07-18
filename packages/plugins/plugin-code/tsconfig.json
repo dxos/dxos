@@ -49,6 +49,12 @@
       "path": "../../core/echo/echo-doc"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
+    },
+    {
       "path": "../../reflect/deus"
     },
     {

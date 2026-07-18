@@ -3,6 +3,7 @@
 //
 
 export * from './SyncOptions';
+export * from './SyncStreamConfig';
 
 export * as Calendar from './Calendar';
 export * as ExtractedFrom from './ExtractedFrom';
@@ -12,4 +13,4 @@ export * as InboxOperation from './InboxOperation';
 export * as Mailbox from './Mailbox';
 export * as Settings from './Settings';
 export * as DraftEvent from './DraftEvent';
-export * as Starred from './Starred';
+export * as SystemTags from './SystemTags';

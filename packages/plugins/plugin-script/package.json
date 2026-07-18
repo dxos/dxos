@@ -16,7 +16,7 @@
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/neutral/skills/index.mjs"
+      "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
       "source": {
@@ -24,33 +24,33 @@
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "node": "./dist/lib/neutral/capabilities/node.mjs",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "node": "./dist/lib/capabilities/node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
+      "default": "./dist/lib/containers.mjs"
     },
     "#hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
-      "default": "./dist/lib/neutral/hooks/index.mjs"
+      "default": "./dist/lib/hooks.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/neutral/operations/index.mjs"
+      "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": {
@@ -59,58 +59,58 @@
         "default": "./src/ScriptPlugin.tsx"
       },
       "types": "./dist/types/src/ScriptPlugin.d.ts",
-      "workerd": "./dist/lib/neutral/ScriptPlugin.workerd.mjs",
-      "node": "./dist/lib/neutral/ScriptPlugin.node.mjs",
-      "default": "./dist/lib/neutral/ScriptPlugin.mjs"
+      "workerd": "./dist/lib/ScriptPlugin.workerd.mjs",
+      "node": "./dist/lib/ScriptPlugin.node.mjs",
+      "default": "./dist/lib/ScriptPlugin.mjs"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/neutral/skills/index.mjs"
+      "import": "./dist/lib/skills.mjs"
     },
     "./containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
+      "import": "./dist/lib/containers.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./templates": {
       "source": "./src/templates/index.ts",
       "types": "./dist/types/src/templates/index.d.ts",
-      "default": "./dist/lib/neutral/templates/index.mjs"
+      "import": "./dist/lib/templates.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -136,6 +136,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/devtools": "workspace:*",
@@ -143,9 +144,10 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-query": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
+    "@dxos/halo": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",

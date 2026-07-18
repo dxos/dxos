@@ -18,4 +18,5 @@ export const ClientOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./redeem-token'),
   () => import('./reset-storage'),
   () => import('./share-identity'),
+  () => import('./update-profile'),
 );

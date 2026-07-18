@@ -66,9 +66,6 @@ export type ClientOptions = {
   /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
   sqlitePath?: string;
 
-  /** Create client worker. */
-  createWorker?: () => SharedWorker;
-
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
 };
@@ -372,13 +369,11 @@ export class Client {
     this._config = this._options.config ?? new Config();
 
     if (!this._options.services) {
-      // Default services mode when not explicitly set in config. The Client entrypoint only exposes
-      // the SharedWorker and OPFS worker options (dedicated worker is a composer-app-level choice).
+      // Default services mode when not explicitly set in config. The Client entrypoint only runs
+      // services in-thread (HOST); the dedicated worker is a composer-app-level choice.
       const clientCfg = this._config.values.runtime?.client;
       if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
-        const servicesMode = this._options.createWorker
-          ? Runtime.Client.ServicesMode.SHARED_WORKER
-          : Runtime.Client.ServicesMode.HOST;
+        const servicesMode = Runtime.Client.ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
         // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
@@ -400,13 +395,11 @@ export class Client {
     // NOTE: Must currently match the host.
     log('client.initialize: creating services provider', {
       providedServices: !!this._options.services,
-      hasCreateWorker: !!this._options.createWorker,
       hasCreateOpfsWorker: !!this._options.createOpfsWorker,
       sqlitePath: this._options.sqlitePath,
     });
     this._services = await (this._options.services ??
       createClientServices(this._config, {
-        createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));

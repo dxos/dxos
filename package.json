@@ -45,6 +45,7 @@
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
     "publish-package": "node scripts/publish-package.mjs",
+    "publish-unpublished-packages": "node scripts/publish-unpublished-packages.mjs",
     "query-logs": "node scripts/query-logs.mjs",
     "secrets": "node scripts/secrets.mjs",
     "test": "moon run :test -- --no-file-parallelism",
@@ -55,7 +56,8 @@
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
     "js-yaml": "catalog:",
-    "tslib": "catalog:"
+    "tslib": "catalog:",
+    "vite-plugin-solid": "catalog:"
   },
   "devDependencies": {
     "@changesets/changelog-github": "catalog:",

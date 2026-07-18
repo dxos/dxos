@@ -75,6 +75,8 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
  * Use {@link Obj.getDatabase} when you only need DB/`spaceId` access; this
  * helper is retained only for callers that need {@link Space} proxy members
  * (`properties`, `members`, `key`, `state`, `listen`, identity).
+ *
+ * @deprecated Use {@link Obj.getSpace} instead.
  */
 // TODO(burdon): Hypergraph.getSpace().
 export const getSpace = (object?: any): Space | undefined => {
@@ -762,18 +764,18 @@ export class SpaceProxy implements Space, CustomInspectable {
         }
       };
 
-      ctx.onDispose(this._db.subscribeToSyncState(ctx, checkSyncState));
+      ctx.onDispose(this._db.subscribeToAutomergeSyncState(ctx, checkSyncState));
       // TODO(dmaretskyi): Still need polling, otherwise this gets stuck.
       scheduleTaskInterval(
         ctx,
         async () => {
-          checkSyncState(await this._db.getSyncState());
+          checkSyncState(await this._db.getAutomergeSyncState());
         },
         1_000,
       );
 
       scheduleMicroTask(ctx, async () => {
-        checkSyncState(await this._db.getSyncState());
+        checkSyncState(await this._db.getAutomergeSyncState());
       });
     });
   }

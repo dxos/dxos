@@ -12,7 +12,7 @@ import * as Schedule from 'effect/Schedule';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute-runtime';
 import { log } from '@dxos/log';
 
 import { GoogleApiError } from '../../errors';

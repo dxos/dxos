@@ -25,9 +25,9 @@
         "default": "./src/RegistryPlugin.tsx"
       },
       "types": "./dist/types/src/RegistryPlugin.d.ts",
-      "workerd": "./dist/lib/neutral/RegistryPlugin.workerd.mjs",
-      "node": "./dist/lib/neutral/RegistryPlugin.node.mjs",
-      "default": "./dist/lib/neutral/RegistryPlugin.mjs"
+      "workerd": "./dist/lib/RegistryPlugin.workerd.mjs",
+      "node": "./dist/lib/RegistryPlugin.node.mjs",
+      "default": "./dist/lib/RegistryPlugin.mjs"
     },
     "#translations": "./src/translations.ts",
     "#types": "./src/types.ts"
@@ -36,17 +36,17 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

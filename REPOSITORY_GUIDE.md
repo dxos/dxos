@@ -94,8 +94,38 @@ Examples of ways to run different test workloads:
 The following command generates storybooks across the individual packages:
 
 ```bash
-moon run storybook:serve
+moon run storybook-react:serve
 ```
+
+### Fast dev mode (`serve-fast`)
+
+Long React sessions can slow down and eventually wedge the browser tab. By
+default Storybook resolves every `@dxos/*` package to source (via the
+`importSource` plugin in `tools/storybook-react/.storybook/main.ts`), producing a
+huge live module graph that the renderer accumulates until it locks up. For a
+lighter session, use the fast variant:
+
+```bash
+moon run storybook-react:serve-fast
+```
+
+This sets `DX_FASTBUNDLE=1`, which skips `importSource` and pre-bundles heavy
+deps (react, effect, codemirror, radix, automerge, atlaskit). One-off use without
+the task: `DX_FASTBUNDLE=1 moon run storybook-react:serve`.
+
+**Tradeoff:** `serve-fast` reduces renderer memory and HMR churn, but you get
+less granular HMR on DXOS source (edits to `@dxos/*` internals no longer
+hot-reload from source). It's best when iterating on a single package's stories,
+not when editing deep DXOS internals — use plain `serve` for the latter.
+
+**Known accumulation sources** (present in either mode):
+
+- **WASM stories** (`@dxos/wa-sqlite`, `manifold-3d`) don't free their memory on
+  unmount.
+- **StrictMode** double-mounts effects, so per-story state accumulates faster.
+
+Either way, hard-reload the tab periodically during long sessions to reclaim
+memory.
 
 ### Playwright
 
@@ -177,6 +207,16 @@ Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/c
 
 **Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
 
+Because these tags are force-moved on every deploy, a plain `git pull`/`git fetch` will reject them once your local clone has a stale copy (`! [rejected] composer/labs -> composer/labs (would clobber existing tag)`). Turn off automatic tag-following once per clone so routine fetches stay quiet:
+
+```bash
+git config remote.origin.tagOpt --no-tags
+```
+
+You can still pull a specific one on demand: `git fetch origin tag composer/labs --force` (still needs
+`--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
+check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
+
 | Env            | Trigger                | Apps               | Notes                                    |
 | -------------- | ---------------------- | ------------------ | ---------------------------------------- |
 | **main**       | auto on push to `main` | all `main`-enabled | rolling preview; no native build         |
@@ -233,7 +273,9 @@ New packages are created with `"private": true` in their `package.json` (see [Ne
 
 1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
 2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
-3. Run `npm login && pnpm publish-package @dxos/<PACKAGE>`
+3. Run `pnpm login`, then either:
+   - one package: `pnpm publish-package @dxos/<PACKAGE>`
+   - all packages failing the published-package gate: `pnpm publish-unpublished-packages --yes`
 4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
    - Repository: `dxos/dxos`
    - Workflow file: `publish-all.yml`

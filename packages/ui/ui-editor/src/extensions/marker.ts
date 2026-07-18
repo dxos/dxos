@@ -16,8 +16,6 @@ import { type ChromaticPalette } from '@dxos/ui-types';
  */
 export type MarkerHue = ChromaticPalette;
 
-const MARKED = ['.cm-marker > span', '.cm-marker-text'].join(', ');
-
 // Map `data-hue` to the standard ui-theme surface/foreground tokens (one rule per hue).
 const hueVars = Object.fromEntries(
   hues.flatMap((hue) =>
@@ -39,12 +37,14 @@ export const markerTheme = (): Extension =>
   EditorView.theme({
     ...hueVars,
     // The comment-style surface "padding" is a box-shadow of the same colour so adjacent lines join.
-    [MARKED]: {
+    // No `border-radius`: with `box-decoration-break: clone` every wrapped fragment would round its
+    // own corners, pinching the left/right edges of a multi-line span into jagged notches. Square
+    // corners let the per-line boxes stack into one continuous block with straight vertical edges.
+    '.cm-marker > span, .cm-marker-text': {
       boxDecorationBreak: 'clone',
       backgroundColor: 'var(--cm-marker-surface)',
       boxShadow: '0 0 0 3px var(--cm-marker-surface)',
       color: 'var(--cm-marker-text) !important',
-      borderRadius: '0.25rem',
     },
     // `inline-block` (not flex) so the finalized + interim spans flow as one continuous block.
     '.cm-marker-text': {

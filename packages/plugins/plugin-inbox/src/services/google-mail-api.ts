@@ -51,6 +51,11 @@ export interface GoogleMailApiService {
     pageToken?: string,
   ) => Effect.Effect<GoogleMail.ListMessagesResponse, GoogleMailApiError>;
   readonly getMessage: (userId: string, messageId: string) => Effect.Effect<GoogleMail.Message, GoogleMailApiError>;
+  readonly getProfile: (userId: string) => Effect.Effect<GoogleMail.Profile, GoogleMailApiError>;
+  readonly listHistory: (
+    userId: string,
+    options: { startHistoryId: string; labelId?: string; pageToken?: string; maxResults?: number },
+  ) => Effect.Effect<GoogleMail.HistoryResponse, GoogleMailApiError>;
   readonly getAttachment: (
     userId: string,
     messageId: string,
@@ -76,6 +81,27 @@ export interface GmailDataset {
   readonly messages: readonly GoogleMail.Message[];
   /** Attachment bytes keyed by `attachmentId`, served by `getAttachment` for messages that carry one. */
   readonly attachments?: Readonly<Record<string, GoogleMail.MessagePartBody>>;
+  /**
+   * Current mailbox `historyId` — `getProfile` returns it and it's the newest `history.list` position.
+   * Set to exercise incremental sync; absent means "no delta support" (token capture returns none).
+   */
+  readonly historyId?: string;
+  /** Ordered `history.list` steps chaining `startHistoryId` → `historyId`, each carrying the delta. */
+  readonly historyLog?: readonly GmailHistoryStep[];
+}
+
+/** One `history.list` step in a {@link GmailDataset}'s history log. */
+export interface GmailHistoryStep {
+  readonly startHistoryId: string;
+  readonly historyId: string;
+  /** Ids of messages added in this step. */
+  readonly messagesAdded?: readonly string[];
+  /** Per-message label additions in this step. */
+  readonly labelsAdded?: readonly { readonly id: string; readonly labelIds: readonly string[] }[];
+  /** Per-message label removals in this step. */
+  readonly labelsRemoved?: readonly { readonly id: string; readonly labelIds: readonly string[] }[];
+  /** Ids of messages deleted in this step. */
+  readonly messagesDeleted?: readonly string[];
 }
 
 /** Parses Gmail's `after:YYYY/MM/DD` / `before:YYYY/MM/DD` window (epoch-ms) from a list query. */
@@ -106,6 +132,8 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
         listMessages: (userId, q, pageSize, pageToken) =>
           Effect.provide(GoogleMail.listMessages(userId, q, pageSize, pageToken), context),
         getMessage: (userId, messageId) => Effect.provide(GoogleMail.getMessage(userId, messageId), context),
+        getProfile: (userId) => Effect.provide(GoogleMail.getProfile(userId), context),
+        listHistory: (userId, options) => Effect.provide(GoogleMail.listHistory(userId, options), context),
         getAttachment: (userId, messageId, attachmentId) =>
           Effect.provide(GoogleMail.getAttachment(userId, messageId, attachmentId), context),
         sendMessage: (userId, message) => Effect.provide(GoogleMail.sendMessage(userId, message), context),
@@ -154,6 +182,54 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
             ? Effect.succeed(message)
             : Effect.die(new Error(`mock GoogleMailApi: message not in dataset: ${messageId}`));
         },
+        getProfile: () => Effect.succeed({ historyId: dataset.historyId }),
+        // Chains the history-log steps from `startHistoryId` into one record per step (Gmail returns a
+        // record per change-batch), then returns one bounded page (honoring `maxResults`). `historyId` is
+        // the mailbox's *current* record on every page (Gmail semantics). An unknown/evicted id (no chain
+        // match, not already the latest) fails with a 404 GoogleApiError, matching a server past its
+        // retention window.
+        listHistory: (_userId, options) =>
+          Effect.gen(function* () {
+            const latest = dataset.historyId;
+            const records: {
+              id: string;
+              messagesAdded: { message: { id: string } }[];
+              labelsAdded: { message: { id: string }; labelIds: readonly string[] }[];
+              labelsRemoved: { message: { id: string }; labelIds: readonly string[] }[];
+            }[] = [];
+            let chain = options.startHistoryId;
+            let matched = latest !== undefined && options.startHistoryId === latest;
+            for (const step of dataset.historyLog ?? []) {
+              if (step.startHistoryId === chain) {
+                matched = true;
+                records.push({
+                  id: step.historyId,
+                  messagesAdded: (step.messagesAdded ?? []).map((id) => ({ message: { id } })),
+                  labelsAdded: (step.labelsAdded ?? []).map((entry) => ({
+                    message: { id: entry.id },
+                    labelIds: entry.labelIds,
+                  })),
+                  labelsRemoved: (step.labelsRemoved ?? []).map((entry) => ({
+                    message: { id: entry.id },
+                    labelIds: entry.labelIds,
+                  })),
+                });
+                chain = step.historyId;
+              }
+            }
+            if (!matched) {
+              return yield* Effect.fail(new GoogleApiError(404, 'Requested entity was not found.'));
+            }
+            // One bounded page per call (honors `maxResults`). The caller resumes across runs from the
+            // last record's id (not `pageToken`), so more records simply mean a non-empty `nextPageToken`.
+            const pageSize = options.maxResults ?? (records.length || 1);
+            const page = records.slice(0, pageSize);
+            return {
+              history: page,
+              historyId: latest ?? options.startHistoryId,
+              nextPageToken: page.length < records.length ? 'more' : undefined,
+            };
+          }),
         getAttachment: (_userId, _messageId, attachmentId) => {
           const body = dataset.attachments?.[attachmentId];
           return body

@@ -23,13 +23,13 @@ import { InvitationsManagerService, InvitationsServiceImpl } from '../invitation
 import { NetworkServiceImpl } from '../network';
 import { SpaceManagerService } from '../space';
 import { SpacesServiceImpl } from '../spaces';
-import { ServiceContextService } from './service-context';
+import { ClientServicesHostService } from './service-host';
 
 //
 // Each client RPC service handler is exposed as an individual Effect service tag. Handlers depend
 // directly on the lower-level component tags they consume (EchoHostService, IdentityManagerService,
 // …); only handlers that need lifecycle orchestration (identity creation, readiness gates)
-// additionally depend on {@link ServiceContextService}.
+// additionally depend on {@link ClientServicesHostService} (the host provides itself into the stack).
 //
 
 export class IdentityServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/IdentityService')<
@@ -98,24 +98,24 @@ export type ClientServicesRpcContext =
   | FeedServiceRpc;
 
 // Identity creation is a lifecycle sequence and profile broadcast iterates live spaces, so both
-// remain orchestrator responsibilities resolved from {@link ServiceContextService}.
+// remain orchestrator responsibilities resolved from {@link ClientServicesHostService}.
 const identityServiceLayer = Layer.effect(
   IdentityServiceRpc,
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const keyring = yield* KeyringApiService;
-    const serviceContext = yield* ServiceContextService;
+    const host = yield* ClientServicesHostService;
     return new IdentityServiceImpl(
       identityManager,
       recoveryManager,
       keyring,
       async (params, ctx) => {
-        const identity = await serviceContext.createIdentity(params, ctx);
-        await serviceContext.initialized.wait();
+        const identity = await host.createIdentity(params, ctx);
+        await host.initialized.wait();
         return identity;
       },
-      (profile) => serviceContext.broadcastProfileUpdate(profile),
+      (profile) => host.broadcastProfileUpdate(profile),
     );
   }),
 );
@@ -125,8 +125,8 @@ const contactsServiceLayer = Layer.effect(
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
     const spaceManager = yield* SpaceManagerService;
-    const serviceContext = yield* ServiceContextService;
-    return new ContactsServiceImpl(identityManager, spaceManager, () => serviceContext.whenDataSpaceManagerReady());
+    const host = yield* ClientServicesHostService;
+    return new ContactsServiceImpl(identityManager, spaceManager, () => host.whenDataSpaceManagerReady());
   }),
 );
 
@@ -151,10 +151,8 @@ const spacesServiceLayer = Layer.effect(
     const identityManager = yield* IdentityManagerService;
     const spaceManager = yield* SpaceManagerService;
     const echoHost = yield* EchoHostService;
-    const serviceContext = yield* ServiceContextService;
-    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () =>
-      serviceContext.whenDataSpaceManagerReady(),
-    );
+    const host = yield* ClientServicesHostService;
+    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () => host.whenDataSpaceManagerReady());
   }),
 );
 
@@ -172,8 +170,8 @@ const edgeAgentServiceLayer = Layer.effect(
   EdgeAgentServiceRpc,
   Effect.gen(function* () {
     const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
-    const serviceContext = yield* ServiceContextService;
-    return new EdgeAgentServiceImpl(() => serviceContext.whenEdgeAgentManagerReady(), edgeConnection);
+    const host = yield* ClientServicesHostService;
+    return new EdgeAgentServiceImpl(() => host.whenEdgeAgentManagerReady(), edgeConnection);
   }),
 );
 
@@ -207,7 +205,7 @@ export const ClientServicesRpcLayer: Layer.Layer<
   | KeyringApiService
   | SwarmNetworkManagerService
   | SignalManagerService
-  | ServiceContextService
+  | ClientServicesHostService
 > = Layer.mergeAll(
   identityServiceLayer,
   contactsServiceLayer,

@@ -11,7 +11,7 @@ import { Game } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Game)]: {
+      [Type.getTypename(Game.Game)]: {
         'typename.label': 'Game',
         'typename.label_zero': 'Games',
         'typename.label_one': 'Game',

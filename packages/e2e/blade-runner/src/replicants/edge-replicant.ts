@@ -7,12 +7,12 @@ import * as Schema from 'effect/Schema';
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { DeviceType, type Identity } from '@dxos/client/halo';
+import { getInvocationUrl } from '@dxos/compute-runtime';
 import { type ConfigProto } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DXN, Type } from '@dxos/echo';
-import { getInvocationUrl } from '@dxos/functions-runtime';
-import { bundleFunction } from '@dxos/functions-runtime/bundler';
-import { uploadWorkerFunction } from '@dxos/functions-runtime/edge';
+import { uploadWorkerFunction } from '@dxos/edge-compute';
+import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -175,7 +175,7 @@ export class EdgeReplicant {
 
     const replicationIsDone = new Trigger();
     let lastDifferentDocuments: number = Infinity;
-    const unsub = space.internal.db.subscribeToSyncState(Context.default(), (state) => {
+    const unsub = space.internal.db.subscribeToAutomergeSyncState(Context.default(), (state) => {
       if (
         state.peers?.length === 1 &&
         state.peers[0].differentDocuments === 0 &&

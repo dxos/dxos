@@ -194,7 +194,7 @@ export const makeObject = ({
   get: Atom.Context;
   db: Database.Database;
   object: Obj.Unknown;
-  disposition?: string;
+  disposition?: string | string[];
   draggable?: boolean;
   droppable?: boolean;
   navigable?: boolean;

@@ -89,19 +89,22 @@ describe('sync pipeline harness', () => {
     return { db, feed, tagIndex, binding };
   };
 
-  // Provider-agnostic mapping stage: raw → mapped ECHO message (no contact resolution needed here).
-  const mapStage: Stage.Stage<Raw, EmailStage.Mapped, never, never> = Stage.map('map', (raw: Raw) =>
-    Effect.sync(() => ({
-      message: Obj.make(Message.Message, {
-        [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
-        created: new Date(raw.key).toISOString(),
-        sender: { email: raw.email },
-        blocks: [{ _tag: 'text', text: raw.body }],
+  // Provider-agnostic mapping stage: raw → an `insert` Change (no contact resolution needed here).
+  const mapStage: Stage.Stage<Raw, EmailStage.Change, never, never> = Stage.map('map', (raw: Raw) =>
+    Effect.sync(
+      (): EmailStage.Change => ({
+        _tag: 'insert',
+        message: Obj.make(Message.Message, {
+          [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
+          created: new Date(raw.key).toISOString(),
+          sender: { email: raw.email },
+          blocks: [{ _tag: 'text', text: raw.body }],
+        }),
+        foreignId: raw.id,
+        key: raw.key,
+        tagUris: [],
       }),
-      foreignId: raw.id,
-      key: raw.key,
-      tagUris: [],
-    })),
+    ),
   );
 
   // Faults after `n` units reach it, simulating a crash mid-run.
@@ -139,7 +142,7 @@ describe('sync pipeline harness', () => {
     );
   };
 
-  const cursorOf = (binding: Cursor.Cursor): string | undefined => binding.value;
+  const cursorOf = (binding: Cursor.Cursor): string | undefined => binding.max;
 
   const feedForeignIds = async (db: Database.Database, feed: Feed.Feed): Promise<string[]> => {
     const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
@@ -157,7 +160,7 @@ describe('sync pipeline harness', () => {
     // Run 1: fault after the first page (m1, m2) commits.
     const stats1: Cursor.Stats = { newMessages: 0 };
     const exit = await EffectEx.runPromise(
-      Effect.exit(drain({ ...base, cursorKey: 0, stats: stats1, fault: faultAfter(2) })),
+      Effect.exit(drain({ ...base, maxKey: 0, stats: stats1, fault: faultAfter(2) })),
     );
     expect(Exit.isFailure(exit)).toBe(true);
 
@@ -168,7 +171,7 @@ describe('sync pipeline harness', () => {
 
     // Run 2: recovery — resumes from the cursor, no fault. No duplicates.
     const stats2: Cursor.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(drain({ ...base, cursorKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
+    await EffectEx.runPromise(drain({ ...base, maxKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
 
     expect(stats2.newMessages).toBe(3);
     const foreignIds = (await feedForeignIds(db, feed)).sort();
@@ -205,7 +208,7 @@ describe('sync pipeline harness', () => {
     const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
       Cursor.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -219,11 +222,11 @@ describe('sync pipeline harness', () => {
     const base = { db, cursor: binding, feed, tagIndex, foreignKeySource: TEST_SOURCE };
 
     const stats1: Cursor.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(drain({ ...base, cursorKey: 0, stats: stats1 }));
+    await EffectEx.runPromise(drain({ ...base, maxKey: 0, stats: stats1 }));
     expect(stats1.newMessages).toBe(RAWS.length);
 
     const stats2: Cursor.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(drain({ ...base, cursorKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
+    await EffectEx.runPromise(drain({ ...base, maxKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
     expect(stats2.newMessages).toBe(0);
     expect((await feedForeignIds(db, feed)).length).toBe(RAWS.length);
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(3);
@@ -261,21 +264,24 @@ describe('sync pipeline harness', () => {
       },
     ];
 
-    const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Mapped, never, never> = Stage.map(
+    const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Change, never, never> = Stage.map(
       'map',
       (raw: AttachmentRaw) =>
-        Effect.sync(() => ({
-          message: Obj.make(Message.Message, {
-            [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
-            created: new Date(raw.key).toISOString(),
-            sender: { email: raw.email },
-            blocks: [{ _tag: 'text', text: raw.body }],
+        Effect.sync(
+          (): EmailStage.Change => ({
+            _tag: 'insert',
+            message: Obj.make(Message.Message, {
+              [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
+              created: new Date(raw.key).toISOString(),
+              sender: { email: raw.email },
+              blocks: [{ _tag: 'text', text: raw.body }],
+            }),
+            foreignId: raw.id,
+            key: raw.key,
+            tagUris: [],
+            attachments: raw.attachments,
           }),
-          foreignId: raw.id,
-          key: raw.key,
-          tagUris: [],
-          attachments: raw.attachments,
-        })),
+        ),
     );
 
     const stats: Cursor.Stats = { newMessages: 0 };
@@ -287,7 +293,7 @@ describe('sync pipeline harness', () => {
         EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -323,7 +329,7 @@ describe('sync pipeline harness', () => {
     expect(withoutAttachment.attachments ?? []).toHaveLength(0);
   });
 
-  test('email stages compose in any order (Mapped → Mapped) ahead of the terminal toCommitUnit', async ({ expect }) => {
+  test('email stages compose in any order (Change → Change) ahead of the terminal toCommitUnit', async ({ expect }) => {
     const { db, feed, binding } = await setup();
 
     type AttachmentRaw = Raw & { readonly attachments?: readonly EmailStage.Attachment[] };
@@ -336,21 +342,24 @@ describe('sync pipeline harness', () => {
       attachments: [{ name: 'note.txt', mimeType: 'text/plain', size: bytes.byteLength, bytes }],
     };
 
-    const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Mapped, never, never> = Stage.map(
+    const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Change, never, never> = Stage.map(
       'map',
       (item: AttachmentRaw) =>
-        Effect.sync(() => ({
-          message: Obj.make(Message.Message, {
-            [Obj.Meta]: { keys: [{ id: item.id, source: TEST_SOURCE }] },
-            created: new Date(item.key).toISOString(),
-            sender: { email: item.email },
-            blocks: [{ _tag: 'text', text: item.body }],
+        Effect.sync(
+          (): EmailStage.Change => ({
+            _tag: 'insert',
+            message: Obj.make(Message.Message, {
+              [Obj.Meta]: { keys: [{ id: item.id, source: TEST_SOURCE }] },
+              created: new Date(item.key).toISOString(),
+              sender: { email: item.email },
+              blocks: [{ _tag: 'text', text: item.body }],
+            }),
+            foreignId: item.id,
+            key: item.key,
+            tagUris: [],
+            attachments: item.attachments,
           }),
-          foreignId: item.id,
-          key: item.key,
-          tagUris: [],
-          attachments: item.attachments,
-        })),
+        ),
     );
 
     const stats: Cursor.Stats = { newMessages: 0 };
@@ -358,13 +367,13 @@ describe('sync pipeline harness', () => {
       Stream.fromIterable([raw]).pipe(
         mapAttachmentStage,
         // Swapped relative to the production pipelines (extractContacts before processAttachments) —
-        // both are Mapped → Mapped, so order doesn't matter; only toCommitUnit must run last.
+        // both are Change → Change, so order doesn't matter; only toCommitUnit must run last.
         EmailStage.extractContacts(),
         EmailStage.processAttachments(),
         EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
+        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
     );
@@ -418,7 +427,8 @@ describe('reconcileDrafts stage', () => {
     });
 
   /** A synced message flowing in from a provider, carrying its provider foreign id. */
-  const makeSyncedMapped = (foreignId: string, key: number): EmailStage.Mapped => ({
+  const makeSyncedInsert = (foreignId: string, key: number): EmailStage.Change => ({
+    _tag: 'insert',
     message: Obj.make(Message.Message, {
       [Obj.Meta]: { keys: [{ id: foreignId, source: GMAIL_SOURCE }] },
       created: new Date(key).toISOString(),
@@ -432,7 +442,7 @@ describe('reconcileDrafts stage', () => {
   });
 
   /**
-   * Drives the reconcile-in-commit chain: pool sent drafts, flow the given synced messages through
+   * Drives the reconcile-in-commit chain: pool sent drafts, flow the given synced changes through
    * `reconcileDrafts` → `toCommitUnit` → the commit sink (which appends the canonical message and runs
    * the deferred draft removal), exactly as the provider sync ops do.
    */
@@ -440,7 +450,7 @@ describe('reconcileDrafts stage', () => {
     db: Database.Database,
     mailbox: Mailbox.Mailbox,
     binding: Cursor.Cursor,
-    synced: readonly EmailStage.Mapped[],
+    synced: readonly EmailStage.Change[],
   ) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
@@ -452,7 +462,7 @@ describe('reconcileDrafts stage', () => {
           EmailStage.toCommitUnit(),
           Stream.grouped(2),
           Pipeline.run({ sink: Cursor.commit }),
-          Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: GMAIL_SOURCE, cursorKey: 0, stats })),
+          Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: GMAIL_SOURCE, maxKey: 0, stats })),
         );
       }).pipe(Effect.provide(Database.layer(db))),
     );
@@ -485,7 +495,7 @@ describe('reconcileDrafts stage', () => {
     db.add(makeSentDraft(mailboxUri, 'gmail-msg-1'));
     await db.flush({ indexes: true });
 
-    await runReconcile(db, mailbox, binding, [makeSyncedMapped('gmail-msg-1', 10)]);
+    await runReconcile(db, mailbox, binding, [makeSyncedInsert('gmail-msg-1', 10)]);
     await db.flush({ indexes: true });
 
     expect(await queryDrafts(db, mailboxUri)).toHaveLength(0);
@@ -505,7 +515,7 @@ describe('reconcileDrafts stage', () => {
     );
     await db.flush({ indexes: true });
 
-    await runReconcile(db, mailbox, binding, [makeSyncedMapped('gmail-msg-1', 10)]);
+    await runReconcile(db, mailbox, binding, [makeSyncedInsert('gmail-msg-1', 10)]);
     await db.flush({ indexes: true });
 
     expect(await queryDrafts(db, mailboxUri)).toHaveLength(1);
@@ -519,7 +529,7 @@ describe('reconcileDrafts stage', () => {
     await db.flush({ indexes: true });
 
     // A synced message with an unrelated foreign id — must not match the sent draft above.
-    await runReconcile(db, mailbox, binding, [makeSyncedMapped('gmail-msg-other', 10)]);
+    await runReconcile(db, mailbox, binding, [makeSyncedInsert('gmail-msg-other', 10)]);
     await db.flush({ indexes: true });
 
     expect(await queryDrafts(db, mailboxUri)).toHaveLength(1);
