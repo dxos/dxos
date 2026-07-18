@@ -431,7 +431,11 @@ describe.skipIf(!EDGE_URL)('edge api (live)', { tags: ['sync-e2e'], timeout: 60_
     // empty `{}` payload decodes successfully — so the append below can be verified through a real
     // round-trip `queueBlocksQuery` call.
     test('queueBlocksAppend appends a block, verified through queueBlocksQuery', async ({ expect }) => {
-      const blockData = [1, 2, 3];
+      // Block data MUST be the UTF-8 bytes of a JSON-encoded object: the db-service Indexer
+      // walks every data-subspace feed block with `JSON.parse` on an alarm, and a non-JSON block
+      // poisons that alarm into a permanent crash-loop (no skip/back-off) that can wedge the
+      // whole local dev worker. See feed-data-source.ts in dxos/edge db-service.
+      const blockData = Array.from(new TextEncoder().encode(JSON.stringify({ id: queueId })));
       const appendOutcome = await EffectEx.runPromise(
         Effect.gen(function* () {
           const client = yield* anonymousClient();
