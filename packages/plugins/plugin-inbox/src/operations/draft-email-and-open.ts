@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention/types';
 import { DraftMessage } from '@dxos/types';
@@ -27,7 +28,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
       if (Mailbox.instanceOf(mailbox)) {
         // Tag as 'draft' so the Drafts view (a systemTag filter, like Inbox/Sent) picks it up;
         // `useSendEmail` removes the tag at send time.
-        yield* Effect.promise(() => SystemTags.toggleTag(mailbox, draft, db, 'draft'));
+        yield* SystemTags.toggleTag(mailbox, draft, 'draft').pipe(Effect.provide(Database.layer(db)));
 
         // Navigate to Drafts and select the new draft, mirroring the select-then-show-companion flow
         // a list click does via `useShowItem` (invoked directly here since this runs outside a component).

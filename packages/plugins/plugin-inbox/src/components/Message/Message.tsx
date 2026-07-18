@@ -4,12 +4,13 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
+import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { normalizeText } from '@dxos/markdown';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -206,7 +207,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (mailbox && db) {
-      void SystemTags.toggleTag(mailbox, message, db, 'starred');
+      void Effect.runFork(SystemTags.toggleTag(mailbox, message, 'starred').pipe(Effect.provide(Database.layer(db))));
     }
   }, [mailbox, message, db]);
 

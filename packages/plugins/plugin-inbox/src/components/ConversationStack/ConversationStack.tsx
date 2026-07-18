@@ -3,6 +3,7 @@
 //
 
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React, {
   type FC,
   type KeyboardEvent,
@@ -17,7 +18,7 @@ import React, {
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { log } from '@dxos/log';
 import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
@@ -444,7 +445,7 @@ const useMessageHandlers = (
         const draft = db.add(DraftMessage.make(createDraftMessage({ mode, message, mailbox })));
         // Tag as 'draft' like every other draft-creation path; `useSendEmail` removes it at send time.
         if (mailbox) {
-          void SystemTags.toggleTag(mailbox, draft, db, 'draft');
+          void Effect.runFork(SystemTags.toggleTag(mailbox, draft, 'draft').pipe(Effect.provide(Database.layer(db))));
         }
       }
     },
