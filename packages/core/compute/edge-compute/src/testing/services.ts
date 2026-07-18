@@ -67,12 +67,7 @@ export type TestServiceOptions = {
  * credentials, database (from a space or standalone database), and trace. Callers layer AI,
  * `Operation.Service`, and registry on top as needed for the code under test.
  */
-export const createTestServices = ({
-  credentials,
-  db,
-  logging,
-  space,
-}: TestServiceOptions = {}): Layer.Layer<
+export const createTestServices = ({ credentials, db, logging, space }: TestServiceOptions = {}): Layer.Layer<
   Credential.CredentialsService | Database.Service | Trace.TraceService
 > => {
   assertArgument(!(!!space && !!db), 'space', 'space can be provided only if db is not');
