@@ -103,15 +103,74 @@ const firstRowHeight = (view: EditorView, pos: number): number => {
   return view.defaultLineHeight;
 };
 
+// The `from` of the block under the pointer (a hovered block shows its grip), or null.
+const setHoveredBlock = StateEffect.define<number | null>();
+const hoveredBlockField = StateField.define<number | null>({
+  create: () => null,
+  update: (value, tr) => {
+    for (const effect of tr.effects) {
+      if (effect.is(setHoveredBlock)) {
+        return effect.value;
+      }
+    }
+    return value != null && tr.docChanged ? tr.changes.mapPos(value, -1) : value;
+  },
+});
+
+// Tracks the block under the pointer (by its vertical position, so it works over the text, the gutter,
+// or the margin) and publishes it to `hoveredBlockField` so that block's grip can show. Listens on the
+// scroller — which spans the gutter and content — so moving from the text toward the grip doesn't clear
+// it; the hover clears only when the pointer leaves the editor. Dispatches only when the block changes.
+const createHoverPlugin = (getBlocks: BlockDragOptions['getBlocks']) =>
+  ViewPlugin.fromClass(
+    class {
+      constructor(readonly view: EditorView) {
+        view.scrollDOM.addEventListener('mousemove', this.#onMove);
+        view.scrollDOM.addEventListener('mouseleave', this.#onLeave);
+      }
+
+      destroy() {
+        this.view.scrollDOM.removeEventListener('mousemove', this.#onMove);
+        this.view.scrollDOM.removeEventListener('mouseleave', this.#onLeave);
+      }
+
+      #set(anchor: number | null) {
+        if (anchor !== (this.view.state.field(hoveredBlockField, false) ?? null)) {
+          this.view.dispatch({ effects: setHoveredBlock.of(anchor) });
+        }
+      }
+
+      #onMove = (event: MouseEvent) => {
+        // Map the pointer's row (content-center x + pointer y) to a block, so any horizontal position works.
+        const contentRect = this.view.contentDOM.getBoundingClientRect();
+        const pos = this.view.posAtCoords({ x: contentRect.left + contentRect.width / 2, y: event.clientY });
+        this.#set(
+          pos == null
+            ? null
+            : (getBlocks(this.view.state).find((block) => pos >= block.from && pos <= block.to)?.from ?? null),
+        );
+      };
+
+      #onLeave = () => this.#set(null);
+    },
+  );
+
 // Indices of the blocks whose grips are shown, ascending: every selected block (so the group has a grab
-// point and each can be shift-toggled) plus the block at the caret (so a fresh block can be grabbed or
-// added to the selection).
+// point and each can be shift-toggled), the block at the caret, and the block under the pointer (hover).
 const activeBlockIndices = (state: EditorState, getBlocks: BlockDragOptions['getBlocks']): number[] => {
+  const blocks = getBlocks(state);
   const indices = new Set(getSelectedBlocks(state, getBlocks).map((entry) => entry.index));
   const head = state.selection.main.head;
-  const cursorIndex = getBlocks(state).findIndex((block) => head >= block.from && head <= block.to);
+  const cursorIndex = blocks.findIndex((block) => head >= block.from && head <= block.to);
   if (cursorIndex >= 0) {
     indices.add(cursorIndex);
+  }
+  const hovered = state.field(hoveredBlockField, false);
+  if (hovered != null) {
+    const hoverIndex = blocks.findIndex((block) => block.from === hovered);
+    if (hoverIndex >= 0) {
+      indices.add(hoverIndex);
+    }
   }
   return [...indices].sort((a, b) => a - b);
 };
@@ -635,10 +694,10 @@ const dragTheme = EditorView.theme({
 
 /**
  * Drag-to-reorder for arbitrary document blocks, with click/shift-click block selection. The gutter shows
- * a single grip on the active block (the selection head or the first selected block); pressing it toggles
- * the block selection, dragging it reorders the block (or the whole selection). A floating preview, a
- * drop placeholder, and edge auto-scroll accompany the drag. Blocks and reorder semantics come from the
- * caller (see `blocks` for markdown blocks, and the outliner for task lines). Pairs with
+ * a grip on the block under the pointer, the block at the caret, and every selected block; pressing a grip
+ * toggles the block selection, dragging it reorders the block (or the whole selection). A floating
+ * preview, a drop placeholder, and edge auto-scroll accompany the drag. Blocks and reorder semantics come
+ * from the caller (see `blocks` for markdown blocks, and the outliner for task lines). Pairs with
  * `createBlockSelection`, which owns the selection state, highlight, and clipboard.
  */
 export const createBlockDrag = ({
@@ -659,10 +718,11 @@ export const createBlockDrag = ({
       }
       return builder.finish();
     },
-    // The active grip follows the selection/block-selection, so recompute markers when either changes.
+    // The active grip follows the caret, block-selection, and hover, so recompute markers on any change.
     lineMarkerChange: (update) =>
       update.selectionSet ||
-      update.startState.field(blockSelectionField, false) !== update.state.field(blockSelectionField, false),
+      update.startState.field(blockSelectionField, false) !== update.state.field(blockSelectionField, false) ||
+      update.startState.field(hoveredBlockField, false) !== update.state.field(hoveredBlockField, false),
     domEventHandlers: {
       mousedown: (view, line, event) => {
         // Primary button only; right/middle click must not reorder content.
@@ -681,5 +741,5 @@ export const createBlockDrag = ({
     },
   });
 
-  return [dragTheme, dragDecoField, dragPlugin, dragGutter];
+  return [dragTheme, dragDecoField, hoveredBlockField, createHoverPlugin(getBlocks), dragPlugin, dragGutter];
 };
