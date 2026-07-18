@@ -13,6 +13,11 @@ export type JsonOptions = {
   schema?: JsonSchemaType;
 };
 
+/**
+ * JSON editing extension: the JSON language (syntax highlighting, folding, bracket matching) plus a
+ * linter. When `schema` (a JSON Schema) is given the linter validates against it; otherwise it reports
+ * only parse errors.
+ */
 export const json = ({ schema }: JsonOptions = {}): Extension => {
   let lintSource: LintSource = jsonParseLinter();
   if (schema) {

@@ -76,18 +76,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const content = Array.from({ length: 30 }, (_, i) => {
-  const n = random.number.int(10);
-  if (i == 0 || n < 2) {
-    return `# Header ${i + 1}`;
+const content = Array.from({ length: 30 }, (_, index) => {
+  const roll = random.number.int(10);
+  if (index === 0 || roll < 2) {
+    return `# Header ${index + 1}`;
   }
 
-  if (n > 8) {
+  if (roll > 8) {
     return Array.from(
       {
         length: random.number.int({ min: 2, max: 8 }),
       },
-      (_, i) => `- Item ${i + 1}`,
+      (_, itemIndex) => `- Item ${itemIndex + 1}`,
     ).join('\n');
   }
 

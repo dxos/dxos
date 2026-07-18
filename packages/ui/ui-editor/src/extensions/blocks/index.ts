@@ -5,3 +5,4 @@
 export * from './blocks';
 export * from './drag';
 export * from './outline';
+export * from './selection';

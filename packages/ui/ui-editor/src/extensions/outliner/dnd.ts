@@ -5,7 +5,7 @@
 import { type EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { type Block, createBlockDrag } from '../blocks';
+import { type Block, type BlockOps, createBlockDrag, createBlockSelection } from '../blocks';
 import { type Item, type Tree, getRange, treeFacet } from './tree';
 
 // Narrower than the markdown block gutter — outliner items are indented and tightly packed.
@@ -115,13 +115,107 @@ const moveItem = (view: EditorView, sourceIndex: number, dropIndex: number): voi
   view.dispatch({ changes, userEvent: 'move.item' });
 };
 
+// Merges sorted ranges, combining any that overlap or touch.
+const mergeRanges = (ranges: { from: number; to: number }[]): { from: number; to: number }[] => {
+  const sorted = [...ranges].sort((a, b) => a.from - b.from);
+  const merged: { from: number; to: number }[] = [];
+  for (const range of sorted) {
+    const last = merged.at(-1);
+    if (last && range.from <= last.to) {
+      last.to = Math.max(last.to, range.to);
+    } else {
+      merged.push({ ...range });
+    }
+  }
+  return merged;
+};
+
+// Delete ranges for the given items: each item's own lines plus the newline below it (down to the next
+// item, or the document end), merged so adjacent selections form one range.
+const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): { from: number; to: number }[] => {
+  const count = blocks.length;
+  return mergeRanges(
+    indices.map((index) => ({
+      from: blocks[index].from,
+      to: index + 1 < count ? blocks[index + 1].from : state.doc.length,
+    })),
+  );
+};
+
 /**
- * Drag-to-reorder for outliner items. Adds a gutter grip to each item and, on drop, relocates the
- * item and its subtree. Reuses the generic block-drag core (preview, drop indicator, auto-scroll)
- * from the `blocks` extensions with tree-aware blocks and move semantics.
+ * Moves the items at `sourceIndices` to the slot before `dropIndex`. A single item moves with its whole
+ * subtree (re-indented — see `moveItem`); multiple items move by their own lines as a group (a
+ * best-effort for multi-selection reorder).
+ */
+const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number): void => {
+  const { state } = view;
+  const items = flattenItems(state);
+  const count = items.length;
+  const sources = [...new Set(sourceIndices)].filter((index) => index >= 0 && index < count).sort((a, b) => a - b);
+  if (sources.length === 0 || sources.includes(dropIndex)) {
+    return;
+  }
+  if (sources.length === 1) {
+    moveItem(view, sources[0], dropIndex);
+    return;
+  }
+
+  const blocks = getBlocks(state);
+  const text = sources.map((index) => state.doc.sliceString(blocks[index].from, blocks[index].to)).join('\n');
+  const deletes = deleteRanges(state, blocks, sources);
+  const insertAt = dropIndex < count ? blocks[dropIndex].from : state.doc.length;
+  if (deletes.some((range) => insertAt > range.from && insertAt < range.to)) {
+    return;
+  }
+
+  const insert = dropIndex < count ? `${text}\n` : `\n${text}`;
+  const changes = [...deletes.map((range) => ({ from: range.from, to: range.to })), { from: insertAt, insert }];
+  view.dispatch({ changes, userEvent: 'move.item' });
+};
+
+/** Removes the items at `indices`, optionally replacing the first slot with `text` (paste). */
+const replaceBlocks = (view: EditorView, indices: number[], text: string | null): void => {
+  const { state } = view;
+  const blocks = getBlocks(state);
+  const count = blocks.length;
+  const sources = [...new Set(indices)].filter((index) => index >= 0 && index < count).sort((a, b) => a - b);
+  if (sources.length === 0) {
+    return;
+  }
+
+  const deletes = deleteRanges(state, blocks, sources);
+  const changes = deletes.map(
+    (range) => ({ from: range.from, to: range.to }) as { from: number; to: number; insert?: string },
+  );
+  let anchor = deletes[0].from;
+  if (text != null && text.length > 0) {
+    const insert = deletes[0].to >= state.doc.length ? text : `${text}\n`;
+    changes[0] = { from: deletes[0].from, to: deletes[0].to, insert };
+    anchor = deletes[0].from + text.length;
+  }
+
+  view.dispatch({
+    changes,
+    selection: { anchor: Math.min(anchor, state.doc.length) },
+    userEvent: text == null ? 'delete.block' : 'input.paste',
+  });
+};
+
+const outlinerBlockOps: BlockOps = {
+  getBlocks,
+  moveBlocks,
+  serialize: (state, selected) => selected.map((block) => state.doc.sliceString(block.from, block.to)).join('\n'),
+  replaceBlocks,
+};
+
+/**
+ * Block selection, drag-to-reorder, and cut/copy/paste for outliner items. Single-item drag relocates
+ * the whole subtree (re-indented); the generic block-selection and clipboard from the `blocks`
+ * extensions operate on item lines. The gutter is narrower — outliner items are indented and packed.
  */
 export const outlinerDnd = (): Extension => [
-  createBlockDrag({ getBlocks, moveBlock: moveItem, gutterClass: GUTTER_CLASS }),
+  createBlockSelection(outlinerBlockOps),
+  createBlockDrag({ getBlocks, moveBlocks, gutterClass: GUTTER_CLASS }),
   EditorView.theme({
     [`.${GUTTER_CLASS}`]: {
       width: '24px',

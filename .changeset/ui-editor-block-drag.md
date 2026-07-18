@@ -2,8 +2,8 @@
 '@dxos/ui-editor': minor
 ---
 
-Split the `blocks` editor extension into two independent extensions — `blockOutline` (the below-text border boxes) and `blockDrag` (the gutter drag handle + drag-to-reorder). `blocks()` now composes both; use them separately for one behaviour without the other. The drag core (`createBlockDrag`) is generalized over a block provider and reorder function.
+Split the `blocks` editor extension into independent extensions — `blockOutline` (the below-text border boxes), `blockSelection` (whole-block selection + clipboard), and `blockDrag` (the gutter grip + drag-to-reorder). `blocks()` composes all three; use them separately for one behaviour without the others. The drag core (`createBlockDrag`) and selection core (`createBlockSelection`) are generalized over a document-agnostic `BlockOps` contract, shared by markdown blocks and the outliner.
 
-Add `outlinerDnd` to reorder outliner task lines via the shared drag core (drag handle, block-height drop placeholder, subtree-aware move with re-indentation).
+Add document-agnostic whole-block selection: the gutter shows a grip on the caret's block and each selected block; clicking a grip selects the block (shift-click toggles it in a multi-selection). Dragging a grip reorders the block, or the whole selection when it is part of it, and `Cut`/`Copy`/`Paste` operate on the selected blocks. Wire the same selection, drag, and clipboard into the outliner (`outlinerDnd`).
 
-The drag experience now lifts the source block out of the document (collapsing it and its trailing blank line), opens a block-sized placeholder at the drop slot, centers each grip on its line's first row, and matches the floating preview's wrapping to the source.
+The drag experience lifts the source block(s) out of the document (collapsing them and their trailing blank line), opens a block-sized placeholder at the drop slot, centers each grip on its line's first row, and matches the floating preview's wrapping to the source. Drags abort on a concurrent edit and start on the primary button only.
