@@ -62,10 +62,7 @@ export interface Accessor {
 type TagKey = readonly [TagIndex, EntityId, string | undefined];
 type TaggedIdsKey = readonly [TagIndex, string];
 
-const tagsEqual = (left: readonly string[], right: readonly string[]): boolean =>
-  left.length === right.length && left.every((value, index) => value === right[index]);
-
-const idsEqual = (left: readonly EntityId[], right: readonly EntityId[]): boolean =>
+const arraysEqual = <T>(left: readonly T[], right: readonly T[]): boolean =>
   left.length === right.length && left.every((value, index) => value === right[index]);
 
 const tagFamily = Atom.family((key: TagKey) =>
@@ -97,7 +94,7 @@ const taggedIdsFamily = Atom.family((key: TaggedIdsKey) =>
     let previous = read();
     const unsubscribe = Obj.subscribe(tagIndex, () => {
       const next = read();
-      if (!idsEqual(next, previous)) {
+      if (!arraysEqual(next, previous)) {
         previous = next;
         get.setSelf(next);
       }
@@ -114,7 +111,7 @@ const objectTagsFamily = Atom.family((key: TagKey) =>
     let previous = read();
     const unsubscribe = Obj.subscribe(tagIndex, () => {
       const next = read();
-      if (!tagsEqual(next, previous)) {
+      if (!arraysEqual(next, previous)) {
         previous = next;
         get.setSelf(next);
       }

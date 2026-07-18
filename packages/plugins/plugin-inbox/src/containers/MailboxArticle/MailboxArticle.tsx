@@ -194,17 +194,19 @@ export const MailboxArticle = ({
   // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
   const items = useMemo<MessageStackItem[]>(() => {
     const result: MessageStackItem[] = [];
+    const selectedSystemTagIds = new Set(systemTagIds);
     for (const entry of pagination.items) {
       if (!isThreadGroup(entry)) {
         result.push(entry);
       } else if (entry.threadId == null) {
         result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        // Attach this mailbox's space-resident messages for the thread, skipping any already in
-        // `entry.items` (the Drafts view's own drafts already came through `source` above).
+        // Attach this mailbox's space-resident messages for the thread, skipping any already
+        // matched by `source` — whether present in the (capped) preview or only in `count`.
         const presentIds = new Set(entry.items.map((message) => message.id));
         const spaceMessagesForThread = (spaceMessagesByThreadId.get(entry.threadId) ?? []).filter(
-          (message) => !presentIds.has(message.id),
+          (message) =>
+            !presentIds.has(message.id) && !(isUnmodifiedSystemTagView && selectedSystemTagIds.has(message.id)),
         );
         const messages =
           spaceMessagesForThread.length > 0
@@ -218,7 +220,17 @@ export const MailboxArticle = ({
     // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
     // message can match the index yet have no matching (or any) plain/markdown text to display.
     return applyPostFilters(result, mailbox, searchQuery);
-  }, [pagination.items, spaceMessagesByThreadId, mailbox, mailbox.messageFilters, searchQuery]);
+    // systemTagIds is a fresh array each render; key on its membership (systemTagIdsKey) instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    pagination.items,
+    spaceMessagesByThreadId,
+    mailbox,
+    mailbox.messageFilters,
+    searchQuery,
+    isUnmodifiedSystemTagView,
+    systemTagIdsKey,
+  ]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);

@@ -86,7 +86,7 @@ describe('TagIndex', () => {
     expect(registry.get(tagsForObject(first))).toEqual([urgent]);
   });
 
-  test('taggedIdsAtom returns object ids for one tag', () => {
+  test('taggedIdsAtom returns object ids for one tag', ({ expect }) => {
     const tagIndex = TagIndex.make();
     const tags = TagIndex.bind(tagIndex);
 
