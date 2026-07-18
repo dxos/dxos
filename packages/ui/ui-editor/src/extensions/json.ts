@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { json, jsonParseLinter } from '@codemirror/lang-json';
+import { json as jsonLanguage, jsonParseLinter } from '@codemirror/lang-json';
 import { type LintSource, linter } from '@codemirror/lint';
 import { type Extension } from '@codemirror/state';
 import Ajv, { type ValidateFunction } from 'ajv';
 
 import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 
-export type JsonExtensionsOptions = {
+export type JsonOptions = {
   schema?: JsonSchemaType;
 };
 
-export const createJsonExtensions = ({ schema }: JsonExtensionsOptions = {}): Extension => {
+export const json = ({ schema }: JsonOptions = {}): Extension => {
   let lintSource: LintSource = jsonParseLinter();
   if (schema) {
     // NOTE: Relaxing strict mode to allow additional custom schema properties.
@@ -22,7 +22,7 @@ export const createJsonExtensions = ({ schema }: JsonExtensionsOptions = {}): Ex
     lintSource = schemaLinter(validate);
   }
 
-  return [json(), linter(lintSource)];
+  return [jsonLanguage(), linter(lintSource)];
 };
 
 const schemaLinter =
