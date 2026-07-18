@@ -7,13 +7,10 @@ import { type EditorState, type Extension, type TransactionSpec } from '@codemir
 import { type EditorView } from '@codemirror/view';
 
 import { createBlockDrag } from './drag';
-import { createBlockOutline } from './outline';
-import { type BlockOps, createBlockSelection, setBlockSelection } from './selection';
+import { type BlockOps, createBlockSelection, createBlockSelectionHighlight, setBlockSelection } from './selection';
 import { type Block } from './types';
 
 export type BlockOptions = {
-  /** Class applied to each block box element. */
-  className?: string;
   /**
    * Pin the drag preview to the block's left edge so it only tracks vertically (default `true`).
    * When `false`, the preview follows the pointer on both axes.
@@ -22,29 +19,29 @@ export type BlockOptions = {
 };
 
 /**
- * Renders each top-level markdown block as a non-interactive box behind the text, with block selection
- * (click/shift-click the gutter grip), drag-to-reorder, and block cut/copy/paste. Composes `blockOutline`
- * (the boxes — usable on its own), `blockSelection` (selection state, highlight, clipboard), and
- * `blockDrag` (the gutter grip: the click/shift-click that populates the selection and drag-to-move).
- * `blockSelection` and `blockDrag` are a pair — the grip lives in `blockDrag` and drives the selection —
- * so use them together (or via this `blocks()`).
+ * Whole-block editing over the top-level markdown blocks: click/shift-click the gutter grip to select,
+ * drag-to-reorder, cut/copy/paste, with a border/background behind the selection. Composes
+ * `blockSelectionHighlight` (the box behind selected blocks), `blockSelection` (selection state and
+ * clipboard), and `blockDrag` (the gutter grip that populates the selection and drag-to-move). The grip
+ * lives in `blockDrag` and drives the selection, so these are used together (or via this `blocks()`).
  */
-export const blocks = ({ className, clampX }: BlockOptions = {}): Extension => [
-  blockOutline({ className }),
+export const blocks = ({ clampX }: BlockOptions = {}): Extension => [
+  blockSelectionHighlight(),
   blockSelection(),
   blockDrag({ clampX }),
 ];
 
 /**
- * Draws a non-interactive box behind each top-level markdown block. See `createBlockOutline`.
+ * Draws a border/background box behind each selected top-level markdown block. See
+ * `createBlockSelectionHighlight`.
  */
-export const blockOutline = ({ className }: Pick<BlockOptions, 'className'> = {}): Extension =>
-  createBlockOutline({ getBlocks: findBlocks, className });
+export const blockSelectionHighlight = (): Extension => createBlockSelectionHighlight(findBlocks);
 
 /**
- * Whole-block selection state, highlight, and block cut/copy/paste over the top-level markdown blocks.
- * The gutter grip gesture that populates the selection is provided by `blockDrag`, so pair the two (or
- * use `blocks()`, which composes them). See `createBlockSelection`.
+ * Whole-block selection state and block cut/copy/paste over the top-level markdown blocks. The gutter
+ * grip gesture that populates the selection is provided by `blockDrag` and the highlight by
+ * `blockSelectionHighlight`, so pair them (or use `blocks()`, which composes them). See
+ * `createBlockSelection`.
  */
 export const blockSelection = (): Extension => createBlockSelection(markdownBlockOps);
 
@@ -58,7 +55,7 @@ export const blockDrag = ({ clampX }: Pick<BlockOptions, 'clampX'> = {}): Extens
 /**
  * Top-level markdown blocks (headings, paragraphs, lists, blockquotes, fenced code, …) from the
  * syntax tree, so a list or code fence moves and boxes as a single unit. Memoized per state — the
- * outline layer, the gutter, and the drag plugin all query it on the same state.
+ * highlight layer, the gutter, and the drag plugin all query it on the same state.
  */
 const blockCache = new WeakMap<EditorState, Block[]>();
 

@@ -5,7 +5,14 @@
 import { type EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { type Block, type BlockOps, createBlockDrag, createBlockSelection, setBlockSelection } from '../blocks';
+import {
+  type Block,
+  type BlockOps,
+  createBlockDrag,
+  createBlockSelection,
+  createBlockSelectionHighlight,
+  setBlockSelection,
+} from '../blocks';
 import { type Item, type Tree, getRange, treeFacet } from './tree';
 
 // Narrower than the markdown block gutter — outliner items are indented and tightly packed.
@@ -233,6 +240,7 @@ const outlinerBlockOps: BlockOps = {
  * extensions operate on item lines. The gutter is narrower — outliner items are indented and packed.
  */
 export const outlinerDnd = (): Extension => [
+  createBlockSelectionHighlight(getBlocks),
   createBlockSelection(outlinerBlockOps),
   createBlockDrag({ getBlocks, moveBlocks, gutterClass: GUTTER_CLASS }),
   EditorView.theme({

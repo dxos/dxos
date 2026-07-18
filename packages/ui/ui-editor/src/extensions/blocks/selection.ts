@@ -224,14 +224,14 @@ const clearOnTextPress = EditorView.domEventHandlers({
 });
 
 /**
- * Whole-block selection: a highlight behind selected blocks plus cut/copy/paste over them. The gutter
- * click gestures that populate the selection live in `createBlockDrag` (the handle is a gutter marker).
+ * Draws a border/background box behind each selected block, in a below-text layer re-measured on edits,
+ * scrolling, and viewport changes. Separate from the selection state and clipboard so it can travel with
+ * the drag grip (which populates the selection) independently of `createBlockSelection`. The blocks are
+ * supplied by the caller (see `blockSelectionHighlight` for markdown top-level blocks).
  */
-export const createBlockSelection = (ops: BlockOps): Extension => [
+export const createBlockSelectionHighlight = (getBlocks: BlockOps['getBlocks']): Extension => [
   blockSelectionField,
   selectionTheme,
-  clipboardHandlers(ops),
-  clearOnTextPress,
   layer({
     above: false,
     class: 'cm-blockSelectedLayer',
@@ -240,6 +240,17 @@ export const createBlockSelection = (ops: BlockOps): Extension => [
       update.viewportChanged ||
       update.geometryChanged ||
       selectionChanged(update.startState, update.state),
-    markers: (view) => buildSelectionMarkers(view, ops.getBlocks),
+    markers: (view) => buildSelectionMarkers(view, getBlocks),
   }),
+];
+
+/**
+ * Whole-block selection state and cut/copy/paste over the selected blocks. The border/background behind
+ * the selection is drawn by `createBlockSelectionHighlight`, and the gutter grip gestures that populate
+ * the selection live in `createBlockDrag` (the handle is a gutter marker) — compose all three together.
+ */
+export const createBlockSelection = (ops: BlockOps): Extension => [
+  blockSelectionField,
+  clipboardHandlers(ops),
+  clearOnTextPress,
 ];

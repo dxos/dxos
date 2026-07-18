@@ -109,20 +109,23 @@ these same DOM events, so no extra keymap.
   drag when a concurrent/collaborative edit lands (stale indices would otherwise
   resolve against a changed doc on drop).
 - **Primary button only** for drag/click.
-- **Highlight**: selected blocks get a `cm-block-selected` style (accent-tinted),
-  layered like the outline boxes; works with or without `blockOutline`.
+- **Highlight**: selected blocks get a `cm-blockSelected` border/background
+  (accent-tinted), drawn in a below-text layer by its own extension
+  (`createBlockSelectionHighlight`) so the visual travels with the drag grip
+  independently of the selection state/clipboard.
 
 ## Module layout
 
-- `selection.ts` — `createBlockSelection(ops)`: the field + effects, highlight
-  layer, clipboard `domEventHandlers`, and `getSelectedBlocks`. Exports the
-  module-level `blockSelectionField` (deduped by CM if included twice).
+- `selection.ts` — the field + effects and `getSelectedBlocks`;
+  `createBlockSelectionHighlight(getBlocks)` (the highlight layer); and
+  `createBlockSelection(ops)` (clipboard `domEventHandlers` + clear-on-text-press).
+  Exports the module-level `blockSelectionField` (deduped by CM if included twice).
 - `drag.ts` — `createBlockDrag(ops)`: gutter + drag, reads `blockSelectionField`
   for handle placement and multi-block drag; click/shift-click dispatch selection
   effects.
 - `blocks.ts` — markdown `BlockOps` (findBlocks, moveBlocks, serialize,
-  removeBlocks, insertBlocks); public `blockSelection()`; `blocks()` composes
-  outline + selection + drag.
+  replaceBlocks); public `blockSelectionHighlight()`, `blockSelection()`,
+  `blockDrag()`; `blocks()` composes highlight + selection + drag.
 - `outliner/dnd.ts` — outliner `BlockOps` over the item tree.
 
 ## Non-goals (this pass)
