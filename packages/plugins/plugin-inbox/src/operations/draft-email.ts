@@ -8,7 +8,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DraftMessage } from '@dxos/types';
 
-import { InboxOperation } from '../types';
+import { InboxOperation, SystemTags } from '../types';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOperation.DraftEmail.pipe(
   Operation.withHandler(
@@ -19,10 +19,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
 
       const message = yield* Database.add(
         DraftMessage.make({
-          [Obj.Meta]: {
-            tags: ['org.dxos.plugin-inbox.draft'],
-          },
-
           created: new Date().toISOString(),
           sender: { name: 'Me' },
           blocks: [{ _tag: 'text', text: body }],
@@ -34,6 +30,12 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
           },
         }),
       );
+
+      // Tag with the canonical 'draft' system tag so the Drafts view (a plain systemTag filter, like
+      // Inbox/Sent) picks it up — same mechanism every other draft-creation path uses.
+      const { db } = yield* Database.Service;
+      yield* Effect.promise(() => SystemTags.toggleTag(mailbox, message, db, 'draft'));
+
       return {
         newMessageDXN: Obj.getURI(message),
       };

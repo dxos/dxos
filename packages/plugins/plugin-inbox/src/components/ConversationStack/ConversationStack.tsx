@@ -30,7 +30,7 @@ import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import { useActorContact, useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
-import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
+import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { createDraftMessage, getMessageProps } from '../../util';
@@ -441,7 +441,13 @@ const useMessageHandlers = (
       // Add the draft directly; it shares the thread's `threadId`, so the `mailboxMessage` connector
       // query picks it up reactively and renders it inline — no navigation, no operation needed.
       if (db && message) {
-        db.add(DraftMessage.make(createDraftMessage({ mode, message, mailbox })));
+        const draft = db.add(DraftMessage.make(createDraftMessage({ mode, message, mailbox })));
+        // Tag it like every other draft-creation path (`DraftEmailAndOpen`); `useSendEmail` removes
+        // this tag at send time. A brand-new draft never already carries a tag, so `toggleTag` (the
+        // same mechanism 'starred' uses) always applies it here.
+        if (mailbox) {
+          void SystemTags.toggleTag(mailbox, draft, db, 'draft');
+        }
       }
     },
     [db, message, mailbox],
