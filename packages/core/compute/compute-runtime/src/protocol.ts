@@ -42,7 +42,8 @@ type EdgeFunctionServices =
   | Credential.CredentialsService
   | Database.Service
   | Trace.TraceService
-  | Operation.Service;
+  | Operation.Service
+  | Registry.Service;
 
 export interface FunctionWrappingOptions {
   /**
