@@ -1,7 +1,7 @@
 layer: tool
 language: typescript
 tasks:
-  compile:
+  build:
     command: pnpm exec vite-node ./src/main.ts
     inputs:
       - tsconfig.json

@@ -11,7 +11,7 @@ tasks:
     command: vitest run -c vitest.config.ts --reporter=verbose --tagsFilter=functions-e2e src/e2e/*.test.ts
     deps:
       - ^:build
-      - ^:compile
+      - ^:build
     inputs:
       - src/e2e/**
       - vitest.config.ts
