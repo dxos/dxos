@@ -33,7 +33,7 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { DraftMessage, Message } from '@dxos/types';
 
 import {
   MessageStack,
@@ -123,19 +123,13 @@ export const MailboxArticle = ({
   // label text (see `buildSystemTagSelection`) — `undefined` until the provider sync (or, for `draft`,
   // the first locally-created draft) has created it.
   const systemTagUri = useSystemTagUri(db, systemTag);
-  // This mailbox's currently-open drafts are resolved by the canonical 'draft' tag too — removed by
-  // `useSendEmail` the instant a draft sends, well before the sync-side `db.remove` that later deletes
-  // the object. Needed on every view, not just the Drafts view: a draft reply is attached to its thread
-  // wherever that thread is already shown (see the `items` memo). Resolved separately from `systemTag`
-  // above (even though it's the same tag on the Drafts view) since this one is always active.
-  const draftTagUri = useSystemTagUri(db, 'draft');
   const systemTagIds = useTaggedIds(tagIndex, systemTagUri);
-  const draftIds = useTaggedIds(tagIndex, draftTagUri);
-  // This mailbox's currently-open drafts, indexed by thread — already excludes sent drafts (untagged at
-  // send time, see above), so no further supersession check is needed here. Attached to a thread's
-  // entry in the `items` memo below if that thread is already present in the results; a draft with no
-  // thread is never attached anywhere outside the Drafts view (see `useDraftsByThreadId`).
-  const draftsByThreadId = useDraftsByThreadId(db, draftIds);
+  // This mailbox's space-resident messages (drafts, and a just-sent message before sync deletes it in
+  // favor of its synced feed copy — see `useSendEmail`), indexed by thread. Needed on every view, not
+  // just the Drafts view: a message's tag state (draft vs. sent) only decides which panel it belongs in
+  // — it should keep showing in its thread wherever that thread is already shown regardless of tag, so
+  // this attach step isn't scoped to the 'draft' tag at all (see `useSpaceMessagesByThreadId`).
+  const spaceMessagesByThreadId = useSpaceMessagesByThreadId(db, mailbox);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -220,19 +214,21 @@ export const MailboxArticle = ({
       } else if (entry.threadId == null) {
         result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        // Attach this mailbox's still-open drafts for the thread, if any not already among `entry.items`
-        // — already excludes sent drafts (untagged the instant they send), so no supersession check is
-        // needed here. On the Drafts view itself, the thread's drafts already came from the primary
-        // union query above (see `source`), so every candidate here is filtered out as already-present.
+        // Attach this mailbox's space-resident messages for the thread, if any not already among
+        // `entry.items` — a message's tag state (draft vs. sent) doesn't gate this: a just-sent message
+        // stays attached until sync deletes the space copy in favor of the synced one, so a thread never
+        // appears to lose a message mid-send. On the Drafts view itself, the thread's own drafts already
+        // came from the primary union query above (see `source`), so every candidate here is filtered
+        // out as already-present.
         const presentIds = new Set(entry.items.map((message) => message.id));
-        const draftsForThread = (draftsByThreadId.get(entry.threadId) ?? []).filter(
-          (draft) => !presentIds.has(draft.id),
+        const spaceMessagesForThread = (spaceMessagesByThreadId.get(entry.threadId) ?? []).filter(
+          (message) => !presentIds.has(message.id),
         );
         const messages =
-          draftsForThread.length > 0
-            ? [...entry.items, ...draftsForThread].sort(sortByCreated('created', true))
+          spaceMessagesForThread.length > 0
+            ? [...entry.items, ...spaceMessagesForThread].sort(sortByCreated('created', true))
             : entry.items;
-        result.push({ id: entry.threadId, messages, total: entry.count + draftsForThread.length });
+        result.push({ id: entry.threadId, messages, total: entry.count + spaceMessagesForThread.length });
       }
     }
     // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
@@ -240,7 +236,7 @@ export const MailboxArticle = ({
     // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
     // message can match the index yet have no matching (or any) plain/markdown text to display.
     return applyPostFilters(result, mailbox, searchQuery);
-  }, [pagination.items, draftsByThreadId, mailbox, mailbox.messageFilters, searchQuery]);
+  }, [pagination.items, spaceMessagesByThreadId, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
@@ -520,30 +516,38 @@ const useTaggedIds = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string | 
 };
 
 /**
- * This mailbox's currently-open drafts (space-db, not the feed), indexed by `threadId`. A draft with no
- * thread (a brand-new, not-yet-replied compose) is never attached anywhere outside the Drafts view — see
- * `MailboxArticle`'s `items` memo, which looks entries up by `threadId` only.
+ * This mailbox's space-resident messages (space-db, not the feed), indexed by `threadId`. Scoped by
+ * `DraftMessage.belongsTo` — `properties.mailbox`, set once at draft creation and never cleared by
+ * sending — not by the 'draft' tag: a message that's just been sent is untagged 'draft' immediately
+ * (see `useSendEmail`) but should keep attaching to its thread until sync deletes this space copy in
+ * favor of the synced feed one, so tag state only decides which *panel* a message belongs in, never
+ * whether it's still part of its thread. A message with no thread (a brand-new, not-yet-replied compose)
+ * is never attached anywhere outside the Drafts view — see `MailboxArticle`'s `items` memo, which looks
+ * entries up by `threadId` only.
  */
-const useDraftsByThreadId = (
+const useSpaceMessagesByThreadId = (
   db: Database.Database | undefined,
-  draftIds: readonly EntityId[],
+  mailbox: Mailbox.Mailbox,
 ): Map<string, Message.Message[]> => {
-  const drafts = useQuery(db, buildSystemTagSelection(draftIds));
+  const mailboxUri = Obj.getURI(mailbox).toString();
+  const messages = useQuery(db, Filter.type(Message.Message)).filter((message) =>
+    DraftMessage.belongsTo(message, mailboxUri),
+  );
   return useMemo(() => {
     const map = new Map<string, Message.Message[]>();
-    for (const draft of drafts) {
-      if (draft.threadId == null) {
+    for (const message of messages) {
+      if (message.threadId == null) {
         continue;
       }
-      const list = map.get(draft.threadId);
+      const list = map.get(message.threadId);
       if (list) {
-        list.push(draft);
+        list.push(message);
       } else {
-        map.set(draft.threadId, [draft]);
+        map.set(message.threadId, [message]);
       }
     }
     return map;
-  }, [drafts]);
+  }, [messages]);
 };
 
 type MailboxActionsOptions = {
