@@ -1125,9 +1125,6 @@ export class EntityManager implements IDatabaseBinding {
     if (!core) {
       return;
     }
-    // A branch switch is a harder navigation than a time-travel scrub; drop any active pin so reads
-    // reflect the (live) target branch rather than a stale historical view of the previous doc.
-    core.clearTimeTravel();
     const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
     let handle: DocHandleProxy<DatabaseDirectory>;
     if (url) {

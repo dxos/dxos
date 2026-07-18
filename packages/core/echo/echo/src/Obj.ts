@@ -229,11 +229,10 @@ export const isSnapshot = (obj: unknown): obj is Snapshot => {
  * Subscribe to object updates.
  * The callback is called synchronously when the object is modified.
  * Only accepts reactive objects (not snapshots).
- * Pass `{ latestOnly: true }` for side-effecting subscribers so they ignore time-travel scrubbing.
  * @returns Unsubscribe function.
  */
-export const subscribe = (obj: Unknown, callback: () => void, opts?: internal.SubscribeOptions): (() => void) => {
-  return internal.subscribe(obj, callback, opts);
+export const subscribe = (obj: Unknown, callback: () => void): (() => void) => {
+  return internal.subscribe(obj, callback);
 };
 
 //

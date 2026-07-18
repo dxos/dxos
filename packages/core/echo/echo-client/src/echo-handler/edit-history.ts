@@ -151,8 +151,7 @@ export const checkoutVersion = (object: Obj.Unknown, version: Heads): unknown =>
 /**
  * @returns An immutable {@link Obj.Snapshot} of the object at the given historical heads — a detached
  * instance, not a pin on the live object. Every surface that wants the historical value renders this
- * snapshot; the live object is unaffected (nothing else in the app rewinds). Replaces the
- * `setTimeTravel` read-pin: the functional form Dmytro asked for.
+ * snapshot; the live object is unaffected (nothing else in the app rewinds).
  */
 export const checkoutVersionSnapshot = <T extends Obj.Unknown>(object: T, version: Heads): Obj.Snapshot<T> => {
   assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');

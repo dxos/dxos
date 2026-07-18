@@ -46,12 +46,6 @@ export const ObjectDeletedId = Symbol.for('@dxos/echo/Deleted');
 export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/Version');
 
 /**
- * Time-travel state accessor symbol. Resolves to `true` while the entity is in a historical read
- * mode (pinned via `setTimeTravel`), so callers can guard mutations and derive read-only UI.
- */
-export const TimeTravelingId: unique symbol = Symbol.for('@dxos/echo/TimeTraveling');
-
-/**
  * Object database accessor symbol.
  */
 export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
