@@ -4,11 +4,12 @@
 
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
+import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { type Capabilities } from '@dxos/app-framework';
 import { type Graph } from '@dxos/app-graph';
-import { Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { normalizeText } from '@dxos/markdown';
 import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
@@ -452,7 +453,7 @@ const MessageStar = ({ message, mailbox }: MessageStarProps) => {
   const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (db) {
-      void SystemTags.toggleTag(mailbox, message, db, 'starred');
+      void Effect.runFork(SystemTags.toggleTag(mailbox, message, 'starred').pipe(Effect.provide(Database.layer(db))));
     }
   }, [mailbox, message, db]);
 
@@ -618,7 +619,11 @@ const useMessageHandlers = (
       // Add the draft directly; it shares the thread's `threadId`, so the `mailboxMessage` connector
       // query picks it up reactively and renders it inline — no navigation, no operation needed.
       if (db && message) {
-        db.add(DraftMessage.make(createDraftMessage({ mode, message, mailbox })));
+        const draft = db.add(DraftMessage.make(createDraftMessage({ mode, message, mailbox })));
+        // Tag as 'draft' like every other draft-creation path; `useSendEmail` removes it at send time.
+        if (mailbox) {
+          void Effect.runFork(SystemTags.toggleTag(mailbox, draft, 'draft').pipe(Effect.provide(Database.layer(db))));
+        }
       }
     },
     [db, message, mailbox],

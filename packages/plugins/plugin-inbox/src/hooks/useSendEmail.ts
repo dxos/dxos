@@ -17,7 +17,7 @@ import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
 import { meta } from '#meta';
-import { InboxOperation, Mailbox } from '#types';
+import { InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { JMAP_MAIL_CONNECTOR_ID } from '../constants';
 import { findBindingForTarget } from '../util';
@@ -113,6 +113,10 @@ export const useSendEmail = (
         });
         const index = mailbox.tags.target ?? (await mailbox.tags.load());
         Tagging.set(draft, sentTagUri, { index });
+        // No longer a draft: untag now so Drafts stops showing it, without waiting for sync's later
+        // `db.remove` of the object itself.
+        const draftTag = await SystemTags.findOrCreateSystemTag(db, 'draft');
+        Tagging.unset(draft, Obj.getURI(draftTag).toString(), { index });
       } catch (err) {
         log.catch(err);
       }
