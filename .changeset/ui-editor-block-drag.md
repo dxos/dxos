@@ -7,5 +7,3 @@ Split the `blocks` editor extension into two independent extensions — `blockOu
 Add `outlinerDnd` to reorder outliner task lines via the shared drag core (drag handle, block-height drop placeholder, subtree-aware move with re-indentation).
 
 The drag experience now lifts the source block out of the document (collapsing it and its trailing blank line), opens a block-sized placeholder at the drop slot, centers each grip on its line's first row, and matches the floating preview's wrapping to the source.
-
-Fix double-painted text selection: suppress CodeMirror `drawSelection`'s native-selection re-enable for focused content descendants (kept for real form inputs), leaving only the themed selection layer.

@@ -194,6 +194,8 @@ export const baseTheme = EditorView.baseTheme({
 
   /**
    * Selection (layer).
+   * NOTE: A browser dark-mode/reader extension can override `::selection` and reveal a second
+   * (native) selection over this layer; that is an extension artifact, not an editor bug.
    */
   '.cm-selectionBackground': {
     background: 'var(--color-cm-selection)',
@@ -201,18 +203,6 @@ export const baseTheme = EditorView.baseTheme({
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
     background: 'var(--color-cm-focused-selection)',
   },
-  // `drawSelection` re-enables the browser's native selection for any focused descendant of `.cm-content`
-  // (so nested form fields keep a visible selection). Against our custom selection layer that double-
-  // paints — the dark custom layer with a lighter native highlight on top. Suppress the native highlight
-  // for editor content (`&.cm-editor …` outweighs drawSelection's `.cm-content :focus` rule on
-  // specificity), but keep it for real inputs, where the custom layer does not draw.
-  '&.cm-editor .cm-content :focus::selection, &.cm-editor .cm-content :focus ::selection': {
-    backgroundColor: 'transparent !important',
-  },
-  '&.cm-editor .cm-content :is(input, textarea):focus::selection, &.cm-editor .cm-content :is(input, textarea):focus ::selection':
-    {
-      backgroundColor: 'Highlight !important',
-    },
 
   /**
    * Search.
