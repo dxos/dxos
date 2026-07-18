@@ -369,7 +369,13 @@ const dumpAgent = async (agent: Agent.Agent) => {
   }
   text += `============== Artifacts ==============\n\n`;
   for (const artifact of agent.artifacts) {
-    const data = await artifact.data.load();
+    // Debug dump: tolerate a dangling artifact ref (e.g. an object the agent referenced but never
+    // persisted) rather than throwing out of the diagnostic output.
+    const data = await artifact.data.tryLoad();
+    if (!data) {
+      text += `============== ${artifact.name} (unresolved) ==============\n\n`;
+      continue;
+    }
     text += `============== ${artifact.name} (${Obj.getTypename(data)}) ==============\n`;
     if (Obj.instanceOf(Markdown.Document, data)) {
       text += `# ${Obj.getLabel(data)}\n\n${await data.content.load().then((_) => _.content)}\n`;

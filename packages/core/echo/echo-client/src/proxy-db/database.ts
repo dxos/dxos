@@ -636,6 +636,24 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this.#feeds.values();
   }
 
+  /**
+   * @internal
+   * Disposes and drops the cached feed handle for a feed (its live working-set / core cache). A
+   * subsequent access re-creates a fresh handle that re-reads the feed cold — used in tests to model
+   * a spawned process reading the feed with an empty in-memory cache.
+   */
+  async _evictFeedHandle(feed: Feed.Feed): Promise<void> {
+    const feedUri = Feed.getFeedUri(feed);
+    if (!feedUri) {
+      return;
+    }
+    const handle = this.#feeds.get(feedUri);
+    if (handle) {
+      this.#feeds.delete(feedUri);
+      await handle.dispose();
+    }
+  }
+
   #getFeedHandle(feed: Feed.Feed): FeedHandle {
     const feedUri = Feed.getFeedUri(feed);
     invariant(feedUri, 'Feed must be stored in the database before accessing its contents');

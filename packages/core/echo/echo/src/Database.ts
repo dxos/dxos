@@ -211,6 +211,13 @@ export interface Database extends Queryable {
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
 
   /**
+   * @internal
+   * Disposes and drops the in-memory handle (live working-set / core cache) for a feed, so the next
+   * access re-reads it cold. Used in tests to model a spawned process with an empty cache.
+   */
+  _evictFeedHandle(feed: Feed.Feed): Promise<void>;
+
+  /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
    * Rejects with `Err.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
    * `maxSize`), `Err.BlobWriteError` (backend upload failure), or `Err.BlobNotAvailableError`
