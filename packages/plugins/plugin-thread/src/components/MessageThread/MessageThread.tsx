@@ -6,9 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { PublicKey } from '@dxos/react-client';
-import { type SpaceMember } from '@dxos/react-client/echo';
-import { type Identity } from '@dxos/react-client/halo';
+import { type Identity, type Space } from '@dxos/halo';
 import { Card, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { type ObjectTileComponent, Thread } from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
@@ -22,9 +20,9 @@ export type MessageThreadProps = ThemedClassName<{
   /** Stable id used for the underlying thread root and message metadata. */
   id: string;
   /** Identity used to attribute outgoing messages in the textbox metadata. */
-  identity?: Identity;
+  identity?: Identity.Info;
   /** Space members for rendering sender names/avatars on incoming messages. */
-  members: SpaceMember[];
+  members: readonly Space.Member[];
   /** Messages to render in order. */
   messages: readonly Message.Message[];
   /** Activity indicator (e.g. processing) shown beneath the textbox. */
@@ -66,14 +64,14 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
         // TODO(burdon): Factor out.
         const sender = members.find(
           (member) =>
-            (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
-            (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
+            (message.sender.identityDid && member.did === message.sender.identityDid) ||
+            (message.sender.identityKey && member.identityKey === message.sender.identityKey),
         );
 
         // Pass `message.sender` as the fallback so externally-synced messages
         // (Slack, etc.) display the source-side sender name instead of "Anonymous"
         // when no DXOS identity matches.
-        return getMessageMetadata(message.id, sender?.identity, message.sender, message.created);
+        return getMessageMetadata(message.id, sender, message.sender, message.created);
       },
       [members],
     );

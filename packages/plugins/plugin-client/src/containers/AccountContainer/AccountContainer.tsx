@@ -8,8 +8,7 @@ import React, { type FormEvent, useCallback, useState } from 'react';
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Context } from '@dxos/context';
-import { createDidFromIdentityKey } from '@dxos/credentials';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useIdentity } from '@dxos/halo-react';
 import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -81,7 +80,7 @@ export const AccountContainer = () => {
         return;
       }
       try {
-        const identityDid = identity ? await createDidFromIdentityKey(identity.identityKey) : undefined;
+        const identityDid = identity?.did;
         await hubHttp.requestAccess(new Context(), { email, identityDid });
       } catch {
         // Surface a generic confirmation; failure details would leak signal.

@@ -5,6 +5,7 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
@@ -36,16 +37,18 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
       if (!edgeClient) {
         const [client] = manager.getAll(ClientCapabilities.Client);
         invariant(client, 'Client capability is required for edge AI requests.');
+        const [haloIdentity] = manager.getAll(ClientCapabilities.IdentityService);
+        invariant(haloIdentity, 'HALO identity capability is required for edge AI requests.');
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         invariant(edgeUrl, 'EDGE services are not configured.');
         const created = new EdgeHttpClient(edgeUrl);
         const updateIdentity = () => {
-          if (client.halo.identity.get()) {
+          if (Option.isSome(haloIdentity.getSnapshot())) {
             created.setIdentity(createEdgeIdentity(client));
           }
         };
         updateIdentity();
-        identitySubscription = client.halo.identity.subscribe(updateIdentity);
+        identitySubscription = { unsubscribe: haloIdentity.subscribe(updateIdentity) };
         edgeClient = created;
       }
       return edgeClient;

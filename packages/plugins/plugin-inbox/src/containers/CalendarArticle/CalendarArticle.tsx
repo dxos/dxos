@@ -3,12 +3,13 @@
 //
 
 import { addHours, isSameDay, startOfHour } from 'date-fns';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -146,7 +147,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         case 'star': {
           const event = events.find((entry) => entry.id === action.eventId);
           if (event && db && Calendar.instanceOf(calendar)) {
-            void SystemTags.toggleTag(calendar, event, db, 'starred');
+            void Effect.runFork(
+              SystemTags.toggleTag(calendar, event, 'starred').pipe(Effect.provide(Database.layer(db))),
+            );
           }
           break;
         }

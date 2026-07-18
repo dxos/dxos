@@ -16,19 +16,27 @@ import { Cursor } from '@dxos/link';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Calendar, InboxOperation, Mailbox } from '#types';
+import { Calendar, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { MAILBOX_DRAFTS_TYPE, MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
+import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
 import { createSyncProgressKey } from '../operations/mail/mail-sync';
-import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId, getSubscriptionsId } from '../paths';
-import { syncTarget } from '../util';
+import {
+  getAllMailId,
+  getCalendarsPath,
+  getDraftsId,
+  getMailboxesPath,
+  getMailboxesSectionId,
+  getSentId,
+  getSubscriptionsId,
+} from '../paths';
+import { dedupeSupersededDrafts, syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -182,20 +190,47 @@ export default Capability.makeModule(
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
-                  // New-message badge stubbed pending a real read/unread signal (see Mailbox.ts).
+                  // Placeholder for a future "intelligent inbox"; resolved by the canonical `systemTag`,
+                  // not this label string (see `MailboxArticle`'s `systemTag` prop).
+                  filter: '#inbox',
+                  systemTag: 'inbox' satisfies SystemTags.SystemTagId,
                 },
                 nodes: [
+                  // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
+                  // static with no rename/delete actions.
+                  Node.make({
+                    id: getAllMailId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['all-mail.label', { ns: meta.profile.key }],
+                      icon: 'ph--tray--regular',
+                      iconHue: 'rose',
+                      filter: '',
+                    },
+                  }),
+                  Node.make({
+                    id: getSentId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['sent.label', { ns: meta.profile.key }],
+                      icon: 'ph--paper-plane-tilt--regular',
+                      iconHue: 'rose',
+                      filter: '#sent',
+                      systemTag: 'sent' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
                   Node.make({
                     id: getDraftsId(),
-                    type: MAILBOX_DRAFTS_TYPE,
-                    // The folder node's data IS the mailbox, so the article surface receives it as `subject`
-                    // (see `DraftsArticle`); the surface filter narrows by the node's trailing path segment.
+                    type: FILTER_TYPE,
                     data: mailbox,
                     properties: {
                       label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
                       iconHue: 'rose',
-                      mailbox,
+                      filter: '',
+                      systemTag: 'draft' satisfies SystemTags.SystemTagId,
                     },
                   }),
                   Node.make({
@@ -263,32 +298,16 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'mailboxDrafts',
-        match: NodeMatcher.whenNodeType(MAILBOX_DRAFTS_TYPE),
-        connector: (node, get) => {
-          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
-          if (!mailbox || !db) {
-            return Effect.succeed([]);
-          }
-
-          const mailboxUri = Obj.getURI(mailbox);
-          const messageId = get(selectedId(node.id));
-          const message = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
-          const draft = message && DraftMessage.belongsTo(message, mailboxUri) ? message : undefined;
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: linkedSegment('message'),
-              label: ['message.label', { ns: meta.profile.key }],
-              icon: 'ph--envelope-open--regular',
-              data: draft ?? 'message',
-            }),
-          ]);
-        },
-        actions: (node) => {
-          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
-          if (!mailbox || !db) {
+        id: 'mailboxDraftsActions',
+        // Companion comes from `mailboxMessage` below; this only contributes "create draft", scoped to
+        // the Drafts view.
+        match: (node) =>
+          node.properties.systemTag === 'draft' && Mailbox.instanceOf(node.data)
+            ? Option.some(node.data)
+            : Option.none(),
+        actions: (mailbox) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
             return Effect.succeed([]);
           }
 
@@ -318,13 +337,14 @@ export default Capability.makeModule(
           }
 
           const messageId = get(selectedId(nodeId));
-          const message = get(
-            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
-          )[0];
-          // The selected message's whole conversation, assigned to the companion so the article renders
-          // it directly. One combined-scope query (db-root drafts + this mailbox's feed) assembles it
-          // via a single reactive subscription, oldest-first, correlated by `threadId`. Two same-shape
-          // subscriptions here deadlock the connector's recompute, so keep it to one query.
+          const idFilter = messageId ? Filter.id(messageId) : Filter.nothing();
+          const fromFeed = get(db.query(Query.select(idFilter).from(feed)).atom)[0];
+          // Drafts live in the space db, not the feed; fall back to a db lookup (mirrors `calendarEvent`).
+          const fromDb = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
+          const message = fromFeed ?? fromDb;
+
+          // Whole conversation for the companion, one combined-scope query (space + this mailbox's feed)
+          // correlated by threadId — two same-shape subscriptions here deadlock the connector's recompute.
           const conversation = !message
             ? []
             : get(
@@ -335,24 +355,10 @@ export default Capability.makeModule(
                 ).atom,
               );
 
-          // Synced messages (no `properties.mailbox`) always pass; drafts pass only when scoped to this
-          // mailbox and not yet superseded by their sent copy in the feed (matched on the provider id
-          // set at send time). Deleting the superseded draft is deferred to sync (`reconcileDrafts`).
-          const mailboxUri = Obj.getURI(mailbox);
-          const syncedIds = new Set(
-            conversation
-              .filter((item) => !DraftMessage.instanceOf(item))
-              .flatMap((item) => Obj.getMeta(item).keys.map((key) => key.id)),
-          );
-          const thread = conversation.filter((item) => {
-            if (!DraftMessage.instanceOf(item)) {
-              return true;
-            }
-            if (!DraftMessage.belongsTo(item, mailboxUri)) {
-              return false;
-            }
-            return !(item.properties?.sentMessageId && syncedIds.has(item.properties.sentMessageId));
-          });
+          // Synced messages always pass; drafts pass only when scoped to this mailbox and not yet
+          // superseded by their sent copy in the feed. Deleting the superseded draft is deferred to
+          // sync (`reconcileDrafts`).
+          const thread = dedupeSupersededDrafts(conversation, Obj.getURI(mailbox));
 
           return Effect.succeed([
             AppNode.makeCompanion({
@@ -538,11 +544,8 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'syncMailbox',
-        // Filter nodes store the parent mailbox as node.data; exclude them so sync only appears on the mailbox itself.
-        match: (node) =>
-          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
-            ? Option.some(node.data)
-            : Option.none(),
+        // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           if (!db) {

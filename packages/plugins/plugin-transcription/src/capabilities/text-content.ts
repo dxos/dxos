@@ -17,7 +17,11 @@ export default Capability.makeModule(
       id: Type.getTypename(Transcript.Transcript),
       getTextContent: async (transcript: Transcript.Transcript) => {
         const space = getSpace(transcript);
-        const members = space?.members.get().map((member) => member.identity) ?? [];
+        const members =
+          space?.members.get().map((member) => ({
+            did: member.identity?.did,
+            displayName: member.identity?.profile?.displayName,
+          })) ?? [];
         const feed = await transcript.feed.load();
         const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
         if (!space || !feedDXN) {

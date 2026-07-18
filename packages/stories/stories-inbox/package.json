@@ -31,6 +31,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/pipeline-email": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-brain": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
