@@ -16,4 +16,4 @@ export type SpotlightState = {
   dismissTimeout?: ReturnType<typeof setTimeout>;
 };
 
-export const State = Capability.make<Atom.Writable<SpotlightState>>(`${meta.profile.key}.state`);
+export const State = Capability.makeSingleton<Atom.Writable<SpotlightState>>(`${meta.profile.key}.state`);

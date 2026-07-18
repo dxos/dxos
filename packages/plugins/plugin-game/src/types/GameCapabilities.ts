@@ -17,4 +17,4 @@ import type { GameVariant } from './types';
  * `Capability.getAll(GameCapabilities.VariantProvider)` (Effect) or
  * `useCapabilities(GameCapabilities.VariantProvider)` (React).
  */
-export const VariantProvider = Capability.makeMulti<GameVariant>(`${meta.profile.key}.capability.variant`);
+export const VariantProvider = Capability.make<GameVariant>(`${meta.profile.key}.capability.variant`);

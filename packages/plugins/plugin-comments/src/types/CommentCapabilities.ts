@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 import { type CommentState, type ViewStore } from '../types';
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -25,10 +25,10 @@ export type CommentConfig = AppCapabilities.CommentConfig;
 export const CommentConfig: Capability.InterfaceDef<AppCapabilities.CommentConfig> = AppCapabilities.CommentConfig;
 
 /** Comment state (drafts, toolbar state, current selection). */
-export const State = Capability.make<Atom.Writable<CommentState>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<CommentState>>(`${meta.profile.key}.capability.state`);
 
 /** Per-subject view state (e.g., showResolvedThreads). */
-export const ViewState = Capability.make<Atom.Writable<ViewStore>>(`${meta.profile.key}.capability.view-state`);
+export const ViewState = Capability.makeSingleton<Atom.Writable<ViewStore>>(`${meta.profile.key}.capability.view-state`);
 
 /**
  * Runs one comment-thread agent turn against a thread/subject pair.
@@ -46,4 +46,4 @@ export interface AgentRunner {
   run(input: { thread: Thread.Thread; subject: Obj.Any }): Effect.Effect<void, Error, Capability.Service>;
 }
 
-export const AgentRunner = Capability.make<AgentRunner>(`${meta.profile.key}.capability.agent-runner`);
+export const AgentRunner = Capability.makeSingleton<AgentRunner>(`${meta.profile.key}.capability.agent-runner`);

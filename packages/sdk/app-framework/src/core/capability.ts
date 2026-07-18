@@ -187,24 +187,11 @@ export interface MultiTag<T> extends Context.Tag<CapabilityIdentifier<T, 'multi'
 export type AnyTag = Tag<any> | MultiTag<any>;
 
 /**
- * Defines a singleton capability.
+ * Defines a multi (registry) capability — the default: an open registry contributed to by
+ * many modules, yielding a live {@link Contributions} collection.
  * Static NSID strings are validated at compile time via {@link DXN.Name}.
  */
 export const make: {
-  <T, S extends string = string>(
-    identifier: [DXN.Name<S>] extends [never] ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)` : S,
-  ): Tag<T>;
-} = <T>(identifier: string): Tag<T> => {
-  const tag = Context.GenericTag<CapabilityIdentifier<T, 'single'>, T>(identifier);
-  // Controlled brand cast: the InterfaceDef phantom member is type-only.
-  return Object.assign(tag, { identifier, arity: 'single' as const }) as Tag<T>;
-};
-
-/**
- * Defines a multi (registry) capability.
- * Static NSID strings are validated at compile time via {@link DXN.Name}.
- */
-export const makeMulti: {
   <T, S extends string = string>(
     identifier: [DXN.Name<S>] extends [never] ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)` : S,
   ): MultiTag<T>;
@@ -212,6 +199,20 @@ export const makeMulti: {
   const tag = Context.GenericTag<CapabilityIdentifier<T, 'multi'>, Contributions<T>>(identifier);
   // Controlled brand cast: the InterfaceDef phantom member is type-only.
   return Object.assign(tag, { identifier, arity: 'multi' as const }) as MultiTag<T>;
+};
+
+/**
+ * Defines a singleton capability: exactly one provider, `yield*` yields the implementation.
+ * Static NSID strings are validated at compile time via {@link DXN.Name}.
+ */
+export const makeSingleton: {
+  <T, S extends string = string>(
+    identifier: [DXN.Name<S>] extends [never] ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)` : S,
+  ): Tag<T>;
+} = <T>(identifier: string): Tag<T> => {
+  const tag = Context.GenericTag<CapabilityIdentifier<T, 'single'>, T>(identifier);
+  // Controlled brand cast: the InterfaceDef phantom member is type-only.
+  return Object.assign(tag, { identifier, arity: 'single' as const }) as Tag<T>;
 };
 
 /**

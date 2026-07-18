@@ -13,7 +13,7 @@ import { meta } from '#meta';
 /**
  * Writable atom holding the plugin's Settings.
  */
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -21,6 +21,6 @@ export const Settings = Capability.make<Atom.Writable<import('./Settings').Setti
  * Page actions contributed by plugins for the browser extension to surface.
  * Multi: each contributor provides one array (e.g. plugin-bookmarks); consumers flatten via `getAll`.
  */
-export const PageAction = Capability.makeMulti<import('./PageAction').PageAction[]>(
+export const PageAction = Capability.make<import('./PageAction').PageAction[]>(
   `${meta.profile.key}.capability.page-action`,
 );

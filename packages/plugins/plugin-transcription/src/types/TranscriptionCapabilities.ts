@@ -42,11 +42,11 @@ export type TranscriptionManagerProviderProps = {
 
 export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManager;
 
-export const TranscriptionManagerProvider = Capability.make<TranscriptionManagerProvider>(
+export const TranscriptionManagerProvider = Capability.makeSingleton<TranscriptionManagerProvider>(
   `${meta.profile.key}.capability.transcription-manager`,
 );
 
-export const Settings = Capability.make<Atom.Writable<SettingsModule.Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -57,7 +57,7 @@ export const Settings = Capability.make<Atom.Writable<SettingsModule.Settings>>(
  */
 export type RecordingSession = { id: string; recording: boolean };
 
-export const RecordingSession = Capability.make<Atom.Writable<RecordingSession | null>>(
+export const RecordingSession = Capability.makeSingleton<Atom.Writable<RecordingSession | null>>(
   `${meta.profile.key}.capability.recording-session`,
 );
 
@@ -67,7 +67,7 @@ export const RecordingSession = Capability.make<Atom.Writable<RecordingSession |
  */
 export type EntityLookup = EntityLookupFn;
 
-export const EntityLookup = Capability.make<EntityLookupFn>(`${meta.profile.key}.capability.entity-lookup`);
+export const EntityLookup = Capability.makeSingleton<EntityLookupFn>(`${meta.profile.key}.capability.entity-lookup`);
 
 /**
  * Live transcription lifecycle, published by the driver for observers (toolbar spinner, testbench):
@@ -75,6 +75,6 @@ export const EntityLookup = Capability.make<EntityLookupFn>(`${meta.profile.key}
  */
 export type PipelinePhase = 'idle' | 'recording' | 'draining';
 
-export const PipelineStatus = Capability.make<Atom.Writable<{ phase: PipelinePhase }>>(
+export const PipelineStatus = Capability.makeSingleton<Atom.Writable<{ phase: PipelinePhase }>>(
   `${meta.profile.key}.capability.pipeline-status`,
 );

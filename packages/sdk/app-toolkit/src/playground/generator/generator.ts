@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 
 import { AppPlugin } from '../../app-framework';
 
-export const Number = Capability.makeMulti<number>('org.dxos.test.generator.number');
+export const Number = Capability.make<number>('org.dxos.test.generator.number');
 
 export const CountEvent = ActivationEvent.make('org.dxos.test.generator.count');
 

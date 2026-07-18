@@ -21,4 +21,4 @@ export const StateSchema = Schema.mutable(
 
 export type State = Schema.Schema.Type<typeof StateSchema>;
 
-export const State = Capability.make<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);

@@ -71,12 +71,12 @@ export type Layout = Readonly<{
  * Layout capability - provides reactive access to the current layout state.
  * @category Capability
  */
-export const Layout = Capability$.make<Atom.Atom<Layout>>(LAYOUT_CAPABILITY_ID);
+export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>(LAYOUT_CAPABILITY_ID);
 
 /**
  * @category Capability
  */
-export const Translations = Capability$.makeMulti<Readonly<Translations$.Resource[]>>(
+export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>(
   'org.dxos.app-framework.capability.translations',
 );
 
@@ -85,7 +85,7 @@ export const Translations = Capability$.makeMulti<Readonly<Translations$.Resourc
  * (operations, services, Effect programs) can translate strings dynamically.
  * @category Capability
  */
-export const Translator = Capability$.make<Translator$>('org.dxos.app-framework.capability.translator');
+export const Translator = Capability$.makeSingleton<Translator$>('org.dxos.app-framework.capability.translator');
 
 /**
  * Effect service for the {@link Translator} capability, consumable via `yield* TranslatorService`
@@ -133,7 +133,7 @@ export type StatsPanelStore = Readonly<{
 /**
  * @category Capability
  */
-export const StatsPanel = Capability$.make<StatsPanelStore>('org.dxos.app-toolkit.capability.statsPanel');
+export const StatsPanel = Capability$.makeSingleton<StatsPanelStore>('org.dxos.app-toolkit.capability.statsPanel');
 
 export type AppGraph = Readonly<{
   graph: Graph.ExpandableGraph;
@@ -143,12 +143,12 @@ export type AppGraph = Readonly<{
 /**
  * @category Capability
  */
-export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capability.appGraph');
+export const AppGraph = Capability$.makeSingleton<AppGraph>('org.dxos.app-framework.capability.appGraph');
 
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.makeMulti<BuilderExtensions>(
+export const AppGraphBuilder = Capability$.make<BuilderExtensions>(
   'org.dxos.app-framework.capability.appGraphBuilder',
 );
 
@@ -175,26 +175,26 @@ export const isSettings = (value: unknown): value is Settings =>
 /**
  * @category Capability
  */
-export const Settings = Capability$.makeMulti<Settings>('org.dxos.app-framework.capability.settings');
+export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
 
 export type Schema = ReadonlyArray<Type.AnyEntity>;
 
 /**
  * @category Capability
  */
-export const Schema = Capability$.makeMulti<Schema>('org.dxos.app-framework.capability.schema');
+export const Schema = Capability$.make<Schema>('org.dxos.app-framework.capability.schema');
 
 export type Toolkit = OpaqueToolkit.OpaqueToolkit;
 
 /**
  * @category Capability
  */
-export const Toolkit = Capability$.makeMulti<Toolkit>('org.dxos.app-framework.capability.aiToolkit');
+export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.aiToolkit');
 
 /**
  * @category Capability
  */
-export const SkillDefinition = Capability$.makeMulti<Skill.Definition>(
+export const SkillDefinition = Capability$.make<Skill.Definition>(
   'org.dxos.app-framework.capability.skillDefinition',
 );
 
@@ -220,14 +220,14 @@ export type PluginAsset = Readonly<{
 /**
  * @category Capability
  */
-export const PluginAsset = Capability$.makeMulti<PluginAsset>('org.dxos.app-framework.capability.pluginAsset');
+export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.pluginAsset');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
  * supplied by the active-space resolver — BYOK-aware resolvers wrap their HTTP client with
  * `Header.byokLayer(...)`; the rest carry it through unused.
  */
-export const AiModelResolver = Capability$.makeMulti<
+export const AiModelResolver = Capability$.make<
   Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
 >('org.dxos.app-framework.capability.aiModelResolver');
 
@@ -236,7 +236,7 @@ export type FileUploader = (db: Database.Database, file: File) => Promise<FileIn
 /**
  * @category Capability
  */
-export const FileUploader = Capability$.makeMulti<FileUploader>('org.dxos.app-framework.capability.fileUploader');
+export const FileUploader = Capability$.make<FileUploader>('org.dxos.app-framework.capability.fileUploader');
 
 export type AnchorSort = {
   key: string;
@@ -246,7 +246,7 @@ export type AnchorSort = {
 /**
  * @category Capability
  */
-export const AnchorSort = Capability$.makeMulti<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
+export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
 
 /** Text content extractor contributed per typename by plugins that support text extraction. */
 export type TextContent = Readonly<{
@@ -257,7 +257,7 @@ export type TextContent = Readonly<{
 /**
  * @category Capability
  */
-export const TextContent = Capability$.makeMulti<TextContent>('org.dxos.app-framework.capability.textContent');
+export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.textContent');
 
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = Readonly<{
@@ -271,7 +271,7 @@ export type CommentConfig = Readonly<{
 /**
  * @category Capability
  */
-export const CommentConfig = Capability$.makeMulti<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
+export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
 
 export type NavigationTarget = {
   /** Navigation path usable with the Open operation. */
@@ -294,7 +294,7 @@ export type NavigationQuery = {
  */
 export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
 
-export const NavigationTargetResolver = Capability$.makeMulti<NavigationTargetResolver>(
+export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
   'org.dxos.app-framework.capability.navigationTargetResolver',
 );
 
@@ -306,7 +306,7 @@ export const NavigationTargetResolver = Capability$.makeMulti<NavigationTargetRe
  */
 export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 
-export const NavigationHandler = Capability$.makeMulti<NavigationHandler>(
+export const NavigationHandler = Capability$.make<NavigationHandler>(
   'org.dxos.app-toolkit.capability.navigationHandler',
 );
 
@@ -319,7 +319,7 @@ export const NavigationHandler = Capability$.makeMulti<NavigationHandler>(
  */
 export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
 
-export const NavigationPathResolver = Capability$.makeMulti<NavigationPathResolver>(
+export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
   'org.dxos.app-framework.capability.navigationPathResolver',
 );
 
@@ -352,4 +352,4 @@ export type ProgressRegistry = Readonly<{
 /**
  * @category Capability
  */
-export const ProgressRegistry = Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');
+export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');

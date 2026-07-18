@@ -13,7 +13,7 @@ import { ActivationEvents, Capabilities } from '../../common';
 import { Capability, Plugin, PluginManager } from '../../core';
 import { useApp } from './useApp';
 
-const String = Capability.make<{ string: string }>('org.dxos.test.string');
+const String = Capability.makeSingleton<{ string: string }>('org.dxos.test.string');
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test', tags: ['system'] });
 
 const pluginLoader = (plugins: Plugin.Plugin[]) =>

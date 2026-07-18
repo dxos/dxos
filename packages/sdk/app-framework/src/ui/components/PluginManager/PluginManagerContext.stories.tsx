@@ -17,7 +17,7 @@ import { Capability, Plugin } from '../../../core';
 import { useApp } from '../../hooks';
 
 // Define the Counter capability
-const Counter = Capability.make<{ count: number; increment: () => void }>('example/counter');
+const Counter = Capability.makeSingleton<{ count: number; increment: () => void }>('example/counter');
 
 const CountStatus = () => {
   const manager = useWebComponentContext(PluginManagerContext);
