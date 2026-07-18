@@ -15,7 +15,6 @@ import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types'
 import {
   CalendarArticle,
   CalendarProperties,
-  DraftsArticle,
   EditMessageArticle,
   EventArticle,
   EventCard,
@@ -31,7 +30,7 @@ import {
 import { Calendar, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../constants';
-import { getDraftsId, getSubscriptionsId } from '../paths';
+import { getSubscriptionsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -45,16 +44,6 @@ const isMessageOrThread = (subject: unknown): subject is Message.Message | Messa
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'drafts',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const lastSegment = data.attendableId.split('/').pop();
-          return lastSegment === getDraftsId() && Mailbox.instanceOf(data.subject);
-        }),
-        component: ({ data, role }) => (
-          <DraftsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
-      }),
       Surface.create({
         id: 'subscriptions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
@@ -70,7 +59,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Mailbox.Mailbox),
         component: ({ data }) => {
           return (
-            <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
+            <MailboxArticle
+              subject={data.subject}
+              filter={data.properties?.filter}
+              systemTag={data.properties?.systemTag}
+              attendableId={data.attendableId}
+            />
           );
         },
       }),
