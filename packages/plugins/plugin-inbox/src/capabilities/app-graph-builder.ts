@@ -198,17 +198,14 @@ export default Capability.makeModule(
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
-                  // Placeholder for a future "intelligent inbox" (important mail only); for now, the
-                  // canonical inbox system tag (resolved by identity, not by this label string — see
-                  // `MailboxArticle`'s `systemTag` prop). New-message badge stubbed pending a real
-                  // read/unread signal.
+                  // Placeholder for a future "intelligent inbox"; resolved by the canonical `systemTag`,
+                  // not this label string (see `MailboxArticle`'s `systemTag` prop).
                   filter: '#inbox',
                   systemTag: 'inbox' satisfies SystemTags.SystemTagId,
                 },
                 nodes: [
-                  // Pre-seeded, non-removable filter nodes — the same mechanism as a saved user filter
-                  // (FILTER_TYPE, data: mailbox, properties.filter), just emitted statically with fixed
-                  // labels and no rename/delete actions.
+                  // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
+                  // static with no rename/delete actions.
                   Node.make({
                     id: getAllMailId(),
                     type: FILTER_TYPE,
@@ -321,9 +318,8 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'mailboxDraftsActions',
-        // The companion (message thread) comes from `mailboxMessage` below — every node under a mailbox
-        // carries `data: mailbox`, drafts included. This extension only contributes the "create draft"
-        // action, scoped to the Drafts view (the `draft` systemTag filter node).
+        // Companion comes from `mailboxMessage` below; this only contributes "create draft", scoped to
+        // the Drafts view.
         match: (node) =>
           node.properties.systemTag === 'draft' && Mailbox.instanceOf(node.data)
             ? Option.some(node.data)
@@ -362,15 +358,12 @@ export default Capability.makeModule(
           const messageId = get(selectedId(nodeId));
           const idFilter = messageId ? Filter.id(messageId) : Filter.nothing();
           const fromFeed = get(db.query(Query.select(idFilter).from(feed)).atom)[0];
-          // Drafts live in the space db, not the feed (e.g. the Drafts view's rows); fall back to a db
-          // lookup so their companion resolves too (mirrors `calendarEvent` below).
+          // Drafts live in the space db, not the feed; fall back to a db lookup (mirrors `calendarEvent`).
           const fromDb = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
           const message = fromFeed ?? fromDb;
 
-          // The selected message's whole conversation, assigned to the companion so the article renders
-          // it directly. One combined-scope query (db-root drafts + this mailbox's feed) assembles it
-          // via a single reactive subscription, oldest-first, correlated by `threadId`. Two same-shape
-          // subscriptions here deadlock the connector's recompute, so keep it to one query.
+          // Whole conversation for the companion, one combined-scope query (space + this mailbox's feed)
+          // correlated by threadId — two same-shape subscriptions here deadlock the connector's recompute.
           const conversation = !message
             ? []
             : get(
@@ -595,8 +588,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'syncMailbox',
-        // Sibling view nodes (All Mail, Sent, Drafts, saved filters) all store the same mailbox as
-        // node.data, so the action shows on any of them, not just the primary node.
+        // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
@@ -650,8 +642,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'analyzeTopicsMailbox',
-        // Sibling view nodes (All Mail, Sent, Drafts, saved filters) all store the same mailbox as
-        // node.data, so the action shows on any of them, not just the primary node (peer of `sync`).
+        // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox) => {
           const db = Obj.getDatabase(mailbox);

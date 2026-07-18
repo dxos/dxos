@@ -14,9 +14,8 @@ import { Tagging, TagIndex } from '@dxos/schema';
  * locally-toggled star resolve to the *same* {@link Tag} object (likewise inbox/sent/etc.). Custom user
  * labels/folders keep their own provider-scoped tags (`findOrCreateGmailTag`/`findOrCreateJmapTag`).
  *
- * `draft` is the one entry with no provider mapping: it's applied and removed locally, at compose and
- * send time (`DraftEmailAndOpen`, `useSendEmail`), never synced — providers' own draft signals (Gmail's
- * `DRAFT` label, JMAP's `drafts` role) are deliberately dropped rather than mapped onto it.
+ * `draft` is the one entry with no provider mapping: applied/removed locally at compose/send time
+ * (`DraftEmailAndOpen`, `useSendEmail`), never synced from a provider's own draft signal.
  *
  * The source is space-general (`org.dxos.tag`), not mail-specific, so the same tag identities apply to
  * any object in the space.

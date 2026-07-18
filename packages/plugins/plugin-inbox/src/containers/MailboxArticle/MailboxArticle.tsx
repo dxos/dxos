@@ -68,13 +68,9 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   {
     filter?: string;
     /**
-     * A canonical system tag (see `SystemTags.SystemTag`) this view resolves by identity rather than by
-     * parsing `filter` as a tag-label string — used by the pre-seeded Inbox/Sent/Drafts views so they
-     * stay correct regardless of a tag's label text (and, for Inbox/Sent, across providers/locales).
-     * `filter` still seeds the editable filter box (e.g. `'#inbox'`) for display and further narrowing;
-     * once the user edits it away from that seed, the box's own text/tag parsing takes over as normal —
-     * except on the Drafts view, which hides the filter box entirely (see `hideFilterEditor` below),
-     * since free text can't yet be safely scoped to just this mailbox's drafts.
+     * Canonical system tag (Inbox/Sent/Draft) this view resolves by id, not by parsing `filter` as tag
+     * text — stays correct regardless of label/provider. `filter` seeds the editable box; once edited
+     * away from that seed, normal text/tag parsing takes over (Drafts hides the box — see `hideFilterEditor`).
      */
     systemTag?: SystemTags.SystemTagId;
   }
@@ -119,16 +115,11 @@ export const MailboxArticle = ({
   const starredUri = useSystemTagUri(db, 'starred');
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
 
-  // Resolves this view's canonical system tag (e.g. Inbox/Sent/Draft) by its stable foreign key, not by
-  // label text (see `buildSystemTagSelection`) — `undefined` until the provider sync (or, for `draft`,
-  // the first locally-created draft) has created it.
+  // This view's canonical system tag, resolved by id (`undefined` until sync/first draft creates it).
   const systemTagUri = useSystemTagUri(db, systemTag);
   const systemTagIds = useTaggedIds(tagIndex, systemTagUri);
-  // This mailbox's space-resident messages (drafts, and a just-sent message before sync deletes it in
-  // favor of its synced feed copy — see `useSendEmail`), indexed by thread. Needed on every view, not
-  // just the Drafts view: a message's tag state (draft vs. sent) only decides which panel it belongs in
-  // — it should keep showing in its thread wherever that thread is already shown regardless of tag, so
-  // this attach step isn't scoped to the 'draft' tag at all (see `useSpaceMessagesByThreadId`).
+  // This mailbox's space-resident messages (drafts + not-yet-synced sent), by thread — attached to an
+  // already-shown thread regardless of view or tag (see `useSpaceMessagesByThreadId`).
   const spaceMessagesByThreadId = useSpaceMessagesByThreadId(db, mailbox);
 
   // Filter.
@@ -157,12 +148,9 @@ export const MailboxArticle = ({
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
-  //
-  // A system-tag view (Inbox/Sent/Drafts) resolves by tag identity while the filter box sits at its
-  // seeded text (e.g. unedited `'#inbox'`) — robust regardless of a tag's label text and immune to a
-  // same-named user tag. Once the user edits the box away from that seed, the usual text/tag DSL parse
-  // takes over — except on the Drafts view, whose filter box is hidden entirely (see `useMailboxActions`
-  // below), so it always takes this branch.
+
+  // True while the filter box still shows its seeded text (`'#inbox'` etc.) unedited, so the tag-id
+  // selection applies; editing away falls back to normal text/tag parsing (Drafts hides the box).
   const isUnmodifiedSystemTagView = systemTag !== undefined && debouncedFilterText === (filterProp ?? '');
   const systemTagIdsKey = systemTagIds.join(',');
   const selection = useMemo(
@@ -170,15 +158,16 @@ export const MailboxArticle = ({
       isUnmodifiedSystemTagView
         ? buildSystemTagSelection(systemTagIds)
         : buildMailboxSelection(debouncedFilterText, debouncedFilter),
-    // `systemTagIds` is a fresh array each render; key the memo on its membership (`systemTagIdsKey`) instead.
+    // systemTagIds is a fresh array each render; key on its membership (systemTagIdsKey) instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
-  // A system-tag view (Inbox/Sent/Drafts) unions this mailbox's feed with its own space-db scope (where
-  // drafts live), both under the exact same id-based selection: Inbox/Sent's ids only ever resolve in
-  // the feed and Drafts' only in the space, so each view's half of the union is simply empty rather than
-  // needing a per-view branch. Free-text search stays feed-only — see `hideFilterEditor`'s docstring.
+  // Inbox/Sent/Drafts union the feed with the space (where drafts live); each view's ids only ever
+  // resolve on one side, so the other half is just empty. Free text stays feed-only (too complex to
+  // scope by mailbox over the whole space — see `hideFilterEditor`).
+  // TODO: unify with `spaceMessagesByThreadId`'s separate query below into one query once the query
+  // engine can express "thread contains a matching member" directly (semi-join).
   const source = isUnmodifiedSystemTagView
     ? Query.all(Query.select(selection).from(Scope.space()), ...(feed ? [Query.select(selection).from(feed)] : []))
     : feed
@@ -214,12 +203,8 @@ export const MailboxArticle = ({
       } else if (entry.threadId == null) {
         result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        // Attach this mailbox's space-resident messages for the thread, if any not already among
-        // `entry.items` — a message's tag state (draft vs. sent) doesn't gate this: a just-sent message
-        // stays attached until sync deletes the space copy in favor of the synced one, so a thread never
-        // appears to lose a message mid-send. On the Drafts view itself, the thread's own drafts already
-        // came from the primary union query above (see `source`), so every candidate here is filtered
-        // out as already-present.
+        // Attach this mailbox's space-resident messages for the thread, skipping any already in
+        // `entry.items` (the Drafts view's own drafts already came through `source` above).
         const presentIds = new Set(entry.items.map((message) => message.id));
         const spaceMessagesForThread = (spaceMessagesByThreadId.get(entry.threadId) ?? []).filter(
           (message) => !presentIds.has(message.id),
@@ -375,8 +360,6 @@ export const MailboxArticle = ({
     sortDescending,
     nodeId: id,
     filterElement,
-    // Free text still can't be safely scoped to just this mailbox's drafts (see
-    // `MailboxActionsOptions.hideFilterEditor`) — the one remaining Drafts-specific check.
     hideFilterEditor: systemTag === 'draft',
   });
 
@@ -503,9 +486,8 @@ const useSystemTagUri = (
 const EMPTY_IDS_ATOM = Atom.make((): readonly EntityId[] => []);
 
 /**
- * Reactive ids of the objects carrying `tagUri` in `tagIndex`. A bare `Filter.tag` query can't see this:
- * feed/space messages carry no `meta.tags` of their own — membership lives entirely in the mailbox's
- * `TagIndex` sibling object, which mutates in place (so `useQuery`/`useResolveRef` don't observe it).
+ * Reactive ids carrying `tagUri` in `tagIndex`. Feed/space messages have no `meta.tags` of their own —
+ * membership lives in the mailbox's `TagIndex` sibling object instead, so a bare `Filter.tag` can't see it.
  */
 const useTaggedIds = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string | undefined): readonly EntityId[] => {
   const atom = useMemo(
@@ -516,14 +498,10 @@ const useTaggedIds = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string | 
 };
 
 /**
- * This mailbox's space-resident messages (space-db, not the feed), indexed by `threadId`. Scoped by
- * `DraftMessage.belongsTo` — `properties.mailbox`, set once at draft creation and never cleared by
- * sending — not by the 'draft' tag: a message that's just been sent is untagged 'draft' immediately
- * (see `useSendEmail`) but should keep attaching to its thread until sync deletes this space copy in
- * favor of the synced feed one, so tag state only decides which *panel* a message belongs in, never
- * whether it's still part of its thread. A message with no thread (a brand-new, not-yet-replied compose)
- * is never attached anywhere outside the Drafts view — see `MailboxArticle`'s `items` memo, which looks
- * entries up by `threadId` only.
+ * This mailbox's space-resident messages (drafts + not-yet-synced sent), by `threadId`. Scoped by
+ * `DraftMessage.belongsTo` (`properties.mailbox`), not the 'draft' tag — a just-sent message is untagged
+ * 'draft' immediately but should still attach to its thread until sync replaces it with the synced copy.
+ * A threadless message (a fresh compose) is only ever shown on the Drafts view.
  */
 const useSpaceMessagesByThreadId = (
   db: Database.Database | undefined,
@@ -556,12 +534,7 @@ type MailboxActionsOptions = {
   nodeId: string;
   /** Search box, custom-rendered as a toolbar item so the connect group can sit to its right. */
   filterElement: ReactNode;
-  /**
-   * Hides the search box (the Drafts view). A free-text search can't be safely scoped to just this
-   * mailbox's drafts once it drops to a lone full-text select over the whole space (the query engine
-   * can't AND a mailbox-scope constraint onto it — same "too complex" limit `buildMailboxSelection`
-   * already works around for the feed), so the Drafts view doesn't offer one.
-   */
+  /** Hides the search box (Drafts): free text can't be safely scoped to just this mailbox's drafts. */
   hideFilterEditor: boolean;
 };
 

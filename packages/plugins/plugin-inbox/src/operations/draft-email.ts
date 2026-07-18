@@ -31,8 +31,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
         }),
       );
 
-      // Tag with the canonical 'draft' system tag so the Drafts view (a plain systemTag filter, like
-      // Inbox/Sent) picks it up — same mechanism every other draft-creation path uses.
+      // Tag as 'draft' so the Drafts view picks it up — same mechanism every draft-creation path uses.
       const { db } = yield* Database.Service;
       yield* Effect.promise(() => SystemTags.toggleTag(mailbox, message, db, 'draft'));
 

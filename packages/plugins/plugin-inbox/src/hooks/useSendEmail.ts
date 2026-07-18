@@ -108,8 +108,8 @@ export const useSendEmail = (message: Message.Message): NonNullable<EditMessageP
         });
         const index = mailbox.tags.target ?? (await mailbox.tags.load());
         Tagging.set(draft, sentTagUri, { index });
-        // No longer a draft: the Drafts view (a plain 'draft' systemTag filter) should stop showing it
-        // immediately, without waiting for sync's later, separate `db.remove` of the object itself.
+        // No longer a draft: untag now so Drafts stops showing it, without waiting for sync's later
+        // `db.remove` of the object itself.
         const draftTag = await SystemTags.findOrCreateSystemTag(db, 'draft');
         Tagging.unset(draft, Obj.getURI(draftTag).toString(), { index });
       } catch (err) {

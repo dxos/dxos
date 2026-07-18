@@ -49,16 +49,10 @@ export const getSearchText = (filter: Filter.Any | undefined): string | undefine
 };
 
 /**
- * Selects messages carrying a system tag (e.g. the canonical Inbox/Sent/Draft tag), given the member
- * ids already resolved from the mailbox's `TagIndex` (see `TagIndex.bind(...).objects(uri)`). Used for
- * both feed-scoped views (Inbox/Sent) and the space-scoped Drafts view — the scope is applied by the
- * caller's `.from(...)`, this selection only constrains by id.
- *
- * A bare `Filter.tag` cannot express this: it matches an object's own `meta.tags`, but neither feed
- * messages (immutable) nor this mechanism's mutable drafts carry that — membership lives entirely in
- * the mailbox's sibling `TagIndex` object instead (see `@dxos/schema`'s `TagIndex`). So membership has
- * to be resolved to concrete ids first and selected by id, not by a `Filter.tag` predicate. `Filter.id()`
- * on an empty array selects nothing, which is also the correct pre-sync/no-drafts-yet behavior.
+ * Selects messages carrying a system tag (Inbox/Sent/Draft), given member ids already resolved from
+ * the mailbox's `TagIndex`. A bare `Filter.tag` can't do this — feed/drafts carry no `meta.tags` of
+ * their own, membership lives in `TagIndex` instead — so selection is by id. Scope (`.from(...)`) is
+ * the caller's job. An empty `ids` selects nothing (correct pre-sync/no-drafts-yet behavior).
  */
 export const buildSystemTagSelection = (ids: readonly EntityId[]): Filter.Any =>
   ids.length === 0 ? Filter.nothing() : Filter.and(Filter.type(Message.Message), Filter.id(...ids));

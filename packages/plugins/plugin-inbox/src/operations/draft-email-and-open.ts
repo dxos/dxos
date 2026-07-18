@@ -25,15 +25,12 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
       });
 
       if (Mailbox.instanceOf(mailbox)) {
-        // Tag with the canonical 'draft' system tag so the Drafts view (a plain systemTag filter, like
-        // Inbox/Sent) picks it up; `useSendEmail` removes this tag at send time. A brand-new draft
-        // never already carries a tag, so `toggleTag` (the same mechanism 'starred' uses) always
-        // applies it here.
+        // Tag as 'draft' so the Drafts view (a systemTag filter, like Inbox/Sent) picks it up;
+        // `useSendEmail` removes the tag at send time.
         yield* Effect.promise(() => SystemTags.toggleTag(mailbox, draft, db, 'draft'));
 
-        // Navigate to the Drafts view and select the new draft there, so its companion (the message
-        // editor) shows it — mirrors the select-then-show-companion flow a click in any mailbox list
-        // already does (`useShowItem`), just invoked directly since this runs outside a component.
+        // Navigate to Drafts and select the new draft, mirroring the select-then-show-companion flow
+        // a list click does via `useShowItem` (invoked directly here since this runs outside a component).
         const draftsPath = getMailboxDraftsPath(db.spaceId, mailbox.id);
         yield* Operation.invoke(LayoutOperation.Select, {
           contextId: draftsPath,

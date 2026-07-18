@@ -442,9 +442,7 @@ const useMessageHandlers = (
       // query picks it up reactively and renders it inline — no navigation, no operation needed.
       if (db && message) {
         const draft = db.add(DraftMessage.make(createDraftMessage({ mode, message, mailbox })));
-        // Tag it like every other draft-creation path (`DraftEmailAndOpen`); `useSendEmail` removes
-        // this tag at send time. A brand-new draft never already carries a tag, so `toggleTag` (the
-        // same mechanism 'starred' uses) always applies it here.
+        // Tag as 'draft' like every other draft-creation path; `useSendEmail` removes it at send time.
         if (mailbox) {
           void SystemTags.toggleTag(mailbox, draft, db, 'draft');
         }
