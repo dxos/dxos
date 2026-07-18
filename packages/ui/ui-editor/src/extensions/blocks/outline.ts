@@ -5,7 +5,7 @@
 import { type EditorState, type Extension } from '@codemirror/state';
 import { EditorView, RectangleMarker, layer } from '@codemirror/view';
 
-import { type Block } from './drag';
+import { type Block } from './types';
 
 export type BlockOutlineOptions = {
   /** Enumerates the blocks to outline for a state, in document order. */

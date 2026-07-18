@@ -6,9 +6,10 @@ import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
-import { type Block, createBlockDrag } from './drag';
+import { createBlockDrag } from './drag';
 import { createBlockOutline } from './outline';
 import { type BlockOps, createBlockSelection, setBlockSelection } from './selection';
+import { type Block } from './types';
 
 export type BlockOptions = {
   /** Class applied to each block box element. */

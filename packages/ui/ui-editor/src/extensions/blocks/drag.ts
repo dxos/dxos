@@ -16,12 +16,7 @@ import {
 } from '@codemirror/view';
 
 import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection';
-
-/** A contiguous document region that can be dragged and reordered as a unit. */
-export type Block = {
-  from: number;
-  to: number;
-};
+import { type Block } from './types';
 
 export type BlockDragOptions = {
   /**
