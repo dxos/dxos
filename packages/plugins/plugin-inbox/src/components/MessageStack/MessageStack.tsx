@@ -532,7 +532,7 @@ const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: Conver
   return (
     <Card.Row>
       <Card.Block>
-        <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
+        <DxAvatar hue={hue} hueVariant='surface' variant='circle' size={6} fallback={from} />
       </Card.Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>

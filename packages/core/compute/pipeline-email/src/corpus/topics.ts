@@ -70,12 +70,12 @@ export const DEFAULT_TOPIC_OPTIONS: Required<TopicOptions> = {
 /** A topic before ECHO materialization: plain values so LLM enrichment can rewrite them freely. */
 export type TopicDraft = {
   readonly name: string;
-  // readonly summary: string;
-  // readonly threadIds: readonly string[];
-  // readonly participants: readonly string[];
-  // readonly keywords: readonly string[];
-  // readonly questions: readonly string[];
-  // readonly tasks: readonly string[];
+  readonly summary: string;
+  readonly threadIds: readonly string[];
+  readonly participants: readonly string[];
+  readonly keywords: readonly string[];
+  readonly questions: readonly string[];
+  readonly tasks: readonly string[];
 };
 
 type Signature = {
@@ -202,12 +202,12 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
     const first = cluster.members[0].thread;
     return {
       name: keywords.length > 0 ? keywords.slice(0, 3).join(' ') : first.subject || first.threadId,
-      // summary: summaries.join('\n'),
-      // threadIds: cluster.members.map((member) => member.thread.threadId),
-      // participants: [...cluster.participants].sort(),
-      // keywords,
-      // questions,
-      // tasks,
+      summary: summaries.join('\n'),
+      threadIds: cluster.members.map((member) => member.thread.threadId),
+      participants: [...cluster.participants].sort(),
+      keywords,
+      questions,
+      tasks,
     } satisfies TopicDraft;
   });
 };
