@@ -11,13 +11,13 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization] }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSchemaModule<void>({ schema: [Person.Person, Organization.Organization] }),
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: 'preview-popover',
     requires: PreviewPopover.requires,

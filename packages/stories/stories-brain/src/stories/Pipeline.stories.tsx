@@ -34,7 +34,7 @@ import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { stubParse } from '@dxos/nlp/testing';
@@ -51,7 +51,7 @@ import {
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -508,7 +508,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

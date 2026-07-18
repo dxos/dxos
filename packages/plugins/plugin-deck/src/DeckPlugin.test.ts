@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { DeckPlugin } from '#plugin';
@@ -19,9 +18,9 @@ describe('DeckPlugin', () => {
       plugins: [DeckPlugin()],
     });
 
+    // Both are dependency-mode roots (no requires), so they activate during the startup
+    // dependency pass without waiting on any event.
     expect(harness.manager.getActive()).toContain(moduleId('AppGraphBuilder'));
-
-    await harness.fire(ActivationEvents.SetupProcessManager);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

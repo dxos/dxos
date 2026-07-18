@@ -3,7 +3,7 @@
 //
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -16,7 +16,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { SimpleLayoutEvents } from '#types';
 
 export type SimpleLayoutPluginOptions = {
   /** Determines if running in popover window context (hides mobile-specific UI). */
@@ -39,8 +38,6 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
     id: Capability.getModuleTag(State),
     requires: State.requires,
     provides: State.provides,
-    // Migration bridge for unmigrated StateReady/LayoutReady listeners.
-    compatFires: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
     activate: () => State({ initialState: { isPopover } }),
   })),
   Plugin.addModule(({ isPopover = false }) => ({

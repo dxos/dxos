@@ -16,25 +16,25 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const DevtoolsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<void, typeof AppGraphBuilder.requires>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addReactContextModule({
+  AppPlugin.addReactContextModule<void>({
     requires: ReactContext.requires,
     provides: ReactContext.provides,
     activate: ReactContext,
   }),
   Plugin.addLazyModule(ReactSurface),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: 'setup-devtools',
     requires: [],
     provides: [],
     activate: () => Effect.sync(() => setupDevtools()),
   }),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

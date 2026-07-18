@@ -4,8 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -21,15 +19,15 @@ describe('MapPlugin', () => {
       plugins: [ClientPlugin({}), MapPlugin()],
     });
 
+    // SkillDefinition and OperationHandler are dependency-mode roots, so they activate immediately too.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
+      expect.arrayContaining([
+        moduleId('AppGraphBuilder'),
+        moduleId('CreateObject'),
+        moduleId('schema'),
+        moduleId('SkillDefinition'),
+        moduleId('OperationHandler'),
+      ]),
     );
-
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
-
-    // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

@@ -6,10 +6,12 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationHandlerSet, Skill } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { OperationInvoker } from '@dxos/operation';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
-import type { OperationInvoker } from '@dxos/operation';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 
 import { CommentCapabilities } from '#types';

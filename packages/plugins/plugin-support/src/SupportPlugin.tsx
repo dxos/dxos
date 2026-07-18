@@ -29,33 +29,33 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<SupportPluginOptions, typeof AppGraphBuilder.requires>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<SupportPluginOptions>({
     requires: SkillDefinition.requires,
     provides: SkillDefinition.provides,
     activate: SkillDefinition,
   }),
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<SupportPluginOptions>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<SupportPluginOptions>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSchemaModule({ schema: [Support.Ticket] }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSchemaModule<SupportPluginOptions>({ schema: [Support.Ticket] }),
+  AppPlugin.addSurfaceModule<SupportPluginOptions>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<SupportPluginOptions>({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(HelpState),
     requires: HelpState.requires,
@@ -86,7 +86,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
     provides: SupportSettings.provides,
     activate: SupportSettings,
   }),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<SupportPluginOptions>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

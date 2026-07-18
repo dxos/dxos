@@ -163,12 +163,9 @@ describe('ClientPlugin startup', () => {
       );
     });
 
-    // Phase 3: Fire activation events (mirrors useApp behavior).
+    // Phase 3: Fire the startup activation event (mirrors useApp behavior).
     phaseStart = performance.now();
-    await Effect.all([
-      manager.activate(ActivationEvents.SetupReactSurface),
-      manager.activate(ActivationEvents.Startup),
-    ]).pipe(Effect.runPromise);
+    await manager.activate(ActivationEvents.Startup).pipe(Effect.runPromise);
     mark('activation (core events)', phaseStart);
 
     await startupDone;

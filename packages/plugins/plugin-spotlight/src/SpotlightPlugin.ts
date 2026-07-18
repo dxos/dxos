@@ -3,12 +3,11 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import { OperationHandler, ReactRoot, SpotlightDismiss, State } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { SpotlightEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -20,10 +19,7 @@ export const SpotlightPlugin = Plugin.define(meta).pipe(
     activate: OperationHandler,
   }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addLazyModule(State, {
-    // Migration bridge for unmigrated StateReady/LayoutReady listeners.
-    compatFires: [SpotlightEvents.StateReady, AppActivationEvents.LayoutReady],
-  }),
+  Plugin.addLazyModule(State, {}),
   Plugin.addLazyModule(SpotlightDismiss),
   Plugin.addLazyModule(ReactRoot),
   AppPlugin.addPluginAssetModule({

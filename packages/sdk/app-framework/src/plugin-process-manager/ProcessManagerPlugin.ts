@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capabilities } from '../common';
+import { Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { meta } from './meta';
 
@@ -38,8 +38,6 @@ export const ProcessManagerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     requires: ProcessManagerCapability.requires,
     provides: ProcessManagerCapability.provides,
-    // Migration bridge for unmigrated ProcessManagerReady listeners.
-    compatFires: [ActivationEvents.ProcessManagerReady],
     activate: ProcessManagerCapability,
   }),
   Plugin.addModule({

@@ -30,27 +30,27 @@ import { type AssistantPluginOptions } from '#types';
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    AppPlugin.addAppGraphModule({
+    AppPlugin.addAppGraphModule<AssistantPluginOptions | void>({
       requires: AppGraphBuilder.requires,
       provides: AppGraphBuilder.provides,
       activate: AppGraphBuilder,
     }),
-    AppPlugin.addSkillDefinitionModule({
+    AppPlugin.addSkillDefinitionModule<AssistantPluginOptions | void>({
       requires: SkillDefinition.requires,
       provides: SkillDefinition.provides,
       activate: SkillDefinition,
     }),
-    AppPlugin.addCreateObjectModule({
+    AppPlugin.addCreateObjectModule<AssistantPluginOptions | void>({
       requires: CreateObject.requires,
       provides: CreateObject.provides,
       activate: CreateObject,
     }),
-    AppPlugin.addOperationHandlerModule({
+    AppPlugin.addOperationHandlerModule<AssistantPluginOptions | void>({
       requires: OperationHandler.requires,
       provides: OperationHandler.provides,
       activate: OperationHandler,
     }),
-    AppPlugin.addSchemaModule({
+    AppPlugin.addSchemaModule<AssistantPluginOptions | void>({
       schema: [
         Chat.Chat,
         Chat.CompanionTo,
@@ -78,7 +78,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       provides: LocalModelResolver.provides,
       activate: LocalModelResolver,
     }),
-    Plugin.addModule((options) => ({
+    Plugin.addModule((options: AssistantPluginOptions | void) => ({
       id: Capability.getModuleTag(AiService),
       requires: AiService.requires,
       provides: AiService.provides,

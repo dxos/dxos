@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 //
 // Capability Module
 //
-// Rehydrates durable agent processes once {@link ActivationEvents.ProcessManagerReady} fires.
+// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed.
 //
 
 export default Capability.makeModule(

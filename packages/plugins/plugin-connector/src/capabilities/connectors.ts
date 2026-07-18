@@ -50,7 +50,7 @@ const atprotoCredentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPre
 /**
  * Built-in {@link Connector} entries: just the manual-token connector.
  * Service-specific connectors (Bluesky, Trello, GitHub, …) live in their
- * own plugins and contribute on `SetupConnectors`.
+ * own plugins and contribute from their own dependency-mode modules.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -6,6 +6,7 @@ import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type AiModelResolver } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
@@ -13,6 +14,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Credential, Header } from '@dxos/compute';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';

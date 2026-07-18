@@ -26,35 +26,39 @@ import { Booking, Segment, Trip } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TripPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<void, typeof AppGraphBuilder.requires>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<void>({
     requires: [],
     provides: [AppCapabilities.SkillDefinition],
     activate: SkillDefinition,
   }),
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<void>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSchemaModule({ schema: [Trip.Trip, Segment.Segment, Booking.Booking] }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSchemaModule<void>({ schema: [Trip.Trip, Segment.Segment, Booking.Booking] }),
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addSettingsModule({ requires: Settings.requires, provides: Settings.provides, activate: Settings }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addSettingsModule<void, typeof Settings.requires>({
+    requires: Settings.requires,
+    provides: Settings.provides,
+    activate: Settings,
+  }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.addModule({

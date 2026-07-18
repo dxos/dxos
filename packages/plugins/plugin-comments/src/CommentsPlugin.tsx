@@ -21,59 +21,85 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { AgentIdentity, DEFAULT_AGENT_IDENTITY } from '#types';
+import {
+  AgentIdentity,
+  type AgentIdentity as AgentIdentityType,
+  CommentCapabilities,
+  DEFAULT_AGENT_IDENTITY,
+} from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-export const CommentsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+/**
+ * Test/storybook hosts swap in a stub `AgentRunner`/`AgentIdentity` via these options rather
+ * than shadowing by plugin order: `AgentRunner`/`AgentIdentity` are singleton capabilities, so
+ * two dependency-mode providers of either would trip the duplicate-provider check.
+ */
+export type CommentsPluginOptions = {
+  agentRunner?: CommentCapabilities.AgentRunner;
+  agentIdentity?: AgentIdentityType;
+};
+
+export const CommentsPlugin = Plugin.define<CommentsPluginOptions>(meta).pipe(
+  AppPlugin.addAppGraphModule<CommentsPluginOptions>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<CommentsPluginOptions>({
     requires: SkillDefinition.requires,
     provides: SkillDefinition.provides,
     activate: SkillDefinition,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<CommentsPluginOptions>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addUndoMappingsModule({
+  AppPlugin.addUndoMappingsModule<CommentsPluginOptions>({
     requires: UndoMappings.requires,
     provides: UndoMappings.provides,
     activate: UndoMappings,
   }),
-  AppPlugin.addSchemaModule({
+  AppPlugin.addSchemaModule<CommentsPluginOptions>({
     schema: [AnchoredTo.AnchoredTo, Message.Message, Thread.Thread],
   }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSurfaceModule<CommentsPluginOptions>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
+  AppPlugin.addTranslationsModule<CommentsPluginOptions>({ translations: [...translations, ...threadTranslations] }),
   Plugin.addLazyModule(CommentState),
   Plugin.addLazyModule(Markdown),
-  // Default comment-thread agent runner (one-shot LLM call per scheduled turn).
-  // Test/storybook hosts that contribute a stub `AgentRunner` earlier in plugin order — i.e.
-  // before CommentsPlugin in the plugins list — win, because `Capability.get` returns the
-  // first contribution. The stub must stay a legacy (event-mode) module: `AgentRunner` is a
-  // singleton capability, so two dependency-mode providers would trip the duplicate-provider
-  // check; only one typed provider may exist at a time.
-  Plugin.addLazyModule(AgentRunner),
-  // Default agent identity. Hosts wanting a different name contribute their own `AgentIdentity`
-  // earlier in plugin order (as a legacy module, for the same singleton-arity reason as above)
-  // to win the `Capability.get`.
-  Plugin.addModule({
+  // Default comment-thread agent runner (one-shot LLM call per scheduled turn). `AgentRunner`
+  // is a singleton capability, so a test/storybook host that wants a stub runner passes
+  // `agentRunner` in `CommentsPluginOptions` instead of contributing a second provider.
+  Plugin.addModule((options: CommentsPluginOptions) => {
+    const agentRunnerOverride = options.agentRunner;
+    return agentRunnerOverride
+      ? {
+          id: 'agent-runner-override',
+          provides: [CommentCapabilities.AgentRunner],
+          activate: () => Effect.succeed([Capability.provide(CommentCapabilities.AgentRunner, agentRunnerOverride)]),
+        }
+      : {
+          id: Capability.getModuleTag(AgentRunner),
+          requires: AgentRunner.requires,
+          provides: AgentRunner.provides,
+          activate: AgentRunner,
+        };
+  }),
+  // Default agent identity, overridable via `CommentsPluginOptions.agentIdentity` for the same
+  // singleton-arity reason as `AgentRunner` above.
+  Plugin.addModule((options: CommentsPluginOptions) => ({
     id: 'agent-identity',
     provides: [AgentIdentity],
-    activate: () => Effect.succeed([Capability.provide(AgentIdentity, DEFAULT_AGENT_IDENTITY)]),
-  }),
-  AppPlugin.addPluginAssetModule({
+    activate: () =>
+      Effect.succeed([Capability.provide(AgentIdentity, options.agentIdentity ?? DEFAULT_AGENT_IDENTITY)]),
+  })),
+  AppPlugin.addPluginAssetModule<CommentsPluginOptions>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

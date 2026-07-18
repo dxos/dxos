@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
@@ -31,9 +31,6 @@ export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
     id: Capability.getModuleTag(Translator),
     requires: Translator.requires,
     provides: Translator.provides,
-    // Migration bridge: fired after activation now (previously gated activation) — the
-    // Translator reads Translations reactively so ordering is no longer load-bearing.
-    compatFires: [AppActivationEvents.SetupTranslations],
     activate: () => Translator(options),
   })),
   Plugin.make,

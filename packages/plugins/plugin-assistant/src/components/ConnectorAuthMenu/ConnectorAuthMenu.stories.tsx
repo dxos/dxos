@@ -11,7 +11,6 @@ import React, { useContext, useMemo } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -130,7 +129,6 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       capabilities: [Capability.contributes(Connector, testConnectors)],
       plugins: [
         ...corePlugins(),

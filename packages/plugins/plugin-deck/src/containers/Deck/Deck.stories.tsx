@@ -8,7 +8,6 @@ import React, { useCallback } from 'react';
 import { Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
@@ -60,7 +59,6 @@ const meta = {
     withMosaic(),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
-      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {

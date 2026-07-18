@@ -65,7 +65,9 @@ export const waitFor = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, neve
  * @param capability The multi capability tag.
  * @returns The live, reactive {@link Contributions} collection.
  */
-export const contributions = <T>(capability: MultiTag<T> | InterfaceDef<T>): Effect.Effect<Contributions<T>, never, Service> =>
+export const contributions = <T>(
+  capability: MultiTag<T> | InterfaceDef<T>,
+): Effect.Effect<Contributions<T>, never, Service> =>
   Effect.map(Service, (manager) => manager.contributions(capability));
 
 /**
@@ -225,13 +227,16 @@ export type Capability<T> = {
 export type Any = Capability<any>;
 
 /**
- * Union type representing all valid return types for a capability module.
- * Supports single capabilities, arrays, and tuples of different capability types.
+ * Union of the raw capability-entry shapes accepted where a module's return isn't
+ * type-checked against a declared `provides` — direct manager injection (`withPluginManager`'s
+ * `capabilities` fixture option, {@link CapabilityManager.contribute}) rather than authored
+ * modules, which return typed {@link Contribution}s (see {@link makeModule}).
  */
 export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]] | readonly [Any, ...Any[]];
 
 /**
- * Helper to define the implementation of a capability.
+ * Builds a raw capability entry for direct manager injection (test/story fixtures) — see
+ * {@link ModuleReturn}. Authored modules return {@link provide}/{@link provideAll} instead.
  * Returns the opaque base type so callers cannot discriminate on capability kind,
  * keeping d.ts emit portable across packages.
  */
@@ -362,13 +367,14 @@ export type ProvidesReturn<Provides extends readonly AnyTag[]> = Provides extend
  * The `never` element guard keeps an empty-array return (inferred as `never[]`) from
  * covering every capability via unconstrained inference.
  */
-export type CoveredBy<Ret> = Ret extends ReadonlyArray<infer Item>
-  ? [Item] extends [never]
-    ? never
-    : Item extends Contribution<infer C>
-      ? C
-      : never
-  : never;
+export type CoveredBy<Ret> =
+  Ret extends ReadonlyArray<infer Item>
+    ? [Item] extends [never]
+      ? never
+      : Item extends Contribution<infer C>
+        ? C
+        : never
+    : never;
 
 /**
  * Completeness constraint for a module's activate: evaluates to `unknown` (no-op) when every
@@ -388,52 +394,6 @@ export type Requirements<Requires extends readonly AnyTag[]> =
   | Service
   | Plugin.Service
   | Scope.Scope;
-
-type LoadCapability<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | Scope.Scope | never>;
-}>;
-type LoadCapabilities<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | Scope.Scope | never>;
-}>;
-
-type NormalizeReturn<R> = R extends readonly (infer A)[]
-  ? A[]
-  : R extends (infer A)[]
-    ? A[]
-    : R extends Any
-      ? [R]
-      : Any[];
-
-export type LazyCapability<Props = void, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
-  props: Props,
-) => Effect.Effect<NormalizeReturn<Capabilities>, E, Service | Plugin.Service | Scope.Scope | never>;
-
-/**
- * Helper to define a lazily loaded implementation of a capability.
- * Supports single capabilities, arrays, and tuples of different capability types.
- * @param name The export name (e.g., 'AppGraphBuilder') - used to auto-compute module IDs.
- * @param loader The lazy loader function.
- * @returns A lazy capability function with ModuleTag symbol attached.
- * @deprecated Use {@link lazyModule} with a requires/provides spec.
- */
-export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
-  name: string,
-  c: LoadCapability<T, R> | LoadCapabilities<T, R>,
-): LazyCapability<T> => {
-  const lazyFn = (props: T) =>
-    Effect.gen(function* () {
-      const { default: getCapability } = yield* Effect.promise(() => c());
-      const result = yield* getCapability(props);
-      const normalized = result == null ? [] : Array.isArray(result) ? Array.from(result) : [result];
-      return normalized as NormalizeReturn<R>;
-    });
-
-  // Props (T) are preserved so callers pass correctly-typed options, but the contributed
-  // Capabilities type is widened to the opaque base. The concrete capability type often traces to a
-  // module-internal source path that TypeScript cannot name in declaration files (TS2883); the base
-  // type is portable. The contributed type is checked at Capability.contributes regardless.
-  return Object.assign(lazyFn, { [ModuleTag]: name }) as LazyCapability<T>;
-};
 
 /**
  * Loader for a spec-carrying lazy module body. The default export's environment is
@@ -502,19 +462,16 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *
  * This helper provides explicit typing for the module activation function,
  * making it clear that the function should:
- * - Access CapabilityManager via the Effect layer system (Capability.get, Capability.getAll, etc.)
- * - Return a capability, array of capabilities, or tuple of different capability types (sync or async)
- *
- * Supports returning multiple capabilities of different types as a tuple, which will be normalized
- * to an array at runtime for compatibility with the plugin system.
+ * - Access declared `requires` via `yield*` (or the ambient `Capability.Service`/`Plugin.Service`)
+ * - Return an array of typed {@link Contribution}s (see {@link provide}/{@link provideAll})
  *
  * @example
  * ```ts
  * // Module without options - single capability
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* () {
- *     const client = yield* Capability.get(ClientCapabilities.Client);
- *     return contributes(Capabilities.SettingsStore, store);
+ *     const client = yield* ClientCapabilities.Client;
+ *     return [Capability.provide(Capabilities.SettingsStore, store)];
  *   })
  * );
  *
@@ -522,8 +479,8 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* () {
  *     return [
- *       contributes(Capabilities.SettingsStore, store),
- *       contributes(Capabilities.Translations, translations),
+ *       Capability.provide(Capabilities.SettingsStore, store),
+ *       Capability.provide(Capabilities.Translations, translations),
  *     ];
  *   })
  * );
@@ -531,8 +488,8 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * // Module with required options (context accessed via layer)
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* (props: { observability: boolean }) {
- *     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
- *     return contributes(Capabilities.OperationHandler, ...);
+ *     const invoker = yield* Capabilities.OperationInvoker;
+ *     return [Capability.provide(Capabilities.OperationHandler, ...)];
  *   })
  * );
  *
@@ -541,14 +498,14 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *   Effect.fnUntraced(function* () {
  *     const scope = yield* Scope.Scope;
  *     yield* Scope.addFinalizer(scope, Effect.sync(() => cleanup()));
- *     return contributes(Capabilities.MyCapability, implementation);
+ *     return [Capability.provide(Capabilities.MyCapability, implementation)];
  *   })
  * );
  * ```
  */
 export const makeModule = <
   TProps = void,
-  TReturn extends ModuleReturn | readonly AnyContribution[] = ModuleReturn,
+  TReturn extends readonly AnyContribution[] = readonly AnyContribution[],
   E extends Error = Error,
   R extends Requirements<readonly AnyTag[]> = Service,
 >(

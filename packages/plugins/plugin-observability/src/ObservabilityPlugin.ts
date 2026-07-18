@@ -31,12 +31,12 @@ export type ObservabilityPluginOptions = {
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSurfaceModule<ObservabilityPluginOptions>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<ObservabilityPluginOptions>({ translations }),
   Plugin.addModule(({ observability }) => ({
     id: 'observability',
     requires: [],
@@ -56,8 +56,6 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     id: Capability.getModuleTag(ObservabilityState),
     requires: ObservabilityState.requires,
     provides: ObservabilityState.provides,
-    // Migration bridge for any unmigrated `StateReady` listener.
-    compatFires: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
   })),
   Plugin.addModule(({ namespace }) => ({
@@ -75,7 +73,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
         downloadLogs !== undefined ? [Capability.provide(ObservabilityCapabilities.LogDownloader, downloadLogs)] : [],
       ),
   })),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<ObservabilityPluginOptions>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,

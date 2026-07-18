@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -20,9 +19,9 @@ describe('SidekickPlugin', () => {
       plugins: [ClientPlugin({}), SidekickPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]));
-
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
+    // SkillDefinition is a dependency-mode root, so it activates immediately too.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface'), moduleId('SkillDefinition')]),
+    );
   });
 });

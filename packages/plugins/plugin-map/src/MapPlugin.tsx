@@ -17,7 +17,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Map, MapEvents } from '#types';
+import { Map } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -28,35 +28,33 @@ export const MapPlugin = Plugin.define(meta).pipe(
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<void>({
     requires: SkillDefinition.requires,
     provides: SkillDefinition.provides,
     activate: SkillDefinition,
   }),
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<void>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSchemaModule({ schema: [Map.Map] }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSchemaModule<void>({ schema: [Map.Map] }),
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addSettingsModule({
+  AppPlugin.addSettingsModule<void>({
     requires: MapSettings.requires,
     provides: MapSettings.provides,
-    // Migration bridge for unmigrated SettingsReady listeners.
-    compatFires: [MapEvents.SettingsReady],
     activate: MapSettings,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(MarkerProvider),
     requires: MarkerProvider.requires,
@@ -67,11 +65,9 @@ export const MapPlugin = Plugin.define(meta).pipe(
     id: Capability.getModuleTag(MapState),
     requires: MapState.requires,
     provides: MapState.provides,
-    // Migration bridge for unmigrated StateReady listeners.
-    compatFires: [MapEvents.StateReady],
     activate: MapState,
   }),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

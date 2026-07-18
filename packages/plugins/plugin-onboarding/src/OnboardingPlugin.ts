@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { SpaceEvents } from '@dxos/plugin-space';
+import { ClientEvents } from '@dxos/plugin-client';
 
 import {
   AppGraphBuilder,
@@ -20,34 +20,39 @@ import { meta } from './meta';
 import { translations } from './translations';
 
 export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<OnboardingOptions>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<OnboardingOptions>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSettingsModule({ requires: Settings.requires, provides: Settings.provides, activate: Settings }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSettingsModule<OnboardingOptions>({
+    requires: Settings.requires,
+    provides: Settings.provides,
+    activate: Settings,
+  }),
+  AppPlugin.addSurfaceModule<OnboardingOptions>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<OnboardingOptions>({ translations }),
   Plugin.addModule({
     id: 'oauth-recovery-redirect',
     requires: OAuthRecoveryRedirect.requires,
     provides: OAuthRecoveryRedirect.provides,
     activate: OAuthRecoveryRedirect,
   }),
-  // Migration bridge: `SpaceEvents.PersonalSpaceReady` still fires via plugin-space's
-  // legacy compat window until this module's consumer is fully event-free.
-  Plugin.addModule((options) => ({
+  // Runtime event: the personal space exists once identity is created, not at startup.
+  // `requires: [SpaceCapabilities.PersonalSpace]` orders this after plugin-space's
+  // `IdentityCreated` module within the same event wave.
+  Plugin.addModule((options: OnboardingOptions) => ({
     id: 'default-content',
-    activatesOn: SpaceEvents.PersonalSpaceReady,
+    activatesOn: ClientEvents.IdentityCreated,
     requires: DefaultContent.requires,
     provides: DefaultContent.provides,
     activate: () => DefaultContent(options),

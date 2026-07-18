@@ -9,7 +9,6 @@ import React, { useEffect } from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
@@ -182,7 +181,6 @@ const baseDecorators = (
   withKeyboard,
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
-    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({

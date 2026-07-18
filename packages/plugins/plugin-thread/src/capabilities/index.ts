@@ -4,10 +4,12 @@
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationHandlerSet } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { CallManager } from '@dxos/plugin-calls';
 // Explicit imports so the emitted `.d.ts` references the packages via their public
 // aliases instead of relative `node_modules` paths (TS2883).
-import type { CallManager } from '@dxos/plugin-calls';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';

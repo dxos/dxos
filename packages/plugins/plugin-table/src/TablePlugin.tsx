@@ -21,33 +21,33 @@ import { TableOperation } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TablePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<void>({
     requires: SkillDefinition.requires,
     provides: SkillDefinition.provides,
     activate: SkillDefinition,
   }),
-  AppPlugin.addCommentConfigModule({
+  AppPlugin.addCommentConfigModule<void>({
     requires: CommentConfig.requires,
     provides: CommentConfig.provides,
     activate: CommentConfig,
   }),
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<void>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSchemaModule({ schema: [Table.Table] }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSchemaModule<void>({ schema: [Table.Table] }),
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({
+  AppPlugin.addTranslationsModule<void>({
     translations: [...translations, ...formTranslations, ...tableTranslations],
   }),
   // Genuine runtime event: fires whenever a new type is added to a space, not at startup.
@@ -63,7 +63,7 @@ export const TablePlugin = Plugin.define(meta).pipe(
         ),
       ]),
   }),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

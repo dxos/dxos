@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
 
-import { ActivationEvents, Capabilities } from '../../../common';
+import { Capabilities } from '../../../common';
 import { PluginManagerContext } from '../../../context';
 import { Capability, Plugin } from '../../../core';
 import { useApp } from '../../hooks';
@@ -127,7 +127,7 @@ const CounterPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'CounterMain',
-    activatesOn: ActivationEvents.Startup,
+    provides: [Counter, Capabilities.ReactRoot],
     activate: () => {
       const listeners = new Set<() => void>();
       const counter = {
@@ -144,10 +144,10 @@ const CounterPlugin = Plugin.define(
 
       return Effect.succeed([
         // Contribute the state/logic
-        Capability.contributes(Counter, counter),
+        Capability.provide(Counter, counter),
 
         // Contribute the UI
-        Capability.contributes(Capabilities.ReactRoot, {
+        Capability.provide(Capabilities.ReactRoot, {
           id: 'org.dxos.plugin.counter.root',
           root: CounterComponent,
         }),

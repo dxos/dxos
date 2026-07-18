@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
 import { DXN } from '@dxos/keys';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { ActivationEvents, Capabilities } from '../../../common';
+import { Capabilities } from '../../../common';
 import { Capability, Plugin } from '../../../core';
 import { useApp } from '../../hooks';
 
@@ -23,10 +23,10 @@ const TestPlugin = Plugin.define<{ error?: boolean }>(
 ).pipe(
   Plugin.addModule(({ error }) => ({
     id: 'TestMain',
-    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.ReactRoot],
     activate: () =>
       Effect.succeed([
-        Capability.contributes(Capabilities.ReactRoot, {
+        Capability.provide(Capabilities.ReactRoot, {
           id: 'org.dxos.plugin.test.root',
           root: () => {
             useEffect(() => {

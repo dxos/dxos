@@ -10,7 +10,6 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
 import { Database, Ref, Tag } from '@dxos/echo';
@@ -112,8 +111,8 @@ export type VariantConfig =
  * Model precedence: `variant.model` → `options.model` → `DEFAULT_MODEL`.
  *
  * The task creates a full Composer test harness via `createComposerTestApp` / `createDefaultPlugins`,
- * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runInstructions` with the
- * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
+ * initializes an identity, then invokes `runInstructions` with the resolved model and the personal
+ * space. All execution is wrapped in an Effect scope; errors are
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
  */
 export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig> => {
@@ -136,8 +135,6 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
             ),
             (testHarness) => Effect.promise(() => testHarness.dispose()),
           );
-
-          yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
 
           const { personalSpace } = yield* Effect.promise(() =>
             EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),

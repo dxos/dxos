@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { NavTreePlugin } from '#plugin';
@@ -19,9 +18,9 @@ describe('NavTreePlugin', () => {
       plugins: [NavTreePlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('AppGraphBuilder')]));
-
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
+    // OperationHandler is a dependency-mode root, so it activates immediately too.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('OperationHandler')]),
+    );
   });
 });

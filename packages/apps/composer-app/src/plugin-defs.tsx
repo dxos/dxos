@@ -196,7 +196,7 @@ export const getPlugins = ({
     CallsPlugin(),
     ChessPlugin(),
     ChessComPlugin(),
-    CommentsPlugin(),
+    CommentsPlugin({}),
     ClientPlugin({
       config,
       services,

@@ -23,7 +23,7 @@ import {
 import { meta } from '#meta';
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox } from '#types';
+import { Calendar, ExtractedFrom, InboxCapabilities, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -31,12 +31,12 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<void>({
     requires: SkillDefinition.requires,
     provides: SkillDefinition.provides,
     activate: SkillDefinition,
   }),
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<void>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
@@ -46,12 +46,12 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     provides: NavigationResolver.provides,
     activate: NavigationResolver,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSchemaModule({
+  AppPlugin.addSchemaModule<void>({
     schema: [
       Event.Event,
       Mailbox.Mailbox,
@@ -62,21 +62,19 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Topic,
     ],
   }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(InboxSettings),
     requires: InboxSettings.requires,
     provides: InboxSettings.provides,
-    // Migration bridge for unmigrated SettingsReady listeners.
-    compatFires: [InboxEvents.SettingsReady],
     activate: InboxSettings,
   }),
-  Plugin.addLazyModule(Connector),
+  Plugin.addLazyModule<typeof Connector.requires, typeof Connector.provides, void>(Connector),
   Plugin.addModule({
     id: 'contact-extractor',
     requires: [],

@@ -14,7 +14,6 @@ import { AiService } from '@dxos/ai';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -185,7 +184,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, ActivationEvents.Startup],
+      setupEvents: [ActivationEvents.Startup],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

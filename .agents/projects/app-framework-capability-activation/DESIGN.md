@@ -11,12 +11,13 @@ Plugin.addModule({
   provides: [Capabilities.ProcessManagerRuntime],
   requires: [Capabilities.FeedTraceSink],
   activate: ProcessManagerCapability,
-})
+});
 ```
 
 Capabilities become yieldable Effect services (`yield* Capabilities.Foo`), so accessing an undeclared capability or failing to return a declared one is a **type error**, and the manager topologically orders activation at runtime.
 
 **User decisions (final):**
+
 1. **Scope**: full migration — the PR does not land until **all ~180 plugins** are on the new API. The legacy API and coexistence machinery exist only as intra-PR scaffolding (keeps the build green between phases) and are **deleted in the final phase**, not deprecated.
 2. **Events**: `Startup` goes away for migrated modules. Exactly two mutually exclusive activation modes, enforced as a discriminated union — **dependency mode** (`provides` required, `requires` optional; activates during startup dependency resolution) or **runtime-event mode** (`activatesOn` a genuine runtime event — SpaceCreated, parameterized state/settings events; activates when the event fires). Ordering-only events are eliminated for migrated modules.
 3. **Enforcement**: type-level (R channel constrained to `requires`; return must cover `provides`) AND runtime (topo sort, cycle/missing-provider/duplicate-provider/provides-mismatch fail-fast with tagged errors).
@@ -30,6 +31,7 @@ default root event. A module with no `requires` is a root triggered by `activate
 declared singleton capability has been contributed — by whichever event's chain produced the
 providers — additionally gated on `activatesOn` when declared (an event is a special require
 that provides nothing; fired events latch). Consequences implemented in the manager:
+
 - Consumers of event-gated providers **pend** (no error, no bounded wait) and **cascade**
   alive when the provider contributes; every event wave triggers a cascade round; activation
   rounds run to a fixpoint. Requires-only modules (`{requires, activate}`) are valid.
@@ -97,20 +99,26 @@ export interface MultiTag<T> extends Context.Tag<CapabilityIdentifier<T, 'multi'
 // controlled brand cast the file already uses (capability.ts:113). tag.key === identifier.
 
 // Contributions (activate success type)
-export interface Contribution<C extends AnyTag> { /* phantom-branded by C; capability, values, deactivate? */ }
+export interface Contribution<C extends AnyTag> {
+  /* phantom-branded by C; capability, values, deactivate? */
+}
 export const provide: {
   <C extends Tag<any>>(capability: C, impl: C extends Tag<infer T> ? T : never, deactivate?): Contribution<C>;
   <C extends MultiTag<any>>(capability: C, impl: C extends MultiTag<infer T> ? T : never, deactivate?): Contribution<C>;
 };
 export const provideAll: <C extends MultiTag<any>>(capability: C, impls: readonly T[], deactivate?) => Contribution<C>;
 
-export type ProvidesReturn<Provides extends readonly AnyTag[]> =
-  Provides extends readonly [] ? void | readonly [] : ReadonlyArray<Contribution<Provides[number]>>;
-export type EnsureProvides<Ret, Provides extends readonly AnyTag[]> =
-  [Provides[number]] extends [CoveredBy<Ret>] ? unknown
-    : { readonly 'Missing declared capabilities in activate return': Exclude<Provides[number], CoveredBy<Ret>> };
+export type ProvidesReturn<Provides extends readonly AnyTag[]> = Provides extends readonly []
+  ? void | readonly []
+  : ReadonlyArray<Contribution<Provides[number]>>;
+export type EnsureProvides<Ret, Provides extends readonly AnyTag[]> = [Provides[number]] extends [CoveredBy<Ret>]
+  ? unknown
+  : { readonly 'Missing declared capabilities in activate return': Exclude<Provides[number], CoveredBy<Ret>> };
 export type Requirements<Requires extends readonly AnyTag[]> =
-  Context.Tag.Identifier<Requires[number]> | Service | Plugin.Service | Scope.Scope;
+  | Context.Tag.Identifier<Requires[number]>
+  | Service
+  | Plugin.Service
+  | Scope.Scope;
 ```
 
 ```ts
@@ -144,10 +152,10 @@ Tagged errors (`src/core/errors.ts`): `CapabilityNotFoundError`, `ModuleActivati
 1. **Capability tags + arity + contributions + errors** — capability.ts, capability-manager.ts (`contributions()` over the existing atom family), errors.ts, index.ts. Gate: full-repo typecheck (Tag<T> assignable to InterfaceDef<T> keeps ~180 plugins compiling untouched); new `capability.test.ts` (yieldability, arity cross-use `@ts-expect-error`, Contributions reactivity); extend capability-manager.test.ts.
 2. **Module union + builder + typed makeModule/lazy** — plugin.ts, capability.ts.
 3. **Manager: dependency pass + coexistence** — plugin-manager.ts (the big one). New `describe('capability dependency activation')` in plugin-manager.test.ts.
-4. **Core migrations** — common/capabilities.ts arity flips (multi: ReactContext, ReactRoot, ReactSurface, Command, Layer, LayerSpec, TraceSink, OperationHandler, UndoMapping; rest singleton); AppCapabilities arity flips (multi: Translations, Schema, AppGraphBuilder, Settings, PluginAsset, SkillDefinition, Toolkit, TextContent, CommentConfig, Navigation*, AnchorSort); `AppPlugin.addXModule` helpers emit dependency-mode modules (e.g. addTranslationsModule → `provides: [AppCapabilities.Translations]`; addSettingsModule adds `compatFires: [createSettingsEvent(id)]`), legacy opt-out kept; process-manager-capability → dependency mode (requires AtomRegistry/LayerSpec/TraceSink/OperationHandler, provides ProcessManagerRuntime/ServiceResolver/ProcessMonitor/OperationInvoker, `compatFires: [ProcessManagerReady]`, keeps the inline `Plugin.activate(SetupProcessManager)` legacy-window shim, resolves the Scope-finalizer TODO at :128); deprecate ordering events (Startup-as-target, Setup*, *Ready) — still exported and fired for legacy plugins; keep createStateEvent/createSettingsEvent + plugin-domain runtime events.
+4. **Core migrations** — common/capabilities.ts arity flips (multi: ReactContext, ReactRoot, ReactSurface, Command, Layer, LayerSpec, TraceSink, OperationHandler, UndoMapping; rest singleton); AppCapabilities arity flips (multi: Translations, Schema, AppGraphBuilder, Settings, PluginAsset, SkillDefinition, Toolkit, TextContent, CommentConfig, Navigation*, AnchorSort); `AppPlugin.addXModule` helpers emit dependency-mode modules (e.g. addTranslationsModule → `provides: [AppCapabilities.Translations]`; addSettingsModule adds `compatFires: [createSettingsEvent(id)]`), legacy opt-out kept; process-manager-capability → dependency mode (requires AtomRegistry/LayerSpec/TraceSink/OperationHandler, provides ProcessManagerRuntime/ServiceResolver/ProcessMonitor/OperationInvoker, `compatFires: [ProcessManagerReady]`, keeps the inline `Plugin.activate(SetupProcessManager)` legacy-window shim, resolves the Scope-finalizer TODO at :128); deprecate ordering events (Startup-as-target, Setup*, \*Ready) — still exported and fired for legacy plugins; keep createStateEvent/createSettingsEvent + plugin-domain runtime events.
 5. **plugin-client migration (worked example)** — Client module: `provides: [ClientCapabilities.Client, Capabilities.Layer]`, `compatFires: [ClientEvents.ClientReady]`; ClientReady-listeners become `requires: [ClientCapabilities.Client]`; `allOf(SpacesReady, ProgressRegistryReady)` → `activatesOn: SpacesReady` + `requires: [AppCapabilities.ProgressRegistry]`; SetupSchema/SetupMigration windows → multi requires (`AppCapabilities.Schema`, `ClientCapabilities.Migration` flipped to makeMulti); capability bodies swap `Capability.get(...)` for `yield* Tag` and `contributes(...)` for `provide(...)`.
 6. **Testing utils + docs** — testing/withPluginManager.tsx, harness.ts, service.ts accept new-style modules; rewrite the `org.dxos.app-framework.moduleActivationOrdering` idiom doc (plugin.ts:80–95).
-7. **Migrate all remaining plugins (~180 across packages/plugins/*, plus app-framework/app-toolkit stragglers, stories, ui-editor).** Mechanical pattern per plugin, established by Phase 5's plugin-client example:
+7. **Migrate all remaining plugins (~180 across packages/plugins/\*, plus app-framework/app-toolkit stragglers, stories, ui-editor).** Mechanical pattern per plugin, established by Phase 5's plugin-client example:
    - `activatesOn: Startup/Setup*` module → dependency mode (`provides` from what its activate contributes; `requires` from its `Capability.get/waitFor` calls).
    - `activatesOn: <X>Ready` / `allOf(...)` → `requires: [<capability behind the Ready event>]`, keeping `activatesOn` only for genuine runtime events; `firesAfterActivation: [<X>Ready]` → the capability itself (drop the event) or `compatFires` while unmigrated listeners remain mid-PR.
    - Audit each plugin-defined custom event (~10 event modules: plugin-client, plugin-space, plugin-script, plugin-assistant, plugin-attention, plugin-wnfs, plugin-observability, …): runtime occurrences (SpaceCreated, IdentityCreated, …) stay events; ordering-only events (ClientReady-style) are replaced by capabilities and deleted.
@@ -161,12 +169,12 @@ This is a multi-session effort — register it in the project registry (`$projec
 
 Main session: **Fable, high effort** — it orchestrates throughout and implements the core phases directly.
 
-| Phase | Model | Effort | Why |
-|---|---|---|---|
-| 1–3 (tags, module union, manager) | Fable (main session) | high | Edge-of-inference TypeScript (`const` params, `EnsureProvides` intersection, arity branding assignable to `InterfaceDef` repo-wide) and concurrency/deadlock reasoning in the 1700-line manager, where a wrong ordering decision is a flaky boot, not a test failure. Escalate to xhigh only if a specific inference or coexistence problem gets stuck — not as the default. |
-| 4–6 (core migrations, plugin-client example, testing utils) | Fable (main session) | medium–high | Pattern-establishing: errors here multiply across ~180 plugins in Phase 7, so keep in the strong session. |
-| 7 (~180 plugin batches) | Sonnet subagents (`model: sonnet`), worktree-isolated, parallel | medium | Mechanical once plugin-client is the template; the one judgment call per plugin (custom event: runtime occurrence vs ordering-only) needs Sonnet-level care, not Haiku. Fable spot-reviews the first 1–2 batches before scaling out; per-batch build+test gates are the real correctness backstop. |
-| 8 (legacy deletion) + final review | Fable (main session) | high | Deletion is where subtle behavioral dependencies on the old Startup wave surface; the final code-review/verify pass over a diff this size deserves the strongest model. |
+| Phase                                                       | Model                                                           | Effort      | Why                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------------------- | --------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1–3 (tags, module union, manager)                           | Fable (main session)                                            | high        | Edge-of-inference TypeScript (`const` params, `EnsureProvides` intersection, arity branding assignable to `InterfaceDef` repo-wide) and concurrency/deadlock reasoning in the 1700-line manager, where a wrong ordering decision is a flaky boot, not a test failure. Escalate to xhigh only if a specific inference or coexistence problem gets stuck — not as the default. |
+| 4–6 (core migrations, plugin-client example, testing utils) | Fable (main session)                                            | medium–high | Pattern-establishing: errors here multiply across ~180 plugins in Phase 7, so keep in the strong session.                                                                                                                                                                                                                                                                    |
+| 7 (~180 plugin batches)                                     | Sonnet subagents (`model: sonnet`), worktree-isolated, parallel | medium      | Mechanical once plugin-client is the template; the one judgment call per plugin (custom event: runtime occurrence vs ordering-only) needs Sonnet-level care, not Haiku. Fable spot-reviews the first 1–2 batches before scaling out; per-batch build+test gates are the real correctness backstop.                                                                           |
+| 8 (legacy deletion) + final review                          | Fable (main session)                                            | high        | Deletion is where subtle behavioral dependencies on the old Startup wave surface; the final code-review/verify pass over a diff this size deserves the strongest model.                                                                                                                                                                                                      |
 
 The bottleneck in Phase 7 is verification discipline more than model intelligence — budget wall-clock for the `moon` gates and the two end-to-end Composer checks regardless of model.
 
@@ -185,7 +193,7 @@ Changesets: `@dxos/app-framework` and `@dxos/app-toolkit` (major-leaning minor �
 1. `moon run app-framework:test` and `moon run app-toolkit:test`, `moon run plugin-client:test` after each phase.
 2. Full-repo typecheck/build after Phases 1, 4, each Phase-7 wave, and Phase 8: `moon exec --on-failure continue --quiet :build` (Tag/InterfaceDef compatibility is the repo-wide gate until Phase 8).
 3. Full test suite before landing: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`; `moon run :lint -- --fix` + `pnpm format`.
-4. End-to-end: run Composer via storybook/dev app (`moon run storybook-react:serve`) after Phase 5 (mixed legacy/new coexistence) and again after Phase 8 (pure new-world): app boots, spaces load, surfaces/translations/settings render — i.e. the multi-capability registries populated correctly without Setup* windows.
+4. End-to-end: run Composer via storybook/dev app (`moon run storybook-react:serve`) after Phase 5 (mixed legacy/new coexistence) and again after Phase 8 (pure new-world): app boots, spaces load, surfaces/translations/settings render — i.e. the multi-capability registries populated correctly without Setup\* windows.
 
 ## Risks / follow-ups (recorded, not blocking)
 

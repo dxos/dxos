@@ -17,7 +17,6 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { bootLoader, useApp } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
@@ -448,7 +447,6 @@ const main = async () => {
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const defaults = getDefaults(conf);
-  const setupEvents = [AppActivationEvents.SetupSettings];
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
@@ -495,7 +493,6 @@ const main = async () => {
       pluginRegistryProvider,
       plugins,
       defaults,
-      setupEvents,
       cacheEnabled: true,
       safeMode,
       // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),

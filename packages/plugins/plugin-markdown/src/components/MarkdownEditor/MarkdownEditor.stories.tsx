@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Sketch } from '@dxos/plugin-sketch';
@@ -72,7 +71,6 @@ const DefaultStory = (props: StoryArgs) => {
 const withClient = (seed: (client: Client) => Effect.Effect<void>): Decorator =>
   withPluginManager({
     // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
-    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       SketchPlugin(),

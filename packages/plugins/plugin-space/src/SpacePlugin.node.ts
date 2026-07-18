@@ -22,7 +22,7 @@ import {
 
 import { CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
-import { SpaceEvents, type SpacePluginOptions } from '#types';
+import { type SpacePluginOptions } from '#types';
 
 import { database, queue, space } from './commands';
 
@@ -83,8 +83,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activatesOn: ClientEvents.IdentityCreated,
     requires: IdentityCreated.requires,
     provides: IdentityCreated.provides,
-    // Migration bridge for unmigrated PersonalSpaceReady listeners (plugin-onboarding).
-    compatFires: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.make,

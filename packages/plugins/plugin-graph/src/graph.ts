@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -18,12 +18,8 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
 
-    // Legacy contribution window: unmigrated plugins still contribute AppGraphBuilder
-    // extensions via this event. Removed with the legacy API.
-    yield* Plugin.activate(AppActivationEvents.SetupAppGraph);
-
-    // Live view: extensions contributed after this point (by dependency-mode or legacy
-    // modules alike) still reach the subscription below.
+    // Live view: extensions contributed by dependency-mode modules (including those enabled
+    // later in the session) reach this subscription reactively.
     const extensionsByModuleAtom = yield* Capability.atomByModule(AppCapabilities.AppGraphBuilder);
 
     const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
@@ -54,14 +50,11 @@ export default Capability.makeModule(
     setupDevtools(builder.graph);
 
     return [
-      Capability.provide(
-        AppCapabilities.AppGraph,
-        { graph: builder.graph, explore: GraphBuilder.explore },
-        () =>
-          Effect.sync(() => {
-            // clearInterval(interval);
-            unsubscribe();
-          }),
+      Capability.provide(AppCapabilities.AppGraph, { graph: builder.graph, explore: GraphBuilder.explore }, () =>
+        Effect.sync(() => {
+          // clearInterval(interval);
+          unsubscribe();
+        }),
       ),
     ];
   }),

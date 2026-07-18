@@ -16,47 +16,43 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Meeting, MeetingEvents } from '#types';
+import { Meeting } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<void, typeof AppGraphBuilder.requires>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting, AnchoredTo.AnchoredTo] }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSchemaModule<void>({ schema: [Meeting.Meeting, AnchoredTo.AnchoredTo] }),
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(MeetingSettings),
     requires: MeetingSettings.requires,
     provides: MeetingSettings.provides,
-    // Migration bridge for unmigrated SettingsReady listeners.
-    compatFires: [MeetingEvents.SettingsReady],
     activate: MeetingSettings,
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(MeetingState),
     requires: MeetingState.requires,
     provides: MeetingState.provides,
-    // Migration bridge for unmigrated StateReady listeners.
-    compatFires: [MeetingEvents.StateReady],
     activate: MeetingState,
   }),
   Plugin.addLazyModule(CallExtension),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

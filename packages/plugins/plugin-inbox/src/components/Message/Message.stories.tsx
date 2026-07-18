@@ -9,7 +9,6 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Blob, Obj, Ref, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { DXN } from '@dxos/keys';
@@ -92,7 +91,6 @@ const meta = {
   component: DefaultStory,
   decorators: [
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [RemoteImagesEnabledPlugin()],
     }),
     withTheme(),

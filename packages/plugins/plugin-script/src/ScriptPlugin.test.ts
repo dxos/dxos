@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -20,12 +19,15 @@ describe('ScriptPlugin', () => {
       plugins: [ClientPlugin({}), ScriptPlugin()],
     });
 
-    // After autoStart: AppGraphBuilder, CreateObject, schema all auto-cascade.
+    // After autoStart: AppGraphBuilder, CreateObject, schema all auto-cascade. SkillDefinition is a
+    // dependency-mode root, so it activates immediately too.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
+      expect.arrayContaining([
+        moduleId('AppGraphBuilder'),
+        moduleId('CreateObject'),
+        moduleId('schema'),
+        moduleId('SkillDefinition'),
+      ]),
     );
-
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
   });
 });

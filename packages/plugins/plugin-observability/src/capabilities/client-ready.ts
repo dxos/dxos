@@ -4,11 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 // Explicit imports so the emitted `.d.ts` references the packages via their public
 // aliases instead of relative `node_modules` paths (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Observability, ObservabilityProvider } from '@dxos/observability';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 
 import { ObservabilityCapabilities, ObservabilityOperation } from '#types';

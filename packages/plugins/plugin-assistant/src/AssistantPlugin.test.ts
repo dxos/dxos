@@ -10,7 +10,6 @@ import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
@@ -39,22 +38,19 @@ describe('AssistantPlugin', () => {
       plugins: [ClientPlugin({}), AssistantPlugin()],
     });
 
-    // After autoStart: AppGraphBuilder, CreateObject, schema, OperationHandler all auto-cascade.
+    // All dependency-mode roots, so they all activate immediately during the startup dependency pass.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
+      expect.arrayContaining([
+        moduleId('AppGraphBuilder'),
+        moduleId('CreateObject'),
+        moduleId('schema'),
+        moduleId('SkillDefinition'),
+        moduleId('OperationHandler'),
+        moduleId('AiService'),
+        moduleId('AiContext'),
+        moduleId('AgentRuntime'),
+      ]),
     );
-
-    // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own skill.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
-
-    // OperationHandler auto-cascades from ProcessManagerPlugin.
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
-
-    // Process-manager layer specs must activate on SetupProcessManager.
-    expect(harness.manager.getActive()).toContain(moduleId('AiService'));
-    expect(harness.manager.getActive()).toContain(moduleId('AiContext'));
-    expect(harness.manager.getActive()).toContain(moduleId('AgentRuntime'));
 
     // Space-affinity LayerSpec — resolution requires a space context.
     const { personalSpace } = await EffectEx.runAndForwardErrors(
@@ -110,8 +106,6 @@ describe('AssistantPlugin', () => {
       ],
     });
 
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-
     const { personalSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
@@ -153,8 +147,6 @@ describe('AssistantPlugin', () => {
         RoutinePlugin(),
       ],
     });
-
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
 
     const { personalSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
       EffectEx.runAndForwardErrors,

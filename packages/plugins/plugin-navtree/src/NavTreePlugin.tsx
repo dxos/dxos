@@ -11,34 +11,31 @@ import { Graph } from '@dxos/plugin-graph';
 import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { NavTreeEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<void>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(State),
     requires: State.requires,
     provides: State.provides,
-    // Migration bridge for unmigrated StateReady listeners.
-    compatFires: [NavTreeEvents.StateReady],
     activate: State,
   }),
   Plugin.addModule({
@@ -61,7 +58,7 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
     }),
   }),
   Plugin.addLazyModule(Keyboard),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

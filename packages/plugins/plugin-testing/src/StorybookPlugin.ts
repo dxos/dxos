@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import { OperationHandler, State } from '#capabilities';
 import { Layout } from '#components';
@@ -17,12 +17,12 @@ export type StorybookPluginOptions = {
 };
 
 export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<StorybookPluginOptions>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addReactContextModule({
+  AppPlugin.addReactContextModule<StorybookPluginOptions>({
     requires: [],
     provides: [Capabilities.ReactContext],
     activate: () =>
@@ -33,12 +33,10 @@ export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
         }),
       ]),
   }),
-  Plugin.addModule(({ initialState }) => ({
+  Plugin.addModule(({ initialState }: StorybookPluginOptions) => ({
     id: Capability.getModuleTag(State),
     requires: State.requires,
     provides: State.provides,
-    // Migration bridge for unmigrated LayoutReady listeners.
-    compatFires: [AppActivationEvents.LayoutReady],
     activate: () => State({ initialState }),
   })),
   Plugin.make,

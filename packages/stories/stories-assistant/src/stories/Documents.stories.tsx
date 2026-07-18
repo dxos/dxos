@@ -76,7 +76,7 @@ export const WithMarkdown: Story = {
         import('@dxos/plugin-comments/plugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), CommentsPlugin()],
+        plugins: [MarkdownPlugin(), CommentsPlugin({})],
       };
     },
     config: config.remote, // TODO(burdon): Issue making persistent.

@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useRef } from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { configPreset } from '@dxos/config';
 import { Database, Feed, Filter, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
@@ -90,7 +89,6 @@ const meta = {
     withSurfaceDebug(false),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

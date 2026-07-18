@@ -2,6 +2,7 @@
 
 Read first: `DESIGN.md` (context), `PHASE7-WORKLIST.md` (your assignment + event
 classification), and the reference migrations:
+
 - `packages/plugins/plugin-client/src/ClientPlugin.ts` + `src/capabilities/index.ts` (worked example)
 - `packages/plugins/plugin-routine/src/capabilities/{index.ts,layer-specs.ts}` (LayerSpec provider)
 - `packages/sdk/app-framework/src/plugin-process-manager/*` (module with requires + finalizers)
@@ -23,7 +24,7 @@ classification), and the reference migrations:
    - `Capability.contributes(X, impl, deactivate?)` → `Capability.provide(X, impl, deactivate?)`.
      Several entries for one multi capability: keep several `provide` calls or `provideAll`.
    - `contributes(Capabilities.Null, null, () => cleanup)` → `yield* Effect.addFinalizer(() =>
-     cleanup)` + return `[]` (declare `provides: []`).
+cleanup)` + return `[]` (declare `provides: []`).
    - Bodies may conditionally return `[]`/skip a declared provide (runtime warns, not fails).
 3. **Plugin entry files** (`<Name>Plugin.{ts,tsx}` + `.node.ts` + `.workerd.ts` — keep
    variants' specs in sync):
@@ -32,7 +33,7 @@ classification), and the reference migrations:
      `{ compatFires: [E] }` to keep firing a legacy ordering event for unmigrated listeners.
    - Props-taking modules keep the callback form:
      `Plugin.addModule((options) => ({ id: Capability.getModuleTag(X), requires: X.requires,
-     provides: X.provides, activate: () => X(props) }))`.
+provides: X.provides, activate: () => X(props) }))`.
    - AppPlugin helpers: pass `requires: X.requires, provides: X.provides` to opt into
      dependency mode (body-only calls stay legacy — that is NOT migrated). Value-bearing
      helpers (addTranslationsModule/addSchemaModule/addPluginAssetModule/addCommandModule)
@@ -44,7 +45,7 @@ classification), and the reference migrations:
      ProcessManagerReady→Capabilities.OperationInvoker or ProcessManagerRuntime as the body needs,
      ClientReady→ClientCapabilities.Client, StateReady/SettingsReady→that plugin's State/Settings
      capability). Mixed `allOf(<runtime event>, <ordering events>)` → `activatesOn: <runtime
-     event>` + `requires: [...]`. Genuine runtime events (see work-list classification) stay
+event>` + `requires: [...]`. Genuine runtime events (see work-list classification) stay
      `activatesOn`.
    - Modules that other (unmigrated) plugins listen to via `firesAfterActivation: [E]` →
      `compatFires: [E]`.
@@ -76,7 +77,7 @@ classification), and the reference migrations:
   `pnpm add --filter @dxos/<plugin> "@dxos/<pkg>@workspace:*"`.
 - **No casts** (`as any`, non-null `!`) — repo rule. No compatibility re-exports.
 - LayerSpec/TraceSink provider modules: dependency-mode `provides: [Capabilities.LayerSpec,
-  Capabilities.TraceSink]`-style (see plugin-routine reference). Their specs already declare
+Capabilities.TraceSink]`-style (see plugin-routine reference). Their specs already declare
   their own effect-level requires — the MODULE usually needs `requires: []`.
 
 ## Gates (run per plugin; fix everything you break)

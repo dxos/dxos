@@ -8,11 +8,11 @@ import React from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Filter, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
@@ -55,7 +55,6 @@ const meta: Meta<typeof StackArticle> = {
     withMosaic(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),

@@ -8,7 +8,6 @@ import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { Topic } from '@dxos/pipeline-email';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -69,7 +68,6 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

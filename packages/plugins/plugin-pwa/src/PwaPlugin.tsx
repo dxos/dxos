@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const PwaPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: 'register-pwa',
     requires: [Capabilities.OperationInvoker],

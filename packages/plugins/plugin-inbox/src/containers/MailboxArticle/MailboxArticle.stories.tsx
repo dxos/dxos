@@ -10,7 +10,7 @@ import React, { useEffect } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -37,15 +37,15 @@ const MockDeckOperationsPlugin = Plugin.define(
 ).pipe(
   AppPlugin.addOperationHandlerModule({
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.provide(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(
             Operation.withHandler(LayoutOperation.Select, () => Effect.void),
             Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -85,7 +85,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10 } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

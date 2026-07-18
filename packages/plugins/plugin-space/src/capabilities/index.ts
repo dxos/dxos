@@ -5,10 +5,14 @@
 import { Capabilities, Capability } from '@dxos/app-framework';
 // Explicit imports so the emitted `.d.ts` references the packages via their public
 // aliases instead of relative `node_modules` paths (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { PluginManager } from '@dxos/app-framework';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { Graph, GraphBuilder } from '@dxos/app-graph';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationHandlerSet } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -27,7 +31,7 @@ export const CreateObject = Capability.lazyModule(
 );
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
-  { requires: [ClientCapabilities.Client], provides: [] },
+  { requires: [ClientCapabilities.Client], provides: [SpaceCapabilities.PersonalSpace] },
   () => import('./identity-created'),
 );
 export { NavigationHandler } from './navigation-handler';

@@ -8,7 +8,6 @@ import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMe
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
 import { Process, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
@@ -310,7 +309,6 @@ export const Default: Story = {
     withPluginManager({
       // Fire SetupSettings so the assistant settings module activates and contributes
       // `AssistantCapabilities.Settings`, which `TracePanel` reads via `useAtomCapability`.
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Plugin, type Plugin as PluginNS } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import { Capability, type Plugin as PluginNS } from '@dxos/app-framework';
+import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -26,11 +26,8 @@ import { makePluginSpecSubject } from '../plugin-spec';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // `addPluginAssetModule` is dependency-mode (declared in `requires`), so migrated plugins'
-    // assets are already contributed by the time this module runs. The imperative fire below is
-    // a legacy-window shim for plugins whose asset module hasn't migrated yet — it only reaches
-    // listeners still on the old Startup event wave, and is removed with the legacy API.
-    yield* Plugin.activate(AppActivationEvents.SetupPluginAssets);
+    // `addPluginAssetModule` is dependency-mode (declared in `requires`), so every plugin's
+    // asset module is already contributed by the time this module runs.
     // Subscribe to the reactive asset atom so the connector re-runs when a
     // plugin enabled later in the session contributes (or removes) its spec.
     const pluginAssetsAtom = (yield* AppCapabilities.PluginAsset).atom;

@@ -10,27 +10,27 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const RegistryPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<void>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSettingsModule({
+  AppPlugin.addSettingsModule<void>({
     requires: RegistrySettings.requires,
     provides: RegistrySettings.provides,
     activate: RegistrySettings,
   }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(DevPluginLoader),
     requires: DevPluginLoader.requires,

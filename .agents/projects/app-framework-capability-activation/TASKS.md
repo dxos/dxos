@@ -34,18 +34,18 @@ and the legacy API is deleted (Phase 8).
 ## Phase 4 — Core migrations (app-framework common, process-manager, app-toolkit)
 
 - [x] `common/capabilities.ts` arity flips (9 multi: ReactContext, ReactRoot, ReactSurface, Command, Layer, LayerSpec, TraceSink, OperationHandler, UndoMapping)
-- [x] `AppCapabilities.ts` arity flips (15 multi incl. Translations, Schema, AppGraphBuilder, Settings, PluginAsset, SkillDefinition, AiModelResolver, FileUploader, AnchorSort, TextContent, CommentConfig, Navigation*)
+- [x] `AppCapabilities.ts` arity flips (15 multi incl. Translations, Schema, AppGraphBuilder, Settings, PluginAsset, SkillDefinition, AiModelResolver, FileUploader, AnchorSort, TextContent, CommentConfig, Navigation\*)
 - [x] `AppPlugin.addXModule` rewrite: shared `addCapabilityModule` factory; **policy — body-bearing helpers emit dependency mode only when the caller declares `requires`/`provides`** (body-only calls stay legacy until their Phase-7 batch; avoids runtime ProvidesMismatch for bodies contributing extra/foreign capabilities — found: settings bodies also contribute plugin-local Settings; create-object contributes SpaceCapabilities.CreateObjectEntry, so that helper has no default provides). Value-bearing helpers (translations/schema/plugin-asset/command) always dependency-mode via provide/provideAll.
 - [x] process-manager: ProcessManagerPlugin → lazyModule specs + dependency mode (compatFires ProcessManagerReady); capability body → yield* tags, contributions snapshots, reactive OperationHandler atom, Scope finalizer (runtime dispose + layerStack.destroy — resolves TODO); history module → yield* + provide
 - [x] app-toolkit window consumers: none in-toolkit (real consumers live in plugins → Phase 7 foundational wave)
-- [x] Deprecated ordering events (core ActivationEvents + all app-toolkit Setup*/Ready; createStateEvent/createSettingsEvent kept)
+- [x] Deprecated ordering events (core ActivationEvents + all app-toolkit Setup\*/Ready; createStateEvent/createSettingsEvent kept)
 - [x] Gate: app-framework (197) + app-toolkit (82) tests green; full-repo build passed
 
 ## Phase 5 — plugin-client migration (worked example)
 
-- [x] ClientPlugin(.node/.workerd) → new API: lazyModule specs; Client provides [Client, Layer] + compatFires [ClientReady]; ClientReady listeners → requires [Client]; allOf(SpacesReady, ProgressRegistryReady) → activatesOn SpacesReady + requires [ProgressRegistry]; Schema/Migration → makeMulti; SchemaDefs/Migrations compatFires the legacy Setup* windows (bodies subscribe reactively); Plugin.addLazyModule sugar added
+- [x] ClientPlugin(.node/.workerd) → new API: lazyModule specs; Client provides [Client, Layer] + compatFires [ClientReady]; ClientReady listeners → requires [Client]; allOf(SpacesReady, ProgressRegistryReady) → activatesOn SpacesReady + requires [ProgressRegistry]; Schema/Migration → makeMulti; SchemaDefs/Migrations compatFires the legacy Setup\* windows (bodies subscribe reactively); Plugin.addLazyModule sugar added
 - [x] Capability bodies: `Capability.get` → `yield*`; `contributes` → `provide`/`provideAll`; Null-contribution deactivate → Scope finalizers
-- [x] Fallout fixes: legacy fires* fields → readonly (const-inference of literals); helper legacy activate arm regained Scope.Scope in R; TS2883 type-naming imports (+ @dxos/operation, @dxos/progress deps); stray makeModule type-arg in operation-handler
+- [x] Fallout fixes: legacy fires\* fields → readonly (const-inference of literals); helper legacy activate arm regained Scope.Scope in R; TS2883 type-naming imports (+ @dxos/operation, @dxos/progress deps); stray makeModule type-arg in operation-handler
 - [x] **Gate integrity fix: earlier "full-repo build passed" results for Phases 2–4 were pipe-masked exit codes.** Re-ran honestly after Phase 5: EXIT=0, zero TS errors repo-wide. app-framework 197 / app-toolkit 82 / plugin-client tests green.
 - [x] e2e Composer check (mixed coexistence) — **PASSED after fixes** (headless chromium against dev server; `treeView.userAccount` gate, stable across fresh contexts; A/B-verified against base commit ea1708639b by in-place file restore). Findings → fixes:
   1. Strict runtime ProvidesMismatch broke conditional providers (HubHttpClient returns [] without DX_HUB_URL) and auto-disabled plugin-client → **missing declared provides now warns; undeclared still fails** (static coverage check unchanged — conditional bodies pass via return-type union).
@@ -63,7 +63,8 @@ and the legacy API is deleted (Phase 8).
 Foundational wave first (plugin-space, plugin-graph, plugin-settings, plugin-deck/layout,
 plugin-attention), then leaf batches (parallel Sonnet subagents, worktree-isolated).
 Per-plugin pattern + custom-event audit: DESIGN.md Phase 7. Gate per batch: `moon run <pkg>:build`
-+ `:test`; full build after each wave.
+
+- `:test`; full build after each wave.
 
 Docs: [PHASE7-WORKLIST.md](./PHASE7-WORKLIST.md) (inventory + batches + event classification),
 [MIGRATION-BRIEF.md](./MIGRATION-BRIEF.md) (per-plugin recipe given to every batch agent).
@@ -86,7 +87,7 @@ Gate recipe per wave: per-package build+test → framework suites → Composer b
 - [x] Special case: plugin-assistant (+.node/.workerd) — 3 LayerSpec providers (ai-context, agent-service, ai-service); hybrid `get(yield* Capability.get(State))` in app-graph-builder.ts collapsed to hoisted atoms (:99 action-closure get is fine, :141-142 was the real violation); EdgeModelResolver/LocalModelResolver → dependency-mode (AiModelResolver already multi); AssistantEvents.SetupAiServiceProviders deprecated; SetupArtifactDefinition firesBeforeActivation dropped (all producers already migrated, confirmed via repo-wide grep); CompanionChatProvisioner's 4-event allOf → 7 requires (drops event entirely)
 - [x] Special case: plugin-observability — architectural decision: plugin-client depends on plugin-observability (confirmed via subagent + repo cycle checker), so mirrored `ObservabilityCapabilities.ClientCapability`/`IdentityCreatedEvent` (by identifier, already precedented for ClientCapability) instead of a real package dep; found+fixed a genuine duplicate-provider bug (both `observability` Startup module and `client-ready` module contributed the singleton `ObservabilityCapabilities.Observability`) by consolidating to one owner; ClientReadyEvent deprecated
 - [ ] Special case: plugin-code (imperative SetupPluginAssets fire) — not in this batch's scope
-- [ ] Scaffolding: app-toolkit playground, stories-*, story-modules
+- [ ] Scaffolding: app-toolkit playground, stories-\*, story-modules
 - [ ] ui-editor: confirmed out of scope (CodeMirror ViewPlugin, not app-framework)
 
 ## Phase 8 — Delete legacy API + scaffolding
@@ -105,7 +106,7 @@ Gate recipe per wave: per-package build+test → framework suites → Composer b
 
 - Committed through 38f3a26d63 (batches 9+10 + specials). UNCOMMITTED in tree: final sweep
   (connector, bookmarks, plugin-files dead-code deletion, scaffolding + storybook fixtures;
-  residual fires* grep EMPTY) and plugin-routine remainder (agent in flight).
+  residual fires\* grep EMPTY) and plugin-routine remainder (agent in flight).
 - Next steps for the driving session (delegate everything heavy to Sonnet agents):
   1. When routine agent completes: one agent runs the boot gate (recipe above; probe
      manager legacyRemaining — must be [] except plugin-comments story stub) and reports.

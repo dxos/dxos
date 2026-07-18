@@ -82,36 +82,26 @@ export const isPluginModule = (value: unknown): value is PluginModule => {
  * Normalized activation specification of a module — how and when it activates.
  *
  * - `dependency`: activates during the startup dependency-resolution pass, topologically
- *   ordered by the capability graph (providers of `requires` activate first).
+ *   ordered by the capability graph (providers of `requires` activate first). A module
+ *   with no `requires` is a root, triggered at startup.
  * - `event`: activates when a runtime event fires; `requires` are resolved on demand.
- * - `legacy`: activates on an event with hand-wired `firesBeforeActivation` /
- *   `firesAfterActivation` ordering. Scaffolding for the migration; removed once all
- *   plugins declare capability dependencies.
  */
 export type ActivationSpec =
   | {
       readonly mode: 'dependency';
       readonly requires: readonly Capability.AnyTag[];
       readonly provides: readonly Capability.AnyTag[];
-      readonly compatFires?: readonly ActivationEvent.ActivationEvent[];
     }
   | {
       readonly mode: 'event';
       readonly activatesOn: ActivationEvent.Events;
       readonly requires: readonly Capability.AnyTag[];
       readonly provides: readonly Capability.AnyTag[];
-      readonly compatFires?: readonly ActivationEvent.ActivationEvent[];
-    }
-  | {
-      readonly mode: 'legacy';
-      readonly activatesOn: ActivationEvent.Events;
-      readonly firesBeforeActivation?: readonly ActivationEvent.ActivationEvent[];
-      readonly firesAfterActivation?: readonly ActivationEvent.ActivationEvent[];
     };
 
 /**
- * What a module's activate may produce at runtime: legacy capability contributions or
- * typed {@link Capability.Contribution}s.
+ * What a module's activate may produce at runtime: raw capability entries (see
+ * {@link Capability.ModuleReturn}) or typed {@link Capability.Contribution}s.
  */
 export type ModuleActivateResult = Capability.ModuleReturn | readonly Capability.AnyContribution[];
 
@@ -143,21 +133,6 @@ export interface PluginModule {
   readonly activation: ActivationSpec;
 
   /**
-   * @deprecated Read {@link activation}. Undefined for dependency-mode modules.
-   */
-  readonly activatesOn?: ActivationEvent.Events;
-
-  /**
-   * @deprecated Read {@link activation}. Only set for legacy modules.
-   */
-  readonly firesBeforeActivation?: readonly ActivationEvent.ActivationEvent[];
-
-  /**
-   * @deprecated Read {@link activation}. Only set for legacy modules.
-   */
-  readonly firesAfterActivation?: readonly ActivationEvent.ActivationEvent[];
-
-  /**
    * Called when the module is activated.
    * Declared `requires` are provided as Effect services; CapabilityManager and PluginManager
    * are ambient (Capability.Service, Plugin.Service).
@@ -168,21 +143,6 @@ export interface PluginModule {
     props?: any,
   ) => Effect.Effect<ModuleActivateResult, Error, Capability.Service | Service | Scope.Scope | never>;
 }
-
-/**
- * Legacy module authoring shape (event-driven with hand-wired ordering).
- * @deprecated Declare `provides`/`requires` (dependency mode) or `activatesOn` +
- *   `requires`/`provides` (runtime-event mode) instead.
- */
-export type PluginModuleOptions = {
-  id?: string;
-  activatesOn: ActivationEvent.Events;
-  firesBeforeActivation?: readonly ActivationEvent.ActivationEvent[];
-  firesAfterActivation?: readonly ActivationEvent.ActivationEvent[];
-  activate: (
-    props?: any,
-  ) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | Scope.Scope | never>;
-};
 
 /**
  * Structural authoring shape for typed modules. A module without `requires` is a root,
@@ -198,13 +158,6 @@ export type TypedModuleOptions = {
   readonly activatesOn?: ActivationEvent.Events;
   readonly requires?: readonly Capability.AnyTag[];
   readonly provides?: readonly Capability.AnyTag[];
-  readonly firesBeforeActivation?: never;
-  readonly firesAfterActivation?: never;
-  /**
-   * Legacy events fired by the framework after this module activates.
-   * Migration bridge for unmigrated listeners; removed with the legacy API.
-   */
-  readonly compatFires?: readonly ActivationEvent.ActivationEvent[];
   readonly activate: (props?: any) => Effect.Effect<any, any, any>;
 };
 
@@ -213,11 +166,10 @@ type OptProvides<Opts> = Opts extends { provides: infer P extends readonly Capab
 
 /**
  * Validates typed module options: evaluates to `true` for a valid module, otherwise to an
- * unconstructible branded type naming the violation. Checks that the options match one of
- * the two activation modes, that activate's environment only uses declared `requires`, that
- * its error channel extends `Error`, and that its return exactly covers the declared
- * `provides`. Options with no capability declarations are legacy and validate as `true`
- * (the runtime normalizer classifies them).
+ * unconstructible branded type naming the violation. Checks that activate's environment only
+ * uses declared `requires`, that its error channel extends `Error`, and that its return
+ * exactly covers the declared `provides`. Options with no capability declarations are a
+ * dependency-mode startup root and validate as `true` (the runtime normalizer classifies them).
  *
  * Applied on {@link addModule}'s return type (not intersected with the parameter): inference
  * of `Opts` from an options object containing inline generator activates fails when the
@@ -259,11 +211,8 @@ export type ValidateModuleOptions<Opts extends TypedModuleOptions> = Opts extend
 export type ModuleEntry = {
   readonly id?: string;
   readonly activatesOn?: ActivationEvent.Events;
-  readonly firesBeforeActivation?: readonly ActivationEvent.ActivationEvent[];
-  readonly firesAfterActivation?: readonly ActivationEvent.ActivationEvent[];
   readonly requires?: readonly Capability.AnyTag[];
   readonly provides?: readonly Capability.AnyTag[];
-  readonly compatFires?: readonly ActivationEvent.ActivationEvent[];
   readonly activate: (props?: any) => Effect.Effect<any, Error, any>;
 };
 
@@ -277,21 +226,6 @@ class PluginModuleImpl implements PluginModule {
     this.id = options.id;
     this.activation = options.activation;
     this.activate = options.activate;
-  }
-
-  /** @deprecated Read {@link activation}. */
-  get activatesOn(): ActivationEvent.Events | undefined {
-    return this.activation.mode === 'dependency' ? undefined : this.activation.activatesOn;
-  }
-
-  /** @deprecated Read {@link activation}. */
-  get firesBeforeActivation(): readonly ActivationEvent.ActivationEvent[] | undefined {
-    return this.activation.mode === 'legacy' ? this.activation.firesBeforeActivation : undefined;
-  }
-
-  /** @deprecated Read {@link activation}. */
-  get firesAfterActivation(): readonly ActivationEvent.ActivationEvent[] | undefined {
-    return this.activation.mode === 'legacy' ? this.activation.firesAfterActivation : undefined;
   }
 }
 
@@ -453,14 +387,10 @@ export function addModule<T, const Opts extends Types.NoExcessProperties<TypedMo
 ): true extends ValidateModuleOptions<Opts>
   ? (builder: PluginBuilder<T>) => PluginBuilder<T>
   : ValidateModuleOptions<Opts>;
-/** @deprecated Declare capability dependencies instead of legacy event wiring. */
-export function addModule<T>(
-  moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions),
-): (builder: PluginBuilder<T>) => PluginBuilder<T>;
-/** @deprecated Declare capability dependencies instead of legacy event wiring. */
+/** Direct-call variant of the typed overload above (see {@link PluginBuilder.addModule}). */
 export function addModule<T>(
   builder: PluginBuilder<T>,
-  moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+  moduleOptions: TypedModuleOptions | ((options: T) => TypedModuleOptions),
 ): PluginBuilder<T>;
 export function addModule<T>(
   moduleOptionsOrBuilder: ModuleEntry | ((options: T) => ModuleEntry) | PluginBuilder<T>,
@@ -481,16 +411,11 @@ export function addModule<T>(
  * Dependency-mode by default; pass `activatesOn` for a runtime-event module.
  */
 export const addLazyModule =
-  <
-    Requires extends readonly Capability.AnyTag[],
-    Provides extends readonly Capability.AnyTag[],
-    T = void,
-  >(
+  <Requires extends readonly Capability.AnyTag[], Provides extends readonly Capability.AnyTag[], T = void>(
     module: Capability.LazyModule<void, Requires, Provides>,
     options?: {
       id?: string;
       activatesOn?: ActivationEvent.Events;
-      compatFires?: readonly ActivationEvent.ActivationEvent[];
     },
   ) =>
   (builder: PluginBuilder<T>): PluginBuilder<T> =>
@@ -499,43 +424,23 @@ export const addLazyModule =
       activatesOn: options?.activatesOn,
       requires: module.requires,
       provides: module.provides,
-      compatFires: options?.compatFires,
       activate: module,
     });
 
 export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
 
 /**
- * Normalizes an authoring record to an {@link ActivationSpec}.
- * Modules declaring `provides`/`requires` (even empty) are dependency- or event-mode;
- * everything else is legacy. Dependency mode requires `provides` as its discriminant.
+ * Normalizes an authoring record to an {@link ActivationSpec}. `activatesOn` selects event
+ * mode; otherwise the module is a dependency-mode chain member (a root — activating at
+ * startup — when `requires` is empty).
  */
-const normalizeActivation = (meta: Meta, options: ModuleEntry): ActivationSpec => {
-  const declared = options.provides !== undefined || options.requires !== undefined;
-  if (!declared) {
-    invariant(
-      options.activatesOn !== undefined,
-      `Module missing activatesOn or provides/requires. Plugin: ${meta.profile.key}`,
-    );
-    return {
-      mode: 'legacy',
-      activatesOn: options.activatesOn,
-      firesBeforeActivation: options.firesBeforeActivation,
-      firesAfterActivation: options.firesAfterActivation,
-    };
-  }
-
-  invariant(
-    options.firesBeforeActivation === undefined && options.firesAfterActivation === undefined,
-    `fires{Before,After}Activation are legacy-only; declare requires/compatFires. Plugin: ${meta.profile.key}`,
-  );
+const normalizeActivation = (options: ModuleEntry): ActivationSpec => {
   if (options.activatesOn !== undefined) {
     return {
       mode: 'event',
       activatesOn: options.activatesOn,
       requires: options.requires ?? [],
       provides: options.provides ?? [],
-      compatFires: options.compatFires,
     };
   }
 
@@ -546,7 +451,6 @@ const normalizeActivation = (meta: Meta, options: ModuleEntry): ActivationSpec =
     mode: 'dependency',
     requires: options.requires ?? [],
     provides: options.provides ?? [],
-    compatFires: options.compatFires,
   };
 };
 
@@ -572,7 +476,7 @@ const resolveModule = (
   );
   return new PluginModuleImpl({
     id,
-    activation: normalizeActivation(meta, moduleOptions),
+    activation: normalizeActivation(moduleOptions),
     // Erasure boundary: the authoring layer constrained the effect's environment to the
     // declared requires; the manager supplies exactly those services plus the ambient ones.
     activate: moduleOptions.activate as PluginModule['activate'],

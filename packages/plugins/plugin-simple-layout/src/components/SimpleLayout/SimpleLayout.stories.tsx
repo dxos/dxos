@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { SearchPlugin } from '@dxos/plugin-search/testing';
@@ -19,14 +18,12 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { ReactRoot, ReactSurface, State } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import { SimpleLayoutEvents } from '#types';
 
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { SimpleLayout } from './SimpleLayout';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({
-    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({
@@ -46,8 +43,6 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
           id: Capability.getModuleTag(State),
           requires: State.requires,
           provides: State.provides,
-          // Migration bridge for unmigrated StateReady/LayoutReady listeners.
-          compatFires: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
           activate: () => State({ initialState: { isPopover } }),
         })),
         Plugin.addLazyModule(ReactRoot),

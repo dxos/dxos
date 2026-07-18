@@ -7,12 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 // Explicit imports so the emitted `.d.ts` references the packages via their public aliases
 // instead of relative `node_modules` paths (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Graph, type GraphBuilder } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation, NotFound, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';

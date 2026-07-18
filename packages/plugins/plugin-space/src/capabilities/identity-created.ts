@@ -12,6 +12,8 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
+import { SpaceCapabilities } from '#types';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
@@ -29,5 +31,7 @@ export default Capability.makeModule(
         Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
       }
     });
+
+    return [Capability.provide(SpaceCapabilities.PersonalSpace, personalSpace)];
   }),
 );

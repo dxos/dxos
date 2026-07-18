@@ -15,8 +15,9 @@ import { meta } from '#meta';
 
 // Import only the (lightweight) Video type directly — NOT via the `#types` barrel. The barrel also
 // evaluates `VideoOperation`, which pulls the `@dxos/ai` stack; importing that here would drag the
-// whole AI stack into early boot (this module activates on SetupAppGraph). The operations are
-// lazy-imported in the action handlers below, so `@dxos/ai` only loads when a menu item is invoked.
+// whole AI stack into early boot (this module contributes `AppCapabilities.AppGraphBuilder`). The
+// operations are lazy-imported in the action handlers below, so `@dxos/ai` only loads when a menu
+// item is invoked.
 import * as Video from '../types/Video';
 
 /**

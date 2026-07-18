@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -21,10 +20,10 @@ describe('MeetingPlugin', () => {
     });
 
     // AppGraphBuilder requires CallsCapabilities.Manager, which the headless (node) variant of
-    // plugin-calls does not provide, so it does not activate in this harness.
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]));
-
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
+    // plugin-calls does not provide, so it does not activate in this harness. OperationHandler is a
+    // dependency-mode root, so it activates immediately.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface'), moduleId('OperationHandler')]),
+    );
   });
 });

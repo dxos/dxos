@@ -25,38 +25,38 @@ import { Sheet } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<void>({
     requires: SkillDefinition.requires,
     provides: SkillDefinition.provides,
     activate: SkillDefinition,
   }),
-  AppPlugin.addCommentConfigModule({
+  AppPlugin.addCommentConfigModule<void>({
     requires: CommentConfig.requires,
     provides: CommentConfig.provides,
     activate: CommentConfig,
   }),
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<void>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addUndoMappingsModule({
+  AppPlugin.addUndoMappingsModule<void>({
     requires: UndoMappings.requires,
     provides: UndoMappings.provides,
     activate: UndoMappings,
   }),
-  AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSchemaModule<void>({ schema: [Sheet.Sheet] }),
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(SheetState),
     requires: SheetState.requires,
@@ -81,7 +81,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     provides: AnchorSort.provides,
     activate: AnchorSort,
   }),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

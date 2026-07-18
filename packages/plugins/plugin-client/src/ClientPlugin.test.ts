@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 // #plugin resolves to ClientPlugin.node.ts under the source condition used by vitest.
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -19,11 +18,10 @@ describe('ClientPlugin', () => {
       plugins: [ClientPlugin({})],
     });
 
-    // The CLI variant activates Client and SchemaDefs on startup.
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('Client'), moduleId('SchemaDefs')]));
-
-    // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
+    // All three are dependency-mode roots (no requires), so they activate during the startup
+    // dependency pass without waiting on any event.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('Client'), moduleId('SchemaDefs'), moduleId('OperationHandler')]),
+    );
   });
 });

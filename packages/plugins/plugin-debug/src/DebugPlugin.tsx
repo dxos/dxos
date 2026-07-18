@@ -14,30 +14,30 @@ import { type DebugPluginOptions } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<DebugPluginOptions, typeof AppGraphBuilder.requires>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSettingsModule({
+  AppPlugin.addSettingsModule<DebugPluginOptions>({
     requires: DebugSettings.requires,
     provides: DebugSettings.provides,
     activate: DebugSettings,
   }),
-  Plugin.addModule(({ logStore }) => ({
+  Plugin.addModule(({ logStore }: DebugPluginOptions) => ({
     id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: () => ReactSurface({ logStore }),
   })),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ persistStats }) => ({
+  AppPlugin.addTranslationsModule<DebugPluginOptions>({ translations }),
+  Plugin.addModule(({ persistStats }: DebugPluginOptions) => ({
     id: 'stats-panel',
     requires: StatsPanel.requires,
     provides: StatsPanel.provides,
     activate: () => StatsPanel({ persist: persistStats ?? true }),
   })),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<DebugPluginOptions>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

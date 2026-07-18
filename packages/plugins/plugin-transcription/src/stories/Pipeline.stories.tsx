@@ -25,7 +25,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -45,7 +45,7 @@ import {
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -112,7 +112,7 @@ const StoryGraphPlugin = () =>
                 .filter(isNonNullable);
             }),
         });
-        return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+        return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
       }),
     }),
     Plugin.make,
@@ -303,7 +303,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

@@ -3,7 +3,7 @@
 //
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
@@ -41,13 +41,9 @@ import { type AssistantPluginOptions } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-// Legacy compat window kept for any straggling unmigrated listener; the sole in-plugin
-// consumer (CompanionChatProvisioner) now requires `AssistantCapabilities.State` directly.
-const StateReady = AppActivationEvents.createStateEvent(meta.profile.key);
-
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    AppPlugin.addAppGraphModule({
+    AppPlugin.addAppGraphModule<AssistantPluginOptions | void>({
       requires: AppGraphBuilder.requires,
       provides: AppGraphBuilder.provides,
       activate: AppGraphBuilder,
@@ -57,22 +53,22 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       provides: NavigationResolver.provides,
       activate: NavigationResolver,
     }),
-    AppPlugin.addSkillDefinitionModule({
+    AppPlugin.addSkillDefinitionModule<AssistantPluginOptions | void>({
       requires: SkillDefinition.requires,
       provides: SkillDefinition.provides,
       activate: SkillDefinition,
     }),
-    AppPlugin.addCreateObjectModule({
+    AppPlugin.addCreateObjectModule<AssistantPluginOptions | void>({
       requires: CreateObject.requires,
       provides: CreateObject.provides,
       activate: CreateObject,
     }),
-    AppPlugin.addOperationHandlerModule({
+    AppPlugin.addOperationHandlerModule<AssistantPluginOptions | void>({
       requires: OperationHandler.requires,
       provides: OperationHandler.provides,
       activate: OperationHandler,
     }),
-    AppPlugin.addSchemaModule({
+    AppPlugin.addSchemaModule<AssistantPluginOptions | void>({
       schema: [
         Chat.Chat,
         Chat.CompanionTo,
@@ -90,13 +86,17 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Text.Text,
       ],
     }),
-    AppPlugin.addSettingsModule({ requires: Settings.requires, provides: Settings.provides, activate: Settings }),
-    AppPlugin.addSurfaceModule({
+    AppPlugin.addSettingsModule<AssistantPluginOptions | void>({
+      requires: Settings.requires,
+      provides: Settings.provides,
+      activate: Settings,
+    }),
+    AppPlugin.addSurfaceModule<AssistantPluginOptions | void>({
       requires: ReactSurface.requires,
       provides: ReactSurface.provides,
       activate: ReactSurface,
     }),
-    AppPlugin.addTranslationsModule({ translations }),
+    AppPlugin.addTranslationsModule<AssistantPluginOptions | void>({ translations }),
     Plugin.addModule({
       id: 'automation-templates',
       requires: AutomationTemplates.requires,
@@ -115,8 +115,6 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       //   Should settings store be renamed to be more generic?
       requires: AssistantState.requires,
       provides: AssistantState.provides,
-      // Migration bridge for any unmigrated `StateReady` listener.
-      compatFires: [StateReady],
       activate: AssistantState,
     }),
     Plugin.addModule({
@@ -129,7 +127,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       provides: LocalModelResolver.provides,
       activate: LocalModelResolver,
     }),
-    Plugin.addModule((options) => ({
+    Plugin.addModule((options: AssistantPluginOptions | void) => ({
       id: Capability.getModuleTag(AiService),
       requires: AiService.requires,
       provides: AiService.provides,
@@ -177,7 +175,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       provides: Connector.provides,
       activate: Connector,
     }),
-    AppPlugin.addPluginAssetModule({
+    AppPlugin.addPluginAssetModule<AssistantPluginOptions | void>({
       asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
     }),
     Plugin.make,

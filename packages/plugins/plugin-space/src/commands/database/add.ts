@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { type Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
@@ -43,7 +43,9 @@ export const add: Command.Command<
       const manager = yield* Plugin.Service;
       const { db } = yield* Database.Service;
 
-      yield* manager.activate(AppActivationEvents.SetupSchema);
+      // Ensures the dependency pass has run so `SpaceCapabilities.CreateObjectEntry` providers
+      // (dependency-mode modules) have contributed before they're queried below.
+      yield* manager.start();
 
       const resolve = (typename: string) => {
         const entry = manager.capabilities

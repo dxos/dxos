@@ -148,7 +148,9 @@ export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capab
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.makeMulti<BuilderExtensions>('org.dxos.app-framework.capability.appGraphBuilder');
+export const AppGraphBuilder = Capability$.makeMulti<BuilderExtensions>(
+  'org.dxos.app-framework.capability.appGraphBuilder',
+);
 
 export type Settings = {
   prefix: string;
@@ -192,16 +194,17 @@ export const Toolkit = Capability$.makeMulti<Toolkit>('org.dxos.app-framework.ca
 /**
  * @category Capability
  */
-export const SkillDefinition = Capability$.makeMulti<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
+export const SkillDefinition = Capability$.makeMulti<Skill.Definition>(
+  'org.dxos.app-framework.capability.skillDefinition',
+);
 
 /**
  * A static asset bundled with a plugin's published package, exposed for
  * other plugins to read.
  *
  * Contributors import the raw file (e.g. `import spec from '../PLUGIN.mdl?raw'`)
- * and contribute it via this capability on
- * {@link AppActivationEvents.SetupPluginAssets}. Consumers read all
- * contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
+ * and contribute it via this capability from a dependency-mode module. Consumers
+ * read all contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
  */
 export type PluginAsset = Readonly<{
   /** Owning plugin id (matches `Plugin.Meta.id`). */

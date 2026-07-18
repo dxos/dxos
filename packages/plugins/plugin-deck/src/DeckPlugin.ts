@@ -5,7 +5,7 @@
 import { setAutoFreeze } from 'immer';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -20,7 +20,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { DeckEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -31,43 +30,39 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 setAutoFreeze(false);
 
 export const DeckPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<void>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(DeckSettings),
     requires: DeckSettings.requires,
     provides: DeckSettings.provides,
-    // Migration bridge for unmigrated SettingsReady listeners.
-    compatFires: [DeckEvents.SettingsReady],
     activate: DeckSettings,
   }),
-  Plugin.addLazyModule(CheckAppScheme),
+  Plugin.addLazyModule<typeof CheckAppScheme.requires, typeof CheckAppScheme.provides, void>(CheckAppScheme),
   Plugin.addModule({
     id: Capability.getModuleTag(DeckState),
     requires: DeckState.requires,
     provides: DeckState.provides,
-    // Migration bridge for unmigrated LayoutReady/StateReady listeners.
-    compatFires: [AppActivationEvents.LayoutReady, DeckEvents.StateReady],
     activate: DeckState,
   }),
   Plugin.addLazyModule(ReactRoot),
   Plugin.addLazyModule(UrlHandler),
   Plugin.addLazyModule(NotificationTracker),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

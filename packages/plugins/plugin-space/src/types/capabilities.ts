@@ -50,6 +50,9 @@ export namespace SpaceCapabilities {
     `${meta.profile.key}.capability.ephemeral-state`,
   );
 
+  /** The personal space, contributed once the `IdentityCreated` module has created it. */
+  export const PersonalSpace = Capability.make<Space>(`${meta.profile.key}.capability.personal-space`);
+
   export type SettingsSection = { id: string; label: Label; position?: Position.Position };
   export const SettingsSection = Capability.make<SettingsSection>(`${meta.profile.key}.capability.settings-section`);
 

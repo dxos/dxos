@@ -11,6 +11,7 @@ import { Blob, Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space';
 

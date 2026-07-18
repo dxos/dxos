@@ -11,6 +11,7 @@ No package outside the two references has adopted requires/provides yet (~89 to 
 ## Custom ActivationEvent classification
 
 RUNTIME OCCURRENCE (stay events):
+
 - `ClientEvents.IdentityCreated` — fired by `plugin-client/src/operations/create-identity.ts:26`
 - `ClientEvents.SpacesReady` — fired by client.ts spaces subscription
 - `SpaceEvents.SpaceCreated` — fired by `plugin-space/src/operations/create.ts:54` AND `plugin-onboarding/src/capabilities/default-content.ts:50`
@@ -18,6 +19,7 @@ RUNTIME OCCURRENCE (stay events):
 - `ScriptEvents.SetupCompiler` — fired imperatively by `plugin-script/src/hooks/useCompiler.ts:21` (on-demand compiler load)
 
 ORDERING-ONLY (replace with requires/provides; keep exported+deprecated until Phase 8):
+
 - `ClientEvents.ClientReady`, `ClientEvents.SetupMigration` (compat bridges already), `ClientEvents.SetupSchema` (DEAD — never fired; drop when touched)
 - `SpaceEvents.PersonalSpaceReady` (consumed by plugin-onboarding), `SpaceEvents.SetupSettingsPanel`
 - `AttentionEvents.AttentionReady` → `requires: [AttentionCapabilities.Attention]` (consumers: space, markdown, trip, commerce, inbox, ibkr, magazine)

@@ -49,7 +49,6 @@ describe('Plugin module authoring', () => {
       assert(module.activation.mode === 'dependency');
       expect(module.activation.requires).toEqual([String, Number]);
       expect(module.activation.provides).toEqual([Total]);
-      expect(module.activatesOn).toBeUndefined();
       expect(module.id).toEqual('org.dxos.plugin.test.module.total');
     });
 
@@ -76,12 +75,14 @@ describe('Plugin module authoring', () => {
           Context.add(String, { string: 'abc' }),
           Context.add(Number, { number: 2 }),
         );
-        const result = yield* module.activate().pipe(
-          Effect.provide(requires),
-          Effect.provideService(Capability.Service, manager.capabilities),
-          Effect.provideService(Plugin.Service, manager),
-          Effect.scoped,
-        );
+        const result = yield* module
+          .activate()
+          .pipe(
+            Effect.provide(requires),
+            Effect.provideService(Capability.Service, manager.capabilities),
+            Effect.provideService(Plugin.Service, manager),
+            Effect.scoped,
+          );
         assert(Array.isArray(result));
         const entries = Capability.expandContributions(result);
         expect(entries).toHaveLength(1);
@@ -126,31 +127,11 @@ describe('Plugin module authoring', () => {
       assert(module.activation.mode === 'event');
       expect(module.activation.activatesOn).toEqual(CountEvent);
       expect(module.activation.requires).toEqual([String]);
-      expect(module.activatesOn).toEqual(CountEvent);
-    });
-  });
-
-  describe('legacy mode', () => {
-    it('legacy options still compile and normalize', () => {
-      const Test = Plugin.make(
-        Plugin.define(testMeta).pipe(
-          Plugin.addModule({
-            id: 'legacy',
-            activatesOn: CountEvent,
-            firesAfterActivation: [ActivationEvent.make('org.dxos.test.after')],
-            activate: () => Effect.succeed(Capability.contributes(String, { string: 'legacy' })),
-          }),
-        ),
-      );
-      const [module] = Test().modules;
-      assert(module.activation.mode === 'legacy');
-      expect(module.activatesOn).toEqual(CountEvent);
-      expect(module.firesAfterActivation).toHaveLength(1);
     });
   });
 
   describe('type-level enforcement', () => {
-    it('accepts requires-only chain members and rejects invalid shapes', () => {
+    it('accepts requires-only chain members', () => {
       const builder = Plugin.define(testMeta);
 
       builder.pipe(
@@ -167,23 +148,6 @@ describe('Plugin module authoring', () => {
       assert(chainMember.activation.mode === 'dependency');
       expect(chainMember.activation.requires).toEqual([String]);
       expect(chainMember.activation.provides).toEqual([]);
-
-      builder.pipe(
-        // fires* wiring cannot be combined with capability declarations.
-        Plugin.addModule({
-          id: 'mixed',
-          activatesOn: CountEvent,
-          // @ts-expect-error legacy options do not accept requires.
-          requires: [String],
-          firesAfterActivation: [CountEvent],
-          activate: () => Effect.void,
-        }),
-      );
-
-      // The type errors above do not stop execution; the runtime normalizer rejects the
-      // invalid shapes when the plugin factory resolves its modules.
-      expect(builder.modules).toHaveLength(2);
-      expect(() => Plugin.make(builder)()).toThrow();
     });
 
     it('rejects an activate that does not cover its provides', () => {

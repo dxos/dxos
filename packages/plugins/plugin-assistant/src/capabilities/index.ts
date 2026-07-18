@@ -2,13 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { AiModelResolver } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Graph, GraphBuilder } from '@dxos/app-graph';
 // Explicit imports so the emitted `.d.ts` references the packages via their public
 // aliases instead of relative `node_modules` paths (TS2883).
-import type { Graph, GraphBuilder } from '@dxos/app-graph';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential, LayerSpec, OperationHandlerSet, Skill } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';

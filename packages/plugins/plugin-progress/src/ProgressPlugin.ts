@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
+import { AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 
 import { ProgressRegistry, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -14,8 +14,6 @@ export const ProgressPlugin = Plugin.define(meta).pipe(
     id: 'progress-registry',
     requires: [Capabilities.AtomRegistry],
     provides: [AppCapabilities.ProgressRegistry],
-    // Migration bridge for unmigrated ProgressRegistryReady listeners.
-    compatFires: [AppActivationEvents.ProgressRegistryReady],
     activate: () => ProgressRegistry(),
   }),
   Plugin.addModule({

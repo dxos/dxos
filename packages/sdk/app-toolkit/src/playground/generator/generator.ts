@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 
 import { AppPlugin } from '../../app-framework';
 
-export const Number = Capability.make<number>('org.dxos.test.generator.number');
+export const Number = Capability.makeMulti<number>('org.dxos.test.generator.number');
 
 export const CountEvent = ActivationEvent.make('org.dxos.test.generator.count');
 
@@ -30,7 +30,7 @@ export const createNumberPlugin = (id: string) => {
   const AlertOperation = createAlertOperation(pluginId);
 
   return Plugin.define(Plugin.makeMeta({ key: pluginId, name: `Plugin ${DXN.getName(pluginId)}` })).pipe(
-    AppPlugin.addOperationHandlerModule({
+    AppPlugin.addOperationHandlerModule<void>({
       provides: [Capabilities.OperationHandler],
       activate: () =>
         Effect.succeed([
@@ -45,7 +45,8 @@ export const createNumberPlugin = (id: string) => {
     Plugin.addModule({
       id: 'Main',
       activatesOn: CountEvent,
-      activate: () => Effect.succeed(Capability.contributes(Number, number)),
+      provides: [Number],
+      activate: () => Effect.succeed([Capability.provide(Number, number)]),
     }),
     Plugin.make,
   )();

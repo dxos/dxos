@@ -41,14 +41,13 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { SpaceEvents } from '#types';
 import { type SpacePluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<SpacePluginOptions>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
@@ -63,13 +62,17 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     provides: NavigationResolver.provides,
     activate: NavigationResolver,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<SpacePluginOptions>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addReactRootModule({ requires: ReactRoot.requires, provides: ReactRoot.provides, activate: ReactRoot }),
-  AppPlugin.addSchemaModule({
+  AppPlugin.addReactRootModule<SpacePluginOptions>({
+    requires: ReactRoot.requires,
+    provides: ReactRoot.provides,
+    activate: ReactRoot,
+  }),
+  AppPlugin.addSchemaModule<SpacePluginOptions>({
     schema: [
       ...DataTypes,
       AnchoredTo.AnchoredTo,
@@ -86,20 +89,18 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Task.Task,
     ],
   }),
-  AppPlugin.addSettingsModule({
+  AppPlugin.addSettingsModule<SpacePluginOptions>({
     requires: SpaceSettings.requires,
     provides: SpaceSettings.provides,
     activate: SpaceSettings,
   }),
-  AppPlugin.addTranslationsModule({
+  AppPlugin.addTranslationsModule<SpacePluginOptions>({
     translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(SpaceState),
     requires: SpaceState.requires,
     provides: SpaceState.provides,
-    // Migration bridge for unmigrated StateReady listeners.
-    compatFires: [SpaceEvents.StateReady],
     activate: SpaceState,
   }),
   Plugin.addModule(
@@ -107,7 +108,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
       invitationPath = '/',
       invitationProp = 'spaceInvitationCode',
-    }) => {
+    }: SpacePluginOptions) => {
       const createInvitationUrl = (invitationCode: string) => {
         const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
         baseUrl.searchParams.set(invitationProp, invitationCode);
@@ -123,7 +124,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     },
   ),
   Plugin.addModule(
-    ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
+    ({
+      shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+    }: SpacePluginOptions) => ({
       id: Capability.getModuleTag(AppGraphBuilder),
       requires: AppGraphBuilder.requires,
       provides: AppGraphBuilder.provides,
@@ -136,7 +139,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       invitationPath = '/',
       invitationProp = 'spaceInvitationCode',
       observability = false,
-    }) => {
+    }: SpacePluginOptions) => {
       const createInvitationUrl = (invitationCode: string) => {
         const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
         baseUrl.searchParams.set(invitationProp, invitationCode);
@@ -157,8 +160,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activatesOn: ClientEvents.IdentityCreated,
     requires: IdentityCreated.requires,
     provides: IdentityCreated.provides,
-    // Migration bridge for unmigrated PersonalSpaceReady listeners (plugin-onboarding).
-    compatFires: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
@@ -177,7 +178,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     provides: Repair.provides,
     activate: Repair,
   }),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<SpacePluginOptions>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation, Skill, type OperationHandlerSet } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Operation, type OperationHandlerSet, Skill } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -109,5 +110,7 @@ export default Capability.makeModule(
       },
       { immediate: true },
     );
+
+    return [];
   }),
 );

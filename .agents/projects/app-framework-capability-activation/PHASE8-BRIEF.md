@@ -12,7 +12,7 @@ commit unless the driving session says so; run all commands synchronously.
      `ActivationSpec`, `firesBeforeActivation`/`firesAfterActivation` everywhere
      (PluginModule deprecated getters included), and `normalizeActivation`'s legacy branch
      (no requires/provides/activatesOn now means: startup root, `{mode:'dependency',
-     requires:[], provides:[]}`).
+requires:[], provides:[]}`).
    - Delete `compatFires` from ActivationSpec/TypedModuleOptions/ModuleEntry and all plumbing.
    - Keep: `activatesOn` (event mode), `ModuleEntry` (erased), `ValidateModuleOptions`,
      `addLazyModule`.
@@ -36,13 +36,13 @@ commit unless the driving session says so; run all commands synchronously.
 4. `src/core/activation-event.ts` + `src/common/activation-events.ts` +
    app-toolkit `AppActivationEvents.ts`: delete deprecated ordering-only events (Startup
    stays as the delegating key + useApp call sites; SetupReactSurface/SetupProcessManager/
-   ProcessManagerReady/Setup*/AppGraphReady/ProgressRegistryReady deleted). KEEP
+   ProcessManagerReady/Setup\*/AppGraphReady/ProgressRegistryReady deleted). KEEP
    `createStateEvent`/`createSettingsEvent` and runtime events. Update all remaining
    references (grep each deleted symbol; the window shims in plugin-graph/process-manager
    (`Plugin.activate(Setup...)`) get deleted with their events; plugin-code's imperative
    SetupPluginAssets fire too).
 5. `AppPlugin.ts` (app-toolkit): delete the legacy branch of `addCapabilityModule`
-   (hasLegacyWiring path), the deprecated activatesOn/fires* option fields, and the legacy
+   (hasLegacyWiring path), the deprecated activatesOn/fires\* option fields, and the legacy
    activate union arm; helpers become dependency-mode always (validate every remaining call
    site compiles — callers now all pass requires/provides or use value-bearing helpers).
 6. Deprecated ClientEvents/SpaceEvents/etc. ordering events (ClientReady, SetupSchema,
@@ -63,7 +63,7 @@ commit unless the driving session says so; run all commands synchronously.
 8. `src/testing/withPluginManager.tsx` fixtures + app-framework tests
    (plugin-manager.test.ts, useApp.test.tsx, react.test.tsx, SurfaceComponent.test.tsx):
    rewrite legacy-only tests against the new semantics or delete them with the feature
-   (events/allOf/custom-event tests translate to event-mode modules; fires* tests die;
+   (events/allOf/custom-event tests translate to event-mode modules; fires\* tests die;
    keep/extend the dependency-activation suite as the regression gate).
 
 ## B. Gates (all must be green before handing back)

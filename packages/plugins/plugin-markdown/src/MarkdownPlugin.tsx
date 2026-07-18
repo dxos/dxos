@@ -19,42 +19,37 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Markdown, MarkdownEvents } from '#types';
+import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<void>({
     requires: SkillDefinition.requires,
     provides: SkillDefinition.provides,
     activate: SkillDefinition,
   }),
-  AppPlugin.addCommentConfigModule({
+  AppPlugin.addCommentConfigModule<void>({
     requires: CommentConfig.requires,
     provides: CommentConfig.provides,
     activate: CommentConfig,
   }),
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<void>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSchemaModule<void>({ schema: [Markdown.Document, Text.Text] }),
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
-    // Migration bridge: Batch-5 consumer plugins still contribute extension providers via
-    // `activatesOn: MarkdownEvents.SetupExtensions`; the ExtensionProvider capability is a live
-    // (multi) view read reactively by the surface's Container component, so firing after
-    // activation is safe — contributions still show up whenever they land.
-    compatFires: [MarkdownEvents.SetupExtensions],
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
-  AppPlugin.addSettingsModule({
+  AppPlugin.addTranslationsModule<void>({ translations: [...translations, ...editorTranslations] }),
+  AppPlugin.addSettingsModule<void>({
     requires: MarkdownSettings.requires,
     provides: MarkdownSettings.provides,
     activate: MarkdownSettings,

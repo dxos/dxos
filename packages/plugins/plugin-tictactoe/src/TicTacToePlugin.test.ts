@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -21,11 +20,10 @@ describe('TicTacToePlugin', () => {
       plugins: [ClientPlugin({}), GamePlugin(), TicTacToePlugin()],
     });
 
-    // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('GameVariant'), moduleId('schema')]));
-
-    // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
+    // Modules expected to be active after a normal startup. OperationHandler is a dependency-mode
+    // root, so it activates immediately too.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('GameVariant'), moduleId('schema'), moduleId('OperationHandler')]),
+    );
   });
 });

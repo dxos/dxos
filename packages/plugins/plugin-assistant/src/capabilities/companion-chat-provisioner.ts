@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { Graph, type GraphBuilder, type Node } from '@dxos/app-graph';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
@@ -14,6 +15,7 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {

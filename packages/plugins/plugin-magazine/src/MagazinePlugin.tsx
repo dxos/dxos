@@ -24,12 +24,12 @@ import { Magazine, Subscription } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<void, typeof AppGraphBuilder.requires>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addCreateObjectModule({
+  AppPlugin.addCreateObjectModule<void>({
     requires: CreateObject.requires,
     provides: CreateObject.provides,
     activate: CreateObject,
@@ -39,15 +39,15 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
     provides: NavigationResolver.provides,
     activate: NavigationResolver,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  AppPlugin.addPluginAssetModule({
+  AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
-  AppPlugin.addSchemaModule({
+  AppPlugin.addSchemaModule<void>({
     schema: [
       Subscription.Subscription,
       Subscription.Post,
@@ -58,17 +58,17 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       TagIndex.TagIndex,
     ],
   }),
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<void>({
     requires: SkillDefinition.requires,
     provides: SkillDefinition.provides,
     activate: SkillDefinition,
   }),
-  AppPlugin.addSurfaceModule({
+  AppPlugin.addSurfaceModule<void>({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,
     activate: ReactSurface,
   }),
-  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule<void>({ translations }),
   Plugin.addModule({
     id: 'magazine-automation-templates',
     requires: RoutineTemplates.requires,

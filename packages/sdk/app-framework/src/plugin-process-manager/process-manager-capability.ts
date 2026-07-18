@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
 
-import { ActivationEvents, Capabilities } from '../common';
+import { Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { layerIdb } from './idb-key-value-store';
 
@@ -24,9 +24,8 @@ import { layerIdb } from './idb-key-value-store';
 // Hosts the {@link ProcessManager} runtime for the plugin system.
 //
 // Workflow:
-// 1. Activates {@link ActivationEvents.SetupProcessManager} so plugins can
-//    contribute {@link Capabilities.LayerSpec} entries and
-//    {@link Capabilities.OperationHandler} sets.
+// 1. Requires {@link Capabilities.LayerSpec} and {@link Capabilities.OperationHandler}
+//    contributions from dependency-mode modules.
 // 2. Collects all contributed {@link LayerSpec.LayerSpec}s and builds a
 //    {@link LayerStack} whose {@link ServiceResolver} drives process-scoped
 //    service resolution.
@@ -45,10 +44,6 @@ export default Capability.makeModule(
     const capabilityManager = yield* Capability.Service;
     const pluginManager = yield* Plugin.Service;
     const atomRegistry = yield* Capabilities.AtomRegistry;
-
-    // Legacy contribution window: unmigrated plugins still contribute LayerSpec /
-    // OperationHandler entries via this event. Removed with the legacy API.
-    yield* Plugin.activate(ActivationEvents.SetupProcessManager);
 
     const layerSpecContributions = yield* Capabilities.LayerSpec;
     const traceSinkContributions = yield* Capabilities.TraceSink;
@@ -132,9 +127,7 @@ export default Capability.makeModule(
     // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
     // down the stack's keep-alive slices.
     yield* Effect.addFinalizer(() =>
-      Effect.promise(() => managedRuntime.dispose()).pipe(
-        Effect.andThen(Effect.promise(() => layerStack.destroy())),
-      ),
+      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(Effect.promise(() => layerStack.destroy()))),
     );
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {

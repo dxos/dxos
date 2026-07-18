@@ -10,7 +10,7 @@ import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { Capabilities, Capability, Plugin, PluginManager } from '@dxos/app-framework';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
@@ -111,7 +111,6 @@ const buildPluginManagerOptions = ({
     // SetupSchema registers ECHO schemas so plugin-scoped types are available in stories.
     // SetupSettings causes plugins (e.g. AssistantPlugin) to contribute settings capabilities
     // that surfaces like TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
-    setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({

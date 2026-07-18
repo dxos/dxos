@@ -20,7 +20,7 @@ import SkillDefinition from './capabilities/skill-definition';
 import Toolkit from './capabilities/toolkit';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({
+  AppPlugin.addSkillDefinitionModule<void>({
     id: 'skill-definition',
     requires: [],
     provides: [
@@ -30,7 +30,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     ],
     activate: SkillDefinition,
   }),
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     id: 'operation-handler',
     requires: [],
     provides: [Capabilities.OperationHandler],
@@ -42,7 +42,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     provides: [AppCapabilities.Toolkit],
     activate: Toolkit,
   }),
-  AppPlugin.addSchemaModule({
+  AppPlugin.addSchemaModule<void>({
     schema: [
       Chat.Chat,
       Chat.CompanionTo,

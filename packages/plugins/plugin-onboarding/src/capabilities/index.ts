@@ -5,10 +5,14 @@
 import { Capabilities, Capability } from '@dxos/app-framework';
 // Explicit imports so the emitted `.d.ts` references the packages via their public
 // aliases instead of relative `node_modules` paths (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { Graph, GraphBuilder } from '@dxos/app-graph';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Client } from '@dxos/client';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type OperationHandlerSet } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -28,6 +32,7 @@ export const DefaultContent = Capability.lazyModule(
       AppCapabilities.AppGraph,
       ClientCapabilities.Client,
       SpaceCapabilities.OnCreateSpace,
+      SpaceCapabilities.PersonalSpace,
     ],
     provides: [],
   },

@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
@@ -18,10 +18,6 @@ const Graph = Capability.lazyModule(
  * Enables other plugins to register node builders to add nodes to the graph.
  * This includes actions and annotation each other's nodes.
  */
-export const GraphPlugin = Plugin.define(meta).pipe(
-  // Migration bridge for unmigrated AppGraphReady listeners.
-  Plugin.addLazyModule(Graph, { compatFires: [AppActivationEvents.AppGraphReady] }),
-  Plugin.make,
-);
+export const GraphPlugin = Plugin.define(meta).pipe(Plugin.addLazyModule(Graph), Plugin.make);
 
 export default GraphPlugin;

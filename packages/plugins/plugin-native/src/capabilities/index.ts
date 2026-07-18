@@ -4,13 +4,17 @@
 
 // Explicit imports so the emitted `.d.ts` references the packages via their public
 // aliases instead of relative `node_modules` paths (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { AiModelResolver } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
-import { AssistantCapabilities } from '@dxos/plugin-assistant';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { Ollama as OllamaTypes } from '@dxos/plugin-assistant';
+import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
 import { NativeCapabilities } from '#types';
 

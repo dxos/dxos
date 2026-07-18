@@ -10,11 +10,10 @@ import { AttentionManager, ViewStateManager, createDefaultBackends } from '@dxos
 
 import { Keyboard, OperationHandler, ReactContext } from '#capabilities';
 import { meta } from '#meta';
-import { AttentionEvents } from '#types';
 import { AttentionCapabilities } from '#types';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
+  AppPlugin.addOperationHandlerModule<void>({
     requires: OperationHandler.requires,
     provides: OperationHandler.provides,
     activate: OperationHandler,
@@ -23,9 +22,6 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
     id: 'attention',
     requires: [Capabilities.AtomRegistry],
     provides: [AttentionCapabilities.Attention, AttentionCapabilities.ViewState],
-    // Migration bridge for unmigrated AttentionReady listeners (space, markdown, trip, commerce,
-    // inbox, ibkr, magazine, files).
-    compatFires: [AttentionEvents.AttentionReady],
     activate: () =>
       Effect.gen(function* () {
         const registry = yield* Capabilities.AtomRegistry;

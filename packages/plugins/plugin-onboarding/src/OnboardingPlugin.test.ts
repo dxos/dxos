@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { OnboardingPlugin } from '#plugin';
@@ -19,9 +18,7 @@ describe('OnboardingPlugin', () => {
       plugins: [OnboardingPlugin({ generateExemplarSpace: false })],
     });
 
-    // Startup + SetupReactSurface activate core modules.
-    // ProcessManagerPlugin fires SetupProcessManager on Startup → OperationHandler activates.
-    // GraphPlugin fires SetupAppGraph on Startup (after SetupSettings) → AppGraphBuilder activates.
+    // All dependency-mode roots, so they activate immediately during the startup dependency pass.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
         moduleId('Settings'),
@@ -29,11 +26,8 @@ describe('OnboardingPlugin', () => {
         moduleId('ReactSurface'),
         moduleId('AppGraphBuilder'),
         moduleId('OperationHandler'),
+        moduleId('translations'),
       ]),
     );
-
-    // Translations activate on SetupTranslations, which is fired separately from Startup.
-    await harness.fire(AppActivationEvents.SetupTranslations);
-    expect(harness.manager.getActive()).toContain(moduleId('translations'));
   });
 });

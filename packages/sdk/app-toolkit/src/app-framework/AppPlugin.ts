@@ -6,103 +6,55 @@
 
 import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
-import type * as Scope from 'effect/Scope';
 
-import {
-  ActivationEvents,
-  Capabilities,
-  ActivationEvent as ActivationEvent$,
-  Capability as Capability$,
-  Plugin as Plugin$,
-} from '@dxos/app-framework';
+import { Capabilities, Capability as Capability$, Plugin as Plugin$ } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 
 import { Translations } from '../app';
-import * as AppActivationEvents from './AppActivationEvents';
 import * as AppCapabilities from './AppCapabilities';
 
 /**
  * Body-bearing module options shared by the `addXModule` helpers.
  *
- * Declaring `requires` and/or `provides` opts the module into dependency mode: it activates
- * during the startup dependency pass, `requires` declares typed capability access for the
- * body (`yield* Tag`), and `provides` defaults to the helper's capability. Calls without
- * capability declarations keep the legacy event wiring until their plugin migrates.
+ * Always dependency mode: the module activates during the startup dependency pass,
+ * `requires` declares typed capability access for the body (`yield* Tag`), and `provides`
+ * defaults to the helper's capability (override when the body contributes additional
+ * capabilities).
  */
 export type CapabilityModuleOptions<
   C extends Capability$.AnyTag,
   Requires extends readonly Capability$.AnyTag[] = readonly [],
 > = {
   id?: string;
-  /** Capabilities the body accesses via `yield*`. Declaring this opts into dependency mode. */
+  /** Capabilities the body accesses via `yield*`. */
   requires?: Requires;
-  /**
-   * Overrides the helper's default provides (e.g. a body contributing additional
-   * capabilities). Declaring this opts into dependency mode.
-   */
+  /** Overrides the helper's default provides (e.g. a body contributing additional capabilities). */
   provides?: readonly Capability$.AnyTag[];
-  /** Legacy events fired by the framework after activation (migration bridge). */
-  compatFires?: readonly ActivationEvent$.ActivationEvent[];
-  /** @deprecated Legacy event wiring; declare capability dependencies instead. */
-  activatesOn?: ActivationEvent$.Events;
-  /** @deprecated Legacy event wiring; declare `requires` instead. */
-  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
-  /** @deprecated Legacy event wiring; providers gate consumers via capabilities instead. */
-  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
-  activate:
-    | ((
-        props?: any,
-      ) => Effect.Effect<
-        Capability$.ModuleReturn,
-        Error,
-        Capability$.Service | Plugin$.Service | Scope.Scope | never
-      >)
-    | (() => Effect.Effect<
-        ReadonlyArray<Capability$.Contribution<C>> | readonly Capability$.AnyContribution[],
-        Error,
-        Capability$.Requirements<Requires>
-      >);
+  activate: () => Effect.Effect<
+    ReadonlyArray<Capability$.Contribution<C>> | readonly Capability$.AnyContribution[],
+    Error,
+    Capability$.Requirements<Requires>
+  >;
 };
 
 type AnyCapabilityModuleOptions = CapabilityModuleOptions<Capability$.AnyTag, readonly Capability$.AnyTag[]>;
 
 /**
- * Shared helper implementation: modules declaring `requires`/`provides` become
- * dependency-mode; everything else keeps the legacy event wiring (removed with the
- * legacy API).
+ * Shared helper implementation: always dependency-mode.
  */
 const addCapabilityModule = <T>(args: {
   defaultId: string;
-  /** Default provides for dependency mode; omitted for helpers whose bodies contribute foreign capabilities (callers pass `provides`). */
+  /** Default provides; omitted for helpers whose bodies contribute foreign capabilities (callers pass `provides`). */
   capability?: Capability$.AnyTag;
-  legacyActivatesOn: ActivationEvent$.Events;
   options: AnyCapabilityModuleOptions;
-  /** Force dependency mode even without caller declarations (helper-owned bodies). */
-  alwaysDependency?: boolean;
 }): ((builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T>) => {
   const { options } = args;
   const id = Capability$.getModuleTag(options.activate) ?? options.id ?? args.defaultId;
-  const hasLegacyWiring =
-    options.activatesOn !== undefined ||
-    options.firesBeforeActivation !== undefined ||
-    options.firesAfterActivation !== undefined;
-  const declared = options.requires !== undefined || options.provides !== undefined;
-  if (hasLegacyWiring || (!declared && !args.alwaysDependency)) {
-    return (builder) =>
-      builder.addModule({
-        id,
-        activatesOn: options.activatesOn ?? args.legacyActivatesOn,
-        firesBeforeActivation: options.firesBeforeActivation,
-        firesAfterActivation: options.firesAfterActivation,
-        activate: options.activate,
-      });
-  }
   return (builder) =>
     builder.addModule({
       id,
       requires: options.requires ?? [],
       provides: options.provides ?? (args.capability ? [args.capability] : []),
-      compatFires: options.compatFires,
       activate: options.activate,
     });
 };
@@ -119,7 +71,6 @@ export function addAppGraphModule<T = void, const Requires extends readonly Capa
   return addCapabilityModule<T>({
     defaultId: 'app-graph-builder',
     capability: AppCapabilities.AppGraphBuilder,
-    legacyActivatesOn: ActivationEvent$.allOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
     options,
   });
 }
@@ -127,12 +78,6 @@ export function addAppGraphModule<T = void, const Requires extends readonly Capa
 export type TranslationsModuleOptions = {
   id?: string;
   translations: Translations.Resource | Translations.Resource[];
-  /** @deprecated Legacy event wiring. */
-  activatesOn?: ActivationEvent$.Events;
-  /** @deprecated Legacy event wiring. */
-  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
-  /** @deprecated Legacy event wiring. */
-  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
 };
 
 /**
@@ -147,13 +92,8 @@ export function addTranslationsModule<T = void>(
   return addCapabilityModule<T>({
     defaultId: 'translations',
     capability: AppCapabilities.Translations,
-    legacyActivatesOn: AppActivationEvents.SetupTranslations,
-    alwaysDependency: true,
     options: {
       id: options.id,
-      activatesOn: options.activatesOn,
-      firesBeforeActivation: options.firesBeforeActivation,
-      firesAfterActivation: options.firesAfterActivation,
       activate: () => Effect.succeed([Capability$.provide(AppCapabilities.Translations, resources)]),
     },
   });
@@ -171,7 +111,6 @@ export function addSettingsModule<T = void, const Requires extends readonly Capa
   return addCapabilityModule<T>({
     defaultId: 'settings',
     capability: AppCapabilities.Settings,
-    legacyActivatesOn: AppActivationEvents.SetupSettings,
     options,
   });
 }
@@ -188,7 +127,6 @@ export function addSkillDefinitionModule<T = void, const Requires extends readon
   return addCapabilityModule<T>({
     defaultId: 'skill-definition',
     capability: AppCapabilities.SkillDefinition,
-    legacyActivatesOn: AppActivationEvents.SetupArtifactDefinition,
     options,
   });
 }
@@ -196,12 +134,6 @@ export function addSkillDefinitionModule<T = void, const Requires extends readon
 export type PluginAssetModuleOptions = {
   id?: string;
   asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>;
-  /** @deprecated Legacy event wiring. */
-  activatesOn?: ActivationEvent$.Events;
-  /** @deprecated Legacy event wiring. */
-  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
-  /** @deprecated Legacy event wiring. */
-  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
 };
 
 /**
@@ -217,13 +149,8 @@ export function addPluginAssetModule<T = void>(
   return addCapabilityModule<T>({
     defaultId: 'plugin-asset',
     capability: AppCapabilities.PluginAsset,
-    legacyActivatesOn: AppActivationEvents.SetupPluginAssets,
-    alwaysDependency: true,
     options: {
       id: options.id,
-      activatesOn: options.activatesOn,
-      firesBeforeActivation: options.firesBeforeActivation,
-      firesAfterActivation: options.firesAfterActivation,
       activate: () => Effect.succeed([Capability$.provideAll(AppCapabilities.PluginAsset, assets)]),
     },
   });
@@ -232,12 +159,6 @@ export function addPluginAssetModule<T = void>(
 export type SchemaModuleOptions = {
   id?: string;
   schema: ReadonlyArray<Type.AnyEntity>;
-  /** @deprecated Legacy event wiring. */
-  activatesOn?: ActivationEvent$.Events;
-  /** @deprecated Legacy event wiring. */
-  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
-  /** @deprecated Legacy event wiring. */
-  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
 };
 
 /**
@@ -249,13 +170,8 @@ export function addSchemaModule<T = void>(
   return addCapabilityModule<T>({
     defaultId: 'schema',
     capability: AppCapabilities.Schema,
-    legacyActivatesOn: AppActivationEvents.SetupSchema,
-    alwaysDependency: true,
     options: {
       id: options.id,
-      activatesOn: options.activatesOn,
-      firesBeforeActivation: options.firesBeforeActivation,
-      firesAfterActivation: options.firesAfterActivation,
       activate: () => Effect.succeed([Capability$.provide(AppCapabilities.Schema, options.schema)]),
     },
   });
@@ -264,12 +180,6 @@ export function addSchemaModule<T = void>(
 export type CommandModuleOptions = {
   id?: string;
   commands: ReadonlyArray<Command$.Command<any, any, any, any>>;
-  /** @deprecated Legacy event wiring. */
-  activatesOn?: ActivationEvent$.Events;
-  /** @deprecated Legacy event wiring. */
-  firesBeforeActivation?: readonly ActivationEvent$.ActivationEvent[];
-  /** @deprecated Legacy event wiring. */
-  firesAfterActivation?: readonly ActivationEvent$.ActivationEvent[];
 };
 
 /**
@@ -281,13 +191,8 @@ export function addCommandModule<T = void>(
   return addCapabilityModule<T>({
     defaultId: 'cli-commands',
     capability: Capabilities.Command,
-    legacyActivatesOn: ActivationEvents.Startup,
-    alwaysDependency: true,
     options: {
       id: options.id,
-      activatesOn: options.activatesOn,
-      firesBeforeActivation: options.firesBeforeActivation,
-      firesAfterActivation: options.firesAfterActivation,
       activate: () => Effect.succeed([Capability$.provideAll(Capabilities.Command, options.commands)]),
     },
   });
@@ -299,16 +204,12 @@ export type OperationHandlerModuleOptions<Requires extends readonly Capability$.
 /**
  * Creates a module that contributes operation handlers.
  */
-export function addOperationHandlerModule<
-  T = void,
-  const Requires extends readonly Capability$.AnyTag[] = readonly [],
->(
+export function addOperationHandlerModule<T = void, const Requires extends readonly Capability$.AnyTag[] = readonly []>(
   options: OperationHandlerModuleOptions<Requires>,
 ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
   return addCapabilityModule<T>({
     defaultId: 'operation-handler',
     capability: Capabilities.OperationHandler,
-    legacyActivatesOn: ActivationEvents.SetupProcessManager,
     options,
   });
 }
@@ -325,7 +226,6 @@ export function addUndoMappingsModule<T = void, const Requires extends readonly 
   return addCapabilityModule<T>({
     defaultId: 'undo-mappings',
     capability: Capabilities.UndoMapping,
-    legacyActivatesOn: ActivationEvents.SetupProcessManager,
     options,
   });
 }
@@ -342,7 +242,6 @@ export function addReactContextModule<T = void, const Requires extends readonly 
   return addCapabilityModule<T>({
     defaultId: 'react-context',
     capability: Capabilities.ReactContext,
-    legacyActivatesOn: ActivationEvents.Startup,
     options,
   });
 }
@@ -359,7 +258,6 @@ export function addReactRootModule<T = void, const Requires extends readonly Cap
   return addCapabilityModule<T>({
     defaultId: 'react-root',
     capability: Capabilities.ReactRoot,
-    legacyActivatesOn: ActivationEvents.Startup,
     options,
   });
 }
@@ -373,13 +271,10 @@ export type NavigationResolverModuleOptions<Requires extends readonly Capability
 export function addNavigationResolverModule<
   T = void,
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
->(
-  options: NavigationResolverModuleOptions<Requires>,
-): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+>(options: NavigationResolverModuleOptions<Requires>): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
   return addCapabilityModule<T>({
     defaultId: 'navigation-resolver',
     capability: AppCapabilities.NavigationTargetResolver,
-    legacyActivatesOn: ActivationEvents.ProcessManagerReady,
     options,
   });
 }
@@ -402,21 +297,10 @@ export function addNavigationHandlerModule<
     return (builder) =>
       builder.addModule((pluginOptions: T) => {
         const resolved = options(pluginOptions);
-        const declared = resolved.requires !== undefined || resolved.provides !== undefined;
-        if (!declared || resolved.activatesOn || resolved.firesBeforeActivation || resolved.firesAfterActivation) {
-          return {
-            id: Capability$.getModuleTag(resolved.activate) ?? resolved.id ?? 'navigation-handler',
-            activatesOn: resolved.activatesOn ?? ActivationEvents.ProcessManagerReady,
-            firesBeforeActivation: resolved.firesBeforeActivation,
-            firesAfterActivation: resolved.firesAfterActivation,
-            activate: resolved.activate,
-          };
-        }
         return {
           id: Capability$.getModuleTag(resolved.activate) ?? resolved.id ?? 'navigation-handler',
           requires: resolved.requires ?? [],
           provides: resolved.provides ?? [AppCapabilities.NavigationHandler],
-          compatFires: resolved.compatFires,
           activate: resolved.activate,
         };
       });
@@ -424,7 +308,6 @@ export function addNavigationHandlerModule<
   return addCapabilityModule<T>({
     defaultId: 'navigation-handler',
     capability: AppCapabilities.NavigationHandler,
-    legacyActivatesOn: ActivationEvents.ProcessManagerReady,
     options,
   });
 }
@@ -441,7 +324,6 @@ export function addSurfaceModule<T = void, const Requires extends readonly Capab
   return addCapabilityModule<T>({
     defaultId: 'surfaces',
     capability: Capabilities.ReactSurface,
-    legacyActivatesOn: ActivationEvents.SetupReactSurface,
     options,
   });
 }
@@ -459,7 +341,6 @@ export function addCreateObjectModule<T = void, const Requires extends readonly 
 ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
   return addCapabilityModule<T>({
     defaultId: 'create-object',
-    legacyActivatesOn: AppActivationEvents.SetupSchema,
     options,
   });
 }
@@ -476,7 +357,6 @@ export function addCommentConfigModule<T = void, const Requires extends readonly
   return addCapabilityModule<T>({
     defaultId: 'comment-config',
     capability: AppCapabilities.CommentConfig,
-    legacyActivatesOn: AppActivationEvents.SetupSchema,
     options,
   });
 }
@@ -493,7 +373,6 @@ export function addTextContentModule<T = void, const Requires extends readonly C
   return addCapabilityModule<T>({
     defaultId: 'text-content',
     capability: AppCapabilities.TextContent,
-    legacyActivatesOn: AppActivationEvents.SetupSchema,
     options,
   });
 }

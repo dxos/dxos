@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -20,16 +19,15 @@ describe('OutlinerPlugin', () => {
       plugins: [ClientPlugin({}), OutlinerPlugin()],
     });
 
+    // OperationHandler is a dependency-mode root, so it activates immediately too.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
         moduleId('AppGraphBuilder'),
         moduleId('CreateObject'),
         moduleId('schema'),
         moduleId('ReactSurface'),
+        moduleId('OperationHandler'),
       ]),
     );
-
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

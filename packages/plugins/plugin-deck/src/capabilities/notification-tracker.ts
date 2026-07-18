@@ -15,6 +15,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public alias instead of a
 // relative `node_modules` path (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 
 import { meta } from '#meta';
@@ -183,8 +184,8 @@ export default Capability.makeModule(
       registry.set(ephemeralAtom, { ...state, currentUndoId: undoId, toasts: [...toasts, toast] });
     };
 
-    // The history tracker is contributed on ProcessManagerReady, possibly after this module activates;
-    // `waitFor` resolves it once available, then we observe its undoable stream.
+    // The history tracker may be contributed after this module activates; `waitFor` resolves
+    // it once available, then we observe its undoable stream.
     const undoFiber = Effect.runFork(
       Effect.gen(function* () {
         const historyTracker = yield* Capability.waitFor(Capabilities.HistoryTracker);

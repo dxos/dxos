@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
 // Explicit imports so the emitted `.d.ts` references the packages via their public aliases
 // instead of relative `node_modules` paths (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Graph, type GraphBuilder } from '@dxos/app-graph';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type OperationHandlerSet, type Process } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 
 import { DeckCapabilities } from '#types';

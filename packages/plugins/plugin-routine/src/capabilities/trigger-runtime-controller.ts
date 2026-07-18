@@ -119,5 +119,7 @@ export default Capability.makeModule(
         trackers.clear();
       }),
     );
+
+    return [];
   }),
 );

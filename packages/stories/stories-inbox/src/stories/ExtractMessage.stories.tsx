@@ -10,7 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { AiService } from '@dxos/ai';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
@@ -221,7 +221,6 @@ const meta = {
     withTheme(),
     withPluginManager({
       setupEvents: [
-        AppActivationEvents.SetupSettings,
         // TripPlugin contributes TripMessageExtractor on Startup; fire it explicitly so the
         // capability is contributed before MessageArticle's toolbar reads the extractor list.
         ActivationEvents.Startup,

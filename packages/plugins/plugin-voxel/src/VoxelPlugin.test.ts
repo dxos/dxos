@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -20,13 +19,15 @@ describe('VoxelPlugin', () => {
       plugins: [ClientPlugin({}), VoxelPlugin()],
     });
 
-    // Modules expected to be active after a normal startup.
+    // Modules expected to be active after a normal startup. SkillDefinition is a dependency-mode
+    // root, so it activates immediately too.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('ReactSurface')]),
+      expect.arrayContaining([
+        moduleId('CreateObject'),
+        moduleId('schema'),
+        moduleId('ReactSurface'),
+        moduleId('SkillDefinition'),
+      ]),
     );
-
-    // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
   });
 });
