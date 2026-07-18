@@ -286,7 +286,10 @@ const createDragPlugin = (
         const selected = getSelectedBlocks(this.view.state, getBlocks).map((entry) => entry.index);
         const indices = selected.length > 1 && selected.includes(index) ? selected : [index];
         this.#sourceIndices = indices;
-        this.#dropIndex = indices[0];
+        // Resolve the initial drop slot from the pointer (skipping the sources), not the source's own slot
+        // — placing the placeholder there would collide with the collapse's start and render nothing (a
+        // jump). This lands it just past the collapse, so the placeholder shows from the first frame.
+        this.#dropIndex = this.#dropIndexAt(event.clientY);
         this.#grabX = event.clientX;
         this.#grabY = event.clientY;
         this.#lastPointer = { clientX: event.clientX, clientY: event.clientY };
