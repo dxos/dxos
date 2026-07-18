@@ -139,14 +139,16 @@ const CommentsList = ({
   const registry = useContext(RegistryContext);
   const items = useAtomValue(commentsAtom);
 
-  const label = (comment: Comment): string => {
-    const view = getView();
-    const range = view && comment.cursor ? Cursor.getRangeFromCursor(view.state, comment.cursor) : undefined;
-    return (range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id;
-  };
+  const view = getView();
+  // Resolve each comment's range once, then sort by document position (unresolved ranges sort last).
+  const resolved = items
+    .map((comment) => ({
+      comment,
+      range: view && comment.cursor ? Cursor.getRangeFromCursor(view.state, comment.cursor) : undefined,
+    }))
+    .sort((a, b) => (a.range?.from ?? Infinity) - (b.range?.from ?? Infinity));
 
   const handleSelect = (id: string) => {
-    const view = getView();
     if (view) {
       scrollThreadIntoView(view, id);
       view.focus();
@@ -164,9 +166,13 @@ const CommentsList = ({
     <div className='border-bs border-subdued-separator overflow-y-auto max-bs-48'>
       <Listbox.Root value={activeId} onValueChange={handleSelect}>
         <Listbox.Content aria-label='Comments' classNames='p-1'>
-          {items.map((comment) => (
+          {resolved.map(({ comment, range }) => (
             <Listbox.Item key={comment.id} id={comment.id} classNames='flex items-center gap-2'>
-              <Listbox.ItemLabel>{label(comment)}</Listbox.ItemLabel>
+              <Listbox.ItemContent
+                classNames='grow'
+                title={(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
+                description={range ? `${range.from}–${range.to}` : comment.cursor}
+              />
               <IconButton
                 variant='ghost'
                 iconOnly
