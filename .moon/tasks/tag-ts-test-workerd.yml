@@ -1,0 +1,31 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  test-workerd:
+    # Runs `*.workerd.test.{ts,tsx}` suites inside the Cloudflare Workers runtime
+    # (`workerd`) via `@cloudflare/vitest-pool-workers`. See `createWorkerdProject`
+    # in `vite.base.config.ts` for the shared project definition.
+    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=workerd
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - vite-plugin-import-source:compile
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+      - /vite.base.config.ts
+      - /vitest.base.config.ts
+      - /vitest.tags.ts # Ensure cache is invalidated when tag definitions change.
+      - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
+      - vitest.config.ts
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+    outputs:
+      - /coverage/$project/workerd/**
+      - /test-results/$project/workerd/**
+    options:
+      timeout: 600
+
+inheritedBy:
+  tags: ts-test-workerd

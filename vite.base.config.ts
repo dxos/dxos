@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
@@ -68,6 +69,12 @@ const BROWSER_LOG_FILTER = process.env.DX_TEST_LOG_FILTER ?? process.env.LOG_FIL
 // the browser tests actually tokenize, so the alias is safe.
 const TIKTOKEN_STUB = new URL('./vitest/tiktoken-stub.mjs', import.meta.url).pathname;
 const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
+
+// Default Workers runtime compatibility for the opt-in `workerd` vitest project. `nodejs_compat`
+// exposes the Node.js built-ins (`node:crypto`, `node:buffer`, …) that @dxos packages resolve to,
+// mirroring what production DXOS functions run against on Cloudflare. Overridable per package.
+const WORKERD_COMPATIBILITY_DATE = '2024-11-01';
+const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
 
 // ---------------------------------------------------------------------------
 // Library build plugins
@@ -295,6 +302,17 @@ export type ConfigOptions = {
   node?: boolean | NodeOptions;
   browser?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] });
   storybook?: boolean | StorybookOptions;
+  workerd?: boolean | WorkerdOptions;
+};
+
+export type WorkerdOptions = {
+  /** Workers runtime compatibility date. Defaults to a fixed recent date. */
+  compatibilityDate?: string;
+  /** Workers runtime compatibility flags. Defaults to `['nodejs_compat']`. */
+  compatibilityFlags?: string[];
+  setupFiles?: string[];
+  timeout?: number;
+  plugins?: Plugin[];
 };
 
 export type StorybookOptions = {
@@ -327,19 +345,20 @@ export type BrowserOptions = {
 };
 
 export const createConfig = (options: ConfigOptions): ViteUserConfig => {
-  const { dirname, node, browser, storybook } = options;
+  const { dirname, node, browser, storybook, workerd } = options;
 
   const nodeProject = node ? createNodeProject(typeof node === 'boolean' ? undefined : node) : undefined;
   const storybookProject = storybook
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((browser) => createBrowserProject(browser));
+  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     test: {
       ...resolveReporterConfig(dirname),
       tags: TEST_TAGS,
-      projects: [nodeProject, storybookProject, ...browserProjects].filter(
+      projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
     },
@@ -461,6 +480,8 @@ const createBrowserProject = ({
         '!**/src/**/__snapshots__/**',
         '!**/src/**/*.node.test.{ts,tsx}',
         '!**/test/**/*.node.test.{ts,tsx}',
+        '!**/src/**/*.workerd.test.{ts,tsx}',
+        '!**/test/**/*.workerd.test.{ts,tsx}',
       ],
 
       testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
@@ -477,6 +498,42 @@ const createBrowserProject = ({
       },
 
       setupFiles: [VITEST_BROWSER_LOG_SETUP],
+    },
+  });
+
+// Runs tests inside the Cloudflare Workers runtime (`workerd`) via
+// `@cloudflare/vitest-pool-workers`. Opt-in (like `browser`/`storybook`) — only
+// `*.workerd.test.{ts,tsx}` files run here, so packages can exercise the same source
+// against the runtime their production Cloudflare functions use. The node/browser
+// projects exclude these files so a suite runs in exactly one runtime.
+const createWorkerdProject = ({
+  compatibilityDate = WORKERD_COMPATIBILITY_DATE,
+  compatibilityFlags = WORKERD_COMPATIBILITY_FLAGS,
+  setupFiles = [],
+  timeout,
+  plugins = [],
+}: WorkerdOptions = {}) =>
+  defineProject({
+    plugins: [
+      ...plugins,
+      // Resolve `@dxos/*` to their `source` export (src/*.ts) so tests exercise source
+      // instead of stale `dist/` build artifacts (mirrors the node/browser projects).
+      PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      // Log-meta injection only — no file sink (workerd has no filesystem).
+      DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
+      // Must run last: configures the vitest pool to execute tests in workerd.
+      cloudflareTest({
+        miniflare: {
+          compatibilityDate,
+          compatibilityFlags,
+        },
+      }),
+    ],
+    test: {
+      name: 'workerd',
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 5000),
+      include: ['**/src/**/*.workerd.test.{ts,tsx}', '**/test/**/*.workerd.test.{ts,tsx}'],
+      setupFiles,
     },
   });
 
@@ -511,6 +568,8 @@ const createNodeProject = ({
         '!**/src/**/__snapshots__/**',
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
+        '!**/src/**/*.workerd.test.{ts,tsx}',
+        '!**/test/**/*.workerd.test.{ts,tsx}',
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
       setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname, VITEST_LOG_SETUP],
@@ -549,6 +608,8 @@ const resolveProjectType = (): string | undefined => {
     return 'node';
   } else if (projectArg === 'storybook') {
     return 'storybook';
+  } else if (projectArg === 'workerd') {
+    return 'workerd';
   }
   return undefined;
 };
@@ -561,6 +622,8 @@ const moonTaskForProjectType = (projectType: string | undefined): string => {
       return 'test-browser';
     case 'storybook':
       return 'test-storybook';
+    case 'workerd':
+      return 'test-workerd';
     default:
       return 'test';
   }
@@ -687,6 +750,7 @@ export type TestOptions = {
   node?: boolean | NodeOptions;
   browser?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] });
   storybook?: boolean | StorybookOptions;
+  workerd?: boolean | WorkerdOptions;
 };
 
 export interface DxConfigOptions {
@@ -721,7 +785,7 @@ const buildTestConfig = (
   options: TestOptions,
   outerJsx?: 'react' | 'solid',
 ): ViteUserConfig['test'] => {
-  const { node, browser, storybook } = options;
+  const { node, browser, storybook, workerd } = options;
   // Outer `defineConfig({ jsx })` propagates into the node test project so a Solid
   // package's tests get the Solid client transform without each per-package
   // vite.config.ts having to wire `test.node.jsx` itself.
@@ -732,6 +796,7 @@ const buildTestConfig = (
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject({ jsx: outerJsx, ...b }));
+  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     ...resolveReporterConfig(dirname),
@@ -741,7 +806,7 @@ const buildTestConfig = (
     // node tests, WebSocket birpc errors from the storybook runner) — these surface as
     // non-zero exits with no actual test failures and turn the entire job red.
     dangerouslyIgnoreUnhandledErrors: true,
-    projects: [nodeProject, storybookProject, ...browserProjects].filter(
+    projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
       (project): project is UserWorkspaceConfig => project !== undefined,
     ),
   };

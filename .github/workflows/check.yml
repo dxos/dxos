@@ -307,6 +307,98 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
+  # Workerd tests run in the Cloudflare Workers runtime (`@cloudflare/vitest-pool-workers`)
+  # on their own runner, in parallel with `test`/`storybook`. No chromium/Playwright needed —
+  # the workerd binary ships with the `workerd` npm package installed during setup.
+  workerd:
+    strategy:
+      matrix:
+        node-version: ['24.11.1']
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ github.token }}
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: ${{ matrix.node-version }}
+      # Opt in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
+      VITEST_ENV: 'node'
+      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
+      VITEST_XML_REPORT: 'true'
+      MOON_CONCURRENCY: 4
+      # Exposed so step conditions can branch on token presence without referencing
+      # secrets directly (secrets are not allowed in if: expressions).
+      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Clean stale test results
+        run: rm -rf test-results
+
+      - name: Test Workerd Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon run :test-workerd --affected remote -- --no-file-parallelism
+
+      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
+      - name: Test Workerd Affected (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
+        run: moon run :test-workerd --affected remote -- --no-file-parallelism
+
+      - name: Test Workerd All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon exec --on-failure continue :test-workerd -- --no-file-parallelism
+
+      # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
+      - name: Test Workerd All (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
+        run: moon exec --on-failure continue :test-workerd -- --no-file-parallelism
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-report-workerd-${{ matrix.node-version }}
+          path: test-results
+          retention-days: 7
+
+      - uses: codecov/codecov-action@v5
+        if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
+        with:
+          directory: ./coverage
+          fail_ci_if_error: false
+          handle_no_reports_found: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
   e2e:
     # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
     # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
@@ -411,7 +503,7 @@ jobs:
           result: ${{ job.status }}
 
   report:
-    needs: [test, storybook]
+    needs: [test, storybook, workerd]
     if: always() && github.event_name == 'schedule'
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -431,6 +523,11 @@ jobs:
         with:
           name: storybook-24.11.1
           result: ${{ needs.storybook.result }}
+      - name: Send workerd report
+        uses: ./.github/actions/test-report
+        with:
+          name: workerd-24.11.1
+          result: ${{ needs.workerd.result }}
 
   # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
   # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.
