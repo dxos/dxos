@@ -18,20 +18,20 @@
 
 ## Deletion targets (all in `@dxos/compute-runtime`)
 
-| Symbol | File | Notes |
-|---|---|---|
-| `FunctionInvocationService` (tag) | `src/services/function-invocation-service.ts` | Deprecated; only `layerNotAvailable` + static helpers remain. |
-| `FunctionInvocationServiceLayer`, `FunctionInvocationServiceLayerWithLocalLoopbackExecutor` | `src/services/function-invocation-router.ts` | Local↔remote router; superseded by `ProcessOperationInvoker` edge dispatch. |
-| (test) | `src/services/function-invocation-router.test.ts` | Delete with the router. |
-| `LocalFunctionExecutionService`, `FunctionImplementationResolver` | `src/services/local-function-execution.ts` | Local executor + `@deprecated` resolver. |
-| `ServiceContainer`, `RuntimeServices`, `ServiceRecord`, `ServiceTagRecord`, `SERVICE_TAGS`, `SERVICE_MAPPING` | `src/services/service-container.ts` | Legacy imperative service bag; `@deprecated Use Effect layers directly`. |
-| `FunctionExecutor` | `src/executor.ts` | `@deprecated Use FunctionInvocationService`; wraps `ServiceContainer.createLayer()`. |
-| `FunctionServices` (union) | `src/sdk.ts` | Remove the `FunctionInvocationService` arm; then evaluate deleting the whole alias (see Task 5). |
+| Symbol                                                                                                        | File                                              | Notes                                                                                            |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `FunctionInvocationService` (tag)                                                                             | `src/services/function-invocation-service.ts`     | Deprecated; only `layerNotAvailable` + static helpers remain.                                    |
+| `FunctionInvocationServiceLayer`, `FunctionInvocationServiceLayerWithLocalLoopbackExecutor`                   | `src/services/function-invocation-router.ts`      | Local↔remote router; superseded by `ProcessOperationInvoker` edge dispatch.                      |
+| (test)                                                                                                        | `src/services/function-invocation-router.test.ts` | Delete with the router.                                                                          |
+| `LocalFunctionExecutionService`, `FunctionImplementationResolver`                                             | `src/services/local-function-execution.ts`        | Local executor + `@deprecated` resolver.                                                         |
+| `ServiceContainer`, `RuntimeServices`, `ServiceRecord`, `ServiceTagRecord`, `SERVICE_TAGS`, `SERVICE_MAPPING` | `src/services/service-container.ts`               | Legacy imperative service bag; `@deprecated Use Effect layers directly`.                         |
+| `FunctionExecutor`                                                                                            | `src/executor.ts`                                 | `@deprecated Use FunctionInvocationService`; wraps `ServiceContainer.createLayer()`.             |
+| `FunctionServices` (union)                                                                                    | `src/sdk.ts`                                      | Remove the `FunctionInvocationService` arm; then evaluate deleting the whole alias (see Task 5). |
 
 ### Explicitly OUT of scope (do NOT delete — same/similar names, different things)
 
 - `ServiceRegistry` — `src/services/service-registry.ts` (a live `Context.Tag`, unrelated). **Keep.**
-- `@dxos/functions-runtime-cloudflare/src/internal/service-container.ts` — a *different* `ServiceContainer` (Cloudflare worker env bag). **Keep.**
+- `@dxos/functions-runtime-cloudflare/src/internal/service-container.ts` — a _different_ `ServiceContainer` (Cloudflare worker env bag). **Keep.**
 - `RemoteOperationInvoker` / `EdgeOperationInvoker` — the replacement. **Keep.**
 - `RemoteFunctionExecutionService` — already gone (only referenced in comments); nothing to do.
 
@@ -76,33 +76,39 @@ Each consumer must be repointed off the deleted symbols before/with deletion.
 No deletions yet; make every consumer stop importing the doomed symbols so Phase 2/3 deletes compile cleanly.
 
 ### Task 1.1: plugin-doctor whitelist
+
 - [ ] Remove `FunctionInvocationService` from `KNOWN_SERVICES` and its import in `plugin-doctor/src/diagnostics/providers/operations.ts`.
 - [ ] `moon run plugin-doctor:build` → success.
 - [ ] Commit: `plugin-doctor: drop FunctionInvocationService from operation service whitelist`.
 
 ### Task 1.2: EDGE invocation protocol
+
 - [ ] In `compute-runtime/src/protocol.ts`, remove the `FunctionInvocationService.layerNotAvailable` arm from `FunctionContext.createLayer()` and narrow the return type; update the `FunctionServices`-typed handler effect to the trimmed set.
 - [ ] `moon run compute-runtime:build` → success; `moon run functions-runtime-cloudflare:build` → success (wrapper consumes this path).
 - [ ] Commit: `compute-runtime: stop providing FunctionInvocationService in EDGE function context`.
 
 ### Task 1.3: transcription normalizer
+
 - [ ] Rewrite `message-normalizer.ts` to invoke via `Operation.Service` (inject the invoker) instead of `FunctionExecutor`.
 - [ ] Update `normalization.test.ts` to build the invoker/layers instead of `FunctionExecutor` + `ServiceContainer`.
 - [ ] `moon run plugin-transcription:build && moon run plugin-transcription:test -- src/normalization/normalization.test.ts` → PASS.
 - [ ] Commit: `plugin-transcription: invoke normalization via Operation.Service`.
 
 ### Task 1.4: devtools CLI resolver
+
 - [ ] Replace `FunctionImplementationResolver.layerTest(...)` in `trigger-runtime.ts` and `chat/processor.ts` with `OperationHandlerSet.provide(...)` + the process invoker runtime.
 - [ ] `moon run cli:build` → success (and any CLI smoke test that exercises chat/trigger).
 - [ ] Commit: `cli: resolve operations via OperationHandlerSet instead of FunctionImplementationResolver`.
 
 ### Task 1.5: edge-compute + conductor test helpers
+
 - [ ] Rewrite `edge-compute/src/testing/services.ts` `createTestServices` to return composed Effect layers; update its importers.
 - [ ] Rewrite `conductor/src/nodes/gpt/gpt.test.ts` to `Effect.provide` layers directly.
 - [ ] `moon run edge-compute:build && moon run conductor:build && moon run conductor:test -- src/nodes/gpt/gpt.test.ts` → PASS.
 - [ ] Commit: `edge-compute,conductor: replace ServiceContainer test helpers with Effect layers`.
 
 ### Task 1.6: comment-only reference
+
 - [ ] Update the stale `LocalFunctionExecutionService` comment in `plugin-assistant/src/skills/assistant/skill.ts`.
 - [ ] Commit (fold into 1.4/1.5 if trivial).
 
@@ -111,11 +117,13 @@ No deletions yet; make every consumer stop importing the doomed symbols so Phase
 ## Phase 2 — Delete `ServiceContainer` + `FunctionExecutor`
 
 ### Task 2.1: remove `FunctionExecutor`
+
 - [ ] Delete `compute-runtime/src/executor.ts`; remove `export * from './executor'` from `src/index.ts`.
 - [ ] Confirm no importers remain: `rg -n "FunctionExecutor" packages --glob '*.ts'` → empty.
 - [ ] `moon run compute-runtime:build` → success.
 
 ### Task 2.2: remove `ServiceContainer`
+
 - [ ] Delete `compute-runtime/src/services/service-container.ts`; remove `export * from './service-container'` from `src/services/index.ts`.
 - [ ] Confirm no importers of `ServiceContainer`/`RuntimeServices`/`ServiceRecord` from `@dxos/compute-runtime` remain (mind the Cloudflare same-name class — that one stays).
 - [ ] `moon run compute-runtime:build` → success.
@@ -126,6 +134,7 @@ No deletions yet; make every consumer stop importing the doomed symbols so Phase
 ## Phase 3 — Delete the function-invocation/execution services
 
 ### Task 3.1: remove router + local execution + tag
+
 - [ ] Delete `function-invocation-router.ts` (+ `.test.ts`), `local-function-execution.ts`, `function-invocation-service.ts`.
 - [ ] Remove their lines from `src/services/index.ts`.
 - [ ] `rg -n "FunctionInvocationService|LocalFunctionExecutionService|FunctionImplementationResolver|FunctionInvocationServiceLayer" packages --glob '*.ts'` → empty.
@@ -137,6 +146,7 @@ No deletions yet; make every consumer stop importing the doomed symbols so Phase
 ## Phase 4 — Simplify `FunctionServices`
 
 ### Task 4.1: trim / remove the union
+
 - [ ] In `sdk.ts`, remove the `FunctionInvocationService` arm from `FunctionServices` (import now gone). If the remaining consumers (`protocol.ts` after Task 1.2) can express their requirements directly with `AiService | Credential | Database | Trace | Operation.Service`, delete the `FunctionServices` alias entirely and inline it; otherwise keep the trimmed alias.
 - [ ] `moon run compute-runtime:build` → success.
 - [ ] Commit: `compute-runtime: drop FunctionInvocationService from FunctionServices`.
@@ -146,20 +156,25 @@ No deletions yet; make every consumer stop importing the doomed symbols so Phase
 ## Phase 5 — Full sweep + changeset
 
 ### Task 5.1: repo-wide verification
+
 - [ ] `moon exec --on-failure continue --quiet :build` → resolve any dangling import.
 - [ ] `MOON_CONCURRENCY=4 moon run compute-runtime:test edge-compute:test conductor:test plugin-transcription:test -- --no-file-parallelism` → PASS.
 - [ ] `moon run :lint -- --fix && pnpm format`.
 - [ ] No-cast audit on touched files: `rg -n " as any| as unknown as |!\." packages/core/compute/compute-runtime/src` → nothing new introduced by this change.
 
 ### Task 5.2: changeset
+
 - [ ] Add `.changeset/*.md` (bump `@dxos/compute-runtime` minor) noting the breaking removal of `FunctionInvocationService`, `LocalFunctionExecutionService`, `FunctionImplementationResolver`, `ServiceContainer`, and `FunctionExecutor`; direct consumers to `Operation.Service` (with `{ on: 'edge' }` for edge dispatch).
 
 ---
 
 ## Risks / notes
 
-- **EDGE path parity.** Task 1.2 removes `FunctionInvocationService.layerNotAvailable` from the Cloudflare `FunctionContext`. Any deployed operation handler still `yield*`-ing `FunctionInvocationService` would previously have *died at invocation time* anyway; after deletion it becomes a *type* error at build. Grep operation handlers for `FunctionInvocationService` before deleting (Phase 1 confirms none in-repo).
+- **EDGE path parity.** Task 1.2 removes `FunctionInvocationService.layerNotAvailable` from the Cloudflare `FunctionContext`. Any deployed operation handler still `yield*`-ing `FunctionInvocationService` would previously have _died at invocation time_ anyway; after deletion it becomes a _type_ error at build. Grep operation handlers for `FunctionInvocationService` before deleting (Phase 1 confirms none in-repo).
 - **Two `ServiceContainer`s.** Do not touch `@dxos/functions-runtime-cloudflare`'s `ServiceContainer`; only the `@dxos/compute-runtime` one is deprecated.
 - **Test helpers were the main consumers.** Most remaining usage is in tests (`normalization.test.ts`, `gpt.test.ts`, `edge-compute/testing`) and the CLI; production wiring already runs through `ProcessOperationInvoker` / `Operation.Service`.
-- **Follow-up (not in this plan): real per-space Edge wiring into the app runtime.** `ProcessOperationInvoker.layer` resolves `RemoteOperationInvoker.Service` optionally; `app-framework`'s process-manager runtime currently has no `RemoteOperationInvoker` in context (space-agnostic), while `plugin-routine` provides `EdgeOperationInvoker` at *space* affinity in the LayerStack. Bridging the space-scoped Edge invoker into the runtime that backs `Capabilities.OperationInvoker` is what makes `{ on: 'edge' }` actually reach EDGE in the app, and should be tracked separately.
+- **Follow-up (not in this plan): real per-space Edge wiring into the app runtime.** `ProcessOperationInvoker.layer` resolves `RemoteOperationInvoker.Service` optionally; `app-framework`'s process-manager runtime currently has no `RemoteOperationInvoker` in context (space-agnostic), while `plugin-routine` provides `EdgeOperationInvoker` at _space_ affinity in the LayerStack. Bridging the space-scoped Edge invoker into the runtime that backs `Capabilities.OperationInvoker` is what makes `{ on: 'edge' }` actually reach EDGE in the app, and should be tracked separately.
+
+```
+
 ```
