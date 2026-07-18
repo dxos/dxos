@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -39,12 +39,7 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
 
       // TODO(burdon): This should be factored ouf from SimpleLayoutPlugin.
       Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
-        Plugin.addModule(({ isPopover = false }) => ({
-          id: Capability.getModuleTag(State),
-          requires: State.requires,
-          provides: State.provides,
-          activate: () => State({ initialState: { isPopover } }),
-        })),
+        Plugin.addLazyModule(State),
         Plugin.addLazyModule(ReactRoot),
         Plugin.addLazyModule(ReactSurface),
         Plugin.make,

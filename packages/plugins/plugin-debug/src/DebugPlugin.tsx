@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, DebugSettings, ReactSurface, StatsPanel } from '#capabilities';
@@ -24,19 +24,9 @@ export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
     provides: DebugSettings.provides,
     activate: DebugSettings,
   }),
-  Plugin.addModule(({ logStore }: DebugPluginOptions) => ({
-    id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: () => ReactSurface({ logStore }),
-  })),
+  Plugin.addLazyModule(ReactSurface),
   AppPlugin.addTranslationsModule<DebugPluginOptions>({ translations }),
-  Plugin.addModule(({ persistStats }: DebugPluginOptions) => ({
-    id: 'stats-panel',
-    requires: StatsPanel.requires,
-    provides: StatsPanel.provides,
-    activate: () => StatsPanel({ persist: persistStats ?? true }),
-  })),
+  Plugin.addLazyModule(StatsPanel, { id: 'stats-panel' }),
   AppPlugin.addPluginAssetModule<DebugPluginOptions>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

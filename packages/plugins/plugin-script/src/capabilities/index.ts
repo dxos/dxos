@@ -10,7 +10,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import type { OperationHandlerSet, Skill } from '@dxos/compute';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { ScriptCapabilities } from '#types';
+import { ScriptCapabilities, ScriptEvents } from '#types';
 
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',
@@ -27,10 +27,13 @@ export const CreateObject = Capability.lazyModule(
   { provides: [SpaceCapabilities.CreateObjectEntry] },
   () => import('./create-object'),
 );
-// Runtime event: the compiler is only loaded on demand (see `hooks/useCompiler.ts`), not at startup.
 export const Compiler = Capability.lazyModule(
   'Compiler',
-  { provides: [ScriptCapabilities.Compiler] },
+  {
+    provides: [ScriptCapabilities.Compiler],
+    // Genuine runtime event: the compiler is only loaded on demand (`hooks/useCompiler.ts`), not at startup.
+    activatesOn: ScriptEvents.SetupCompiler,
+  },
   () => import('./compiler'),
 );
 export const OperationHandler = Capability.lazyModule(

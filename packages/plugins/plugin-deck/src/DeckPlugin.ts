@@ -4,7 +4,7 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
@@ -46,19 +46,9 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(DeckSettings),
-    requires: DeckSettings.requires,
-    provides: DeckSettings.provides,
-    activate: DeckSettings,
-  }),
-  Plugin.addLazyModule<typeof CheckAppScheme.requires, typeof CheckAppScheme.provides, void>(CheckAppScheme),
-  Plugin.addModule({
-    id: Capability.getModuleTag(DeckState),
-    requires: DeckState.requires,
-    provides: DeckState.provides,
-    activate: DeckState,
-  }),
+  Plugin.addLazyModule(DeckSettings),
+  Plugin.addLazyModule(CheckAppScheme),
+  Plugin.addLazyModule(DeckState),
   Plugin.addLazyModule(ReactRoot),
   Plugin.addLazyModule(UrlHandler),
   Plugin.addLazyModule(NotificationTracker),

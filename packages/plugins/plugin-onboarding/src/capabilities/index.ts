@@ -14,7 +14,7 @@ import { type Client } from '@dxos/client';
 import { type OperationHandlerSet } from '@dxos/compute';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { OnboardingCapabilities } from './capabilities';
@@ -35,6 +35,10 @@ export const DefaultContent = Capability.lazyModule(
       SpaceCapabilities.PersonalSpace,
     ],
     provides: [],
+    // Runtime event: the personal space exists once identity is created, not at startup.
+    // `requires: [SpaceCapabilities.PersonalSpace]` orders this after plugin-space's
+    // `IdentityCreated` module within the same event wave.
+    activatesOn: ClientEvents.IdentityCreated,
   },
   () => import('./default-content'),
 );

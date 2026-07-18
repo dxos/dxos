@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AnchoredTo } from '@dxos/types';
 
@@ -39,18 +39,8 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(MeetingSettings),
-    requires: MeetingSettings.requires,
-    provides: MeetingSettings.provides,
-    activate: MeetingSettings,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(MeetingState),
-    requires: MeetingState.requires,
-    provides: MeetingState.provides,
-    activate: MeetingState,
-  }),
+  Plugin.addLazyModule(MeetingSettings),
+  Plugin.addLazyModule(MeetingState),
   Plugin.addLazyModule(CallExtension),
   AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

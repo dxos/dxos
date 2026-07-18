@@ -10,7 +10,7 @@ pattern already in `capability.ts` is the only allowed form — copy its comment
 The exported type of a capability module must be **opaque with respect to
 requires/provides** — parameterized ONLY by its options type. Spec type-checking of the
 body still happens at the authoring site (`lazyModule`/`inlineModule` parameters); the
-*result* type erases it. This eliminates every TS2883 declaration-emit problem, so the
+_result_ type erases it. This eliminates every TS2883 declaration-emit problem, so the
 named `XModule` interfaces in AppCapability and all `typeof`-annotation workarounds get
 deleted. `props` (plugin-options → body-props mapping) and `activatesOn` are declared where
 the module is authored (capability level), not at `Plugin.addLazyModule`.
@@ -58,15 +58,15 @@ export const lazyModule = <
 ): Module<Options>
 ```
 
-  Body: `(options: Options)` → await loader → `getModule(spec.props ? spec.props(options) :
+Body: `(options: Options)` → await loader → `getModule(spec.props ? spec.props(options) :
   options)` — the no-props branch needs a documented correlation cast (when `spec.props` is
-  absent, `Options` resolves to its `Props` default). Attach `[ModuleTag]: name`, `requires:
+absent, `Options` resolves to its `Props` default). Attach `[ModuleTag]: name`, `requires:
   spec.requires ?? []`, `provides: spec.provides`, `activatesOn: spec.activatesOn` via
-  `Object.assign`. Do NOT mutate the caller's loader.
+`Object.assign`. Do NOT mutate the caller's loader.
 
 - `inlineModule(name, spec, activate)` — same spec shape (requires?/provides/activatesOn?/
   props?), `activate: (props: Props) => Effect<ProvidesReturn<Provides>, Error,
-  Requirements<Requires>>`, returns `Module<Options>`.
+Requirements<Requires>>`, returns `Module<Options>`.
 
 - `moduleMaker(defaultName, capability)` — returned maker:
 
@@ -78,9 +78,9 @@ export const lazyModule = <
 ): Module<Options>
 ```
 
-  `MakerOptions` gains `activatesOn?: ActivationEvent.Events` and
-  `props?: (options: Options) => Props` (update its type params accordingly). Delegates to
-  `lazyModule` passing all spec fields through.
+`MakerOptions` gains `activatesOn?: ActivationEvent.Events` and
+`props?: (options: Options) => Props` (update its type params accordingly). Delegates to
+`lazyModule` passing all spec fields through.
 
 ## 2. app-framework `src/core/plugin.ts`
 
@@ -100,13 +100,14 @@ Implementation: always register the function-entry form so options-taking module
 the plugin options:
 
 ```ts
-(builder) => builder.addModule((pluginOptions) => ({
-  id: options?.id ?? Capability.getModuleTag(module),
-  activatesOn: module.activatesOn,
-  requires: module.requires,
-  provides: module.provides,
-  activate: () => module(pluginOptions),
-}));
+(builder) =>
+  builder.addModule((pluginOptions) => ({
+    id: options?.id ?? Capability.getModuleTag(module),
+    activatesOn: module.activatesOn,
+    requires: module.requires,
+    provides: module.provides,
+    activate: () => module(pluginOptions),
+  }));
 ```
 
 (For void-options modules the extra argument is ignored by the body.) `TypedModuleOptions`,
@@ -149,8 +150,9 @@ options). Delete the interfaces.
   ```
 
   (copy the exact current mapping body from ClientPlugin.ts; import `type
-  ClientPluginOptions` from `'#types'`). `Client` needs NO props (its body already takes
+ClientPluginOptions` from `'#types'`). `Client` needs NO props (its body already takes
   `ClientPluginOptions` — options and props coincide).
+
 - **plugin-client `src/capabilities/navigation-handler/index.ts`**: drop the annotation;
   add `props: ({ invitationProp }: ClientPluginOptions) => ({ invitationProp })` to the
   maker options (moved from ClientPlugin.ts).
@@ -173,7 +175,7 @@ options). Delete the interfaces.
 - **app-framework `src/core/plugin.test.ts`**: the `addLazyModule` describe block: the
   'maps plugin options to module props' test moves the props mapping into the
   `Capability.lazyModule` spec (`props: ({ offset }: { offset: number }) => ({ start:
-  offset + 1 })`), and `Plugin.addLazyModule(Lazy)` becomes bare. Add one assertion that a
+offset + 1 })`), and `Plugin.addLazyModule(Lazy)` becomes bare. Add one assertion that a
   module authored with `activatesOn` in its spec normalizes to event mode via
   `addLazyModule` (activation.mode === 'event'). Keep the inlineModule/moduleMaker tests,
   adjusting only if signatures require.

@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
 import { DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,
@@ -57,34 +56,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Task.Task,
     ],
   }),
-  Plugin.addModule(
-    ({
-      shareableLinkOrigin = 'http://localhost:5173',
-      invitationPath = '/',
-      invitationProp = 'spaceInvitationCode',
-    }) => {
-      const createInvitationUrl = (invitationCode: string) => {
-        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
-        baseUrl.searchParams.set(invitationProp, invitationCode);
-        return baseUrl.toString();
-      };
-
-      return {
-        id: Capability.getModuleTag(UndoMappings),
-        requires: UndoMappings.requires,
-        provides: UndoMappings.provides,
-        activate: () => UndoMappings({ createInvitationUrl, observability: false }),
-      };
-    },
-  ),
-  Plugin.addModule({
-    id: Capability.getModuleTag(IdentityCreated),
-    // Runtime event: the personal space is created when a local identity is created, not at startup.
-    activatesOn: ClientEvents.IdentityCreated,
-    requires: IdentityCreated.requires,
-    provides: IdentityCreated.provides,
-    activate: IdentityCreated,
-  }),
+  Plugin.addLazyModule(UndoMappings),
+  Plugin.addLazyModule(IdentityCreated),
   Plugin.make,
 );
 

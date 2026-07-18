@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
@@ -55,18 +55,8 @@ export const MapPlugin = Plugin.define(meta).pipe(
     activate: MapSettings,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(MarkerProvider),
-    requires: MarkerProvider.requires,
-    provides: MarkerProvider.provides,
-    activate: MarkerProvider,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(MapState),
-    requires: MapState.requires,
-    provides: MapState.provides,
-    activate: MapState,
-  }),
+  Plugin.addLazyModule(MarkerProvider),
+  Plugin.addLazyModule(MapState),
   AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

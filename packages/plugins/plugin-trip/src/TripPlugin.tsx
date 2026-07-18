@@ -67,12 +67,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
     provides: [InboxCapabilities.ObjectExtractor],
     activate: () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
   }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(MarkerProvider),
-    requires: MarkerProvider.requires,
-    provides: MarkerProvider.provides,
-    activate: MarkerProvider,
-  }),
+  Plugin.addLazyModule(MarkerProvider),
   Plugin.make,
 );
 

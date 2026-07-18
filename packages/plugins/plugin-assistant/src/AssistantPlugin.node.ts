@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
@@ -68,45 +68,13 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Text.Text,
       ],
     }),
-    Plugin.addModule({
-      requires: EdgeModelResolver.requires,
-      provides: EdgeModelResolver.provides,
-      activate: EdgeModelResolver,
-    }),
-    Plugin.addModule({
-      requires: LocalModelResolver.requires,
-      provides: LocalModelResolver.provides,
-      activate: LocalModelResolver,
-    }),
-    Plugin.addModule((options: AssistantPluginOptions | void) => ({
-      id: Capability.getModuleTag(AiService),
-      requires: AiService.requires,
-      provides: AiService.provides,
-      activate: () => AiService(options),
-    })),
-    Plugin.addModule({
-      requires: AiContextCapability.requires,
-      provides: AiContextCapability.provides,
-      activate: AiContextCapability,
-    }),
-    Plugin.addModule({
-      requires: Toolkit.requires,
-      provides: Toolkit.provides,
-      activate: Toolkit,
-    }),
-    Plugin.addModule({
-      requires: AgentRuntime.requires,
-      provides: AgentRuntime.provides,
-      activate: AgentRuntime,
-    }),
+    Plugin.addLazyModule(EdgeModelResolver),
+    Plugin.addLazyModule(LocalModelResolver),
+    Plugin.addLazyModule(AiService),
+    Plugin.addLazyModule(AiContextCapability),
+    Plugin.addLazyModule(Toolkit),
+    Plugin.addLazyModule(AgentRuntime),
   )
-  .pipe(
-    Plugin.addModule({
-      requires: AgentHydrator.requires,
-      provides: AgentHydrator.provides,
-      activate: AgentHydrator,
-    }),
-    Plugin.make,
-  );
+  .pipe(Plugin.addLazyModule(AgentHydrator), Plugin.make);
 
 export default AssistantPlugin;

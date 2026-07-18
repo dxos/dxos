@@ -33,12 +33,7 @@ export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
         }),
       ]),
   }),
-  Plugin.addModule(({ initialState }: StorybookPluginOptions) => ({
-    id: Capability.getModuleTag(State),
-    requires: State.requires,
-    provides: State.provides,
-    activate: () => State({ initialState }),
-  })),
+  Plugin.addLazyModule(State),
   Plugin.make,
 );
 

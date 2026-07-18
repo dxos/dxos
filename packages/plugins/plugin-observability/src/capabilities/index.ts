@@ -14,7 +14,7 @@ import { type Observability } from '@dxos/observability';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 
-import { ObservabilityCapabilities } from '#types';
+import { ObservabilityCapabilities, ObservabilityEvents, type ObservabilityPluginOptions } from '#types';
 
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
@@ -40,6 +40,9 @@ export const PrivacyNotice = Capability.lazyModule(
       ObservabilityCapabilities.ClientCapability,
     ],
     provides: [],
+    // Genuine runtime event: fired imperatively by `plugin-client`'s create-identity operation
+    // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
+    activatesOn: ObservabilityEvents.IdentityCreatedEvent,
   },
   () => import('./privacy-notice'),
 );
@@ -60,6 +63,10 @@ export const ObservabilitySettings = Capability.lazyModule(
 );
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',
-  { requires: [Capabilities.AtomRegistry], provides: [ObservabilityCapabilities.State] },
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [ObservabilityCapabilities.State],
+    props: ({ namespace }: ObservabilityPluginOptions) => ({ namespace }),
+  },
   () => import('./state'),
 );

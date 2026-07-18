@@ -18,12 +18,7 @@ export const PreviewPlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: 'preview-popover',
-    requires: PreviewPopover.requires,
-    provides: PreviewPopover.provides,
-    activate: PreviewPopover,
-  }),
+  Plugin.addLazyModule(PreviewPopover, { id: 'preview-popover' }),
   Plugin.make,
 );
 

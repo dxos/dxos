@@ -26,8 +26,14 @@ export type CapabilityModuleOptions<
   Requires extends readonly Capability$.AnyTag[] = readonly [],
 > = {
   id?: string;
-  /** Capabilities the body accesses via `yield*`. */
-  requires?: Requires;
+  /**
+   * Capabilities the body accesses via `yield*`. Also accepts the opaque `readonly AnyTag[]`
+   * shape a {@link Capability$.Module}'s own `.requires` carries — an explicit partial type
+   * argument list (e.g. `addXModule<PluginOptions>(...)`) pins `Requires` to its `readonly []`
+   * default rather than inferring it from this field, so the narrower type alone would reject
+   * every call site that forwards a module's `.requires` under an explicit plugin-options type.
+   */
+  requires?: Requires | readonly Capability$.AnyTag[];
   /** Overrides the helper's default provides (e.g. a body contributing additional capabilities). */
   provides?: readonly Capability$.AnyTag[];
   activate: () => Effect.Effect<

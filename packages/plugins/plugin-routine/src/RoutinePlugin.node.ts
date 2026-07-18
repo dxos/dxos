@@ -5,7 +5,6 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
-import { ClientEvents } from '@dxos/plugin-client';
 
 import {
   AppGraphBuilder,
@@ -40,8 +39,7 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(Templates),
   Plugin.addLazyModule(LayerSpecs),
   Plugin.addLazyModule(RegistrySync),
-  // Runtime event: triggers only need to react to spaces once the client observes them.
-  Plugin.addLazyModule(TriggerRuntimeController, { activatesOn: ClientEvents.SpacesReady }),
+  Plugin.addLazyModule(TriggerRuntimeController),
   Plugin.make,
 );
 

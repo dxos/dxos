@@ -4,7 +4,6 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
 
 import {
   AppGraphBuilder,
@@ -41,28 +40,9 @@ export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<OnboardingOptions>({ translations }),
-  Plugin.addModule({
-    id: 'oauth-recovery-redirect',
-    requires: OAuthRecoveryRedirect.requires,
-    provides: OAuthRecoveryRedirect.provides,
-    activate: OAuthRecoveryRedirect,
-  }),
-  // Runtime event: the personal space exists once identity is created, not at startup.
-  // `requires: [SpaceCapabilities.PersonalSpace]` orders this after plugin-space's
-  // `IdentityCreated` module within the same event wave.
-  Plugin.addModule((options: OnboardingOptions) => ({
-    id: 'default-content',
-    activatesOn: ClientEvents.IdentityCreated,
-    requires: DefaultContent.requires,
-    provides: DefaultContent.provides,
-    activate: () => DefaultContent(options),
-  })),
-  Plugin.addModule({
-    id: 'onboarding',
-    requires: Onboarding.requires,
-    provides: Onboarding.provides,
-    activate: Onboarding,
-  }),
+  Plugin.addLazyModule(OAuthRecoveryRedirect, { id: 'oauth-recovery-redirect' }),
+  Plugin.addLazyModule(DefaultContent, { id: 'default-content' }),
+  Plugin.addLazyModule(Onboarding, { id: 'onboarding' }),
   Plugin.make,
 );
 

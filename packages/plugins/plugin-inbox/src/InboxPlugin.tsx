@@ -26,7 +26,7 @@ import { translations } from '#translations';
 import { Calendar, ExtractedFrom, InboxCapabilities, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
+  AppPlugin.addAppGraphModule<void>({
     requires: AppGraphBuilder.requires,
     provides: AppGraphBuilder.provides,
     activate: AppGraphBuilder,
@@ -41,7 +41,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     provides: CreateObject.provides,
     activate: CreateObject,
   }),
-  AppPlugin.addNavigationResolverModule({
+  AppPlugin.addNavigationResolverModule<void>({
     requires: NavigationResolver.requires,
     provides: NavigationResolver.provides,
     activate: NavigationResolver,
@@ -68,13 +68,8 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(InboxSettings),
-    requires: InboxSettings.requires,
-    provides: InboxSettings.provides,
-    activate: InboxSettings,
-  }),
-  Plugin.addLazyModule<typeof Connector.requires, typeof Connector.provides, void>(Connector),
+  Plugin.addLazyModule(InboxSettings),
+  Plugin.addLazyModule<void>(Connector),
   Plugin.addModule({
     id: 'contact-extractor',
     requires: [],

@@ -35,12 +35,18 @@ export const ReactSurface = Capability.lazyModule(
 );
 export const SpotlightDismiss = Capability.lazyModule(
   'SpotlightDismiss',
-  { provides: [] },
+  {
+    provides: [],
+    props: (options: { isPopover?: boolean }) => ({ isPopover: options.isPopover ?? false }),
+  },
   () => import('./spotlight-dismiss'),
 );
 export const State = Capability.lazyModule(
   'State',
-  { provides: [SimpleLayoutCapabilities.State, AppCapabilities.Layout] },
+  {
+    provides: [SimpleLayoutCapabilities.State, AppCapabilities.Layout],
+    props: (options: { isPopover?: boolean }) => ({ initialState: { isPopover: options.isPopover ?? false } }),
+  },
   () => import('./state'),
 );
 export const UrlHandler = Capability.lazyModule(

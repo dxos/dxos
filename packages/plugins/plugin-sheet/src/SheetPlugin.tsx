@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
@@ -57,30 +57,10 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(SheetState),
-    requires: SheetState.requires,
-    provides: SheetState.provides,
-    activate: SheetState,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ComputeGraphRegistry),
-    requires: ComputeGraphRegistry.requires,
-    provides: ComputeGraphRegistry.provides,
-    activate: ComputeGraphRegistry,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(Markdown),
-    requires: Markdown.requires,
-    provides: Markdown.provides,
-    activate: Markdown,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(AnchorSort),
-    requires: AnchorSort.requires,
-    provides: AnchorSort.provides,
-    activate: AnchorSort,
-  }),
+  Plugin.addLazyModule(SheetState),
+  Plugin.addLazyModule(ComputeGraphRegistry),
+  Plugin.addLazyModule(Markdown),
+  Plugin.addLazyModule(AnchorSort),
   AppPlugin.addPluginAssetModule<void>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

@@ -10,7 +10,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import type { OperationHandlerSet, Skill } from '@dxos/compute';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { HelpCapabilities, SupportCapabilities } from '#types';
+import { HelpCapabilities, SupportCapabilities, type Tour } from '#types';
 
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',
@@ -39,7 +39,11 @@ export const OperationHandler = Capability.lazyModule(
 );
 export const ReactRoot = Capability.lazyModule(
   'ReactRoot',
-  { provides: [Capabilities.ReactRoot] },
+  {
+    provides: [Capabilities.ReactRoot],
+    /** Maps the plugin's configured tour steps to the body's props. */
+    props: (options: { helpSteps?: Tour.Step[] }) => options.helpSteps,
+  },
   () => import('./react-root'),
 );
 export const ReactSurface = Capability.lazyModule(

@@ -5,7 +5,7 @@
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 
-import { ClientCapabilities } from '#types';
+import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '#types';
 
 export const AccountCache = Capability.lazyModule(
   'AccountCache',
@@ -23,10 +23,11 @@ export const Client = Capability.lazyModule(
   { provides: [ClientCapabilities.Client, Capabilities.Layer] },
   () => import('./client'),
 );
-// Annotated so the emitted `.d.ts` names the capability via `typeof` instead of expanding
-// compute types this package does not depend on (TS2883).
-export const LayerSpecs: Capability.Module<void, readonly [], readonly [typeof Capabilities.LayerSpec]> =
-  Capability.lazyModule('LayerSpecs', { provides: [Capabilities.LayerSpec] }, () => import('./layer-specs'));
+export const LayerSpecs = Capability.lazyModule(
+  'LayerSpecs',
+  { provides: [Capabilities.LayerSpec] },
+  () => import('./layer-specs'),
+);
 export const Migrations = Capability.lazyModule(
   'Migrations',
   { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration], provides: [] },
@@ -36,27 +37,33 @@ export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  props: ({
+    shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+    invitationPath = '/',
+    invitationProp = 'deviceInvitationCode',
+    onReset,
+  }: ClientPluginOptions) => {
+    const createInvitationUrl = (invitationCode: string) => {
+      const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
+      baseUrl.searchParams.set(invitationProp, invitationCode);
+      return baseUrl.toString();
+    };
+    return { createInvitationUrl, onReset };
+  },
+});
 export const SchemaDefs = Capability.lazyModule(
   'SchemaDefs',
   { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema], provides: [] },
   () => import('./schema-defs'),
 );
-// Annotated so the emitted `.d.ts` names the requires via `typeof` instead of expanding
-// progress types this package does not depend on (TS2883).
-export const SpaceReplicationProgress: Capability.Module<
-  void,
-  readonly [
-    typeof ClientCapabilities.Client,
-    typeof AppCapabilities.ProgressRegistry,
-    typeof Capabilities.ProcessManagerRuntime,
-  ],
-  readonly []
-> = Capability.lazyModule(
+export const SpaceReplicationProgress = Capability.lazyModule(
   'SpaceReplicationProgress',
   {
     requires: [ClientCapabilities.Client, AppCapabilities.ProgressRegistry, Capabilities.ProcessManagerRuntime],
     provides: [],
+    // Runtime event: spaces become ready when the client observes them, not at startup.
+    activatesOn: ClientEvents.SpacesReady,
   },
   () => import('./space-replication-progress'),
 );

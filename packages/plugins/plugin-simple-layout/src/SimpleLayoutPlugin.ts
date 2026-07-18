@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
@@ -34,18 +34,8 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
     activate: OperationHandler,
   }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ isPopover = false }) => ({
-    id: Capability.getModuleTag(State),
-    requires: State.requires,
-    provides: State.provides,
-    activate: () => State({ initialState: { isPopover } }),
-  })),
-  Plugin.addModule(({ isPopover = false }) => ({
-    id: Capability.getModuleTag(SpotlightDismiss),
-    requires: SpotlightDismiss.requires,
-    provides: SpotlightDismiss.provides,
-    activate: () => SpotlightDismiss({ isPopover }),
-  })),
+  Plugin.addLazyModule(State),
+  Plugin.addLazyModule(SpotlightDismiss),
   Plugin.addLazyModule(ReactRoot),
   Plugin.addLazyModule(ReactSurface),
   Plugin.addLazyModule(UrlHandler),

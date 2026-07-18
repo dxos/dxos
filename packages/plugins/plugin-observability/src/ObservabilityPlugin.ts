@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { type Observability } from '@dxos/observability';
 
 import {
   ClientReady,
@@ -18,17 +17,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ObservabilityCapabilities, ObservabilityEvents } from '#types';
+import { ObservabilityCapabilities, type ObservabilityPluginOptions } from '#types';
 
-export type ObservabilityPluginOptions = {
-  namespace: string;
-  observability: () => Promise<Observability.Observability>;
-  /**
-   * Optional callback invoked by the help/feedback UI to download captured logs.
-   * When omitted the "Download logs" action is hidden.
-   */
-  downloadLogs?: () => void | Promise<void>;
-};
+export type { ObservabilityPluginOptions } from '#types';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
   AppPlugin.addSurfaceModule<ObservabilityPluginOptions>({
@@ -37,7 +28,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<ObservabilityPluginOptions>({ translations }),
-  Plugin.addModule(({ observability }) => ({
+  Plugin.addModule(({ observability }: ObservabilityPluginOptions) => ({
     id: 'observability',
     requires: [],
     provides: [ObservabilityCapabilities.Observability],
@@ -47,24 +38,15 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
         return [Capability.provide(ObservabilityCapabilities.Observability, obs, () => obs.close())];
       }),
   })),
-  Plugin.addModule({
-    requires: ObservabilitySettings.requires,
-    provides: ObservabilitySettings.provides,
-    activate: ObservabilitySettings,
-  }),
-  Plugin.addModule(({ namespace }) => ({
-    id: Capability.getModuleTag(ObservabilityState),
-    requires: ObservabilityState.requires,
-    provides: ObservabilityState.provides,
-    activate: () => ObservabilityState({ namespace }),
-  })),
-  Plugin.addModule(({ namespace }) => ({
+  Plugin.addLazyModule(ObservabilitySettings),
+  Plugin.addLazyModule(ObservabilityState),
+  Plugin.addModule(({ namespace }: ObservabilityPluginOptions) => ({
     id: 'namespace',
     requires: [],
     provides: [ObservabilityCapabilities.Namespace],
     activate: () => Effect.succeed([Capability.provide(ObservabilityCapabilities.Namespace, namespace)]),
   })),
-  Plugin.addModule(({ downloadLogs }) => ({
+  Plugin.addModule(({ downloadLogs }: ObservabilityPluginOptions) => ({
     id: 'log-downloader',
     requires: [],
     provides: downloadLogs !== undefined ? [ObservabilityCapabilities.LogDownloader] : [],
@@ -78,21 +60,8 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     provides: OperationHandler.provides,
     activate: OperationHandler,
   }),
-  // Genuine runtime event: fired imperatively by `plugin-client`'s create-identity operation
-  // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
-  Plugin.addModule({
-    id: Capability.getModuleTag(PrivacyNotice),
-    activatesOn: ObservabilityEvents.IdentityCreatedEvent,
-    requires: PrivacyNotice.requires,
-    provides: PrivacyNotice.provides,
-    activate: PrivacyNotice,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ClientReady),
-    requires: ClientReady.requires,
-    provides: ClientReady.provides,
-    activate: ClientReady,
-  }),
+  Plugin.addLazyModule(PrivacyNotice),
+  Plugin.addLazyModule(ClientReady),
   Plugin.make,
 );
 

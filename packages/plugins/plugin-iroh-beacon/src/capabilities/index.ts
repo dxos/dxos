@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { BeaconCapabilities } from './beacon-service';
 
@@ -12,6 +12,9 @@ export const BeaconServiceModule = Capability.lazyModule(
   {
     requires: [ClientCapabilities.Client, Capabilities.AtomRegistry],
     provides: [BeaconCapabilities.State],
+    // Genuine runtime event: spaces become ready when the client observes them, not at a fixed
+    // startup point.
+    activatesOn: ClientEvents.SpacesReady,
   },
   () => import('./beacon-service'),
 );

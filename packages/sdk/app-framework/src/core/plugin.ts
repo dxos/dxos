@@ -407,55 +407,29 @@ export function addModule<T>(
 
 /**
  * Adds a module from a spec-carrying body ({@link Capability.lazyModule} /
- * {@link Capability.inlineModule}): requires/provides come from the spec and the id derives
- * from the module name. Dependency-mode by default; pass `activatesOn` for a runtime-event
- * module. Bodies taking props declare `props` mapping the plugin options to the body's props.
+ * {@link Capability.inlineModule}): requires/provides/activatesOn/props all come from the
+ * module's own spec (declared where it is authored), so this only needs an optional id
+ * override.
  */
 export const addLazyModule: {
-  <Requires extends readonly Capability.AnyTag[], Provides extends readonly Capability.AnyTag[], T = void>(
-    module: Capability.Module<void, Requires, Provides>,
-    options?: {
-      id?: string;
-      activatesOn?: ActivationEvent.Events;
-    },
+  <T = void>(
+    module: Capability.Module<void>,
+    options?: { id?: string },
   ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
-  <Props, Requires extends readonly Capability.AnyTag[], Provides extends readonly Capability.AnyTag[], T>(
-    module: Capability.Module<Props, Requires, Provides>,
-    options: {
-      id?: string;
-      activatesOn?: ActivationEvent.Events;
-      /** Maps the plugin options to the module body's props. */
-      props: (pluginOptions: T) => Props;
-    },
+  <Options, T extends Options = Options>(
+    module: Capability.Module<Options>,
+    options?: { id?: string },
   ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
 } =
-  <Props, Requires extends readonly Capability.AnyTag[], Provides extends readonly Capability.AnyTag[], T>(
-    module: Capability.Module<Props, Requires, Provides>,
-    options?: {
-      id?: string;
-      activatesOn?: ActivationEvent.Events;
-      props?: (pluginOptions: T) => Props;
-    },
-  ) =>
-  (builder: PluginBuilder<T>): PluginBuilder<T> => {
-    const props = options?.props;
-    if (props === undefined) {
-      return builder.addModule({
-        id: options?.id,
-        activatesOn: options?.activatesOn,
-        requires: module.requires,
-        provides: module.provides,
-        activate: module,
-      });
-    }
-    return builder.addModule((pluginOptions: T) => ({
+  <Options, T extends Options = Options>(module: Capability.Module<Options>, options?: { id?: string }) =>
+  (builder: PluginBuilder<T>): PluginBuilder<T> =>
+    builder.addModule((pluginOptions: T) => ({
       id: options?.id ?? Capability.getModuleTag(module),
-      activatesOn: options?.activatesOn,
+      activatesOn: module.activatesOn,
       requires: module.requires,
       provides: module.provides,
-      activate: () => module(props(pluginOptions)),
+      activate: () => module(pluginOptions),
     }));
-  };
 
 export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
 

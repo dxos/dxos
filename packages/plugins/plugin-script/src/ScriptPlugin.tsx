@@ -17,7 +17,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ScriptEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -55,8 +54,7 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
     provides: ScriptSettings.provides,
     activate: ScriptSettings,
   }),
-  // Genuine runtime event: the compiler is only loaded on demand (`hooks/useCompiler.ts`), not at startup.
-  Plugin.addLazyModule(Compiler, { activatesOn: ScriptEvents.SetupCompiler }),
+  Plugin.addLazyModule(Compiler),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

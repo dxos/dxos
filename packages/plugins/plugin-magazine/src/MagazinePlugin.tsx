@@ -69,12 +69,7 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: 'magazine-automation-templates',
-    requires: RoutineTemplates.requires,
-    provides: RoutineTemplates.provides,
-    activate: RoutineTemplates,
-  }),
+  Plugin.addLazyModule(RoutineTemplates, { id: 'magazine-automation-templates' }),
   Plugin.make,
 );
 

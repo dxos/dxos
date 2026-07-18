@@ -2,24 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
 
 import { BeaconServiceModule, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const IrohBeaconPlugin = Plugin.define(meta).pipe(
-  // Beacon service: creates transport + starts broadcasting. Genuine runtime event — spaces
-  // become ready when the client observes them, not at a fixed startup point.
-  Plugin.addModule({
-    id: Capability.getModuleTag(BeaconServiceModule),
-    activatesOn: ClientEvents.SpacesReady,
-    requires: BeaconServiceModule.requires,
-    provides: BeaconServiceModule.provides,
-    activate: BeaconServiceModule,
-  }),
+  // Beacon service: creates transport + starts broadcasting.
+  Plugin.addLazyModule(BeaconServiceModule),
 
   // Status indicator surface.
   AppPlugin.addSurfaceModule({

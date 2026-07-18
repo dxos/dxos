@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
@@ -97,84 +97,29 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: ReactSurface,
     }),
     AppPlugin.addTranslationsModule<AssistantPluginOptions | void>({ translations }),
-    Plugin.addModule({
-      id: 'automation-templates',
-      requires: AutomationTemplates.requires,
-      provides: AutomationTemplates.provides,
-      activate: AutomationTemplates,
-    }),
-    Plugin.addModule({
-      id: 'markdown',
-      requires: MarkdownExtension.requires,
-      provides: MarkdownExtension.provides,
-      activate: MarkdownExtension,
-    }),
-    Plugin.addModule({
-      // TODO(wittjosiah): Does not integrate with settings store.
-      //   Should this be a different event?
-      //   Should settings store be renamed to be more generic?
-      requires: AssistantState.requires,
-      provides: AssistantState.provides,
-      activate: AssistantState,
-    }),
-    Plugin.addModule({
-      requires: EdgeModelResolver.requires,
-      provides: EdgeModelResolver.provides,
-      activate: EdgeModelResolver,
-    }),
-    Plugin.addModule({
-      requires: LocalModelResolver.requires,
-      provides: LocalModelResolver.provides,
-      activate: LocalModelResolver,
-    }),
-    Plugin.addModule((options: AssistantPluginOptions | void) => ({
-      id: Capability.getModuleTag(AiService),
-      requires: AiService.requires,
-      provides: AiService.provides,
-      activate: () => AiService(options),
-    })),
-    Plugin.addModule({
-      // Process-affinity `Harness.HarnessService` LayerSpec — needed so operations
-      // dispatched as their own processes (e.g. via `Operation.invoke` from
-      // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
-      // conversation-scoped services without an inline `Effect.provideService`
-      // upstream. See `capabilities/ai-context.ts` for the rationale.
-      requires: AiContextCapability.requires,
-      provides: AiContextCapability.provides,
-      activate: AiContextCapability,
-    }),
-    Plugin.addModule({
-      requires: AgentRuntime.requires,
-      provides: AgentRuntime.provides,
-      activate: AgentRuntime,
-    }),
+    Plugin.addLazyModule(AutomationTemplates, { id: 'automation-templates' }),
+    Plugin.addLazyModule(MarkdownExtension, { id: 'markdown' }),
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    Plugin.addLazyModule(AssistantState),
+    Plugin.addLazyModule(EdgeModelResolver),
+    Plugin.addLazyModule(LocalModelResolver),
+    Plugin.addLazyModule(AiService),
+    // Process-affinity `Harness.HarnessService` LayerSpec — needed so operations
+    // dispatched as their own processes (e.g. via `Operation.invoke` from
+    // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
+    // conversation-scoped services without an inline `Effect.provideService`
+    // upstream. See `capabilities/ai-context.ts` for the rationale.
+    Plugin.addLazyModule(AiContextCapability),
+    Plugin.addLazyModule(AgentRuntime),
   )
   .pipe(
-    Plugin.addModule({
-      requires: Toolkit.requires,
-      provides: Toolkit.provides,
-      activate: Toolkit,
-    }),
-    Plugin.addModule({
-      requires: AgentHydrator.requires,
-      provides: AgentHydrator.provides,
-      activate: AgentHydrator,
-    }),
-    Plugin.addModule({
-      requires: CompanionChatProvisioner.requires,
-      provides: CompanionChatProvisioner.provides,
-      activate: CompanionChatProvisioner,
-    }),
-    Plugin.addModule({
-      requires: Migrations.requires,
-      provides: Migrations.provides,
-      activate: Migrations,
-    }),
-    Plugin.addModule({
-      requires: Connector.requires,
-      provides: Connector.provides,
-      activate: Connector,
-    }),
+    Plugin.addLazyModule(Toolkit),
+    Plugin.addLazyModule(AgentHydrator),
+    Plugin.addLazyModule(CompanionChatProvisioner),
+    Plugin.addLazyModule(Migrations),
+    Plugin.addLazyModule(Connector),
     AppPlugin.addPluginAssetModule<AssistantPluginOptions | void>({
       asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
     }),

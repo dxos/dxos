@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, DevPluginLoader, OperationHandler, ReactSurface, RegistrySettings } from '#capabilities';
@@ -31,12 +31,7 @@ export const RegistryPlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(DevPluginLoader),
-    requires: DevPluginLoader.requires,
-    provides: DevPluginLoader.provides,
-    activate: DevPluginLoader,
-  }),
+  Plugin.addLazyModule(DevPluginLoader),
   Plugin.make,
 );
 

@@ -35,15 +35,7 @@ const HistoryCapabilities = Capability.lazyModule(
 );
 
 export const ProcessManagerPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    requires: ProcessManagerCapability.requires,
-    provides: ProcessManagerCapability.provides,
-    activate: ProcessManagerCapability,
-  }),
-  Plugin.addModule({
-    requires: HistoryCapabilities.requires,
-    provides: HistoryCapabilities.provides,
-    activate: HistoryCapabilities,
-  }),
+  Plugin.addLazyModule(ProcessManagerCapability),
+  Plugin.addLazyModule(HistoryCapabilities),
   Plugin.make,
 );

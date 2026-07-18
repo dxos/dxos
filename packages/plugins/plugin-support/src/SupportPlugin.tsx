@@ -56,18 +56,8 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<SupportPluginOptions>({ translations }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(HelpState),
-    requires: HelpState.requires,
-    provides: HelpState.provides,
-    activate: HelpState,
-  }),
-  Plugin.addModule(({ helpSteps = [] }) => ({
-    id: 'react-root',
-    requires: ReactRoot.requires,
-    provides: ReactRoot.provides,
-    activate: () => ReactRoot(helpSteps),
-  })),
+  Plugin.addLazyModule<SupportPluginOptions>(HelpState),
+  Plugin.addLazyModule<{ helpSteps?: Tour.Step[] }, SupportPluginOptions>(ReactRoot),
   // Genuine runtime event: fired imperatively by `plugin-space`'s create-space operation.
   Plugin.addModule({
     id: 'on-space-created',
@@ -80,12 +70,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
         ),
       ]),
   }),
-  Plugin.addModule({
-    id: 'settings',
-    requires: SupportSettings.requires,
-    provides: SupportSettings.provides,
-    activate: SupportSettings,
-  }),
+  Plugin.addLazyModule(SupportSettings, { id: 'settings' }),
   AppPlugin.addPluginAssetModule<SupportPluginOptions>({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

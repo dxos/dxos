@@ -21,18 +21,8 @@ const Translator = Capability.lazyModule(
 );
 
 export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
-  Plugin.addModule((options: ThemePluginOptions) => ({
-    id: Capability.getModuleTag(ReactContext),
-    requires: ReactContext.requires,
-    provides: ReactContext.provides,
-    activate: () => ReactContext(options),
-  })),
-  Plugin.addModule((options: ThemePluginOptions) => ({
-    id: Capability.getModuleTag(Translator),
-    requires: Translator.requires,
-    provides: Translator.provides,
-    activate: () => Translator(options),
-  })),
+  Plugin.addLazyModule(ReactContext),
+  Plugin.addLazyModule(Translator),
   Plugin.make,
 );
 

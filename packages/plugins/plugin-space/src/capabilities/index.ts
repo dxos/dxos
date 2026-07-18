@@ -15,14 +15,27 @@ import type { OperationHandlerSet } from '@dxos/compute';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, type SpacePluginOptions } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
 
 export * from './app-graph-builder';
 export { makeCreateObjectEntryForDatabaseType } from '../util';
+
+/** Builds the invitation-link URL builder shared by the props mappings below. */
+const makeCreateInvitationUrl =
+  ({
+    shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+    invitationPath = '/',
+    invitationProp = 'spaceInvitationCode',
+  }: SpacePluginOptions) =>
+  (invitationCode: string) => {
+    const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
+    baseUrl.searchParams.set(invitationProp, invitationCode);
+    return baseUrl.toString();
+  };
 
 export const CreateObject = Capability.lazyModule(
   'CreateObject',
@@ -31,7 +44,12 @@ export const CreateObject = Capability.lazyModule(
 );
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
-  { requires: [ClientCapabilities.Client], provides: [SpaceCapabilities.PersonalSpace] },
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [SpaceCapabilities.PersonalSpace],
+    // Runtime event: the personal space is created when a local identity is created, not at startup.
+    activatesOn: ClientEvents.IdentityCreated,
+  },
   () => import('./identity-created'),
 );
 export { NavigationHandler } from './navigation-handler';
@@ -56,12 +74,19 @@ export const ReactRoot = Capability.lazyModule(
 );
 export const ReactSurface = Capability.lazyModule(
   'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
+  {
+    provides: [Capabilities.ReactSurface],
+    props: (options: SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
+  },
   () => import('./react-surface'),
 );
 export const Repair = Capability.lazyModule(
   'Repair',
-  { provides: [SpaceCapabilities.Repair] },
+  {
+    provides: [SpaceCapabilities.Repair],
+    // Runtime event: repairs run once spaces are observed, not at startup.
+    activatesOn: ClientEvents.SpacesReady,
+  },
   () => import('./repair'),
 );
 export const SpaceSettings = Capability.lazyModule(
@@ -83,6 +108,8 @@ export const SpacesReady = Capability.lazyModule(
       ClientCapabilities.Client,
     ],
     provides: [],
+    // Runtime event: spaces become ready when the client observes them, not at startup.
+    activatesOn: ClientEvents.SpacesReady,
   },
   () => import('./spaces-ready'),
 );
@@ -96,6 +123,12 @@ export const SpaceState = Capability.lazyModule(
 );
 export const UndoMappings = Capability.lazyModule(
   'UndoMappings',
-  { provides: [Capabilities.UndoMapping, SpaceOperationConfig] },
+  {
+    provides: [Capabilities.UndoMapping, SpaceOperationConfig],
+    props: (options: SpacePluginOptions) => ({
+      createInvitationUrl: makeCreateInvitationUrl(options),
+      observability: options.observability,
+    }),
+  },
   () => import('./undo-mappings'),
 );

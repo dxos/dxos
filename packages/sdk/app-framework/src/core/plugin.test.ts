@@ -284,16 +284,19 @@ describe('Plugin module authoring', () => {
     it.effect('maps plugin options to module props', () =>
       Effect.gen(function* () {
         const manager = makeManager();
-        const Lazy = Capability.lazyModule('Total', { provides: [Total] }, () =>
-          Promise.resolve({
-            default: (props: { start: number }) => Effect.succeed([Capability.provide(Total, { total: props.start })]),
-          }),
+        const Lazy = Capability.lazyModule(
+          'Total',
+          {
+            provides: [Total],
+            props: ({ offset }: { offset: number }) => ({ start: offset + 1 }),
+          },
+          () =>
+            Promise.resolve({
+              default: (props: { start: number }) =>
+                Effect.succeed([Capability.provide(Total, { total: props.start })]),
+            }),
         );
-        const Test = Plugin.make(
-          Plugin.define<{ offset: number }>(testMeta).pipe(
-            Plugin.addLazyModule(Lazy, { props: ({ offset }: { offset: number }) => ({ start: offset + 1 }) }),
-          ),
-        );
+        const Test = Plugin.make(Plugin.define<{ offset: number }>(testMeta).pipe(Plugin.addLazyModule(Lazy)));
 
         const [module] = Test({ offset: 41 }).modules;
         expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
@@ -312,5 +315,18 @@ describe('Plugin module authoring', () => {
         expect(entries[0].implementation).toEqual({ total: 42 });
       }),
     );
+
+    it('normalizes a module authored with activatesOn to event mode', () => {
+      const Lazy = Capability.lazyModule(
+        'Listener',
+        { requires: [String], provides: [], activatesOn: CountEvent },
+        () => Promise.resolve({ default: () => Effect.succeed([]) }),
+      );
+      const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addLazyModule(Lazy)));
+      const [module] = Test().modules;
+      assert(module.activation.mode === 'event');
+      expect(module.activation.activatesOn).toEqual(CountEvent);
+      expect(module.activation.requires).toEqual([String]);
+    });
   });
 });

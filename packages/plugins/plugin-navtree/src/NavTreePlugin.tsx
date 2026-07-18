@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Graph } from '@dxos/plugin-graph';
 
@@ -32,12 +32,7 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
   }),
   AppPlugin.addTranslationsModule<void>({ translations }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(State),
-    requires: State.requires,
-    provides: State.provides,
-    activate: State,
-  }),
+  Plugin.addLazyModule<void>(State),
   Plugin.addModule({
     id: 'expose',
     requires: [AppCapabilities.AppGraph, AppCapabilities.Layout, Capabilities.OperationInvoker],

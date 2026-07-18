@@ -11,6 +11,7 @@ import type * as Scope from 'effect/Scope';
 
 import type { DXN } from '@dxos/keys';
 
+import type * as ActivationEvent from './activation-event';
 import type * as CapabilityManager from './capability-manager';
 import { CapabilityNotFoundError } from './errors';
 import type * as Plugin from './plugin';
@@ -416,21 +417,38 @@ export type LoadModule<Props, Requires extends readonly AnyTag[], Provides exten
 }>;
 
 /**
- * A module body carrying its requires/provides spec eagerly, so dependency ordering never
- * needs to execute the body (or load its chunk, for lazy bodies). Produced by
- * {@link lazyModule} (code-split body) or {@link inlineModule} (eager body).
+ * A module body carrying its activation spec as erased runtime values. The spec types are
+ * enforced where the body is authored ({@link lazyModule} / {@link inlineModule}) and
+ * deliberately absent from this type, so exporting a module never leaks foreign capability
+ * types into declaration emit (TS2883). Runtime manager validation is authoritative.
  */
-export type Module<Props, Requires extends readonly AnyTag[], Provides extends readonly AnyTag[]> = ((
-  props: Props,
-) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>) & {
-  readonly requires: Requires;
+export interface Module<Options = void> {
+  (options: Options): Effect.Effect<any, Error, any>;
+  readonly requires: readonly AnyTag[];
+  readonly provides: readonly AnyTag[];
+  readonly activatesOn?: ActivationEvent.Events;
+}
+
+/**
+ * Spec shared by {@link lazyModule} and {@link inlineModule}: the requires/provides
+ * declaration checked at the authoring site, plus the optional event-mode and
+ * props-mapping fields carried alongside it.
+ */
+type ModuleSpec<Provides extends readonly AnyTag[], Requires extends readonly AnyTag[], Props, Options> = {
+  readonly requires?: Requires;
   readonly provides: Provides;
+  /** Activates when this runtime event fires instead of during the dependency pass. */
+  readonly activatesOn?: ActivationEvent.Events;
+  /** Maps plugin options to the body's props; omit when they coincide. */
+  readonly props?: (options: Options) => Props;
 };
 
 /**
  * Helper to define a lazily loaded module body with an eager requires/provides spec.
  * The spec is available without importing the chunk (dependency ordering happens before
- * code-splitting resolves) and the loaded default export is type-checked against it.
+ * code-splitting resolves) and the loaded default export is type-checked against it. The
+ * returned {@link Module} is opaque with respect to requires/provides/props, parameterized
+ * only by `Options` — this is what eliminates TS2883 at every call site.
  * The lazy pairing of {@link makeModule}.
  * @param name The export name (e.g., 'AppGraphBuilder') - used to auto-compute module IDs.
  * @param spec The requires/provides declaration, matching the module authoring site.
@@ -440,21 +458,30 @@ export const lazyModule = <
   const Provides extends readonly AnyTag[],
   const Requires extends readonly AnyTag[] = readonly [],
   Props = void,
+  Options = Props,
 >(
   name: string,
-  spec: { readonly requires?: Requires; readonly provides: Provides },
+  spec: ModuleSpec<Provides, Requires, Props, Options>,
   loader: LoadModule<Props, Requires, Provides>,
-): Module<Props, Requires, Provides> => {
-  const lazyFn = (props: Props): Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>> =>
+): Module<Options> => {
+  const lazyFn = (options: Options): Effect.Effect<any, Error, any> =>
     Effect.gen(function* () {
       const { default: getModule } = yield* Effect.promise(() => loader());
+      // Correlation cast: when `spec.props` is absent, `Options` resolves to its `Props`
+      // default, so `options` is a valid `Props` value.
+      const props = spec.props ? spec.props(options) : (options as unknown as Props);
       return yield* getModule(props);
     });
 
   // Correlation cast: when `spec.requires` is absent, `Requires` resolves to its
   // `readonly []` default, so the fallback empty tuple is the correct value for it.
   const requires = (spec.requires ?? []) as Requires;
-  return Object.assign(lazyFn, { [ModuleTag]: name, requires, provides: spec.provides });
+  return Object.assign(lazyFn, {
+    [ModuleTag]: name,
+    requires,
+    provides: spec.provides,
+    activatesOn: spec.activatesOn,
+  });
 };
 
 /**
@@ -469,16 +496,27 @@ export const inlineModule = <
   const Provides extends readonly AnyTag[],
   const Requires extends readonly AnyTag[] = readonly [],
   Props = void,
+  Options = Props,
 >(
   name: string,
-  spec: { readonly requires?: Requires; readonly provides: Provides },
+  spec: ModuleSpec<Provides, Requires, Props, Options>,
   activate: (props: Props) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>,
-): Module<Props, Requires, Provides> => {
+): Module<Options> => {
   // Correlation cast: when `spec.requires` is absent, `Requires` resolves to its
   // `readonly []` default, so the fallback empty tuple is the correct value for it.
   const requires = (spec.requires ?? []) as Requires;
-  const body = (props: Props) => activate(props);
-  return Object.assign(body, { [ModuleTag]: name, requires, provides: spec.provides });
+  const body = (options: Options): Effect.Effect<any, Error, any> => {
+    // Correlation cast: when `spec.props` is absent, `Options` resolves to its `Props`
+    // default, so `options` is a valid `Props` value.
+    const props = spec.props ? spec.props(options) : (options as unknown as Props);
+    return activate(props);
+  };
+  return Object.assign(body, {
+    [ModuleTag]: name,
+    requires,
+    provides: spec.provides,
+    activatesOn: spec.activatesOn,
+  });
 };
 
 /**
@@ -487,6 +525,8 @@ export const inlineModule = <
 export type MakerOptions<
   Requires extends readonly AnyTag[] = readonly [],
   Extra extends readonly AnyTag[] = readonly [],
+  Props = void,
+  Options = Props,
 > = {
   /** Overrides the default module name (used to derive the module id). */
   name?: string;
@@ -494,6 +534,10 @@ export type MakerOptions<
   requires?: Requires;
   /** Additional capabilities the body contributes beyond the maker's default. */
   provides?: Extra;
+  /** Activates when this runtime event fires instead of during the dependency pass. */
+  activatesOn?: ActivationEvent.Events;
+  /** Maps plugin options to the body's props; omit when they coincide. */
+  props?: (options: Options) => Props;
 };
 
 /**
@@ -503,15 +547,24 @@ export type MakerOptions<
  */
 export const moduleMaker =
   <C extends AnyTag>(defaultName: string, capability: C) =>
-  <Props, const Requires extends readonly AnyTag[] = readonly [], const Extra extends readonly AnyTag[] = readonly []>(
+  <
+    Props = void,
+    Options = Props,
+    const Requires extends readonly AnyTag[] = readonly [],
+    const Extra extends readonly AnyTag[] = readonly [],
+  >(
     loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
-    options?: MakerOptions<Requires, Extra>,
-  ): Module<Props, Requires, readonly [C, ...Extra]> => {
+    options?: MakerOptions<Requires, Extra, Props, Options>,
+  ): Module<Options> => {
     // Correlation casts: when options are absent, Requires/Extra resolve to their
     // `readonly []` defaults, so the fallback empty tuples are the correct values.
     const requires = (options?.requires ?? []) as Requires;
     const extra = (options?.provides ?? []) as Extra;
-    return lazyModule(options?.name ?? defaultName, { requires, provides: [capability, ...extra] }, loader);
+    return lazyModule(
+      options?.name ?? defaultName,
+      { requires, provides: [capability, ...extra], activatesOn: options?.activatesOn, props: options?.props },
+      loader,
+    );
   };
 
 /**
