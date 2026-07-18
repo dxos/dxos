@@ -49,7 +49,7 @@ export const keyOf = (message: MessageOrRef): string =>
  */
 export type MessageOptions = {
   viewMode: ViewMode;
-  loadImages?: boolean;
+  loadRemoteImages?: boolean;
 };
 
 /** Header interaction surface shared by the message header rows (kept as a named type for containers). */
@@ -507,7 +507,7 @@ type MessageBodyProps = {
 
 /** The message body — raw email HTML (default) or the markdown/plain rendering. */
 const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
-  const { viewMode, loadImages = false } = useAtomValue(options);
+  const { viewMode, loadRemoteImages = false } = useAtomValue(options);
 
   // Person-to-person mail carries a provider "personal" tag (e.g. Gmail's "Personal" category,
   // persisted into the mailbox tag index during label sync); used to decide how aggressively the
@@ -537,7 +537,7 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
     return (
       <HtmlViewer
         html={html}
-        loadRemoteImages={loadImages}
+        loadRemoteImages={loadRemoteImages}
         isPersonal={isPersonal}
         attachments={message.attachments}
         db={db}
@@ -545,14 +545,7 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
     );
   }
 
-  return (
-    <MarkdownViewer
-      content={markdown}
-      markdown={viewMode !== 'plain'}
-      loadRemoteImages={loadImages}
-      // slots={{ content: { className: 'mx-4!' } }}
-    />
-  );
+  return <MarkdownViewer content={markdown} markdown={viewMode !== 'plain'} loadRemoteImages={loadRemoteImages} />;
 };
 
 MessageBody.displayName = 'MessageThread.MessageBody';
@@ -695,14 +688,14 @@ type UseThreadViewActionsProps = {
 // collapse-all/expand-all fold or unfold every message. Per-message actions live on each tile's menu.
 // Reads/writes the shared `options` atom directly rather than taking derived values + setters.
 const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThreadViewActionsProps) => {
-  const { viewMode, loadImages = false } = useAtomValue(options);
+  const { viewMode, loadRemoteImages = false } = useAtomValue(options);
   const setOptions = useAtomSet(options);
   const setViewMode = useCallback(
     (mode: ViewMode) => setOptions((prev) => ({ ...prev, viewMode: mode })),
     [setOptions],
   );
   const onToggleLoadImages = useCallback(
-    () => setOptions((prev) => ({ ...prev, loadImages: !(prev.loadImages ?? false) })),
+    () => setOptions((prev) => ({ ...prev, loadRemoteImages: !(prev.loadRemoteImages ?? false) })),
     [setOptions],
   );
 
@@ -716,9 +709,9 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
             'load-images',
             {
               label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
-              icon: loadImages ? 'ph--image--regular' : 'ph--image-broken--regular',
+              icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
               iconOnly: true,
-              checked: loadImages,
+              checked: loadRemoteImages,
             },
             onToggleLoadImages,
           ),
@@ -753,7 +746,7 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
             : null,
         )
         .build(),
-    [viewMode, setViewMode, loadImages, onToggleLoadImages, onCollapseAll, onExpandAll],
+    [viewMode, setViewMode, loadRemoteImages, onToggleLoadImages, onCollapseAll, onExpandAll],
   );
 };
 

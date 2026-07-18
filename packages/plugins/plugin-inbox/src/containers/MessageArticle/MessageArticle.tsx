@@ -120,13 +120,13 @@ export const MessageArticle = ({
   const setSettings = useAtomSet(settingsAtom);
   const optionsAtom = useMemo(
     // Seed once from the persisted setting; subsequent edits flow back via the effect below.
-    () => Atom.make<MessageOptions>({ viewMode: DEFAULT_VIEW_MODE, loadImages: persistedImages }),
+    () => Atom.make<MessageOptions>({ viewMode: DEFAULT_VIEW_MODE, loadRemoteImages: persistedImages }),
     [],
   );
-  const loadImages = useAtomValue(optionsAtom).loadImages ?? false;
+  const loadRemoteImages = useAtomValue(optionsAtom).loadRemoteImages ?? false;
   useEffect(() => {
-    setSettings((prev) => ({ ...prev, loadRemoteImages: loadImages }));
-  }, [loadImages, setSettings]);
+    setSettings((prev) => ({ ...prev, loadRemoteImages: loadRemoteImages }));
+  }, [loadRemoteImages, setSettings]);
 
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {

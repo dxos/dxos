@@ -449,9 +449,9 @@ const useMailboxActions = (
           () => sortDescending.set((value) => !value),
         )
         .action(
-          'loadImages',
+          'loadRemoteImages',
           {
-            type: 'loadImages',
+            type: 'loadRemoteImages',
             icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
             label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
             checked: loadRemoteImages,
