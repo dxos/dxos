@@ -7,18 +7,18 @@
 // primitives keep working against the runtime our production Cloudflare functions execute on
 // (Buffer + web-crypto `getRandomValues` under `nodejs_compat`), not just under Node.
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { EntityId } from './entity-id';
 import { PublicKey } from './public-key';
 
 describe('keys in workerd', () => {
-  test('runs inside the Cloudflare Workers runtime', () => {
+  test('runs inside the Cloudflare Workers runtime', ({ expect }) => {
     // workerd sets a fixed navigator.userAgent; asserts the pool actually swapped the runtime.
     expect(navigator.userAgent).toBe('Cloudflare-Workers');
   });
 
-  test('PublicKey.random produces distinct hex-encoded keys', () => {
+  test('PublicKey.random produces distinct hex-encoded keys', ({ expect }) => {
     const first = PublicKey.random();
     const second = PublicKey.random();
     expect(first.toHex()).toHaveLength(64);
@@ -26,17 +26,17 @@ describe('keys in workerd', () => {
     expect(PublicKey.equals(first, second)).toBe(false);
   });
 
-  test('PublicKey round-trips through hex', () => {
+  test('PublicKey round-trips through hex', ({ expect }) => {
     const key = PublicKey.random();
     expect(PublicKey.from(key.toHex()).equals(key)).toBe(true);
   });
 
-  test('EntityId.random yields valid ids', () => {
+  test('EntityId.random yields valid ids', ({ expect }) => {
     const id = EntityId.random();
     expect(EntityId.isValid(id)).toBe(true);
   });
 
-  test('EntityId.deterministic is stable and avoids the platform RNG', () => {
+  test('EntityId.deterministic is stable and avoids the platform RNG', ({ expect }) => {
     // Workerd forbids `crypto.getRandomValues()` in global scope, so deterministic() must be
     // reachable at module-eval time — its stability doubles as that guard here.
     const first = EntityId.deterministic('org.dxos.type.person', '0.1.0');

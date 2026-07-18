@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
@@ -521,13 +520,13 @@ const createWorkerdProject = ({
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       // Log-meta injection only — no file sink (workerd has no filesystem).
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
-      // Must run last: configures the vitest pool to execute tests in workerd.
-      cloudflareTest({
-        miniflare: {
-          compatibilityDate,
-          compatibilityFlags,
-        },
-      }),
+      // Configures the vitest pool to execute tests in workerd. `@cloudflare/vitest-pool-workers`
+      // is ESM-only; a static import would make vite's (CJS) config bundler `require()` it and
+      // fail for every `vite build`. A dynamic import stays an `import()` the bundler preserves,
+      // and vite awaits promise-valued entries in the plugins array.
+      import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
+        cloudflareTest({ miniflare: { compatibilityDate, compatibilityFlags } }),
+      ),
     ],
     test: {
       name: 'workerd',
