@@ -123,6 +123,8 @@ const [MessageThreadProvider, useMessageThreadContext] = createContext<MessageTh
 // Root
 //
 
+const MESSAGE_THREAD_ROOT_NAME = 'MessageThread.Root';
+
 export type MessageThreadRootProps = PropsWithChildren<
   Pick<
     MessageThreadContextValue,
@@ -191,11 +193,13 @@ const MessageThreadRoot = ({
   </MessageThreadProvider>
 );
 
-MessageThreadRoot.displayName = 'MessageThread.Root';
+MessageThreadRoot.displayName = MESSAGE_THREAD_ROOT_NAME;
 
 //
 // Content
 //
+
+const MESSAGE_THREAD_CONTENT_NAME = 'MessageThread.Content';
 
 export type MessageThreadContentProps = ThemedClassName<{ testId?: string }>;
 
@@ -207,7 +211,7 @@ export type MessageThreadContentProps = ThemedClassName<{ testId?: string }>;
  */
 const MessageThreadContent = composable<HTMLDivElement, MessageThreadContentProps>(
   ({ testId, ...props }, forwardedRef) => {
-    const { items } = useMessageThreadContext('MessageThread.Content');
+    const { items } = useMessageThreadContext(MESSAGE_THREAD_CONTENT_NAME);
     const viewportRef = useRef<HTMLDivElement>(null);
 
     const tileItems = useMemo<ConversationTileData[]>(
@@ -271,11 +275,13 @@ const MessageThreadContent = composable<HTMLDivElement, MessageThreadContentProp
   },
 );
 
-MessageThreadContent.displayName = 'MessageThread.Content';
+MessageThreadContent.displayName = MESSAGE_THREAD_CONTENT_NAME;
 
 //
-// Tile
+// Message Tile
 //
+
+const MESSAGE_TILE_NAME = 'MessageThread.MessageTile';
 
 /** Mosaic tile chrome; dispatches to the draft composer or the read-message body. */
 const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<ConversationTileData>) => {
@@ -301,7 +307,7 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
   );
 };
 
-ConversationMessageTile.displayName = 'ConversationMessageTile';
+ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 
 //
 // Message (read tile)
@@ -311,6 +317,8 @@ ConversationMessageTile.displayName = 'ConversationMessageTile';
 // tile itself; `MessageTile` spans it with `grid-cols-subgrid` so its summary row and its expanded
 // detail/body row share the exact same columns (avatar in column 1, date/menu pinned right).
 //
+
+const MESSAGE_TILE_COLUMNS_NAME = 'MessageThread.MessageTile.Columns';
 
 /** Column template established by the tile; message parts subgrid into it. */
 const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
@@ -338,7 +346,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     onOpen,
     onExpandedChange,
     onContactCreate,
-  } = useMessageThreadContext('MessageThread.Message');
+  } = useMessageThreadContext(MESSAGE_TILE_NAME);
   // The snapshot drives reactive body/header rendering; the live object (already the item, or the ref's
   // resolved target) drives handlers and the menu, which need a real `Message` for the operations.
   const [message] = useObject(messageOrRef);
@@ -373,6 +381,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
         <div className='col-start-2 flex flex-col py-1'>
           <h2
             className='text-lg line-clamp-2 min-w-0 cursor-pointer'
+            data-testid={isExpanded ? undefined : 'message.expand'}
             onClick={() => onExpandedChange?.(id, !isExpanded)}
           >
             {sender}
@@ -411,11 +420,13 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   );
 };
 
-MessageTile.displayName = 'MessageThread.Message';
+MessageTile.displayName = MESSAGE_TILE_NAME;
 
 //
 // Message parts (internal)
 //
+
+const MESSAGE_STAR_NAME = 'MessageThread.MessageStar';
 
 // Stable fallback so `useAtomValue` always receives an atom when the message isn't starrable.
 const NOT_STARRED = Atom.make(false);
@@ -445,7 +456,13 @@ const MessageStar = ({ message, mailbox }: MessageStarProps) => {
   return <Row.Star starred={starred} onToggle={handleToggleStar} />;
 };
 
-MessageStar.displayName = 'MessageThread.MessageStar';
+MessageStar.displayName = MESSAGE_STAR_NAME;
+
+//
+// Message Details
+//
+
+const MESSAGE_DETAILS_NAME = 'MessageThread.MessageDetails';
 
 type MessageDetailsProps = {
   message: Mailbox.MessageLike;
@@ -497,7 +514,13 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   );
 };
 
-MessageDetails.displayName = 'MessageThread.MessageDetails';
+MessageDetails.displayName = MESSAGE_DETAILS_NAME;
+
+//
+// Message Body
+//
+
+const MESSAGE_BODY_NAME = 'MessageThread.MessageBody';
 
 type MessageBodyProps = {
   message: Mailbox.MessageLike;
@@ -548,7 +571,13 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
   return <MarkdownViewer content={markdown} markdown={viewMode !== 'plain'} loadRemoteImages={loadRemoteImages} />;
 };
 
-MessageBody.displayName = 'MessageThread.MessageBody';
+MessageBody.displayName = MESSAGE_BODY_NAME;
+
+//
+// Message Menu
+//
+
+const MESSAGE_MENU_NAME = 'MessageThread.MessageMenu';
 
 type MessageMenuProps = {
   attendableId?: string;
@@ -562,7 +591,11 @@ const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
   </Menu.Root>
 );
 
-MessageMenu.displayName = 'MessageThread.MessageMenu';
+MessageMenu.displayName = MESSAGE_MENU_NAME;
+
+//
+// Message Handlers
+//
 
 /**
  * Builds the per-message action handlers bound to `message`. Reply/forward/reply-all are pure ECHO
@@ -605,43 +638,35 @@ const useMessageHandlers = (
 // Draft
 //
 
+const MESSAGE_DRAFT_NAME = 'MessageThread.Draft';
+
+// Stable fallback while the mailbox tag index is unresolved, so the tag-uris atom is unconditional.
+const EMPTY_TAG_URIS_ATOM = Atom.make<string[]>(() => []);
+
 type DraftTileProps = {
   id: string;
   message: MessageType.Message;
 };
 
 /**
- * A draft in the conversation stack. Re-resolves its own live, persisting object by id: the object in
- * the connector's ordered/windowed query is index-hydrated and detached (`Obj.update` on it silently
- * no-ops), so editing it wouldn't persist. Rendering waits for the live object so the composer's
- * uncontrolled editor initializes from the persisted body rather than the stale thread copy.
+ * A draft in the conversation stack: the inline composer while unsent, locking to the read-only tile
+ * once the provider's sent tag is applied (on send) — reactively, via the tag-index membership — until
+ * the sync reconciliation stage swaps in the canonical feed message.
+ *
+ * Re-resolves its own live, persisting object by id: the object in the connector's ordered/windowed
+ * query is index-hydrated and detached (`Obj.update` on it silently no-ops), so editing it wouldn't
+ * persist. Rendering waits for the live object so the composer's uncontrolled editor initializes from
+ * the persisted body rather than the stale thread copy. Hooks run against `live ?? message` (the prop is
+ * always defined) so they stay unconditional while the live object resolves.
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
-  const { mailbox } = useMessageThreadContext('MessageThread.Draft');
+  const { t } = useTranslation(meta.profile.key);
+  const { mailbox, runtime, onDelete } = useMessageThreadContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
-  if (!live) {
-    return null;
-  }
-
-  return <DraftTileContent id={id} message={live} />;
-};
-
-DraftTile.displayName = 'MessageThread.Draft';
-
-// Stable fallback while the mailbox tag index is unresolved, so the tag-uris atom is unconditional.
-const EMPTY_TAG_URIS_ATOM = Atom.make<string[]>(() => []);
-
-/**
- * Renders a resolved live draft: the inline composer while unsent, locking to the read-only tile once
- * the provider's sent tag is applied (on send) — reactively, via the tag-index membership — until the
- * sync reconciliation stage swaps in the canonical feed message.
- */
-const DraftTileContent = ({ id, message }: DraftTileProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { mailbox, runtime, onDelete } = useMessageThreadContext('MessageThread.Draft');
-  const extensions = useEmailComposerExtensions(runtime, message);
-  const onSend = useSendEmail(runtime, message);
+  const draft = live ?? message;
+  const extensions = useEmailComposerExtensions(runtime, draft);
+  const onSend = useSendEmail(runtime, draft);
 
   // Sent once the draft carries the provider sent tag `useSendEmail` recorded on it (`sentTagUri`).
   // Read membership reactively from the tag index: the tag-uri list re-fires the instant the tag is
@@ -652,18 +677,22 @@ const DraftTileContent = ({ id, message }: DraftTileProps) => {
     [tagIndex, message.id],
   );
   const tagUris = useAtomValue(tagUrisAtom);
-  const sentTagUri = message.properties?.sentTagUri;
+  const handleDelete = useCallback(() => onDelete?.(draft), [onDelete, draft]);
+
+  // Wait for the live object before editing (see above).
+  if (!live) {
+    return null;
+  }
+
+  const sentTagUri = live.properties?.sentTagUri;
   const sent = typeof sentTagUri === 'string' && tagUris.includes(sentTagUri);
-
-  const handleDelete = useCallback(() => onDelete?.(message), [onDelete, message]);
-
   if (sent) {
-    return <MessageTile id={id} message={message} />;
+    return <MessageTile id={id} message={live} />;
   }
 
   return (
     <EditMessage
-      message={message}
+      message={live}
       extensions={extensions}
       onSend={onSend}
       title={t('draft-message.title')}
@@ -672,7 +701,7 @@ const DraftTileContent = ({ id, message }: DraftTileProps) => {
   );
 };
 
-DraftTileContent.displayName = 'MessageThread.DraftContent';
+DraftTile.displayName = MESSAGE_DRAFT_NAME;
 
 //
 // Toolbar
@@ -750,19 +779,16 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
   );
 };
 
-const MESSAGE_THREAD_TOOLBAR_CONTEXT_ID = 'MessageThread.Toolbar';
+//
+// Message Thread Toolbar
+//
+
+const MESSAGE_THREAD_TOOLBAR_NAME = 'MessageThread.Toolbar';
 
 export type MessageThreadToolbarProps = ThemedClassName;
 
-/**
- * The whole-thread toolbar: body view controls + collapse-all/expand-all, mounted once at the top.
- * Reads the shared thread state from {@link MessageThreadRoot}; slots into `Panel.Toolbar`.
- */
 const MessageThreadToolbar = composable<HTMLDivElement, MessageThreadToolbarProps>((props, forwardedRef) => {
-  const { attendableId, options, onCollapseAll, onExpandAll } = useMessageThreadContext(
-    MESSAGE_THREAD_TOOLBAR_CONTEXT_ID,
-  );
-
+  const { attendableId, options, onCollapseAll, onExpandAll } = useMessageThreadContext(MESSAGE_THREAD_TOOLBAR_NAME);
   const menuActions = useThreadViewActions({ options, onCollapseAll, onExpandAll });
 
   return (
@@ -772,7 +798,7 @@ const MessageThreadToolbar = composable<HTMLDivElement, MessageThreadToolbarProp
   );
 });
 
-MessageThreadToolbar.displayName = MESSAGE_THREAD_TOOLBAR_CONTEXT_ID;
+MessageThreadToolbar.displayName = MESSAGE_THREAD_TOOLBAR_NAME;
 
 //
 // MessageThread
