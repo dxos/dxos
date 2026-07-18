@@ -111,6 +111,18 @@ export const EmailGetResult = Schema.Struct({
 });
 export type EmailGetResult = Schema.Schema.Type<typeof EmailGetResult>;
 
+/** `Email/changes` delta since an opaque `sinceState` token (RFC 8621 §4.3 / RFC 8620 §5.2). */
+export const EmailChangesResult = Schema.Struct({
+  accountId: Schema.optional(Schema.String),
+  oldState: Schema.String,
+  newState: Schema.String,
+  hasMoreChanges: Schema.Boolean,
+  created: Schema.Array(Schema.String),
+  updated: Schema.Array(Schema.String),
+  destroyed: Schema.Array(Schema.String),
+});
+export type EmailChangesResult = Schema.Schema.Type<typeof EmailChangesResult>;
+
 export const IdentityGetResult = Schema.Struct({
   accountId: Schema.optional(Schema.String),
   state: Schema.optional(Schema.String),

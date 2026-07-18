@@ -68,6 +68,8 @@ describe('mapEmail', () => {
       expect(foreignId).toBe('email-001');
 
       expect(result.mailboxIds).toEqual(['mb-inbox']);
+      // Active keywords are surfaced verbatim; the provider maps them onto canonical system tags.
+      expect(result.keywords).toEqual(['$seen']);
     }, Effect.provide(InboxResolver.Mock())),
   );
 

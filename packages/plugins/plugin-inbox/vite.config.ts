@@ -25,5 +25,9 @@ export default defineConfig({
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  // Many stories here use `withClientProvider` (ECHO/Automerge-backed); per-file isolation
+  // re-instantiates that WASM module graph for every story file and exhausts the single headless
+  // chromium's WASM memory partway through the suite (`RangeError: ... Out of memory: Cannot
+  // allocate Wasm memory for new instance`). Share the module graph across files instead.
+  test: { node: true, storybook: { isolate: false } },
 });

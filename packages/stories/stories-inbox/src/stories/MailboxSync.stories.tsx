@@ -13,6 +13,7 @@ import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';

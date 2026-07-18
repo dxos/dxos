@@ -7,26 +7,19 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import { Operation, Topic } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import {
-  Topic,
-  buildThreads,
-  clusterThreads,
-  deriveThreadId,
-  resolveModel,
-  summarizeTopics,
-} from '@dxos/pipeline-email';
+import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';
 import { AnchoredTo, Message } from '@dxos/types';
 
 import { InboxOperation } from '../../types';
 
 /**
  * Creates a single `Topic` seeded from one message's thread: gathers the sibling messages sharing the
- * message's derived thread id, clusters them into one topic draft (label/keywords/participants), adds
- * an LLM summary, and persists the `Topic` with an `AnchoredTo` relation to the mailbox. v1 is
- * single-thread — cross-thread "find related" and fact extraction are follow-ups.
+ * message's derived thread id, clusters them into one topic draft (label/keywords/participants),
+ * adds an LLM summary, and persists the `Topic` with an `AnchoredTo` relation to the mailbox.
+ * v1 is single-thread — cross-thread "find related" and fact extraction are follow-ups.
  */
 const handler = InboxOperation.CreateTopicFromMessage.pipe(
   Operation.withHandler(
@@ -36,6 +29,7 @@ const handler = InboxOperation.CreateTopicFromMessage.pipe(
       if (!db) {
         return { topicId: '' };
       }
+
       const feed = yield* Database.load(mailbox.feed);
       const aiService = yield* AiService.AiService;
 
@@ -68,14 +62,14 @@ const handler = InboxOperation.CreateTopicFromMessage.pipe(
       }
 
       const topic = db.add(
-        Obj.make(Topic, {
-          label: draft.label,
-          summary: draft.summary,
-          threadIds: [...draft.threadIds],
-          participants: [...draft.participants],
-          keywords: [...draft.keywords],
-          questions: [...draft.questions],
-          tasks: [...draft.tasks],
+        Obj.make(Topic.Topic, {
+          name: draft.name,
+          // summary: draft.summary,
+          // threadIds: [...draft.threadIds],
+          // participants: [...draft.participants],
+          // keywords: [...draft.keywords],
+          // questions: [...draft.questions],
+          // tasks: [...draft.tasks],
         }),
       );
       db.add(AnchoredTo.make({ [Relation.Source]: topic, [Relation.Target]: mailbox }));
