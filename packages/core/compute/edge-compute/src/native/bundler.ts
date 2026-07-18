@@ -85,7 +85,11 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
                 },
               };
             `,
-            resolveDir: new URL('.', import.meta.url).pathname,
+            // `import.meta.dirname` (not `new URL('.', import.meta.url)`) so the library bundler does
+            // not mistake the `new URL(..., import.meta.url)` pattern for an asset reference and inline
+            // this module as a `data:video/mp2t;base64,…` URL — which would make `resolveDir` garbage and
+            // break resolution of the `@dxos/compute-runtime` / `@dxos/functions-runtime-cloudflare` deps.
+            resolveDir: import.meta.dirname,
           }));
         },
       },
