@@ -210,6 +210,12 @@ export interface Database extends Queryable {
    */
   getCurrentBranch(objectId: string): string;
 
+  /**
+   * An immutable snapshot of the object at the given historical heads — a detached instance, not a
+   * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
+   */
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
+
   /** All branch names available for an object, including the implicit `'main'` (always first). */
   listBranches(objectId: string): string[];
 

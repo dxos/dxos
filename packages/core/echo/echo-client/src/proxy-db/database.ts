@@ -56,6 +56,7 @@ import { type BranchStore, EntityManager } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
+  checkoutVersionSnapshot,
   createObject,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
@@ -839,6 +840,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getCurrentBranch(objectId: string): string {
     return this._entityManager.getCurrentBranch(objectId);
+  }
+
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T> {
+    return checkoutVersionSnapshot(obj, [...heads]);
   }
 
   listBranches(objectId: string): string[] {

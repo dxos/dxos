@@ -585,6 +585,17 @@ export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.
  */
 export const getBranch = (obj: Unknown): string => internal.getBranch(obj);
 
+/**
+ * Get an immutable snapshot of the object at the given historical heads — a detached instance, not a
+ * pin on the live object. Only the surface that asks for it sees the historical value; the live
+ * object and every other surface are unaffected. The functional alternative to a read-time-travel pin.
+ */
+export const getVersion = <T extends Unknown>(obj: T, heads: readonly string[]): Snapshot<T> => {
+  const db = getDatabase(obj);
+  invariant(db, 'object is not bound to a database');
+  return db.getVersion(obj, heads);
+};
+
 //
 // Meta
 //

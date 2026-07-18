@@ -60,6 +60,26 @@ describe('edit-history', () => {
     expect(deletion?.added).toBe(0);
   });
 
+  test('Obj.getVersion returns an immutable snapshot at heads; the live object is unaffected', async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([TestSchema.Task]);
+
+    const obj = db.add(Obj.make(TestSchema.Task, { description: 'aaa' }));
+    const v1 = [...(Obj.version(obj).automergeHeads ?? [])];
+    const accessor = getObjectCore(obj).getDocAccessor(['description']);
+    accessor.handle.change((doc: AutomergeDoc<TestSchema.Task>) => {
+      A.splice(doc, accessor.path.slice(), 3, 0, 'bbbb');
+    });
+    expect(Doc.getValue<string>(accessor)).toBe('aaabbbb');
+
+    // The snapshot reads the historical value; it is a detached snapshot (not the live object), and
+    // the live object keeps its current value.
+    const snapshot = Obj.getVersion(obj, v1);
+    expect(Obj.isSnapshot(snapshot)).toBe(true);
+    expect((snapshot as any).description).toBe('aaa');
+    expect(obj.description).toBe('aaabbbb');
+  });
+
   test('getEditHistoryWithDiffs produces cumulative-frontier heads across concurrent history', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([TestSchema.Task]);
