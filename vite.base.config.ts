@@ -674,7 +674,9 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const moonRerunReporter = createMoonRerunReporter({ moonProject: packageDirName, projectType });
   const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
   const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
-  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
+  // The v8 coverage provider imports `node:inspector/promises`, which the workerd runtime does not
+  // provide — coverage is unsupported for the workers pool, so never enable it for the workerd project.
+  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE) && projectType !== 'workerd';
 
   if (xmlReport) {
     return {

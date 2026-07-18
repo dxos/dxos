@@ -327,7 +327,9 @@ jobs:
       # while still excluding the heavier opt-in tag families.
       VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
       VITEST_ENV: 'node'
-      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
+      # v8 coverage imports `node:inspector/promises`, which the workerd runtime does not
+      # provide — coverage is unsupported for the workers pool, so keep it off for this job.
+      VITEST_COVERAGE: 'false'
       VITEST_XML_REPORT: 'true'
       MOON_CONCURRENCY: 4
       # Exposed so step conditions can branch on token presence without referencing
@@ -389,15 +391,6 @@ jobs:
           name: vitest-report-workerd-${{ matrix.node-version }}
           path: test-results
           retention-days: 7
-
-      - uses: codecov/codecov-action@v5
-        if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
-        with:
-          directory: ./coverage
-          fail_ci_if_error: false
-          handle_no_reports_found: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
 
   e2e:
     # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
