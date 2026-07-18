@@ -186,12 +186,6 @@ export const hashString = (str?: string): number => {
   return str ? Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0)) : 0;
 };
 
-// TODO(burdon): Factor out sort pattern with getters.
-export const sortByCreated =
-  <T, K extends Extract<keyof T, string>>(prop: K, descending = false) =>
-  (a: T & Record<K, string>, b: T & Record<K, string>) =>
-    descending ? b[prop].localeCompare(a[prop]) : a[prop].localeCompare(b[prop]);
-
 export type FormatDateTimeOptions = { compact?: boolean; time?: boolean };
 
 export const formatDateTime = (date: Date, now: Date, options?: FormatDateTimeOptions) =>

@@ -33,7 +33,7 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { DraftMessage, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import {
   MessageStack,
@@ -52,7 +52,7 @@ import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
-import { messageMatchesQuery, sortByCreated } from '../../util';
+import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
@@ -124,12 +124,6 @@ export const MailboxArticle = ({
   // the first locally-created draft) has created it.
   const systemTagUri = useSystemTagUri(db, systemTag);
   const systemTagIds = useTaggedIds(tagIndex, systemTagUri);
-  // This mailbox's space-resident messages (drafts, and a just-sent message before sync deletes it in
-  // favor of its synced feed copy — see `useSendEmail`), indexed by thread. Needed on every view, not
-  // just the Drafts view: a message's tag state (draft vs. sent) only decides which panel it belongs in
-  // — it should keep showing in its thread wherever that thread is already shown regardless of tag, so
-  // this attach step isn't scoped to the 'draft' tag at all (see `useSpaceMessagesByThreadId`).
-  const spaceMessagesByThreadId = useSpaceMessagesByThreadId(db, mailbox);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -175,14 +169,37 @@ export const MailboxArticle = ({
     [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
+  // Fold this mailbox's own space-resident messages (drafts, and a just-sent message before sync
+  // deletes it in favor of its synced feed copy — see `useSendEmail`) into the same union: the query's
+  // own group-by-threadId aggregate attaches one to an already-qualifying thread with no separate query
+  // or JS-side join needed, since a union step dedupes by object id (a message matching both this branch
+  // and the view's own selection below is one row, not two). Tag state (draft vs. sent) only decides
+  // which panel a message belongs in, never whether it's still part of its thread elsewhere. Skipped on
+  // the Drafts view itself — its own selection below already IS this fetch (tag-restricted to 'draft'),
+  // and adding this branch there would also surface already-sent messages. A thread id can in principle
+  // collide across two different mailboxes sharing this space, but that's rare enough to accept for now
+  // — scoping it out precisely (only if the *other* mailbox's thread doesn't itself qualify) needs the
+  // semi-join primitive this PR's Deferred section already calls out as unavailable.
+  const attachThisMailboxSpaceMessages =
+    systemTag !== 'draft'
+      ? [
+          Query.select(Filter.type(Message.Message, { properties: { mailbox: Obj.getURI(mailbox).toString() } })).from(
+            Scope.space(),
+          ),
+        ]
+      : [];
   // A system-tag view (Inbox/Sent/Drafts) unions this mailbox's feed with its own space-db scope (where
   // drafts live), both under the exact same id-based selection: Inbox/Sent's ids only ever resolve in
   // the feed and Drafts' only in the space, so each view's half of the union is simply empty rather than
   // needing a per-view branch. Free-text search stays feed-only — see `hideFilterEditor`'s docstring.
   const source = isUnmodifiedSystemTagView
-    ? Query.all(Query.select(selection).from(Scope.space()), ...(feed ? [Query.select(selection).from(feed)] : []))
+    ? Query.all(
+        Query.select(selection).from(Scope.space()),
+        ...(feed ? [Query.select(selection).from(feed)] : []),
+        ...attachThisMailboxSpaceMessages,
+      )
     : feed
-      ? Query.select(selection).from(feed)
+      ? Query.all(Query.select(selection).from(feed), ...attachThisMailboxSpaceMessages)
       : undefined;
   const pagination = usePagination(
     db,
@@ -214,21 +231,9 @@ export const MailboxArticle = ({
       } else if (entry.threadId == null) {
         result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        // Attach this mailbox's space-resident messages for the thread, if any not already among
-        // `entry.items` — a message's tag state (draft vs. sent) doesn't gate this: a just-sent message
-        // stays attached until sync deletes the space copy in favor of the synced one, so a thread never
-        // appears to lose a message mid-send. On the Drafts view itself, the thread's own drafts already
-        // came from the primary union query above (see `source`), so every candidate here is filtered
-        // out as already-present.
-        const presentIds = new Set(entry.items.map((message) => message.id));
-        const spaceMessagesForThread = (spaceMessagesByThreadId.get(entry.threadId) ?? []).filter(
-          (message) => !presentIds.has(message.id),
-        );
-        const messages =
-          spaceMessagesForThread.length > 0
-            ? [...entry.items, ...spaceMessagesForThread].sort(sortByCreated('created', true))
-            : entry.items;
-        result.push({ id: entry.threadId, messages, total: entry.count + spaceMessagesForThread.length });
+        // A thread's space-resident members (see `attachThisMailboxSpaceMessages` above) already came
+        // through the query above, alongside its feed members — nothing further to attach here.
+        result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
       }
     }
     // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
@@ -236,7 +241,7 @@ export const MailboxArticle = ({
     // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
     // message can match the index yet have no matching (or any) plain/markdown text to display.
     return applyPostFilters(result, mailbox, searchQuery);
-  }, [pagination.items, spaceMessagesByThreadId, mailbox, mailbox.messageFilters, searchQuery]);
+  }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
@@ -513,41 +518,6 @@ const useTaggedIds = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string | 
     [tagIndex, tagUri],
   );
   return useAtomValue(atom);
-};
-
-/**
- * This mailbox's space-resident messages (space-db, not the feed), indexed by `threadId`. Scoped by
- * `DraftMessage.belongsTo` — `properties.mailbox`, set once at draft creation and never cleared by
- * sending — not by the 'draft' tag: a message that's just been sent is untagged 'draft' immediately
- * (see `useSendEmail`) but should keep attaching to its thread until sync deletes this space copy in
- * favor of the synced feed one, so tag state only decides which *panel* a message belongs in, never
- * whether it's still part of its thread. A message with no thread (a brand-new, not-yet-replied compose)
- * is never attached anywhere outside the Drafts view — see `MailboxArticle`'s `items` memo, which looks
- * entries up by `threadId` only.
- */
-const useSpaceMessagesByThreadId = (
-  db: Database.Database | undefined,
-  mailbox: Mailbox.Mailbox,
-): Map<string, Message.Message[]> => {
-  const mailboxUri = Obj.getURI(mailbox).toString();
-  const messages = useQuery(db, Filter.type(Message.Message)).filter((message) =>
-    DraftMessage.belongsTo(message, mailboxUri),
-  );
-  return useMemo(() => {
-    const map = new Map<string, Message.Message[]>();
-    for (const message of messages) {
-      if (message.threadId == null) {
-        continue;
-      }
-      const list = map.get(message.threadId);
-      if (list) {
-        list.push(message);
-      } else {
-        map.set(message.threadId, [message]);
-      }
-    }
-    return map;
-  }, [messages]);
 };
 
 type MailboxActionsOptions = {
