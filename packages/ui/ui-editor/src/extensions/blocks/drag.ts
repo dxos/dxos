@@ -285,11 +285,6 @@ const createDragPlugin = (
       #beginDrag(index: number, event: MouseEvent) {
         const selected = getSelectedBlocks(this.view.state, getBlocks).map((entry) => entry.index);
         const indices = selected.length > 1 && selected.includes(index) ? selected : [index];
-        // Move the caret to the end of the grabbed block (collapsing any text selection).
-        const grabbed = getBlocks(this.view.state)[index];
-        if (grabbed) {
-          this.view.dispatch({ selection: { anchor: grabbed.to } });
-        }
         this.#sourceIndices = indices;
         this.#dropIndex = indices[0];
         this.#grabX = event.clientX;

@@ -182,12 +182,12 @@ const clipboardHandlers = (ops: BlockOps): Extension =>
         ),
       );
       event.preventDefault();
+      // `replaceBlocks` clears the block selection within its own transaction.
       ops.replaceBlocks(
         view,
         selected.map((entry) => entry.index),
         null,
       );
-      view.dispatch({ effects: setBlockSelection.of([]) });
       return true;
     },
     paste: (event, view) => {
@@ -197,13 +197,12 @@ const clipboardHandlers = (ops: BlockOps): Extension =>
       }
       const text = event.clipboardData?.getData('text/plain') ?? '';
       event.preventDefault();
-      // Replace the selected blocks with the pasted text (answer: paste replaces the selection).
+      // Replace the selected blocks with the pasted text (`replaceBlocks` clears the block selection).
       ops.replaceBlocks(
         view,
         selected.map((entry) => entry.index),
         text,
       );
-      view.dispatch({ effects: setBlockSelection.of([]) });
       return true;
     },
   });

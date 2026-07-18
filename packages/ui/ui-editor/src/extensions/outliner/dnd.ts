@@ -5,7 +5,7 @@
 import { type EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { type Block, type BlockOps, createBlockDrag, createBlockSelection } from '../blocks';
+import { type Block, type BlockOps, createBlockDrag, createBlockSelection, setBlockSelection } from '../blocks';
 import { type Item, type Tree, getRange, treeFacet } from './tree';
 
 // Narrower than the markdown block gutter — outliner items are indented and tightly packed.
@@ -112,7 +112,16 @@ const moveItem = (view: EditorView, sourceIndex: number, dropIndex: number): voi
           { from: insertAt, insert },
         ];
 
-  view.dispatch({ changes, userEvent: 'move.item' });
+  // Caret at the end of the moved item, and clear the block selection.
+  const changeSet = state.changes(changes);
+  const insertStart = changeSet.mapPos(insertAt, -1);
+  const caret = insertStart + (dropIndex < count ? text.length : 1 + text.length);
+  view.dispatch({
+    changes,
+    selection: { anchor: Math.min(caret, changeSet.newLength) },
+    effects: setBlockSelection.of([]),
+    userEvent: 'move.item',
+  });
 };
 
 // Merges sorted ranges, combining any that overlap or touch.
@@ -170,7 +179,15 @@ const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number
 
   const insert = dropIndex < count ? `${text}\n` : `\n${text}`;
   const changes = [...deletes.map((range) => ({ from: range.from, to: range.to })), { from: insertAt, insert }];
-  view.dispatch({ changes, userEvent: 'move.item' });
+  const changeSet = state.changes(changes);
+  const insertStart = changeSet.mapPos(insertAt, -1);
+  const caret = insertStart + (dropIndex < count ? text.length : 1 + text.length);
+  view.dispatch({
+    changes,
+    selection: { anchor: Math.min(caret, changeSet.newLength) },
+    effects: setBlockSelection.of([]),
+    userEvent: 'move.item',
+  });
 };
 
 /** Removes the items at `indices`, optionally replacing the first slot with `text` (paste). */
@@ -197,6 +214,7 @@ const replaceBlocks = (view: EditorView, indices: number[], text: string | null)
   view.dispatch({
     changes,
     selection: { anchor: Math.min(anchor, state.doc.length) },
+    effects: setBlockSelection.of([]),
     userEvent: text == null ? 'delete.block' : 'input.paste',
   });
 };

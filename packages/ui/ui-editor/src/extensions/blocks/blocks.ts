@@ -3,12 +3,12 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension } from '@codemirror/state';
+import { type EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 import { type Block, createBlockDrag } from './drag';
 import { createBlockOutline } from './outline';
-import { type BlockOps, createBlockSelection } from './selection';
+import { type BlockOps, createBlockSelection, setBlockSelection } from './selection';
 
 export type BlockOptions = {
   /** Class applied to each block box element. */
@@ -58,7 +58,7 @@ export const blockDrag = ({ clampX }: Pick<BlockOptions, 'clampX'> = {}): Extens
  */
 const blockCache = new WeakMap<EditorState, Block[]>();
 
-const findBlocks = (state: EditorState): Block[] => {
+export const findBlocks = (state: EditorState): Block[] => {
   const cached = blockCache.get(state);
   if (cached) {
     return cached;
@@ -106,18 +106,23 @@ const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): {
 };
 
 /**
- * Moves the blocks at `sourceIndices` to the slot before `dropIndex` (the end of the document when
- * `dropIndex === blocks.length`), preserving their relative order and blank-line separation, as a single
- * undo step that syncs as a small edit.
+ * Transaction that moves the blocks at `sourceIndices` to the slot before `dropIndex` (the end of the
+ * document when `dropIndex === blocks.length`), preserving their relative order and blank-line
+ * separation, as a single undo step. Places the caret at the end of the moved content and clears the
+ * block selection. Returns `null` for a no-op (empty/invalid sources, or a drop inside the moved region).
+ * Pure — exported for tests.
  */
-const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number): void => {
-  const { state } = view;
+export const moveBlocksSpec = (
+  state: EditorState,
+  sourceIndices: number[],
+  dropIndex: number,
+): TransactionSpec | null => {
   const blocks = findBlocks(state);
   const count = blocks.length;
   const sources = [...new Set(sourceIndices)].filter((index) => index >= 0 && index < count).sort((a, b) => a - b);
   // Dropping onto a selected block is a no-op.
   if (sources.length === 0 || sources.includes(dropIndex)) {
-    return;
+    return null;
   }
 
   const text = sources.map((index) => state.doc.sliceString(blocks[index].from, blocks[index].to)).join('\n\n');
@@ -125,25 +130,46 @@ const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number
   const insertAt = dropIndex < count ? blocks[dropIndex].from : state.doc.length;
   // Dropping inside the removed region is a no-op.
   if (deletes.some((range) => insertAt > range.from && insertAt < range.to)) {
-    return;
+    return null;
   }
 
   const insert = dropIndex < count ? `${text}\n\n` : `\n\n${text}`;
   const changes = [...deletes.map((range) => ({ from: range.from, to: range.to })), { from: insertAt, insert }];
-  view.dispatch({ changes, userEvent: 'move.block' });
+  // Caret at the end of the moved content: the inserted text starts where `insertAt` maps to (dropping
+  // any deletes before it), then `text` sits at its start (or after the `\n\n` prefix when appending).
+  const changeSet = state.changes(changes);
+  const insertStart = changeSet.mapPos(insertAt, -1);
+  const caret = insertStart + (dropIndex < count ? text.length : 2 + text.length);
+  return {
+    changes,
+    selection: { anchor: Math.min(caret, changeSet.newLength) },
+    effects: setBlockSelection.of([]),
+    userEvent: 'move.block',
+  };
+};
+
+const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number): void => {
+  const spec = moveBlocksSpec(view.state, sourceIndices, dropIndex);
+  if (spec) {
+    view.dispatch(spec);
+  }
 };
 
 /**
- * Removes the blocks at `indices` and, when `text` is non-null, inserts it as block(s) at the first
- * removed slot — as a single edit. `null` is a pure delete (cut); non-null is a replace (paste).
+ * Transaction that removes the blocks at `indices` and, when `text` is non-null, inserts it as block(s)
+ * at the first removed slot — a single edit. `null` is a pure delete (cut); non-null is a replace
+ * (paste). Returns `null` for a no-op. Pure — exported for tests.
  */
-const replaceBlocks = (view: EditorView, indices: number[], text: string | null): void => {
-  const { state } = view;
+export const replaceBlocksSpec = (
+  state: EditorState,
+  indices: number[],
+  text: string | null,
+): TransactionSpec | null => {
   const blocks = findBlocks(state);
   const count = blocks.length;
   const sources = [...new Set(indices)].filter((index) => index >= 0 && index < count).sort((a, b) => a - b);
   if (sources.length === 0) {
-    return;
+    return null;
   }
 
   const deletes = deleteRanges(state, blocks, sources);
@@ -158,14 +184,23 @@ const replaceBlocks = (view: EditorView, indices: number[], text: string | null)
     anchor = deletes[0].from + text.length;
   }
 
-  view.dispatch({
+  const changeSet = state.changes(changes);
+  return {
     changes,
-    selection: { anchor: Math.min(anchor, state.doc.length) },
+    selection: { anchor: Math.min(anchor, changeSet.newLength) },
+    effects: setBlockSelection.of([]),
     userEvent: text == null ? 'delete.block' : 'input.paste',
-  });
+  };
 };
 
-const markdownBlockOps: BlockOps = {
+const replaceBlocks = (view: EditorView, indices: number[], text: string | null): void => {
+  const spec = replaceBlocksSpec(view.state, indices, text);
+  if (spec) {
+    view.dispatch(spec);
+  }
+};
+
+export const markdownBlockOps: BlockOps = {
   getBlocks: findBlocks,
   moveBlocks,
   serialize: (state, blocks) => blocks.map((block) => state.doc.sliceString(block.from, block.to)).join('\n\n'),
