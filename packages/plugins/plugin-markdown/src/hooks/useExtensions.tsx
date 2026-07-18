@@ -8,9 +8,9 @@ import React, { useMemo } from 'react';
 import { Paths } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { type Identity } from '@dxos/client/halo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
@@ -67,7 +67,7 @@ export type ExtensionsOptions = {
    * Local identity for collaboration awareness. Optional so the editor can bind to a raw ECHO object
    * with no client (awareness only activates when both a space and an identity are present).
    */
-  identity?: Identity | null;
+  identity?: Identity.Info | null;
   /** Callback when an internal link is clicked. */
   onSelectObject?: (objectId: string) => void;
 };

@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Identity } from '@dxos/halo';
 import { DXN, IdentityDid, SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -32,9 +33,16 @@ const ProfileSchema = Schema.Struct({
 
 export const CreateIdentity = Operation.make({
   meta: { key: makeKey('createIdentity'), name: 'Create Identity', icon: 'ph--user--regular' },
-  services: [Capability.Service],
+  services: [Capability.Service, Identity.Service],
   input: ProfileSchema,
   output: IdentitySchema,
+});
+
+export const UpdateProfile = Operation.make({
+  meta: { key: makeKey('updateProfile'), name: 'Update Profile', icon: 'ph--user--regular' },
+  services: [Identity.Service],
+  input: ProfileSchema,
+  output: Schema.Void,
 });
 
 export const JoinIdentity = Operation.make({

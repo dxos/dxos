@@ -3,12 +3,14 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
+import type * as Context from 'effect/Context';
 
 import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
 import { type ObjectMigration } from '@dxos/client/echo';
 import { type Type } from '@dxos/echo';
 import { type HubHttpClient } from '@dxos/edge-client';
+import { type Identity, type Space } from '@dxos/halo';
 
 import { meta } from '#meta';
 
@@ -22,4 +24,16 @@ export namespace ClientCapabilities {
     `${meta.profile.key}.capability.accountCache`,
   );
   export const HubHttpClient = Capability.make<HubHttpClient>(`${meta.profile.key}.capability.hubHttpClient`);
+
+  /**
+   * The HALO Identity service instance, for imperative (non-React, non-Effect-layer) consumers
+   * that need identity access without depending on `@dxos/client`.
+   */
+  export const IdentityService: Capability.InterfaceDef<Context.Tag.Service<Identity.Service>> = Capability.make(
+    `${meta.profile.key}.capability.identityService`,
+  );
+  /** The HALO Space service instance, for imperative consumers. */
+  export const SpaceService: Capability.InterfaceDef<Context.Tag.Service<Space.Service>> = Capability.make(
+    `${meta.profile.key}.capability.spaceService`,
+  );
 }
