@@ -414,7 +414,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
       {isExpanded && (
         <div className='col-span-full grid grid-cols-subgrid items-start'>
           <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pe-3'>
-            {/* <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} /> */}
+            <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
             <MessageBody message={message} mailbox={mailbox} options={options} />
           </div>
         </div>
@@ -497,7 +497,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   const objects = useMessageExtractedObjects(db, mailbox, message);
 
   return (
-    <Card.Root border={false} fullWidth>
+    <Card.Root border={false} fullWidth data-testid='message-header'>
       <Card.Body>
         {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
         {/* <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} /> */}
