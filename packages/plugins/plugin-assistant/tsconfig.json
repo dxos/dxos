@@ -43,6 +43,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -59,9 +62,6 @@
     },
     {
       "path": "../../core/compute/conductor"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/compute/link"

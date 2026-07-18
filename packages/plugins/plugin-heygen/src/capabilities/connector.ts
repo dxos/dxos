@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { Connection, Connector } from '@dxos/plugin-connector';
 
 import { HEYGEN_CONNECTOR_ID, HEYGEN_SOURCE } from '../constants';
 
 const HeyGenTokenForm = Schema.Struct({
-  token: Schema.String.annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
     title: 'API key',
     description: 'The HeyGen API key from https://app.heygen.com/settings (API).',
   }),

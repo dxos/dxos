@@ -4,67 +4,47 @@
 
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type FC, useContext, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 
-import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
-import { annotations, comments, createExternalCommentSync } from '@dxos/ui-editor';
+import { comments } from '@dxos/ui-editor';
 import { type Comment } from '@dxos/ui-editor/types';
 
-import { createRenderer, str } from '../util';
-import { EditorStory, content, longText } from './components';
+import { EditorStory } from './components';
 
-const meta = {
-  title: 'ui/react-ui-editor/Comments',
-  component: EditorStory,
-  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
-} satisfies Meta<typeof EditorStory>;
+random.seed(123);
 
-export default meta;
+type StoryArgs = {
+  content?: string;
+  comments?: Comment[];
+};
 
-type Story = StoryObj<typeof meta>;
-
-//
-// Comments
-//
-
-const CommentsStory = () => {
+const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
   const registry = useContext(RegistryContext);
-  const commentsAtom = useMemo(() => Atom.make<Comment[]>([]), []);
+  const commentsAtom = useMemo(() => Atom.make<Comment[]>(commentsProp), []);
 
   return (
     <EditorStory
-      text={str('# Comments', '', content.paragraphs, content.footer)}
+      id='test'
+      text={content}
       extensions={[
-        createExternalCommentSync(
-          'test',
-          (sink) => registry.subscribe(commentsAtom, () => sink()),
-          () => registry.get(commentsAtom),
-        ),
         comments({
           id: 'test',
-          renderTooltip: createRenderer(CommentTooltip),
-          onCreate: ({ cursor }) => {
-            const id = PublicKey.random().toHex();
-            const current = registry.get(commentsAtom);
-            registry.set(commentsAtom, [...current, { id, cursor }]);
-            return id;
+          onSelect: ({ comments, selection }) => {
+            log.info('update', {
+              comments: comments.length,
+              active: selection.current?.slice(0, 8),
+              closest: selection.closest?.slice(0, 8),
+            });
           },
-          onSelect: (state) => {
-            const debug = false;
-            if (debug) {
-              log.info('update', {
-                comments: state.comments.length,
-                active: state.selection.current?.slice(0, 8),
-                closest: state.selection.closest?.slice(0, 8),
-              });
-            }
+          getComments: () => registry.get(commentsAtom),
+          subscribe: (sink) => {
+            sink();
+            return registry.subscribe(commentsAtom, () => sink());
           },
         }),
       ]}
@@ -72,35 +52,28 @@ const CommentsStory = () => {
   );
 };
 
-export const Comments: Story = {
-  render: () => <CommentsStory />,
-};
+const meta = {
+  title: 'ui/react-ui-editor/Comments',
+  component: EditorStory,
+  render: (args) => <DefaultStory {...args} />,
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof EditorStory>;
 
-const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded-sm text-xs bg-neutral-200 text-black'>
-    {char}
-  </span>
-);
+export default meta;
 
-const CommentTooltip: FC<{ shortcut: string }> = ({ shortcut }) => {
-  return (
-    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded-sm'>
-      <div>Create comment</div>
-      <div className='flex gap-1'>
-        {keySymbols(parseShortcut(shortcut)).map((char) => (
-          <Key key={char} char={char} />
-        ))}
-      </div>
-    </div>
-  );
-};
+type Story = StoryObj<StoryArgs>;
 
-//
-// Annotations
-//
-
-export const Annotations: Story = {
-  render: () => (
-    <EditorStory text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />
-  ),
+export const Default: Story = {
+  args: {
+    content: Array.from({ length: 3 })
+      .map(() => random.lorem.paragraph(3))
+      .join('\n\n'),
+    comments: [
+      { id: PublicKey.random().toHex(), cursor: '16:197' },
+      { id: PublicKey.random().toHex(), cursor: '402:420' },
+    ],
+  },
 };

@@ -36,7 +36,25 @@ export type EditorViewRegistry = {
   get: (attendableId: string) => EditorViewEntry | undefined;
 };
 
+/** Which version of a document the local user is viewing. Never replicated. */
+export type VersionSelection =
+  | { kind: 'current' }
+  | { kind: 'branch'; branchId: string }
+  | { kind: 'checkpoint'; versionId: string };
+
+export type VersioningState = {
+  /** Selection keyed by document id. Missing entry = current. */
+  selection: Record<string, VersionSelection>;
+  /** Whether the diff/compare overlay is enabled, keyed by document id. */
+  compare: Record<string, boolean>;
+};
+
 export const Settings = Capability.make<Atom.Writable<Markdown.Settings>>(`${meta.profile.key}.capability.settings`);
+
+/** In-memory (per-session) version selection state. */
+export const VersioningState = Capability.make<Atom.Writable<VersioningState>>(
+  `${meta.profile.key}.capability.versioning-state`,
+);
 
 /** Persisted state atom for view mode per document. */
 export const State = Capability.make<Atom.Writable<MarkdownState>>(`${meta.profile.key}.capability.state`);

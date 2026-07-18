@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
+import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
@@ -15,7 +16,6 @@ import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
-import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
 import { DXN, EntityId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';

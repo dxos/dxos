@@ -19,7 +19,7 @@ export const GamePlugin = Plugin.define(meta).pipe(
     provides: CreateObject.provides,
     activate: CreateObject,
   }),
-  AppPlugin.addSchemaModule({ schema: [Game] }),
+  AppPlugin.addSchemaModule({ schema: [Game.Game] }),
   AppPlugin.addSurfaceModule({
     requires: ReactSurface.requires,
     provides: ReactSurface.provides,

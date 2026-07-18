@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
+import { traceFeedPrettyPrintSubscription } from '@dxos/agent-runtime/testing';
 import { AiService } from '@dxos/ai';
 import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
@@ -24,7 +25,6 @@ import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
-import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -131,9 +131,14 @@ const makeMemoizedAiServiceMiddleware = (
       TestAiService({
         preset: options.inferenceProvider ?? 'direct',
         disableMemoization: options.disableLlmMemoization ?? false,
-        // Space keys and entity IDs differ across runs; canonicalize for matching and
+        // Space keys, entity IDs, and ids minted by external services on every live tool call
+        // (e.g. an image-hosting upload id) differ across runs; canonicalize for matching and
         // substitute live values back into memoized responses on a cache hit.
-        dynamicValuePatterns: [MemoizedLanguageModel.SPACE_ID_PATTERN, MemoizedLanguageModel.ENTITY_ID_PATTERN],
+        dynamicValuePatterns: [
+          MemoizedLanguageModel.SPACE_ID_PATTERN,
+          MemoizedLanguageModel.ENTITY_ID_PATTERN,
+          MemoizedLanguageModel.UUID_PATTERN,
+        ],
       }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
     Effect.map((service) => (_upstream: AiService.Service) => service),

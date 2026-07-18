@@ -6,7 +6,7 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute-runtime';
 
 import { JmapApiError } from '../../../errors';
 import { JmapCredentials } from '../../../services/jmap-credentials';
@@ -21,6 +21,7 @@ import {
 } from '../Jmap/api';
 import {
   type EmailAddress,
+  EmailChangesResult,
   EmailGetResult,
   EmailQueryResult,
   EmailSetResult,
@@ -178,6 +179,28 @@ export const emailGet = Effect.fn('emailGet')(function* (
     ],
   });
   return yield* getMethodResponse(response, '0', EmailGetResult);
+});
+
+/**
+ * Fetches the delta of email changes since an opaque `sinceState` token (RFC 8621 §4.3). A server that
+ * can't compute the delta (state too old / evicted) returns a `cannotCalculateChanges` method error,
+ * surfaced as a {@link JmapApiError} with that `type` — the caller's cue to fall back to a full scan.
+ * The token to pass comes from a prior `Email/get` `state` (NOT `Email/query` `queryState`).
+ */
+export const emailChanges = Effect.fn('emailChanges')(function* (
+  target: Target,
+  sinceState: string,
+  maxChanges?: number,
+) {
+  const args: Record<string, unknown> = { accountId: target.accountId, sinceState };
+  if (maxChanges !== undefined) {
+    args.maxChanges = maxChanges;
+  }
+  const response = yield* jmapRequest(target.apiUrl, {
+    using: MAIL_CAPABILITIES,
+    methodCalls: [['Email/changes', args, '0']],
+  });
+  return yield* getMethodResponse(response, '0', EmailChangesResult);
 });
 
 /** Lists the account's sending identities (RFC 8621 §6.2). */

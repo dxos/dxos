@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { Connection, Connector } from '@dxos/plugin-connector';
 
 import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_SOURCE } from '../constants';
 
 const IdeogramTokenForm = Schema.Struct({
-  token: Schema.String.annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
     title: 'API key',
     description: 'The Ideogram API key from https://ideogram.ai/manage-api.',
   }),

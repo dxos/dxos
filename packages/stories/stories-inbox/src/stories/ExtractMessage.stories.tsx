@@ -278,8 +278,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Renders MessageArticle for a Flying Blue confirmation message. The toolbar's `Extract`
- * dropdown should list `Run all (4)`, the contact extractor (plugin-inbox), the trip
+ * Renders MessageArticle for a Flying Blue confirmation message. The per-message overflow (`More`)
+ * menu should list `Run all (4)`, the contact extractor (plugin-inbox), the trip
  * extractor (plugin-trip), the summarize extractor (plugin-inbox, backed by the mock
  * AiService contributed via `MockAiServicePlugin`), and the story-local `important`
  * extractor. Clicking each invokes ExtractMessage; the dispatcher persists Trip / Person /
@@ -289,7 +289,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * End-to-end play function: opens the toolbar `Extract` dropdown, runs every matching
+ * End-to-end play function: opens the per-message overflow (`More`) menu, runs every matching
  * extractor via `Run all`, and asserts that a Trip chip AND a summary Document chip both
  * show up in the MessageHeader. The summary path proves the full
  * `ExtractMessage` → `Operation.invoke(ExtractSummaryFromMessage)` → mock AiService →
@@ -324,11 +324,12 @@ export const Test: Story = {
     // Wait for the seeded message to render.
     await waitFor(() => articleScope.queryByText(/Your flight confirmation/i));
 
-    // Open the toolbar Extract dropdown.
-    const extractTrigger = await waitFor(() => articleScope.queryByRole('button', { name: /extract/i }));
-    await userEvent.click(extractTrigger as HTMLElement);
+    // Open the per-message overflow menu; the Extract actions live in the "More" menu. Match either
+    // the translated label or the raw i18n key, since this harness may not load react-ui-menu strings.
+    const moreTrigger = await waitFor(() => articleScope.queryByRole('button', { name: /more|overflow/i }));
+    await userEvent.click(moreTrigger as HTMLElement);
 
-    // Assert the summarize extractor is registered and matches the seeded body. The dropdown
+    // Assert the summarize extractor is registered and matches the seeded body. The menu
     // entry uses the extractor's short `title` ("Summary"). Use queryAllByText (the label text
     // can match both the menu item and its inner text node) and require at least one match. If
     // the body falls below the 200-char threshold or the InboxPlugin's Startup module stops

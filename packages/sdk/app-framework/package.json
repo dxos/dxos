@@ -15,10 +15,8 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "workerd": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     },
     "./workerd": {
       "types": "./dist/types/src/index.d.ts",
@@ -26,78 +24,68 @@
     },
     "./ActivationEvent": {
       "source": "./src/core/activation-event.ts",
-      "browser": "./dist/lib/browser/activation-event/index.mjs",
-      "node": "./dist/lib/node-esm/activation-event/index.mjs",
-      "types": "./dist/types/src/activation-event/index.d.ts"
+      "types": "./dist/types/src/core/activation-event.d.ts",
+      "import": "./dist/lib/core/activation-event.mjs"
     },
     "./ActivationEvents": {
       "source": "./src/common/activation-events.ts",
-      "browser": "./dist/lib/browser/common/activation-events.mjs",
-      "node": "./dist/lib/node-esm/common/activation-events.mjs",
-      "types": "./dist/types/src/common/activation-events.d.ts"
+      "types": "./dist/types/src/common/activation-events.d.ts",
+      "import": "./dist/lib/common/activation-events.mjs"
     },
     "./Capabilities": {
       "source": "./src/common/capabilities.ts",
-      "browser": "./dist/lib/browser/common/capabilities.mjs",
-      "node": "./dist/lib/node-esm/common/capabilities.mjs",
-      "types": "./dist/types/src/common/capabilities.d.ts"
+      "types": "./dist/types/src/common/capabilities.d.ts",
+      "import": "./dist/lib/common/capabilities.mjs"
     },
     "./Capability": {
       "source": "./src/core/capability.ts",
-      "browser": "./dist/lib/browser/capability/index.mjs",
-      "node": "./dist/lib/node-esm/capability/index.mjs",
-      "types": "./dist/types/src/capability/index.d.ts"
+      "types": "./dist/types/src/core/capability.d.ts",
+      "import": "./dist/lib/core/capability.mjs"
     },
     "./Plugin": {
       "source": "./src/core/plugin.ts",
-      "browser": "./dist/lib/browser/plugin/index.mjs",
-      "node": "./dist/lib/node-esm/plugin/index.mjs",
-      "types": "./dist/types/src/plugin/index.d.ts"
+      "types": "./dist/types/src/core/plugin.d.ts",
+      "import": "./dist/lib/core/plugin.mjs"
     },
     "./PluginManager": {
       "source": "./src/core/plugin-manager.ts",
-      "browser": "./dist/lib/browser/plugin-manager/index.mjs",
-      "node": "./dist/lib/node-esm/plugin-manager/index.mjs",
-      "types": "./dist/types/src/plugin-manager/index.d.ts"
+      "types": "./dist/types/src/core/plugin-manager.d.ts",
+      "import": "./dist/lib/core/plugin-manager.mjs"
     },
     "./UrlLoader": {
       "source": "./src/core/url-loader.ts",
-      "browser": "./dist/lib/browser/url-loader/index.mjs",
-      "node": "./dist/lib/node-esm/url-loader/index.mjs",
-      "types": "./dist/types/src/url-loader/index.d.ts"
+      "types": "./dist/types/src/core/url-loader.d.ts",
+      "import": "./dist/lib/core/url-loader.mjs"
     },
     "./config": {
-      "browser": "./dist/lib/browser/config/index.mjs",
-      "node": "./dist/lib/node-esm/config/index.mjs",
-      "types": "./dist/types/src/config/index.d.ts"
+      "source": "./src/config/index.ts",
+      "types": "./dist/types/src/config/index.d.ts",
+      "import": "./dist/lib/config.mjs"
     },
     "./vite-plugin": {
-      "import": "./dist/plugin/node-esm/index.mjs",
-      "types": "./dist/types/src/vite-plugin/index.d.ts"
+      "source": "./src/vite-plugin/index.ts",
+      "types": "./dist/types/src/vite-plugin/index.d.ts",
+      "import": "./dist/lib/vite-plugin.mjs"
     },
     "./cli": {
       "source": "./src/cli/index.ts",
-      "browser": "./dist/lib/browser/cli/index.mjs",
-      "node": "./dist/lib/node-esm/cli/index.mjs",
-      "types": "./dist/types/src/cli/index.d.ts"
+      "types": "./dist/types/src/cli/index.d.ts",
+      "import": "./dist/lib/cli.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs",
-      "types": "./dist/types/src/testing/index.d.ts"
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     },
     "./testing-react": {
       "source": "./src/testing/react.tsx",
-      "browser": "./dist/lib/browser/testing/react.mjs",
-      "node": "./dist/lib/node-esm/testing/react.mjs",
-      "types": "./dist/types/src/testing/react.d.ts"
+      "types": "./dist/types/src/testing/react.d.ts",
+      "import": "./dist/lib/testing/react.mjs"
     },
     "./ui": {
       "source": "./src/ui/index.ts",
-      "browser": "./dist/lib/browser/ui/index.mjs",
-      "node": "./dist/lib/node-esm/ui/index.mjs",
-      "types": "./dist/types/src/ui/index.d.ts"
+      "types": "./dist/types/src/ui/index.d.ts",
+      "import": "./dist/lib/ui.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -13,7 +13,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CreateGamePanel } from '#components';
 
-import { Game, GameCapabilities, make as makeGame } from '../types';
+import { Game, GameCapabilities } from '../types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
@@ -21,7 +21,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.provide(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Game),
+        id: Type.getTypename(Game.Game),
         customPanel: CreateGamePanel,
         createObject: (
           { variantId, input }: { variantId: string; input?: Record<string, any> },
@@ -45,7 +45,7 @@ export default Capability.makeModule(
               targetNodeId: options.targetNodeId,
             });
 
-            const game = makeGame({
+            const game = Game.make({
               name: typeof input?.name === 'string' ? input.name : undefined,
               variant: stateObject,
             });

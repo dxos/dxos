@@ -65,16 +65,16 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/compute/edge-compute"
+    },
+    {
       "path": "../../core/compute/extractor"
     },
     {
       "path": "../../core/compute/extractor-lib"
-    },
-    {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/compute/link"
@@ -165,6 +165,9 @@
     },
     {
       "path": "../../ui/react-ui-rdf"
+    },
+    {
+      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-table"

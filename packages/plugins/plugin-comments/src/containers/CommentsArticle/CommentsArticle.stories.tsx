@@ -72,27 +72,30 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
     if (start < 0) {
       continue;
     }
+
     const anchor = toCursorRange(accessor, start, start + phrase.length);
-    const thread = Thread.make({
-      name: phrase,
-      status: 'active',
-      messages: [
-        Ref.make(
-          Obj.make(Message.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'user', name: 'Alice' },
-            blocks: [{ _tag: 'text', text: `Comment on “${phrase}”.` }],
-          }),
-        ),
-      ],
-    });
-    const relation = Relation.make(AnchoredTo.AnchoredTo, {
-      [Relation.Source]: thread,
-      [Relation.Target]: doc,
-      anchor,
-    });
-    space.db.add(thread);
-    space.db.add(relation);
+    const thread = space.db.add(
+      Thread.make({
+        name: phrase,
+        status: 'active',
+        messages: [
+          Ref.make(
+            Obj.make(Message.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user', name: 'Alice' },
+              blocks: [{ _tag: 'text', text: `Comment on “${phrase}”.` }],
+            }),
+          ),
+        ],
+      }),
+    );
+    space.db.add(
+      Relation.make(AnchoredTo.AnchoredTo, {
+        [Relation.Source]: thread,
+        [Relation.Target]: doc,
+        anchor,
+      }),
+    );
   }
 };
 

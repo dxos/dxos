@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { type ReactNode, type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -19,14 +19,19 @@ import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, Icon, Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
-import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import {
+  Menu,
+  MenuBuilder,
+  TOOLBAR_DISPOSITION,
+  graphActions,
+  isToolbarAction,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -38,16 +43,19 @@ import {
   isMessageGroup,
   useInjectedMailboxActions,
   useMailboxExtractorActions,
-  useTargetSync,
 } from '#components';
+import { useDebouncedValue } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox, Starred } from '#types';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
-import { createSyncProgressKey } from '../../operations/google/gmail/sync';
+import { createSyncProgressKey } from '../../operations/mail/mail-sync';
+import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
+import { buildMailboxSelection, getSearchText } from './mailbox-search';
+import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -70,8 +78,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
   const runAction = useActionRunner();
-  // Pull "Sync" toolbar action once a connection is bound to this mailbox.
-  const { connection, sync } = useTargetSync(mailbox);
 
   // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
   // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
@@ -81,15 +87,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
-  // Derived from the same monitor atom the meter reads (not the already-subscribed `syncProgress`
-  // value above) so the menu builder can track it via `get()` — a plain boolean prop wouldn't be
-  // reactive within the builder's own atom-driven update path.
-  const syncProgressAtom = progressRegistry?.monitorAtom(createSyncProgressKey(mailbox));
-  const syncing = useMemo(
-    () =>
-      syncProgressAtom ? Atom.map(syncProgressAtom, (task) => task?.status === 'running') : Atom.make(() => false),
-    [syncProgressAtom],
-  );
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -104,9 +101,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const tagsAtom = useMessageTagsAtomFamily(tagIndex, tagMap);
 
   // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const starredAtom = useMemo(() => Starred.atom(tagIndex, starredUri), [tagIndex, starredUri]);
+  const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -121,11 +118,25 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const conversations = settings.conversations ?? true;
   const direction = sortDescending.value ? 'desc' : 'asc';
 
+  // The ECHO query (and the `searchQuery` that drives highlighting) is driven by a DEBOUNCED value so
+  // typing in the filter editor doesn't rebuild the paginated store and flash the list empty on every
+  // keystroke — the query's AST only changes once typing pauses. The editor itself, and the
+  // save-filter gating below, stay bound to the immediate `filterText`/`filter`. (`useDeferredValue`
+  // is insufficient here: it still commits every intermediate keystroke, just at a lower priority, so
+  // the query AST — and thus `usePagination`'s store — still changes on each keypress.)
+  const debouncedFilterText = useDebouncedValue(filterText, 300);
+  const debouncedFilter = useMemo(() => builder.build(debouncedFilterText).filter, [debouncedFilterText, builder]);
+
   // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
-  const source = feed && Query.select(Filter.type(Message.Message)).from(feed);
+  const selection = useMemo(
+    () => buildMailboxSelection(debouncedFilterText, debouncedFilter),
+    [debouncedFilterText, debouncedFilter],
+  );
+  const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
+  const source = feed && Query.select(selection).from(feed);
   const pagination = usePagination(
     db,
     source
@@ -160,34 +171,25 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       }
     }
     // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
+    // During an active search, also drop messages that don't match in their plain/markdown body or
+    // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
+    // message can match the index yet have no matching (or any) plain/markdown text to display.
     return result.flatMap((item): MessageStackItem[] => {
+      const matches = (message: Message.Message) =>
+        !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
       if (isMessageGroup(item)) {
-        const messages = item.messages.filter((message) => !Mailbox.isFiltered(mailbox, message));
+        const messages = item.messages.filter(matches);
         return messages.length > 0 ? [{ ...item, messages }] : [];
       }
-      return Mailbox.isFiltered(mailbox, item) ? [] : [item];
+      return matches(item) ? [item] : [];
     });
-  }, [pagination.items, mailbox, mailbox.messageFilters]);
+  }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // TODO(burdon): Actual test should be if we have synced; not number of messages.
-  // Show the message list as soon as any messages are present; only fall back to the empty state
-  // after a brief delay of genuinely having none (prevents an initial-load flicker). Keyed on the
-  // COUNT, not the query-result identity: keying on `messages` (which changes on every update) plus
-  // an always-delayed setter meant that during a sync the timeout was cleared before it ever fired,
-  // latching the empty state `true` while messages streamed in — the mailbox showed empty for the
-  // whole burst and only revealed messages once updates slowed past the 1s window.
-  const [isEmpty, setEmpty] = useState<boolean>(false);
-  useEffect(() => {
-    if (messages.length > 0) {
-      setEmpty(false);
-      return;
-    }
-    const t = setTimeout(() => setEmpty(true), 1_000);
-    return () => clearTimeout(t);
-  }, [messages.length]);
+  // Gates on the query settling, not on `messages.length`, so the empty-mailbox panel never renders mid-load.
+  const loading = !feed || pagination.isLoading;
 
   const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
@@ -226,7 +228,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         case 'star': {
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
-            void Starred.toggleStarred(mailbox, message, db);
+            void SystemTags.toggleTag(mailbox, message, db, 'starred');
           }
           break;
         }
@@ -315,16 +317,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     [db, tagMap, filterText, filter, setFilterText, handleSaveFilter, handleClear],
   );
 
-  const menuActions = useMailboxActions(mailbox, {
-    sortDescending,
-    nodeId: id,
-    filterElement,
-    connection,
-    sync,
-    // Same monitor as the statusbar meter (`syncProgress`, above): true for the whole duration of a
-    // sync, whether kicked off by this toolbar action or independently by the routine's timer trigger.
-    syncing,
-  });
+  const menuActions = useMailboxActions(mailbox, { sortDescending, nodeId: id, filterElement });
 
   return (
     <Panel.Root>
@@ -336,9 +329,16 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         </Menu.Root>
       </ElevationProvider>
       <Panel.Content asChild>
-        {isEmpty ? (
-          <InitializeMailbox mailbox={mailbox} />
-        ) : (
+        {loading ? (
+          // Fade-in delayed 1s so a fast load never flashes the spinner.
+          <div className='grid place-items-center bs-full is-full'>
+            <Icon
+              icon='ph--spinner-gap--regular'
+              size={6}
+              classNames='text-subdued [animation:spin_1s_linear_infinite,fade-in_200ms_ease-out_1s_backwards]'
+            />
+          </div>
+        ) : messages.length > 0 ? (
           <MessageStack
             id={id}
             items={items}
@@ -348,8 +348,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             pagination={feed ? pagination : undefined}
             enableIgnoreSender
             enableCreateTopic
+            searchQuery={searchQuery}
             onAction={handleAction}
           />
+        ) : (
+          <InitializeMailbox mailbox={mailbox} />
         )}
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
@@ -366,55 +369,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 };
 
 MailboxArticle.displayName = 'MailboxArticle';
-
-type MailboxFilterProps = {
-  db?: Database.Database;
-  tags: Tag.Map;
-  value: string;
-  /** Parsed filter; save is enabled only when the text parses. */
-  filter?: Filter.Any;
-  onChange: (value: string) => void;
-  onSave: () => void;
-  onClear: () => void;
-  editorRef: Ref<EditorController>;
-  saveButtonRef: Ref<HTMLButtonElement>;
-};
-
-/** Filter row slotted into the mailbox toolbar (query editor + save/clear actions). */
-const MailboxFilter = ({
-  db,
-  tags,
-  value,
-  filter,
-  onChange,
-  onSave,
-  onClear,
-  editorRef,
-  saveButtonRef,
-}: MailboxFilterProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  return (
-    <>
-      <QueryEditor
-        classNames='grow min-w-0 ps-1'
-        db={db}
-        tags={tags}
-        value={value}
-        onChange={onChange}
-        ref={editorRef}
-      />
-      <IconButton
-        disabled={!filter}
-        icon='ph--folder-plus--regular'
-        iconOnly
-        label={t('mailbox-toolbar-save-button.label')}
-        onClick={onSave}
-        ref={saveButtonRef}
-      />
-      <IconButton icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
-    </>
-  );
-};
 
 /** One thread's worth of results from the conversation-aggregated message query (see the query above). */
 type ThreadGroup = {
@@ -459,16 +413,11 @@ type MailboxActionsOptions = {
   nodeId: string;
   /** Search box, custom-rendered as a toolbar item so the connect group can sit to its right. */
   filterElement: ReactNode;
-  /** Bound connection (drives the own pull-"Sync" action). */
-  connection?: Connection.Connection;
-  sync: () => Promise<void>;
-  /** Derived from the mailbox's sync progress monitor (see `syncing` above); read via `get()`. */
-  syncing: Atom.Atom<boolean>;
 };
 
 const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
-  { sortDescending, nodeId, filterElement, connection, sync, syncing }: MailboxActionsOptions,
+  { sortDescending, nodeId, filterElement }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
@@ -545,36 +494,15 @@ const useMailboxActions = (
         () => {},
       );
 
-      // Own action: pull-sync from the provider once connected.
-      if (connection) {
-        const isSyncing = get(syncing);
-        builder.action(
-          'sync',
-          {
-            label: ['sync-mailbox.label', { ns: meta.profile.key }],
-            icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
-            variant: 'primary',
-            iconOnly: false,
-            disabled: isSyncing,
-          },
-          () => {
-            void sync();
-          },
-        );
-      }
-
       return builder
         .separator('gap')
-        .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }))
+        .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
         .build();
     },
     [
       graph,
       nodeId,
       filterElement,
-      connection,
-      sync,
-      syncing,
       sortDescending,
       loadRemoteImages,
       setSettings,

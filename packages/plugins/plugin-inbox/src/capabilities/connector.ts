@@ -12,8 +12,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Operation } from '@dxos/compute';
+import { withAuthorization } from '@dxos/compute-runtime';
 import { Database, Obj } from '@dxos/echo';
-import { withAuthorization } from '@dxos/functions';
 import {
   ConnectionTestError,
   Connector,

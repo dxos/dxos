@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
 import { meta } from '#meta';
@@ -37,8 +38,40 @@ export const translations = [
         'words.label_zero': 'words',
         'words.label_one': 'word',
         'words.label_other': 'words',
+        'version-banner-checkpoint.label': 'Viewing checkpoint',
+        'version-banner-branch.label': 'Editing branch',
+        'restore.label': 'Restore',
+        'branch-from.label': 'Branch from here',
+        'merge.label': 'Merge',
+        'compare.label': 'Compare',
+        'close.label': 'Close',
+        'history-panel.title': 'History',
+        'branches.title': 'Branches',
+        'checkpoints.title': 'Checkpoints',
+        'create.label': 'Create',
+        'create-checkpoint.label': 'Create revision',
+        'create-branch.label': 'New branch',
+        'revision-name.placeholder': 'Revision name (optional)',
+        'discard-branch.label': 'Discard branch',
+        'delete-branch.label': 'Delete',
+        'current.label': 'Current',
+        'main-branch.label': 'Main',
+        'now.label': 'Now',
+        'version-name.placeholder': 'Checkpoint name…',
+        'branch-name.placeholder': 'Branch name…',
+        'versions.title': 'Versions',
+        'open-history.label': 'Open history',
+        'branch-count.label': '{{count}} branches',
+        'branch-count.label_zero': 'no branches',
+        'branch-count.label_one': '{{count}} branch',
+        'branch-count.label_other': '{{count}} branches',
+        'checkpoint-count.label': '{{count}} checkpoints',
+        'checkpoint-count.label_zero': 'no checkpoints',
+        'checkpoint-count.label_one': '{{count}} checkpoint',
+        'checkpoint-count.label_other': '{{count}} checkpoints',
       },
     },
   },
   ...editorTranslations,
+  ...componentsTranslations,
 ] as const satisfies Resource[];

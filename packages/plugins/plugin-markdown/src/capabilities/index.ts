@@ -32,6 +32,11 @@ export const CreateObject = Capability.lazyModule(
   { provides: [SpaceCapabilities.CreateObjectEntry] },
   () => import('./create-object'),
 );
+export const AppGraphBuilder = Capability.lazyModule(
+  'AppGraphBuilder',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  () => import('./app-graph-builder'),
+);
 export const SkillDefinition = Capability.lazyModule(
   'SkillDefinition',
   { provides: [AppCapabilities.SkillDefinition] },
@@ -56,7 +61,12 @@ export const MarkdownState = Capability.lazyModule(
   'MarkdownState',
   {
     requires: [AttentionCapabilities.ViewState],
-    provides: [MarkdownCapabilities.State, MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
+    provides: [
+      MarkdownCapabilities.State,
+      MarkdownCapabilities.EditorState,
+      MarkdownCapabilities.EditorViews,
+      MarkdownCapabilities.VersioningState,
+    ],
   },
   () => import('./state'),
 );

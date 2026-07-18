@@ -28,7 +28,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
   const games = useQuery(
     db,
     gamesFeed
-      ? Query.select(Filter.type(Game)).from(Scope.feed(Obj.getURI(gamesFeed)))
+      ? Query.select(Filter.type(Game.Game)).from(Scope.feed(Obj.getURI(gamesFeed)))
       : Query.select(Filter.nothing()),
   );
 
@@ -85,7 +85,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
   );
 };
 
-const GameTile = ({ data: game }: { data: Game }) => {
+const GameTile = ({ data: game }: { data: Game.Game }) => {
   const { t } = useTranslation(meta.profile.key);
   const objectMenuItems = useObjectMenuItems(game);
   const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';

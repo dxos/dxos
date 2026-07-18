@@ -231,13 +231,13 @@ export const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) =
 export const defaultExtensions: Extension[] = [
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
-  linkTooltip(renderLinkTooltip),
+  linkTooltip({ render: renderLinkTooltip }),
 ];
 
 export const allExtensions: Extension[] = [
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, numberedHeadings: { from: 2, to: 4 } }),
   formattingKeymap(),
-  linkTooltip(renderLinkTooltip),
+  linkTooltip({ render: renderLinkTooltip }),
   image(),
   table(),
   folding(),

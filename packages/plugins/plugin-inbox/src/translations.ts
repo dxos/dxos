@@ -74,13 +74,9 @@ export const translations = [
         'no-connections.label': 'No connections configured',
 
         'sync-mailbox.label': 'Sync',
-        'sync-mailbox-error.title': 'Failed to sync mailbox',
-        'sync-mailbox-success.title': 'Mailbox sync complete',
         'empty-mailbox.message': 'Mailbox empty',
 
         'sync-calendar.label': 'Sync calendar',
-        'sync-calendar-error.title': 'Failed to sync calendar',
-        'sync-calendar-success.title': 'Calendar sync complete',
         'empty-calendar.message': 'Calendar empty',
 
         'sync-contacts.label': 'Sync contacts',
@@ -127,6 +123,9 @@ export const translations = [
         'calendar-toolbar-create-event.menu': 'Create event',
         'calendar-toolbar-sync.menu': 'Save events to calendar',
 
+        'conversation-toolbar.label': 'Conversation toolbar',
+        'collapse-all.menu': 'Collapse all',
+        'expand-all.menu': 'Expand all',
         'message-toolbar.label': 'Message toolbar',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
@@ -138,6 +137,7 @@ export const translations = [
         'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
+        'message-toolbar-collapse.label': 'Collapse message',
 
         'message-body.placeholder': 'Enter message text...',
 

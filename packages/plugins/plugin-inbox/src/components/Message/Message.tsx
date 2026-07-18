@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer } from 'react';
 
@@ -19,7 +19,7 @@ import { Menu } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock } from '@dxos/types';
 
-import { InboxCapabilities, Mailbox, Starred } from '#types';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
@@ -38,9 +38,8 @@ import { useMessageActions } from './useToolbar';
 // TODO(burdon): Create pattern for 1-up.
 type MessageContextValue = {
   attendableId?: string;
+  /** Body render mode; owned by the conversation and switched from the thread toolbar. */
   viewMode: ViewMode;
-  /** Omit to make the body read-only: the toolbar then hides its view-mode switcher. */
-  setViewMode?: (mode: ViewMode) => void;
   message: Mailbox.MessageLike;
   /** Owning mailbox; enables starring (the message's tag association lives in the mailbox's tag index). */
   mailbox?: Mailbox.Mailbox;
@@ -77,7 +76,6 @@ type MessageRootProps = PropsWithChildren<
 const MessageRoot = ({
   children,
   viewMode = 'markdown',
-  setViewMode,
   onOpen,
   onReply,
   onReplyAll,
@@ -89,7 +87,6 @@ const MessageRoot = ({
   return (
     <MessageContextProvider
       viewMode={viewMode}
-      setViewMode={setViewMode}
       onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
@@ -112,19 +109,8 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete } =
+  const { attendableId, message, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-
-  // Settings capability is optional (see MessageBody); fall back to safe defaults outside the plugin.
-  const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
-  const settingsAtom = settingsAtoms[0] ?? FALLBACK_SETTINGS_ATOM;
-  const settings = useAtomValue(settingsAtom);
-  const setSettings = useAtomSet(settingsAtom);
-  const loadRemoteImages = settings.loadRemoteImages ?? false;
-  const onToggleLoadImages = useCallback(
-    () => setSettings((prev) => ({ ...prev, loadRemoteImages: !(prev.loadRemoteImages ?? false) })),
-    [setSettings],
-  );
 
   // Optional: the graph capability isn't present in standalone (no-graph-plugin) stories.
   const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
@@ -132,10 +118,6 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     graph,
     nodeId: attendableId,
     message,
-    loadRemoteImages,
-    viewMode,
-    setViewMode,
-    onToggleLoadImages,
     onOpen,
     onReply,
     onReplyAll,
@@ -214,7 +196,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 
   // Starring uses the owning mailbox's tag index (messages are feed objects). Subscribe to the index
   // via `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = mailbox?.tags?.target;
   const starredAtom = useMemo(
@@ -224,7 +206,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (mailbox && db) {
-      void Starred.toggleStarred(mailbox, message, db);
+      void SystemTags.toggleTag(mailbox, message, db, 'starred');
     }
   }, [mailbox, message, db]);
 
@@ -296,7 +278,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   // persisted into the mailbox tag index during label sync); used to decide how aggressively the
   // HTML view restyles the body.
   const db = getSpace(mailbox ?? message)?.db;
-  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [...Mailbox.PERSONAL_TAG_KEYS]))[0];
+  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('personal')]))[0];
   const isPersonal = useMemo(
     () =>
       !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),

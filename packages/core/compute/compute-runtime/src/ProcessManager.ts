@@ -307,6 +307,13 @@ export interface Manager {
    * Operation handlers supplied at construction (same set used for nested {@link Operation.Service} in processes).
    */
   readonly operationHandlerSet: OperationHandlerSet.OperationHandlerSet;
+
+  /**
+   * Local (this-runtime) process-tree view. The aggregate
+   * {@link Process.ProcessMonitorService} is assembled from this plus the
+   * remote view by {@link ProcessMonitor.layer}.
+   */
+  readonly monitor: Process.Monitor;
 }
 
 export { ProcessManagerService };
@@ -1024,9 +1031,13 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
 }
 
 /**
- * Scoped layer that provides ProcessManager and ProcessMonitorService.
+ * Scoped layer that provides {@link ProcessManagerService}.
  * On scope close, the manager's `shutdown()` runs (layer finalizer), suspending
  * process state so it can be hydrated on the next boot.
+ *
+ * The {@link Process.ProcessMonitorService} is provided separately by the
+ * aggregate {@link ProcessMonitor.layer}, which merges this local manager's
+ * `monitor` with the remote ({@link RemoteProcessManager.Service}) one.
  *
  * Requires KeyValueStore, ServiceResolver, OperationHandlerSet.OperationHandlerProvider,
  * and Registry.AtomRegistry from the environment.
@@ -1039,7 +1050,7 @@ export const layer = (opts?: {
    */
   runtimeName?: Trace.RuntimeName;
 }): Layer.Layer<
-  ProcessManagerService | Process.ProcessMonitorService,
+  ProcessManagerService,
   never,
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
@@ -1068,9 +1079,6 @@ export const layer = (opts?: {
 
       yield* Effect.addFinalizer(() => manager.shutdown());
 
-      return Context.mergeAll(
-        Context.make(ProcessManagerService, manager),
-        Context.make(Process.ProcessMonitorService, manager.monitor),
-      );
+      return Context.make(ProcessManagerService, manager);
     }),
   );
