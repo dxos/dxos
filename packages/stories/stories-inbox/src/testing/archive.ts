@@ -12,8 +12,6 @@ import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { type Mailbox } from '@dxos/plugin-inbox';
 import { Message } from '@dxos/types';
 
-import { MailboxTriggerRelation } from './sync-trigger';
-
 /**
  * Feed export/import for the MailboxSync story's `ArchiveModule`. The exported JSON is for local
  * development testing only and is never committed. Import replaces the mailbox's backing feed with a
@@ -74,24 +72,20 @@ export const replaceFeed = async (
 };
 
 /**
- * Returns the mailbox to a clean slate: removes the sync binding(s) targeting it, deletes the linked
- * Gmail sync trigger(s) (and their {@link MailboxTriggerRelation}), deletes every saved
- * {@link Connection} (and its {@link AccessToken}), and empties the feed. Used by the story's Reset
- * control — the binding removal alone leaves Connection accounts behind, so they otherwise accumulate
- * in the Connect menu across reconnects.
+ * Returns the mailbox to a clean slate: removes the sync binding(s) targeting it, deletes the sync
+ * trigger(s) wired up by the connector integration, deletes every saved {@link Connection} (and its
+ * {@link AccessToken}), and empties the feed. Used by the story's Reset control — the binding removal
+ * alone leaves Connection accounts behind, so they otherwise accumulate in the Connect menu across
+ * reconnects.
  */
 export const resetMailbox = async (mailbox: Mailbox.Mailbox, db: Database.Database): Promise<void> => {
   const cursors = await db.query(Filter.type(Cursor.Cursor)).run();
   cursors.filter((cursor) => isCursorForTarget(cursor, mailbox)).forEach((cursor) => db.remove(cursor));
 
-  // Delete every sync trigger and its linking relation so a reset clears the scheduled sync wired up
-  // for routine stories. Triggers are parented to the mailbox but survive a reset otherwise; delete by
-  // type (rather than by relation) so triggers left over from earlier sessions — whose relation may be
-  // missing — are cleared too.
+  // Delete every sync trigger so a reset clears the scheduled sync. Delete by type so triggers left
+  // over from earlier sessions are cleared too.
   const triggers = await db.query(Filter.type(Trigger.Trigger)).run();
   triggers.forEach((trigger) => db.remove(trigger));
-  const triggerRelations = await db.query(Filter.type(MailboxTriggerRelation)).run();
-  triggerRelations.forEach((relation) => db.remove(relation));
 
   const connections = await db.query(Filter.type(Connection.Connection)).run();
   for (const connection of connections) {
