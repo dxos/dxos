@@ -139,13 +139,14 @@ const mergeRanges = (ranges: { from: number; to: number }[]): { from: number; to
   return merged;
 };
 
-// Delete ranges for the given items: each item's own lines plus the newline below it (down to the next
-// item, or the document end), merged so adjacent selections form one range.
+// Delete ranges for the given items: each item's own lines plus its separating newline (the one below,
+// down to the next item; for the last item the one above instead, so no trailing blank is orphaned),
+// merged so adjacent selections form one range.
 const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): { from: number; to: number }[] => {
   const count = blocks.length;
   return mergeRanges(
     indices.map((index) => ({
-      from: blocks[index].from,
+      from: index === count - 1 && index > 0 ? blocks[index - 1].to : blocks[index].from,
       to: index + 1 < count ? blocks[index + 1].from : state.doc.length,
     })),
   );

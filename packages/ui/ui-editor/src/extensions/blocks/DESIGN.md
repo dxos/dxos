@@ -41,16 +41,16 @@ Single-block drag is just `moveBlocks(view, [i], drop)`.
 
 ```ts
 // Block anchors (each block's `from`), sorted. Positions — not indices — so they
-// survive edits. `update` maps each anchor through `tr.changes`, then keeps only
-// anchors that still resolve to a block start via getBlocks; drops the rest.
+// survive edits: `update` maps each anchor through `tr.changes` (no filtering).
 const blockSelectionField: StateField<readonly number[]>;
 const setBlockSelection = StateEffect<readonly number[]>(); // replace
-const toggleBlock = StateEffect<number>(); // add/remove one
+const toggleBlockSelection = StateEffect<number>(); // add/remove one
 ```
 
-- `getSelectedBlocks(state): Block[]` — resolve anchors → blocks (in order).
-- The set is **cleared** when a `selectionSet` transaction not carrying our own
-  effect lands (the user moved the caret by typing/clicking in the content).
+- `getSelectedBlocks(state)` — resolves anchors to `{ block, index }` in order,
+  dropping anchors that no longer identify a block start.
+- The set is **cleared** on a non-shift `mousedown` in the content (a plain text
+  click); keyboard caret moves keep it so it can be extended.
 
 ## Feature design
 

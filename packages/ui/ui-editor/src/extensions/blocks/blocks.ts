@@ -22,9 +22,11 @@ export type BlockOptions = {
 
 /**
  * Renders each top-level markdown block as a non-interactive box behind the text, with block selection
- * (click/shift-click the gutter grip), drag-to-reorder, and block cut/copy/paste. Composes the
- * independent extensions `blockOutline` (the boxes), `blockSelection` (selection + clipboard), and
- * `blockDrag` (the grip + drag-to-move); use them separately for one behaviour without the others.
+ * (click/shift-click the gutter grip), drag-to-reorder, and block cut/copy/paste. Composes `blockOutline`
+ * (the boxes — usable on its own), `blockSelection` (selection state, highlight, clipboard), and
+ * `blockDrag` (the gutter grip: the click/shift-click that populates the selection and drag-to-move).
+ * `blockSelection` and `blockDrag` are a pair — the grip lives in `blockDrag` and drives the selection —
+ * so use them together (or via this `blocks()`).
  */
 export const blocks = ({ className, clampX }: BlockOptions = {}): Extension => [
   blockOutline({ className }),
@@ -39,8 +41,9 @@ export const blockOutline = ({ className }: Pick<BlockOptions, 'className'> = {}
   createBlockOutline({ getBlocks: findBlocks, className });
 
 /**
- * Whole-block selection (gutter click/shift-click), highlight, and block cut/copy/paste over the
- * top-level markdown blocks. See `createBlockSelection`.
+ * Whole-block selection state, highlight, and block cut/copy/paste over the top-level markdown blocks.
+ * The gutter grip gesture that populates the selection is provided by `blockDrag`, so pair the two (or
+ * use `blocks()`, which composes them). See `createBlockSelection`.
  */
 export const blockSelection = (): Extension => createBlockSelection(markdownBlockOps);
 
@@ -93,13 +96,14 @@ const mergeRanges = (ranges: { from: number; to: number }[]): { from: number; to
   return merged;
 };
 
-// Delete ranges for the given blocks: each block plus the blank-line separator below it (down to the next
-// block, or the document end for the last block), merged so adjacent selections form one range.
+// Delete ranges for the given blocks: each block plus its blank-line separator (the one below it, down to
+// the next block; for the last block the one above it instead, so no trailing blank is orphaned), merged
+// so adjacent selections form one range.
 const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): { from: number; to: number }[] => {
   const count = blocks.length;
   return mergeRanges(
     indices.map((index) => ({
-      from: blocks[index].from,
+      from: index === count - 1 && index > 0 ? blocks[index - 1].to : blocks[index].from,
       to: index + 1 < count ? blocks[index + 1].from : state.doc.length,
     })),
   );
