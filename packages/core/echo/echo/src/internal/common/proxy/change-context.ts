@@ -3,7 +3,7 @@
 //
 
 import { batchEvents } from './event-batch';
-import { EventId } from './symbols';
+import { EventId, LatestEventId } from './symbols';
 
 /**
  * Generic change context tracking.
@@ -25,6 +25,12 @@ let currentChangeContext: object | null = null;
  * This uses the contextKey (target or ObjectCore).
  */
 let pendingNotificationKey: object | null = null;
+
+/**
+ * Parallel to {@link pendingNotificationKey} for the `latestOnly` channel (`LatestEventId`).
+ * Real data changes inside a change context queue here and flush after the context exits.
+ */
+let pendingLatestNotificationKey: object | null = null;
 
 /**
  * Additional objects (owner chain) that need notifications.
@@ -105,6 +111,25 @@ export const clearPendingNotifications = (key: object): void => {
 };
 
 /**
+ * Queue a `latestOnly`-channel notification for the given key, flushed when the change context exits.
+ */
+export const queueLatestNotification = (key: object): void => {
+  if (currentChangeContext === key) {
+    pendingLatestNotificationKey = key;
+  }
+};
+
+export const hasPendingLatestNotifications = (key: object): boolean => {
+  return pendingLatestNotificationKey === key;
+};
+
+export const clearPendingLatestNotifications = (key: object): void => {
+  if (pendingLatestNotificationKey === key) {
+    pendingLatestNotificationKey = null;
+  }
+};
+
+/**
  * Execute a callback within a change context.
  * This is the shared implementation used by both TypedReactiveHandler and EchoReactiveHandler.
  *
@@ -124,14 +149,19 @@ export const executeChange = (
     batchEvents(() => callback(proxy));
   } finally {
     exitContext();
-    // Fire primary notification.
+    // Fire primary notification on both the display and latest channels (a real change).
     if (hasPendingNotifications(contextKey)) {
       clearPendingNotifications(contextKey);
       (eventTarget as any)[EventId]?.emit();
     }
-    // Fire owner chain notifications.
+    if (hasPendingLatestNotifications(contextKey)) {
+      clearPendingLatestNotifications(contextKey);
+      (eventTarget as any)[LatestEventId]?.emit();
+    }
+    // Fire owner chain notifications on both channels.
     for (const ownerTarget of pendingOwnerNotifications) {
       (ownerTarget as any)[EventId]?.emit();
+      (ownerTarget as any)[LatestEventId]?.emit();
     }
     pendingOwnerNotifications.clear();
   }

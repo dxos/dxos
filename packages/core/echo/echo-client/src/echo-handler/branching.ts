@@ -1,0 +1,93 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Heads } from '@automerge/automerge';
+
+import { type Obj } from '@dxos/echo';
+import { assertArgument, invariant } from '@dxos/invariant';
+
+import { type DecodedAutomergePrimaryValue } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
+import { getObjectCore } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
+import { getEchoDatabase } from './echo-proxy-target';
+
+const resolve = (obj: Obj.Unknown): { db: EchoDatabase; id: string } => {
+  assertArgument(isEchoObject(obj), 'obj', 'expected ECHO object stored in the database');
+  const core = getObjectCore(obj);
+  const db = getEchoDatabase(core);
+  invariant(db, 'object is not bound to a database');
+  return { db, id: core.id };
+};
+
+/**
+ * @returns The branch names available for the object, including the implicit `'main'` (always first).
+ */
+export const getBranches = (obj: Obj.Unknown): string[] => {
+  const { db, id } = resolve(obj);
+  return db.listBranches(id);
+};
+
+/**
+ * @returns The branch this device currently views the object on (`'main'` by default).
+ */
+export const getCurrentBranch = (obj: Obj.Unknown): string => {
+  const { db, id } = resolve(obj);
+  return db.getCurrentBranch(id);
+};
+
+/**
+ * Fork the object and its referenced subtree into a new branch (does not switch to it).
+ * @param opts.fromHeads Fork from a historical version (e.g. a scrubbed point) instead of the tip.
+ *   A `Heads` array forks only the root; a `{ objectId -> Heads }` map forks each subtree member
+ *   from its own frontier (use this to capture a scrubbed position across the whole subtree).
+ */
+export const createBranch = (
+  obj: Obj.Unknown,
+  name: string,
+  opts?: { fromHeads?: Heads | Record<string, Heads> },
+): Promise<void> => {
+  const { db, id } = resolve(obj);
+  return db.createBranch(id, name, opts);
+};
+
+/**
+ * Switch the object's subtree to a branch (or back to `'main'`). Device-local; cascades to children.
+ */
+export const switchBranch = (obj: Obj.Unknown, name: string): Promise<void> => {
+  const { db, id } = resolve(obj);
+  return db.switchBranch(id, name);
+};
+
+/**
+ * Merge a branch back into main across the subtree, then switch back to main.
+ */
+export const mergeBranch = (obj: Obj.Unknown, name: string, opts?: { deleteAfter?: boolean }): Promise<void> => {
+  const { db, id } = resolve(obj);
+  return db.mergeBranch(id, name, opts);
+};
+
+/**
+ * Delete a branch (its documents lose their sync reference). Cannot delete `'main'`.
+ */
+export const deleteBranch = (obj: Obj.Unknown, name: string): void => {
+  const { db, id } = resolve(obj);
+  db.deleteBranch(id, name);
+};
+
+/**
+ * Read the object's CURRENT decoded data on a branch, without switching the device selection or
+ * holding a binding open — a one-shot read for review workflows (e.g. recomputing a diff against
+ * the compare branch to cherry-pick a hunk). Binding to `'main'` reads the live object.
+ */
+export const getObjectOnBranch = async (obj: Obj.Unknown, name: string): Promise<DecodedAutomergePrimaryValue> => {
+  const { db } = resolve(obj);
+  const binding = await db.branch(obj, name);
+  try {
+    // Snapshot the decoded `data` section; the binding's live object is disposed below.
+    return getObjectCore(binding.object).getDecoded(['data']);
+  } finally {
+    binding.dispose();
+  }
+};

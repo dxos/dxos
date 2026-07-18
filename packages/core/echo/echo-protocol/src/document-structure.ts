@@ -58,11 +58,47 @@ export interface DatabaseDirectory {
   };
 
   /**
+   * Per-object branch registry. Keyed by the subtree-root object id, then by branch name; each
+   * branch records the automerge doc url holding each subtree member at that branch.
+   *
+   * This is the single synced source of truth for branches: it is both the branch list/membership
+   * AND the set of branch documents the space must replicate (the host collects these urls in
+   * {@link getAllBranchDocUrls}). The client document loader does NOT treat these urls as object
+   * links, so branch docs never materialize as phantom objects. The implicit `'main'` branch is
+   * never listed here (it is the object's main doc via {@link links}).
+   *
+   * Which branch a device is currently viewing is NOT stored here — that is device-local,
+   * non-synced state.
+   */
+  branches?: SpaceBranchRegistry;
+
+  /**
    * @deprecated
    * For backward compatibility.
    */
   experimental_spaceKey?: string;
 }
+
+/**
+ * @see DatabaseDirectory.branches
+ */
+export type SpaceBranchRegistry = {
+  [rootObjectId: string]: {
+    [branchName: string]: BranchRecord;
+  };
+};
+
+export type BranchRecord = {
+  /** Subtree member object id -> automerge doc url holding that member on this branch. */
+  members: { [objectId: string]: string | RawString };
+  /**
+   * The root object's main-doc heads at fork time. Provenance only — currently written but never
+   * read; the merge relies on shared automerge ancestry, not this field.
+   */
+  baseHeads?: string[];
+  /** Unix ms timestamp at branch creation. */
+  createdAt?: number;
+};
 
 export const DatabaseDirectory = Object.freeze({
   /**
@@ -108,6 +144,29 @@ export const DatabaseDirectory = Object.freeze({
 
   getLink: (doc: DatabaseDirectory, id: EntityId): string | undefined => {
     return doc.links?.[id]?.toString();
+  },
+
+  /**
+   * @returns The branch registry for a subtree-root object, or undefined if it has no branches.
+   */
+  getBranches: (doc: DatabaseDirectory, rootObjectId: EntityId): Record<string, BranchRecord> | undefined => {
+    return doc.branches?.[rootObjectId];
+  },
+
+  /**
+   * @returns All branch document urls referenced anywhere in the registry. Used by the host to
+   * decide which documents to replicate (branch docs are NOT object links).
+   */
+  getAllBranchDocUrls: (doc: DatabaseDirectory): string[] => {
+    const urls: string[] = [];
+    for (const byName of Object.values(doc.branches ?? {})) {
+      for (const record of Object.values(byName)) {
+        for (const url of Object.values(record.members ?? {})) {
+          urls.push(url.toString());
+        }
+      }
+    }
+    return urls;
   },
 
   make: ({

@@ -30,6 +30,7 @@ import {
   RelationTargetId,
   type SchemaId,
   SelfURIId,
+  TimeTravelingId,
   TypeId,
   type Version,
 } from '../common/types';
@@ -44,6 +45,7 @@ export {
   ObjectDeletedId,
   ObjectVersionId,
   SelfURIId,
+  TimeTravelingId,
 };
 
 /**
@@ -62,6 +64,7 @@ export interface InternalObjectProps {
   readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
+  readonly [TimeTravelingId]?: boolean;
   readonly [RelationSourceDXNId]?: EID.EID;
   readonly [RelationTargetDXNId]?: EID.EID;
   readonly [RelationSourceId]?: InternalObjectProps;

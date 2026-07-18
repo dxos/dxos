@@ -95,6 +95,19 @@ export type FlushOptions = {
 };
 
 /**
+ * A caller-owned, writable per-surface binding to one branch of one object.
+ * @see Database.branch
+ */
+export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
+  /** Live object bound to the branch document (`'main'` -> the canonical live object). */
+  readonly object: T;
+  /** The branch this binding resolves. */
+  readonly branch: string;
+  /** Release the binding (drops the doc-handle listener; never deletes the branch document). */
+  dispose(): void;
+};
+
+/**
  * Identifier denoting an ECHO Database.
  */
 export const TypeId = Symbol.for('@dxos/echo/Database');
@@ -184,6 +197,47 @@ export interface Database extends Queryable {
    * Optionaly waits for changes to be propagated to indexes and event handlers.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  //
+  // Branching. A branch is a writable alternate timeline of an object subtree (same object ids,
+  // shared automerge history, true CRDT merge-back). The registry is synced on the space root;
+  // the currently-viewed branch stays device-local.
+  //
+
+  /** The branch name this device currently views the object on (`'main'` by default). */
+  getCurrentBranch(objectId: string): string;
+
+  /** All branch names available for an object, including the implicit `'main'` (always first). */
+  listBranches(objectId: string): string[];
+
+  /**
+   * Fork the object and its referenced subtree into a new branch (does not switch to it).
+   * @param opts.fromHeads Fork from a historical frontier instead of the tip (a bare heads array
+   *   applies to the root only; a map forks each member from its own frontier).
+   */
+  createBranch(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: readonly string[] | Record<string, readonly string[]> },
+  ): Promise<void>;
+
+  /** Switch the object's subtree to a branch (or back to `'main'`). Device-local; cascades to children. */
+  switchBranch(rootObjectId: string, name: string): Promise<void>;
+
+  /** Merge a branch back into main across the subtree, then switch back to main. */
+  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void>;
+
+  /** Delete a branch (its documents lose their sync reference). Cannot delete `'main'`. */
+  deleteBranch(rootObjectId: string, name: string): void;
+
+  /**
+   * Create a caller-owned, writable binding to one branch of one object — a live object whose reads
+   * resolve the branch document and whose writes land on the branch document only. Multiple bindings
+   * to different branches of the same object may coexist; the device-global current branch and other
+   * bindings are unaffected. Binding to `'main'` returns the canonical live object. Bindings are
+   * ephemeral and never persisted — the caller must `dispose()`.
+   */
+  branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>>;
 
   /**
    * Removes feed items by ID.

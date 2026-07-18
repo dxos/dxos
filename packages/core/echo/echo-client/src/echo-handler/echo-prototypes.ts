@@ -67,6 +67,7 @@ import {
   EntityMetaSchema,
   EventId,
   type JsonSchemaType,
+  LatestEventId,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
@@ -84,6 +85,7 @@ import {
   SchemaMetaSymbol,
   SelfURIId,
   StaticTypeSchemaSlot,
+  TimeTravelingId,
   TypeEntityId,
   TypeId,
   TypeIdentifierAnnotationId,
@@ -349,10 +351,13 @@ export const getVersion = (target: ProxyTarget): Obj.Version => {
 /** The meta sub-proxy for the object. `self` is the proxy (its handler backs the meta proxy). */
 const getMeta = (self: ProxyTarget): EntityMeta => {
   const target = rawTarget(self);
-  // Reuse the root target's event so subscribers of the meta proxy are notified: the central
-  // `core.updates` subscription emits on the root's event only (see the nested-record path).
+  // Reuse the root target's events so subscribers of the meta proxy are notified: the central
+  // core subscriptions emit on the root's events only (see the nested-record path).
   const metaTarget = createRecordTarget(
-    createInstanceState(target[symbolInternals], META_NAMESPACE, [], { event: target[EventId] }),
+    createInstanceState(target[symbolInternals], META_NAMESPACE, [], {
+      event: target[EventId],
+      latestEvent: target[LatestEventId],
+    }),
   );
   return createProxy(metaTarget, getProxyHandler(self)) as any;
 };
@@ -499,6 +504,7 @@ export class EchoRecord {
   declare readonly [symbolNamespace]: string;
   declare readonly [symbolPath]: Doc.KeyPath;
   declare readonly [EventId]: Event<void>;
+  declare readonly [LatestEventId]: Event<void>;
 
   // This class is never instantiated: it exists only so its `.prototype` can back proxy
   // targets via `setPrototypeOf`. `protected` (rather than `private`) so {@link EchoRoot}
@@ -597,6 +603,10 @@ export class EchoRoot extends EchoRecord {
     return this[symbolInternals].isDeleted();
   }
 
+  get [TimeTravelingId](): boolean {
+    return this[symbolInternals].isTimeTraveling();
+  }
+
   get [ObjectVersionId](): Obj.Version {
     return getVersion(this);
   }
@@ -635,7 +645,7 @@ export const createInstanceState = (
   core: ObjectCore,
   namespace: string,
   path: Doc.KeyPath,
-  options?: { event?: Event<void> },
+  options?: { event?: Event<void>; latestEvent?: Event<void> },
 ): ProxyTarget => {
   const root = namespace === DATA_NAMESPACE && path.length === 0;
   const state = Object.create(root ? EchoRootPrototype : EchoRecordPrototype) as ProxyTarget;
@@ -643,6 +653,7 @@ export const createInstanceState = (
   defineHiddenProperty(state, symbolNamespace, namespace);
   defineHiddenProperty(state, symbolPath, path);
   defineHiddenProperty(state, EventId, options?.event ?? new Event());
+  defineHiddenProperty(state, LatestEventId, options?.latestEvent ?? new Event());
   return state;
 };
 

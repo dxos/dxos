@@ -7,6 +7,7 @@ export * from './define-hidden-property';
 export * from './errors';
 export * from './event-batch';
 export * from './json-serializer';
+export * from './latest-read-context';
 export * from './make-object';
 export * from './proxy-types';
 export * from './proxy-utils';
