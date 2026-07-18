@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -42,6 +43,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const registry = useContext(RegistryContext);
   const editorRef = useRef<EditorController>(null);
+  const attentionAttrs = useAttentionAttributes(DOCUMENT_ID);
   const commentsAtom = useMemo(() => Atom.make<Comment[]>(commentsProp), []);
 
   const extensions = useMemo(
@@ -87,7 +89,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
             }
           },
           {
-            label: 'Comment',
+            label: 'Add comment',
             icon: 'ph--chat-text--regular',
             iconOnly: true,
           },
@@ -104,8 +106,8 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
   return (
     <Editor.Root ref={editorRef} extensions={extensions}>
       <Editor.Content>
-        <Editor.Toolbar classNames='dx-document' customActions={customActions} />
-        <div className='dx-container dx-document bg-base-surface'>
+        <Editor.Toolbar classNames='dx-document' attendableId={DOCUMENT_ID} customActions={customActions} />
+        <div className='dx-container dx-document bg-base-surface' {...attentionAttrs}>
           <Editor.View initialValue={content} selectionEnd />
         </div>
       </Editor.Content>
