@@ -13,7 +13,7 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "scripts": {
-    "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.env.1password'\"",
+    "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.config/.env.1password'\"",
     "audit-classes": "pnpm --filter @dxos/ui-theme audit-classes",
     "beast": "beast docs",
     "build": "moon run :build",
@@ -33,7 +33,7 @@
     "postinstall": "[ \"$CI\" != \"true\" ] && vite-node tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
-    "knip": "knip",
+    "knip": "knip --config .config/knip.ts",
     "lint": "pnpm exec moon run :lint-fix",
     "lint-changed": "pnpm exec moon run :lint-fix --affected remote",
     "lint-check": "pnpm exec moon run :lint",
