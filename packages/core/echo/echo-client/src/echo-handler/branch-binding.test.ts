@@ -9,7 +9,6 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
 import { createBranch, getCurrentBranch, switchBranch } from './branching';
-import { getObjectCore } from './echo-handler';
 
 describe('branch bindings (independent instance)', () => {
   let builder: EchoTestBuilder;
@@ -53,24 +52,24 @@ describe('branch bindings (independent instance)', () => {
     }
   });
 
-  test('the bound branch lives on the instance core (independent of the device selection)', async () => {
+  test('Obj.getBranch reports the branch per instance, independent of the device selection', async () => {
     const { db, root } = await setup();
     await createBranch(root, 'b1');
 
-    // A binding instance carries its branch; the canonical object is unchanged.
+    // A binding instance reports its branch; the canonical object is unchanged.
     const binding = await db.branch(root, 'b1');
     try {
-      expect(getObjectCore(binding.object).branch).toBe('b1');
-      expect(getObjectCore(root).branch).toBe('main');
+      expect(Obj.getBranch(binding.object)).toBe('b1');
+      expect(Obj.getBranch(root)).toBe('main');
     } finally {
       binding.dispose();
     }
 
     // A device-global switch stamps the canonical instance; switching back restores 'main'.
     await switchBranch(root, 'b1');
-    expect(getObjectCore(root).branch).toBe('b1');
+    expect(Obj.getBranch(root)).toBe('b1');
     await switchBranch(root, 'main');
-    expect(getObjectCore(root).branch).toBe('main');
+    expect(Obj.getBranch(root)).toBe('main');
   });
 
   test('multiple bindings to different branches of the same object coexist', async () => {
@@ -102,7 +101,7 @@ describe('branch bindings (independent instance)', () => {
     const { db, root } = await setup();
     const binding = await db.branch(root, 'main');
     expect(binding.object).toBe(root);
-    expect(binding.branch).toBe('main');
+    expect(Obj.getBranch(binding.object)).toBe('main');
     binding.dispose();
   });
 

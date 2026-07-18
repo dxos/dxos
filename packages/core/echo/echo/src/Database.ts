@@ -102,8 +102,6 @@ export type FlushOptions = {
 export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
   /** Live object bound to the branch document (`'main'` -> the canonical live object). */
   readonly object: T;
-  /** The branch this binding resolves. */
-  readonly branch: string;
   /** Release the binding (drops the doc-handle listener; never deletes the branch document). */
   dispose(): void;
 };
@@ -205,7 +203,11 @@ export interface Database extends Queryable {
   // the currently-viewed branch stays device-local.
   //
 
-  /** The branch name this device currently views the object on (`'main'` by default). */
+  /**
+   * The device-global current branch for an object id (`'main'` by default).
+   * @deprecated Prefer `Obj.getBranch(obj)` — it takes the object and reports the branch of that
+   * specific instance (including `db.branch()` independent instances), not just the device selection.
+   */
   getCurrentBranch(objectId: string): string;
 
   /** All branch names available for an object, including the implicit `'main'` (always first). */

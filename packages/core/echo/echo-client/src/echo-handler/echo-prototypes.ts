@@ -69,6 +69,7 @@ import {
   type JsonSchemaType,
   LatestEventId,
   MetaId,
+  ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
@@ -613,6 +614,10 @@ export class EchoRoot extends EchoRecord {
 
   get [ObjectDatabaseId](): EchoDatabase | undefined {
     return getEchoDatabase(this[symbolInternals]);
+  }
+
+  get [ObjectBranchId](): string {
+    return this[symbolInternals].branch;
   }
 
   get [SchemaKindId](): EntityKind | undefined {

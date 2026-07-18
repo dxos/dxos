@@ -578,6 +578,13 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
 export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
   internal.getDatabase(entity);
 
+/**
+ * Get the branch this object instance is bound to: `'main'` for the canonical object, or the branch of
+ * a `db.branch()` independent instance. The branch is a property of the instance — two instances of the
+ * same object id on different branches each report their own branch.
+ */
+export const getBranch = (obj: Unknown): string => internal.getBranch(obj);
+
 //
 // Meta
 //

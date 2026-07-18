@@ -873,11 +873,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     assertArgument(getObjectCore(obj).database === this, 'obj', 'object is not bound to this database');
     if (name === 'main') {
       // The live object IS the main binding; nothing to release.
-      return { object: obj, branch: 'main', dispose: () => {} };
+      return { object: obj, dispose: () => {} };
     }
     const { core, dispose } = await this._entityManager.bindCoreToBranch(getObjectCore(obj).id, name);
     const object = initEchoReactiveObjectRootProxy(core, this) as T;
-    return { object, branch: name, dispose };
+    return { object, dispose };
   }
 
   getObjectCoreById(id: string, opts?: Parameters<EntityManager['getObjectCoreById']>[1]) {
