@@ -95,7 +95,8 @@ export type FlushOptions = {
 };
 
 /**
- * A caller-owned, writable per-surface binding to one branch of one object.
+ * A caller-owned, writable **independent instance** of one object bound to one branch: a distinct
+ * object instance (not a UI surface), separate from the device-global canonical object.
  * @see Database.branch
  */
 export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {

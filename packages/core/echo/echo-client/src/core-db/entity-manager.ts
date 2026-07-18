@@ -1071,7 +1071,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Core-level per-surface branch binding: an ephemeral `ObjectCore` bound to the branch document
+   * Core-level independent-instance branch binding: an ephemeral `ObjectCore` bound to the branch document
    * of one object, independent of the device-global selection (`switchBranch`) and of other
    * bindings. The caller owns the returned core and must call `dispose` — bindings are never
    * persisted (the {@link BranchStore} records only the device default, which bindings override

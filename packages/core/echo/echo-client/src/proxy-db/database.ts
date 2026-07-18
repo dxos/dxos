@@ -167,7 +167,8 @@ export interface EchoDatabase extends Database.Database {
 }
 
 /**
- * A caller-owned, writable per-surface binding to one branch of one object.
+ * A caller-owned, writable **independent instance** of one object bound to one branch (a distinct
+ * object instance, not a UI surface).
  * @see Database.BranchBinding
  */
 export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.BranchBinding<T>;

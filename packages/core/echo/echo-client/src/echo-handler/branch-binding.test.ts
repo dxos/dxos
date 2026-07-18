@@ -10,7 +10,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EchoTestBuilder } from '../testing';
 import { createBranch, getCurrentBranch, switchBranch } from './branching';
 
-describe('branch bindings (per-surface)', () => {
+describe('branch bindings (independent instance)', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
