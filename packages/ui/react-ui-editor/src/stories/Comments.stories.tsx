@@ -116,7 +116,12 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
         <div className='dx-container dx-document bg-base-surface' {...attentionAttrs}>
           <Editor.View initialValue={content} selectionEnd />
         </div>
-        <CommentsList commentsAtom={commentsAtom} getView={() => editorRef.current?.view} activeId={activeComment} />
+        <CommentsList
+          commentsAtom={commentsAtom}
+          getView={() => editorRef.current?.view}
+          activeId={activeComment}
+          onActivate={setActiveComment}
+        />
       </Editor.Content>
     </Editor.Root>
   );
@@ -131,10 +136,12 @@ const CommentsList = ({
   commentsAtom,
   getView,
   activeId,
+  onActivate,
 }: {
   commentsAtom: Atom.Writable<Comment[]>;
   getView: () => EditorController['view'] | undefined;
   activeId?: string;
+  onActivate: (id: string) => void;
 }) => {
   const registry = useContext(RegistryContext);
   const items = useAtomValue(commentsAtom);
@@ -149,6 +156,9 @@ const CommentsList = ({
     .sort((a, b) => (a.range?.from ?? Infinity) - (b.range?.from ?? Infinity));
 
   const handleSelect = (id: string) => {
+    // Update the list selection directly: activating a thread in the editor doesn't re-fire `onSelect`
+    // (the effect already set it current), so the round-trip wouldn't move the list selection.
+    onActivate(id);
     if (view) {
       scrollThreadIntoView(view, id);
       view.focus();
