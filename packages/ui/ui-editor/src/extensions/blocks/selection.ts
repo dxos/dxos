@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EditorState, type Extension, StateEffect, StateField } from '@codemirror/state';
-import { EditorView, RectangleMarker, layer } from '@codemirror/view';
+import { type EditorState, type Extension, Prec, StateEffect, StateField } from '@codemirror/state';
+import { EditorView, RectangleMarker, keymap, layer } from '@codemirror/view';
 
 import { type Block } from './types';
 
@@ -221,6 +221,24 @@ const clearOnTextPress = EditorView.domEventHandlers({
   },
 });
 
+// Escape clears the block selection. High precedence so it wins over other Escape bindings while a
+// selection is active, but falls through (returns false) when there is nothing selected.
+const clearOnEscape = Prec.high(
+  keymap.of([
+    {
+      key: 'Escape',
+      run: (view) => {
+        const anchors = view.state.field(blockSelectionField, false);
+        if (!anchors || anchors.length === 0) {
+          return false;
+        }
+        view.dispatch({ effects: setBlockSelection.of([]) });
+        return true;
+      },
+    },
+  ]),
+);
+
 /**
  * Draws a border/background box behind each selected block, in a below-text layer re-measured on edits,
  * scrolling, and viewport changes. Separate from the selection state and clipboard so it can travel with
@@ -251,4 +269,5 @@ export const createBlockSelection = (ops: BlockOps): Extension => [
   blockSelectionField,
   clipboardHandlers(ops),
   clearOnTextPress,
+  clearOnEscape,
 ];
