@@ -286,10 +286,7 @@ const createDragPlugin = (
         const selected = getSelectedBlocks(this.view.state, getBlocks).map((entry) => entry.index);
         const indices = selected.length > 1 && selected.includes(index) ? selected : [index];
         this.#sourceIndices = indices;
-        // Resolve the initial drop slot from the pointer (skipping the sources), not the source's own slot
-        // — placing the placeholder there would collide with the collapse's start and render nothing (a
-        // jump). This lands it just past the collapse, so the placeholder shows from the first frame.
-        this.#dropIndex = this.#dropIndexAt(event.clientY);
+        this.#dropIndex = indices[0];
         this.#grabX = event.clientX;
         this.#grabY = event.clientY;
         this.#lastPointer = { clientX: event.clientX, clientY: event.clientY };
@@ -556,7 +553,14 @@ const createDragPlugin = (
           return;
         }
 
-        const placeholderPos = dropIndex < blocks.length ? blocks[dropIndex].from : this.view.state.doc.length;
+        // A side:-1 block widget sitting at a collapse's END is absorbed by the block-replace and renders
+        // nothing (dropping onto the block right after a source). Snap such positions to that collapse's
+        // START, which renders before it — the source's own slot, a no-op drop, so the position is right.
+        let placeholderPos = dropIndex < blocks.length ? blocks[dropIndex].from : this.view.state.doc.length;
+        const atCollapseEnd = collapses.find((range) => range.to === placeholderPos);
+        if (atCollapseEnd) {
+          placeholderPos = atCollapseEnd.from;
+        }
         const key = `${placeholderPos}:${collapses.map((range) => range.from).join(',')}`;
         if (key === this.#placeholderKey) {
           return;
