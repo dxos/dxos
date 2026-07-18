@@ -366,7 +366,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     return null;
   }
 
-  const { from, to, date, snippet, hue } = getMessageProps(target);
+  const { from, to, date, snippet, subject, hue } = getMessageProps(target);
   const sender = from ?? target.sender?.email ?? '';
 
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
@@ -387,7 +387,10 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
             {sender}
           </h2>
           {isExpanded ? (
-            <div className='text-sm text-description'>{to}</div>
+            <>
+              {subject && <div className='font-medium line-clamp-2'>{subject}</div>}
+              {to && <div className='text-sm text-description'>{to}</div>}
+            </>
           ) : (
             <div className='text-sm text-description line-clamp-1'>{snippet}</div>
           )}
