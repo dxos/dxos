@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Heads } from '@automerge/automerge';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -51,7 +52,7 @@ import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { EntityManager } from '../core-db';
+import { type BranchStore, EntityManager } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -132,6 +133,14 @@ export interface EchoDatabase extends Database.Database {
    */
   _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
 
+  //
+  // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
+  // `mergeBranch`/`deleteBranch`/`listBranches`/`getCurrentBranch`/`branch`). Client-only extras:
+  //
+
+  /** Fires after any branch operation (create / switch / merge / delete) for reactive branch UI. */
+  readonly branchesChanged: ReadOnlyEvent<void>;
+
   /**
    * Insert new objects.
    * @deprecated Use `add` instead.
@@ -157,6 +166,12 @@ export interface EchoDatabase extends Database.Database {
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
 }
 
+/**
+ * A caller-owned, writable per-surface binding to one branch of one object.
+ * @see Database.BranchBinding
+ */
+export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.BranchBinding<T>;
+
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
@@ -164,6 +179,9 @@ export type EchoDatabaseProps = {
   feedService?: FeedService.Client;
   runtime: Runtime.Runtime<never>;
   spaceId: SpaceId;
+
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
 
   /**
    * Run a reactive query for dynamic schemas.
@@ -275,6 +293,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       runtime: params.runtime,
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
+      branchStore: params.branchStore,
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
@@ -811,6 +830,53 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getObjectDocumentId(objectId: string): string | undefined {
     return this._entityManager.getObjectDocumentId(objectId);
+  }
+
+  get branchesChanged(): ReadOnlyEvent<void> {
+    return this._entityManager.branchesChanged;
+  }
+
+  getCurrentBranch(objectId: string): string {
+    return this._entityManager.getCurrentBranch(objectId);
+  }
+
+  listBranches(objectId: string): string[] {
+    return this._entityManager.listBranches(objectId);
+  }
+
+  createBranch(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: Heads | Record<string, Heads> },
+  ): Promise<void> {
+    return this._entityManager.createBranch(rootObjectId, name, opts);
+  }
+
+  switchBranch(rootObjectId: string, name: string): Promise<void> {
+    return this._entityManager.switchBranch(rootObjectId, name);
+  }
+
+  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void> {
+    return this._entityManager.mergeBranch(rootObjectId, name, opts);
+  }
+
+  deleteBranch(rootObjectId: string, name: string): void {
+    this._entityManager.deleteBranch(rootObjectId, name);
+  }
+
+  async branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>> {
+    assertArgument(isEchoObject(obj), 'obj', 'expected ECHO object stored in the database');
+    // Guard against foreign/unbound objects: 'main' would hand back an unrelated live object as a
+    // valid binding, and other branches resolve by id only (an id collision could bind another
+    // space's data).
+    assertArgument(getObjectCore(obj).database === this, 'obj', 'object is not bound to this database');
+    if (name === 'main') {
+      // The live object IS the main binding; nothing to release.
+      return { object: obj, branch: 'main', dispose: () => {} };
+    }
+    const { core, dispose } = await this._entityManager.bindCoreToBranch(getObjectCore(obj).id, name);
+    const object = initEchoReactiveObjectRootProxy(core, this) as T;
+    return { object, branch: name, dispose };
   }
 
   getObjectCoreById(id: string, opts?: Parameters<EntityManager['getObjectCoreById']>[1]) {

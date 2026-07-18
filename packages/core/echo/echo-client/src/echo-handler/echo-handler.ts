@@ -21,6 +21,7 @@ import {
   EntityKind,
   type EntityMeta,
   EventId,
+  LatestEventId,
   MetaId,
   ParentId,
   type ReactiveHandler,
@@ -45,6 +46,7 @@ import {
   isProxy,
   isReactiveRecord,
   normalizeSpliceRange,
+  queueLatestNotification,
   queueNotification,
   symbolIsProxy,
 } from '@dxos/echo/internal';
@@ -290,6 +292,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolNamespace] = namespace;
         array[symbolHandler] = this;
         defineHiddenProperty(array, EventId, target[EventId]);
+        // Borrow the root's latest channel too so `latestOnly` subscribers on the array are notified.
+        defineHiddenProperty(array, LatestEventId, target[LatestEventId]);
         return array as any as ProxyTarget;
       });
 
@@ -301,12 +305,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const newTarget = defaultMap(
         target[symbolInternals].targetsMap,
         targetKey,
-        // Reuse the root target's event: the central `core.updates` subscription emits on the root's
-        // event only, so a derived record proxy with its own event would never notify its subscribers
-        // (arrays preserve `target[EventId]` for the same reason).
+        // Reuse the root target's events: the central core subscriptions emit on the root's
+        // events only, so a derived record proxy with its own events would never notify its
+        // subscribers (arrays preserve `target[EventId]`/`target[LatestEventId]` for the same reason).
         (): ProxyTarget =>
           createRecordTarget(
-            createInstanceState(target[symbolInternals], namespace, dataPath, { event: target[EventId] }),
+            createInstanceState(target[symbolInternals], namespace, dataPath, {
+              event: target[EventId],
+              latestEvent: target[LatestEventId],
+            }),
           ),
       );
 
@@ -836,9 +843,10 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
 
     const target = slot.target as ProxyTarget;
     core.rootSchema = type;
-    // Preserve the object's existing Event so reactive subscriptions established while it was an
+    // Preserve the object's existing Events so reactive subscriptions established while it was an
     // in-memory typed object keep firing once it becomes database-backed.
     const existingEvent = target[EventId];
+    const existingLatestEvent = target[LatestEventId];
     // The previous (typed) handler keeps this object's metadata on its instance-state prototype.
     // Re-pointing the prototype below would detach it, but the migration that follows
     // (`initCore`, `setRelationSourceAndTarget`, `rebindRelationEndpoints`) reads parent/relation
@@ -852,11 +860,15 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
         }
       }
     }
-    adoptInstanceState(target, createInstanceState(core, DATA_NAMESPACE, [], { event: existingEvent }));
+    adoptInstanceState(
+      target,
+      createInstanceState(core, DATA_NAMESPACE, [], { event: existingEvent, latestEvent: existingLatestEvent }),
+    );
     slot.handler._proxyMap.set(target, obj);
 
     core.subscriptions.push(
-      core.updates.on(() => {
+      // Display channel: fires on real changes AND time-travel scrubbing.
+      core.displayUpdates.on(() => {
         // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
         // gets recomputed from the (possibly new) `jsonSchema` on next read.
         target[symbolInternals].cachedStaticSlot = undefined;
@@ -866,6 +878,14 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
         } else {
           // Immediate notification for external changes (sync from peers).
           target[EventId]?.emit();
+        }
+      }),
+      // Latest channel: fires on real changes only, never on scrubbing.
+      core.updates.on(() => {
+        if (isInChangeContext(core)) {
+          queueLatestNotification(core);
+        } else {
+          target[LatestEventId]?.emit();
         }
       }),
     );
@@ -895,7 +915,8 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     const target = createRecordTarget(createInstanceState(core, DATA_NAMESPACE, []), obj as any);
     core.rootSchema = type;
     core.subscriptions.push(
-      core.updates.on(() => {
+      // Display channel: fires on real changes AND time-travel scrubbing.
+      core.displayUpdates.on(() => {
         // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
         // gets recomputed from the (possibly new) `jsonSchema` on next read.
         target[symbolInternals].cachedStaticSlot = undefined;
@@ -905,6 +926,14 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
         } else {
           // Immediate notification for external changes (sync from peers).
           target[EventId]?.emit();
+        }
+      }),
+      // Latest channel: fires on real changes only, never on scrubbing.
+      core.updates.on(() => {
+        if (isInChangeContext(core)) {
+          queueLatestNotification(core);
+        } else {
+          target[LatestEventId]?.emit();
         }
       }),
     );
@@ -976,13 +1005,22 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   const target = createRecordTarget(createInstanceState(core, DATA_NAMESPACE, []));
 
   // TODO(dmaretskyi): Does this need to be disposed?
-  core.updates.on(() => {
+  // Display channel: fires on real changes AND time-travel scrubbing.
+  core.displayUpdates.on(() => {
     if (isInChangeContext(core)) {
       // Defer notification until the change context exits.
       queueNotification(core);
     } else {
       // Immediate notification for external changes (sync from peers).
       target[EventId]?.emit();
+    }
+  });
+  // Latest channel: fires on real changes only, never on scrubbing.
+  core.updates.on(() => {
+    if (isInChangeContext(core)) {
+      queueLatestNotification(core);
+    } else {
+      target[LatestEventId]?.emit();
     }
   });
 

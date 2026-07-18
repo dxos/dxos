@@ -4,16 +4,26 @@
 
 import { type RefTypeId } from '../../Ref/ref';
 import { getProxyTarget, isProxy } from './proxy-utils';
-import { ChangeId, EventId } from './symbols';
+import { ChangeId, EventId, LatestEventId } from './symbols';
+
+export type SubscribeOptions = {
+  /**
+   * Subscribe to the latest committed value only: the callback never fires on time-travel scrubbing.
+   * Side-effecting subscribers must set this so they do not act on historical (scrubbed) data; a
+   * real change (local write, remote sync) fires both channels.
+   */
+  latestOnly?: boolean;
+};
 
 /**
  * Subscribe to changes on a reactive object.
  * @param obj - The reactive object to subscribe to.
  * @param callback - Called when the object changes.
+ * @param opts - Subscription options ({@link SubscribeOptions}).
  * @returns Unsubscribe function.
  */
 // TODO(wittjosiah): Consider throwing if obj doesn't have EventId instead of returning no-op.
-export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
+export const subscribe = (obj: unknown, callback: () => void, opts?: SubscribeOptions): (() => void) => {
   // Guard against non-reactive inputs (queue-stored typed objects, snapshots, plain shapes
   // with branded symbols) before `getProxyTarget`'s `ProxyHandlerSlot` invariant kicks in.
   // `Obj.isObject` (KindId-based) is satisfied by these inputs, so callers like
@@ -24,6 +34,12 @@ export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
     return () => {};
   }
   const target = getProxyTarget(obj as any);
+  if (opts?.latestOnly) {
+    // Non-ECHO objects have no time-travel, so their default channel is already latest-only.
+    if (target && LatestEventId in target) {
+      return (target as any)[LatestEventId].on(callback);
+    }
+  }
   if (target && EventId in target) {
     return (target as any)[EventId].on(callback);
   }
