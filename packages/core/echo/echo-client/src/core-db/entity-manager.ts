@@ -1090,6 +1090,8 @@ export class EntityManager implements IDatabaseBinding {
     const core = new ObjectCore();
     core.id = objectId as EntityId;
     core.bind({ db: this, docHandle: handle, path: ['objects', objectId], assignFromLocalState: false });
+    // This independent instance is bound to `name`; `Obj.getBranch` reads it off the core.
+    core.branch = name;
 
     // Route branch-doc changes to this binding's core directly: the id-keyed `_objects` routing
     // (`_onDocumentUpdate` -> `_emitObjectUpdateEvent`) serves the device-global binding only, and
@@ -1150,6 +1152,9 @@ export class EntityManager implements IDatabaseBinding {
       handle.on('change', this._onDocumentUpdate);
     }
     core.bind({ db: this, docHandle: handle, path: ['objects', memberId], assignFromLocalState: false });
+    // The canonical instance now views this branch; `Obj.getBranch` reads it. A member absent from the
+    // branch's set was bound to main above (`url` undefined), so it reports `'main'`, not `name`.
+    core.branch = url ? name : 'main';
     this._onObjectBoundToDocument(handle, memberId);
   }
 

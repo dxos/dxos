@@ -9,6 +9,7 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
 import { createBranch, getCurrentBranch, switchBranch } from './branching';
+import { getObjectCore } from './echo-handler';
 
 describe('branch bindings (independent instance)', () => {
   let builder: EchoTestBuilder;
@@ -50,6 +51,26 @@ describe('branch bindings (independent instance)', () => {
     } finally {
       binding.dispose();
     }
+  });
+
+  test('the bound branch lives on the instance core (independent of the device selection)', async () => {
+    const { db, root } = await setup();
+    await createBranch(root, 'b1');
+
+    // A binding instance carries its branch; the canonical object is unchanged.
+    const binding = await db.branch(root, 'b1');
+    try {
+      expect(getObjectCore(binding.object).branch).toBe('b1');
+      expect(getObjectCore(root).branch).toBe('main');
+    } finally {
+      binding.dispose();
+    }
+
+    // A device-global switch stamps the canonical instance; switching back restores 'main'.
+    await switchBranch(root, 'b1');
+    expect(getObjectCore(root).branch).toBe('b1');
+    await switchBranch(root, 'main');
+    expect(getObjectCore(root).branch).toBe('main');
   });
 
   test('multiple bindings to different branches of the same object coexist', async () => {
