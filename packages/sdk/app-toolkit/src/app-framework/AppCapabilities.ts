@@ -148,9 +148,7 @@ export const AppGraph = Capability$.makeSingleton<AppGraph>('org.dxos.app-framew
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.make<BuilderExtensions>(
-  'org.dxos.app-framework.capability.appGraphBuilder',
-);
+export const AppGraphBuilder = Capability$.make<BuilderExtensions>('org.dxos.app-framework.capability.appGraphBuilder');
 
 export type Settings = {
   prefix: string;
@@ -194,9 +192,7 @@ export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capabil
 /**
  * @category Capability
  */
-export const SkillDefinition = Capability$.make<Skill.Definition>(
-  'org.dxos.app-framework.capability.skillDefinition',
-);
+export const SkillDefinition = Capability$.make<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
 
 /**
  * A static asset bundled with a plugin's published package, exposed for
@@ -352,4 +348,6 @@ export type ProgressRegistry = Readonly<{
 /**
  * @category Capability
  */
-export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');
+export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>(
+  'org.dxos.app-toolkit.capability.progressRegistry',
+);

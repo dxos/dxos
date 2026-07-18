@@ -3,13 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { LayerSpec, OperationHandlerSet } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Progress } from '@dxos/progress';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 
 import { ClientCapabilities } from '#types';
 
@@ -18,11 +12,7 @@ export const AccountCache = Capability.lazyModule(
   { provides: [ClientCapabilities.AccountCache] },
   () => import('./account-cache'),
 );
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   { requires: [ClientCapabilities.Client], provides: [ClientCapabilities.HubHttpClient] },
@@ -33,11 +23,10 @@ export const Client = Capability.lazyModule(
   { provides: [ClientCapabilities.Client, Capabilities.Layer] },
   () => import('./client'),
 );
-export const LayerSpecs = Capability.lazyModule(
-  'LayerSpecs',
-  { provides: [Capabilities.LayerSpec] },
-  () => import('./layer-specs'),
-);
+// Annotated so the emitted `.d.ts` names the capability via `typeof` instead of expanding
+// compute types this package does not depend on (TS2883).
+export const LayerSpecs: Capability.Module<void, readonly [], readonly [typeof Capabilities.LayerSpec]> =
+  Capability.lazyModule('LayerSpecs', { provides: [Capabilities.LayerSpec] }, () => import('./layer-specs'));
 export const Migrations = Capability.lazyModule(
   'Migrations',
   { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration], provides: [] },
@@ -45,27 +34,25 @@ export const Migrations = Capability.lazyModule(
 );
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactContext = Capability.lazyModule(
-  'ReactContext',
-  { provides: [Capabilities.ReactContext] },
-  () => import('./react-context'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 export const SchemaDefs = Capability.lazyModule(
   'SchemaDefs',
   { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema], provides: [] },
   () => import('./schema-defs'),
 );
-export const SpaceReplicationProgress = Capability.lazyModule(
+// Annotated so the emitted `.d.ts` names the requires via `typeof` instead of expanding
+// progress types this package does not depend on (TS2883).
+export const SpaceReplicationProgress: Capability.Module<
+  void,
+  readonly [
+    typeof ClientCapabilities.Client,
+    typeof AppCapabilities.ProgressRegistry,
+    typeof Capabilities.ProcessManagerRuntime,
+  ],
+  readonly []
+> = Capability.lazyModule(
   'SpaceReplicationProgress',
   {
     requires: [ClientCapabilities.Client, AppCapabilities.ProgressRegistry, Capabilities.ProcessManagerRuntime],

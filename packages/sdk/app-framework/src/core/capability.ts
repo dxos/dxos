@@ -482,6 +482,39 @@ export const inlineModule = <
 };
 
 /**
+ * Options accepted by makers built with {@link moduleMaker}.
+ */
+export type MakerOptions<
+  Requires extends readonly AnyTag[] = readonly [],
+  Extra extends readonly AnyTag[] = readonly [],
+> = {
+  /** Overrides the default module name (used to derive the module id). */
+  name?: string;
+  /** Capabilities the body accesses via `yield*`. */
+  requires?: Requires;
+  /** Additional capabilities the body contributes beyond the maker's default. */
+  provides?: Extra;
+};
+
+/**
+ * Builds a lazy-module maker for a capability, with the tag and default module name baked
+ * in so the maker takes only a loader in the common case. Capability owners export makers
+ * so consumers author modules without restating the spec.
+ */
+export const moduleMaker =
+  <C extends AnyTag>(defaultName: string, capability: C) =>
+  <Props, const Requires extends readonly AnyTag[] = readonly [], const Extra extends readonly AnyTag[] = readonly []>(
+    loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
+    options?: MakerOptions<Requires, Extra>,
+  ): Module<Props, Requires, readonly [C, ...Extra]> => {
+    // Correlation casts: when options are absent, Requires/Extra resolve to their
+    // `readonly []` defaults, so the fallback empty tuples are the correct values.
+    const requires = (options?.requires ?? []) as Requires;
+    const extra = (options?.provides ?? []) as Extra;
+    return lazyModule(options?.name ?? defaultName, { requires, provides: [capability, ...extra] }, loader);
+  };
+
+/**
  * Gets the module tag (export name) from a lazy capability function.
  * @param capability The lazy capability function.
  * @returns The module tag if present, undefined otherwise.

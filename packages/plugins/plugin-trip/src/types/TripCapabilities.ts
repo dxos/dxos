@@ -24,4 +24,6 @@ export const BookingService = Capability.make<BookingSearch.BookingService>(
  * Plugins contribute driving-route providers via this capability (e.g. plugin-osrm). `PlanRoute`
  * resolves all contributions and uses the first (or the one matching the requested provider id).
  */
-export const RoutingService = Capability.makeSingleton<Routing.RoutingService>(`${meta.profile.key}.capability.routingService`);
+export const RoutingService = Capability.makeSingleton<Routing.RoutingService>(
+  `${meta.profile.key}.capability.routingService`,
+);

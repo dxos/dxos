@@ -28,7 +28,9 @@ export const CommentConfig: Capability.InterfaceDef<AppCapabilities.CommentConfi
 export const State = Capability.makeSingleton<Atom.Writable<CommentState>>(`${meta.profile.key}.capability.state`);
 
 /** Per-subject view state (e.g., showResolvedThreads). */
-export const ViewState = Capability.makeSingleton<Atom.Writable<ViewStore>>(`${meta.profile.key}.capability.view-state`);
+export const ViewState = Capability.makeSingleton<Atom.Writable<ViewStore>>(
+  `${meta.profile.key}.capability.view-state`,
+);
 
 /**
  * Runs one comment-thread agent turn against a thread/subject pair.

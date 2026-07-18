@@ -21,7 +21,9 @@ import * as Settings from './Settings';
 import { type CreateObject, type ObjectViewerProps } from './types';
 
 export namespace SpaceCapabilities {
-  export const Settings = Capability.makeSingleton<Atom.Writable<Settings.Settings>>(`${meta.profile.key}.capability.settings`);
+  export const Settings = Capability.makeSingleton<Atom.Writable<Settings.Settings>>(
+    `${meta.profile.key}.capability.settings`,
+  );
 
   /** Schema for persisted space plugin state. */
   export const StateSchema = Schema.mutable(
@@ -54,7 +56,9 @@ export namespace SpaceCapabilities {
   export const PersonalSpace = Capability.makeSingleton<Space>(`${meta.profile.key}.capability.personal-space`);
 
   export type SettingsSection = { id: string; label: Label; position?: Position.Position };
-  export const SettingsSection = Capability.makeSingleton<SettingsSection>(`${meta.profile.key}.capability.settings-section`);
+  export const SettingsSection = Capability.makeSingleton<SettingsSection>(
+    `${meta.profile.key}.capability.settings-section`,
+  );
 
   export type OnCreateSpace = (params: {
     space: Space;
@@ -91,9 +95,7 @@ export namespace SpaceCapabilities {
      */
     customPanel?: ComponentType<CreateObjectCustomPanelProps>;
   }>;
-  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(
-    `${meta.profile.key}.capability.create-object`,
-  );
+  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.profile.key}.capability.create-object`);
 
   /** Props passed to a `CreateObjectEntry.customPanel`. */
   export type CreateObjectCustomPanelProps = {

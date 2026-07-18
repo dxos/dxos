@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
+import { Capabilities } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
+
+import { type NavigationHandlerOptions } from './navigation-handler';
 
 export type { NavigationHandlerOptions } from './navigation-handler';
 
-export const NavigationHandler = Capability.lazyModule(
-  'NavigationHandler',
-  { requires: [Capabilities.OperationInvoker], provides: [AppCapabilities.NavigationHandler] },
-  () => import('./navigation-handler'),
-);
+// Annotated so the emitted `.d.ts` names the requires via `typeof` instead of expanding
+// operation types this package does not depend on (TS2883).
+export const NavigationHandler: AppCapability.NavigationHandlerModule<
+  NavigationHandlerOptions,
+  readonly [typeof Capabilities.OperationInvoker]
+> = AppCapability.navigationHandler(() => import('./navigation-handler'), {
+  requires: [Capabilities.OperationInvoker],
+});

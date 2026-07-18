@@ -113,3 +113,31 @@ Gate recipe per wave: per-package build+test → framework suites → Composer b
   2. Review `git diff --stat`, commit sweep+routine → Phase 7 CLOSED.
   3. Dispatch Phase 8 agent with PHASE8-BRIEF.md (deletion + all landing gates).
   4. Review, commit, boot-gate once, changesets, submit-pr skill.
+
+## Phase 9 — API ergonomics (user-directed, 2026-07-18)
+
+User direction: plugins are a uniform chain of `Plugin.addLazyModule`; per-capability sugar
+moves from the plugin level (`AppPlugin.addXModule`) to the capability level (`AppCapability`
+module makers); no explicit types where main had none; multi is the default capability arity
+(`Capability.make` = multi, `Capability.makeSingleton` = the marked case).
+
+- [x] Arity flip: `make` → multi, `makeSingleton` → singleton; repo-wide rename (63 files);
+      full build green (commit 84b9e789ff)
+- [x] `Capability.Module` (renamed from LazyModule), `Capability.inlineModule` (eager pairing
+      of lazyModule), `Capability.moduleMaker`/`MakerOptions` (maker factory for capability
+      owners), `Plugin.addLazyModule` props overload (options-taking plugins stay a chain)
+- [x] app-toolkit `AppCapability`: makers for surface/settings/appGraphBuilder/skillDefinition/
+      operationHandler/undoMappings/reactContext/reactRoot/navigationResolver/navigationHandler/
+      commentConfig/textContent/anchorSort + value makers translations/schema/pluginAsset/
+      commands. Makers return named generic interfaces (e.g. `SurfaceModule`) so plugin `.d.ts`
+      emit names them instead of expanding foreign service types — kills the TS2883
+      unused-import hack (commit 691710b77a)
+- [x] plugin-space `SpaceCapability.createObject` maker (capability owners export makers)
+- [x] Exemplars: plugin-markdown + plugin-client fully on `Plugin.addLazyModule` chains;
+      TS2883 fake imports removed (remaining foreign-requires cases use honest `typeof`
+      annotations); framework tests extended (inlineModule/moduleMaker/addLazyModule props)
+- [ ] Boot gate on exemplars
+- [ ] USER REVIEW of exemplar diffs, then full sweep: migrate all ~90 plugins off
+      `AppPlugin.addXModule` (616 call sites), then delete `AppPlugin`
+- [ ] Sweep cleanup: remove remaining TS2883 fake-import blocks (212 files), investigate the
+      2 explicit-generic `Plugin.addLazyModule<...>` workarounds (DeckPlugin, InboxPlugin)

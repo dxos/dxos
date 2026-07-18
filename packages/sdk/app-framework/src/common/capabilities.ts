@@ -47,7 +47,9 @@ export const PluginManager = Capability$.makeSingleton<PluginManager$.PluginMana
 /**
  * @category Capability
  */
-export const AtomRegistry = Capability$.makeSingleton<Registry.Registry>('org.dxos.app-framework.capability.atomRegistry');
+export const AtomRegistry = Capability$.makeSingleton<Registry.Registry>(
+  'org.dxos.app-framework.capability.atomRegistry',
+);
 
 export type ReactContext = Readonly<{
   id: string;
@@ -167,7 +169,9 @@ export const ServiceResolver = Capability$.makeSingleton<ServiceResolver$.Servic
  *
  * @category Capability
  */
-export const ProcessMonitor = Capability$.makeSingleton<Process$.Monitor>('org.dxos.app-framework.capability.processMonitor');
+export const ProcessMonitor = Capability$.makeSingleton<Process$.Monitor>(
+  'org.dxos.app-framework.capability.processMonitor',
+);
 
 /**
  * Services that are always available when running effects through a {@link ProcessManagerRuntime}.
@@ -215,7 +219,9 @@ export type ManagedRuntime = ManagedRuntime$.ManagedRuntime<any, any>;
 /**
  * @category Capability
  */
-export const ManagedRuntime = Capability$.makeSingleton<ManagedRuntime>('org.dxos.app-framework.capability.managedRuntime');
+export const ManagedRuntime = Capability$.makeSingleton<ManagedRuntime>(
+  'org.dxos.app-framework.capability.managedRuntime',
+);
 
 //
 // Operation System Capabilities
@@ -261,7 +267,9 @@ export type HistoryTracker = HistoryTracker$.HistoryTracker;
  * History tracker - provided by ProcessManagerPlugin.
  * @category Capability
  */
-export const HistoryTracker = Capability$.makeSingleton<HistoryTracker>('org.dxos.app-framework.capability.historyTracker');
+export const HistoryTracker = Capability$.makeSingleton<HistoryTracker>(
+  'org.dxos.app-framework.capability.historyTracker',
+);
 
 //
 // Atom Capability Helpers

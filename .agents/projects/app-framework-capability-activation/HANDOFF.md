@@ -48,6 +48,7 @@ the merged tree). Before trusting them, re-run the gates (below).
 ## What was done (phases 1–8)
 
 The design + per-phase ledger live alongside this file:
+
 - `DESIGN.md` — full plan + the authoritative "REVISED ACTIVATION MODEL" section.
 - `MIGRATION-BRIEF.md` — the per-plugin migration recipe + hard rules.
 - `PHASE7-WORKLIST.md` — per-package inventory / event classification.
@@ -55,10 +56,11 @@ The design + per-phase ledger live alongside this file:
 - `TASKS.md` — per-phase progress + session checkpoint.
 
 Summary of the end state:
+
 - **Phases 1–3** (Fable, main session): capability tags + arity + contributions
-  + tagged errors (`capability.ts`, `errors.ts`); typed module union + builder
-  (`plugin.ts`); the manager's dependency pass, waves, cycle handling
-  (`plugin-manager.ts`).
+  - tagged errors (`capability.ts`, `errors.ts`); typed module union + builder
+    (`plugin.ts`); the manager's dependency pass, waves, cycle handling
+    (`plugin-manager.ts`).
 - **Phases 4–6**: core capability arity flips, `AppPlugin` sugar helpers,
   process-manager migration, plugin-client worked example, testing utils.
 - **Phase 7**: all ~89 plugin packages migrated (Sonnet agents against

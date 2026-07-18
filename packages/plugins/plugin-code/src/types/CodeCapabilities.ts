@@ -56,4 +56,6 @@ export type BuildRunState = Readonly<Record<string, ProjectBuildState | undefine
  * outside React so it survives `CodeArticle` remount and so the agent can
  * (later) read/write build status without going through the editor.
  */
-export const BuildRun = Capability.makeSingleton<Atom.Writable<BuildRunState>>(`${meta.profile.key}.capability.build-run`);
+export const BuildRun = Capability.makeSingleton<Atom.Writable<BuildRunState>>(
+  `${meta.profile.key}.capability.build-run`,
+);

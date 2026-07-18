@@ -13,42 +13,6 @@ import { type Type } from '@dxos/echo';
 import { type Translations } from '../app';
 import * as AppCapabilities from './AppCapabilities';
 
-/**
- * Options accepted by the capability module makers.
- */
-export type ModuleOptions<
-  Requires extends readonly Capability$.AnyTag[] = readonly [],
-  Extra extends readonly Capability$.AnyTag[] = readonly [],
-> = {
-  /** Overrides the default module name (used to derive the module id). */
-  name?: string;
-  /** Capabilities the body accesses via `yield*`. */
-  requires?: Requires;
-  /** Additional capabilities the body contributes beyond the maker's default. */
-  provides?: Extra;
-};
-
-/**
- * Builds a lazy-module maker for a capability: the maker takes only a loader in the common
- * case, with the capability's tag and module name baked in.
- */
-const lazyMaker =
-  <C extends Capability$.AnyTag>(defaultName: string, capability: C) =>
-  <
-    Props,
-    const Requires extends readonly Capability$.AnyTag[] = readonly [],
-    const Extra extends readonly Capability$.AnyTag[] = readonly [],
-  >(
-    loader: Capability$.LoadModule<Props, Requires, readonly [C, ...Extra]>,
-    options?: ModuleOptions<Requires, Extra>,
-  ): Capability$.Module<Props, Requires, readonly [C, ...Extra]> => {
-    // Correlation casts: when options are absent, Requires/Extra resolve to their
-    // `readonly []` defaults, so the fallback empty tuples are the correct values.
-    const requires = (options?.requires ?? []) as Requires;
-    const extra = (options?.provides ?? []) as Extra;
-    return Capability$.lazyModule(options?.name ?? defaultName, { requires, provides: [capability, ...extra] }, loader);
-  };
-
 //
 // Lazy module makers (loader-based bodies).
 //
@@ -65,8 +29,9 @@ export const appGraphBuilder = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof AppCapabilities.AppGraphBuilder, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): AppGraphBuilderModule<Props, Requires, Extra> => lazyMaker('AppGraphBuilder', AppCapabilities.AppGraphBuilder)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): AppGraphBuilderModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('AppGraphBuilder', AppCapabilities.AppGraphBuilder)(loader, options);
 
 /** Module contributing settings. */
 export interface SettingsModule<
@@ -80,8 +45,9 @@ export const settings = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof AppCapabilities.Settings, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): SettingsModule<Props, Requires, Extra> => lazyMaker('Settings', AppCapabilities.Settings)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): SettingsModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('Settings', AppCapabilities.Settings)(loader, options);
 
 /** Module contributing skill definitions. */
 export interface SkillDefinitionModule<
@@ -95,8 +61,9 @@ export const skillDefinition = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof AppCapabilities.SkillDefinition, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): SkillDefinitionModule<Props, Requires, Extra> => lazyMaker('SkillDefinition', AppCapabilities.SkillDefinition)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): SkillDefinitionModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('SkillDefinition', AppCapabilities.SkillDefinition)(loader, options);
 
 /** Module contributing operation handlers. */
 export interface OperationHandlerModule<
@@ -110,8 +77,9 @@ export const operationHandler = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.OperationHandler, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): OperationHandlerModule<Props, Requires, Extra> => lazyMaker('OperationHandler', Capabilities.OperationHandler)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): OperationHandlerModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('OperationHandler', Capabilities.OperationHandler)(loader, options);
 
 /** Module contributing undo operation mappings. */
 export interface UndoMappingsModule<
@@ -125,8 +93,9 @@ export const undoMappings = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.UndoMapping, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): UndoMappingsModule<Props, Requires, Extra> => lazyMaker('UndoMappings', Capabilities.UndoMapping)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): UndoMappingsModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('UndoMappings', Capabilities.UndoMapping)(loader, options);
 
 /** Module contributing a React context. */
 export interface ReactContextModule<
@@ -140,8 +109,9 @@ export const reactContext = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactContext, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): ReactContextModule<Props, Requires, Extra> => lazyMaker('ReactContext', Capabilities.ReactContext)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): ReactContextModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('ReactContext', Capabilities.ReactContext)(loader, options);
 
 /** Module contributing a React root. */
 export interface ReactRootModule<
@@ -155,8 +125,9 @@ export const reactRoot = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactRoot, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): ReactRootModule<Props, Requires, Extra> => lazyMaker('ReactRoot', Capabilities.ReactRoot)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): ReactRootModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('ReactRoot', Capabilities.ReactRoot)(loader, options);
 
 /** Module contributing navigation target resolvers. */
 export interface NavigationResolverModule<
@@ -170,8 +141,9 @@ export const navigationResolver = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof AppCapabilities.NavigationTargetResolver, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): NavigationResolverModule<Props, Requires, Extra> => lazyMaker('NavigationResolver', AppCapabilities.NavigationTargetResolver)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): NavigationResolverModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('NavigationResolver', AppCapabilities.NavigationTargetResolver)(loader, options);
 
 /** Module contributing a navigation handler. */
 export interface NavigationHandlerModule<
@@ -185,8 +157,9 @@ export const navigationHandler = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof AppCapabilities.NavigationHandler, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): NavigationHandlerModule<Props, Requires, Extra> => lazyMaker('NavigationHandler', AppCapabilities.NavigationHandler)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): NavigationHandlerModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('NavigationHandler', AppCapabilities.NavigationHandler)(loader, options);
 
 /** Module contributing React surfaces. */
 export interface SurfaceModule<
@@ -200,8 +173,9 @@ export const surface = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): SurfaceModule<Props, Requires, Extra> => lazyMaker('ReactSurface', Capabilities.ReactSurface)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): SurfaceModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('ReactSurface', Capabilities.ReactSurface)(loader, options);
 
 /** Module contributing a comment configuration. */
 export interface CommentConfigModule<
@@ -215,8 +189,9 @@ export const commentConfig = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof AppCapabilities.CommentConfig, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): CommentConfigModule<Props, Requires, Extra> => lazyMaker('CommentConfig', AppCapabilities.CommentConfig)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): CommentConfigModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('CommentConfig', AppCapabilities.CommentConfig)(loader, options);
 
 /** Module contributing a text content extractor. */
 export interface TextContentModule<
@@ -230,8 +205,9 @@ export const textContent = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof AppCapabilities.TextContent, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): TextContentModule<Props, Requires, Extra> => lazyMaker('TextContent', AppCapabilities.TextContent)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): TextContentModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('TextContent', AppCapabilities.TextContent)(loader, options);
 
 /** Module contributing an anchor sort comparator. */
 export interface AnchorSortModule<
@@ -245,16 +221,20 @@ export const anchorSort = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof AppCapabilities.AnchorSort, ...Extra]>,
-  options?: ModuleOptions<Requires, Extra>,
-): AnchorSortModule<Props, Requires, Extra> => lazyMaker('AnchorSort', AppCapabilities.AnchorSort)(loader, options);
+  options?: Capability$.MakerOptions<Requires, Extra>,
+): AnchorSortModule<Props, Requires, Extra> =>
+  Capability$.moduleMaker('AnchorSort', AppCapabilities.AnchorSort)(loader, options);
 
 //
 // Inline module makers (value-based bodies).
 //
 
 /** Module contributing translations. */
-export interface TranslationsModule
-  extends Capability$.Module<void, readonly [], readonly [typeof AppCapabilities.Translations]> {}
+export interface TranslationsModule extends Capability$.Module<
+  void,
+  readonly [],
+  readonly [typeof AppCapabilities.Translations]
+> {}
 export const translations = (
   resources: Translations.Resource | Translations.Resource[],
   options?: { name?: string },
@@ -273,8 +253,11 @@ export const schema = (types: ReadonlyArray<Type.AnyEntity>, options?: { name?: 
   );
 
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
-export interface PluginAssetModule
-  extends Capability$.Module<void, readonly [], readonly [typeof AppCapabilities.PluginAsset]> {}
+export interface PluginAssetModule extends Capability$.Module<
+  void,
+  readonly [],
+  readonly [typeof AppCapabilities.PluginAsset]
+> {}
 export const pluginAsset = (
   asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>,
   options?: { name?: string },

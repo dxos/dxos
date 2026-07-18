@@ -37,7 +37,9 @@ export type State = {
 export const State = Capability.makeSingleton<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);
 
 /** Writable settings atom (also surfaced as a settings form via `AppCapabilities.Settings`). */
-export const Settings = Capability.makeSingleton<Atom.Writable<SettingsType>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.makeSingleton<Atom.Writable<SettingsType>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 //
 // Marker providers

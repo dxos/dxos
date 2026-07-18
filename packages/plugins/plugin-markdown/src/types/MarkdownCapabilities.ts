@@ -49,7 +49,9 @@ export type VersioningState = {
   compare: Record<string, boolean>;
 };
 
-export const Settings = Capability.makeSingleton<Atom.Writable<Markdown.Settings>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.makeSingleton<Atom.Writable<Markdown.Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 /** In-memory (per-session) version selection state. */
 export const VersioningState = Capability.makeSingleton<Atom.Writable<VersioningState>>(

@@ -15,7 +15,9 @@ import { meta } from '#meta';
 import * as Assistant from './Assistant';
 import * as Ollama from './Ollama';
 
-export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Settings>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 export const OllamaManager = Capability.makeSingleton<Ollama.Manager>(`${meta.profile.key}.capability.ollama-manager`);
 

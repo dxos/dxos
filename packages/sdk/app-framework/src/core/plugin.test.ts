@@ -225,4 +225,92 @@ describe('Plugin module authoring', () => {
       expect(entries[0].deactivate).toBeUndefined();
     });
   });
+
+  describe('inlineModule', () => {
+    it('carries its spec with an eager body', () => {
+      const Inline = Capability.inlineModule('total', { provides: [Total] }, () =>
+        Effect.succeed([Capability.provide(Total, { total: 1 })]),
+      );
+
+      expect(Capability.getModuleTag(Inline)).toEqual('total');
+      expect(Inline.requires).toEqual([]);
+      expect(Inline.provides).toEqual([Total]);
+    });
+  });
+
+  describe('moduleMaker', () => {
+    const totalModule = Capability.moduleMaker('Total', Total);
+    const loader = () =>
+      Promise.resolve({
+        default: () => Effect.succeed([Capability.provide(Total, { total: 1 })]),
+      });
+
+    it('bakes in the default name and provides', () => {
+      const module = totalModule(loader);
+      expect(Capability.getModuleTag(module)).toEqual('Total');
+      expect(module.requires).toEqual([]);
+      expect(module.provides).toEqual([Total]);
+    });
+
+    it('merges custom requires and extra provides', () => {
+      const module = totalModule(
+        () =>
+          Promise.resolve({
+            default: Effect.fnUntraced(function* () {
+              const { number } = yield* Number;
+              return [Capability.provide(Total, { total: number }), Capability.provide(Multi, { entry: 'a' })];
+            }),
+          }),
+        { name: 'CustomTotal', requires: [Number], provides: [Multi] },
+      );
+      expect(Capability.getModuleTag(module)).toEqual('CustomTotal');
+      expect(module.requires).toEqual([Number]);
+      expect(module.provides).toEqual([Total, Multi]);
+    });
+  });
+
+  describe('addLazyModule', () => {
+    it('derives the module id and spec from the module', () => {
+      const Lazy = Capability.lazyModule('Total', { provides: [Total] }, () =>
+        Promise.resolve({ default: () => Effect.succeed([Capability.provide(Total, { total: 1 })]) }),
+      );
+      const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addLazyModule(Lazy)));
+      const [module] = Test().modules;
+      expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
+      assert(module.activation.mode === 'dependency');
+      expect(module.activation.provides).toEqual([Total]);
+    });
+
+    it.effect('maps plugin options to module props', () =>
+      Effect.gen(function* () {
+        const manager = makeManager();
+        const Lazy = Capability.lazyModule('Total', { provides: [Total] }, () =>
+          Promise.resolve({
+            default: (props: { start: number }) => Effect.succeed([Capability.provide(Total, { total: props.start })]),
+          }),
+        );
+        const Test = Plugin.make(
+          Plugin.define<{ offset: number }>(testMeta).pipe(
+            Plugin.addLazyModule(Lazy, { props: ({ offset }: { offset: number }) => ({ start: offset + 1 }) }),
+          ),
+        );
+
+        const [module] = Test({ offset: 41 }).modules;
+        expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
+        assert(module.activation.mode === 'dependency');
+        expect(module.activation.provides).toEqual([Total]);
+
+        const result = yield* module
+          .activate()
+          .pipe(
+            Effect.provideService(Capability.Service, manager.capabilities),
+            Effect.provideService(Plugin.Service, manager),
+            Effect.scoped,
+          );
+        assert(Array.isArray(result));
+        const entries = Capability.expandContributions(result);
+        expect(entries[0].implementation).toEqual({ total: 42 });
+      }),
+    );
+  });
 });

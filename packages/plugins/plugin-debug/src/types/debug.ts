@@ -33,5 +33,7 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 });
 
 export namespace DebugCapabilities {
-  export const Settings = Capability.makeSingleton<Atom.Writable<Settings.Settings>>(`${meta.profile.key}.capability.settings`);
+  export const Settings = Capability.makeSingleton<Atom.Writable<Settings.Settings>>(
+    `${meta.profile.key}.capability.settings`,
+  );
 }

@@ -4,6 +4,7 @@
 
 export * from './capabilities';
 export * from './events';
+export * as SpaceCapability from './SpaceCapability';
 export * from './form';
 export * from './surface';
 export * from './types';
