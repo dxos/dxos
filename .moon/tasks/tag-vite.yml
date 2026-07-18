@@ -4,7 +4,6 @@ tasks:
     command: pnpm exec vite build
     deps:
       - ^:build
-      - ^:build
     inputs:
       - vite.config.ts
       - '*.html'

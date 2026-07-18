@@ -9,8 +9,6 @@ tasks:
       - vite-plugin-icons:build
       - target: ^:build
         optional: true
-      - target: ^:build
-        optional: true
       - target: bundle
         optional: true
         env:

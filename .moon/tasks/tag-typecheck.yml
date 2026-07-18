@@ -4,7 +4,6 @@ tasks:
     command: sh -c 'if [ "${DX_USE_TSC}" = "1" ]; then pnpm exec tsc --noEmit; else pnpm exec tsgo --noEmit; fi'
     deps:
       - ^:build
-      - ^:build
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
