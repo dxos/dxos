@@ -341,10 +341,17 @@ const createDragPlugin = (
       }
 
       // Enter drag mode: drag the whole block selection when the grabbed block is part of it, else just
-      // the grabbed block.
+      // the grabbed block. Grabbing a block outside the current selection shifts the selection to it, so
+      // the dragged block shows as selected immediately.
       #beginDrag(index: number, event: MouseEvent) {
         const selected = getSelectedBlocks(this.view.state, getBlocks).map((entry) => entry.index);
         const indices = selected.length > 1 && selected.includes(index) ? selected : [index];
+        if (!selected.includes(index)) {
+          const block = getBlocks(this.view.state)[index];
+          if (block) {
+            this.view.dispatch({ effects: setBlockSelection.of([block.from]) });
+          }
+        }
         this.#sourceIndices = indices;
         this.#dropIndex = indices[0];
         this.#grabX = event.clientX;
