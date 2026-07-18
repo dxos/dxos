@@ -157,7 +157,6 @@ export const translations = [
         'all-mail.label': 'All Mail',
         'sent.label': 'Sent',
         'drafts.label': 'Drafts',
-        'drafts.empty.message': 'No drafts yet.',
         'topics.label': 'Topics',
         'topic.label': 'Topic',
         'topics.toolbar.title': 'Topics toolbar',

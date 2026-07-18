@@ -85,6 +85,28 @@ describe('TagIndex', () => {
     tags.unsetTag(later, first);
     expect(registry.get(tagsForObject(first))).toEqual([urgent]);
   });
+
+  test('taggedIdsAtom returns object ids for one tag', () => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const first = EntityId.random();
+    const second = EntityId.random();
+    const urgent = 'dxn:tag:urgent';
+    const later = 'dxn:tag:later';
+
+    tags.setTag(urgent, first);
+    tags.setTag(urgent, second);
+    tags.setTag(later, first);
+
+    const registry = Registry.make();
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, urgent))).toEqual([first, second]);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, later))).toEqual([first]);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, 'dxn:tag:missing'))).toEqual([]);
+
+    tags.unsetTag(urgent, first);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, urgent))).toEqual([second]);
+  });
 });
 
 describe('TagIndex (feed integration)', () => {
