@@ -53,23 +53,24 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   //   * `?url` static-asset imports (e.g. plugin-zen's m4a samples,
   //     plugin-script's `esbuild.wasm`) get real bundled URLs instead of
   //     the `""` empty-url stub that `dx-compile` writes into `dist`.
-  // Disabled under `DX_FASTBUNDLE` for the smoke-test/preview build where
-  // build speed wins over correctness for unchanged source.
-  !isFastBundle &&
-    importSource({
-      include: ['@dxos/**', '#*'],
-      exclude: [
-        '@dxos/random-access-storage',
-        '@dxos/lock-file',
-        '@dxos/network-manager',
-        '@dxos/teleport',
-        '@dxos/config',
-        '@dxos/client-services',
-        '@dxos/observability',
-        // TODO(dmaretskyi): Decorators break in lit.
-        '@dxos/lit-*',
-      ],
-    }),
+  // Under `DX_FASTBUNDLE` (smoke-test/preview build) only the `@dxos/**`-to-source
+  // forcing is skipped, where build speed wins over correctness for unchanged source.
+  // Package-internal `#*` subpath imports must still resolve to source, or they fall
+  // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
+  importSource({
+    include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
+    exclude: [
+      '@dxos/random-access-storage',
+      '@dxos/lock-file',
+      '@dxos/network-manager',
+      '@dxos/teleport',
+      '@dxos/config',
+      '@dxos/client-services',
+      '@dxos/observability',
+      // TODO(dmaretskyi): Decorators break in lit.
+      '@dxos/lit-*',
+    ],
+  }),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
