@@ -664,8 +664,6 @@ const dragTheme = EditorView.theme({
     boxSizing: 'border-box',
     marginLeft: `-${BOX_INSET_X}px`,
     width: `calc(100% + ${BOX_INSET_X}px)`,
-    borderRadius: '4px',
-    border: '1px dashed var(--color-accent-text, #3b82f6)',
     backgroundColor: 'color-mix(in oklch, var(--color-accent-text, #3b82f6) 12%, transparent)',
   },
   '.cm-blockDragPreview': {
@@ -677,8 +675,6 @@ const dragTheme = EditorView.theme({
     boxSizing: 'border-box',
     overflow: 'hidden',
     opacity: '0.9',
-    borderRadius: '4px',
-    border: '1px solid var(--color-primary-500)',
     padding: '1px 0',
     backgroundColor: 'var(--dx-base-surface, Canvas)',
     boxShadow: '0 8px 24px rgb(0 0 0 / 0.35)',

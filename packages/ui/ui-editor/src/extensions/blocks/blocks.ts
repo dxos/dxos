@@ -137,15 +137,23 @@ export const moveBlocksSpec = (
 
   const insert = dropIndex < count ? `${text}\n\n` : `\n\n${text}`;
   const changes = [...deletes.map((range) => ({ from: range.from, to: range.to })), { from: insertAt, insert }];
-  // Caret at the end of the moved content: the inserted text starts where `insertAt` maps to (dropping
-  // any deletes before it), then `text` sits at its start (or after the `\n\n` prefix when appending).
+  // The inserted text starts where `insertAt` maps to (dropping any deletes before it), then `text` sits
+  // at its start (or after the `\n\n` prefix when appending).
   const changeSet = state.changes(changes);
-  const insertStart = changeSet.mapPos(insertAt, -1);
-  const caret = insertStart + (dropIndex < count ? text.length : 2 + text.length);
+  const textStart = changeSet.mapPos(insertAt, -1) + (dropIndex < count ? 0 : 2);
+  // Keep the moved blocks selected: their new anchors are the start of each block within the inserted
+  // text, joined by `\n\n` (block length + 2). The caret lands at the end of the moved content.
+  const anchors: number[] = [];
+  let anchor = textStart;
+  for (const index of sources) {
+    anchors.push(anchor);
+    anchor += blocks[index].to - blocks[index].from + 2;
+  }
+  const caret = textStart + text.length;
   return {
     changes,
     selection: { anchor: Math.min(caret, changeSet.newLength) },
-    effects: setBlockSelection.of([]),
+    effects: setBlockSelection.of(anchors),
     userEvent: 'move.block',
   };
 };

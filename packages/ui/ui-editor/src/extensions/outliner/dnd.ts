@@ -119,14 +119,15 @@ const moveItem = (view: EditorView, sourceIndex: number, dropIndex: number): voi
           { from: insertAt, insert },
         ];
 
-  // Caret at the end of the moved item, and clear the block selection.
+  // Caret at the end of the moved item; keep the moved item selected (its new anchor is where the moved
+  // text starts — the subtree's first line).
   const changeSet = state.changes(changes);
-  const insertStart = changeSet.mapPos(insertAt, -1);
-  const caret = insertStart + (dropIndex < count ? text.length : 1 + text.length);
+  const textStart = changeSet.mapPos(insertAt, -1) + (dropIndex < count ? 0 : 1);
+  const caret = textStart + text.length;
   view.dispatch({
     changes,
     selection: { anchor: Math.min(caret, changeSet.newLength) },
-    effects: setBlockSelection.of([]),
+    effects: setBlockSelection.of([textStart]),
     userEvent: 'move.item',
   });
 };
@@ -188,12 +189,20 @@ const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number
   const insert = dropIndex < count ? `${text}\n` : `\n${text}`;
   const changes = [...deletes.map((range) => ({ from: range.from, to: range.to })), { from: insertAt, insert }];
   const changeSet = state.changes(changes);
-  const insertStart = changeSet.mapPos(insertAt, -1);
-  const caret = insertStart + (dropIndex < count ? text.length : 1 + text.length);
+  const textStart = changeSet.mapPos(insertAt, -1) + (dropIndex < count ? 0 : 1);
+  // Keep the moved items selected: their new anchors are the start of each item within the inserted
+  // text, joined by a single newline (item length + 1). The caret lands at the end of the moved content.
+  const anchors: number[] = [];
+  let anchor = textStart;
+  for (const index of sources) {
+    anchors.push(anchor);
+    anchor += blocks[index].to - blocks[index].from + 1;
+  }
+  const caret = textStart + text.length;
   view.dispatch({
     changes,
     selection: { anchor: Math.min(caret, changeSet.newLength) },
-    effects: setBlockSelection.of([]),
+    effects: setBlockSelection.of(anchors),
     userEvent: 'move.item',
   });
 };

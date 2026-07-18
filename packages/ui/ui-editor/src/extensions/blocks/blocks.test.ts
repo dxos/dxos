@@ -9,9 +9,21 @@ import { describe, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 
 import { findBlocks, moveBlocksSpec, replaceBlocksSpec } from './blocks';
+import { blockSelectionField } from './selection';
 
-const extensions = [markdown({ base: markdownLanguage })];
+const extensions = [markdown({ base: markdownLanguage }), blockSelectionField];
 const create = (doc: string) => EditorState.create({ doc, extensions });
+
+// The blocks selected in a state, as their source strings.
+const selectedText = (state: EditorState): string[] => {
+  const anchors = state.field(blockSelectionField);
+  const byFrom = new Map(findBlocks(state).map((block) => [block.from, block]));
+  return anchors.map((anchor) => {
+    const block = byFrom.get(anchor);
+    invariant(block, `no block at anchor ${anchor}`);
+    return state.doc.sliceString(block.from, block.to);
+  });
+};
 
 // Applies a (non-null) transaction spec and returns the resulting state.
 const apply = (state: EditorState, spec: TransactionSpec | null): EditorState => {
@@ -71,6 +83,14 @@ describe('moveBlocksSpec', () => {
     const state = create('A\n\nB\n\nC\n\nD');
     const next = apply(state, moveBlocksSpec(state, [0, 2], 4));
     expect(next.doc.toString()).to.eq('B\n\nD\n\nA\n\nC');
+  });
+
+  test('keeps the moved blocks selected after the drop', ({ expect }) => {
+    const state = create('A\n\nB\n\nC\n\nD');
+    // A single block dropped before another.
+    expect(selectedText(apply(state, moveBlocksSpec(state, [1], 3)))).to.deep.eq(['B']);
+    // Multiple non-contiguous blocks moved to the end stay selected, in document order.
+    expect(selectedText(apply(state, moveBlocksSpec(state, [0, 2], 4)))).to.deep.eq(['A', 'C']);
   });
 
   test('is a no-op when dropping onto a source block', ({ expect }) => {
