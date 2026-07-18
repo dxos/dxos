@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Text as EchoText, Entity, Obj, Ref } from '@dxos/echo';
-import { checkoutVersion, clearTimeTravel, setTimeTravel } from '@dxos/echo-client';
+import { type Database, Text as EchoText, Obj, Ref } from '@dxos/echo';
+import { checkoutVersion } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
@@ -60,10 +60,9 @@ export type CreateCheckpointProps = {
  */
 export const createCheckpoint = (doc: VersionedObject, props: CreateCheckpointProps): Versioning.Version => {
   const text = props.target;
-  // A checkpoint records the target's current tip. Refuse to checkpoint while the target is pinned
-  // to a historical revision (viewing a checkpoint) — it is not at the tip, and `getHeads` would
-  // silently record the live tip anyway. Return to the tip (or a branch) before checkpointing.
-  invariant(!Entity.isTimeTraveling(text), 'cannot create a revision while viewing history (not at the tip)');
+  // A checkpoint records the target's current tip. Viewing a checkpoint no longer pins the live
+  // object (it renders a detached snapshot), so the target is always at its tip here; the "don't
+  // checkpoint while viewing a revision" affordance is enforced in the UI (the disabled button).
   const version = Versioning.makeVersion({
     name: props.name,
     target: Ref.make(text),
@@ -153,38 +152,17 @@ export const createBranch = async (doc: VersionedObject, props: CreateBranchProp
   return stored;
 };
 
-/**
- * Pin the checkpoint's target to its heads: the live object's reads resolve the historical value
- * until {@link clearVersionView} (writes throw while pinned). Replaces snapshot-swap viewing so
- * every surface bound to the object — editor text, label, fields — reflects the checkpoint.
- *
- * A branch checkpoint's heads live in the branch document, not the root's, so the caller must pass
- * `text` = the branch-bound Text (from `db.branch`) for a `version.branch` checkpoint; otherwise it
- * defaults to `version.target.target` (the base document).
- */
-export const viewVersion = (version: Versioning.Version, text = version.target.target): void => {
-  invariant(text, 'checkpoint target not loaded');
-  setTimeTravel(text, [...version.heads]);
-};
-
-/** Return the checkpoint's target to its live (latest) value. See {@link viewVersion} for `text`. */
-export const clearVersionView = (version: Versioning.Version, text = version.target.target): void => {
-  if (text) {
-    clearTimeTravel(text);
-  }
-};
+// Viewing a checkpoint no longer pins the live object: the caller reads the historical value with
+// `contentAt` (or `Obj.getVersion` for the full snapshot) and renders it, so only that surface shows
+// history — the live object is never mutated. (The former `viewVersion`/`clearVersionView` pin is gone.)
 
 /**
- * Applies the checkpoint's content to the tip as a new forward edit — history is never rewritten.
- * For a branch checkpoint, `text` is the branch-bound Text (see {@link viewVersion}); the restore
- * then lands on the branch, not the base.
+ * Applies the checkpoint's content to the tip as a new forward edit — history is never rewritten. For
+ * a branch checkpoint, `text` is the branch-bound Text; the restore lands on the branch, not the base.
+ * No pin to clear: the live object was never mutated by viewing.
  */
 export const restore = (doc: VersionedObject, version: Versioning.Version, text = version.target.target): void => {
   invariant(text, 'checkpoint target not loaded');
-  // Writes never go through a pinned object (they throw by design): restoring while viewing a
-  // checkpoint first returns the object to the live tip, then applies the historical content as a
-  // forward edit — the caller's selection resets to current.
-  clearTimeTravel(text);
   const historical = contentAt(text, version.heads);
   Obj.update(text, () => {
     EchoText.update(text, 'content', historical);

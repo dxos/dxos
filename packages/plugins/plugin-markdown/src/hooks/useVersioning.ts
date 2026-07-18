@@ -33,8 +33,8 @@ export type UseVersioningResult = {
   activeVersion?: Version.Version;
   /**
    * The Text the active checkpoint resolves against: the branch-bound Text for a branch checkpoint,
-   * else the checkpoint's root target. Pass to `Version.view`/`restore` so a branch checkpoint acts
-   * on the branch document.
+   * else the checkpoint's root target. Pass to `Version.contentAt`/`restore` so a branch checkpoint
+   * acts on the branch document.
    */
   checkpointText?: Text.Text;
   /** Read-only content at the selected checkpoint. */
@@ -166,17 +166,9 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     return Version.contentAt(checkpointText, activeVersion.heads);
   }, [activeVersion, checkpointText]);
 
-  // Viewing a checkpoint pins the live Text to the checkpoint's heads: every read on the object
-  // (editor text, label) resolves the historical value and writes throw until the pin clears.
-  useEffect(() => {
-    if (!activeVersion || !checkpointText) {
-      return;
-    }
-    Version.view(activeVersion, checkpointText);
-    return () => {
-      Version.clearView(activeVersion, checkpointText);
-    };
-  }, [activeVersion, checkpointText]);
+  // Viewing a checkpoint no longer pins the live Text: the editor renders `checkpointContent` (a
+  // detached snapshot read via `contentAt`), so only the editor shows history — the live object and
+  // every other surface (sidebar title, tabs, backlinks) are unaffected.
 
   return {
     document,

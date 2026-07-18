@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { DXN, Text as EchoText, Entity, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Text as EchoText, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -185,7 +185,9 @@ describe('versioning model', () => {
     expect(stored.status).toBe('merged');
   });
 
-  test('view pins reads to the checkpoint; clearView returns live', async ({ expect }) => {
+  test('viewing a checkpoint reads a detached snapshot; the live object is unaffected and editable', async ({
+    expect,
+  }) => {
     const { doc, root } = await setup('first');
     const checkpoint = Version.create(doc, { name: 'v1', target: root });
 
@@ -193,35 +195,15 @@ describe('versioning model', () => {
       root.content = 'second';
     });
 
-    Version.view(checkpoint);
-    expect(root.content).toBe('first');
-    expect(Entity.isTimeTraveling(root)).toBe(true);
-    // Writes throw while pinned.
-    expect(() =>
-      Obj.update(root, (root) => {
-        root.content = 'nope';
-      }),
-    ).toThrow();
-
-    Version.clearView(checkpoint);
+    // The historical value is read as a detached snapshot — no pin on the live object.
+    expect(Version.contentAt(root, checkpoint.heads)).toBe('first');
+    expect((Obj.getVersion(root, [...checkpoint.heads]) as { content: string }).content).toBe('first');
+    // The live object was never mutated by viewing, so it keeps its value and stays editable.
     expect(root.content).toBe('second');
-    expect(Entity.isTimeTraveling(root)).toBe(false);
-  });
-
-  test('cannot create a revision while viewing a checkpoint (not at the tip)', async ({ expect }) => {
-    const { doc, root } = await setup('first');
-    const checkpoint = Version.create(doc, { name: 'v1', target: root });
     Obj.update(root, (root) => {
-      root.content = 'second';
+      root.content = 'third';
     });
-
-    // Viewing the checkpoint pins the object off the tip; checkpointing must refuse.
-    Version.view(checkpoint);
-    expect(() => Version.create(doc, { name: 'nope', target: root })).toThrow(/not at the tip/);
-
-    // Back at the tip it succeeds again.
-    Version.clearView(checkpoint);
-    expect(() => Version.create(doc, { name: 'v2', target: root })).not.toThrow();
+    expect(root.content).toBe('third');
   });
 
   test('restore applies historical content as a new forward edit', async ({ expect }) => {
@@ -236,27 +218,6 @@ describe('versioning model', () => {
     expect(root.content).toBe('first');
     // History retained: heads advanced, not rewound.
     expect(Obj.version(root).automergeHeads).not.toEqual(checkpoint.heads);
-  });
-
-  test('restore while viewing a checkpoint clears the pin first', async ({ expect }) => {
-    const { doc, root } = await setup('first');
-    const checkpoint = Version.create(doc, { name: 'v1', target: root });
-
-    Obj.update(root, (root) => {
-      root.content = 'second';
-    });
-
-    // Viewing the checkpoint pins reads; restore must transition back to live before writing.
-    Version.view(checkpoint);
-    expect(root.content).toBe('first');
-    Version.restore(doc, checkpoint);
-    expect(Entity.isTimeTraveling(root)).toBe(false);
-    expect(root.content).toBe('first');
-    // The restored state is a forward edit on the live tip; editing continues normally.
-    Obj.update(root, (root) => {
-      root.content = 'third';
-    });
-    expect(root.content).toBe('third');
   });
 
   test('discard archives without touching the parent; the branch stays recoverable', async ({ expect }) => {
