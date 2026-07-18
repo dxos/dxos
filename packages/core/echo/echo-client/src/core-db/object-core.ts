@@ -497,8 +497,10 @@ export class ObjectCore {
     try {
       view = A.view(latest as AutomergeDoc<any>, heads);
     } catch (err) {
-      // Heads not reachable in the local doc (e.g. a peer's changes not yet synced); leave live.
+      // Heads not reachable in the local doc (e.g. a peer's changes not yet synced): the object must
+      // read live. Clear any existing pin so we do not strand the reader on a stale historical view.
       log.warn('ignoring setTimeTravel with unreachable heads', { id: this.id, heads, err });
+      this.clearTimeTravel();
       return;
     }
     this.#timeTravelHeads = heads;

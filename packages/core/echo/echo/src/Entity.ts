@@ -250,10 +250,11 @@ export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[
 export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDeleted(entity);
 
 /**
- * Check if an entity is currently in a historical (time-travel) read mode.
- * Synchronous guard — use before mutating to avoid the time-travel write error.
+ * Check if a live entity is currently in a historical (time-travel) read mode.
+ * Synchronous guard — use before mutating to avoid the time-travel write error. Detached snapshots
+ * carry no pin state (and cannot transition), so the parameter is restricted to live entities.
  */
-export const isTimeTraveling = (entity: Unknown | Snapshot): boolean => internal.isTimeTraveling(entity);
+export const isTimeTraveling = (entity: Unknown): boolean => internal.isTimeTraveling(entity);
 
 /**
  * Get the label of an entity.
