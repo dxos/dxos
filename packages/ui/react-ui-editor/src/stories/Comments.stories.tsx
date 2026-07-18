@@ -17,6 +17,7 @@ import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   Cursor,
+  EditorView,
   comments,
   createBasicExtensions,
   createComment,
@@ -49,6 +50,8 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
   const attentionAttrs = useAttentionAttributes(DOCUMENT_ID);
   const commentsAtom = useMemo(() => Atom.make<Comment[]>(commentsProp), []);
   const [activeComment, setActiveComment] = useState<string>();
+  // Bumped on every document edit so the comments list re-resolves each thread's range.
+  const [, setDocVersion] = useState(0);
 
   const extensions = useMemo(
     () => [
@@ -57,6 +60,11 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
       createMarkdownExtensions(),
       decorateMarkdown(),
       formattingKeymap(),
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          setDocVersion((version) => version + 1);
+        }
+      }),
       comments({
         id: DOCUMENT_ID,
         // Append the new thread to the atom; the extension re-reads it via `getComments`/`subscribe`.
