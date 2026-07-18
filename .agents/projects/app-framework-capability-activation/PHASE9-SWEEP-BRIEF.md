@@ -69,11 +69,15 @@ maker default.
    `props: (options: T) => <props>` (import the options type in the barrel), then bare
    `Plugin.addLazyModule(M)`.
 6. `Plugin.addLazyModule(M, { activatesOn: E })` → move `activatesOn: E` into `M`'s spec.
-7. DELETE every TS2883 workaround block — the comment
+7. DELETE the TS2883 workaround blocks in **capabilities barrels** (`index.ts` files whose
+   exports are now opaque `Capability.Module` values) — the comment
    `// Explicit imports so the emitted '.d.ts' references the packages via their public aliases ... (TS2883)`
    plus its `eslint-disable-next-line unused-imports/no-unused-imports` type imports. The
-   opaque `Capability.Module<Options>` type makes them dead. If declaration emit still
-   fails after conversion, something was not converted — fix that instead of re-adding.
+   opaque `Capability.Module<Options>` type makes them dead THERE. **KEEP them in chunk
+   files** (the lazy module bodies with `export default Capability.makeModule(...)`) — the
+   chunk's default export type still mentions foreign service types and needs the import
+   for declaration emit. If a package build fails with TS2883 after your edits, restore the
+   workaround in the file the error points at.
 8. Remove now-unused imports (`AppPlugin`, `Capability` where only used for the old
    boilerplate, `getModuleTag`). Keep `Capability` where `lazyModule`/`inlineModule` remain.
 9. Stories/tests inside the package that use `AppPlugin.*` get the same treatment (fixtures

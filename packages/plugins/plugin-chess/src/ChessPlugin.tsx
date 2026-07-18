@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { GameVariant, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
@@ -15,21 +15,18 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(GameVariant),
-  AppPlugin.addSkillDefinitionModule({
-    requires: SkillDefinition.requires,
-    provides: SkillDefinition.provides,
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
-  AppPlugin.addSchemaModule({ schema: [Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review] }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
+  Plugin.addLazyModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

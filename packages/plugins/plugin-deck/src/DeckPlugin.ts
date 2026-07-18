@@ -5,7 +5,7 @@
 import { setAutoFreeze } from 'immer';
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -30,31 +30,24 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 setAutoFreeze(false);
 
 export const DeckPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule<void>({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addOperationHandlerModule<void>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSurfaceModule<void>({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule<void>({ translations }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(DeckSettings),
   Plugin.addLazyModule(CheckAppScheme),
   Plugin.addLazyModule(DeckState),
   Plugin.addLazyModule(ReactRoot),
   Plugin.addLazyModule(UrlHandler),
   Plugin.addLazyModule(NotificationTracker),
-  AppPlugin.addPluginAssetModule<void>({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

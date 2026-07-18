@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { translations as boardTranslations } from '@dxos/react-ui-board/translations';
 
 import { CreateObject, ReactSurface } from '#capabilities';
@@ -15,21 +15,18 @@ import { Board } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addSchemaModule({ schema: [Board.Board] }),
-  AppPlugin.addSurfaceModule({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule({ translations: [...translations, ...boardTranslations] }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(AppCapability.schema([Board.Board])),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations([...translations, ...boardTranslations])),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 
