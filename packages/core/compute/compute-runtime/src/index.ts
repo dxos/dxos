@@ -12,7 +12,6 @@ export * as ProcessMonitor from './ProcessMonitor';
 export * as RemoteOperationInvoker from './RemoteOperationInvoker';
 export * as RemoteProcessManager from './RemoteProcessManager';
 export * as RemoteTriggerManager from './RemoteTriggerManager';
-export * from './sdk';
 export * from './services';
 export { layer as storageServiceLayer } from './storage-service-layer';
 export * from './triggers';
