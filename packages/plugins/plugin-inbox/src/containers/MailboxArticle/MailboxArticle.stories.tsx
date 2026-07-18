@@ -158,7 +158,7 @@ const meta = {
                   );
                 }
               } else {
-                const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
+                const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace.db, count, threads));
                 if (bound) {
                   const accessToken = personalSpace.db.add(
                     AccessToken.make({ source: 'imap.example.com', account: 'user@example.com', token: 'story-token' }),

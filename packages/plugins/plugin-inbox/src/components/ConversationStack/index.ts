@@ -3,3 +3,6 @@
 //
 
 export * from './ConversationStack';
+export * from './useExtractorActions';
+export * from './useMessageExtractedObjects';
+export * from './useToolbar';

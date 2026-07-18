@@ -8,6 +8,7 @@ import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useStat
 import {
   useAtomCapability,
   useAtomCapabilityState,
+  useCapabilities,
   useOperationInvoker,
   useOptionalCapability,
 } from '@dxos/app-framework/ui';
@@ -415,18 +416,22 @@ const useMailboxActions = (
   { sortDescending, nodeId, filterElement }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
+  const invoker = useOperationInvoker();
   const [settings, setSettings] = useAtomCapabilityState(InboxCapabilities.Settings);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   const handleCompose = useCallback(() => {
     const db = Obj.getDatabase(mailbox);
     invariant(db);
-    void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox });
-  }, [invokePromise, mailbox]);
+    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox });
+  }, [invoker, mailbox]);
 
-  const mailboxExtractorActions = useMailboxExtractorActions(mailbox);
-  const mailboxActions = useInjectedMailboxActions(mailbox);
+  // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
+  // action hooks — components (and the hooks they call) must not resolve capabilities themselves.
+  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const injectedActions = useCapabilities(InboxCapabilities.MailboxAction);
+  const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
+  const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
   const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
