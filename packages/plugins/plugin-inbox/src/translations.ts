@@ -3,7 +3,6 @@
 //
 
 import { Type } from '@dxos/echo';
-import { Topic } from '@dxos/pipeline-email';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { Message } from '@dxos/types';
@@ -35,17 +34,6 @@ export const translations = [
         'rename-object.label': 'Rename message',
         'delete-object.label': 'Delete message',
         'object-deleted.label': 'Message deleted',
-      },
-      [Type.getTypename(Topic)]: {
-        'typename.label': 'Topic',
-        'typename.label_zero': 'Topics',
-        'typename.label_one': 'Topic',
-        'typename.label_other': 'Topics',
-        'object-name.placeholder': 'New topic',
-        'add-object.label': 'Add topic',
-        'rename-object.label': 'Rename topic',
-        'delete-object.label': 'Delete topic',
-        'object-deleted.label': 'Topic deleted',
       },
       [Type.getTypename(Calendar.Calendar)]: {
         'typename.label': 'Calendar',
@@ -123,6 +111,9 @@ export const translations = [
         'calendar-toolbar-create-event.menu': 'Create event',
         'calendar-toolbar-sync.menu': 'Save events to calendar',
 
+        'conversation-toolbar.label': 'Conversation toolbar',
+        'collapse-all.menu': 'Collapse all',
+        'expand-all.menu': 'Expand all',
         'message-toolbar.label': 'Message toolbar',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
@@ -134,6 +125,7 @@ export const translations = [
         'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
+        'message-toolbar-collapse.label': 'Collapse message',
 
         'message-body.placeholder': 'Enter message text...',
 
@@ -154,22 +146,6 @@ export const translations = [
         'drafts.label': 'Drafts',
         'drafts.article.description': 'Draft list (coming soon).',
         'drafts.empty.message': 'No drafts yet.',
-        'topics.label': 'Topics',
-        'topic.label': 'Topic',
-        'topics.toolbar.title': 'Topics toolbar',
-        'analyze-topics.label': 'Analyze Topics',
-        'analyze-topics-success.title': 'Topics updated.',
-        'analyze-topics-error.title': 'Failed to analyze topics.',
-        'topics.empty.message': 'No topics yet. Run "Analyze Topics" from the mailbox toolbar.',
-        'topics.count.label':
-          '{{threads}} threads · {{participants}} participants · {{questions}} questions · {{tasks}} tasks',
-        'topics.delete.label': 'Delete topic',
-        'topics.threads.label': 'Threads',
-        'topics.questions.label': 'Questions',
-        'topics.tasks.label': 'Tasks',
-        'topics.suggested.title': 'Suggested',
-        'topics.accept.label': 'Accept',
-        'topics.dismiss.label': 'Dismiss',
         'subscriptions.label': 'Subscriptions',
         'subscriptions.toolbar.title': 'Subscriptions toolbar',
         'subscriptions.empty.message': 'No bulk-mail subscriptions found.',

@@ -7,21 +7,19 @@ import * as Exit from 'effect/Exit';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { Operation, Trigger } from '@dxos/compute';
-import { TriggerDispatcher } from '@dxos/compute-runtime';
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
-import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import { Trigger } from '@dxos/compute';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ModuleProps } from '@dxos/story-modules';
 
-import { MailboxTriggerRelation } from '../testing';
-
-/** Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}. */
+/**
+ * Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}.
+ * Triggers are created solely by the connector integration (the sync toggle → {@link createSyncRoutine}),
+ * so this panel only observes and invokes them.
+ */
 export const TriggersModule = ({ space }: ModuleProps) => {
   const triggers = useQuery(
     space.db,
@@ -29,57 +27,24 @@ export const TriggersModule = ({ space }: ModuleProps) => {
   );
   const { state, start, stop } = useTriggerRuntimeControls(space.db);
 
-  // The mailbox's sync cursor is the trigger's input; a trigger can only be created once it exists.
-  const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
-  const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
-  const binding = mailbox
-    ? cursors.find(
-        (candidate): candidate is Cursor.ExternalCursor =>
-          Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
-      )
-    : undefined;
-
-  // Wire a manual trigger to the Gmail sync operation, linked to the mailbox via `MailboxTriggerRelation`.
-  const handleCreateTrigger = useCallback(() => {
-    if (!mailbox || !binding) {
-      return;
-    }
-
-    const trigger = space.db.add(
-      Trigger.make({
-        [Obj.Parent]: mailbox,
-        enabled: true,
-        runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
-        spec: Trigger.specDirect(),
-        input: { binding: Ref.make(binding) },
-      }),
-    );
-    space.db.add(
-      Relation.make(MailboxTriggerRelation, {
-        [Relation.Source]: mailbox,
-        [Relation.Target]: trigger,
-      }),
-    );
-    void space.db.flush();
-  }, [space.db, mailbox, binding]);
-
   const [invokingId, setInvokingId] = useState<string | undefined>();
   const triggerToInvokeRef = useRef<Trigger.Trigger | undefined>(undefined);
 
+  // Invoke via the aggregate monitor (not the local dispatcher directly) so a trigger marked
+  // `remote` is routed to the EDGE dispatcher, while a local trigger runs in-process.
   const invokeTrigger = useSpaceCallback(
     space.db.spaceId,
-    [TriggerDispatcher],
+    [Trigger.TriggerMonitorService],
     Effect.fnUntraced(function* () {
       const trigger = triggerToInvokeRef.current;
       if (!trigger) {
         return;
       }
 
-      const dispatcher = yield* TriggerDispatcher;
-      const now = new Date();
-      yield* dispatcher.invokeTrigger({
+      const monitor = yield* Trigger.TriggerMonitorService;
+      yield* monitor.invokeTrigger({
         trigger,
-        event: { tick: now.getTime() },
+        event: { tick: Date.now() },
       });
     }),
   );
@@ -100,10 +65,6 @@ export const TriggersModule = ({ space }: ModuleProps) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text>Triggers</Toolbar.Text>
-          <Toolbar.Separator />
-          <Toolbar.Button onClick={handleCreateTrigger} disabled={!binding || triggers.length > 0}>
-            Create trigger
-          </Toolbar.Button>
           <Toolbar.Separator />
           <Toolbar.Button onClick={start} disabled={state?.enabled}>
             Start dispatcher
@@ -131,6 +92,19 @@ export const TriggersModule = ({ space }: ModuleProps) => {
                 <li key={trigger.id} className='flex flex-col gap-1 rounded border border-separator p-2'>
                   <div className='font-mono text-xs truncate'>{trigger.id}</div>
                   <div className='text-description'>{formatTriggerSpec(trigger)}</div>
+                  <Input.Root>
+                    <div className='flex items-center gap-2'>
+                      <Input.Switch
+                        checked={trigger.remote === true}
+                        onCheckedChange={(checked) => {
+                          Obj.update(trigger, (trigger) => {
+                            trigger.remote = checked;
+                          });
+                        }}
+                      />
+                      <Input.Label>{trigger.remote ? 'Remote (edge)' : 'Local'}</Input.Label>
+                    </div>
+                  </Input.Root>
                   {lastInvocation && (
                     <div className='text-xs'>
                       Last run: {formatInvocationResult(lastInvocation.result)}

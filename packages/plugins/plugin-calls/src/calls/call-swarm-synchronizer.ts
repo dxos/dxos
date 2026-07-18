@@ -5,15 +5,15 @@
 import md5Hex from 'md5-hex';
 
 import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
-import { type Identity } from '@dxos/client/halo';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
+import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
+import { type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
 import { ConnectionState, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { isNonNullable } from '@dxos/util';
 
@@ -132,16 +132,16 @@ export class CallSwarmSynchronizer extends Resource {
   /**
    * @internal
    */
-  _setIdentity(identity: Identity): void {
-    this._identityKey = identity.identityKey.toHex();
-    this._displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
+  _setIdentity(identity: Identity.Info): void {
+    this._identityKey = identity.identityKey;
+    this._displayName = identity.displayName ?? generateName(identity.identityKey ?? '');
   }
 
   /**
    * @internal
    */
-  _setDevice(device: Device): void {
-    this._deviceKey = device.deviceKey.toHex();
+  _setDevice(device: Identity.DeviceInfo): void {
+    this._deviceKey = device.key;
   }
 
   /**

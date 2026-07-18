@@ -27,7 +27,7 @@ import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
-import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
+import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
 import { getCalendarEventPath, getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar } from './InitializeCalendar';
@@ -70,14 +70,14 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   // Starred events get a rose marker. The TagIndex mutates in place, which `useQuery` doesn't observe,
   // so subscribe to it directly and re-derive the set on change (drives both grid markers and tile stars).
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = calendar.tags?.target;
   const [, bumpTags] = useReducer((tick: number) => tick + 1, 0);
   useEffect(() => {
     return tagIndex ? Obj.subscribe(tagIndex, bumpTags) : undefined;
   }, [tagIndex]);
-  const starredIds = Starred.getStarredIds(calendar, starredUri);
+  const starredIds = SystemTags.getTaggedIds(calendar, starredUri);
   const dates = useMemo<DateMarker[]>(
     () =>
       events.map((event) => ({
@@ -146,7 +146,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         case 'star': {
           const event = events.find((entry) => entry.id === action.eventId);
           if (event && db && Calendar.instanceOf(calendar)) {
-            void Starred.toggleStarred(calendar, event, db);
+            void SystemTags.toggleTag(calendar, event, db, 'starred');
           }
           break;
         }

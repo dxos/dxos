@@ -367,27 +367,26 @@ export const createConfig = ({
             },
           },
 
-          !isFastBundle &&
-            importSource({
-              // Include `#*` so Node subpath imports (e.g. `#translations`, `#meta`)
-              // resolve to the `source` condition (`./src/...`) instead of falling
-              // through to `default` (`./dist/lib/neutral/...`). Without this, a
-              // package's own `test-storybook` task fails when its `compile` task
-              // hasn't been triggered as an upstream dep — manifests as
-              // `[vite] Failed to resolve import "#translations"`.
-              include: ['@dxos/**', '#*'],
-              exclude: [
-                '@dxos/random-access-storage',
-                '@dxos/lock-file',
-                '@dxos/network-manager',
-                '@dxos/teleport',
-                '@dxos/config',
-                '@dxos/client-services',
-                '@dxos/observability',
-                // TODO(dmaretskyi): Decorators break in lit.
-                '@dxos/lit-*',
-              ],
-            }),
+          importSource({
+            // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,
+            // `#meta`) to the `source` condition (`./src/...`); otherwise they fall through
+            // to `default` (`./dist/lib/neutral/...`) and fail when a package's `compile` has
+            // not run. Fast mode (`DX_FASTBUNDLE`) still needs this — it only wants to skip
+            // forcing `@dxos/**` to source (so those resolve from dist and get pre-bundled),
+            // NOT the `#*` resolution, which every plugin relies on.
+            include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
+            exclude: [
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '@dxos/lit-*',
+            ],
+          }),
 
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),

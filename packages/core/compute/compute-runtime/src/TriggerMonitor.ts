@@ -88,8 +88,16 @@ export const layer: Layer.Layer<
     // Perform initial derivation.
     yield* deriveState;
 
-    // Aggregate local + remote trigger views.
-    const triggersAtom = Atom.make((get) => [...get(localTriggersAtom), ...get(remote.triggers)]);
+    // Aggregate local + remote trigger views. Edge triggers are ECHO objects replicated into the
+    // local database, so they surface in both the database-derived `localTriggersAtom` (as bare
+    // `environment: 'edge'` entries) and in `remote.triggers` (enriched with edge dispatcher runtime
+    // status). Dedupe by trigger ref URI, letting the remote entry supersede the bare local one.
+    const triggersAtom = Atom.make((get) => {
+      const local = get(localTriggersAtom);
+      const remoteStates = get(remote.triggers);
+      const remoteKeys = new Set(remoteStates.map((state) => state.trigger.uri));
+      return [...local.filter((state) => !remoteKeys.has(state.trigger.uri)), ...remoteStates];
+    });
     registry.mount(triggersAtom);
 
     const monitor: Trigger.Monitor = {

@@ -8,6 +8,7 @@ import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useStat
 import {
   useAtomCapability,
   useAtomCapabilityState,
+  useCapabilities,
   useOperationInvoker,
   useOptionalCapability,
 } from '@dxos/app-framework/ui';
@@ -21,7 +22,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Panel } from '@dxos/react-ui';
+import { ElevationProvider, Icon, Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
@@ -47,10 +48,9 @@ import {
 import { useDebouncedValue } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox, Starred } from '#types';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
@@ -79,12 +79,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
-  // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
-  const syncProgress = useProgress(createSyncProgressKey(mailbox));
-  const topicsProgress = useProgress(createTopicsProgressKey(mailbox));
-  const progress =
-    topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
+  // Gmail sync registers a monitor keyed by the mailbox URI (`#sync`); show it in the statusbar.
+  const progress = useProgress(createSyncProgressKey(mailbox));
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -101,9 +97,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const tagsAtom = useMessageTagsAtomFamily(tagIndex, tagMap);
 
   // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const starredAtom = useMemo(() => Starred.atom(tagIndex, starredUri), [tagIndex, starredUri]);
+  const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -188,22 +184,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // TODO(burdon): Actual test should be if we have synced; not number of messages.
-  // Show the message list as soon as any messages are present; only fall back to the empty state
-  // after a brief delay of genuinely having none (prevents an initial-load flicker). Keyed on the
-  // COUNT, not the query-result identity: keying on `messages` (which changes on every update) plus
-  // an always-delayed setter meant that during a sync the timeout was cleared before it ever fired,
-  // latching the empty state `true` while messages streamed in — the mailbox showed empty for the
-  // whole burst and only revealed messages once updates slowed past the 1s window.
-  const [isEmpty, setEmpty] = useState<boolean>(false);
-  useEffect(() => {
-    if (messages.length > 0) {
-      setEmpty(false);
-      return;
-    }
-    const t = setTimeout(() => setEmpty(true), 1_000);
-    return () => clearTimeout(t);
-  }, [messages.length]);
+  // Gates on the query settling, not on `messages.length`, so the empty-mailbox panel never renders mid-load.
+  const loading = !feed || pagination.isLoading;
 
   const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
@@ -242,7 +224,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         case 'star': {
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
-            void Starred.toggleStarred(mailbox, message, db);
+            void SystemTags.toggleTag(mailbox, message, db, 'starred');
           }
           break;
         }
@@ -343,9 +325,16 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         </Menu.Root>
       </ElevationProvider>
       <Panel.Content asChild>
-        {isEmpty ? (
-          <InitializeMailbox mailbox={mailbox} />
-        ) : (
+        {loading ? (
+          // Fade-in delayed 1s so a fast load never flashes the spinner.
+          <div className='grid place-items-center bs-full is-full'>
+            <Icon
+              icon='ph--spinner-gap--regular'
+              size={6}
+              classNames='text-subdued [animation:spin_1s_linear_infinite,fade-in_200ms_ease-out_1s_backwards]'
+            />
+          </div>
+        ) : messages.length > 0 ? (
           <MessageStack
             id={id}
             items={items}
@@ -358,6 +347,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             searchQuery={searchQuery}
             onAction={handleAction}
           />
+        ) : (
+          <InitializeMailbox mailbox={mailbox} />
         )}
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
@@ -425,18 +416,22 @@ const useMailboxActions = (
   { sortDescending, nodeId, filterElement }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
+  const invoker = useOperationInvoker();
   const [settings, setSettings] = useAtomCapabilityState(InboxCapabilities.Settings);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   const handleCompose = useCallback(() => {
     const db = Obj.getDatabase(mailbox);
     invariant(db);
-    void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox });
-  }, [invokePromise, mailbox]);
+    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox });
+  }, [invoker, mailbox]);
 
-  const mailboxExtractorActions = useMailboxExtractorActions(mailbox);
-  const mailboxActions = useInjectedMailboxActions(mailbox);
+  // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
+  // action hooks — components (and the hooks they call) must not resolve capabilities themselves.
+  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const injectedActions = useCapabilities(InboxCapabilities.MailboxAction);
+  const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
+  const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
   const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
@@ -454,9 +449,9 @@ const useMailboxActions = (
           () => sortDescending.set((value) => !value),
         )
         .action(
-          'loadImages',
+          'loadRemoteImages',
           {
-            type: 'loadImages',
+            type: 'loadRemoteImages',
             icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
             label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
             checked: loadRemoteImages,

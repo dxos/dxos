@@ -13,11 +13,16 @@ import { JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 
 /**
- * Result of mapping a JMAP email. `mailboxIds` (the folders the email belongs to) is propagated
- * separately so the caller can apply folder tags to the immutable feed Message — mirrors the Gmail
- * mapper's `labelIds`.
+ * Result of mapping a JMAP email. `mailboxIds` (the folders the email is in) and `keywords` (the set
+ * flags, e.g. `$flagged`) are propagated separately so the caller can apply the corresponding tags to
+ * the immutable feed Message — mirrors the Gmail mapper's `labelIds`. Both axes are needed because JMAP
+ * splits folder membership (`mailboxIds`) from flags (`keywords`), unlike Gmail's single label list.
  */
-export type MappedEmail = { message: Message.Message; mailboxIds: readonly string[] };
+export type MappedEmail = {
+  message: Message.Message;
+  mailboxIds: readonly string[];
+  keywords: readonly string[];
+};
 
 /** A JMAP email with its raw HTML and/or plaintext body (JMAP delivers decoded values; no markdown). */
 export type DecodedEmail = {
@@ -130,7 +135,18 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
     blocks,
   });
 
-  return { message: echoMessage, mailboxIds: email.mailboxIds ? Object.keys(email.mailboxIds) : [] };
+  // `keywords` is a `{ [keyword]: true }` set; keep only the keys currently set.
+  const keywords = email.keywords
+    ? Object.entries(email.keywords)
+        .filter(([, set]) => set)
+        .map(([keyword]) => keyword)
+    : [];
+
+  return {
+    message: echoMessage,
+    mailboxIds: email.mailboxIds ? Object.keys(email.mailboxIds) : [],
+    keywords,
+  };
 };
 
 /**
