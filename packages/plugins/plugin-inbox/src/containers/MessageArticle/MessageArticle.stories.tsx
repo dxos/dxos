@@ -69,7 +69,7 @@ const meta = {
               const { personalSpace } = yield* initializeIdentity(client);
               // Thread pool of size 1 assigns every seeded message the same threadId — a single
               // conversation of exactly `length` messages, oldest to newest.
-              yield* Effect.promise(() => initializeMailbox(personalSpace, length, 1));
+              yield* Effect.promise(() => initializeMailbox(personalSpace.db, length, 1));
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),

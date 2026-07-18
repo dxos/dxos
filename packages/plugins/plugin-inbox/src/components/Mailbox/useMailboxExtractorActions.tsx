@@ -4,13 +4,13 @@
 
 import { useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { type Capabilities } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
+import { type ObjectExtractor } from '@dxos/extractor';
 import { log } from '@dxos/log';
 
 import { isAiServiceUnavailable } from '../../operations/extractor/ai-gate';
-import { InboxCapabilities, InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation, type Mailbox } from '../../types';
 
 export type MailboxExtractorMenuItem = {
   id: string;
@@ -21,11 +21,15 @@ export type MailboxExtractorMenuItem = {
 /**
  * Returns a menu item per registered {@link InboxCapabilities.ObjectExtractor}. Selecting one
  * invokes {@link InboxOperation.ExtractMailbox} over the mailbox feed with default concurrency.
+ *
+ * `extractors` and `invoker` are resolved by the container (this hook lives under `components/`, which
+ * must not call capability hooks) — see the `MailboxArticle` wiring.
  */
-export const useMailboxExtractorActions = (mailbox: Mailbox.Mailbox): MailboxExtractorMenuItem[] => {
-  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
-  const [invoker] = useCapabilities(Capabilities.OperationInvoker);
-
+export const useMailboxExtractorActions = (
+  mailbox: Mailbox.Mailbox,
+  extractors: readonly ObjectExtractor[] = [],
+  invoker?: Capabilities.OperationInvoker,
+): MailboxExtractorMenuItem[] => {
   return useMemo(() => {
     if (!invoker) {
       return [];

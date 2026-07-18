@@ -8,6 +8,7 @@ import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useStat
 import {
   useAtomCapability,
   useAtomCapabilityState,
+  useCapabilities,
   useOperationInvoker,
   useOptionalCapability,
 } from '@dxos/app-framework/ui';
@@ -50,7 +51,6 @@ import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
@@ -79,12 +79,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
-  // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
-  const syncProgress = useProgress(createSyncProgressKey(mailbox));
-  const topicsProgress = useProgress(createTopicsProgressKey(mailbox));
-  const progress =
-    topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
+  // Gmail sync registers a monitor keyed by the mailbox URI (`#sync`); show it in the statusbar.
+  const progress = useProgress(createSyncProgressKey(mailbox));
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -420,18 +416,22 @@ const useMailboxActions = (
   { sortDescending, nodeId, filterElement }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
+  const invoker = useOperationInvoker();
   const [settings, setSettings] = useAtomCapabilityState(InboxCapabilities.Settings);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   const handleCompose = useCallback(() => {
     const db = Obj.getDatabase(mailbox);
     invariant(db);
-    void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox });
-  }, [invokePromise, mailbox]);
+    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox });
+  }, [invoker, mailbox]);
 
-  const mailboxExtractorActions = useMailboxExtractorActions(mailbox);
-  const mailboxActions = useInjectedMailboxActions(mailbox);
+  // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
+  // action hooks — components (and the hooks they call) must not resolve capabilities themselves.
+  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const injectedActions = useCapabilities(InboxCapabilities.MailboxAction);
+  const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
+  const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
   const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
@@ -449,9 +449,9 @@ const useMailboxActions = (
           () => sortDescending.set((value) => !value),
         )
         .action(
-          'loadImages',
+          'loadRemoteImages',
           {
-            type: 'loadImages',
+            type: 'loadRemoteImages',
             icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
             label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
             checked: loadRemoteImages,

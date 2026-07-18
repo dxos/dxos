@@ -15,7 +15,7 @@ import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dx
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 
-import * as Runnable from './Runnable';
+import * as Runnable from '../Runnable';
 import type * as TriggerEvent from './TriggerEvent';
 
 /**

@@ -6,17 +6,17 @@ import { type Graph } from '@dxos/app-graph';
 import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { Mailbox } from '#types';
 
 import { deleteAction, openGroup } from '../Toolbar';
-import { useExtractorActions } from './useExtractorActions';
+import { type ExtractorMenuItem } from './useExtractorActions';
 
 export type UseMessageToolbarActionsProps = {
   /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */
   graph?: Graph.ReadableGraph;
   /** Graph node id of the message (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
-  message: Mailbox.MessageLike;
+  /** Pre-built extract menu items (container-resolved from the object extractors + operation invoker). */
+  extractActions?: readonly ExtractorMenuItem[];
   onOpen?: () => void;
   onDelete?: () => void;
   onReply?: () => void;
@@ -34,7 +34,7 @@ export type UseMessageToolbarActionsProps = {
 export const useMessageActions = ({
   graph,
   nodeId,
-  message,
+  extractActions = [],
   onOpen,
   onDelete,
   onReply,
@@ -42,8 +42,6 @@ export const useMessageActions = ({
   onForward,
   onAiReply,
 }: UseMessageToolbarActionsProps) => {
-  const extractorActions = useExtractorActions(message);
-
   return useMenuBuilder(
     (get) =>
       MenuBuilder.make()
@@ -95,12 +93,15 @@ export const useMessageActions = ({
           }
 
           // Extraction actions (trips, people, …) contributed for this message.
-          if (extractorActions.length > 0) {
+          if (extractActions.length > 0) {
             builder.separator('line');
-            for (const item of extractorActions) {
+            for (const item of extractActions) {
               builder.action(
                 `extract-${item.id}`,
-                { label: item.label, icon: 'ph--magic-wand--regular' },
+                {
+                  label: item.label,
+                  icon: 'ph--magic-wand--regular',
+                },
                 item.onSelect,
               );
             }
@@ -120,6 +121,6 @@ export const useMessageActions = ({
           }
         })
         .build(),
-    [graph, nodeId, extractorActions, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete],
+    [graph, nodeId, extractActions, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete],
   );
 };
