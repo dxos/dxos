@@ -4,12 +4,12 @@
 
 import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useContext, useMemo, useRef } from 'react';
+import React, { useContext, useMemo, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { useThemeContext } from '@dxos/react-ui';
+import { IconButton, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Listbox } from '@dxos/react-ui-list';
@@ -25,6 +25,7 @@ import {
   decorateMarkdown,
   documentSlots,
   formattingKeymap,
+  scrollThreadIntoView,
 } from '@dxos/ui-editor';
 import { type Comment } from '@dxos/ui-editor/types';
 
@@ -47,6 +48,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
   const editorRef = useRef<EditorController>(null);
   const attentionAttrs = useAttentionAttributes(DOCUMENT_ID);
   const commentsAtom = useMemo(() => Atom.make<Comment[]>(commentsProp), []);
+  const [activeComment, setActiveComment] = useState<string>();
 
   const extensions = useMemo(
     () => [
@@ -62,6 +64,8 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
           registry.set(commentsAtom, [...registry.get(commentsAtom), { id: PublicKey.random().toHex(), cursor }]);
         },
         onSelect: ({ comments, selection }) => {
+          // Reflect the editor's current thread in the list selection.
+          setActiveComment(selection.current);
           log.info('update', {
             comments: comments.length,
             active: selection.current?.slice(0, 8),
@@ -112,7 +116,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
         <div className='dx-container dx-document bg-base-surface' {...attentionAttrs}>
           <Editor.View initialValue={content} selectionEnd />
         </div>
-        <CommentsList commentsAtom={commentsAtom} getView={() => editorRef.current?.view} />
+        <CommentsList commentsAtom={commentsAtom} getView={() => editorRef.current?.view} activeId={activeComment} />
       </Editor.Content>
     </Editor.Root>
   );
@@ -120,29 +124,60 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
 
 /**
  * Renders the current comments (reactively from the atom), labelling each with the text it anchors to
- * (resolved from its relative cursor against the live editor state).
+ * (resolved from its relative cursor against the live editor state). Selecting a row scrolls to and
+ * activates that thread in the editor; the delete button removes it.
  */
 const CommentsList = ({
   commentsAtom,
   getView,
+  activeId,
 }: {
-  commentsAtom: Atom.Atom<Comment[]>;
+  commentsAtom: Atom.Writable<Comment[]>;
   getView: () => EditorController['view'] | undefined;
+  activeId?: string;
 }) => {
+  const registry = useContext(RegistryContext);
   const items = useAtomValue(commentsAtom);
+
   const label = (comment: Comment): string => {
     const view = getView();
     const range = view && comment.cursor ? Cursor.getRangeFromCursor(view.state, comment.cursor) : undefined;
     return (range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id;
   };
 
+  const handleSelect = (id: string) => {
+    const view = getView();
+    if (view) {
+      scrollThreadIntoView(view, id);
+      view.focus();
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    registry.set(
+      commentsAtom,
+      registry.get(commentsAtom).filter((comment) => comment.id !== id),
+    );
+  };
+
   return (
     <div className='border-bs border-subdued-separator overflow-y-auto max-bs-48'>
-      <Listbox.Root>
+      <Listbox.Root value={activeId} onValueChange={handleSelect}>
         <Listbox.Content aria-label='Comments' classNames='p-1'>
           {items.map((comment) => (
-            <Listbox.Item key={comment.id} id={comment.id}>
+            <Listbox.Item key={comment.id} id={comment.id} classNames='flex items-center gap-2'>
               <Listbox.ItemLabel>{label(comment)}</Listbox.ItemLabel>
+              <IconButton
+                variant='ghost'
+                iconOnly
+                icon='ph--x--regular'
+                label='Delete comment'
+                onClick={(event) => {
+                  // Keep the row from selecting when the delete button is pressed.
+                  event.stopPropagation();
+                  handleDelete(comment.id);
+                }}
+              />
             </Listbox.Item>
           ))}
         </Listbox.Content>
