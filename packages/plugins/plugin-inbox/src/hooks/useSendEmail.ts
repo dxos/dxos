@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { type Capabilities } from '@dxos/app-framework';
 import { Operation, ServiceResolver } from '@dxos/compute';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -28,9 +28,11 @@ import { findBindingForTarget } from '../util';
  * reactively. Success/failure of the send itself is surfaced by the invocation's `notify` option (the
  * built-in toast mechanism); post-send bookkeeping failures are logged, not toasted.
  */
-export const useSendEmail = (message: Message.Message): NonNullable<EditMessageProps['onSend']> => {
+export const useSendEmail = (
+  runtime: Capabilities.ProcessManagerRuntime | undefined,
+  message: Message.Message,
+): NonNullable<EditMessageProps['onSend']> => {
   const db = Obj.getDatabase(message);
-  const runtime = useProcessManagerRuntime();
   const spaceId = db?.spaceId;
 
   // Resolve the live mailbox from the draft's `properties.mailbox` uri (send routing + sent-tagging).
@@ -42,6 +44,9 @@ export const useSendEmail = (message: Message.Message): NonNullable<EditMessageP
 
   return useCallback<NonNullable<EditMessageProps['onSend']>>(
     async (draft) => {
+      if (!runtime) {
+        throw new TypeError('Process runtime not available.');
+      }
       if (!spaceId) {
         throw new TypeError('Space not available.');
       }

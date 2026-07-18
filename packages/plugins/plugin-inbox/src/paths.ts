@@ -18,7 +18,6 @@ const Segments = {
   allMail: 'all-mail',
   sent: 'sent',
   drafts: 'drafts',
-  topics: 'topics',
   subscriptions: 'subscriptions',
 } as const;
 
@@ -41,9 +40,6 @@ export const getSentId = (): string => Segments.sent;
 
 /** Canonical segment ID for the drafts child node. */
 export const getDraftsId = (): string => Segments.drafts;
-
-/** Canonical segment ID for the topics child node. */
-export const getTopicsId = (): string => Segments.topics;
 
 /** Canonical segment ID for the subscriptions child node. */
 export const getSubscriptionsId = (): string => Segments.subscriptions;

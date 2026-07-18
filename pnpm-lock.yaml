@@ -5907,6 +5907,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -8588,6 +8591,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9299,6 +9308,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/react-ui-rdf':
         specifier: workspace:*
         version: link:../../ui/react-ui-rdf
@@ -9321,6 +9333,15 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -9372,6 +9393,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9723,6 +9747,15 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-adapter-client':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-adapter-client
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9847,6 +9880,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9977,6 +10016,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -12260,6 +12305,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -12332,6 +12380,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -12884,6 +12935,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -14955,6 +15012,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -15981,6 +16044,12 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -17069,6 +17138,12 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -17251,6 +17326,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -20259,6 +20340,9 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-assistant
       '@dxos/plugin-brain':
         specifier: workspace:*
         version: link:../../plugins/plugin-brain

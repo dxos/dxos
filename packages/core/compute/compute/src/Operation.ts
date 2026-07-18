@@ -521,6 +521,12 @@ export interface InvokeOptions {
    * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
    */
   tracing?: unknown;
+
+  /**
+   * Specifies the runtime environment for the operation.
+   * By default, the operation is executed on the local runtime.
+   */
+  on?: 'edge' | 'local';
 }
 
 /**

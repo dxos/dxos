@@ -8,9 +8,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
@@ -43,7 +43,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
       if (!space || !feed || blocks.length === 0) {
         return;
       }
-      const sender = identity ? { identityDid: identity.did, name: identity.profile?.displayName } : {};
+      const sender = identity ? { identityDid: identity.did, name: identity.displayName } : {};
       let message = Obj.make(Message.Message, {
         sender,
         created: new Date().toISOString(),

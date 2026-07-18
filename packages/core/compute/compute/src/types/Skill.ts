@@ -15,8 +15,8 @@ import { BaseError } from '@dxos/errors';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Text } from '@dxos/schema';
 
-import * as McpServer from './McpServer';
-import * as Operation from './Operation';
+import * as McpServer from '../McpServer';
+import * as Operation from '../Operation';
 import * as Template from './Template';
 import * as Trigger from './Trigger';
 

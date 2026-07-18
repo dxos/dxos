@@ -212,6 +212,7 @@ type MessageProps = {
   text: string;
   date: string;
   from?: string;
+  to?: string;
   email?: string;
   subject: string;
   snippet: string;
@@ -267,11 +268,12 @@ export const getMessageProps = (
   const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
+  const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? getMessageBodyText(message);
   const hue = toHue(hashString(from));
-  return { id, text, date, from, email, subject, snippet, hue };
+  return { id, text, date, from, to, email, subject, snippet, hue };
 };
 
 /**

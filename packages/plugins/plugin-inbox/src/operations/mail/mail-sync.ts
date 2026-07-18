@@ -208,8 +208,20 @@ export const runMailSync = (
     const now = options.now ?? new Date();
     const maxMessages = options.maxMessages ?? provider.config.maxItemsPerRun ?? Number.POSITIVE_INFINITY;
 
+    log.info('mail sync starting', {
+      provider: provider.name,
+      binding: options.binding.uri,
+      maxMessages,
+      now: now.toISOString(),
+    });
+
     const binding = yield* Database.load(options.binding);
     if (!Cursor.isExternal(binding)) {
+      log.info('mail sync skipped: binding is not external', {
+        provider: provider.name,
+        typename: Obj.getTypename(binding),
+        kind: binding.spec?.kind,
+      });
       return { newMessages: 0 };
     }
     const mailbox = yield* Database.load(binding.spec.target);
@@ -222,6 +234,7 @@ export const runMailSync = (
     }
     const db = Obj.getDatabase(mailbox);
     if (!db) {
+      log.warn('mail sync skipped: no database');
       return { newMessages: 0 };
     }
 
@@ -238,9 +251,26 @@ export const runMailSync = (
       mailbox: Obj.getURI(mailbox),
       maxKey,
       minKey,
+      horizon: horizon.toISOString(),
+      syncBackDays: targetOptions.syncBackDays,
+      filter: targetOptions.filter,
+      maxMessages,
       forward: formatWindow(windows.forward),
       backward: formatWindow(windows.backward),
     });
+
+    // A run with neither window resolves to no enumeration at all: the cursor already spans the full
+    // horizon (nothing older to backfill) and there is nothing newer than `maxKey`. On edge this is the
+    // most common cause of a `{ newMessages: 0 }` despite mail existing — surface it explicitly.
+    if (!windows.forward && !windows.backward) {
+      log.warn('mail sync: no windows to scan — cursor already covers the full range', {
+        provider: provider.name,
+        mailbox: Obj.getURI(mailbox),
+        maxKey,
+        minKey,
+        horizon: horizon.toISOString(),
+      });
+    }
 
     const feed = yield* Database.load(mailbox.feed);
 
@@ -258,8 +288,10 @@ export const runMailSync = (
     // Session/target discovery + the provider's label/folder→tag map; undefined skips the run.
     const source = yield* provider.prepare({ db, binding, mailbox, now, token, maxMessages });
     if (!source) {
+      log.warn('mail sync skipped: no source', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
       return { newMessages: 0 };
     }
+    log.info('mail sync source prepared', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
@@ -306,6 +338,7 @@ export const runMailSync = (
     const addToTotal = (count: number) => {
       totalToRetrieve += count;
       reportStatus({ total: totalToRetrieve });
+      log('mail sync enumerated page', { provider: provider.name, page: count, totalToRetrieve });
     };
 
     const threads = new Set<string>();
@@ -475,6 +508,28 @@ export const runMailSync = (
     // Flush indexes once at end of run so cross-run dedup / contact resolution observe this run's writes
     // (per-page commits no longer flush — see `Cursor.commit`).
     yield* Database.flush({ indexes: true });
+
+    // Full funnel, each stage narrower than the last, logged unconditionally (even on cancel/failure) so a
+    // zero result can be attributed: `enumerated` 0 → empty windows / provider returned no ids; `taken` 0
+    // with `enumerated` > 0 → everything dedup-dropped (cursor already has these); `processed` 0 with
+    // `taken` > 0 → every candidate dropped in decode/map (no body, filtered sender, unmappable);
+    // `newMessages` 0 with `processed` > 0 → commit dropped them (e.g. draft reconciliation).
+    log.info('mail sync funnel', {
+      provider: provider.name,
+      mailbox: Obj.getURI(mailbox),
+      enumerated: totalToRetrieve,
+      retrieved: progressCurrent,
+      taken,
+      processed,
+      newMessages: stats.newMessages,
+      maxMessages,
+      coverage,
+      threads: threads.size,
+      senders: senders.size,
+      attachments: attachmentCount,
+      extent,
+      aborted: controller.signal.aborted,
+    });
 
     // Final stats publish (disabled — see the TODO above) recorded the committed `newMessages` count and
     // the run's end time / duration after the last mid-stream snapshot.

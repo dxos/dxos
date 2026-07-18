@@ -9,8 +9,8 @@ import { describe, expect, test } from 'vitest';
 import { registryLayer } from '@dxos/echo-client';
 import { DXN } from '@dxos/keys';
 
-import { FunctionNotFoundError } from './errors';
-import * as Operation from './Operation';
+import { FunctionNotFoundError } from '../errors';
+import * as Operation from '../Operation';
 import * as Template from './Template';
 
 describe('Template', () => {

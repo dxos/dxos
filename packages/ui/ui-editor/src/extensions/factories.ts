@@ -25,7 +25,6 @@ import { generateName } from '@dxos/display-name';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { type ChromaticPalette, type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
@@ -265,11 +264,24 @@ export const createThemeExtensions = ({
 // Data
 //
 
+/**
+ * Minimal identity shape consumed by awareness. Kept structural so both the
+ * client identity and the `@dxos/halo` `Identity.Info` can be passed without
+ * this foundational editor package depending on either.
+ */
+export type DataExtensionsIdentity = {
+  /** Hex-encoded identity key, used as the awareness peer id. */
+  identityKey?: string;
+  displayName?: string;
+  /** Free-form profile metadata (e.g. `hue`). */
+  data?: Record<string, unknown>;
+};
+
 export type DataExtensionsProps<T> = {
   id: string;
   text?: Doc.Accessor<T>;
   messenger?: Messenger;
-  identity?: Identity | null;
+  identity?: DataExtensionsIdentity | null;
 };
 
 export const createDataExtensions = <T>({ id, text, messenger, identity }: DataExtensionsProps<T>): Extension[] => {
@@ -278,19 +290,19 @@ export const createDataExtensions = <T>({ id, text, messenger, identity }: DataE
     extensions.push(automerge(text));
   }
 
-  if (messenger && identity) {
-    const peerId = identity?.identityKey.toHex();
-    const hue = (identity?.profile?.data?.hue as ChromaticPalette | undefined) ?? hexToHue(peerId ?? '0');
+  if (messenger && identity?.identityKey) {
+    const peerId = identity.identityKey;
+    const hue = (identity.data?.hue as ChromaticPalette | undefined) ?? hexToHue(peerId);
     extensions.push(
       awareness(
         new SpaceAwarenessProvider({
           messenger,
           channel: `awareness.${id}`,
-          peerId: identity.identityKey.toHex(),
+          peerId,
           info: {
             darkColor: `var(--color-${hue}-border)`,
             lightColor: `var(--color-${hue}-border)`,
-            displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
+            displayName: identity.displayName ?? generateName(peerId),
           },
         }),
       ),

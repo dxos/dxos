@@ -9,6 +9,7 @@ import { Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
+import { type ConnectorEntry } from '@dxos/plugin-connector';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
@@ -20,13 +21,19 @@ import { createSyncRoutine, findBindingForTarget } from '../util';
  * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. Creation
  * wires the trigger to the bound connector's own `sync` operation (the same one
  * `ConnectorOperation.SyncConnection` invokes directly) via {@link createSyncRoutine}.
+ *
+ * `connectors` (the registered `Connector` capability list) is resolved by the calling container and
+ * threaded down to `useConnectorEntry` — components and the hooks they use must not resolve
+ * capabilities themselves.
  */
 export const useSyncTrigger = ({
   db,
   subject,
+  connectors = [],
 }: {
   db: Database.Database | undefined;
   subject: Obj.Unknown;
+  connectors?: readonly ConnectorEntry[][];
 }): {
   syncEnabled: boolean | undefined;
   syncTrigger: Trigger.Trigger | undefined;
@@ -44,7 +51,7 @@ export const useSyncTrigger = ({
       .debugLabel('plugin-inbox.useSyncTrigger'),
   );
   const { connection } = useTargetConnection(subject);
-  const connector = useConnectorEntry(connection);
+  const connector = useConnectorEntry(connection, connectors);
 
   const syncTrigger = useMemo(() => triggers.find((trigger) => trigger.spec?.kind === 'timer'), [triggers]);
 

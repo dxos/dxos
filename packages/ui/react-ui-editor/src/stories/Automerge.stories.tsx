@@ -12,12 +12,17 @@ import { Doc } from '@dxos/echo-doc';
 import { TestSchema } from '@dxos/echo/testing';
 import { type Messenger } from '@dxos/protocols';
 import { useQuery, useResolveRef, useSpace } from '@dxos/react-client/echo';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import {
+  type DataExtensionsIdentity,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
@@ -29,7 +34,7 @@ const initialContent = ['# Hello world!', 'Hello Automerge', ''].join('\n\n');
 type EditorProps = ThemedClassName<{
   source: Doc.Accessor;
   messenger?: Messenger;
-  identity?: Identity;
+  identity?: DataExtensionsIdentity;
   autoFocus?: boolean;
 }>;
 
@@ -98,7 +103,15 @@ const EchoStory = () => {
       </pre>
       {identity && source ? (
         <div className='p-2 flex grow overflow-hidden'>
-          <Editor identity={identity} messenger={space} source={source} />
+          <Editor
+            identity={{
+              identityKey: identity.identityKey.toHex(),
+              displayName: identity.profile?.displayName,
+              data: identity.profile?.data,
+            }}
+            messenger={space}
+            source={source}
+          />
         </div>
       ) : (
         <Loading data={{ identity: !!identity, content: !!content }} />
