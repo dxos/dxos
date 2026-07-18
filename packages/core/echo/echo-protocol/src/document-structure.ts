@@ -91,7 +91,10 @@ export type SpaceBranchRegistry = {
 export type BranchRecord = {
   /** Subtree member object id -> automerge doc url holding that member on this branch. */
   members: { [objectId: string]: string | RawString };
-  /** Heads of the root's main doc at fork time (provenance / merge-base hint). */
+  /**
+   * The root object's main-doc heads at fork time. Provenance only — currently written but never
+   * read; the merge relies on shared automerge ancestry, not this field.
+   */
   baseHeads?: string[];
   /** Unix ms timestamp at branch creation. */
   createdAt?: number;

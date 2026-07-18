@@ -15,7 +15,8 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const callManager = new CallManager(client, registry);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
+    const callManager = new CallManager(client, registry, haloIdentity);
     yield* Effect.tryPromise(() => callManager.open());
 
     return Capability.contributes(CallsCapabilities.Manager, callManager, () =>

@@ -41,11 +41,11 @@ How the pieces fit, end to end:
    phantom objects); every path that enumerates space documents (replication, export, import remap)
    also walks the registry.
 
-6. **Selection is device-local; edits are per-surface.** `switchBranch` rebinds a subtree's live
+6. **Selection is device-local; edits target an instance.** `switchBranch` rebinds a subtree's live
    cores to a branch's documents for this device only (persisted via the injected `BranchStore`,
-   never synced). Independently, `db.branch(obj, name)` hands a caller a disposable **binding** whose
-   reads/writes target one branch document only — so an agent can edit a draft while the user stays
-   on main, with multiple bindings coexisting.
+   never synced). Independently, `db.branch(obj, name)` hands a caller a disposable **independent
+   instance** whose reads/writes target one branch document only — so an agent can edit a draft while
+   the user stays on main, with multiple instances coexisting.
 
 The rest of this document details each layer.
 
@@ -65,7 +65,26 @@ Two facts drive the design:
   document that shares ancestry with the original. Hence branch docs are separate, registered
   outside `links`.
 
+  > NOTE: An automerge document is a single converged state — every change applied to it is
+  > immediately part of that one doc's history. Two timelines of the same object inside one document
+  > would therefore converge, never diverge; there is nowhere to hold a draft that is edited in
+  > isolation and merged on demand. Giving each branch its own document (a history-preserving
+  > `A.save`/`A.load` fork) is what lets the two evolve independently and later reconcile as a true
+  > `A.merge` 3-way merge over shared ancestry.
+
 ## Time travel
+
+> NOTE (direction): the pin described below (`setTimeTravel` on the live object) is being retired in
+> favour of a functional `Obj.getVersion(obj, heads) → Snapshot`. A pin time-travels the object
+> _everywhere in the app at once_ — viewing an old revision in the editor would also rewind the doc's
+> title in the sidebar, tabs, and cross-document backlinks, which is not what a preview should do. A
+> snapshot scopes the historical view to the surface that asks for it; the markdown editor already
+> renders a detached snapshot for exactly this reason (binding CodeMirror to the pinned doc broke).
+> The cross-surface hand-off needs no pin — it already flows through session state:
+> History companion sets the selected version → shared `VersioningState` selection atom → the article
+> re-renders `Obj.getVersion(...)`. Retiring the pin also removes the dual notification channels and
+> `latestOnly`/`withLatestRead`, which exist only to stop the global pin from leaking historical data
+> into side-effecting subscribers.
 
 ### ObjectCore
 
@@ -111,6 +130,22 @@ scrub a subtree.
 
 ## Branching
 
+> NOTE (two models, both intentional): branching exposes a device-global **checkout** and an
+> **independent instance**, for genuinely different needs — kept, but named explicitly:
+>
+> - `switchBranch(root, name)` (checkout) — rebinds the **single shared canonical instance** (and its
+>   subtree) to the branch document; device-global, persisted via `BranchStore`. For when the user
+>   moves their whole view to a branch.
+> - `db.branch(obj, name)` (independent instance) — mints a **new object instance** bound to the branch
+>   document; ephemeral, `dispose()`d, leaves the device selection untouched. For when an agent edits a
+>   draft while the user stays on main, or two panes show two branches at once.
+>
+> The branch a given instance is on is read with one accessor, `Obj.getBranch(obj)`: the device-current
+> branch for the canonical object, the bound branch for a `db.branch()` instance — subsuming today's
+> `getCurrentBranch(objectId)` and the `BranchBinding.branch` field. (`db.branch()` still returns a
+> `dispose` handle: a listener that can't live on the object.) The precise term is "independent
+> instance"; "per-surface" in earlier drafts is UI jargon and misleading at this layer.
+
 ### The registry (protocol)
 
 `DatabaseDirectory.branches` (`SpaceBranchRegistry`) is a synced map on the space root:
@@ -118,7 +153,7 @@ scrub a subtree.
 ```ts
 branches[rootObjectId][branchName] = {
   members: { [objectId]: docUrl },  // one branch doc per subtree member
-  baseHeads?: string[],             // root's heads at fork time (provenance)
+  baseHeads?: string[],             // root object's doc heads at fork time (provenance only; unused)
   createdAt?: number,
 }
 ```
@@ -184,7 +219,7 @@ Which branch a device currently views an object on must survive a reload but nev
   the deployed app injects a `localStorage`-backed store in `space-proxy`; tests use a per-peer store
   that survives `reload()`.
 
-### BranchBinding (writable, per-surface)
+### BranchBinding (writable, independent instance)
 
 `db.branch(obj, name): BranchBinding` returns a caller-owned, ephemeral, writable binding to one
 branch of one object:
@@ -253,11 +288,11 @@ Full design, plugin/timeline plumbing, and estimate:
 
 ## Design notes & constraints
 
-- **Two distinct branch-selection mechanisms.** The product-facing per-surface flow (`db.branch()`
-  bindings) never globally switches the canonical object — each plank/agent binds independently, so
-  other surfaces are undisturbed. Separately, `switchBranch` IS a device-global rebind: it rebinds the
-  canonical cores for this device (persisted via `BranchStore`). The two coexist; the versioning UI
-  uses per-surface bindings and leaves the device on `main`.
+- **Two distinct branch-selection mechanisms.** The independent-instance flow (`db.branch()`) never
+  globally switches the canonical object — each plank/agent binds its own instance, so other instances
+  are undisturbed. Separately, `switchBranch` IS a device-global rebind: it rebinds the canonical cores
+  for this device (persisted via `BranchStore`). The two coexist (see the NOTE under Branching); the
+  versioning UI uses independent instances and leaves the device on `main`.
 - **Registry vs. records.** The space-root registry owns the replication-critical facts (doc urls,
   membership); product metadata (label, status, creator, anchor) lives in `@dxos/versioning`
   `Branch`/`Version` records keyed by the registry branch name.

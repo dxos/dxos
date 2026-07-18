@@ -9,6 +9,7 @@ Story variant that wires Gmail sync to an hourly cron trigger and adds a Trigger
 ### Tasks
 
 - [x] **TriggersModule** — list space triggers, dispatcher status, invoke-now for cron triggers.
-- [x] **SyncTriggerRunner** — create hourly cron trigger when a Gmail sync binding exists.
 - [x] **CronSync story** — add `RoutinePlugin`, extend types, new layout with `Module.Triggers`.
+- [x] **Triggers from integration only** — dropped the manual "Create trigger" button and the
+      `SyncTriggerRunner`; triggers are now created solely by the connector sync integration.
 - [x] **Verify** — `moon run stories-inbox:compile` passes.

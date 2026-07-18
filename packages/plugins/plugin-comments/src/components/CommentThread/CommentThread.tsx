@@ -6,8 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { getSpace, useMembers } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useIdentity, useMembers } from '@dxos/halo-react';
+import { getSpace } from '@dxos/react-client/echo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Message as MessageComponent, Thread, type ThreadComponents } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
@@ -63,7 +63,7 @@ export const CommentThread = ({
   const { t } = useTranslation(meta.profile.key);
   const identity = useIdentity();
   const space = getSpace(anchor);
-  const members = useMembers(space?.key);
+  const members = useMembers(space?.id);
   const detached = !anchor.anchor;
   const source = useRelationSource(anchor);
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
@@ -78,10 +78,10 @@ export const CommentThread = ({
     (message: Message.Message) => {
       const senderIdentity = members.find(
         (member) =>
-          (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
-          (message.sender.identityKey && member.identity.identityKey.toHex() === message.sender.identityKey),
+          (message.sender.identityDid && member.did === message.sender.identityDid) ||
+          (message.sender.identityKey && member.identityKey === message.sender.identityKey),
       );
-      return getMessageMetadata(Obj.getURI(message), senderIdentity?.identity, message.sender);
+      return getMessageMetadata(Obj.getURI(message), senderIdentity, message.sender);
     },
     [members],
   );

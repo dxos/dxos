@@ -3,3 +3,5 @@ language: typescript
 tags:
   - ts-vite-build
   - ts-test
+  - ts-test-storybook
+  - storybook

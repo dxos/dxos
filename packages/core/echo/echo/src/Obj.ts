@@ -381,8 +381,9 @@ export type Mutable<T> = internal.Mutable<T>;
  *
  * Note: Only accepts objects. Use `Relation.update` for relations.
  */
-export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): void => {
+export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): T => {
   internal.change(obj, callback);
+  return obj;
 };
 
 /**

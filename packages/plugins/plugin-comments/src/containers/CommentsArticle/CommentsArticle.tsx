@@ -16,10 +16,10 @@ import {
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { useIdentity } from '@dxos/halo-react';
 import { Markdown } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';

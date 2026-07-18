@@ -4,23 +4,26 @@
 
 import { useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { type Capabilities } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { InboxCapabilities, type Mailbox } from '../../types';
+import { type InboxCapabilities, type Mailbox } from '../../types';
 import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions';
 
 /**
  * Returns a menu item per injected {@link InboxCapabilities.MailboxAction}. Selecting one invokes the
  * contributed operation over the mailbox, scoped to its space — the injection path other plugins use
  * to add mailbox toolbar actions (e.g. plugin-brain's `Analyze`) without depending on the toolbar.
+ *
+ * `actions` and `invoker` are resolved by the container (this hook lives under `components/`, which
+ * must not call capability hooks) — see the `MailboxArticle` wiring.
  */
-export const useInjectedMailboxActions = (mailbox: Mailbox.Mailbox): MailboxExtractorMenuItem[] => {
-  const actions = useCapabilities(InboxCapabilities.MailboxAction);
-  const [invoker] = useCapabilities(Capabilities.OperationInvoker);
-
+export const useInjectedMailboxActions = (
+  mailbox: Mailbox.Mailbox,
+  actions: readonly InboxCapabilities.MailboxAction[] = [],
+  invoker?: Capabilities.OperationInvoker,
+): MailboxExtractorMenuItem[] => {
   return useMemo(() => {
     if (!invoker) {
       return [];
