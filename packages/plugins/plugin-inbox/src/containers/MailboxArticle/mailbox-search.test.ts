@@ -8,7 +8,7 @@ import { Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { EntityId } from '@dxos/keys';
 
-import { buildDraftFilter, buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
+import { buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
 
 describe('buildMailboxSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
@@ -45,13 +45,6 @@ describe('getSearchText', () => {
 
   test('undefined filter returns undefined', () => {
     expect(getSearchText(undefined)).toBeUndefined();
-  });
-});
-
-describe('buildDraftFilter', () => {
-  test('selects messages scoped to this mailbox by properties.mailbox', () => {
-    const filter = buildDraftFilter('echo:mailbox-1');
-    expect(filter.ast.type).toBe('object');
   });
 });
 

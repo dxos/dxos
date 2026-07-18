@@ -152,8 +152,12 @@ export const orderThreadItems = (messages: Message.Message[]): Message.Message[]
  * Drops a draft superseded by its already-synced sent copy (matched via `properties.sentMessageId`
  * against the synced messages' foreign-key ids). Synced messages (i.e. not drafts) always pass, as do
  * this mailbox's still-unsent drafts; a draft belonging to a different mailbox is dropped outright.
- * Shared by the mailbox list (drafts attached to a thread) and the `mailboxMessage` companion connector
- * so both apply the same rule.
+ *
+ * Used by the `mailboxMessage` companion connector, which assembles a thread by `threadId` across both
+ * the feed and the space db and so can see a draft and its just-synced copy at once (see the connector's
+ * comment for why that window exists). `MailboxArticle`'s own list doesn't need this: it resolves this
+ * mailbox's open drafts via the canonical 'draft' system tag, which `useSendEmail` removes at send time
+ * — immediately, not deferred to sync — so a sent draft drops out of that resolution on its own.
  */
 export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
   const syncedIds = new Set(

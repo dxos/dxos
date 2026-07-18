@@ -27,7 +27,6 @@ import { meta } from '#meta';
 import { Calendar, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import {
-  MAILBOX_DRAFTS_TYPE,
   MAILBOX_SUBSCRIPTIONS_NODE_DATA,
   MAILBOX_SUBSCRIPTIONS_TYPE,
   MAILBOX_TOPICS_NODE_DATA,
@@ -235,14 +234,14 @@ export default Capability.makeModule(
                   }),
                   Node.make({
                     id: getDraftsId(),
-                    type: MAILBOX_DRAFTS_TYPE,
+                    type: FILTER_TYPE,
                     data: mailbox,
                     properties: {
                       label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
                       iconHue: 'rose',
-                      draftsOnly: true,
-                      mailbox,
+                      filter: '',
+                      systemTag: 'draft' satisfies SystemTags.SystemTagId,
                     },
                   }),
                   Node.make({
@@ -324,12 +323,14 @@ export default Capability.makeModule(
         id: 'mailboxDraftsActions',
         // The companion (message thread) comes from `mailboxMessage` below — every node under a mailbox
         // carries `data: mailbox`, drafts included. This extension only contributes the "create draft"
-        // action, scoped to the drafts node.
-        match: NodeMatcher.whenNodeType(MAILBOX_DRAFTS_TYPE),
-        actions: (node) => {
-          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
-          if (!mailbox || !db) {
+        // action, scoped to the Drafts view (the `draft` systemTag filter node).
+        match: (node) =>
+          node.properties.systemTag === 'draft' && Mailbox.instanceOf(node.data)
+            ? Option.some(node.data)
+            : Option.none(),
+        actions: (mailbox) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
             return Effect.succeed([]);
           }
 

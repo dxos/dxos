@@ -8,10 +8,11 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
+import { Tagging } from '@dxos/schema';
 import { DraftMessage } from '@dxos/types';
 
 import { getMailboxMessagePath } from '../paths';
-import { InboxOperation } from '../types';
+import { InboxOperation, Mailbox, SystemTags } from '../types';
 import { createDraftMessage } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
@@ -23,6 +24,14 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
         object: draft,
         target: db,
       });
+
+      // Tag with the canonical 'draft' system tag so the Drafts view (a plain systemTag filter, like
+      // Inbox/Sent) picks it up; `useSendEmail` removes this tag at send time.
+      if (Mailbox.instanceOf(mailbox)) {
+        const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, 'draft'));
+        const index = mailbox.tags.target ?? (yield* Effect.promise(() => mailbox.tags.load()));
+        Tagging.set(draft, Obj.getURI(tag).toString(), { index });
+      }
 
       // Same linked path as feed messages; feed-object resolver resolves drafts from the DB.
       const mailboxId = mailbox ? (Obj.isObject(mailbox) ? mailbox.id : undefined) : undefined;

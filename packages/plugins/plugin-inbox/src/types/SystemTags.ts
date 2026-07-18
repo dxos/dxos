@@ -14,6 +14,10 @@ import { Tagging, TagIndex } from '@dxos/schema';
  * locally-toggled star resolve to the *same* {@link Tag} object (likewise inbox/sent/etc.). Custom user
  * labels/folders keep their own provider-scoped tags (`findOrCreateGmailTag`/`findOrCreateJmapTag`).
  *
+ * `draft` is the one entry with no provider mapping: it's applied and removed locally, at compose and
+ * send time (`DraftEmailAndOpen`, `useSendEmail`), never synced — providers' own draft signals (Gmail's
+ * `DRAFT` label, JMAP's `drafts` role) are deliberately dropped rather than mapped onto it.
+ *
  * The source is space-general (`org.dxos.tag`), not mail-specific, so the same tag identities apply to
  * any object in the space.
  *
@@ -27,6 +31,7 @@ export const SystemTag = {
   inbox: { id: 'inbox', label: 'Inbox', hue: 'blue' },
   important: { id: 'important', label: 'Important', hue: 'orange' },
   sent: { id: 'sent', label: 'Sent', hue: 'green' },
+  draft: { id: 'draft', label: 'Draft', hue: 'yellow' },
   personal: { id: 'personal', label: 'Personal', hue: 'neutral' },
   social: { id: 'social', label: 'Social', hue: 'cyan' },
   promotions: { id: 'promotions', label: 'Promotions', hue: 'emerald' },

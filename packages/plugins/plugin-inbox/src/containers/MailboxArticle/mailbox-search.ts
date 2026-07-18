@@ -49,22 +49,16 @@ export const getSearchText = (filter: Filter.Any | undefined): string | undefine
 };
 
 /**
- * Selects a mailbox's draft messages: space-db `Message`s carrying `properties.mailbox` set to this
- * mailbox's URI. Callers should still guard with `DraftMessage.belongsTo` — this property match is
- * structural, not the full `DraftMessage.instanceOf` validity check.
- */
-export const buildDraftFilter = (mailboxUri: string): Filter.Any =>
-  Filter.type(Message.Message, { properties: { mailbox: mailboxUri } });
-
-/**
- * Selects feed messages carrying a system tag (e.g. the canonical Inbox/Sent tag), given the member
- * ids already resolved from the mailbox's `TagIndex` (see `TagIndex.bind(...).objects(uri)`).
+ * Selects messages carrying a system tag (e.g. the canonical Inbox/Sent/Draft tag), given the member
+ * ids already resolved from the mailbox's `TagIndex` (see `TagIndex.bind(...).objects(uri)`). Used for
+ * both feed-scoped views (Inbox/Sent) and the space-scoped Drafts view — the scope is applied by the
+ * caller's `.from(...)`, this selection only constrains by id.
  *
- * A bare `Filter.tag` cannot express this: it matches an object's own `meta.tags`, but feed/queue
- * messages are immutable and can't carry that — their tag membership lives entirely in the mailbox's
- * sibling `TagIndex` object instead (see `@dxos/schema`'s `TagIndex`). So membership has to be resolved
- * to concrete ids first and selected by id, not by a `Filter.tag` predicate. `Filter.id()` on an empty
- * array selects nothing, which is also the correct pre-sync (no ids yet) behavior.
+ * A bare `Filter.tag` cannot express this: it matches an object's own `meta.tags`, but neither feed
+ * messages (immutable) nor this mechanism's mutable drafts carry that — membership lives entirely in
+ * the mailbox's sibling `TagIndex` object instead (see `@dxos/schema`'s `TagIndex`). So membership has
+ * to be resolved to concrete ids first and selected by id, not by a `Filter.tag` predicate. `Filter.id()`
+ * on an empty array selects nothing, which is also the correct pre-sync/no-drafts-yet behavior.
  */
 export const buildSystemTagSelection = (ids: readonly EntityId[]): Filter.Any =>
   ids.length === 0 ? Filter.nothing() : Filter.and(Filter.type(Message.Message), Filter.id(...ids));

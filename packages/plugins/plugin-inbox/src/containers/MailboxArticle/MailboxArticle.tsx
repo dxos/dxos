@@ -34,7 +34,7 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { DraftMessage, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import {
   MessageStack,
@@ -53,9 +53,9 @@ import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
-import { dedupeSupersededDrafts, messageMatchesQuery, sortByCreated } from '../../util';
+import { messageMatchesQuery, sortByCreated } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
-import { buildDraftFilter, buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
+import { buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -70,19 +70,14 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
     filter?: string;
     /**
      * A canonical system tag (see `SystemTags.SystemTag`) this view resolves by identity rather than by
-     * parsing `filter` as a tag-label string — used by the pre-seeded Inbox/Sent views so they stay
-     * correct across providers/locales and don't depend on a tag's label text. `filter` still seeds the
-     * editable filter box (e.g. `'#inbox'`) for display and further narrowing; once the user edits it
-     * away from that seed, the box's own text/tag parsing takes over as normal.
+     * parsing `filter` as a tag-label string — used by the pre-seeded Inbox/Sent/Drafts views so they
+     * stay correct regardless of a tag's label text (and, for Inbox/Sent, across providers/locales).
+     * `filter` still seeds the editable filter box (e.g. `'#inbox'`) for display and further narrowing;
+     * once the user edits it away from that seed, the box's own text/tag parsing takes over as normal.
+     * The Drafts view (`systemTag === 'draft'`) queries the space db instead of the feed and hides the
+     * filter box entirely (see `isDraftsView` below) rather than support that fallback.
      */
     systemTag?: SystemTags.SystemTagId;
-    /**
-     * Drives the mailbox's Drafts view: the list is driven by this mailbox's drafts directly (grouped
-     * by thread; a draft with no thread is its own row) instead of the feed, and the filter editor is
-     * hidden. Otherwise, this mailbox's drafts are attached to feed threads already present in the list
-     * (see the `items` memo below) — a draft never appears as a standalone row outside this view.
-     */
-    draftsOnly?: boolean;
   }
 >;
 
@@ -90,9 +85,11 @@ export const MailboxArticle = ({
   subject: mailbox,
   filter: filterProp,
   systemTag,
-  draftsOnly = false,
   attendableId,
 }: MailboxArticleProps) => {
+  // Drafts is a systemTag view like Inbox/Sent, but its messages live in the space db, not the feed,
+  // and (see `useMailboxActions` below) it has no free-text filter box.
+  const isDraftsView = systemTag === 'draft';
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(InboxCapabilities.Settings);
@@ -128,36 +125,37 @@ export const MailboxArticle = ({
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
 
-  // Resolves this view's canonical system tag (e.g. Inbox/Sent) by its stable foreign key, not by label
-  // text (see `buildSystemTagSelection`) — `undefined` until the provider sync has created it.
+  // Resolves this view's canonical system tag (e.g. Inbox/Sent/Draft) by its stable foreign key, not by
+  // label text (see `buildSystemTagSelection`) — `undefined` until the provider sync (or, for `draft`,
+  // the first locally-created draft) has created it.
   const systemTagObj = useQuery(
     db,
     systemTag ? Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(systemTag)]) : Filter.nothing(),
   )[0];
   const systemTagUri = systemTagObj && Obj.getURI(systemTagObj).toString();
-  // A bare `Filter.tag` query can't see this: feed messages are immutable and carry no `meta.tags` of
-  // their own, so membership lives entirely in the mailbox's `TagIndex` sibling object. Resolve it to
+  // This mailbox's currently-open drafts are resolved by the canonical 'draft' tag too — removed by
+  // `useSendEmail` the instant a draft sends, well before the sync-side `db.remove` that later deletes
+  // the object. Needed on every view, not just the Drafts view: a draft reply is attached to its thread
+  // wherever that thread is already shown (see the `items` memo). Resolved separately from `systemTag`
+  // above (even though they're the same tag when `isDraftsView`) since this one is always active.
+  const draftTagObj = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('draft')]))[0];
+  const draftTagUri = draftTagObj && Obj.getURI(draftTagObj).toString();
+  // A bare `Filter.tag` query can't see either tag: feed/space messages carry no `meta.tags` of their
+  // own here — membership lives entirely in the mailbox's `TagIndex` sibling object. Resolve to
   // concrete ids instead. The index mutates in place, which `useResolveRef` doesn't observe, so
   // subscribe to it directly and force a recompute on change (mirrors `CalendarArticle`'s starred marks).
-  // Only subscribed for system-tag views — other views never read `systemTagIds`.
-  const [, bumpSystemTagIds] = useReducer((tick: number) => tick + 1, 0);
-  useEffect(
-    () => (systemTag && tagIndex ? Obj.subscribe(tagIndex, bumpSystemTagIds) : undefined),
-    [systemTag, tagIndex],
-  );
+  const [, bumpTagIds] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => (tagIndex ? Obj.subscribe(tagIndex, bumpTagIds) : undefined), [tagIndex]);
   const systemTagIds = systemTagUri && tagIndex ? TagIndex.bind(tagIndex).objects(systemTagUri) : [];
+  const draftIds = draftTagUri && tagIndex ? TagIndex.bind(tagIndex).objects(draftTagUri) : [];
 
-  // This mailbox's drafts (space-db, not the feed). In the Drafts view (`draftsOnly`) they drive the
-  // list directly; otherwise each is attached to its thread if that thread is already present in the
-  // feed-paginated list below — a draft never appears as a standalone row outside the Drafts view (see
-  // the `items` memo).
-  const mailboxUri = Obj.getURI(mailbox);
-  const draftFilter = useMemo(() => buildDraftFilter(mailboxUri), [mailboxUri]);
-  const draftMessages = useQuery(db, draftFilter);
-  const drafts = useMemo(
-    () => draftMessages.filter((message) => DraftMessage.belongsTo(message, mailboxUri)),
-    [draftMessages, mailboxUri],
-  );
+  // This mailbox's currently-open drafts, as live objects (space-db, not the feed) — already excludes
+  // sent drafts (untagged at send time, see above), so no further supersession check is needed here.
+  // Outside the Drafts view, each is attached to its thread if that thread is already present in the
+  // list below; a draft never appears as a standalone row anywhere else (see the `items` memo). The
+  // Drafts view itself doesn't use this — it's driven by the same tag-scoped `source` as any other
+  // systemTag view (see `selection` below).
+  const drafts = useQuery(db, buildSystemTagSelection(draftIds));
   const draftsByThreadId = useMemo(() => {
     const map = new Map<string, Message.Message[]>();
     for (const draft of drafts) {
@@ -201,9 +199,11 @@ export const MailboxArticle = ({
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
   //
-  // A system-tag view (Inbox/Sent) resolves by tag identity while the filter box sits at its seeded
-  // text (e.g. unedited `'#inbox'`) — robust across providers/locales and immune to a same-named user
-  // tag. Once the user edits the box away from that seed, the usual text/tag DSL parse takes over.
+  // A system-tag view (Inbox/Sent/Drafts) resolves by tag identity while the filter box sits at its
+  // seeded text (e.g. unedited `'#inbox'`) — robust regardless of a tag's label text and immune to a
+  // same-named user tag. Once the user edits the box away from that seed, the usual text/tag DSL parse
+  // takes over — except on the Drafts view, whose filter box is hidden entirely (see `useMailboxActions`
+  // below), so it always takes this branch.
   const isUnmodifiedSystemTagView = systemTag !== undefined && debouncedFilterText === (filterProp ?? '');
   const systemTagIdsKey = systemTagIds.join(',');
   const selection = useMemo(
@@ -216,8 +216,9 @@ export const MailboxArticle = ({
     [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
-  // The Drafts view drives its list from `drafts` directly (below), not this feed-paginated query.
-  const source = !draftsOnly && feed ? Query.select(selection).from(feed) : undefined;
+  // Every other view queries the feed; Drafts queries the space db instead (drafts live there), via the
+  // exact same tag-scoped selection/aggregate/pagination pipeline — no separate data path needed.
+  const source = isDraftsView ? Query.select(selection) : feed ? Query.select(selection).from(feed) : undefined;
   const pagination = usePagination(
     db,
     source
@@ -241,10 +242,6 @@ export const MailboxArticle = ({
   // single `null`-key group; split them back into singleton conversations at that group's position.
   // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
   const items = useMemo<MessageStackItem[]>(() => {
-    if (draftsOnly) {
-      return applyPostFilters(groupDraftsOnly(drafts), mailbox, searchQuery);
-    }
-
     const result: MessageStackItem[] = [];
     for (const entry of pagination.items) {
       if (!isThreadGroup(entry)) {
@@ -252,17 +249,15 @@ export const MailboxArticle = ({
       } else if (entry.threadId == null) {
         result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        // Attach this mailbox's drafts for the thread, if any (superseded ones excluded). The extra
-        // count only reflects surviving drafts — `entry.items` is always feed (non-draft) messages.
-        const merged = dedupeSupersededDrafts(
-          [...entry.items, ...(draftsByThreadId.get(entry.threadId) ?? [])],
-          mailboxUri,
-        );
-        result.push({
-          id: entry.threadId,
-          messages: merged.sort(sortByCreated('created', true)),
-          total: entry.count + (merged.length - entry.items.length),
-        });
+        // Attach this mailbox's still-open drafts for the thread, if any — already excludes sent drafts
+        // (untagged the instant they send), so no supersession check is needed here. Skipped on the
+        // Drafts view itself: its own aggregate entries already ARE those drafts.
+        const draftsForThread = isDraftsView ? [] : (draftsByThreadId.get(entry.threadId) ?? []);
+        const messages =
+          draftsForThread.length > 0
+            ? [...entry.items, ...draftsForThread].sort(sortByCreated('created', true))
+            : entry.items;
+        result.push({ id: entry.threadId, messages, total: entry.count + draftsForThread.length });
       }
     }
     // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
@@ -270,23 +265,14 @@ export const MailboxArticle = ({
     // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
     // message can match the index yet have no matching (or any) plain/markdown text to display.
     return applyPostFilters(result, mailbox, searchQuery);
-  }, [
-    draftsOnly,
-    drafts,
-    pagination.items,
-    draftsByThreadId,
-    mailboxUri,
-    mailbox,
-    mailbox.messageFilters,
-    searchQuery,
-  ]);
+  }, [pagination.items, isDraftsView, draftsByThreadId, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
   // Gates on the query settling, not on `messages.length`, so the empty-mailbox panel never renders
-  // mid-load. The Drafts view has no paginated query to settle (it reads `drafts` directly).
-  const loading = !draftsOnly && (!feed || pagination.isLoading);
+  // mid-load. `source` is only undefined for a non-Drafts view whose feed hasn't resolved yet.
+  const loading = !source || pagination.isLoading;
 
   const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
@@ -414,7 +400,12 @@ export const MailboxArticle = ({
     [db, tagMap, filterText, filter, setFilterText, handleSaveFilter, handleClear],
   );
 
-  const menuActions = useMailboxActions(mailbox, { sortDescending, nodeId: id, filterElement, draftsOnly });
+  const menuActions = useMailboxActions(mailbox, {
+    sortDescending,
+    nodeId: id,
+    filterElement,
+    hideFilterEditor: isDraftsView,
+  });
 
   return (
     <Panel.Root>
@@ -442,13 +433,13 @@ export const MailboxArticle = ({
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
-            pagination={!draftsOnly && feed ? pagination : undefined}
+            pagination={pagination}
             enableIgnoreSender
             enableCreateTopic
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        ) : draftsOnly ? (
+        ) : isDraftsView ? (
           <Empty label={t('drafts.empty.message')} />
         ) : (
           <InitializeMailbox mailbox={mailbox} />
@@ -503,31 +494,6 @@ const applyPostFilters = (
   });
 };
 
-/** Groups this mailbox's drafts by thread for the Drafts view; a draft with no thread is its own row. */
-const groupDraftsOnly = (drafts: Message.Message[]): MessageStackItem[] => {
-  const byThreadId = new Map<string, Message.Message[]>();
-  const standalone: MessageStackItem[] = [];
-  for (const draft of drafts) {
-    if (draft.threadId == null) {
-      standalone.push({ id: draft.id, messages: [draft] });
-      continue;
-    }
-    const list = byThreadId.get(draft.threadId);
-    if (list) {
-      list.push(draft);
-    } else {
-      byThreadId.set(draft.threadId, [draft]);
-    }
-  }
-  return [
-    ...[...byThreadId.entries()].map(([threadId, messages]) => ({
-      id: threadId,
-      messages: messages.sort(sortByCreated('created', true)),
-    })),
-    ...standalone,
-  ];
-};
-
 const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
 
 /**
@@ -557,13 +523,18 @@ type MailboxActionsOptions = {
   nodeId: string;
   /** Search box, custom-rendered as a toolbar item so the connect group can sit to its right. */
   filterElement: ReactNode;
-  /** The Drafts view has no free-text filter over the feed; hide the search box. */
-  draftsOnly: boolean;
+  /**
+   * Hides the search box (the Drafts view). A free-text search can't be safely scoped to just this
+   * mailbox's drafts once it drops to a lone full-text select over the whole space (the query engine
+   * can't AND a mailbox-scope constraint onto it — same "too complex" limit `buildMailboxSelection`
+   * already works around for the feed), so the Drafts view doesn't offer one.
+   */
+  hideFilterEditor: boolean;
 };
 
 const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
-  { sortDescending, nodeId, filterElement, draftsOnly }: MailboxActionsOptions,
+  { sortDescending, nodeId, filterElement, hideFilterEditor }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
@@ -634,8 +605,8 @@ const useMailboxActions = (
 
       // The search box, custom-rendered as a toolbar item so the connect group can sit to its right.
       // Always present (even for an empty mailbox — filtering an empty list is harmless) except in the
-      // Drafts view, which has no free-text filter over the feed.
-      if (!draftsOnly) {
+      // Drafts view (see `hideFilterEditor`'s docstring).
+      if (!hideFilterEditor) {
         builder.action(
           'filter',
           {
@@ -656,7 +627,7 @@ const useMailboxActions = (
       graph,
       nodeId,
       filterElement,
-      draftsOnly,
+      hideFilterEditor,
       sortDescending,
       loadRemoteImages,
       setSettings,
