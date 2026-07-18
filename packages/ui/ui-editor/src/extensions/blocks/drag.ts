@@ -264,8 +264,9 @@ const createDragPlugin = (
         }
       };
 
-      // A press without drag: move the caret into the block (collapsing any text selection) and update the
-      // block selection in the same transaction (so the field doesn't treat the caret move as a clear).
+      // A press without drag: move the caret to the end of the block (collapsing any text selection) and
+      // update the block selection in the same transaction (so the field doesn't treat the caret move as a
+      // clear). The block's `from` is its selection identity; the caret goes to its `to`.
       #click(index: number, shiftKey: boolean) {
         const block = getBlocks(this.view.state)[index];
         if (!block) {
@@ -276,7 +277,7 @@ const createDragPlugin = (
         const effect = shiftKey
           ? toggleBlockSelection.of(anchor)
           : setBlockSelection.of(current.length === 1 && current[0] === anchor ? [] : [anchor]);
-        this.view.dispatch({ selection: { anchor: block.from }, effects: effect });
+        this.view.dispatch({ selection: { anchor: block.to }, effects: effect });
       }
 
       // Enter drag mode: drag the whole block selection when the grabbed block is part of it, else just
@@ -284,6 +285,11 @@ const createDragPlugin = (
       #beginDrag(index: number, event: MouseEvent) {
         const selected = getSelectedBlocks(this.view.state, getBlocks).map((entry) => entry.index);
         const indices = selected.length > 1 && selected.includes(index) ? selected : [index];
+        // Move the caret to the end of the grabbed block (collapsing any text selection).
+        const grabbed = getBlocks(this.view.state)[index];
+        if (grabbed) {
+          this.view.dispatch({ selection: { anchor: grabbed.to } });
+        }
         this.#sourceIndices = indices;
         this.#dropIndex = indices[0];
         this.#grabX = event.clientX;
