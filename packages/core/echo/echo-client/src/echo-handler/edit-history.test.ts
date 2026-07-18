@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 
 import * as Doc from '../automerge/Doc';
 import { EchoTestBuilder } from '../testing';
@@ -41,9 +42,11 @@ describe('edit-history', () => {
     // One diff per change.
     expect(diffs.length).toBe(getEditHistory(obj).length);
     // The newest version is the insertion: additions, no deletions.
-    expect(diffs.at(-1)!.added).toBeGreaterThanOrEqual(4);
-    expect(diffs.at(-1)!.removed).toBe(0);
-    expect(diffs.at(-1)!.time).toBeGreaterThan(0);
+    const insertion = diffs.at(-1);
+    expect(insertion).toBeDefined();
+    expect(insertion?.added).toBeGreaterThanOrEqual(4);
+    expect(insertion?.removed).toBe(0);
+    expect(insertion?.time).toBeGreaterThan(0);
 
     // Delete three characters.
     accessor.handle.change((doc: AutomergeDoc<TestSchema.Task>) => {
@@ -52,8 +55,9 @@ describe('edit-history', () => {
     expect(Doc.getValue<string>(accessor)).toBe('bbbb');
 
     diffs = getEditHistoryWithDiffs(obj);
-    expect(diffs.at(-1)!.removed).toBeGreaterThanOrEqual(3);
-    expect(diffs.at(-1)!.added).toBe(0);
+    const deletion = diffs.at(-1);
+    expect(deletion?.removed).toBeGreaterThanOrEqual(3);
+    expect(deletion?.added).toBe(0);
   });
 
   test('getEditHistoryWithDiffs produces cumulative-frontier heads across concurrent history', async ({ expect }) => {
@@ -63,7 +67,9 @@ describe('edit-history', () => {
     const obj = db.add(Obj.make(TestSchema.Task, { description: 'base' }));
     const accessor = getObjectCore(obj).getDocAccessor(['description']);
     const path = accessor.path.slice();
-    const baseHeads = [getEditHistory(obj).at(-1)!.change.hash];
+    const baseVersion = getEditHistory(obj).at(-1);
+    invariant(baseVersion, 'expected an initial edit-history entry');
+    const baseHeads = [baseVersion.change.hash];
 
     // Edit the live branch, then make a second edit branching from the base version — concurrent
     // with the first. Integrating it leaves the history non-linear (two frontier heads).
@@ -83,8 +89,10 @@ describe('edit-history', () => {
     const diffs = getEditHistoryWithDiffs(obj);
     // The newest version's frontier is genuinely non-linear (two concurrent heads); this is what
     // a single change hash fails to represent.
-    expect(diffs.at(-1)!.heads.length).toBe(2);
-    const latest = checkoutVersion(obj, diffs.at(-1)!.heads) as { description: string };
+    const newest = diffs.at(-1);
+    invariant(newest, 'expected a newest edit-history diff');
+    expect(newest.heads.length).toBe(2);
+    const latest = checkoutVersion(obj, newest.heads) as { description: string };
     expect(latest.description).toBe(liveValue);
   });
 });

@@ -862,6 +862,16 @@ export class EntityManager implements IDatabaseBinding {
     name: string,
     opts?: { fromHeads?: Heads | Record<string, Heads> },
   ): Promise<void> {
+    // Serialized with switch/merge/delete: a concurrent `switchBranch` between the awaited imports
+    // could rebind members to another doc, forking one branch from mixed source documents.
+    return this.#enqueueBranchOp(() => this.#createBranchInternal(rootObjectId, name, opts));
+  }
+
+  async #createBranchInternal(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: Heads | Record<string, Heads> },
+  ): Promise<void> {
     invariant(name !== 'main', "'main' is the implicit default branch");
     invariant(!this.getBranchRegistry(rootObjectId)?.[name], `branch already exists: ${name}`);
     const rootCore = this._objects.get(rootObjectId) ?? (await this.loadObjectCoreById(rootObjectId)) ?? undefined;
@@ -873,9 +883,17 @@ export class EntityManager implements IDatabaseBinding {
       : (opts?.fromHeads ?? {});
 
     const members = await this._collectSubtree(rootCore);
-    const memberUrls: BranchRecord['members'] = {};
+    // Validate the whole subtree up front, before importing any documents: a member failing the
+    // check mid-loop would otherwise leave already-imported branch docs orphaned in the repo. Fork
+    // only from main — the source doc is the member's current core doc, so a subtree switched to
+    // another branch would capture that branch's content (branch-of-branch is not yet supported).
     for (const member of members) {
       invariant(this._hasOwnDocument(member.id), 'cannot branch an inline object (promotion not yet implemented)');
+      invariant(!this._currentBranches.has(member.id), 'create a branch from main only (switch to main first)');
+    }
+
+    const memberUrls: BranchRecord['members'] = {};
+    for (const member of members) {
       // No `change` listener here: the object stays on its current branch; the branch doc only needs
       // to exist and replicate (referenced via the registry below). A listener is attached on switch.
       const handle = this._repoProxy.import<DatabaseDirectory>(forkDump(member.getDoc(), memberHeads[member.id]));
@@ -936,10 +954,14 @@ export class EntityManager implements IDatabaseBinding {
     }
     for (const memberId of memberIds) {
       await this._rebindMemberToBranch(memberId, name, registry);
-      if (name === 'main') {
-        this._currentBranches.delete(memberId);
-      } else {
+      // A member absent from the selected branch's set is (correctly) rebound to main by
+      // `_rebindMemberToBranch`; record it as such so `getCurrentBranch` matches the real binding
+      // rather than the requested branch.
+      const boundToBranch = name !== 'main' && registry?.[name]?.members[memberId] != null;
+      if (boundToBranch) {
         this._currentBranches.set(memberId, name);
+      } else {
+        this._currentBranches.delete(memberId);
       }
     }
     this._persistCurrentBranches();
@@ -956,11 +978,16 @@ export class EntityManager implements IDatabaseBinding {
     return this.#enqueueBranchOp(async () => {
       const record = this.getBranchRegistry(rootObjectId)?.[name];
       invariant(record, `branch not found: ${name}`);
+      // Preflight every member's branch doc + main handle before mutating any of them, so a member
+      // that fails to load aborts the merge cleanly rather than leaving the subtree half-merged.
+      const merges: Array<{ branchDoc: A.Doc<DatabaseDirectory>; mainHandle: DocHandleProxy<DatabaseDirectory> }> = [];
       for (const [memberId, urlData] of Object.entries(record.members)) {
         const branchHandle = this._repoProxy.find<DatabaseDirectory>(urlData.toString() as DocumentId);
         await branchHandle.whenReady();
-        const branchDoc = branchHandle.doc();
         const mainHandle = await this._mainDocHandle(memberId);
+        merges.push({ branchDoc: branchHandle.doc(), mainHandle });
+      }
+      for (const { branchDoc, mainHandle } of merges) {
         mainHandle.update((doc) => A.merge(doc, branchDoc));
       }
       await this.#switchBranchInternal(rootObjectId, 'main');

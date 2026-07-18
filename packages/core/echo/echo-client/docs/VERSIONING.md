@@ -253,9 +253,11 @@ Full design, plugin/timeline plumbing, and estimate:
 
 ## Design notes & constraints
 
-- **Selection is per-surface/session, not device-global.** The canonical object is never globally
-  switched out from under other surfaces; each plank/agent binds independently. `switchBranch`
-  remains the lower-level device-global capability that `BranchStore` persists.
+- **Two distinct branch-selection mechanisms.** The product-facing per-surface flow (`db.branch()`
+  bindings) never globally switches the canonical object — each plank/agent binds independently, so
+  other surfaces are undisturbed. Separately, `switchBranch` IS a device-global rebind: it rebinds the
+  canonical cores for this device (persisted via `BranchStore`). The two coexist; the versioning UI
+  uses per-surface bindings and leaves the device on `main`.
 - **Registry vs. records.** The space-root registry owns the replication-critical facts (doc urls,
   membership); product metadata (label, status, creator, anchor) lives in `@dxos/versioning`
   `Branch`/`Version` records keyed by the registry branch name.
