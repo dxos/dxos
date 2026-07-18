@@ -15,6 +15,7 @@ import {
   SelfURIId,
   assertObjectModel,
   isProxy,
+  makeDecodedEntityLive,
   objectFromJSON,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
@@ -478,13 +479,14 @@ export class FeedHandle {
 
   async #hydrateNew(json: ObjectJSON, id: EntityId): Promise<Entity.Unknown | undefined> {
     try {
-      const decoded = await objectFromJSON(json, {
+      const snapshot = await objectFromJSON(json, {
         refResolver: this._refResolver,
         uri: EID.make({ spaceId: this._spaceId, entityId: id }),
         database: this._database,
         parent: this._parentEntity,
-        live: true,
       });
+      // Rewrap the decoded snapshot as a live reactive proxy so `Obj.update` mutates and notifies.
+      const decoded = makeDecodedEntityLive(snapshot);
       invariant(Entity.isEntity(decoded), 'objectFromJSON produced an invalid entity');
       // A concurrent writer (e.g. `append`) may have registered a core for this id while we were
       // decoding — discard this (possibly stale) hydration rather than clobber the fresher core;

@@ -44,22 +44,30 @@ const positionOf = (entity: Entity.Unknown): number | undefined => {
  *
  * Persistence is always a whole-object re-append reusing the entity's id — there is no partial-
  * object update block format yet (see `EchoFeedCodec.encode`'s TODO), so every `Obj.update` produces
- * a full snapshot append; the existing index collapse-by-id does the rest.
+ * a full snapshot append; the existing index collapse-by-id does the rest. Rapid `Obj.update`s
+ * coalesce to a single append (the latest combined state), so only ONE state is ever pending — we
+ * never queue intermittent states.
+ *
+ * Reconciliation is a small state machine over a single `#state` (the latest known canonical JSON)
+ * and a version (`KEY_QUEUE_POSITION`) baseline:
+ *
+ *   Obj.update → dirty (local, unappended) → appended (awaiting echo) → roundtripped (came back)
+ *
+ * Before our own append roundtrips we prefer the local state (ignore stale pre-echo reads); once it
+ * roundtrips (an inbound block matches what we appended), every later block updates the state,
+ * subject to the version being newer.
  *
  * Concurrent writers (two tabs/processes holding a live proxy for the same id) are last-*flush*-wins
  * at whole-object granularity: whichever write's block the local index observes last overwrites the
  * other in full, including fields the winner never touched. This is stronger than typical per-field
- * last-write-wins and is a known limitation — precise resolution needs a real merge protocol or
- * positions in the `insertIntoFeed` response (TODO(wittjosiah), out of scope for now).
+ * last-write-wins and is a known limitation — precise resolution needs a real merge protocol
+ * (TODO(wittjosiah), out of scope for now).
  *
- * The above convergence relies on `KEY_QUEUE_POSITION` metadata (`assignQueuePositions`) to tell a
- * genuine newer remote write apart from a stale pre-echo poll read while a local write is still
- * outstanding. Positions default to *off*: without them, a concurrent remote write that lands while
- * this core has an outstanding write is conservatively ignored rather than risk clobbering our own
- * not-yet-echoed state — but if that remote write already overwrote the exact state we were waiting
- * to see echoed, our own outstanding entry can never match again, and this core's local view then
- * silently diverges from the feed until the next genuinely-newer *positioned* write arrives (or the
- * object is re-touched). Enabling positions closes this gap; it is not yet the default.
+ * Versioning uses `KEY_QUEUE_POSITION` (`assignQueuePositions`) — the only monotonic block version
+ * exposed to the client on both the poll and index read paths. When positions are off, ordering is
+ * unavailable: a concurrent remote write racing a not-yet-echoed local write is conservatively
+ * ignored (prefer local) until it roundtrips. `insertionId` would be an always-present alternative
+ * but is currently stripped before the object JSON reaches the client.
  */
 export class FeedObjectCore {
   readonly entity: Entity.Unknown;
@@ -70,23 +78,28 @@ export class FeedObjectCore {
   #unsubscribe: (() => void) | undefined;
 
   /**
-   * Canonical (position-stripped) JSON of the entity's current state, as of the last capture or
-   * applied remote update. Used to short-circuit reconciliation when an inbound read carries no new
-   * information (e.g. a repeated poll), so unchanged objects never fire a reactive notification.
+   * Canonical (position-stripped) JSON of the entity's current known state — the single source of
+   * truth for reconciliation comparisons (updated on capture and on applied remote reads).
    */
-  #lastKnownCanonical: string;
+  #state: string;
 
   /**
-   * Canonical JSON of writes captured for append but not yet confirmed by an inbound read that
-   * matches them. A list, not a single slot: the background flush scheduler fires far faster than
-   * the ~1s echo-confirmation poll cycle, so an object can flush more than once before its first
-   * flush is even observed coming back through the feed.
+   * Version (queue position) of the block `#state` reflects, or `undefined` when positions are off
+   * or the state hasn't been seen from the feed yet. Baseline for ordering inbound blocks.
    */
-  #outstanding: string[] = [];
+  #version: number | undefined;
+
+  /**
+   * Canonical JSON of the state captured for append and awaiting its echo (roundtrip). A single
+   * slot, not a list: appends coalesce to the latest combined state, so at most one write is in
+   * flight; a later capture simply replaces it. `undefined` once roundtripped.
+   */
+  #pendingAppend: string | undefined;
 
   constructor(entity: Entity.Unknown, onDirty: (core: FeedObjectCore) => void) {
     this.entity = entity;
-    this.#lastKnownCanonical = canonicalJsonOf(Entity.toJSON(entity) as Record<string, unknown>);
+    this.#state = canonicalJsonOf(Entity.toJSON(entity) as Record<string, unknown>);
+    this.#version = positionOf(entity);
     this.#unsubscribe = Entity.subscribe(entity, () => {
       if (this.#applyingRemote || this.#deleted) {
         return;
@@ -96,81 +109,94 @@ export class FeedObjectCore {
     });
   }
 
-  get dirty(): boolean {
-    return this.#dirty;
-  }
-
-  get hasOutstandingWrites(): boolean {
-    return this.#outstanding.length > 0;
-  }
-
   /**
    * Capture the entity's current state for an append, marking it clean. The caller (`FeedHandle`'s
-   * flush) calls this exactly once per dirty core per flush cycle, coalescing any number of
-   * synchronous `Obj.update`s since the last flush into a single feed block. Returns the JSON to
-   * send plus a token identifying this specific write, for {@link revertCapture} if the append fails.
+   * flush) calls this once per dirty core per flush cycle, coalescing any number of synchronous
+   * `Obj.update`s since the last flush into a single feed block. Returns the JSON to send plus a
+   * token identifying this write, for {@link revertCapture} if the append fails.
    */
   captureForAppend(): { json: Record<string, unknown>; token: string } {
     const json = Entity.toJSON(this.entity) as Record<string, unknown>;
     const canonical = canonicalJsonOf(json);
-    this.#outstanding.push(canonical);
-    this.#lastKnownCanonical = canonical;
+    this.#pendingAppend = canonical;
+    this.#state = canonical;
     this.#dirty = false;
     return { json, token: canonical };
   }
 
   /**
-   * Revert a specific just-captured write back to dirty after its append RPC failed, so it's
-   * retried. Removes only the entry identified by `token` (not simply the most recent one) — several
-   * writes for this core may be outstanding concurrently, and only one of them failed.
+   * Revert a just-captured write back to dirty after its append RPC failed, so it's retried. Only
+   * clears the pending slot if it still holds this write (a newer capture may have superseded it).
    */
   revertCapture(token: string): void {
-    const index = this.#outstanding.lastIndexOf(token);
-    if (index >= 0) {
-      this.#outstanding.splice(index, 1);
+    if (this.#pendingAppend === token) {
+      this.#pendingAppend = undefined;
     }
     this.#dirty = true;
   }
 
   /**
-   * Reconcile an inbound decode of this object's latest feed state (from polling or a query)
-   * against local state: apply it, ignore it as stale, or — if a genuine concurrent remote update
-   * raced a still-unconfirmed local write — apply it and drop the superseded local write(s).
+   * Reconcile an inbound decode of this object's latest feed state (from polling or a query) against
+   * local state per the lifecycle in the class doc: keep local while a change is unappended or a
+   * pending append hasn't roundtripped; otherwise adopt newer remote blocks (whole-object LWW).
    */
   reconcile(decoded: Entity.Unknown, inboundJson: Record<string, unknown>): void {
     if (this.#deleted || this.#dirty) {
       // Deleted: ignore remote emissions entirely (re-appending is the only path back to a core).
-      // Dirty: local state is strictly newer than anything the server could have echoed back yet.
+      // Dirty: a local change hasn't been appended yet, so local state is strictly newer.
       return;
     }
 
     const inboundCanonical = canonicalJsonOf(inboundJson);
-    if (inboundCanonical === this.#lastKnownCanonical) {
-      // Nothing changed — a repeated poll, or our own write echoed back unchanged.
-      const matchIndex = this.#outstanding.indexOf(inboundCanonical);
-      if (matchIndex >= 0) {
-        this.#outstanding.splice(matchIndex, 1);
+    const inboundPosition = positionOf(decoded);
+
+    if (this.#pendingAppend !== undefined) {
+      if (inboundCanonical === this.#pendingAppend) {
+        // Our own append roundtripped: adopt its version and stop preferring local.
+        this.#pendingAppend = undefined;
+        this.#state = inboundCanonical;
+        this.#version = inboundPosition ?? this.#version;
+        this.#mergeQueuePosition(decoded);
+        return;
       }
-      this.#mergeQueuePosition(decoded);
+      // Not our echo. Only a provably-newer remote write overrides our still-unconfirmed append
+      // (whole-object LWW). Without positions we can't order, so prefer local — anything else is
+      // treated as a stale pre-echo read and ignored.
+      if (this.#strictlyNewer(inboundPosition)) {
+        this.#pendingAppend = undefined;
+        this.#applyRemote(decoded);
+        this.#state = inboundCanonical;
+        this.#version = inboundPosition;
+      }
       return;
     }
 
-    if (this.#outstanding.length > 0) {
-      const inboundPosition = positionOf(decoded);
-      const currentPosition = positionOf(this.entity);
-      const isNewerRemoteWrite =
-        inboundPosition !== undefined && (currentPosition === undefined || inboundPosition > currentPosition);
-      if (!isNewerRemoteWrite) {
-        // Stale pre-echo emission of an earlier state; ignore.
-        return;
+    // Clean (no local change, nothing pending).
+    if (inboundCanonical === this.#state) {
+      // No content change — a repeated poll; keep the position baseline in sync.
+      this.#mergeQueuePosition(decoded);
+      if (inboundPosition !== undefined) {
+        this.#version = inboundPosition;
       }
-      // A genuine concurrent remote update raced ours. Whole-object LWW: apply it, and drop our
-      // still-outstanding writes as superseded (documented data-loss mode — see class doc).
-      this.#outstanding = [];
+      return;
     }
+    // Differing remote block with nothing local to protect: adopt it unless it's a provably-older
+    // (out-of-order) stale read.
+    if (!this.#strictlyOlder(inboundPosition)) {
+      this.#applyRemote(decoded);
+      this.#state = inboundCanonical;
+      this.#version = inboundPosition ?? this.#version;
+    }
+  }
 
-    this.#applyRemote(decoded);
-    this.#lastKnownCanonical = inboundCanonical;
+  /** Inbound block is ordered strictly after our current baseline (both positions known). */
+  #strictlyNewer(inboundPosition: number | undefined): boolean {
+    return inboundPosition !== undefined && (this.#version === undefined || inboundPosition > this.#version);
+  }
+
+  /** Inbound block is ordered strictly before our current baseline (both positions known). */
+  #strictlyOlder(inboundPosition: number | undefined): boolean {
+    return inboundPosition !== undefined && this.#version !== undefined && inboundPosition <= this.#version;
   }
 
   #mergeQueuePosition(decoded: Entity.Unknown): void {

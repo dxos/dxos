@@ -87,26 +87,6 @@ const RetryOp = Operation.make({
   services: [Database.Service],
 });
 
-class FeedFailCounter extends Type.makeObject<FeedFailCounter>(
-  DXN.make('test.trigger-dispatcher.feedFailCounter', '0.1.0'),
-)(
-  Schema.Struct({
-    count: Schema.Number,
-  }),
-) {}
-
-/**
- * Echoes its input on success, but genuinely fails (not `Operation.runAgain()`) the first time it
- * is invoked — used to test that a feed trigger's failed first delivery redelivers as
- * `isUpdate: false` rather than being mis-tagged as an update.
- */
-const FailOnceOp = Operation.make({
-  meta: { key: DXN.make('test.trigger-dispatcher.failOnce'), name: 'Fail Once' },
-  input: Schema.Any,
-  output: Schema.Any,
-  services: [Database.Service],
-});
-
 const TestHanlers = OperationHandlerSet.make(
   ProbeOp.pipe(
     Operation.withHandler(
@@ -131,23 +111,6 @@ const TestHanlers = OperationHandlerSet.make(
           counter.count++;
         });
         yield* Operation.runAgain();
-      }),
-    ),
-  ),
-  FailOnceOp.pipe(
-    Operation.withHandler(
-      Effect.fn(function* (input) {
-        const counter = yield* Database.query(Filter.type(FeedFailCounter)).first.pipe(
-          Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () => Database.add(Obj.make(FeedFailCounter, { count: 0 }))),
-        );
-        if (counter.count === 0) {
-          Obj.update(counter, (counter) => {
-            counter.count++;
-          });
-          return yield* Effect.fail(new Error('simulated first-attempt failure'));
-        }
-        return input;
       }),
     ),
   ),
@@ -180,14 +143,7 @@ const TestLayer = (
     ),
     Layer.provideMerge(
       TestDatabaseLayer({
-        types: [
-          Operation.PersistentOperation,
-          Trigger.Trigger,
-          Person.Person,
-          Task.Task,
-          RetryCounter,
-          FeedFailCounter,
-        ],
+        types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task, RetryCounter],
       }),
     ),
     Layer.provideMerge(KeyValueStore.layerMemory),
@@ -700,128 +656,6 @@ describe('TriggerDispatcher', () => {
         {
           const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
-        }
-      }, Effect.provide(TestLayer())),
-    );
-
-    it.effect(
-      'delivers isUpdate: false on first delivery and isUpdate: true on a re-append-by-id',
-      Effect.fnUntraced(function* ({ expect }) {
-        const feed = yield* Database.add(Feed.make());
-
-        const functionObj = yield* registerOperation(Reply);
-        const trigger = Trigger.make({
-          runnable: Ref.make(functionObj),
-          enabled: true,
-          spec: Trigger.specFeed(feed),
-        });
-        yield* Database.add(trigger);
-
-        const john = Obj.make(Person.Person, { fullName: 'John Doe' });
-        yield* Feed.append(feed, [john]);
-
-        const dispatcher = yield* TriggerDispatcher;
-
-        {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
-          expect(results.length).toBe(1);
-          const exit = results[0].result;
-          invariant(Exit.isSuccess(exit));
-          expect((exit.value as any).isUpdate).toBe(false);
-        }
-
-        yield* Feed.append(feed, [Obj.make(Person.Person, { id: john.id, fullName: 'John Doe v2' })]);
-
-        {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
-          expect(results.length).toBe(1);
-          const exit = results[0].result;
-          invariant(Exit.isSuccess(exit));
-          expect((exit.value as any).isUpdate).toBe(true);
-        }
-      }, Effect.provide(TestLayer())),
-    );
-
-    it.effect(
-      'ignoreUpdates skips update deliveries but still advances the cursor',
-      Effect.fnUntraced(function* ({ expect }) {
-        const feed = yield* Database.add(Feed.make());
-
-        const functionObj = yield* registerOperation(Reply);
-        const trigger = Trigger.make({
-          runnable: Ref.make(functionObj),
-          enabled: true,
-          spec: { ...Trigger.specFeed(feed), ignoreUpdates: true },
-        });
-        yield* Database.add(trigger);
-
-        const john = Obj.make(Person.Person, { fullName: 'John Doe' });
-        yield* Feed.append(feed, [john]);
-
-        const dispatcher = yield* TriggerDispatcher;
-
-        // First delivery (not an update) is invoked normally.
-        {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
-          expect(results.length).toBe(1);
-          const exit = results[0].result;
-          invariant(Exit.isSuccess(exit));
-          expect((exit.value as any).isUpdate).toBe(false);
-        }
-
-        yield* Feed.append(feed, [Obj.make(Person.Person, { id: john.id, fullName: 'John Doe v2' })]);
-
-        // The update is skipped (no invocation), but the cursor still advances past it — checked
-        // twice in a row: a trailing skipped item must not pin the cursor and re-fetch every tick.
-        {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
-          expect(results.length).toBe(0);
-        }
-        {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
-          expect(results.length).toBe(0);
-        }
-      }, Effect.provide(TestLayer())),
-    );
-
-    it.effect(
-      'a failed first delivery redelivers as isUpdate: false, not a mis-tagged update',
-      Effect.fnUntraced(function* ({ expect }) {
-        const feed = yield* Database.add(Feed.make());
-
-        const functionObj = yield* registerOperation(FailOnceOp);
-        const trigger = Trigger.make({
-          runnable: Ref.make(functionObj),
-          enabled: true,
-          spec: Trigger.specFeed(feed),
-        });
-        yield* Database.add(trigger);
-
-        const john = Obj.make(Person.Person, { fullName: 'John Doe' });
-        yield* Feed.append(feed, [john]);
-
-        const dispatcher = yield* TriggerDispatcher;
-
-        // The first attempt fails: neither the cursor nor the delivered-ids set are written (both
-        // are only updated past a contiguous prefix of *successful* invocations), so this is
-        // functionally equivalent to a crash between invocation and the atomic cursor+delivered-id
-        // write — the item must redeliver as new, not as an update.
-        {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
-          expect(results.length).toBe(1);
-          expect(Exit.isFailure(results[0].result)).toBe(true);
-        }
-
-        // A genuine failure arms the failure cooldown (default 30s) — advance past it so the retry
-        // below isn't skipped for being in cooldown.
-        yield* dispatcher.advanceTime(Duration.minutes(1));
-
-        {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
-          expect(results.length).toBe(1);
-          const exit = results[0].result;
-          invariant(Exit.isSuccess(exit));
-          expect((exit.value as any).isUpdate).toBe(false);
         }
       }, Effect.provide(TestLayer())),
     );

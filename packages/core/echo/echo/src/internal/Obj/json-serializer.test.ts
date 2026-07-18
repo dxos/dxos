@@ -13,13 +13,21 @@ import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
 import { getTypename, getTypeURI } from '../Annotation';
 import { getMetaChecked } from '../common/api';
-import { ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
+import { makeDecodedEntityLive } from '../common/proxy';
+import { type AnyEntity, ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
 import { MetaId } from '../common/types/model-symbols';
 import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity';
 import * as JsonSchema from '../JsonSchema';
-import { Ref, StaticRefResolver } from '../Ref';
+import { Ref, type RefResolver, StaticRefResolver } from '../Ref';
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
+
+/**
+ * Decode JSON and rewrap as a live reactive proxy — mirrors the feed hydration path
+ * (`objectFromJSON` then {@link makeDecodedEntityLive}).
+ */
+const decodeLive = async (json: unknown, options?: { refResolver?: RefResolver }): Promise<AnyEntity> =>
+  makeDecodedEntityLive(await objectFromJSON(json, options));
 
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
@@ -166,7 +174,7 @@ describe('Object JSON serializer', () => {
       const contactJson = objectToJSON(contact);
       const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
 
-      const live = (await objectFromJSON(contactJson, { refResolver, live: true })) as TestSchema.Person;
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
 
       expect(Obj.instanceOf(TestSchema.Person)(live)).toBe(true);
       expect(live.name).toBe('Alice');
@@ -176,7 +184,7 @@ describe('Object JSON serializer', () => {
       const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
       const contactJson = objectToJSON(contact);
       const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
-      const live = (await objectFromJSON(contactJson, { refResolver, live: true })) as TestSchema.Person;
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
 
       let notified = 0;
       const unsubscribe = Obj.subscribe(live, () => {
@@ -196,7 +204,7 @@ describe('Object JSON serializer', () => {
       const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
       const contactJson = objectToJSON(contact);
       const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
-      const live = (await objectFromJSON(contactJson, { refResolver, live: true })) as TestSchema.Person;
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
 
       expect(() => {
         (live as any).name = 'Bob';
@@ -207,7 +215,7 @@ describe('Object JSON serializer', () => {
       const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
       const contactJson = objectToJSON(contact);
       const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
-      const live = (await objectFromJSON(contactJson, { refResolver, live: true })) as TestSchema.Person;
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
 
       const snapshot = Obj.getSnapshot(live);
       Obj.update(live, (live) => {
@@ -222,7 +230,7 @@ describe('Object JSON serializer', () => {
       const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
       const contactJson = objectToJSON(contact);
       const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
-      const live = (await objectFromJSON(contactJson, { refResolver, live: true })) as TestSchema.Person;
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
 
       Obj.update(live, (live) => {
         Obj.getMeta(live).keys.push({ id: 'abc', source: 'example.com' });
@@ -247,7 +255,7 @@ describe('Object JSON serializer', () => {
         .addObject(alice)
         .addObject(org);
 
-      const live = (await objectFromJSON(relationJson, { refResolver, live: true })) as any;
+      const live = (await decodeLive(relationJson, { refResolver })) as any;
 
       let notified = 0;
       const unsubscribe = Obj.subscribe(live, () => {
@@ -265,7 +273,7 @@ describe('Object JSON serializer', () => {
       const contact = createObject(TestSchema.Person, { name: 'Alice' });
       const contactJson = objectToJSON(contact);
 
-      const live: any = await objectFromJSON(contactJson, { live: true });
+      const live: any = await decodeLive(contactJson);
 
       expect(getSchema(live)).toBeUndefined();
       expect(live.name).toBe('Alice');
@@ -282,7 +290,7 @@ describe('Object JSON serializer', () => {
       contactJson.age = 'not-a-number';
       const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
 
-      await expect(objectFromJSON(contactJson, { refResolver, live: true })).rejects.toThrow();
+      await expect(decodeLive(contactJson, { refResolver })).rejects.toThrow();
     });
 
     test('nested array fields become reactive on live decode', async () => {
@@ -294,7 +302,7 @@ describe('Object JSON serializer', () => {
         .addSchema(TestSchema.Task)
         .addObject(task1);
 
-      const live = (await objectFromJSON(contactJson, { refResolver, live: true })) as TestSchema.Person;
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
 
       let notified = 0;
       const unsubscribe = Obj.subscribe(live, () => {
