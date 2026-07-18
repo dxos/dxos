@@ -9,7 +9,6 @@
     "src/invitations/index.ts",
     "src/mesh/index.ts",
     "src/services/index.ts",
-    "src/worker/shared-worker.ts",
     "src/testing/index.ts"
   ]
 }

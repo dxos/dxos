@@ -14,7 +14,7 @@ import { CommandConfig, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/functions-runtime/edge';
+import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/edge-compute';
 
 import { printInvokeResult } from './util';
 

@@ -47,6 +47,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -54,9 +57,6 @@
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"
@@ -89,10 +89,16 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../sdk/versioning"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-dnd"

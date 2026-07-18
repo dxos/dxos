@@ -16,8 +16,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -30,11 +29,11 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*"

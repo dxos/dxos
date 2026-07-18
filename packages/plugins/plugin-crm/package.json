@@ -17,47 +17,47 @@
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/neutral/skills/index.mjs"
+      "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/neutral/operations/index.mjs"
+      "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": "./src/CrmPlugin.ts",
       "types": "./dist/types/src/CrmPlugin.d.ts",
-      "default": "./dist/lib/neutral/CrmPlugin.mjs"
+      "default": "./dist/lib/CrmPlugin.mjs"
     },
     "#sources": {
       "source": "./src/sources/index.ts",
       "types": "./dist/types/src/sources/index.d.ts",
-      "default": "./dist/lib/neutral/sources/index.mjs"
+      "default": "./dist/lib/sources.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "default": "./dist/lib/testing.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     },
     "#util": "./src/util/index.ts"
   },
@@ -65,23 +65,23 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -99,7 +99,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -120,10 +119,10 @@
     "react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@effect/vitest": "catalog:",
     "vite": "catalog:",

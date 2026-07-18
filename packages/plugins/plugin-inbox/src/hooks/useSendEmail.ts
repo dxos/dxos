@@ -61,10 +61,9 @@ export const useSendEmail = (message: Message.Message): NonNullable<EditMessageP
           }
           // Finds the Connection whose access token is the binding's `spec.source` — fuzzy if an
           // access token is ever shared across connections.
-          const connections = yield* Database.query(Filter.type(Connection.Connection)).run.pipe(
-            Effect.provide(Database.layer(db)),
-          );
-          const connectionObj = connections.find((candidate) => candidate.accessToken.uri === binding.spec.source.uri);
+          const [connectionObj] = yield* Database.query(
+            Filter.type(Connection.Connection, { accessToken: binding.spec.source }),
+          ).run.pipe(Effect.provide(Database.layer(db)));
           if (!connectionObj) {
             return undefined;
           }
@@ -88,15 +87,15 @@ export const useSendEmail = (message: Message.Message): NonNullable<EditMessageP
         throw new TypeError('Mailbox is not connected to an email account.');
       }
 
-      // Tag the draft with the provider's own sent tag (Gmail's SENT label / the JMAP Sent folder — the
-      // same tag its canonical synced copy will carry), so it locks read-only and reads consistently
-      // with sent messages, and record the reconcile match key. Reusing the provider tag (resolved by
-      // the send op) avoids inventing a parallel "sent" tag. Best effort: a failure here leaves the
-      // message sent but the draft untagged, so log rather than throw.
+      // Tag the draft with the canonical `sent` system tag (resolved by the send op — the same tag the
+      // message's synced copy will carry, since sync maps Gmail's SENT label / the JMAP Sent folder onto
+      // it), so the draft locks read-only, reads consistently with sent messages, and reconciles against
+      // that copy. Best effort: a failure here leaves the message sent but the draft untagged, so log
+      // rather than throw.
       try {
         const key = { source: sent.sentTag.source, id: sent.sentTag.id };
-        // Query first so an existing provider tag keeps its label — `findOrCreate` would rewrite it, and
-        // the next sync would rewrite it back. Create one only before the first sync has surfaced it.
+        // Query first so the existing tag keeps its label/hue — `findOrCreate` would rewrite the label,
+        // and the next sync would rewrite it back. Create one only before the first sync has surfaced it.
         const [existing] = await db.query(Filter.foreignKeys(Tag.Tag, [key])).run();
         const tag = existing ?? (await Tag.findOrCreate(db, { key, label: sent.sentTag.label }));
         const sentTagUri = Obj.getURI(tag).toString();

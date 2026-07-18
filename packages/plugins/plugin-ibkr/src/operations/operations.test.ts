@@ -9,10 +9,10 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { configuredCredentialsLayer } from '@dxos/functions';
 
 import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
 import { Ibkr, IbkrOperation } from '../types';

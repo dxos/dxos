@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { Credential, Operation } from '@dxos/compute';
+import { withAuthorization } from '@dxos/compute-runtime';
 import { Database, Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
-import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Person, Pipeline, Task } from '@dxos/types';
 

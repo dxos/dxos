@@ -17,44 +17,44 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
       "source": "./src/DuffelPlugin.tsx",
       "types": "./dist/types/src/DuffelPlugin.d.ts",
-      "default": "./dist/lib/neutral/DuffelPlugin.mjs"
+      "default": "./dist/lib/DuffelPlugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
       "types": "./dist/types/src/services/index.d.ts",
-      "default": "./dist/lib/neutral/services/index.mjs"
+      "default": "./dist/lib/services.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -9,8 +9,8 @@ import { Client, type Config } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { bundleFunction } from '@dxos/functions-runtime/bundler';
-import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
+import { FunctionsServiceClient } from '@dxos/edge-compute';
+import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

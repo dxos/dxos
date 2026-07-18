@@ -1,0 +1,95 @@
+{
+  "name": "@dxos/edge-compute",
+  "version": "0.10.0",
+  "description": "EDGE compute: function deploy, scripts, and Edge implementations of Remote* runtime interfaces.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./bundler": {
+      "source": "./src/bundler/index.ts",
+      "types": "./dist/types/src/bundler/index.d.ts",
+      "import": "./dist/lib/bundler.mjs"
+    },
+    "./native": {
+      "source": "./src/native/index.ts",
+      "types": "./dist/types/src/native/index.d.ts",
+      "import": "./dist/lib/native.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ],
+      "bundler": [
+        "dist/types/src/bundler/index.d.ts"
+      ],
+      "native": [
+        "dist/types/src/native/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist/lib",
+    "dist/types",
+    "src"
+  ],
+  "scripts": {
+    "publish-runtime": "pnpm run secrets && node ./scripts/build-modules.mjs && node --env-file=.env ./scripts/upload-modules.mjs --env dev",
+    "secrets": "node ./scripts/secrets.mjs"
+  },
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/functions-runtime-cloudflare": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "esbuild": "catalog:",
+    "esbuild-wasm": "catalog:",
+    "iso-did": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

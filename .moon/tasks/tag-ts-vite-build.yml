@@ -1,0 +1,41 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+# New library build pipeline: vite + rolldown for JS, tsgo for .d.ts (run via DxTsgoPlugin at buildStart).
+# Packages migrate from `ts-build` to `ts-vite-build` once they have a `vite.config.ts` and updated exports.
+tasks:
+  build:
+    command: pnpm exec vite build --logLevel silent
+    deps:
+      - dx-build:compile
+      # vite.base.config.ts now houses vitest project builders too — those import
+      # `@dxos/esbuild-plugins` and `@dxos/vite-plugin-import-source` at config-load
+      # time, so the workspace tools must be compiled before any vite build that
+      # imports the base config can resolve them. `@dxos/vite-plugin-log` is
+      # deliberately omitted here: it peerDepends on `@dxos/log` + `@dxos/util` (both
+      # ts-vite-build), so adding it as a dep would create a cycle. The base config
+      # works around that by importing the plugin's source by relative path.
+      - esbuild-plugins:compile
+      - vite-plugin-import-source:compile
+      - ^:build
+      - ^:compile
+    inputs:
+      - /tsconfig.base.json
+      - /vite.base.config.ts
+      - /vitest.base.config.ts
+      - /tools/vite-plugin-log/src/**/*
+      - tsconfig.json
+      - vite.config.ts
+      - '@group(sources)'
+    outputs:
+      - dist/lib/
+      - dist/types/
+    options:
+      timeout: 120
+  # Alias for backwards compatibility: many other moon projects declare
+  # dependencies like `foo:compile`. Now that the new build emits both
+  # `dist/lib/` and `dist/types/` in a single pass, `compile` is just `build`.
+  compile:
+    deps:
+      - build
+
+inheritedBy:
+  tags: ts-vite-build

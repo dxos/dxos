@@ -12,6 +12,7 @@
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
+  "exports": {},
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -34,8 +35,6 @@
     "@dxos/echo-query": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

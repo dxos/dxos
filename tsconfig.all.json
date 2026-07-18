@@ -4,6 +4,9 @@
   "compilerOptions": {},
   "references": [
     {
+      "path": "packages/core/compute/agent-runtime/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
@@ -172,6 +175,9 @@
       "path": "packages/core/mesh/edge-client/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/edge-compute/tsconfig.json"
+    },
+    {
       "path": "packages/common/effect/tsconfig.json"
     },
     {
@@ -209,12 +215,6 @@
     },
     {
       "path": "packages/common/feed-store/tsconfig.json"
-    },
-    {
-      "path": "packages/core/compute/functions/tsconfig.json"
-    },
-    {
-      "path": "packages/core/compute/functions-runtime/tsconfig.json"
     },
     {
       "path": "packages/core/compute/functions-runtime-cloudflare/tsconfig.json"
@@ -881,6 +881,9 @@
     },
     {
       "path": "vendor/quickjs/tsconfig.json"
+    },
+    {
+      "path": "packages/sdk/versioning/tsconfig.json"
     },
     {
       "path": "tools/vite-plugin-icons/tsconfig.json"

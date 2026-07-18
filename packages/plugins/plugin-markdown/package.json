@@ -16,7 +16,7 @@
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/neutral/skills/index.mjs"
+      "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
       "source": {
@@ -24,33 +24,33 @@
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "node": "./dist/lib/neutral/capabilities/node.mjs",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "node": "./dist/lib/capabilities/node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
+      "default": "./dist/lib/containers.mjs"
     },
     "#hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
-      "default": "./dist/lib/neutral/hooks/index.mjs"
+      "default": "./dist/lib/hooks.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/neutral/operations/index.mjs"
+      "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": {
@@ -59,60 +59,56 @@
         "default": "./src/MarkdownPlugin.tsx"
       },
       "types": "./dist/types/src/MarkdownPlugin.d.ts",
-      "workerd": "./dist/lib/neutral/MarkdownPlugin.workerd.mjs",
-      "node": "./dist/lib/neutral/MarkdownPlugin.node.mjs",
-      "default": "./dist/lib/neutral/MarkdownPlugin.mjs"
+      "workerd": "./dist/lib/MarkdownPlugin.workerd.mjs",
+      "node": "./dist/lib/MarkdownPlugin.node.mjs",
+      "default": "./dist/lib/MarkdownPlugin.mjs"
     },
     "#testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
-      "default": "./dist/lib/neutral/testing.mjs"
+      "default": "./dist/lib/testing.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/neutral/skills/index.mjs"
+      "import": "./dist/lib/skills.mjs"
     },
     "./plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "default": "./src/plugin.ts"
-      },
+      "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/neutral/plugin.workerd.mjs",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
-      "default": "./dist/lib/neutral/testing.mjs"
+      "import": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -123,6 +119,7 @@
   ],
   "dependencies": {
     "@automerge/automerge": "catalog:",
+    "@codemirror/merge": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
@@ -137,7 +134,6 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -149,6 +145,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
@@ -159,6 +156,7 @@
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/versioning": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
@@ -166,6 +164,7 @@
     "react-dropzone": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
