@@ -406,26 +406,56 @@ export function addModule<T>(
 }
 
 /**
- * Adds a module from a spec-carrying lazy body ({@link Capability.lazyModule}) taking no
- * props: requires/provides come from the spec and the id derives from the lazy name.
- * Dependency-mode by default; pass `activatesOn` for a runtime-event module.
+ * Adds a module from a spec-carrying body ({@link Capability.lazyModule} /
+ * {@link Capability.inlineModule}): requires/provides come from the spec and the id derives
+ * from the module name. Dependency-mode by default; pass `activatesOn` for a runtime-event
+ * module. Bodies taking props declare `props` mapping the plugin options to the body's props.
  */
-export const addLazyModule =
+export const addLazyModule: {
   <Requires extends readonly Capability.AnyTag[], Provides extends readonly Capability.AnyTag[], T = void>(
-    module: Capability.LazyModule<void, Requires, Provides>,
+    module: Capability.Module<void, Requires, Provides>,
     options?: {
       id?: string;
       activatesOn?: ActivationEvent.Events;
     },
+  ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
+  <Props, Requires extends readonly Capability.AnyTag[], Provides extends readonly Capability.AnyTag[], T>(
+    module: Capability.Module<Props, Requires, Provides>,
+    options: {
+      id?: string;
+      activatesOn?: ActivationEvent.Events;
+      /** Maps the plugin options to the module body's props. */
+      props: (pluginOptions: T) => Props;
+    },
+  ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
+} =
+  <Props, Requires extends readonly Capability.AnyTag[], Provides extends readonly Capability.AnyTag[], T>(
+    module: Capability.Module<Props, Requires, Provides>,
+    options?: {
+      id?: string;
+      activatesOn?: ActivationEvent.Events;
+      props?: (pluginOptions: T) => Props;
+    },
   ) =>
-  (builder: PluginBuilder<T>): PluginBuilder<T> =>
-    builder.addModule({
-      id: options?.id,
+  (builder: PluginBuilder<T>): PluginBuilder<T> => {
+    const props = options?.props;
+    if (props === undefined) {
+      return builder.addModule({
+        id: options?.id,
+        activatesOn: options?.activatesOn,
+        requires: module.requires,
+        provides: module.provides,
+        activate: module,
+      });
+    }
+    return builder.addModule((pluginOptions: T) => ({
+      id: options?.id ?? Capability.getModuleTag(module),
       activatesOn: options?.activatesOn,
       requires: module.requires,
       provides: module.provides,
-      activate: module,
-    });
+      activate: () => module(props(pluginOptions)),
+    }));
+  };
 
 export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
 

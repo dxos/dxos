@@ -416,10 +416,11 @@ export type LoadModule<Props, Requires extends readonly AnyTag[], Provides exten
 }>;
 
 /**
- * A lazy module body carrying its requires/provides spec eagerly, so dependency ordering
- * never needs to load the chunk. The spec values are attached for the module authoring site.
+ * A module body carrying its requires/provides spec eagerly, so dependency ordering never
+ * needs to execute the body (or load its chunk, for lazy bodies). Produced by
+ * {@link lazyModule} (code-split body) or {@link inlineModule} (eager body).
  */
-export type LazyModule<Props, Requires extends readonly AnyTag[], Provides extends readonly AnyTag[]> = ((
+export type Module<Props, Requires extends readonly AnyTag[], Provides extends readonly AnyTag[]> = ((
   props: Props,
 ) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>) & {
   readonly requires: Requires;
@@ -443,7 +444,7 @@ export const lazyModule = <
   name: string,
   spec: { readonly requires?: Requires; readonly provides: Provides },
   loader: LoadModule<Props, Requires, Provides>,
-): LazyModule<Props, Requires, Provides> => {
+): Module<Props, Requires, Provides> => {
   const lazyFn = (props: Props): Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>> =>
     Effect.gen(function* () {
       const { default: getModule } = yield* Effect.promise(() => loader());
@@ -454,6 +455,30 @@ export const lazyModule = <
   // `readonly []` default, so the fallback empty tuple is the correct value for it.
   const requires = (spec.requires ?? []) as Requires;
   return Object.assign(lazyFn, { [ModuleTag]: name, requires, provides: spec.provides });
+};
+
+/**
+ * Helper to define an eager module body with the same spec-carrying shape as
+ * {@link lazyModule} — for bodies that are plain values (translations, schema) or too small
+ * to justify a chunk, so plugin definitions stay a uniform chain of spec-carrying modules.
+ * @param name The module name — used to auto-compute module IDs.
+ * @param spec The requires/provides declaration.
+ * @param activate The module body.
+ */
+export const inlineModule = <
+  const Provides extends readonly AnyTag[],
+  const Requires extends readonly AnyTag[] = readonly [],
+  Props = void,
+>(
+  name: string,
+  spec: { readonly requires?: Requires; readonly provides: Provides },
+  activate: (props: Props) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>,
+): Module<Props, Requires, Provides> => {
+  // Correlation cast: when `spec.requires` is absent, `Requires` resolves to its
+  // `readonly []` default, so the fallback empty tuple is the correct value for it.
+  const requires = (spec.requires ?? []) as Requires;
+  const body = (props: Props) => activate(props);
+  return Object.assign(body, { [ModuleTag]: name, requires, provides: spec.provides });
 };
 
 /**
