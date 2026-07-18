@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo, useRef } from 'react';
 
@@ -12,9 +12,11 @@ import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { Listbox } from '@dxos/react-ui-list';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
+  Cursor,
   comments,
   createBasicExtensions,
   createComment,
@@ -110,8 +112,42 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
         <div className='dx-container dx-document bg-base-surface' {...attentionAttrs}>
           <Editor.View initialValue={content} selectionEnd />
         </div>
+        <CommentsList commentsAtom={commentsAtom} getView={() => editorRef.current?.view} />
       </Editor.Content>
     </Editor.Root>
+  );
+};
+
+/**
+ * Renders the current comments (reactively from the atom), labelling each with the text it anchors to
+ * (resolved from its relative cursor against the live editor state).
+ */
+const CommentsList = ({
+  commentsAtom,
+  getView,
+}: {
+  commentsAtom: Atom.Atom<Comment[]>;
+  getView: () => EditorController['view'] | undefined;
+}) => {
+  const items = useAtomValue(commentsAtom);
+  const label = (comment: Comment): string => {
+    const view = getView();
+    const range = view && comment.cursor ? Cursor.getRangeFromCursor(view.state, comment.cursor) : undefined;
+    return (range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id;
+  };
+
+  return (
+    <div className='border-bs border-subdued-separator overflow-y-auto max-bs-48'>
+      <Listbox.Root>
+        <Listbox.Content aria-label='Comments' classNames='p-1'>
+          {items.map((comment) => (
+            <Listbox.Item key={comment.id} id={comment.id}>
+              <Listbox.ItemLabel>{label(comment)}</Listbox.ItemLabel>
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
+    </div>
   );
 };
 

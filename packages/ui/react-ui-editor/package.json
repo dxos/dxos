@@ -68,6 +68,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui": "workspace:*",

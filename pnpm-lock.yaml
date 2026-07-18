@@ -21981,6 +21981,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
