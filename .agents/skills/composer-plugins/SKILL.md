@@ -169,7 +169,7 @@ plugin-foo/
 
 ### Component (`src/components/`)
 
-Low-level UI. Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
+Low-level UI (plugin/src/components, react-ui-\*). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
 Each component lives in its own subdirectory with an `index.ts` barrel.
 Use named exports; no default exports. Create a basic storybook for each.
 

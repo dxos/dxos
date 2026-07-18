@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { type Capabilities } from '@dxos/app-framework';
 import { Operation, ServiceResolver } from '@dxos/compute';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -28,9 +28,11 @@ import { findBindingForTarget } from '../util';
  * reactively. Success/failure of the send itself is surfaced by the invocation's `notify` option (the
  * built-in toast mechanism); post-send bookkeeping failures are logged, not toasted.
  */
-export const useSendEmail = (message: Message.Message): NonNullable<EditMessageProps['onSend']> => {
+export const useSendEmail = (
+  runtime: Capabilities.ProcessManagerRuntime | undefined,
+  message: Message.Message,
+): NonNullable<EditMessageProps['onSend']> => {
   const db = Obj.getDatabase(message);
-  const runtime = useProcessManagerRuntime();
   const spaceId = db?.spaceId;
 
   // Resolve the live mailbox from the draft's `properties.mailbox` uri (send routing + sent-tagging).
@@ -42,6 +44,9 @@ export const useSendEmail = (message: Message.Message): NonNullable<EditMessageP
 
   return useCallback<NonNullable<EditMessageProps['onSend']>>(
     async (draft) => {
+      if (!runtime) {
+        throw new TypeError('Process runtime not available.');
+      }
       if (!spaceId) {
         throw new TypeError('Space not available.');
       }
@@ -87,15 +92,15 @@ export const useSendEmail = (message: Message.Message): NonNullable<EditMessageP
         throw new TypeError('Mailbox is not connected to an email account.');
       }
 
-      // Tag the draft with the provider's own sent tag (Gmail's SENT label / the JMAP Sent folder — the
-      // same tag its canonical synced copy will carry), so it locks read-only and reads consistently
-      // with sent messages, and record the reconcile match key. Reusing the provider tag (resolved by
-      // the send op) avoids inventing a parallel "sent" tag. Best effort: a failure here leaves the
-      // message sent but the draft untagged, so log rather than throw.
+      // Tag the draft with the canonical `sent` system tag (resolved by the send op — the same tag the
+      // message's synced copy will carry, since sync maps Gmail's SENT label / the JMAP Sent folder onto
+      // it), so the draft locks read-only, reads consistently with sent messages, and reconciles against
+      // that copy. Best effort: a failure here leaves the message sent but the draft untagged, so log
+      // rather than throw.
       try {
         const key = { source: sent.sentTag.source, id: sent.sentTag.id };
-        // Query first so an existing provider tag keeps its label — `findOrCreate` would rewrite it, and
-        // the next sync would rewrite it back. Create one only before the first sync has surfaced it.
+        // Query first so the existing tag keeps its label/hue — `findOrCreate` would rewrite the label,
+        // and the next sync would rewrite it back. Create one only before the first sync has surfaced it.
         const [existing] = await db.query(Filter.foreignKeys(Tag.Tag, [key])).run();
         const tag = existing ?? (await Tag.findOrCreate(db, { key, label: sent.sentTag.label }));
         const sentTagUri = Obj.getURI(tag).toString();

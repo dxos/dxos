@@ -632,31 +632,6 @@ export const AnalyzeMailbox = Operation.make({
   }),
 });
 
-export const AnalyzeTopics = Operation.make({
-  meta: {
-    key: makeKey('analyzeTopics'),
-    name: 'Analyze Topics',
-    description: 'Tags every message and clusters the mailbox threads into suggested topics for review.',
-    icon: 'ph--stack--regular',
-  },
-  // Capability.Service: read the ProgressRegistry to publish a live monitor for the run.
-  services: [Capability.Service, AiService.AiService, Database.Service],
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
-      description: 'Mailbox whose messages are tagged and whose threads are clustered into topics.',
-    }),
-    limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
-        description: 'Cap messages tagged this run (resumable-lite; re-invoke to continue).',
-      }),
-    ),
-  }),
-  output: Schema.Struct({
-    tagged: Schema.Number,
-    suggestions: Schema.Number,
-  }),
-});
-
 export const CreateTopicFromMessage = Operation.make({
   meta: {
     key: makeKey('createTopicFromMessage'),

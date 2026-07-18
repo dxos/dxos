@@ -45,6 +45,8 @@ export type FetchMessagesProps = {
   readonly onEnumerated?: (count: number) => void;
   /** Called once per message retrieved (full fetch), to advance progress. */
   readonly onRetrieved?: () => void;
+  /** Incremental delta's created message ids; when set, replaces the forward window (backward still runs). */
+  readonly forwardIds?: readonly string[];
 };
 
 /**
@@ -74,7 +76,9 @@ export const fetchMessages = (
         })
       : Stream.empty;
 
-  return Stream.concat(idsFor(config.windows.forward), idsFor(config.windows.backward)).pipe(
+  const forward = config.forwardIds ? Stream.fromIterable(config.forwardIds) : idsFor(config.windows.forward);
+
+  return Stream.concat(forward, idsFor(config.windows.backward)).pipe(
     Cursor.skipCommitted('skip-committed', (messageId) => messageId),
     Stream.mapEffect(
       (messageId) =>

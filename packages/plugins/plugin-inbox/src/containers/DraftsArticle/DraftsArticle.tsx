@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
@@ -21,23 +21,20 @@ import { Mailbox } from '#types';
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
 
-export type DraftsArticleProps = AppSurface.SpaceArticleProps<{
-  attendableId?: string;
-  mailbox: Mailbox.Mailbox;
-}>;
+export type DraftsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Mailbox>;
 
 /**
  * Drafts list for a mailbox. Query matches the same mailbox-scoped draft messages as the former per-draft nav nodes.
  */
 // TODO(wittjosiah): Reconcile implementation with MailboxArticle.
-export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArticleProps) => {
+export const DraftsArticle = ({ role, subject: mailbox, attendableId }: DraftsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const id = attendableId ?? Obj.getURI(mailbox);
   const currentId = useSelection(id, 'single');
 
-  const db = space.db;
+  const db = Obj.getDatabase(mailbox);
   const mailboxUri = Obj.getURI(mailbox);
 
   const draftsFilter = useMemo(

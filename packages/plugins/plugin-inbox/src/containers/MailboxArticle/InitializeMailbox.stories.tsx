@@ -52,7 +52,7 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(personalSpace));
+              yield* Effect.promise(() => initializeMailbox(personalSpace.db));
               if (withToken) {
                 personalSpace.db.add(
                   Obj.make(AccessToken.AccessToken, {

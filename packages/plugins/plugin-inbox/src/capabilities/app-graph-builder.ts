@@ -10,10 +10,9 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Feed, Filter, Key, Obj, Order, Query, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
-import { Topic } from '@dxos/pipeline-email';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
@@ -26,24 +25,9 @@ import { kebabize } from '@dxos/util';
 import { meta } from '#meta';
 import { Calendar, InboxOperation, Mailbox } from '#types';
 
-import {
-  MAILBOX_DRAFTS_NODE_DATA,
-  MAILBOX_DRAFTS_TYPE,
-  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
-  MAILBOX_SUBSCRIPTIONS_TYPE,
-  MAILBOX_TOPICS_NODE_DATA,
-  MAILBOX_TOPICS_TYPE,
-  MAILBOXES_SECTION_TYPE,
-} from '../constants';
+import { MAILBOX_DRAFTS_TYPE, MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
 import { createSyncProgressKey } from '../operations/mail/mail-sync';
-import {
-  getCalendarsPath,
-  getDraftsId,
-  getMailboxesPath,
-  getMailboxesSectionId,
-  getSubscriptionsId,
-  getTopicsId,
-} from '../paths';
+import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId, getSubscriptionsId } from '../paths';
 import { syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
@@ -204,7 +188,9 @@ export default Capability.makeModule(
                   Node.make({
                     id: getDraftsId(),
                     type: MAILBOX_DRAFTS_TYPE,
-                    data: MAILBOX_DRAFTS_NODE_DATA,
+                    // The folder node's data IS the mailbox, so the article surface receives it as `subject`
+                    // (see `DraftsArticle`); the surface filter narrows by the node's trailing path segment.
+                    data: mailbox,
                     properties: {
                       label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
@@ -213,20 +199,9 @@ export default Capability.makeModule(
                     },
                   }),
                   Node.make({
-                    id: getTopicsId(),
-                    type: MAILBOX_TOPICS_TYPE,
-                    data: MAILBOX_TOPICS_NODE_DATA,
-                    properties: {
-                      label: ['topics.label', { ns: meta.profile.key }],
-                      icon: 'ph--stack--regular',
-                      iconHue: 'rose',
-                      mailbox,
-                    },
-                  }),
-                  Node.make({
                     id: getSubscriptionsId(),
                     type: MAILBOX_SUBSCRIPTIONS_TYPE,
-                    data: MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+                    data: mailbox,
                     properties: {
                       label: ['subscriptions.label', { ns: meta.profile.key }],
                       icon: 'ph--envelope-simple--regular',
@@ -385,31 +360,6 @@ export default Capability.makeModule(
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
               data: thread.length > 0 ? thread : 'message',
-            }),
-          ]);
-        },
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'mailboxTopics',
-        match: NodeMatcher.whenNodeType(MAILBOX_TOPICS_TYPE),
-        connector: (node, get) => {
-          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
-          if (!mailbox || !db) {
-            return Effect.succeed([]);
-          }
-
-          // The selected topic (Topics list → detail) becomes the companion's subject so `TopicArticle`
-          // renders it. Topics live in the space db (not a feed), so a plain id lookup resolves them.
-          const topicId = get(selectedId(node.id));
-          const topic = topicId ? get(db.query(Query.select(Filter.id(topicId))).atom)[0] : undefined;
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: linkedSegment('topic'),
-              label: ['topic.label', { ns: meta.profile.key }],
-              icon: 'ph--stack--regular',
-              data: Obj.instanceOf(Topic, topic) ? topic : 'topic',
             }),
           ]);
         },
@@ -640,46 +590,6 @@ export default Capability.makeModule(
               },
             ];
           });
-        },
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'analyzeTopicsMailbox',
-        // Filter nodes store the parent mailbox as node.data; exclude them so the action only appears
-        // on the mailbox itself (peer of the `sync` action).
-        match: (node) =>
-          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
-            ? Option.some(node.data)
-            : Option.none(),
-        actions: (mailbox) => {
-          const db = Obj.getDatabase(mailbox);
-          if (!db) {
-            return Effect.succeed([]);
-          }
-          // Tags the mailbox's messages and clusters its threads into Topic objects. Available whenever
-          // the mailbox has a db (no connection required — it runs over already-synced messages).
-          return Effect.succeed([
-            {
-              id: 'analyze-topics',
-              data: () =>
-                Operation.invoke(
-                  InboxOperation.AnalyzeTopics,
-                  { mailbox: Ref.make(mailbox) },
-                  {
-                    spaceId: db.spaceId,
-                    notify: {
-                      success: ['analyze-topics-success.title', { ns: meta.profile.key }],
-                      error: ['analyze-topics-error.title', { ns: meta.profile.key }],
-                    },
-                  },
-                ),
-              properties: {
-                label: ['analyze-topics.label', { ns: meta.profile.key }],
-                icon: 'ph--stack--regular',
-                disposition: 'list-item',
-              },
-            },
-          ]);
         },
       }),
 
