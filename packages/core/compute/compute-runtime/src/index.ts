@@ -4,7 +4,6 @@
 
 export * from './errors';
 export * as FeedTraceSink from './FeedTraceSink';
-export * from './executor';
 export * from './functions-trace';
 export * as LayerStack from './LayerStack';
 export * from './protocol';
