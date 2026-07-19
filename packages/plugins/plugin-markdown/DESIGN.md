@@ -300,17 +300,71 @@ margin card** — so the review surface belongs with comments, not markdown:
    `diffView` reverts to the three branch-vs-parent compare variants
    (`inline`/`sideBySide`/`gutter`).
 
-### Phasing (implementation order)
+### Implementation plan
 
-1. `RejectChange` operation + `UndoMapping` inverses for accept/reject (durable, undoable) —
-   extends today's single-branch flow with no new UI.
-2. `Branch.kind` discriminator + lazy per-user suggestion-branch create / auto-archive-when-empty.
-3. Multi-source **overlay compositor** (stack + re-diff, per-author colour) + `groupHunks` grouping
-   — the core new UI primitive.
-4. **Comment-style cards** reusing plugin-comments anchoring/threads; move the review layer (overlay
-   wiring + cards + accept/reject) into plugin-comments; collapse `suggest` into it and drop it from
-   `diffView`.
-5. _(Later, separate track)_ branch-level ACL for private drafts.
+Each phase is independently shippable and leaves the tree green. File paths are the intended homes;
+"→ test/story" names the coverage each step must add.
+
+#### Phase 1 — durable, undoable Accept/Reject (no new UI)
+
+Foundation: make the existing single-branch accept flow durable-symmetric and undoable.
+
+- **`RejectChange` operation.** Add the definition next to `AcceptChange` in
+  `packages/sdk/app-toolkit/src/operations/CollaborationOperation.ts` — same input shape
+  `{ subject, anchor, branch }`. Handler `packages/plugins/plugin-markdown/src/operations/reject-change.ts`
+  (mirror `accept-change.ts`): resolve the subject's content, `getRangeFromCursor(anchor)`, read the
+  compare `branch`'s text (`getObjectOnBranch`), and `cherryPickHunk(branchContent, base, range)` to
+  splice the **base** back into the **branch** at that hunk (revert). Register in
+  `operations/index.ts` (`MarkdownOperationHandlerSet`). → `reject-change.test.ts`.
+- **Undo mappings.** Register `AppCapabilities.UndoMapping` for both ops (mirror plugin-comments'
+  registration in `capabilities/`): each `UndoMapping` supplies an `inverse` op + `deriveContext`
+  that reconstructs the inverse input from the forward input/output (the op returns the replaced
+  text so the inverse can restore it). Accept's inverse re-splices the original into main; Reject's
+  inverse re-applies the suggested text. → extend `versioning.test.ts` round-trip with accept→undo,
+  reject→undo.
+
+#### Phase 2 — per-user suggestion branches (`Branch.kind` + lifecycle)
+
+- **Schema.** Add `kind: Schema.optional(Schema.Literal('suggestion', 'draft'))` to `Branch`
+  (`packages/sdk/versioning/src/internal/types.ts`); existing/explicit branches read as `draft`.
+- **Helpers** in `@dxos/versioning` `Branch.ts`: `suggestionBranch(doc, creator)` — find-or-create
+  the caller's `kind:'suggestion'` branch keyed by `creator` (identity DID), idempotent;
+  `archiveIfEmpty(doc, branch)` — re-diff the branch vs its parent-at-anchor and `discard` (archive)
+  when zero hunks. `Branch.label` resolves a suggestion branch to its author (DID → `Person`).
+- **Wiring.** Lazy-create on the first suggested edit; call `archiveIfEmpty` after each accept/reject
+  (Phase 1). → `branch.test.ts`: find-or-create idempotency, archive-when-empty.
+
+#### Phase 3 — multi-source overlay compositor + grouping (`@dxos/ui-editor/review`)
+
+- **`suggestions({ base, sources })` extension** generalizing `suggestChanges`: `sources:
+  Array<{ author, colour, content }>`. Per source compute `diffHunks(base, content)`, tag each hunk
+  with author/colour, and compose one decoration set — overlapping hunks stack deterministically
+  (offset, then author). `suggestChanges` becomes the `sources.length === 1` wrapper.
+- **`groupHunks(hunks, policy)`** pure fn (`review/diff.ts`): coalesce an author's adjacent hunks;
+  `policy` = `{ maxGap, respectBlockBoundaries }` with defaults. → `diff.test.ts` (grouping cases).
+- **Author colour** from the editor's collaboration awareness palette
+  (`ui-editor/src/extensions/collab/awareness`) so a suggestion matches the author's cursor colour.
+- → `Suggestions.stories.tsx` (react-ui-editor): 2–3 authors incl. an overlap; accept re-diffs.
+
+#### Phase 4 — comment-style cards; move the review layer to plugin-comments
+
+- **Suggestions review layer in plugin-comments.** A companion/overlay that, for a document + its
+  `kind:'suggestion'` branches, mounts the `suggestions` overlay (Phase 3) and renders one **anchored
+  card per group** (author, before/after, Accept/Reject → the Phase-1 ops with the author's branch
+  key), reusing `AnchoredTo` anchoring + the `Thread`/`Message` card UI and the `CommentsArticle`
+  companion. Cards carry an optional reply thread.
+- **Collapse `suggest`.** Remove `'suggest'` from `Markdown.Settings.DiffViewMode`
+  (`types/Settings.ts`) and the `suggestActive`/parent-binding branch + its compartment handling in
+  `MarkdownArticle`; `diffView` reverts to `inline | sideBySide | gutter`. plugin-markdown keeps only
+  the extension-provider + settings contribution.
+- **Deps.** plugin-comments → `@dxos/ui-editor` (suggestions) + `@dxos/versioning` (branch/merge) —
+  both are lower layers, no cycle. → plugin-comments multi-author suggestions story + accept/reject.
+
+#### Phase 5 — branch-level ACL (separate track)
+
+Out of scope here; suggestion branches stay space-visible until the echo-core branch ACL lands
+(see `@dxos/echo-client` VERSIONING.md). Then: model private drafts as author-only, and re-express
+Reject (a non-author writing the author's branch) as a permitted op under that ACL.
 
 ## Risks / notes
 
