@@ -3,15 +3,18 @@
 //
 
 import { type ViewUpdate } from '@codemirror/view';
+import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
-import { Paths } from '@dxos/app-toolkit';
+import { type AppCapabilities, NotFound } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { EffectEx } from '@dxos/effect';
 import { type Identity } from '@dxos/halo';
-import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { type ViewStateManager, selectionAspect } from '@dxos/react-ui-attention';
@@ -89,6 +92,7 @@ export const useExtensions = ({
   onSelectObject,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
+  const { builder } = useAppGraph();
   const space = getSpace(object);
 
   // Get the content reference from Document objects.
@@ -116,6 +120,7 @@ export const useExtensions = ({
         setWidgets,
         platform,
         onSelectObject,
+        builder,
       }),
     [
       id,
@@ -132,6 +137,7 @@ export const useExtensions = ({
       settings?.numberedHeadings,
       platform,
       onSelectObject,
+      builder,
     ],
   );
 
@@ -177,7 +183,8 @@ const createBaseExtensions = ({
   viewState,
   setWidgets,
   platform,
-}: ExtensionsOptions & { space?: Space }): Extension[] => {
+  builder,
+}: ExtensionsOptions & { space?: Space; builder: AppCapabilities.AppGraph['builder'] }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
@@ -195,7 +202,7 @@ const createBaseExtensions = ({
           selectionChangeDelay: 100,
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
-          renderLinkButton: onSelectObject && createRenderLink(onSelectObject),
+          renderLinkButton: onSelectObject && createRenderLink(onSelectObject, builder),
           // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
           skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
@@ -264,23 +271,37 @@ const selectionChange = (viewState: ViewStateManager) => {
 };
 
 const createRenderLink =
-  (onSelectObject: (id: string, modifiers?: { shift: boolean }) => void): RenderCallback<{ url: string }> =>
+  (
+    onSelectObject: (id: string, modifiers?: { shift: boolean }) => void,
+    builder: AppCapabilities.AppGraph['builder'],
+  ): RenderCallback<{ url: string }> =>
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-    const qualifiedId = isInternal ? Paths.fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
     const icon = Domino.of('span')
       .classNames('dx-link ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
-      invariant(qualifiedId, 'Invalid link format.');
+      const pathname = new URL(url, window.location.origin).pathname;
+
+      // Resolution walks the graph, so it's async; the click handler stays enabled throughout and
+      // simply no-ops (with a warning) if the link doesn't resolve to a node.
+      const handleSelect = async (modifiers?: { shift: boolean }) => {
+        const nodeId = await EffectEx.runPromise(NotFound.resolveInternalLink(builder, pathname));
+        if (Option.isNone(nodeId)) {
+          log.warn('internal link did not resolve to a node', { url });
+          return;
+        }
+        onSelectObject(nodeId.value, modifiers);
+      };
+
       icon
         .attributes({ role: 'button', tabindex: '0' })
         .on('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
-          onSelectObject(qualifiedId, { shift: event.shiftKey });
+          void handleSelect({ shift: event.shiftKey });
         })
         .on('keydown', (event) => {
           if (event.key !== 'Enter' && event.key !== ' ') {
@@ -289,7 +310,7 @@ const createRenderLink =
 
           event.preventDefault();
           event.stopPropagation();
-          onSelectObject(qualifiedId, { shift: event.shiftKey });
+          void handleSelect({ shift: event.shiftKey });
         });
     }
 

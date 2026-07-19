@@ -6,13 +6,11 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Instructions } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
 import { StateMap, TagIndex } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
   CreateObject,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   RoutineTemplates,
@@ -31,7 +29,6 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

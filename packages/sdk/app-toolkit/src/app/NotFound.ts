@@ -7,14 +7,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Graph, Node } from '@dxos/app-graph';
+import { Graph, GraphBuilder, Node, PathResolution } from '@dxos/app-graph';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { expandAttendableId } from '@dxos/react-ui-attention/types';
 
-import { AppCapabilities } from '../app-framework';
 import * as Paths from './Paths';
+import * as UrlPath from './UrlPath';
 
 export const NOT_FOUND_NODE_ID = 'not-found';
 
@@ -47,21 +47,20 @@ export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): v
  * Validate a navigation target by expanding the graph path and checking existence.
  * Returns the original subjectId if valid, or NOT_FOUND_PATH if the target doesn't exist.
  *
- * Resolution is three independent steps: a path resolver parses the path into an EID (structure
+ * Resolution is three independent steps: `Paths.tryGetEid` parses the path into an EID (structure
  * only — it does not validate the full container path), then existence is checked against that EID
  * locally and, failing that, remotely. The path is considered valid if the object exists in either
  * store — we render it best-effort even if intermediate path segments (collection, feed, etc.) no
- * longer describe where it lives. If no resolver recognizes the path, it's a 404. When no existence
+ * longer describe where it lives. If the path doesn't parse to an EID, it's a 404. When no existence
  * checker is available, a resolved EID is trusted.
  */
 export const validateNavigationTarget = (params: {
   graph: Graph.ExpandableGraph;
   subjectId: string;
-  pathResolvers: AppCapabilities.NavigationPathResolver[];
   checkLocalExistence?: ExistenceChecker;
   checkRemoteExistence?: ExistenceChecker;
 }): Effect.Effect<string> => {
-  const { graph, subjectId, pathResolvers, checkLocalExistence, checkRemoteExistence } = params;
+  const { graph, subjectId, checkLocalExistence, checkRemoteExistence } = params;
 
   // Skip validation for system paths.
   if (subjectId === NOT_FOUND_PATH || subjectId === Node.RootId || Paths.isPinnedWorkspace(subjectId)) {
@@ -78,17 +77,8 @@ export const validateNavigationTarget = (params: {
   }
 
   return Effect.gen(function* () {
-    // Parse the path into an EID. If no resolver recognizes the path, there's nothing to open.
-    const id = yield* Effect.reduce(pathResolvers, Option.none<EID.EID>(), (acc, resolver) =>
-      Option.isSome(acc)
-        ? Effect.succeed(acc)
-        : resolver(subjectId).pipe(
-            Effect.catchAll((error) => {
-              log.warn('path resolver failed', { subjectId, error });
-              return Effect.succeed(Option.none<EID.EID>());
-            }),
-          ),
-    );
+    // Parse the path into an EID. If it doesn't parse, there's nothing to open.
+    const id = Paths.tryGetEid(graph, subjectId);
     if (Option.isNone(id)) {
       return NOT_FOUND_PATH;
     }
@@ -121,6 +111,35 @@ export const validateNavigationTarget = (params: {
     return NOT_FOUND_PATH;
   });
 };
+
+/**
+ * Resolve a browser pathname under the pair-chain URL grammar (`UrlPath`) to a graph node id, for
+ * in-app internal-link click-through (e.g. plugin-markdown's internal markdown links) where only a
+ * pathname is on hand rather than an already-parsed pair chain. Only the first plank (id-bearing)
+ * pair is resolved — a link always targets a single node, so anything past it (a companion pair, or
+ * a second plank copied from a shared deck link) is ignored. Returns `Option.none()` for a pathname
+ * that doesn't parse under the grammar, or whose target pair doesn't resolve to an existing node.
+ */
+export const resolveInternalLink = (
+  builder: GraphBuilder.GraphBuilder,
+  pathname: string,
+): Effect.Effect<Option.Option<string>> =>
+  Effect.gen(function* () {
+    const keyTable = PathResolution.buildUrlKeyTable(builder);
+    const parsed = UrlPath.parse(pathname, keyTable);
+    if (Option.isNone(parsed)) {
+      return Option.none();
+    }
+
+    const { workspace, pairs } = parsed.value;
+    const plankPair = pairs.find((pair) => pair.id !== undefined);
+    if (!plankPair) {
+      return Option.none();
+    }
+
+    const resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs: [plankPair] });
+    return Option.fromNullable(resolved[0]?.nodeId);
+  });
 
 /**
  * Create an ExistenceChecker backed by an edge execQuery function (remote existence).

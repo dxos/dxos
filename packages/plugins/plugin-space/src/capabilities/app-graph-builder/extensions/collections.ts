@@ -11,6 +11,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
@@ -330,9 +331,15 @@ const constructObjectActions = ({
           Node.makeAction({
             id: 'copyLink',
             data: () =>
-              Effect.promise(async () => {
-                const url = new URL(Paths.toUrlPath(nodeId), shareableLinkOrigin);
-                await navigator.clipboard.writeText(url.toString());
+              Effect.gen(function* () {
+                const { builder } = yield* Capability.get(AppCapabilities.AppGraph);
+                const path = Paths.getShareableLinkPath(builder, nodeId);
+                if (Option.isNone(path)) {
+                  log.warn('object has no URL representation; cannot copy link', { nodeId });
+                  return;
+                }
+                const url = new URL(path.value, shareableLinkOrigin);
+                yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),
             properties: {
               label: COPY_LINK_LABEL,

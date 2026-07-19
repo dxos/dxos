@@ -4,10 +4,14 @@
 
 // @import-as-namespace
 
-import { Node } from '@dxos/app-graph';
+import * as Option from 'effect/Option';
+
+import { Graph, GraphBuilder, Node, PathResolution } from '@dxos/app-graph';
 import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
+
+import * as UrlPath from './UrlPath';
 
 /**
  * Prefix for pinned (non-space) workspace IDs in the graph.
@@ -155,35 +159,38 @@ export const getCollectionsPath = (spaceId: string, ...segments: string[]): stri
 export const getCollectionObjectPath = (collectionQualifiedId: string, objectId: string): string =>
   `${collectionQualifiedId}/${objectId}`;
 
-//
-// URL routing helpers.
-// These are the only supported way to translate between browser pathnames and qualified graph IDs.
-//
-
 /**
- * Convert a qualified graph ID to a browser URL pathname by stripping the leading `root` segment.
- * Segment content (including `!`, `~`, `:`, etc.) is preserved verbatim.
+ * Structurally parse a qualified graph path into an ECHO EID: the SpaceId segment plus the trailing
+ * EntityId-valid segment, regardless of what lies between them (a canonical database path, a
+ * collection path, a custom type-section path, …). Ported from plugin-space's old generic
+ * `NavigationPathResolver` so app-toolkit can do this parsing with no plugin dependency — used by
+ * `NotFound.validateNavigationTarget` and `plugin-deck`'s DXN dedup. `graph` gates the result on the
+ * path's workspace actually being a known node, so an arbitrary SpaceId-shaped substring in an
+ * unrelated string can't be mistaken for a valid target.
  */
-export const toUrlPath = (qualifiedId: string): string => {
-  if (qualifiedId === Node.RootId) {
-    return '/';
+export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Option.Option<EID.EID> => {
+  const spaceId = getSpaceIdFromPath(qualifiedId);
+  const segments = qualifiedId.split('/');
+  const objectId = segments[segments.length - 1];
+  if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
+    return Option.none();
   }
-  if (qualifiedId.startsWith(`${Node.RootId}/`)) {
-    return `/${qualifiedId.slice(Node.RootId.length + 1)}`;
+  if (Option.isNone(Graph.getNode(graph, getSpacePath(spaceId)))) {
+    return Option.none();
   }
-  return `/${qualifiedId}`;
+  return Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId }));
 };
 
 /**
- * Restore a browser URL pathname to a qualified graph ID by prepending the `root` segment.
+ * Build a single-object shareable link pathname (`/w/<workspace>/<key>/<id>`) for a graph node, the
+ * outbound counterpart to {@link tryGetEid}/{@link resolveInternalLink}: reverse-maps the node via
+ * `PathResolution.representNode` and formats it under the pair-chain grammar. Returns `Option.none()`
+ * for a node with no key-declaring producer (unmapped — see `PathResolution.representNode`).
  */
-export const fromUrlPath = (pathname: string): string => {
-  const trimmed = decodeURIComponent(pathname).replace(/^\/+/, '');
-  if (!trimmed) {
-    return Node.RootId;
-  }
-  return `${Node.RootId}/${trimmed}`;
-};
+export const getShareableLinkPath = (builder: GraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> =>
+  Option.map(PathResolution.representNode(builder, nodeId), (represented) =>
+    UrlPath.format({ workspace: represented.workspace, pairs: [represented] }),
+  );
 
 /**
  * Canonical qualified path to the custom type section node directly under a space.
@@ -213,9 +220,8 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  * export { getChatsPath, getChatPath };
  * ```
  *
- * Always use alongside {@link TypeSection.createTypeSectionExtension} and
- * {@link TypeSection.createTypeSectionPathResolver} — pass the same `groupId` to all three.
- *
+ * Always use alongside {@link TypeSection.createTypeSectionExtension}, passing the same `groupId`
+ * to both.
  */
 export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId?: string }) => {
   const typename = Type.getTypename(type);

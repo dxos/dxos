@@ -11,7 +11,6 @@ import {
   CreateObject,
   FactStore,
   MailboxAction,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   Settings,
@@ -29,7 +28,6 @@ export const BrainPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Topic.Topic] }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

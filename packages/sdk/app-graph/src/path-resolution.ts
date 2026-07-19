@@ -57,16 +57,17 @@ const isReservedUrlKey = (key: string): boolean =>
   RESERVED_URL_KEYS.has(key) || SpaceId.isValid(key) || EntityId.isValid(key);
 
 /**
- * Build the global `urlKey -> extensionId` table from the builder's current extensions, ordered by
- * Position then insertion order (matching connector-ordering semantics elsewhere in this package).
- * The first registration of a key wins; later ones, and any reserved-word key, are dropped with a
- * `log.warn`. Recomputed on every call — cheap (a synchronous scan of already-registered extensions)
- * and always current, so activating/deactivating plugins can never leave a stale table around.
+ * Ordered, deduped `urlKey`-declaring extensions: sorted by Position then insertion order (matching
+ * connector-ordering semantics elsewhere in this package), with reserved-word and duplicate keys
+ * dropped (each with a `log.warn`) so the first registration of a key wins. Shared by
+ * {@link buildKeyTable} (reverse `key -> extensionId` lookup) and {@link buildUrlKeyTable} (the
+ * `UrlPath.parse` table), so the dedup/reservation rules are expressed exactly once.
  */
-const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string> => {
+const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): GraphBuilder.BuilderExtension[] => {
   const extensions = Function.pipe(Record.values(builder.getExtensions()), Array.sortBy(Position.compare));
 
-  const table = new Map<string, string>();
+  const seen = new Set<string>();
+  const keyed: GraphBuilder.BuilderExtension[] = [];
   for (const extension of extensions) {
     const key = extension.urlKey;
     if (!key) {
@@ -76,11 +77,47 @@ const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string> 
       log.warn('reserved URL prefix key', { key, extension: extension.id });
       continue;
     }
-    if (table.has(key)) {
+    if (seen.has(key)) {
       log.warn('duplicate URL prefix key', { key, extension: extension.id });
       continue;
     }
-    table.set(key, extension.id);
+    seen.add(key);
+    keyed.push(extension);
+  }
+  return keyed;
+};
+
+/**
+ * Build the global `urlKey -> extensionId` table from the builder's current extensions. Recomputed
+ * on every call — cheap (a synchronous scan of already-registered extensions) and always current, so
+ * activating/deactivating plugins can never leave a stale table around.
+ */
+const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string> => {
+  const table = new Map<string, string>();
+  for (const extension of getKeyedExtensions(builder)) {
+    table.set(extension.urlKey!, extension.id);
+  }
+  return table;
+};
+
+/**
+ * A single registered URL prefix key, in the shape `UrlPath.parse` expects. Kept as a plain
+ * structural type here (rather than importing `UrlPath.KeyTableEntry`) because app-graph must not
+ * depend on app-toolkit.
+ */
+export type UrlKeyTableEntry = { key: string; hasId: boolean };
+
+/**
+ * Build the `urlKey -> { key, hasId }` table consumed by `UrlPath.parse`, straight from the
+ * builder's current `urlKey`/`urlKeyHasId` declarations — the "registration, not parser" property
+ * the URL grammar requires. Callers (deck/simple-layout url-handlers) pass this to `UrlPath.parse`
+ * to tokenize a pathname into a pair chain.
+ */
+export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
+  const table = new Map<string, UrlKeyTableEntry>();
+  for (const extension of getKeyedExtensions(builder)) {
+    const key = extension.urlKey!;
+    table.set(key, { key, hasId: extension.urlKeyHasId ?? true });
   }
   return table;
 };

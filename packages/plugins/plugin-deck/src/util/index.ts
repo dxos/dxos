@@ -5,5 +5,5 @@
 export * from './companion-view-state';
 export * from './layoutAppliesTopbar';
 export * from './migrate-persisted-state';
-export * from './plank-url-params';
+export * from './serialize-deck-url';
 export * from './set-active';

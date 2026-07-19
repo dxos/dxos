@@ -56,7 +56,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(
       AppCapabilities.AppGraph,
-      { graph: builder.graph, explore: GraphBuilder.explore },
+      { graph: builder.graph, explore: GraphBuilder.explore, builder },
       () =>
         Effect.sync(() => {
           // clearInterval(interval);

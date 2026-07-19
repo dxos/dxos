@@ -75,7 +75,15 @@ Single change, no compatibility shims. Land after B2.
 
 ### Tasks
 
-- [ ] **Cut over URL handling**
+- [x] **Cut over URL handling** — landed; both url-handlers rewritten to the
+      `/w/` pair-chain grammar, `plank-url-params` → `serialize-deck-url`,
+      `NavigationPathResolver` + 7 plugin files deleted (2 target-resolver
+      extractions kept), `Paths.toUrlPath`/`fromUrlPath` +
+      `createTypeSectionPathResolver` deleted, `Paths.tryGetEid` added. Deck
+      49, app-toolkit 124, app-graph 110, space/markdown/inbox/assistant
+      suites green; zero-warning lint. NOTE: `GraphProps.nodes` constructor
+      option is latently broken upstream (immutable Record.set discarded) —
+      tests must seed via `Graph.addNode`; consider an upstream fix later.
   - Rewrite deck + simple-layout url-handlers.
   - Delete `plank-url-params.ts` (+ test).
   - `open.ts` / `NotFound.ts`: drop `pathResolvers`, add `Paths.tryGetEid`.

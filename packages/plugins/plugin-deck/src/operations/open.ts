@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, NotFound } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, NotFound, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, EID, Obj } from '@dxos/echo';
@@ -29,8 +29,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
       // Validate navigation targets, redirecting to 404 if not found.
-      const capabilities = yield* Capability.Service;
-      const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
       const client = yield* Capability.get(ClientCapabilities.Client).pipe(
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
@@ -69,7 +67,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             : NotFound.validateNavigationTarget({
                 graph,
                 subjectId,
-                pathResolvers,
                 checkLocalExistence,
                 checkRemoteExistence,
               }),
@@ -84,57 +81,35 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
       }
 
-      // Dedup subjects against the active deck using DXN identity.
+      // Dedup subjects against the active deck using EID identity.
       // The same object can appear under different graph paths (e.g., via collections vs types).
-      // Resolve each subject's DXN and, if it matches an already-open deck item, remap the
+      // Resolve each subject's EID and, if it matches an already-open deck item, remap the
       // subject to the existing deck entry so that openEntry's exact-match check succeeds.
       {
         const deck = yield* DeckCapabilities.getDeck();
         const active = deck.active;
         if (active.length > 0 && input.subject.length > 0) {
-          const resolveDXN = (qualifiedPath: string) =>
-            Effect.reduce(pathResolvers, Option.none<string>(), (acc, resolver) =>
-              Option.isSome(acc)
-                ? Effect.succeed(acc)
-                : resolver(qualifiedPath).pipe(
-                    Effect.map((opt) => Option.map(opt, (dxn) => dxn.toString())),
-                    Effect.catchAll(() => Effect.succeed(Option.none<string>())),
-                  ),
-            );
+          // Build EID → deck item ID map for active items.
+          const deckEidMap = new Map<string, string>();
+          for (const deckId of active) {
+            const eid = Paths.tryGetEid(graph, deckId);
+            if (Option.isSome(eid)) {
+              deckEidMap.set(eid.value, deckId);
+            }
+          }
 
-          // Build DXN → deck item ID map for active items.
-          const deckDxnMap = new Map<string, string>();
-          yield* Effect.all(
-            active.map((deckId) =>
-              resolveDXN(deckId).pipe(
-                Effect.map((opt) => {
-                  if (Option.isSome(opt)) {
-                    deckDxnMap.set(opt.value, deckId);
-                  }
-                }),
-              ),
-            ),
-            { concurrency: 'unbounded' },
-          );
-
-          // Remap subjects whose DXN matches an existing deck item.
-          if (deckDxnMap.size > 0) {
-            const remapped = yield* Effect.all(
-              input.subject.map((subjectId) =>
-                resolveDXN(subjectId).pipe(
-                  Effect.map((opt) => {
-                    if (Option.isSome(opt)) {
-                      const existing = deckDxnMap.get(opt.value);
-                      if (existing && existing !== subjectId) {
-                        return existing;
-                      }
-                    }
-                    return subjectId;
-                  }),
-                ),
-              ),
-              { concurrency: 'unbounded' },
-            );
+          // Remap subjects whose EID matches an existing deck item.
+          if (deckEidMap.size > 0) {
+            const remapped = input.subject.map((subjectId) => {
+              const eid = Paths.tryGetEid(graph, subjectId);
+              if (Option.isSome(eid)) {
+                const existing = deckEidMap.get(eid.value);
+                if (existing && existing !== subjectId) {
+                  return existing;
+                }
+              }
+              return subjectId;
+            });
             input = { ...input, subject: remapped };
           }
         }

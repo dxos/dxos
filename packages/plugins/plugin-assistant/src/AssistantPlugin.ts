@@ -30,7 +30,6 @@ import {
   LocalModelResolver,
   MarkdownExtension,
   Migrations,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   Settings,
@@ -49,7 +48,6 @@ const StateReady = AppActivationEvents.createStateEvent(meta.profile.key);
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
     AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
     AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
     AppPlugin.addCreateObjectModule({ activate: CreateObject }),
     AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

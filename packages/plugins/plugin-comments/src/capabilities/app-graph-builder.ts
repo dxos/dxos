@@ -39,6 +39,8 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'commentsCompanion',
         urlKey: 'comments',
+        // A companion pair attaches to the preceding plank's node; it never carries its own id segment.
+        urlKeyHasId: false,
         match: (node, get) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();

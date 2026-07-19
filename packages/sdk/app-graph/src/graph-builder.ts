@@ -58,6 +58,13 @@ export type BuilderExtension = Readonly<{
    * `path-resolution.ts` for how the key table is derived and used.
    */
   urlKey?: string;
+  /**
+   * Whether a `urlKey` pair consumes a following id segment. `true` (the default) for a
+   * plank-opening key (e.g. `doc`, addressing a real object id); `false` for a companion key (e.g.
+   * `comments`) or a fixed singleton node (e.g. `home`), neither of which has a variable id to
+   * encode. Read by `path-resolution.ts`'s key-table derivation, consumed by `UrlPath.parse`.
+   */
+  urlKeyHasId?: boolean;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 }>;
 
@@ -522,6 +529,7 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
  * @param params.relation The relation the graph is being expanded from the existing node.
  * @param params.position Affects the order the extensions are processed in.
  * @param params.urlKey Registered URL prefix key for nodes this extension's connector produces.
+ * @param params.urlKeyHasId Whether `urlKey` consumes a following id segment (default `true`).
  * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
  * @param params.actions A function to add actions to the graph based on a connection to an existing node.
  * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
@@ -531,6 +539,7 @@ export type CreateExtensionRawOptions = {
   relation?: Node.RelationInput;
   position?: Position.Position;
   urlKey?: string;
+  urlKeyHasId?: boolean;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
   actionGroups?: ActionGroupsExtension;
@@ -559,6 +568,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     position,
     relation = 'child',
     urlKey,
+    urlKeyHasId,
     connector: _connector,
     actions: _actions,
     actionGroups: _actionGroups,
@@ -600,6 +610,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
           position,
           relation: normalizedRelation,
           urlKey,
+          urlKeyHasId,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -677,6 +688,8 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   position?: Position.Position;
   /** Registered URL prefix key for nodes this extension's connector produces. */
   urlKey?: string;
+  /** Whether `urlKey` consumes a following id segment (default `true`); see {@link BuilderExtension.urlKeyHasId}. */
+  urlKeyHasId?: boolean;
 };
 
 /**
@@ -709,7 +722,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   options: CreateExtensionOptions<TMatched, R>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
-    const { id, match, actions, actionGroups, connector, relation, position, urlKey } = options;
+    const { id, match, actions, actionGroups, connector, relation, position, urlKey, urlKeyHasId } = options;
 
     const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
@@ -755,6 +768,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
       relation,
       position,
       urlKey,
+      urlKeyHasId,
       connector: connectorExtension,
       actions: actionsExtension,
       actionGroups: actionGroupsExtension,
