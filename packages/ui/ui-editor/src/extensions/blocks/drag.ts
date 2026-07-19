@@ -16,7 +16,7 @@ import {
 } from '@codemirror/view';
 
 import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection';
-import { type Block } from './types';
+import { type Block, type BlockExtent } from './types';
 
 export type BlockDragOptions = {
   /**
@@ -36,6 +36,33 @@ export type BlockDragOptions = {
   clampX?: boolean;
   /** Class applied to the drag gutter (default `cm-blockDragGutter`, styled at 60px wide). */
   gutterClass?: string;
+  /**
+   * Maps a block to the range it visually occupies for the collapse/preview/placeholder — its subtree for
+   * the outliner. Defaults to the block's own range (markdown blocks). The gutter grips and drop-index
+   * logic still use `getBlocks` (own, non-overlapping ranges).
+   */
+  getExtent?: BlockExtent;
+  /**
+   * Pixels to push the grip down within its row so it centers on the first line's rendered content rather
+   * than the raw line-box top (e.g. the outliner's row top padding). Default `0`.
+   */
+  gripInsetTop?: number;
+};
+
+// Merges sorted ranges, combining any that overlap or touch (nested subtree extents from a parent and its
+// selected child would otherwise produce overlapping block-replace decorations).
+const mergeRanges = (ranges: { from: number; to: number }[]): { from: number; to: number }[] => {
+  const sorted = [...ranges].sort((a, b) => a.from - b.from);
+  const merged: { from: number; to: number }[] = [];
+  for (const range of sorted) {
+    const last = merged.at(-1);
+    if (last && range.from <= last.to) {
+      last.to = Math.max(last.to, range.to);
+    } else {
+      merged.push({ ...range });
+    }
+  }
+  return merged;
 };
 
 // Space (px) between the text bounds and the box border, applied above and below. Matches the outline
@@ -65,12 +92,15 @@ class DragHandleMarker extends GutterMarker {
   // The gutter element spans the block's full (possibly multi-row/wrapped) height, so sizing the grip
   // to the first row's height and top-anchoring it centers the grip on that line — a tall heading or a
   // short body line — rather than on the middle of the whole block.
-  constructor(readonly rowHeight: number | undefined) {
+  constructor(
+    readonly rowHeight: number | undefined,
+    readonly insetTop = 0,
+  ) {
     super();
   }
 
   override eq(other: DragHandleMarker): boolean {
-    return other.rowHeight === this.rowHeight;
+    return other.rowHeight === this.rowHeight && other.insetTop === this.insetTop;
   }
 
   override toDOM(): HTMLElement {
@@ -78,6 +108,10 @@ class DragHandleMarker extends GutterMarker {
     element.className = 'cm-blockDragHandle';
     if (this.rowHeight != null) {
       element.style.height = `${this.rowHeight}px`;
+    }
+    // Push the grip down so it centers on the first line's content (past any row top padding).
+    if (this.insetTop) {
+      element.style.marginTop = `${this.insetTop}px`;
     }
     element.textContent = '⠿';
     return element;
@@ -251,6 +285,7 @@ const createDragPlugin = (
   getBlocks: BlockDragOptions['getBlocks'],
   moveBlocks: BlockDragOptions['moveBlocks'],
   clampX: boolean,
+  getExtent?: BlockExtent,
 ) =>
   ViewPlugin.fromClass(
     class {
@@ -397,19 +432,37 @@ const createDragPlugin = (
         this.#lastPointer = null;
       }
 
-      // Rendered height of the region a block's collapse hides: the block plus the blank line below it.
+      // The range the block at `sourceIndex` visually occupies (its subtree for the outliner, else its own
+      // range).
+      #extentOf(sourceIndex: number): Block | null {
+        const block = getBlocks(this.view.state)[sourceIndex];
+        if (!block) {
+          return null;
+        }
+        return getExtent ? getExtent(this.view.state, block) : block;
+      }
+
+      // Start of the first block after `pos`, or the document end when there is none — the point a collapse
+      // extends to so it swallows the trailing blank/separator.
+      #nextStartAfter(pos: number): number {
+        const next = getBlocks(this.view.state).find((block) => block.from > pos);
+        return next ? next.from : this.view.state.doc.length;
+      }
+
+      // Rendered height of the region a block's collapse hides: the block (its extent) plus the blank line
+      // below it.
       #measureCollapseHeight(sourceIndex: number): number {
-        const blocks = getBlocks(this.view.state);
-        const source = blocks[sourceIndex];
-        const firstRect = source && this.#lineRect(source.from);
-        if (!source || !firstRect) {
+        const extent = this.#extentOf(sourceIndex);
+        const firstRect = extent && this.#lineRect(extent.from);
+        if (!extent || !firstRect) {
           return 0;
         }
-        if (sourceIndex + 1 >= blocks.length) {
-          const lastRect = this.#lineRect(source.to);
+        const nextStart = this.#nextStartAfter(extent.to);
+        if (nextStart >= this.view.state.doc.length) {
+          const lastRect = this.#lineRect(extent.to);
           return lastRect ? lastRect.bottom - firstRect.top : 0;
         }
-        const nextTop = this.#lineRect(blocks[sourceIndex + 1].from)?.top;
+        const nextTop = this.#lineRect(nextStart)?.top;
         return nextTop != null ? nextTop - firstRect.top : 0;
       }
 
@@ -430,14 +483,14 @@ const createDragPlugin = (
         height: number;
         layoutHeight: number;
       } | null {
-        const block = getBlocks(this.view.state)[sourceIndex];
-        if (!block) {
+        const extent = this.#extentOf(sourceIndex);
+        if (!extent) {
           return null;
         }
 
         const contentRect = this.view.contentDOM.getBoundingClientRect();
-        const firstRect = this.#lineRect(block.from);
-        const lastRect = this.#lineRect(block.to);
+        const firstRect = this.#lineRect(extent.from);
+        const lastRect = this.#lineRect(extent.to);
         if (firstRect && lastRect) {
           const layoutHeight = lastRect.bottom - firstRect.top;
           return {
@@ -449,8 +502,8 @@ const createDragPlugin = (
           };
         }
 
-        const firstLine = this.view.lineBlockAt(block.from);
-        const lastLine = this.view.lineBlockAt(block.to);
+        const firstLine = this.view.lineBlockAt(extent.from);
+        const lastLine = this.view.lineBlockAt(extent.to);
         const layoutHeight = lastLine.bottom - firstLine.top;
         return {
           left: contentRect.left - BOX_INSET_X,
@@ -482,19 +535,18 @@ const createDragPlugin = (
         content.style.width = `${this.view.contentDOM.clientWidth}px`;
         content.style.transform = `translate(${PREVIEW_OFFSET.x}px, ${PREVIEW_OFFSET.y}px)`;
 
-        const blocks = getBlocks(state);
         const seen = new Set<Element>();
         sourceIndices.forEach((sourceIndex, order) => {
-          const block = blocks[sourceIndex];
-          if (!block) {
+          const extent = this.#extentOf(sourceIndex);
+          if (!extent) {
             return;
           }
           if (order > 0) {
             const spacer = content.appendChild(document.createElement('div'));
             spacer.style.height = `${this.view.defaultLineHeight}px`;
           }
-          const startLine = state.doc.lineAt(block.from).number;
-          const endLine = state.doc.lineAt(block.to).number;
+          const startLine = state.doc.lineAt(extent.from).number;
+          const endLine = state.doc.lineAt(extent.to).number;
           for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
             const { node } = this.view.domAtPos(state.doc.line(lineNumber).from);
             const element = node instanceof Element ? node : node.parentElement;
@@ -606,13 +658,16 @@ const createDragPlugin = (
           return;
         }
         const blocks = getBlocks(this.view.state);
-        const collapses = sources
-          .map((sourceIndex) => {
-            const block = blocks[sourceIndex];
-            const to = sourceIndex + 1 < blocks.length ? blocks[sourceIndex + 1].from : this.view.state.doc.length;
-            return block ? { from: block.from, to } : null;
-          })
-          .filter((range): range is { from: number; to: number } => range != null);
+        // Collapse each dragged block's extent (its subtree for the outliner) plus its trailing separator,
+        // merged so nested/adjacent extents don't produce overlapping block-replace decorations.
+        const collapses = mergeRanges(
+          sources
+            .map((sourceIndex) => {
+              const extent = this.#extentOf(sourceIndex);
+              return extent ? { from: extent.from, to: this.#nextStartAfter(extent.to) } : null;
+            })
+            .filter((range): range is { from: number; to: number } => range != null),
+        );
         const totalHeight = this.#collapseHeights.reduce((sum, height) => sum + height, 0);
         const blockHeight =
           totalHeight - (this.#blockRect ? this.#collapseHeights[0] - this.#blockRect.layoutHeight : 0);
@@ -655,7 +710,7 @@ const dragTheme = EditorView.theme({
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'grab',
-    color: 'var(--dx-description, currentColor)',
+    color: 'var(--color-description, currentColor)',
     opacity: '0.3',
     transition: 'opacity 0.2s',
     lineHeight: '1',
@@ -691,7 +746,7 @@ const dragTheme = EditorView.theme({
     overflow: 'hidden',
     opacity: '0.9',
     padding: '1px 0',
-    backgroundColor: 'var(--dx-base-surface, Canvas)',
+    backgroundColor: 'var(--color-base-surface, Canvas)',
     boxShadow: '0 8px 24px rgb(0 0 0 / 0.35)',
   },
 });
@@ -709,8 +764,10 @@ export const createBlockDrag = ({
   moveBlocks,
   clampX = true,
   gutterClass = DEFAULT_GUTTER_CLASS,
+  getExtent,
+  gripInsetTop = 0,
 }: BlockDragOptions): Extension => {
-  const dragPlugin = createDragPlugin(getBlocks, moveBlocks, clampX);
+  const dragPlugin = createDragPlugin(getBlocks, moveBlocks, clampX, getExtent);
   const dragGutter = gutter({
     class: gutterClass,
     markers: (view) => {
@@ -718,7 +775,7 @@ export const createBlockDrag = ({
       const blocks = getBlocks(view.state);
       for (const index of activeBlockIndices(view.state, getBlocks)) {
         const block = blocks[index];
-        builder.add(block.from, block.from, new DragHandleMarker(firstRowHeight(view, block.from)));
+        builder.add(block.from, block.from, new DragHandleMarker(firstRowHeight(view, block.from), gripInsetTop));
       }
       return builder.finish();
     },

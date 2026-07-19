@@ -5,7 +5,7 @@
 import { type EditorState, type Extension, Prec, StateEffect, StateField } from '@codemirror/state';
 import { EditorView, RectangleMarker, keymap, layer } from '@codemirror/view';
 
-import { type Block } from './types';
+import { type Block, type BlockExtent } from './types';
 
 // Amount (px) the highlight extends left of the content, matching the outline boxes and drag preview.
 const BOX_INSET_X = 8;
@@ -102,7 +102,11 @@ export const getSelectedBlocks = (
 // Highlight (layer): a full-width tinted box behind each selected block, aligned with the outline boxes.
 //
 
-const buildSelectionMarkers = (view: EditorView, getBlocks: BlockOps['getBlocks']): RectangleMarker[] => {
+const buildSelectionMarkers = (
+  view: EditorView,
+  getBlocks: BlockOps['getBlocks'],
+  getExtent?: BlockExtent,
+): RectangleMarker[] => {
   const selected = getSelectedBlocks(view.state, getBlocks);
   if (selected.length === 0) {
     return [];
@@ -112,8 +116,10 @@ const buildSelectionMarkers = (view: EditorView, getBlocks: BlockOps['getBlocks'
   const gutterOffset = contentRect.left - view.scrollDOM.getBoundingClientRect().left;
   const markers: RectangleMarker[] = [];
   for (const { block } of selected) {
-    const from = Math.max(block.from, view.viewport.from);
-    const to = Math.min(block.to, view.viewport.to);
+    // The extent is the range the block visually occupies (its subtree for the outliner).
+    const extent = getExtent ? getExtent(view.state, block) : block;
+    const from = Math.max(extent.from, view.viewport.from);
+    const to = Math.min(extent.to, view.viewport.to);
     if (from > to) {
       continue;
     }
@@ -245,7 +251,7 @@ const clearOnEscape = Prec.high(
  * the drag grip (which populates the selection) independently of `createBlockSelection`. The blocks are
  * supplied by the caller (see `blockSelectionHighlight` for markdown top-level blocks).
  */
-export const createBlockSelectionHighlight = (getBlocks: BlockOps['getBlocks']): Extension => [
+export const createBlockSelectionHighlight = (getBlocks: BlockOps['getBlocks'], getExtent?: BlockExtent): Extension => [
   blockSelectionField,
   selectionTheme,
   layer({
@@ -256,7 +262,7 @@ export const createBlockSelectionHighlight = (getBlocks: BlockOps['getBlocks']):
       update.viewportChanged ||
       update.geometryChanged ||
       selectionChanged(update.startState, update.state),
-    markers: (view) => buildSelectionMarkers(view, getBlocks),
+    markers: (view) => buildSelectionMarkers(view, getBlocks, getExtent),
   }),
 ];
 

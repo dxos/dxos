@@ -19,7 +19,7 @@ predates it and still carries its **own** selection (`selection.ts`,
 - **Grip above the checkbox** — the grip anchors to the line-block top, but the
   outliner row adds `paddingTop`/`marginTop`, pushing the checkbox down ~6px.
 
-**Plan:** rebuild the outliner as *structure + editing on top of `blocks`*.
+**Plan:** rebuild the outliner as _structure + editing on top of `blocks`_.
 `blocks` owns selection, drag, highlight, and clipboard; the outliner keeps only
 what is genuinely hierarchy/markdown-specific.
 
@@ -99,16 +99,16 @@ Generalize in `blocks` (per the decision), kept cheap:
 
 ## Module changes
 
-| Module | Action |
-|---|---|
-| `tree.ts` | keep |
-| `editor.ts` | keep (constraints + `initialize`; add teardown for the `setTimeout` in `initialize`) |
-| `commands.ts` | keep; retarget select commands to `blockSelectionField` |
-| `menu.ts` | keep |
-| `dnd.ts` | keep the `BlockOps` adapter (subtree move + reindent, serialize, replace); add the subtree `getBlockExtent`; **drop** the `outlinerDnd` highlight/selection wrapper |
-| `selection.ts` | **remove** |
-| `outliner.ts` | compose `blocks()` (drag + selection + highlight + clipboard) + tree + editor + commands + menu + current-item indicator; **drop** the selection decorations |
-| `blocks/drag.ts`, `blocks/selection.ts` | add `getBlockExtent` hook; generalize grip alignment |
+| Module                                  | Action                                                                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tree.ts`                               | keep                                                                                                                                                                |
+| `editor.ts`                             | keep (constraints + `initialize`; add teardown for the `setTimeout` in `initialize`)                                                                                |
+| `commands.ts`                           | keep; retarget select commands to `blockSelectionField`                                                                                                             |
+| `menu.ts`                               | keep                                                                                                                                                                |
+| `dnd.ts`                                | keep the `BlockOps` adapter (subtree move + reindent, serialize, replace); add the subtree `getBlockExtent`; **drop** the `outlinerDnd` highlight/selection wrapper |
+| `selection.ts`                          | **remove**                                                                                                                                                          |
+| `outliner.ts`                           | compose `blocks()` (drag + selection + highlight + clipboard) + tree + editor + commands + menu + current-item indicator; **drop** the selection decorations        |
+| `blocks/drag.ts`, `blocks/selection.ts` | add `getBlockExtent` hook; generalize grip alignment                                                                                                                |
 
 ### Incidental cleanups (in scope)
 
