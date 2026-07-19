@@ -49,8 +49,8 @@ switch live in every tab, `react-context` adds a `window` `storage`-event
 listener keyed on `meta.profile.key`: on a cross-tab write it parses
 `event.newValue` and re-applies the effective theme (the `dark` class +
 `themeAtom`). It does **not** write back to the settings atom — that would risk a
-cross-tab write loop — so a second tab's open settings *form* still reflects the
-new value only on reload, while the *theme itself* updates instantly everywhere.
+cross-tab write loop — so a second tab's open settings _form_ still reflects the
+new value only on reload, while the _theme itself_ updates instantly everywhere.
 That caveat is acceptable: the visible theme is what must stay in sync.
 
 ### Settings schema (`src/types/Settings.ts`)
@@ -132,6 +132,7 @@ from an earlier draft of this plan.
 ## Files
 
 New (in `packages/plugins/plugin-theme`):
+
 - `src/types/Settings.ts` — `@import-as-namespace` schema.
 - `src/types/ThemeCapabilities.ts` — `Settings` capability key (writable atom).
 - `src/types/index.ts` — namespace barrel.
@@ -140,6 +141,7 @@ New (in `packages/plugins/plugin-theme`):
 - `src/capabilities/index.ts` — lazy barrel.
 
 Edited:
+
 - `src/react-context.tsx` — honor the setting; add matchMedia + atom + storage
   recompute sources.
 - `src/ThemePlugin.ts` — add the settings module (`SetupSettings`); extend
@@ -155,6 +157,7 @@ No settings container, settings surface, `#containers` alias, or
 ## Testing
 
 Extend `ThemePlugin.test.ts` (already stubs `matchMedia`). Assertions:
+
 - `appearance: 'dark'` + `matchMedia matches:false` → `documentElement` has the
   `dark` class and `themeAtom.themeMode === 'dark'`.
 - `appearance: 'light'` + `matchMedia matches:true` → no `dark` class,

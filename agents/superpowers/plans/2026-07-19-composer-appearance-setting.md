@@ -26,6 +26,7 @@
 Adds the setting so it exists, persists, and appears in the Settings dialog. No theme-application behavior yet (Task 2).
 
 **Files:**
+
 - Create: `packages/plugins/plugin-theme/src/types/Settings.ts`
 - Create: `packages/plugins/plugin-theme/src/types/ThemeCapabilities.ts`
 - Create: `packages/plugins/plugin-theme/src/types/index.ts`
@@ -36,6 +37,7 @@ Adds the setting so it exists, persists, and appears in the Settings dialog. No 
 - Test: `packages/plugins/plugin-theme/src/ThemePlugin.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `Settings.Appearance` = `'light' | 'dark' | 'system'` (Effect Schema union).
   - `Settings.Settings` = `{ appearance?: Appearance }` (mutable struct).
@@ -229,20 +231,20 @@ import { ThemeCapabilities } from './types';
 Then the test:
 
 ```ts
-  test('contributes an appearance setting', async ({ expect }) => {
-    await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
-    });
-
-    // The plugin-local capability resolves to a writable settings atom.
-    const registry = harness.get(Capabilities.AtomRegistry);
-    const settingsAtom = harness.get(ThemeCapabilities.Settings);
-    expect(registry.get(settingsAtom).appearance).toBe('system');
-
-    // It is also exposed to the generic settings UI keyed by the plugin.
-    const allSettings = harness.capabilities.getAll(AppCapabilities.Settings);
-    expect(allSettings.some((entry) => entry.prefix === meta.profile.key)).toBe(true);
+test('contributes an appearance setting', async ({ expect }) => {
+  await using harness = await createTestApp({
+    plugins: [ProcessManagerPlugin(), ThemePlugin({})],
   });
+
+  // The plugin-local capability resolves to a writable settings atom.
+  const registry = harness.get(Capabilities.AtomRegistry);
+  const settingsAtom = harness.get(ThemeCapabilities.Settings);
+  expect(registry.get(settingsAtom).appearance).toBe('system');
+
+  // It is also exposed to the generic settings UI keyed by the plugin.
+  const allSettings = harness.capabilities.getAll(AppCapabilities.Settings);
+  expect(allSettings.some((entry) => entry.prefix === meta.profile.key)).toBe(true);
+});
 ```
 
 - [ ] **Step 8: Run the new test**
@@ -274,10 +276,12 @@ git commit -m "plugin-theme: add appearance settings schema and capability"
 Makes the theme actually follow the setting, overriding the OS preference, with live updates in-tab and cross-tab. TDD.
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-theme/src/react-context.tsx`
 - Test: `packages/plugins/plugin-theme/src/ThemePlugin.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ThemeCapabilities.Settings` (Task 1) — `Atom.Writable<Settings.Settings>`; `Settings.Appearance` (Task 1).
 - Produces: no new exports; observable behavior is the `dark` class on `document.documentElement` and the `themeAtom` `themeMode`.
 
@@ -286,8 +290,8 @@ Makes the theme actually follow the setting, overriding the OS preference, with 
 Add to `packages/plugins/plugin-theme/src/ThemePlugin.test.ts`. First extend `beforeEach` (below the existing `matchMedia` stub) to isolate DOM/storage state between tests:
 
 ```ts
-  localStorage.clear();
-  document.documentElement.classList.remove('dark');
+localStorage.clear();
+document.documentElement.classList.remove('dark');
 ```
 
 Add a helper for a matchMedia stub with a given `matches` value, replacing the inline stub so tests can vary the system preference. Replace the `beforeEach` body's `value: vi.fn()...` with a module-level helper and call it:
@@ -323,49 +327,49 @@ beforeEach(() => {
 Then the tests:
 
 ```ts
-  test('appearance override forces dark independent of system preference', async ({ expect }) => {
-    // System preference is light (stubMatchMedia(false)).
-    await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
-    });
-    const registry = harness.get(Capabilities.AtomRegistry);
-    const settingsAtom = harness.get(ThemeCapabilities.Settings);
-
-    registry.set(settingsAtom, { appearance: 'dark' });
-    await Promise.resolve();
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-
-    registry.set(settingsAtom, { appearance: 'light' });
-    await Promise.resolve();
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
-
-    registry.set(settingsAtom, { appearance: 'system' });
-    await Promise.resolve();
-    expect(document.documentElement.classList.contains('dark')).toBe(false); // Follows light system.
+test('appearance override forces dark independent of system preference', async ({ expect }) => {
+  // System preference is light (stubMatchMedia(false)).
+  await using harness = await createTestApp({
+    plugins: [ProcessManagerPlugin(), ThemePlugin({})],
   });
+  const registry = harness.get(Capabilities.AtomRegistry);
+  const settingsAtom = harness.get(ThemeCapabilities.Settings);
 
-  test("appearance 'system' follows the OS preference", async ({ expect }) => {
-    stubMatchMedia(true); // System preference = dark.
-    await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
-    });
-    // Default appearance is 'system'; with a dark system preference the class is set.
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-  });
+  registry.set(settingsAtom, { appearance: 'dark' });
+  await Promise.resolve();
+  expect(document.documentElement.classList.contains('dark')).toBe(true);
 
-  test('cross-tab storage event re-applies the theme', async ({ expect }) => {
-    // System preference is light; another tab writes 'dark'.
-    await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
-    });
-    window.dispatchEvent(
-      new StorageEvent('storage', {
-        key: meta.profile.key,
-        newValue: JSON.stringify({ appearance: 'dark' }),
-      }),
-    );
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  registry.set(settingsAtom, { appearance: 'light' });
+  await Promise.resolve();
+  expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+  registry.set(settingsAtom, { appearance: 'system' });
+  await Promise.resolve();
+  expect(document.documentElement.classList.contains('dark')).toBe(false); // Follows light system.
+});
+
+test("appearance 'system' follows the OS preference", async ({ expect }) => {
+  stubMatchMedia(true); // System preference = dark.
+  await using harness = await createTestApp({
+    plugins: [ProcessManagerPlugin(), ThemePlugin({})],
   });
+  // Default appearance is 'system'; with a dark system preference the class is set.
+  expect(document.documentElement.classList.contains('dark')).toBe(true);
+});
+
+test('cross-tab storage event re-applies the theme', async ({ expect }) => {
+  // System preference is light; another tab writes 'dark'.
+  await using harness = await createTestApp({
+    plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+  });
+  window.dispatchEvent(
+    new StorageEvent('storage', {
+      key: meta.profile.key,
+      newValue: JSON.stringify({ appearance: 'dark' }),
+    }),
+  );
+  expect(document.documentElement.classList.contains('dark')).toBe(true);
+});
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
@@ -509,6 +513,7 @@ git commit -m "plugin-theme: honor appearance setting over system preference"
 ### Task 3: Changeset and final verification
 
 **Files:**
+
 - Create: `.changeset/theme-appearance-setting.md`
 
 **Interfaces:** none.
@@ -554,6 +559,7 @@ git commit -m "plugin-theme: changeset for appearance setting"
 - [ ] **Step 5: Manual verification in the app**
 
 Start the app: preview_start `{ name: 'composer-app' }` (or the launch config), open Settings → Theme.
+
 - Set macOS to Light. Choose **Dark** in the setting → app renders dark. Screenshot.
 - Reload → choice persists (still dark). Screenshot.
 - Switch to **System** → app follows the OS (light). Screenshot.
@@ -566,6 +572,7 @@ Report screenshots to the user (remote — attach visuals).
 ## Self-Review
 
 **Spec coverage:**
+
 - Setting schema `light|dark|system` default `system` → Task 1 Steps 1, 4. ✓
 - Persistence (localStorage/KVS, per-device) → Task 1 Step 4 (`createKvsStore`). ✓
 - Honor setting in react-context (system→matchMedia; light/dark→override, stay subscribed) → Task 2 Step 3. ✓
