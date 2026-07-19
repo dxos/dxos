@@ -15,7 +15,7 @@ import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-
 
 import { useBreakpoints, useDeckState } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, Keyshortcuts, getMode } from '#types';
+import { DeckOperation, Keyshortcuts } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
 import {
@@ -43,13 +43,12 @@ export type DeckViewportProps = PropsWithChildren;
  */
 export const DeckViewport = ({ children }: DeckViewportProps) => {
   const {
-    state: { sidebarState, complementarySidebarState },
+    state: { sidebarState, complementarySidebarState, fullscreen },
     settings,
-    layoutMode,
   } = useDeckContext(DECK_VIEWPORT_NAME);
 
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
 
   return (
     <Main.Content
@@ -90,9 +89,8 @@ DeckViewport.displayName = DECK_VIEWPORT_NAME;
 
 export const DeckContentEmpty = () => {
   const breakpoint = useBreakpoints();
-  const { deck } = useDeckState();
-  const layoutMode = getMode(deck);
-  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const { state } = useDeckState();
+  const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
     <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
       <Surface.Surface type={Keyshortcuts} />
@@ -109,11 +107,23 @@ export const DeckContentEmpty = () => {
  * Single-plank layout with optional companion.
  */
 export const DeckSoloMode = () => {
-  const { deck, settings, layoutMode, onLayoutChange } = useDeckContext('DeckSoloMode');
-  const { companionOpen, fullscreen, solo } = deck;
+  const {
+    deck,
+    state: { fullscreen: fullscreenId },
+    settings,
+  } = useDeckContext('DeckSoloMode');
+  const { companionOpen, active } = deck;
+  const { invokePromise } = useOperationInvoker();
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
-  invariant(solo);
+  const id = active[0];
+  invariant(id);
+  const fullscreen = fullscreenId === id;
+  const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
+
+  const toggleFullscreen = useCallback(
+    () => invokePromise(DeckOperation.Adjust, { type: 'fullscreen', id }),
+    [invokePromise, id],
+  );
 
   useEffect(() => {
     if (!fullscreen) {
@@ -124,22 +134,22 @@ export const DeckSoloMode = () => {
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
-        onLayoutChange({ mode: 'solo--fullscreen' });
+        toggleFullscreen();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [fullscreen, onLayoutChange]);
+  }, [fullscreen, toggleFullscreen]);
 
   return (
     <div className='relative overflow-hidden bg-deck-surface'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
-      {fullscreen && <ExitFullscreenButton onExit={() => onLayoutChange({ mode: 'solo--fullscreen' })} />}
+      {fullscreen && <ExitFullscreenButton onExit={toggleFullscreen} />}
       <DeckPlank
-        id={solo}
-        part='solo'
-        layoutMode={layoutMode}
+        id={id}
+        part='main'
+        fullscreen={fullscreen}
         companionShown={!fullscreen && companionOpen}
         settings={settings}
         classNames={mx('absolute inset-0', mainIntrinsicSize)}
@@ -160,7 +170,7 @@ const getPlankId = (id: string) => id;
  */
 const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const id = props.data;
-  const { deck, settings, layoutMode } = useDeckContext('DeckPlankTile');
+  const { deck, state, settings } = useDeckContext('DeckPlankTile');
   const { invokePromise } = useOperationInvoker();
 
   const handleSizeChange = useCallback<NonNullable<MosaicTileProps['onSizeChange']>>(
@@ -183,8 +193,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     >
       <DeckPlank
         id={id}
-        part='multi'
-        layoutMode={layoutMode}
+        part='main'
+        fullscreen={state.fullscreen === id}
         active={deck.active}
         companionShown={deck.companionOpen}
         settings={settings}
@@ -201,13 +211,15 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
  * just-navigated plank is scrolled into view.
  */
 export const DeckMultiMode = () => {
-  const { deck, layoutMode } = useDeckContext('DeckMultiMode');
-  const { active, fullscreen } = deck;
+  const { deck } = useDeckContext('DeckMultiMode');
+  const { active } = deck;
   const { state } = useDeckState();
   const { invokePromise } = useOperationInvoker();
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const fullscreen = !!state.fullscreen;
+  const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const isMulti = active.length > 1;
 
   // Preserve horizontal scroll position across solo↔multi transitions; a window resize invalidates it.
   const scrollLeftRef = useRef<number | null>(null);
@@ -223,7 +235,7 @@ export const DeckMultiMode = () => {
       viewportRef.current.scrollLeft = scrollLeftRef.current;
     }
   }, []);
-  useOnTransition(layoutMode, (mode) => mode !== 'multi', 'multi', restoreScroll);
+  useOnTransition(isMulti, (value) => !value, true, restoreScroll);
   // Save scroll position as the user scrolls (ScrollArea.Viewport does not forward `onScroll`).
   useEffect(() => {
     const viewport = viewportRef.current;

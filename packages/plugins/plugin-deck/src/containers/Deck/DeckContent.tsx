@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useRef } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect } from 'react';
 
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Main, useMediaQuery } from '@dxos/react-ui';
+import { Main } from '@dxos/react-ui';
 
 import { useBreakpoints } from '#hooks';
 
@@ -20,23 +20,20 @@ export type DeckContentProps = PropsWithChildren;
 
 export const DeckContent = ({ children }: DeckContentProps) => {
   const {
-    state: { sidebarState, complementarySidebarState, complementarySidebarPanel },
-    deck: { active, fullscreen, solo },
+    state: { sidebarState, complementarySidebarState, complementarySidebarPanel, fullscreen },
+    deck: { active },
     updateState,
-    layoutMode,
-    settings,
     pluginManager,
-    onLayoutChange,
   } = useDeckContext(DECK_CONTENT_NAME);
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
     const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
     const attended = attention.getCurrent();
-    const firstId = solo ?? active[0];
+    const firstId = active[0];
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
       //   If the plank is directly focused on first load the focus ring appears.
@@ -44,30 +41,10 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     }
   }, []);
 
-  // Not using `breakpoint` to avoid firing when breakpoint changes between tablet and desktop.
-  // `ssr: false` to avoid using fallback values and flashing into solo mode on startup.
-  const [isNotMobile] = useMediaQuery('md');
-  const shouldRevert = useRef(false);
-  useEffect(() => {
-    if (!isNotMobile && layoutMode === 'multi') {
-      // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
-      const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
-      const attended = attention.getCurrent();
-      shouldRevert.current = true;
-      onLayoutChange({ subject: attended[0], mode: 'solo' });
-    } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {
-      onLayoutChange({ revert: true });
-    }
-    // NOTE: Using `layoutMode` instead of `deck` to avoid infinite loops caused by object reference changes.
-  }, [isNotMobile, layoutMode, onLayoutChange]);
-
-  // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
-  // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
-  useEffect(() => {
-    if (!settings?.enableDeck && layoutMode === 'multi') {
-      onLayoutChange({ subject: active[0], mode: 'solo' });
-    }
-  }, [settings?.enableDeck, onLayoutChange, active, layoutMode]);
+  // TODO(url-deck-redesign): B3 replaces the previous state-mutating mobile "solo-ify" effect (which
+  //   forced `active` down to the attended plank below the `md` breakpoint, with revert-on-return) and
+  //   the `enableDeck`-disabled effect with a render-level derived presentation — mobile scroll-snap
+  //   and single-plank-when-disabled — that never mutates deck state.
 
   const handleNavigationSidebarStateChange = useCallback(
     (next: typeof sidebarState) => {

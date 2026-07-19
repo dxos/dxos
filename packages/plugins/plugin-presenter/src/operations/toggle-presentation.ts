@@ -30,22 +30,24 @@ const handler: Operation.WithHandler<typeof PresenterOperation.TogglePresentatio
 
         const objectPath = Paths.getObjectPathFromObject(object);
         const presenterId = getPresentationPath(objectPath);
-        const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        const deck = deckState.decks[deckState.activeDeck];
-        const presenting = Boolean(deck?.fullscreen && deck?.solo === presenterId);
+        const ephemeral = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+        const presenting = ephemeral.fullscreen === presenterId;
         const next = state ?? !presenting;
 
         if (next) {
-          if (!deck?.fullscreen) {
-            yield* Operation.invoke(DeckOperation.Adjust, { type: 'solo--fullscreen' as const, id: presenterId });
+          if (!presenting) {
+            // Toggles ephemeral fullscreen from undefined to `presenterId`.
+            yield* Operation.invoke(DeckOperation.Adjust, { type: 'fullscreen' as const, id: presenterId });
           }
           yield* Operation.invoke(LayoutOperation.Open, {
             subject: [presenterId],
             workspace: Paths.getSpacePath(db.spaceId),
           });
         } else {
-          if (deck?.fullscreen) {
-            yield* Operation.invoke(DeckOperation.Adjust, { type: 'solo--fullscreen' as const, id: objectPath });
+          if (presenting) {
+            // Toggles ephemeral fullscreen back to undefined; `id` must match the currently-fullscreen
+            // plank for the toggle in `adjust.ts` to clear it rather than switching it.
+            yield* Operation.invoke(DeckOperation.Adjust, { type: 'fullscreen' as const, id: presenterId });
           }
           yield* Operation.invoke(LayoutOperation.Open, {
             subject: [objectPath],

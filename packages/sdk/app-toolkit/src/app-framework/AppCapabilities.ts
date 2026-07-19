@@ -45,7 +45,11 @@ export const FileInfoSchema = Schema$.Struct({
 export type FileInfo = Schema$.Schema.Type<typeof FileInfoSchema>;
 
 export type Layout = Readonly<{
-  mode: string;
+  variant: string;
+  /**
+   * Whether the active plank is displayed fullscreen (headless, no chrome).
+   */
+  fullscreen: boolean;
   dialogOpen: boolean;
   sidebarOpen: boolean;
   complementarySidebarOpen: boolean;

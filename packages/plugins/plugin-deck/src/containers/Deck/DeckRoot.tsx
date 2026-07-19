@@ -7,15 +7,12 @@ import React, { PropsWithChildren } from 'react';
 
 import { type PluginManager } from '@dxos/app-framework';
 
-import { type LayoutMode, type Settings } from '#types';
+import { type Settings } from '#types';
 
 import { type DeckStateHook } from '../../hooks/useDeckState';
 
 const DECK_NAME = 'Deck';
 const DECK_ROOT_NAME = 'DeckRoot';
-
-/** Request to change the layout mode. */
-export type DeckLayoutChangeRequest = { subject?: string; mode: LayoutMode } | { revert: true };
 
 //
 // Context
@@ -26,10 +23,6 @@ export type DeckContextValue = {
   settings?: Settings.Settings;
   /** Plugin manager for capability access. */
   pluginManager: PluginManager.PluginManager;
-  /** Layout mode. */
-  layoutMode: LayoutMode;
-  /** Callback for layout mode changes. */
-  onLayoutChange: (request: DeckLayoutChangeRequest) => void;
 } & Pick<DeckStateHook, 'state' | 'deck' | 'updateState'>;
 
 export const [DeckProvider, useDeckContext] = createContext<DeckContextValue>(DECK_NAME);

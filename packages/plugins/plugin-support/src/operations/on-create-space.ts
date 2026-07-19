@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof SupportOperation.OnCreateSpace> = Su
         return;
       }
       const homePath = Paths.getSpaceHomePath(space.id);
-      yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: homePath });
+      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] });
       // Expose is scheduled because the navtree may not have rendered yet at this point.
       yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
     }),

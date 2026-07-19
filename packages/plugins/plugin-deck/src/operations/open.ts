@@ -88,10 +88,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // The same object can appear under different graph paths (e.g., via collections vs types).
       // Resolve each subject's DXN and, if it matches an already-open deck item, remap the
       // subject to the existing deck entry so that openEntry's exact-match check succeeds.
-      // Only needed in multi (deck) mode; solo mode replaces the single visible item anyway.
       {
         const deck = yield* DeckCapabilities.getDeck();
-        const active = !deck.solo && deck.initialized ? deck.active : [];
+        const active = deck.active;
         if (active.length > 0 && input.subject.length > 0) {
           const resolveDXN = (qualifiedPath: string) =>
             Effect.reduce(pathResolvers, Option.none<string>(), (acc, resolver) =>
@@ -141,51 +140,33 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
       }
 
-      // Compute the next active deck state and apply it.
-      // In solo or uninitialized mode the subject list replaces the deck entirely (unless the
-      // resolved disposition unsolos the deck, see below). In multi (deck) mode, the disposition
-      // decides whether subjects are pushed (openSubjectsOnActiveDeck) or spliced in place
-      // (replaceSubjectsOnActiveDeck) at the pivot/attended plank.
+      // Compute the next active deck state and apply it. The resolved disposition decides whether
+      // subjects are pushed (openSubjectsOnActiveDeck) or spliced in place (replaceSubjectsOnActiveDeck)
+      // at the pivot/attended plank.
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();
-        previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
+        previouslyOpenIds = new Set<string>(deck.active);
 
         const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const disposition = resolveDisposition(settings?.navigationDefault ?? 'replace', input.disposition);
 
-        if (deck.solo && disposition === 'new-plank') {
-          // Unsolo-push: the solo plank stays open and the subjects join it as additional planks,
-          // rather than the solo-swap that computeActiveUpdates would otherwise apply.
-          const active = [deck.solo, ...input.subject.filter((id) => id !== deck.solo)];
-          yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-            updateActiveDeck(state, {
-              solo: undefined,
-              initialized: true,
-              active,
-              inactive: deck.inactive.filter((id) => !active.includes(id)),
-            }),
-          );
+        let next: string[];
+        if (disposition === 'new-plank') {
+          next = openSubjectsOnActiveDeck(deck.active, input.subject, {
+            pivotId: input.pivotId,
+            key: input.key,
+          });
         } else {
-          let next: string[];
-          if (deck.solo || !deck.initialized) {
-            next = [...input.subject];
-          } else if (disposition === 'new-plank') {
-            next = openSubjectsOnActiveDeck(deck.active, input.subject, {
-              pivotId: input.pivotId,
-              key: input.key,
-            });
-          } else {
-            const pivotIndex = input.pivotId ? deck.active.findIndex((id) => id === input.pivotId) : -1;
-            const [attendedId] = Array.from(attention.getCurrent());
-            const attendedIndex = attendedId ? deck.active.findIndex((id) => id === attendedId) : -1;
-            const index = pivotIndex !== -1 ? pivotIndex : attendedIndex !== -1 ? attendedIndex : 0;
-            next = replaceSubjectsOnActiveDeck(deck.active, input.subject, { index });
-          }
-
-          const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
-          yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
+          const pivotIndex = input.pivotId ? deck.active.findIndex((id) => id === input.pivotId) : -1;
+          const [attendedId] = Array.from(attention.getCurrent());
+          const attendedIndex = attendedId ? deck.active.findIndex((id) => id === attendedId) : -1;
+          const index = pivotIndex !== -1 ? pivotIndex : attendedIndex !== -1 ? attendedIndex : 0;
+          next = replaceSubjectsOnActiveDeck(deck.active, input.subject, { index });
         }
+
+        const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       }
 
       // Schedule side-effects for the newly opened items: scroll into view, expose in
@@ -194,8 +175,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // `input.subject[0]` still triggers scroll and expose so the user is taken there.
       {
         const deck = yield* DeckCapabilities.getDeck();
-        const ids = deck.solo ? [deck.solo] : deck.active;
-        const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
+        const newlyOpen = deck.active.filter((i: string) => !previouslyOpenIds.has(i));
 
         if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
           yield* Operation.schedule(LayoutOperation.ScrollIntoView, {

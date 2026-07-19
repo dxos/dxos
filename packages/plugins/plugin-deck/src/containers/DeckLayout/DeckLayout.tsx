@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 
 import { useDeckState } from '#hooks';
-import { DeckCapabilities, getMode } from '#types';
+import { DeckCapabilities } from '#types';
 
-import { Deck, type DeckLayoutChangeRequest } from '../Deck';
+import { Deck } from '../Deck';
 import { ActiveNode } from './ActiveNode';
 import { Dialog } from './Dialog';
 import { PopoverContent, PopoverRoot } from './Popover';
@@ -22,17 +21,8 @@ export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = usePluginManager();
-  const { invokePromise } = useOperationInvoker();
   const { deck, state, updateState } = useDeckState();
-  const layoutMode = getMode(deck);
   const { toasts } = state;
-
-  const handleLayoutChange = useCallback(
-    (request: DeckLayoutChangeRequest) => {
-      void invokePromise(LayoutOperation.SetLayoutMode, request);
-    },
-    [invokePromise],
-  );
 
   return (
     <Dnd.Root>
@@ -41,15 +31,19 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
         <Deck.Root
           settings={settings}
           pluginManager={pluginManager}
-          layoutMode={layoutMode}
           deck={deck}
           state={state}
           updateState={updateState}
-          onLayoutChange={handleLayoutChange}
         >
           <Deck.Content>
             <Deck.Viewport>
-              {deck.solo ? <Deck.SoloMode /> : deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.MultiMode />}
+              {deck.active.length === 0 ? (
+                <Deck.ContentEmpty />
+              ) : deck.active.length === 1 ? (
+                <Deck.SoloMode />
+              ) : (
+                <Deck.MultiMode />
+              )}
             </Deck.Viewport>
           </Deck.Content>
         </Deck.Root>

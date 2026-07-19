@@ -20,8 +20,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const deck = yield* DeckCapabilities.getDeck();
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
-      const active = deck.solo ? [deck.solo] : deck.active;
-      const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
+      const next = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
       const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention });
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
 

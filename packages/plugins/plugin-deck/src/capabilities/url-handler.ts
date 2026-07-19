@@ -91,32 +91,29 @@ export default Capability.makeModule(
 
       const deck = getDeck();
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
+      // Interim: URL shapes are unchanged from the old solo/multi split — pathname carries a single
+      // active plank's path, `?plank=` params carry two or more. A3 rewrites this file wholesale onto
+      // the pair-chain grammar; until then this just reads the branch off `active.length` instead of
+      // the (now-deleted) `deck.solo` field.
+      const soloPlank = deck.active.length === 1 ? deck.active[0] : undefined;
       if (activeId) {
         // Ensure the object referenced by the URL is open in the deck.
-        // Open validates the target and may redirect to 404, returning the resolved IDs.
-        const resolvedIds = yield* Operation.invoke(LayoutOperation.Open, { subject: [activeId] });
-        // If not already in solo mode, switch to solo for the resolved target.
-        if (!deck.solo) {
-          yield* Operation.invoke(LayoutOperation.SetLayoutMode, {
-            subject: resolvedIds?.[0] ?? activeId,
-            mode: 'solo',
-          });
-        }
-      } else if (deck.solo && deck.solo !== NotFound.NOT_FOUND_PATH) {
-        // Stay in solo mode; redirect URL to reflect the current solo item.
-        // Do not switch to deck mode here — only explicit user action should change layout mode.
-        const path = Paths.toUrlPath(deck.solo);
+        // Open validates the target and may redirect to 404.
+        yield* Operation.invoke(LayoutOperation.Open, { subject: [activeId] });
+      } else if (soloPlank && soloPlank !== NotFound.NOT_FOUND_PATH) {
+        // A single active plank: redirect the URL to reflect it.
+        const path = Paths.toUrlPath(soloPlank);
         if (window.location.pathname !== path) {
           history.replaceState(null, '', `${path}${stripPlanks(window.location.search)}`);
         }
-      } else if (!activeId && !deck.solo) {
-        // Multi-mode: restore planks from query params.
+      } else if (!activeId && !soloPlank) {
+        // Zero or multiple active planks: restore planks from query params.
         const plankIds = deserializePlanks(resolvedUrl);
         if (plankIds.length > 0) {
           for (const plankId of plankIds) {
             NotFound.expandPath(graph, plankId);
           }
-          updateState((state) => updateActiveDeck(state, { active: plankIds, initialized: true }));
+          updateState((state) => updateActiveDeck(state, { active: plankIds }));
         }
       }
     });
@@ -180,23 +177,24 @@ export default Capability.makeModule(
     }
 
     // Sync URL with layout state changes.
-    let lastSolo: string | undefined;
+    let lastSoloPlank: string | undefined;
     let lastActiveDeck: string | undefined;
     let lastActiveKey: string | undefined;
     const unsubscribe = registry.subscribe(stateAtom, () => {
       const state = getState();
       const deck = getDeck();
-      const solo = deck.solo;
+      const soloPlank = deck.active.length === 1 ? deck.active[0] : undefined;
       const activeDeck = state.activeDeck;
-      const activeKey = solo ? undefined : JSON.stringify(deck.active);
+      const activeKey = soloPlank ? undefined : JSON.stringify(deck.active);
 
-      if (solo !== lastSolo || activeDeck !== lastActiveDeck || activeKey !== lastActiveKey) {
-        lastSolo = solo;
+      if (soloPlank !== lastSoloPlank || activeDeck !== lastActiveDeck || activeKey !== lastActiveKey) {
+        lastSoloPlank = soloPlank;
         lastActiveDeck = activeDeck;
         lastActiveKey = activeKey;
 
-        const path = solo && solo !== NotFound.NOT_FOUND_PATH ? Paths.toUrlPath(solo) : Paths.toUrlPath(activeDeck);
-        const search = !solo
+        const path =
+          soloPlank && soloPlank !== NotFound.NOT_FOUND_PATH ? Paths.toUrlPath(soloPlank) : Paths.toUrlPath(activeDeck);
+        const search = !soloPlank
           ? serializePlanks(deck.active, window.location.search)
           : stripPlanks(window.location.search);
         const newUrl = `${path}${search}`;

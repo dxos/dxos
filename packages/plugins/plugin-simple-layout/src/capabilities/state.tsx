@@ -32,7 +32,8 @@ export default Capability.makeModule(({ initialState }: SimpleLayoutStateOptions
     const layoutAtom = Atom.make((get): AppCapabilities.Layout => {
       const state = get(stateAtom);
       return {
-        mode: 'simple',
+        variant: 'simple',
+        fullscreen: false,
         dialogOpen: state.dialogOpen,
         sidebarOpen: false,
         complementarySidebarOpen: false,

@@ -34,7 +34,6 @@ import {
   type Settings,
   type StoredDeckState,
   defaultDeck,
-  getMode,
 } from '#types';
 
 import { DeckLayout } from './DeckLayout';
@@ -67,7 +66,6 @@ const storyDeckState = Capability.makeModule(() =>
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
-      previousMode: {},
       decks: {
         default: { ...defaultDeck },
       },
@@ -76,6 +74,7 @@ const storyDeckState = Capability.makeModule(() =>
     const stateAtom = Atom.make<StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
 
     const defaultEphemeralDeckState: EphemeralDeckState = {
+      fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,
       dialogBlockAlign: undefined,
@@ -97,12 +96,13 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck),
+        variant: 'deck',
+        fullscreen: !!ephemeral.fullscreen,
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.solo ? [deck.solo] : deck.active,
+        active: deck.active,
         inactive: deck.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;
@@ -358,8 +358,8 @@ export const Solo: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
+      // A singleton `active` list is the solo look; opening into a fresh deck yields that directly.
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
     });
 
     return <DeckLayout />;
@@ -371,7 +371,11 @@ export const Multi: Story = {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'multi' });
+      await invokePromise(LayoutOperation.Open, {
+        subject: [STORY_ITEMS[1].id],
+        disposition: 'new-plank',
+        navigation: 'immediate',
+      });
     });
 
     return <DeckLayout />;

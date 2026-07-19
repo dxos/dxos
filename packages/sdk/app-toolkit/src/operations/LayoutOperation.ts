@@ -257,33 +257,6 @@ export const AddToast = Operation.make({
 });
 
 //
-// Layout Mode Operations
-//
-
-export const SetLayoutMode = Operation.make({
-  meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.setLayoutMode`),
-    name: 'Set Layout Mode',
-    description: 'Set the layout mode (solo, deck, fullscreen, etc.).',
-    icon: 'ph--layout--regular',
-  },
-  executionMode: 'sync',
-  services: [Capability.Service],
-  input: Schema.Union(
-    Schema.Struct({
-      subject: Schema.optional(
-        Schema.String.annotations({ description: 'Item which is the subject of the new layout mode.' }),
-      ),
-      mode: Schema.String.annotations({ description: 'The new layout mode.' }),
-    }),
-    Schema.Struct({
-      revert: Schema.Boolean.annotations({ description: 'Revert to the previous layout mode.' }),
-    }),
-  ),
-  output: Schema.Void,
-});
-
-//
 // Workspace Operations
 //
 

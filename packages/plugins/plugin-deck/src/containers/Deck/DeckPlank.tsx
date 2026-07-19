@@ -11,7 +11,7 @@ import { Splitter, type ThemedClassName } from '@dxos/react-ui';
 
 import { Companion, Plank } from '#components';
 import { useCompanionSplit } from '#hooks';
-import { type LayoutMode, type ResolvedPart, type Settings } from '#types';
+import { type ResolvedPart, type Settings } from '#types';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';
@@ -22,7 +22,8 @@ const PLANK_LOADING = <PlankLoading />;
 export type DeckPlankProps = ThemedClassName<{
   id: string;
   part: ResolvedPart;
-  layoutMode: LayoutMode;
+  /** Whether this plank is displayed fullscreen (headless, no chrome). */
+  fullscreen?: boolean;
   active?: string[];
   /** Whether the companion pane should be shown for this plank (gated further by attention in multi-mode). */
   companionShown?: boolean;
@@ -37,9 +38,11 @@ export type DeckPlankProps = ThemedClassName<{
  * `PlankContainer`/`PlankComponent`/`PlankHeading` tree.
  */
 export const DeckPlank = memo(
-  ({ id, part, layoutMode, active, companionShown, settings, path, classNames }: DeckPlankProps) => {
+  ({ id, part, fullscreen = false, active, companionShown, settings, path, classNames }: DeckPlankProps) => {
     const { findFirstFocusable } = useFocusFinders();
     const rootRef = useRef<HTMLDivElement>(null);
+    // A singleton active deck renders fullbleed; that's the only case a plank can go fullscreen from.
+    const soloLook = active === undefined || active.length === 1;
     const {
       node,
       companions,
@@ -54,7 +57,7 @@ export const DeckPlank = memo(
       onAdjust,
       onScrollIntoView,
       onUpdateCompanion,
-    } = useDeckPlank({ id, part, layoutMode, active, companionShown, deckEnabled: settings?.enableDeck });
+    } = useDeckPlank({ id, part, soloLook, active, companionShown, deckEnabled: settings?.enableDeck });
 
     // Memoize the split point per orientation so toggling side-by-side ↔ stacked restores each one.
     const { size: companionSize, onSizeChange: onCompanionSizeChange } = useCompanionSplit(companionOrientation);
@@ -109,7 +112,8 @@ export const DeckPlank = memo(
     const controls = (
       <PlankControls
         capabilities={capabilities}
-        layoutMode={layoutMode}
+        soloLook={soloLook}
+        fullscreen={fullscreen}
         close={part === 'complementary' ? 'minify-end' : true}
         onClick={onAdjust}
       />
@@ -125,7 +129,7 @@ export const DeckPlank = memo(
     );
 
     // In fullscreen the toolbar is hidden so the content fills the viewport.
-    const headless = layoutMode === 'solo--fullscreen';
+    const headless = fullscreen;
 
     // Splitter.Root is always the outer element so <Plank> stays at the same tree position regardless of
     // whether the companion is open. A root-element-type change (Plank ↔ Splitter.Root) would force React

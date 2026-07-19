@@ -111,7 +111,13 @@ Atomic change.
 
 ### Tasks
 
-- [ ] **Collapse the state model + operations surface**
+- [x] **Collapse the state model + operations surface** — landed; plugin-deck
+      52 tests green (incl. 9 new migrate-persisted-state + 7 rewritten
+      set-active), app-toolkit 114, consumer plugin suites green. Interim:
+      DeckContent mobile/enableDeck forcing effects are TODO no-ops until B3's
+      derived presentation; PlankControls solo/unsolo removed here (adjustment
+      types gone from schema); increment buttons now render in multi decks
+      (was dead code).
   - New `DeckState` — drop `solo`/`initialized`/`fullscreen`/`companionOrientation`.
   - Fullscreen becomes ephemeral (`EphemeralDeckState.fullscreen?: string`).
   - `migrate-persisted-state.ts` (+ delete `sanitize-persisted-state`).

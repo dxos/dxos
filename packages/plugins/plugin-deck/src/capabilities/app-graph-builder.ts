@@ -118,7 +118,7 @@ export default Capability.makeModule(
               },
             };
 
-            return !deck?.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
+            return deck?.active.length !== 1 ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
           }).pipe(Effect.orDie),
       }),
     ]);

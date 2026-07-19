@@ -4,6 +4,6 @@
 
 export * from './companion-view-state';
 export * from './layoutAppliesTopbar';
+export * from './migrate-persisted-state';
 export * from './plank-url-params';
-export * from './sanitize-persisted-state';
 export * from './set-active';

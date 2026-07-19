@@ -14,7 +14,6 @@ import { iconSize, mx } from '@dxos/ui-theme';
 
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
-import { getMode } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
 import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
@@ -29,10 +28,9 @@ export type ComplementarySidebarProps = {
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
-  const { state, deck, updateState } = useDeckState();
-  const layoutMode = getMode(deck);
+  const { state, updateState } = useDeckState();
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
 
   const companions = useDeckCompanions();
   const activeCompanion = companions.find((companion) => getLinkedVariant(companion.id) === current);

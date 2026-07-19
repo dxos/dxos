@@ -3,7 +3,7 @@
 //
 
 import { DeckContent, DeckContentProps } from './DeckContent';
-import { DeckLayoutChangeRequest, DeckRoot, DeckRootProps } from './DeckRoot';
+import { DeckRoot, DeckRootProps } from './DeckRoot';
 import { DeckContentEmpty, DeckMultiMode, DeckSoloMode, DeckViewport, DeckViewportProps } from './DeckViewport';
 
 /**
@@ -18,4 +18,4 @@ export const Deck = {
   SoloMode: DeckSoloMode,
 };
 
-export type { DeckContentProps, DeckLayoutChangeRequest, DeckRootProps, DeckViewportProps };
+export type { DeckContentProps, DeckRootProps, DeckViewportProps };
