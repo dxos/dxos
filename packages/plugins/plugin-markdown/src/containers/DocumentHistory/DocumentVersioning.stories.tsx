@@ -39,6 +39,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
@@ -103,15 +104,19 @@ const editorContent = (canvasElement: HTMLElement): string => {
 const DefaultStory = () => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  if (!doc) {
+  const id = doc ? Obj.getURI(doc) : undefined;
+  // Establish the attention scope for `id` so the editor toolbar's attendable-scoped menu actions
+  // resolve (a bare Surface has no attended element for the toolbar's `Menu.Root` to bind to).
+  const attentionAttrs = useAttentionAttributes(id);
+  if (!doc || !id) {
     return <Loading />;
   }
 
-  const id = Obj.getURI(doc);
-
   return (
     <div className='dx-container grid grid-cols-2 divide-x divide-separator'>
-      <Surface.Surface type={AppSurface.Article} data={{ subject: doc, attendableId: id }} limit={1} />
+      <div className='contents' {...attentionAttrs}>
+        <Surface.Surface type={AppSurface.Article} data={{ subject: doc, attendableId: id }} limit={1} />
+      </div>
       <ObjectHistory role='article' subject={doc} attendableId={id} />
     </div>
   );
