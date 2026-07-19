@@ -55,6 +55,9 @@ export namespace SpaceCapabilities {
   export type VersionSelection =
     | { kind: 'current' }
     | { kind: 'branch'; branchId: string }
+    // The branch's fork point: a read-only view of the parent content at the branch anchor (the
+    // state the branch was created from). Distinct from `branch` (the editable branch tip).
+    | { kind: 'fork'; branchId: string }
     | { kind: 'checkpoint'; versionId: string };
 
   export type VersioningState = {

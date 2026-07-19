@@ -10,12 +10,12 @@
 // they are spliced through the automerge binding to simulate the editor's live typing (concurrent
 // branch/parent edits must CRDT-merge, which whole-string assignment would not).
 //
-//   1. main revisions            — TimeTravel: checkpoints on main, travel back/forward, return to Now.
-//   2. sub-branch revisions       — BranchRevisions: revisions ON a branch; select one (read-only),
+//   1. main revisions              — TimeTravel: checkpoints on main, travel back/forward, return to Now.
+//   2. sub-branch revisions        — BranchRevisions: revisions ON a branch; select one (read-only),
 //                                    then return to the branch TIP (editable). BranchMerge: merge back.
-//   3. chained branches + merges  — ChainedBranches: fork → merge → fork again → merge (flat registry).
+//   3. chained branches + merges   — ChainedBranches: fork → merge → fork again → merge (flat registry).
 //                                    True nested branch-of-branch is a follow-up (see DESIGN.md).
-//   4. merge conflict             — ConflictAutoResolve: concurrent same-line edits CRDT-merge with no
+//   4. merge conflict              — ConflictAutoResolve: concurrent same-line edits CRDT-merge with no
 //                                    markers. ConflictResolution: the marker-resolution UI for a
 //                                    legacy/external conflict block.
 //

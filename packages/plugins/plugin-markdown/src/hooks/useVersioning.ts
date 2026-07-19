@@ -23,6 +23,10 @@ export type UseVersioningResult = {
   setCompare: (compare: boolean) => void;
   /** The branch being viewed (selection.kind === 'branch'). */
   activeBranch?: Branch.Branch;
+  /** The branch whose fork point is being viewed (selection.kind === 'fork'). */
+  activeFork?: Branch.Branch;
+  /** Read-only parent content at the fork point (the state the branch was created from). */
+  forkContent?: string;
   /**
    * The Text object the editor should bind to: a per-surface branch binding for core branches,
    * the legacy branch Text for content-copy branches, or the root (pinned to the checkpoint's
@@ -92,6 +96,10 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     selection.kind === 'checkpoint'
       ? history?.versions.find((version) => version.id === selection.versionId)
       : undefined;
+  // The fork point is read from the parent (never bindable), so a merged/archived branch resolves
+  // here too — its anchor heads remain reachable on the parent document.
+  const activeFork =
+    selection.kind === 'fork' ? history?.branches.find((branch) => branch.id === selection.branchId) : undefined;
 
   // The branch a checkpoint was taken on, but only while it is still ACTIVE (bindable): once a branch
   // is merged its registry entry is removed, so `db.branch` would throw. The merge folds the branch's
@@ -150,6 +158,16 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     return Version.contentAt(branchParent, activeBranch.anchor);
   }, [activeBranch, branchParent]);
 
+  // The fork point: parent content at the fork's anchor — the read-only state the branch began from.
+  useObject(activeFork?.parent);
+  const forkParent = activeFork?.parent.target;
+  const forkContent = useMemo(() => {
+    if (!activeFork || !forkParent) {
+      return undefined;
+    }
+    return Version.contentAt(forkParent, activeFork.anchor);
+  }, [activeFork, forkParent]);
+
   // A checkpoint on an ACTIVE branch reads/pins against the branch-bound Text (its heads live in the
   // branch document). A base checkpoint — or a checkpoint on a since-merged branch, whose heads the
   // merge folded into the root — resolves against the root target directly.
@@ -178,6 +196,8 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     compare,
     setCompare,
     activeBranch,
+    activeFork,
+    forkContent,
     activeText,
     activeVersion,
     checkpointText,

@@ -69,6 +69,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const {
       document,
       activeBranch,
+      activeFork,
+      forkContent,
       activeVersion,
       checkpointText,
       checkpointContent,
@@ -88,19 +90,29 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // same applies to a branch CHECKPOINT: its content is read from the branch-bound Text, which
     // resolves asynchronously; mounting before it is ready would seed the editor with empty text and
     // never recover (the editor key does not change when the binding later resolves).
-    const branchLoading = (!!activeBranch && !branchText) || (!!activeVersion?.branch && !checkpointText);
-    // A checkpoint is shown read-only from a DETACHED content snapshot, not the live (pinned) object:
-    // binding CodeMirror's automerge sync to a time-travelled doc mismatches (CM holds the tip text
-    // while the pinned doc reads the shorter historical text → out-of-range splice). The pin still
-    // drives non-editor surfaces (label, companion). Branch view binds the live branch Text.
-    const editorObject = activeVersion
-      ? { id: `${id}--${activeVersion.id}`, text: checkpointContent ?? '' }
+    const branchLoading =
+      (!!activeBranch && !branchText) ||
+      (!!activeVersion?.branch && !checkpointText) ||
+      (!!activeFork && forkContent === undefined);
+    // Checkpoint and fork both render read-only from a DETACHED content snapshot, never the live
+    // (pinned) object: binding CodeMirror's automerge sync to a time-travelled doc mismatches (CM
+    // holds the tip text while the historical read is shorter → out-of-range splice). A checkpoint
+    // shows a version's pinned heads; a fork shows the parent content at the branch anchor.
+    const readonlySnapshot = activeVersion
+      ? { key: `checkpoint-${activeVersion.id}`, content: checkpointContent }
+      : activeFork
+        ? { key: `fork-${activeFork.id}`, content: forkContent }
+        : undefined;
+    const editorObject = readonlySnapshot
+      ? { id: `${id}--${readonlySnapshot.key}`, text: readonlySnapshot.content ?? '' }
       : (branchText ?? object);
-    const initialValue = activeVersion ? checkpointContent : (branchText?.content ?? docContent ?? textContent);
-    const effectiveViewMode = activeVersion ? 'readonly' : viewMode;
+    const initialValue = readonlySnapshot
+      ? readonlySnapshot.content
+      : (branchText?.content ?? docContent ?? textContent);
+    const effectiveViewMode = readonlySnapshot ? 'readonly' : viewMode;
     // Remount the editor when the selection or compare overlay changes so CodeMirror state rebinds cleanly.
     const editorKey = `${
-      activeVersion ? `checkpoint-${activeVersion.id}` : activeBranch ? `branch-${activeBranch.id}` : 'current'
+      readonlySnapshot ? readonlySnapshot.key : activeBranch ? `branch-${activeBranch.id}` : 'current'
     }${compareActive ? `--compare-${diffViewMode}` : ''}`;
 
     // Leaving a checkpoint view returns to the tip it belongs to: the branch the checkpoint was
@@ -325,6 +337,21 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                   onMerge={handleMerge}
                   onCompare={handleCompare}
                   onClose={handleCloseBanner}
+                />
+              )}
+              {activeFork && (
+                <VersionBanner
+                  mode='fork'
+                  name={Branch.label(activeFork)}
+                  detail={new Date(activeFork.createdAt).toLocaleString()}
+                  // Leaving the fork point returns to the branch tip if it is still editable, else main.
+                  onClose={() =>
+                    setSelection(
+                      activeFork.status === 'active'
+                        ? { kind: 'branch', branchId: activeFork.id }
+                        : { kind: 'current' },
+                    )
+                  }
                 />
               )}
               <Panel.Content>

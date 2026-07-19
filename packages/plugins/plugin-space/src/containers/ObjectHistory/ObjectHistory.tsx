@@ -68,14 +68,23 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
       ? activeBranch
         ? Branch.label(activeBranch)
         : null
-      : activeVersion?.branch
+      : selection.kind === 'fork'
         ? (() => {
+            // The fork node lanes on its branch; highlight that lane so the selection is not snapped
+            // onto main's first commit (see the `currentBranch` jump effect in Timeline).
             const branch = object.history?.branches.find(
-              (branch) => branch.key === activeVersion.branch && branch.status !== 'archived',
+              (branch) => branch.id === selection.branchId && branch.status !== 'archived',
             );
             return branch ? Branch.label(branch) : MAIN_BRANCH;
           })()
-        : MAIN_BRANCH;
+        : activeVersion?.branch
+          ? (() => {
+              const branch = object.history?.branches.find(
+                (branch) => branch.key === activeVersion.branch && branch.status !== 'archived',
+              );
+              return branch ? Branch.label(branch) : MAIN_BRANCH;
+            })()
+          : MAIN_BRANCH;
 
   // Recomputed per render: the component subscribes to history mutations and the model is
   // cheap at panel scale (a handful of records).
@@ -177,9 +186,9 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             <IconButton
               icon='ph--bookmark-simple--regular'
               label={t('create-checkpoint.label')}
-              // A revision records the tip; disable while viewing a historical checkpoint (not at
-              // the tip). `current` and `branch` selections are at a tip.
-              disabled={selection.kind === 'checkpoint'}
+              // A revision records the tip; disable while viewing a historical checkpoint or a fork
+              // point (neither is at a tip). `current` and `branch` selections are at a tip.
+              disabled={selection.kind === 'checkpoint' || selection.kind === 'fork'}
               onClick={() => setNaming('checkpoint')}
             />
           </NamePopover>
@@ -195,8 +204,9 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
               // Forking a sub-branch off a branch (its tip or one of its revisions) is not yet
               // supported — the core registry is flat, keyed by the root object, so the fork would
               // silently derive from main. Disable rather than mislead. Fork from main or a main
-              // revision is allowed. See DESIGN.md (nested branch-of-branch follow-up).
-              disabled={!!activeBranch || !!activeVersion?.branch}
+              // revision is allowed. See DESIGN.md (nested branch-of-branch follow-up). A fork-point
+              // view is read-only and off-tip, so disable there too.
+              disabled={!!activeBranch || !!activeVersion?.branch || selection.kind === 'fork'}
               onClick={() => setNaming('branch')}
             />
           </NamePopover>

@@ -200,9 +200,10 @@ export const commitToSelection = (
     return branch?.status === 'active' ? { kind: 'branch', branchId } : { kind: 'current' };
   }
   if (commit.id.startsWith(BRANCH_PREFIX)) {
-    // The fork node is a non-interactive marker of where the branch diverged; the branch's editable
-    // present is selected via its `Tip` node (see BRANCH_TIP_PREFIX above), so a fork click is a no-op.
-    return undefined;
+    // The fork node shows the branch's state at creation: a read-only view of the parent content at
+    // the branch anchor. The branch's editable present is a separate `Tip` node (BRANCH_TIP_PREFIX).
+    const branchId = commit.id.slice(BRANCH_PREFIX.length);
+    return object.history?.branches.some((branch) => branch.id === branchId) ? { kind: 'fork', branchId } : undefined;
   }
   if (object.history?.versions.some((version) => version.id === commit.id)) {
     return { kind: 'checkpoint', versionId: commit.id };

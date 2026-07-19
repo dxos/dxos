@@ -11,8 +11,11 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 export type VersionBannerProps = ThemedClassName<{
-  /** Checkpoint mode is read-only time travel; branch mode is an editable draft. */
-  mode: 'checkpoint' | 'branch';
+  /**
+   * Checkpoint mode is read-only time travel; branch mode is an editable draft; fork mode is a
+   * read-only view of a branch's creation point.
+   */
+  mode: 'checkpoint' | 'branch' | 'fork';
   name: string;
   detail?: string;
   onRestore?: () => void;
@@ -50,8 +53,7 @@ export const VersionBanner = ({
     >
       <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} size={4} />
       <span className='truncate'>
-        {t(mode === 'checkpoint' ? 'version-banner-checkpoint.label' : 'version-banner-branch.label')}{' '}
-        <span className='font-medium'>{name}</span>
+        {t(`version-banner-${mode}.label`)} <span className='font-medium'>{name}</span>
         {detail && <span className='text-description'> · {detail}</span>}
       </span>
       <div className='flex items-center gap-1 ms-auto'>

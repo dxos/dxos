@@ -46,3 +46,12 @@ export const Branch: Story = {
     onClose: fn(),
   },
 };
+
+export const Fork: Story = {
+  args: {
+    mode: 'fork',
+    name: 'agent-draft',
+    detail: '2 days ago',
+    onClose: fn(),
+  },
+};

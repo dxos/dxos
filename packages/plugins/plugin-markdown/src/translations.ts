@@ -40,6 +40,7 @@ export const translations = [
         'words.label_other': 'words',
         'version-banner-checkpoint.label': 'Viewing checkpoint',
         'version-banner-branch.label': 'Editing branch',
+        'version-banner-fork.label': 'Branch created from',
         'restore.label': 'Restore',
         'branch-from.label': 'Branch from here',
         'merge.label': 'Merge',

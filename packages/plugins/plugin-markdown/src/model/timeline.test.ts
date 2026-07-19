@@ -86,10 +86,11 @@ describe('timeline model', () => {
         const v1Commit = commits.find((commit) => commit.id === v1.id);
         invariant(v1Commit);
         expect(commitToSelection(doc, v1Commit)).toEqual({ kind: 'checkpoint', versionId: v1.id });
-        // The fork node is a non-interactive marker (and the merged branch has no editable tip node).
+        // The fork node selects the branch's fork point (read-only state at creation), distinct from
+        // its editable tip. A merged branch keeps its registry entry, so the fork stays selectable.
         const branchCommit = commits.find((commit) => commit.id === `branch-${branch.id}`);
         invariant(branchCommit);
-        expect(commitToSelection(doc, branchCommit)).toBeUndefined();
+        expect(commitToSelection(doc, branchCommit)).toEqual({ kind: 'fork', branchId: branch.id });
       },
       WithProperties,
       Effect.provide(TestLayer),
@@ -117,8 +118,8 @@ describe('timeline model', () => {
         invariant(branchCommit);
         // Core branches carry no synchronous diff stats (needs a binding; stage-3 timeline work).
         expect(branchCommit.message).toContain('draft');
-        // The fork node is a non-interactive marker; the branch's editable present is its Tip node.
-        expect(commitToSelection(doc, branchCommit)).toBeUndefined();
+        // The fork node selects the branch's fork point (read-only); its editable present is the Tip node.
+        expect(commitToSelection(doc, branchCommit)).toEqual({ kind: 'fork', branchId: branch.id });
         const tip = commits.find((commit) => commit.id === `${BRANCH_TIP_PREFIX}${branch.id}`);
         invariant(tip);
         expect(commitToSelection(doc, tip)).toEqual({ kind: 'branch', branchId: branch.id });
