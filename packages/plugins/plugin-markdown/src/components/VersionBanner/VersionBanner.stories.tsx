@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
+import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -16,7 +17,7 @@ const meta = {
   component: VersionBanner,
   decorators: [withTheme()],
   parameters: {
-    translations,
+    translations: [...translations, ...spaceTranslations],
   },
 } satisfies Meta<typeof VersionBanner>;
 
@@ -42,6 +43,15 @@ export const Branch: Story = {
     detail: 'anchored at v2 outline',
     onMerge: fn(),
     onCompare: fn(),
+    onClose: fn(),
+  },
+};
+
+export const Fork: Story = {
+  args: {
+    mode: 'fork',
+    name: 'agent-draft',
+    detail: '2 days ago',
     onClose: fn(),
   },
 };

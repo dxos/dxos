@@ -66,7 +66,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div role='none' className='flex flex-col gap-2 p-2 max-w-[32rem]'>
+    <div className='flex flex-col gap-2 p-2 max-w-[32rem]'>
       <input
         type='text'
         placeholder='Search…'

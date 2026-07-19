@@ -41,8 +41,8 @@ export class Domino<T extends HTMLElement | SVGElement> {
    */
   static of<K extends keyof HTMLElementTagNameMap>(tag: K): Domino<HTMLElementTagNameMap[K]>;
   static of<K extends keyof SVGElementTagNameMap>(tag: K, namespace: string): Domino<SVGElementTagNameMap[K]>;
-  // Custom elements (e.g. `dx-anchor`, `dx-icon`); the `dx-` prefix keeps typo-checking for standard tags.
-  static of(tag: `dx-${string}`): Domino<HTMLElement>;
+  // Custom elements (e.g. `dx-anchor`, `dx-icon`) are not in the standard tag maps.
+  static of(tag: string): Domino<HTMLElement>;
   static of(tag: string, namespace?: string): Domino<HTMLElement | SVGElement> {
     return new Domino(tag, namespace);
   }

@@ -26,7 +26,7 @@ import {
   decorateMarkdown,
   documentSlots,
   formattingKeymap,
-  scrollThreadIntoView,
+  scrollCommentIntoView,
 } from '@dxos/ui-editor';
 import { type Comment } from '@dxos/ui-editor/types';
 
@@ -168,7 +168,7 @@ const CommentsList = ({
     // (the effect already set it current), so the round-trip wouldn't move the list selection.
     onActivate(id);
     if (view) {
-      scrollThreadIntoView(view, id);
+      scrollCommentIntoView(view, id);
       view.focus();
     }
   };

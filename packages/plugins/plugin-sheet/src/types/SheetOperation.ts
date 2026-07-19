@@ -42,7 +42,11 @@ export const DropAxisOutput = Schema.Struct({
 export type DropAxisOutput = Schema.Schema.Type<typeof DropAxisOutput>;
 
 export const DropAxis = Operation.make({
-  meta: { key: makeKey('axisDrop'), name: 'Drop Axis', icon: 'ph--trash--regular' },
+  meta: {
+    key: makeKey('axisDrop'),
+    name: 'Drop Axis',
+    icon: 'ph--trash--regular',
+  },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -61,7 +65,7 @@ export const ScrollToAnchor = Operation.make({
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the sheet.' }),
     cursor: Schema.String.annotations({ description: 'Cell range coordinates.' }),
-    ref: Schema.optional(Schema.Any.annotations({ description: 'Active refs for highlighting.' })),
+    id: Schema.optional(Schema.Any.annotations({ description: 'Active refs for highlighting.' })),
   }),
   output: Schema.Void,
 });
