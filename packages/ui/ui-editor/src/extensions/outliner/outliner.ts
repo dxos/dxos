@@ -9,7 +9,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { decorateMarkdown } from '../markdown';
 import { commands } from './commands';
-import { outlinerDnd } from './dnd';
 import { editor } from './editor';
 import { menu } from './menu';
 import { selectionCompartment, selectionEquals, selectionFacet } from './selection';
@@ -54,7 +53,7 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   menu(),
 
   // Drag-to-reorder items.
-  outlinerDnd(),
+  // outlinerDnd(),
 
   // Line decorations.
   decorations(),
