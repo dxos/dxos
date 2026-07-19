@@ -123,8 +123,19 @@ const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
         selection,
         initialValue: text,
         extensions: [
-          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
-          createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
+          createBasicExtensions({
+            lineNumbers,
+            placeholder,
+            readOnly,
+            scrollPastEnd: true,
+            search: true,
+          }),
+          createThemeExtensions({
+            monospace,
+            slots,
+            syntaxHighlighting: true,
+            themeMode,
+          }),
           createMarkdownExtensions(),
           extensions || [],
         ],

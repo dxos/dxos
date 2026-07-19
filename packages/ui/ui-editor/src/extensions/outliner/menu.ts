@@ -6,6 +6,13 @@ import { type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { type CleanupFn, addEventListener } from '@dxos/async';
+import { Domino } from '@dxos/ui';
+
+// Right-hand strip (px) mirroring the drag grip's left strip; the trigger is centered within it. 3rem.
+const GUTTER = 48;
+
+// Square trigger size (px), matching the drag grip (`dx-button` density `xs` + `aspect-square` → `size-6`).
+const TRIGGER_SIZE = 24;
 
 export type MenuOptions = {
   icon?: string;
@@ -31,14 +38,16 @@ export const menu = (options: MenuOptions = {}): Extension => [
           container.style.position = 'relative';
         }
 
-        {
-          const icon = document.createElement('dx-icon');
-          icon.setAttribute('icon', options.icon ?? 'ph--dots-three-vertical--regular');
-
-          this.tag = document.createElement('dx-anchor');
-          this.tag.classList.add('cm-popover-trigger');
-          this.tag.appendChild(icon);
-        }
+        // Outer `dx-anchor` (fires `dx-anchor-activate`, driving the popover) styled as a `dx-button`;
+        // inner element holds the phosphor glyph. Mirrors the drag grip's construction.
+        this.tag = Domino.of('dx-anchor')
+          .classNames('dx-button aspect-square cm-popover-trigger')
+          .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
+          .append(
+            Domino.of('div')
+              .classNames('cm-popover-trigger-icon')
+              .append(Domino.svg(options.icon ?? 'ph--dots-three-vertical--regular')),
+          ).root;
 
         container.appendChild(this.tag);
 
@@ -86,14 +95,18 @@ export const menu = (options: MenuOptions = {}): Extension => [
         const line = this.view.lineBlockAt(pos);
         const coords = this.view.coordsAtPos(line.from);
         if (!coords) {
+          // No resolvable line (e.g. the caret's item was just deleted): hide rather than leave the
+          // trigger stranded at its previous position.
+          this.tag.style.display = 'none';
           return;
         }
 
         const lineHeight = coords.bottom - coords.top;
-        const dy = (lineHeight - (options.height ?? 32)) / 2;
+        const dy = (lineHeight - (options.height ?? TRIGGER_SIZE)) / 2;
 
         const offsetTop = coords.top + dy;
-        const offsetLeft = x + width + (options.padding ?? 8);
+        // Center the trigger within the 3rem gutter immediately right of the content (mirrors the grip).
+        const offsetLeft = x + width + GUTTER / 2 - TRIGGER_SIZE / 2;
 
         this.tag.style.top = `${offsetTop}px`;
         this.tag.style.left = `${offsetLeft}px`;
@@ -111,15 +124,17 @@ export const menu = (options: MenuOptions = {}): Extension => [
   ),
 
   EditorView.theme({
+    // `dx-button` owns the box (size, hover); this only pins it and gates visibility on editor focus.
     '.cm-popover-trigger': {
       position: 'fixed',
-      padding: '0',
-      border: 'none',
       opacity: '0',
+      cursor: 'pointer',
+    },
+    '.cm-popover-trigger-icon': {
       display: 'grid',
       placeContent: 'center',
-      width: '2rem',
-      height: '2rem',
+      fontSize: '16px',
+      color: 'var(--color-description, currentColor)',
     },
     '&:focus-within .cm-popover-trigger': {
       opacity: '1',

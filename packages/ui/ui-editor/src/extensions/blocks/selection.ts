@@ -147,7 +147,7 @@ const selectionTheme = EditorView.theme({
   },
   '.cm-blockSelected': {
     boxSizing: 'border-box',
-    backgroundColor: 'color-mix(in oklch, var(--color-accent-text, #3b82f6) 12%, transparent)',
+    backgroundColor: 'var(--color-cm-highlight-surface)',
   },
 });
 

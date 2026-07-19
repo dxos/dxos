@@ -47,9 +47,6 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Filter and possibly modify changes.
   editor(),
 
-  // Floating menu.
-  menu(),
-
   // Block selection, drag-to-reorder, highlight, and clipboard (built on the `blocks` extensions).
   outlinerDnd(),
 
@@ -59,8 +56,11 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
 
-  // Researve space for menu.
-  EditorView.contentAttributes.of({ class: 'w-full !mr-[3rem]' }),
+  // Floating menu (reserve space).
+  menu(),
+
+  // Centered content column; the grip (left) and menu (right) float in the ~3rem margins on each side.
+  EditorView.contentAttributes.of({ class: 'mx-auto w-full max-w-[min(50rem,100%-6rem)]' }),
 ];
 
 /**
@@ -103,7 +103,8 @@ const decorations = () => [
             return item ? getRange(tree, item) : null;
           })
           .filter((range): range is [number, number] => range != null);
-        const isSelected = (pos: number) => selectedRanges.some(([rangeFrom, rangeTo]) => pos >= rangeFrom && pos <= rangeTo);
+        const isSelected = (pos: number) =>
+          selectedRanges.some(([rangeFrom, rangeTo]) => pos >= rangeFrom && pos <= rangeTo);
 
         const decorations: Range<Decoration>[] = [];
         for (let lineNum = doc.lineAt(from).number; lineNum <= doc.lineAt(to).number; lineNum++) {
@@ -137,8 +138,8 @@ const decorations = () => [
   // Theme.
   EditorView.theme({
     '.cm-list-item': {
-      borderLeftWidth: '1px',
-      borderRightWidth: '1px',
+      // borderLeftWidth: '1px',
+      // borderRightWidth: '1px',
       paddingLeft: '32px',
       borderColor: 'transparent',
     },
@@ -146,28 +147,28 @@ const decorations = () => [
       borderRadius: '0',
     },
 
+    // No vertical margins: CodeMirror's gutter/height-map measures each line's border-box but not its
+    // margins, so any inter-row margin makes the drag grips drift further from center down the list (and
+    // shows as gaps between selected rows). Keep row spacing in the padding, which CM does measure.
     '.cm-list-item-start': {
-      borderTopWidth: '1px',
-      borderTopLeftRadius: '4px',
-      borderTopRightRadius: '4px',
+      // borderTopWidth: '1px',
+      // borderTopLeftRadius: '4px',
+      // borderTopRightRadius: '4px',
       paddingTop: '4px',
-      marginTop: '2px',
     },
-
     '.cm-list-item-end': {
-      borderBottomWidth: '1px',
-      borderBottomLeftRadius: '4px',
-      borderBottomRightRadius: '4px',
+      // borderBottomWidth: '1px',
+      // borderBottomLeftRadius: '4px',
+      // borderBottomRightRadius: '4px',
       paddingBottom: '4px',
-      marginBottom: '2px',
     },
 
     // Accent background behind the selected subtree; flat so adjacent selected rows read as one region.
     '.cm-list-item-selected': {
-      backgroundColor: 'color-mix(in oklch, var(--color-accent-text) 12%, transparent)',
+      boxSizing: 'border-box',
+      backgroundColor: 'var(--color-cm-highlight-surface)',
       borderRadius: '0',
     },
-
     // Subtle border on the item under the caret; distinct from the accent selection highlight.
     '.cm-list-item-current': {
       borderColor: 'var(--color-focus-ring-subtle)',

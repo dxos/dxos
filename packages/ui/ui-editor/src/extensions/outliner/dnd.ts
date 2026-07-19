@@ -5,15 +5,15 @@
 import { type EditorState, type Extension } from '@codemirror/state';
 import { type Command, EditorView } from '@codemirror/view';
 
-import { type Block, type BlockOps, blockSelectionField, createBlockDrag, createBlockSelection, setBlockSelection } from '../blocks';
+import {
+  type Block,
+  type BlockOps,
+  blockSelectionField,
+  createBlockDrag,
+  createBlockSelection,
+  setBlockSelection,
+} from '../blocks';
 import { type Item, type Tree, getRange, treeFacet } from './tree';
-
-// Narrower than the markdown block gutter — outliner items are indented and tightly packed.
-const GUTTER_CLASS = 'cm-outlinerDragGutter';
-
-// The outliner row's first line sits `paddingTop + marginTop` below its gutter element, so push the grip
-// down by that much to center it on the checkbox (see `.cm-list-item-start`).
-const GRIP_INSET_TOP = 6;
 
 /**
  * Flattens the tree into draggable units in document order, one per item. Each unit spans only the
@@ -255,19 +255,15 @@ const outlinerBlockOps: BlockOps = {
 
 /**
  * Block selection, drag-to-reorder, and cut/copy/paste for outliner items. Single-item drag relocates
- * the whole subtree (re-indented); the generic block-selection and clipboard from the `blocks`
- * extensions operate on item lines. The gutter is narrower — outliner items are indented and packed.
+ * the whole subtree (re-indented); the generic block-selection and clipboard from the `blocks` extensions
+ * operate on item lines. The grip is a floating overlay pinned to the content's left edge (see
+ * `createBlockDrag`), so it needs no outliner-specific gutter styling.
  */
 export const outlinerDnd = (): Extension => [
   // The selection highlight is drawn by `outliner.ts` as a line decoration (aligned to the actual rows);
   // the `blocks` RectangleMarker layer is skipped here because it drifts against the outliner's row CSS.
   createBlockSelection(outlinerBlockOps),
-  createBlockDrag({ getBlocks, moveBlocks, getExtent, gutterClass: GUTTER_CLASS, gripInsetTop: GRIP_INSET_TOP }),
-  EditorView.theme({
-    [`.${GUTTER_CLASS}`]: {
-      width: '24px',
-    },
-  }),
+  createBlockDrag({ getBlocks, moveBlocks, getExtent }),
 ];
 
 //

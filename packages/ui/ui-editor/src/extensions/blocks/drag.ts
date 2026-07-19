@@ -2,18 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import {
-  Decoration,
-  type DecorationSet,
-  EditorView,
-  GutterMarker,
-  ViewPlugin,
-  type ViewUpdate,
-  WidgetType,
-  gutter,
-} from '@codemirror/view';
+import { type EditorState, type Extension, StateEffect, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
+
+import { Domino } from '@dxos/ui';
 
 import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection';
 import { type Block, type BlockExtent } from './types';
@@ -34,19 +26,12 @@ export type BlockDragOptions = {
    * When `false`, the preview follows the pointer on both axes.
    */
   clampX?: boolean;
-  /** Class applied to the drag gutter (default `cm-blockDragGutter`, styled at 60px wide). */
-  gutterClass?: string;
   /**
    * Maps a block to the range it visually occupies for the collapse/preview/placeholder — its subtree for
-   * the outliner. Defaults to the block's own range (markdown blocks). The gutter grips and drop-index
-   * logic still use `getBlocks` (own, non-overlapping ranges).
+   * the outliner. Defaults to the block's own range (markdown blocks). The grips and drop-index logic still
+   * use `getBlocks` (own, non-overlapping ranges).
    */
   getExtent?: BlockExtent;
-  /**
-   * Pixels to push the grip down within its row so it centers on the first line's rendered content rather
-   * than the raw line-box top (e.g. the outliner's row top padding). Default `0`.
-   */
-  gripInsetTop?: number;
 };
 
 // Merges sorted ranges, combining any that overlap or touch (nested subtree extents from a parent and its
@@ -85,52 +70,17 @@ const AUTOSCROLL_MAX_SPEED = 14;
 // Pointer travel (px) past which an armed handle press becomes a drag rather than a click.
 const DRAG_THRESHOLD = 4;
 
-const DEFAULT_GUTTER_CLASS = 'cm-blockDragGutter';
+// Reserved strip (px) left of the content for the grip (mirrors the menu strip on the right); the grip is
+// centered within it. 3rem.
+const GUTTER = 48;
 
-/** Gutter grip anchored to a block's first line; press toggles selection, drag reorders. */
-class DragHandleMarker extends GutterMarker {
-  // The gutter element spans the block's full (possibly multi-row/wrapped) height, so sizing the grip
-  // to the first row's height and top-anchoring it centers the grip on that line — a tall heading or a
-  // short body line — rather than on the middle of the whole block.
-  constructor(
-    readonly rowHeight: number | undefined,
-    readonly insetTop = 0,
-  ) {
-    super();
-  }
+// Square grip size (px) and its drag-handle icon. Matches `dx-button` density `xs` + `aspect-square`
+// (`size-6`), so the button's own box lines up with the centering math below.
+const GRIP_SIZE = 24;
+const GRIP_ICON = 'ph--dots-six-vertical--regular';
 
-  override eq(other: DragHandleMarker): boolean {
-    return other.rowHeight === this.rowHeight && other.insetTop === this.insetTop;
-  }
-
-  override toDOM(): HTMLElement {
-    const element = document.createElement('div');
-    element.className = 'cm-blockDragHandle';
-    if (this.rowHeight != null) {
-      element.style.height = `${this.rowHeight}px`;
-    }
-    // Push the grip down so it centers on the first line's content (past any row top padding).
-    if (this.insetTop) {
-      element.style.marginTop = `${this.insetTop}px`;
-    }
-    element.textContent = '⠿';
-    return element;
-  }
-}
-
-// Height (px) of a block's first rendered row, used to center the gutter grip on that line. Computed
-// synchronously from the height map and default line height — both safe to read during an update (unlike
-// `coordsAtPos`). A heading occupies a single tall row, so its whole line-block height is the row height;
-// every other block's first row is the default line height.
-const firstRowHeight = (view: EditorView, pos: number): number => {
-  const node = syntaxTree(view.state).resolveInner(pos, 1);
-  for (let current: typeof node | null = node; current; current = current.parent) {
-    if (/Heading/.test(current.name)) {
-      return view.lineBlockAt(pos).height;
-    }
-  }
-  return view.defaultLineHeight;
-};
+// A grip's target placement, computed in the measure read phase and applied in the write phase.
+type GripPosition = { index: number; anchor: number; left: number; top: number };
 
 // The `from` of the block under the pointer (a hovered block shows its grip), or null.
 const setHoveredBlock = StateEffect.define<number | null>();
@@ -150,7 +100,7 @@ const hoveredBlockField = StateField.define<number | null>({
 // or the margin) and publishes it to `hoveredBlockField` so that block's grip can show. Listens on the
 // scroller — which spans the gutter and content — so moving from the text toward the grip doesn't clear
 // it; the hover clears only when the pointer leaves the editor. Dispatches only when the block changes.
-const createHoverPlugin = (getBlocks: BlockDragOptions['getBlocks']) =>
+const createHoverPlugin = (getBlocks: BlockDragOptions['getBlocks'], dragPlugin: ReturnType<typeof createDragPlugin>) =>
   ViewPlugin.fromClass(
     class {
       constructor(readonly view: EditorView) {
@@ -170,6 +120,11 @@ const createHoverPlugin = (getBlocks: BlockDragOptions['getBlocks']) =>
       }
 
       #onMove = (event: MouseEvent) => {
+        // While a drag is in flight the pointer sweeps across rows; updating the hovered block here would
+        // flicker other rows' grips on and off. The drag plugin owns which grip shows during a drag.
+        if (this.view.plugin(dragPlugin)?.dragging) {
+          return;
+        }
         // Map the pointer's row (content-center x + pointer y) to a block, so any horizontal position works.
         const contentRect = this.view.contentDOM.getBoundingClientRect();
         const pos = this.view.posAtCoords({ x: contentRect.left + contentRect.width / 2, y: event.clientY });
@@ -307,6 +262,16 @@ const createDragPlugin = (
       #scrollFrame: number | null = null;
 
       constructor(readonly view: EditorView) {}
+
+      // True once a press has crossed the drag threshold and a reorder is in flight.
+      get dragging(): boolean {
+        return this.#sourceIndices != null;
+      }
+
+      // The block indices being dragged (null when not dragging).
+      get sourceIndices(): number[] | null {
+        return this.#sourceIndices;
+      }
 
       // Abort an in-flight drag when a concurrent/external edit lands — the stored indices would otherwise
       // resolve against a changed document on drop.
@@ -695,28 +660,24 @@ const createDragPlugin = (
   );
 
 const dragTheme = EditorView.theme({
-  '.cm-blockDragGutter': {
-    width: '60px',
-  },
-  // Top-anchor the handle: the gutter element spans the block's full height, but the handle is sized to
-  // the first row (see `DragHandleMarker`) so it centers on that line (body ~19px, heading ~45px).
-  '.cm-blockDragGutter .cm-gutterElement': {
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
+  // The grip is a floating overlay (see `createGripOverlay`) pinned just left of the content, so it tracks
+  // a centered content column — a CodeMirror gutter is stuck at the scroller edge and can't. Positioned
+  // via fixed coordinates (viewport space), refreshed on layout/scroll. `dx-button` supplies the hover
+  // affordance; this only pins/sizes it.
   '.cm-blockDragHandle': {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'fixed',
+    zIndex: '5',
     cursor: 'grab',
-    color: 'var(--color-description, currentColor)',
-    opacity: '0.3',
-    transition: 'opacity 0.2s',
-    lineHeight: '1',
-    fontSize: '20px',
   },
-  '.cm-blockDragHandle:hover': {
+  '.cm-blockDragHandleIcon': {
+    display: 'grid',
+    placeContent: 'center',
+    fontSize: '16px',
+    color: 'var(--color-description, currentColor)',
+    opacity: '0.4',
+    transition: 'opacity 0.2s',
+  },
+  '.cm-blockDragHandle:hover .cm-blockDragHandleIcon': {
     opacity: '1',
   },
   '.cm-scroller.cm-blockDragging': {
@@ -759,48 +720,141 @@ const dragTheme = EditorView.theme({
  * from the caller (see `blocks` for markdown blocks, and the outliner for task lines). Pairs with
  * `createBlockSelection`, which owns the selection state, highlight, and clipboard.
  */
-export const createBlockDrag = ({
-  getBlocks,
-  moveBlocks,
-  clampX = true,
-  gutterClass = DEFAULT_GUTTER_CLASS,
-  getExtent,
-  gripInsetTop = 0,
-}: BlockDragOptions): Extension => {
+export const createBlockDrag = ({ getBlocks, moveBlocks, clampX = true, getExtent }: BlockDragOptions): Extension => {
   const dragPlugin = createDragPlugin(getBlocks, moveBlocks, clampX, getExtent);
-  const dragGutter = gutter({
-    class: gutterClass,
-    markers: (view) => {
-      const builder = new RangeSetBuilder<GutterMarker>();
-      const blocks = getBlocks(view.state);
-      for (const index of activeBlockIndices(view.state, getBlocks)) {
-        const block = blocks[index];
-        builder.add(block.from, block.from, new DragHandleMarker(firstRowHeight(view, block.from), gripInsetTop));
-      }
-      return builder.finish();
-    },
-    // The active grip follows the caret, block-selection, and hover, so recompute markers on any change.
-    lineMarkerChange: (update) =>
-      update.selectionSet ||
-      update.startState.field(blockSelectionField, false) !== update.state.field(blockSelectionField, false) ||
-      update.startState.field(hoveredBlockField, false) !== update.state.field(hoveredBlockField, false),
-    domEventHandlers: {
-      mousedown: (view, line, event) => {
-        // Primary button only; right/middle click must not reorder content.
-        if (!(event instanceof MouseEvent) || event.button !== 0) {
-          return false;
-        }
-        const blocks = getBlocks(view.state);
-        const sourceIndex = blocks.findIndex((block) => block.from >= line.from && block.from <= line.to);
-        if (sourceIndex < 0) {
-          return false;
-        }
-        view.plugin(dragPlugin)?.arm(sourceIndex, event);
-        event.preventDefault();
-        return true;
-      },
-    },
-  });
-
-  return [dragTheme, dragDecoField, hoveredBlockField, createHoverPlugin(getBlocks), dragPlugin, dragGutter];
+  return [
+    dragTheme,
+    dragDecoField,
+    hoveredBlockField,
+    createHoverPlugin(getBlocks, dragPlugin),
+    dragPlugin,
+    createGripOverlay(getBlocks, dragPlugin),
+  ];
 };
+
+/**
+ * Floating grip overlay, one per active block (caret / hovered / selected), pinned just left of the
+ * content's left edge — unlike a CodeMirror gutter (stuck at the scroller edge) it tracks a `max-width` +
+ * `mx-auto` centered content column. Positions come from `coordsAtPos` (real DOM geometry, not the height
+ * map) and refresh on layout and scroll; presses arm the drag plugin. Grips whose row is scrolled out of
+ * the editor are dropped.
+ */
+const createGripOverlay = (
+  getBlocks: BlockDragOptions['getBlocks'],
+  dragPlugin: ReturnType<typeof createDragPlugin>,
+): Extension =>
+  ViewPlugin.fromClass(
+    class {
+      // Grip elements keyed by the block anchor they mark; rebuilt as the active set changes.
+      #grips = new Map<number, HTMLElement>();
+      constructor(readonly view: EditorView) {
+        view.scrollDOM.addEventListener('scroll', this.#onScroll);
+        this.#schedule();
+      }
+
+      update(update: ViewUpdate) {
+        const selectionChanged =
+          update.startState.field(blockSelectionField, false) !== update.state.field(blockSelectionField, false);
+        const hoverChanged =
+          update.startState.field(hoveredBlockField, false) !== update.state.field(hoveredBlockField, false);
+        if (
+          update.geometryChanged ||
+          update.docChanged ||
+          update.viewportChanged ||
+          update.selectionSet ||
+          selectionChanged ||
+          hoverChanged
+        ) {
+          this.#schedule();
+        }
+      }
+
+      destroy() {
+        this.view.scrollDOM.removeEventListener('scroll', this.#onScroll);
+        for (const grip of this.#grips.values()) {
+          grip.remove();
+        }
+        this.#grips.clear();
+      }
+
+      #onScroll = () => this.#schedule();
+
+      // A keyed measure runs in CodeMirror's measure cycle — after layout, including the initial one — so
+      // `coordsAtPos` is valid (unlike a bare `rAF` fired before first layout). Requests coalesce by key.
+      #measure = {
+        key: this,
+        read: (view: EditorView): GripPosition[] => this.#read(view),
+        write: (positions: GripPosition[]) => this.#write(positions),
+      };
+
+      #schedule() {
+        this.view.requestMeasure(this.#measure);
+      }
+
+      #read(view: EditorView): GripPosition[] {
+        const blocks = getBlocks(view.state);
+        const contentRect = view.contentDOM.getBoundingClientRect();
+        const scrollRect = view.scrollDOM.getBoundingClientRect();
+        // Centered within the 3rem gutter immediately left of the content.
+        const left = contentRect.left - GUTTER / 2 - GRIP_SIZE / 2;
+        const positions: GripPosition[] = [];
+        // During a drag, show only the dragged block(s)' grip(s); otherwise the caret/hover/selection set.
+        const drag = view.plugin(dragPlugin);
+        const indices = drag?.dragging ? (drag.sourceIndices ?? []) : activeBlockIndices(view.state, getBlocks);
+        for (const index of indices) {
+          const block = blocks[index];
+          const coords = block && view.coordsAtPos(block.from);
+          // Drop grips whose first row is scrolled out of the editor viewport.
+          if (!coords || coords.bottom <= scrollRect.top || coords.top >= scrollRect.bottom) {
+            continue;
+          }
+          positions.push({ index, anchor: block.from, left, top: (coords.top + coords.bottom) / 2 - GRIP_SIZE / 2 });
+        }
+        return positions;
+      }
+
+      #write(positions: GripPosition[]) {
+        const active = new Set<number>();
+        for (const { index, anchor, left, top } of positions) {
+          active.add(index);
+          let grip = this.#grips.get(index);
+          if (!grip) {
+            grip = this.#createGrip();
+            this.#grips.set(index, grip);
+          }
+          grip.dataset.anchor = String(anchor);
+          grip.style.left = `${left}px`;
+          grip.style.top = `${top}px`;
+        }
+        for (const [index, grip] of this.#grips) {
+          if (!active.has(index)) {
+            grip.remove();
+            this.#grips.delete(index);
+          }
+        }
+      }
+
+      #createGrip(): HTMLElement {
+        // Outer `dx-button` carries the hover affordance; inner element holds the phosphor drag-handle glyph.
+        const grip = Domino.of('div')
+          .classNames('dx-button aspect-square cm-blockDragHandle')
+          .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
+          .append(Domino.of('div').classNames('cm-blockDragHandleIcon').append(Domino.svg(GRIP_ICON)))
+          .on('mousedown', (event) => {
+            if (event.button !== 0) {
+              return;
+            }
+            // Resolve the block from the grip's anchor at press time (indices shift as the doc changes).
+            const anchor = Number(grip.dataset.anchor);
+            const sourceIndex = getBlocks(this.view.state).findIndex((entry) => entry.from === anchor);
+            if (sourceIndex < 0) {
+              return;
+            }
+            this.view.plugin(dragPlugin)?.arm(sourceIndex, event);
+            event.preventDefault();
+          }).root;
+        this.view.scrollDOM.appendChild(grip);
+        return grip;
+      }
+    },
+  );
