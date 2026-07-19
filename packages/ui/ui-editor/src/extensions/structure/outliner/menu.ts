@@ -143,4 +143,9 @@ const styles = EditorView.theme({
   '&:focus-within .cm-popover-trigger': {
     opacity: '1',
   },
+  // Hide the trigger while a block drag is in flight (the scroller carries `cm-blockDragging`).
+  '.cm-scroller.cm-blockDragging .cm-popover-trigger': {
+    opacity: '0 !important',
+    pointerEvents: 'none',
+  },
 });

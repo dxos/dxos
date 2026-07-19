@@ -263,7 +263,7 @@ export const outlinerDnd = (): Extension => [
   // The selection highlight is drawn by `outliner.ts` as a line decoration (aligned to the actual rows);
   // the `blocks` RectangleMarker layer is skipped here because it drifts against the outliner's row CSS.
   createBlockSelection(outlinerBlockOps),
-  createBlockDrag({ getBlocks, moveBlocks, getExtent }),
+  createBlockDrag({ getBlocks, moveBlocks, getExtent, keepTrailingBreak: true }),
 ];
 
 //

@@ -32,6 +32,14 @@ export type BlockDragOptions = {
    * use `getBlocks` (own, non-overlapping ranges).
    */
   getExtent?: BlockExtent;
+  /**
+   * Collapse only the dragged block's content, keeping its trailing line break (default `false`, which
+   * collapses through to the next block, consuming a blank-line separator). Set `true` for single-newline
+   * separated blocks (the outliner): a block-replace that ends at the next line's start makes CodeMirror
+   * attribute that line's `Decoration.line` (its indent) to the removed block, so the following item would
+   * lose its indentation while dragging. Keeping the break ends the collapse at the content, preserving it.
+   */
+  keepTrailingBreak?: boolean;
 };
 
 // Merges sorted ranges, combining any that overlap or touch (nested subtree extents from a parent and its
@@ -245,6 +253,7 @@ const createDragPlugin = (
   moveBlocks: BlockDragOptions['moveBlocks'],
   clampX: boolean,
   getExtent?: BlockExtent,
+  keepTrailingBreak = false,
 ) =>
   ViewPlugin.fromClass(
     class {
@@ -666,7 +675,11 @@ const createDragPlugin = (
           sources
             .map((sourceIndex) => {
               const extent = this.#extentOf(sourceIndex);
-              return extent ? { from: extent.from, to: this.#nextStartAfter(extent.to) } : null;
+              // Collapse through the separator (next block start) for blank-line separated blocks, or stop
+              // at the content end for single-newline blocks so the next line keeps its decoration (indent).
+              return extent
+                ? { from: extent.from, to: keepTrailingBreak ? extent.to : this.#nextStartAfter(extent.to) }
+                : null;
             })
             .filter((range): range is { from: number; to: number } => range != null),
         );
@@ -766,8 +779,14 @@ const dragTheme = EditorView.theme({
  * from the caller (see `blocks` for markdown blocks, and the outliner for task lines). Pairs with
  * `createBlockSelection`, which owns the selection state, highlight, and clipboard.
  */
-export const createBlockDrag = ({ getBlocks, moveBlocks, clampX = true, getExtent }: BlockDragOptions): Extension => {
-  const dragPlugin = createDragPlugin(getBlocks, moveBlocks, clampX, getExtent);
+export const createBlockDrag = ({
+  getBlocks,
+  moveBlocks,
+  clampX = true,
+  getExtent,
+  keepTrailingBreak = false,
+}: BlockDragOptions): Extension => {
+  const dragPlugin = createDragPlugin(getBlocks, moveBlocks, clampX, getExtent, keepTrailingBreak);
   return [
     dragTheme,
     dragDecoField,
