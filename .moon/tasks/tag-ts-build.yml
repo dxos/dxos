@@ -1,35 +1,26 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
+# Legacy two-tool build pipeline (packages that can't yet use the single-pass `ts-vite-build`).
+# A single `build` task emits both artifacts: `dx-build` writes the `.d.ts` types to
+# `dist/types/`, then `dx-compile` bundles the JS to `dist/lib/`. Per-package `dx-compile`
+# flags (entry points, bundled packages, platform, ...) are supplied as the project's task
+# `args` and forwarded to `dx-compile` via `"$@"`.
 tasks:
   build:
-    command: pnpm exec dx-build
+    command: bash -c 'pnpm exec dx-build && pnpm exec dx-compile --outputPath=dist/lib "$@"' --
     deps:
-      - dx-build:compile
+      - dx-build:build
+      - dx-compile:build
       - ^:build
-      - ^:compile
-      - compile
-      # TODO(burdon): Add root moon.yml?
-      # - root:checkPackageCycles
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
       - '@group(sources)'
-    outputs:
-      - dist/types/
-    options:
-      timeout: 60
-  compile:
-    command: pnpm exec dx-compile
-    args:
-      - --outputPath=dist/lib
-    deps:
-      - dx-compile:compile
-      - ^:compile
-    inputs:
       - '@group(production)'
     outputs:
+      - dist/types/
       - dist/lib/
     options:
-      timeout: 10
+      timeout: 60
 
 inheritedBy:
   tags: ts-build
