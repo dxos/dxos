@@ -29,8 +29,12 @@ const setupPeer = async (mesh: TestEdgeMesh, topic: PublicKey, name: string) => 
 
   const broadcasts: BroadcastMessage[] = [];
   const messages: Message[] = [];
-  manager.onBroadcast.on(broadcasts.push.bind(broadcasts));
-  manager.onMessage.on(messages.push.bind(messages));
+  manager.onBroadcast.on((broadcast) => {
+    broadcasts.push(broadcast);
+  });
+  manager.onMessage.on((message) => {
+    messages.push(message);
+  });
 
   await manager.join(Context.default(), { topic, peer });
   return { manager, peer, broadcasts, messages };

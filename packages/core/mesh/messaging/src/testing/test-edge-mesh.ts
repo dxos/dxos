@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type Context } from '@dxos/context';
-import { type EdgeConnection, type EdgeStatus, protocol } from '@dxos/edge-client';
+import { type EdgeConnection, protocol } from '@dxos/edge-client';
 import { EdgeService } from '@dxos/protocols';
 import {
   type Message,
@@ -132,7 +132,7 @@ export class TestEdgeMesh {
  * {@link EdgeSignalManager} uses are functional; the rest are inert stubs.
  */
 export class TestEdgeConnection implements EdgeConnection {
-  public readonly statusChanged = new Event<EdgeStatus>();
+  public readonly statusChanged: EdgeConnection['statusChanged'] = new Event<any>();
   private readonly _messageListeners = new Set<(message: Message) => void>();
   private readonly _peerKey: string;
   private readonly _identityDid: string;
@@ -160,8 +160,8 @@ export class TestEdgeConnection implements EdgeConnection {
     return true;
   }
 
-  get status(): EdgeStatus {
-    return {} as EdgeStatus;
+  get status(): EdgeConnection['status'] {
+    return {} as EdgeConnection['status'];
   }
 
   setIdentity(): void {}
