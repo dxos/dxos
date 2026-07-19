@@ -27,15 +27,31 @@ A per-device `appearance: 'light' | 'dark' | 'system'` setting, default
 
 Mirror the settings pattern used by plugin-deck / plugin-registry / plugin-markdown:
 each plugin owns its settings via a KVS-backed atom contributed as both a
-plugin-local capability and `AppCapabilities.Settings`, with a `Form`-based
-settings surface. This keeps the setting inside plugin-theme (the plugin that
-already owns the theme), consistent with every other plugin's settings.
+plugin-local capability and `AppCapabilities.Settings`. This keeps the setting
+inside plugin-theme (the plugin that already owns the theme), consistent with
+every other plugin's settings, and the generic `DefaultSettings` surface renders
+the form.
 
-### Persistence
+### Persistence & propagation
+
+Scope: **per-device, live across all tabs of the same browser.** Not synced to
+other devices (an explicit decision — matches every other plugin's settings; a
+cross-device design would need an ECHO/HALO-backed store instead).
 
 `createKvsStore` (`@dxos/effect`) is backed by `BrowserKeyValueStore.layerLocalStorage`
-— the whole settings object is a single JSON `localStorage` key. Per-device
-persistence is therefore inherent; no extra work.
+— the whole settings object is a single JSON `localStorage` key, so per-device
+persistence is inherent.
+
+`Atom.kvs` does **not** listen for the cross-tab `storage` event
+([Atom.js:962](../../../node_modules/@effect-atom/atom/dist/esm/Atom.js)), so a
+second tab would otherwise only pick up a change on reload. To make the theme
+switch live in every tab, `react-context` adds a `window` `storage`-event
+listener keyed on `meta.profile.key`: on a cross-tab write it parses
+`event.newValue` and re-applies the effective theme (the `dark` class +
+`themeAtom`). It does **not** write back to the settings atom — that would risk a
+cross-tab write loop — so a second tab's open settings *form* still reflects the
+new value only on reload, while the *theme itself* updates instantly everywhere.
+That caveat is acceptable: the visible theme is what must stay in sync.
 
 ### Settings schema (`src/types/Settings.ts`)
 
@@ -84,9 +100,12 @@ effective = appearance === 'system'
 
 The initial class is applied synchronously at activation from the persisted
 setting (read via `registry.get(settingsAtom)`), preserving the current
-no-flash-on-load behavior. Both the `matchMedia` `change` listener and a
-`registry.subscribe(settingsAtom, …)` subscription call the same recompute; both
-are torn down in the module's cleanup callback.
+no-flash-on-load behavior. Three sources feed the same `applyTheme(appearance)`
+recompute, all torn down in the module's cleanup callback:
+
+1. `matchMedia` `change` listener — recompute with the current atom value.
+2. `registry.subscribe(settingsAtom, …)` — in-tab setting changes.
+3. `window` `storage` listener (see Persistence & propagation) — cross-tab.
 
 ### Activation ordering
 
@@ -97,13 +116,18 @@ the atom) has run before `ReactContext` resolves `ThemeCapabilities.Settings`.
 The settings module only calls `createKvsStore` (localStorage) — no dependency
 back on the theme context, so no cycle.
 
-### Settings UI (`src/containers/ThemeSettings`)
+### Settings UI — none needed (generic renderer)
 
-A `Form`-based container copied from
-[`DeckSettings.tsx`](../../../packages/plugins/plugin-deck/src/containers/DeckSettings/DeckSettings.tsx):
-`Form.Root variant='settings'` over the schema, rendered by an
-`AppSurface.settings(AppSurface.Article, meta.profile.key)` surface via
-`useSettingsState`.
+plugin-settings contributes a generic
+[`DefaultSettings`](../../../packages/plugins/plugin-settings/src/containers/DefaultSettings/DefaultSettings.tsx)
+surface (`position: Position.last`, filter `AppSurface.settings(AppSurface.Article)`)
+that renders a schema-driven `Form` for **any** plugin's contributed
+`AppCapabilities.Settings { prefix, schema, atom }`. plugin-theme therefore needs
+**no settings container and no settings surface** — contributing the schema + atom
+is enough; the `Appearance` union renders as a select (Light / Dark / System)
+under a "Theme" section in the Settings dialog. This drops the `ThemeSettings`
+container, the theme `react-surface`, and the `@dxos/react-ui-form` dependency
+from an earlier draft of this plan.
 
 ## Files
 
@@ -111,20 +135,22 @@ New (in `packages/plugins/plugin-theme`):
 - `src/types/Settings.ts` — `@import-as-namespace` schema.
 - `src/types/ThemeCapabilities.ts` — `Settings` capability key (writable atom).
 - `src/types/index.ts` — namespace barrel.
-- `src/capabilities/settings.ts` — KVS store + two contributions.
-- `src/capabilities/react-surface.tsx` — settings surface.
+- `src/capabilities/settings.ts` — KVS store + `ThemeCapabilities.Settings` +
+  `AppCapabilities.Settings` contributions.
 - `src/capabilities/index.ts` — lazy barrel.
-- `src/containers/ThemeSettings/{ThemeSettings.tsx,index.ts}`, `src/containers/index.ts`.
 
 Edited:
-- `src/react-context.tsx` — honor the setting.
-- `src/ThemePlugin.ts` — add settings + surface modules; extend
-  `ReactContext.firesBeforeActivation`.
-- `package.json` — `#types` / `#capabilities` / `#containers` import aliases;
-  add `@dxos/react-ui-form` dependency.
+- `src/react-context.tsx` — honor the setting; add matchMedia + atom + storage
+  recompute sources.
+- `src/ThemePlugin.ts` — add the settings module (`SetupSettings`); extend
+  `ReactContext.firesBeforeActivation` with `SetupSettings`.
+- `package.json` — `#types` / `#capabilities` import aliases (no new deps).
 - `vite.config.ts` — unchanged (internal barrels bundle into `ThemePlugin`).
 - `src/ThemePlugin.test.ts` — override-logic coverage.
 - `.changeset/*.md` — `@dxos/plugin-theme` minor.
+
+No settings container, settings surface, `#containers` alias, or
+`@dxos/react-ui-form` dependency — the generic `DefaultSettings` renders the form.
 
 ## Testing
 
@@ -134,18 +160,20 @@ Extend `ThemePlugin.test.ts` (already stubs `matchMedia`). Assertions:
 - `appearance: 'light'` + `matchMedia matches:true` → no `dark` class,
   `themeMode === 'light'`.
 - `appearance: 'system'` → follows `matchMedia` (both matches:true/false).
+- Changing the setting after activation re-applies live (in-tab subscribe path).
+- A dispatched `window` `storage` event for the theme key re-applies the theme
+  (cross-tab path).
 
 Manual verification (per task): set macOS Light, choose Dark in the setting →
 app renders dark; reload → choice persists; switch to System → follows OS.
 
 ## Deliberate scope calls
 
-- **No storybook** for `ThemeSettings`. plugin-theme has no storybook infra
-  today (no `storybook` moon tag, no `.storybook/`); adding it to a lean system
-  plugin is scope creep. The container is a thin `Form` copy of `DeckSettings`,
-  which is storybook-covered.
+- **No custom settings UI / storybook** — the generic `DefaultSettings` renders
+  the form, so plugin-theme adds no container or story.
 - **No new translation strings** — field/option labels come from schema
   annotations, matching plugin-deck.
+- **Per-device only** — no cross-device sync (would require an ECHO/HALO store).
 
 ## Out of scope
 
