@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Trace } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 
-import { createSwarmTraceSink } from './SwarmTraceSink';
+import * as SwarmTraceSink from './SwarmTraceSink';
 
 // DX-1125: the producer sink is the inverse of the feed sink — it broadcasts ephemeral messages and
 // ignores durable ones / messages without a space.
@@ -22,7 +22,7 @@ const makeMessage = (opts: { space?: string; isEphemeral: boolean; type: string 
 describe('createSwarmTraceSink', () => {
   test('publishes ephemeral messages with the message tags and encoded payload', ({ expect }) => {
     const published: { space: string; tags: string[]; payload: Uint8Array }[] = [];
-    const sink = createSwarmTraceSink({ publish: (params) => published.push(params) });
+    const sink = SwarmTraceSink.createSwarmTraceSink({ publish: (params) => published.push(params) });
 
     const msg = makeMessage({ space: 'SPACE1', isEphemeral: true, type: 'status.update' });
     sink.write(msg);
@@ -39,14 +39,14 @@ describe('createSwarmTraceSink', () => {
 
   test('ignores durable messages (they go to the feed only)', ({ expect }) => {
     const published: unknown[] = [];
-    const sink = createSwarmTraceSink({ publish: (params) => published.push(params) });
+    const sink = SwarmTraceSink.createSwarmTraceSink({ publish: (params) => published.push(params) });
     sink.write(makeMessage({ space: 'SPACE1', isEphemeral: false, type: 'operation.end' }));
     expect(published).toHaveLength(0);
   });
 
   test('ignores messages with no space (cannot address a swarm)', ({ expect }) => {
     const published: unknown[] = [];
-    const sink = createSwarmTraceSink({ publish: (params) => published.push(params) });
+    const sink = SwarmTraceSink.createSwarmTraceSink({ publish: (params) => published.push(params) });
     sink.write(makeMessage({ isEphemeral: true, type: 'status.update' }));
     expect(published).toHaveLength(0);
   });

@@ -3,13 +3,13 @@
 //
 
 import * as Chunk from 'effect/Chunk';
-import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { Trace } from '@dxos/compute';
+import { EffectEx } from '@dxos/effect';
 
-import { createSwarmRemoteTraceMonitor } from './RemoteTraceMonitor';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor';
 
 // DX-1125: the swarm-backed remote monitor derives the coarse subscription tag from the filter,
 // decodes each broadcast payload, and re-applies the exact filter client-side.
@@ -20,7 +20,7 @@ const encode = (meta: Trace.Meta, type: string): Uint8Array =>
 describe('createSwarmRemoteTraceMonitor', () => {
   test('subscribes with the coarse tag and re-applies the exact filter', async ({ expect }) => {
     const requestedTags: string[][] = [];
-    const monitor = createSwarmRemoteTraceMonitor({
+    const monitor = RemoteTraceMonitor.createSwarmRemoteTraceMonitor({
       subscribe: (tags) => {
         requestedTags.push(tags);
         return Stream.fromIterable([
@@ -31,7 +31,7 @@ describe('createSwarmRemoteTraceMonitor', () => {
       },
     });
 
-    const collected = await Effect.runPromise(
+    const collected = await EffectEx.runPromise(
       Stream.runCollect(monitor.subscribeToTraceMessages({ type: 'status.update', pid: 'p1' })),
     );
     const messages = Chunk.toReadonlyArray(collected);
@@ -46,13 +46,13 @@ describe('createSwarmRemoteTraceMonitor', () => {
 
   test('empty filter subscribes with no tags (matches nothing at the swarm)', async ({ expect }) => {
     const requestedTags: string[][] = [];
-    const monitor = createSwarmRemoteTraceMonitor({
+    const monitor = RemoteTraceMonitor.createSwarmRemoteTraceMonitor({
       subscribe: (tags) => {
         requestedTags.push(tags);
         return Stream.empty;
       },
     });
-    await Effect.runPromise(Stream.runCollect(monitor.subscribeToTraceMessages({})));
+    await EffectEx.runPromise(Stream.runCollect(monitor.subscribeToTraceMessages({})));
     expect(requestedTags).toEqual([[]]);
   });
 });
