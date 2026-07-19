@@ -175,7 +175,8 @@ const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): {
  * subtree (re-indented — see `moveItem`); multiple items move by their own lines as a group (a
  * best-effort for multi-selection reorder).
  */
-const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number): void => {
+// Exported for tests (the drag path calls this via `outlinerBlockOps`).
+export const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number): void => {
   const { state } = view;
   const items = flattenItems(state);
   const count = items.length;
@@ -218,7 +219,8 @@ const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number
 };
 
 /** Removes the items at `indices`, optionally replacing the first slot with `text` (paste). */
-const replaceBlocks = (view: EditorView, indices: number[], text: string | null): void => {
+// Exported for tests (the drag/clipboard path calls this via `outlinerBlockOps`).
+export const replaceBlocks = (view: EditorView, indices: number[], text: string | null): void => {
   const { state } = view;
   const blocks = getBlocks(state);
   const count = blocks.length;
