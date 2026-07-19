@@ -91,47 +91,34 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
     return (
       <ButtonGroup {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
-        {capabilities.deck ? (
-          <>
-            {/* Fullscreen is only offered for a singleton-active (solo-look) deck; "solo this plank" out of a
-                multi-plank deck is covered by the existing close-others graph action instead. */}
-            {capabilities.fullscreenToggle && soloLook && (
-              <PlankControl
-                label={t(fullscreen ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
-                classNames={buttonClassNames}
-                icon={fullscreen ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
-                onClick={() => onClick?.('fullscreen')}
-              />
-            )}
+        {/* Fullscreen is only offered for a singleton-active (solo-look) deck; "solo this plank" out of a
+            multi-plank deck is covered by the existing close-others graph action instead. */}
+        {capabilities.fullscreenToggle && soloLook && (
+          <PlankControl
+            label={t(fullscreen ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
+            classNames={buttonClassNames}
+            icon={fullscreen ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
+            onClick={() => onClick?.('fullscreen')}
+          />
+        )}
 
-            {!soloLook && (
-              <>
-                <PlankControl
-                  label={t('increment-start.label')}
-                  disabled={!capabilities.incrementStart}
-                  classNames={buttonClassNames}
-                  icon='ph--caret-left--regular'
-                  onClick={() => onClick?.('increment-start')}
-                />
-                <PlankControl
-                  label={t('increment-end.label')}
-                  disabled={!capabilities.incrementEnd}
-                  classNames={buttonClassNames}
-                  icon='ph--caret-right--regular'
-                  onClick={() => onClick?.('increment-end')}
-                />
-              </>
-            )}
-          </>
-        ) : (
-          capabilities.fullscreen && (
+        {!soloLook && (
+          <>
             <PlankControl
-              label={t(fullscreen ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
+              label={t('increment-start.label')}
+              disabled={!capabilities.incrementStart}
               classNames={buttonClassNames}
-              icon={fullscreen ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
-              onClick={() => onClick?.('fullscreen')}
+              icon='ph--caret-left--regular'
+              onClick={() => onClick?.('increment-start')}
             />
-          )
+            <PlankControl
+              label={t('increment-end.label')}
+              disabled={!capabilities.incrementEnd}
+              classNames={buttonClassNames}
+              icon='ph--caret-right--regular'
+              onClick={() => onClick?.('increment-end')}
+            />
+          </>
         )}
 
         {close && !soloLook && (

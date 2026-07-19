@@ -132,12 +132,13 @@ Atomic change.
 
 ### Tasks
 
-- [ ] **Merge the render paths**
-  - Single `Deck.Planks` (fullbleed vs sliding).
-  - Mobile scroll-snap.
-  - `PlankControls` cleanup.
-  - `Part`/`ResolvedPart` → `'main'`.
-  - Delete `enableDeck`.
+- [x] **Merge the render paths** — landed; single `Deck.Planks` (fullscreen
+      short-circuit → fullbleed/sliding via `useDeckPresentation`), planks stay
+      mounted across 1↔2 transitions, mobile = pure render-time scroll-snap,
+      `enableDeck` deleted, 4 dead translation keys pruned. Includes the CI
+      fixes (Adjust literal widening, floating promise). Deferred to B4:
+      Matrix SPEC.md prose; 4 unreferenced pre-existing translation keys
+      (insert-plank/resize/pin-start/pin-end).
 
 ## B4: Cleanup
 

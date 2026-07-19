@@ -20,12 +20,10 @@ const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-li
 
 /** Capability flags that gate the plank toolbar controls. */
 export type PlankCapabilities = {
-  deck?: boolean;
   /** Eligible for the fullscreen toggle (a main, non-mobile plank). */
   fullscreenToggle?: boolean;
   incrementStart?: boolean;
   incrementEnd?: boolean;
-  fullscreen?: boolean;
   companion?: boolean;
 };
 
@@ -39,7 +37,6 @@ export type UseDeckPlankOptions = {
   active?: string[];
   /** Whether the companion pane should be shown for this plank (gated further by attention in multi-mode). */
   companionShown?: boolean;
-  deckEnabled?: boolean;
 };
 
 export type DeckPlank = {
@@ -67,14 +64,7 @@ export type DeckPlank = {
  * operation dispatchers that mutate deck layout state. This re-homes the framework wiring that the legacy
  * `PlankContainer`/`PlankHeading` bundled, so the presentational components stay free of capabilities.
  */
-export const useDeckPlank = ({
-  id,
-  part,
-  soloLook,
-  active,
-  companionShown,
-  deckEnabled,
-}: UseDeckPlankOptions): DeckPlank => {
+export const useDeckPlank = ({ id, part, soloLook, active, companionShown }: UseDeckPlankOptions): DeckPlank => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
   const { state } = useDeckState();
@@ -109,17 +99,14 @@ export const useDeckPlank = ({
   const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
   const capabilities = useMemo<PlankCapabilities>(
     () => ({
-      deck: deckEnabled ?? true,
       fullscreenToggle: breakpoint !== 'mobile' && part === 'main',
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      fullscreen: !isCompanionNode,
       // Offer to open the companion (solo, or the attended plank in a multi-plank deck) when one
       // exists and isn't shown.
       companion: !isCompanionNode && companions.length > 0 && !hasCompanion && (soloLook || hasAttention),
     }),
     [
-      deckEnabled,
       breakpoint,
       part,
       canIncrementStart,

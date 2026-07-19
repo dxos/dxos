@@ -18,7 +18,6 @@ export default Capability.makeModule(() =>
       schema: Settings.Settings,
       defaultValue: () => ({
         showHints: false,
-        enableDeck: false,
         enableNativeRedirect: false,
         encapsulatedPlanks: false,
         navigationDefault: 'replace' as const,

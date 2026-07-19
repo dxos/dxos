@@ -48,7 +48,6 @@ const storyDeckSettings = Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
-      enableDeck: true,
       enableNativeRedirect: false,
       encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
@@ -354,11 +353,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Solo: Story = {
+export const OnePlank: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
-      // A singleton `active` list is the solo look; opening into a fresh deck yields that directly.
+      // A singleton `active` list renders fullbleed; opening into a fresh deck yields that directly.
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
     });
 
@@ -366,7 +365,7 @@ export const Solo: Story = {
   },
 };
 
-export const Multi: Story = {
+export const ManyPlanks: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {

@@ -7,12 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 export const Settings = Schema.Struct({
-  enableDeck: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Enable Deck',
-      description: 'Display multiple panels side by side instead of one at a time.',
-    }),
-  ),
   // TODO(burdon): Rename layoutMode? (e.g., bento/encapsulated or floating/compact, etc.)
   encapsulatedPlanks: Schema.optional(
     Schema.Boolean.annotations({

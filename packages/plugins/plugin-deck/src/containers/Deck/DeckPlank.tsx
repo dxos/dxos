@@ -11,7 +11,7 @@ import { Splitter, type ThemedClassName } from '@dxos/react-ui';
 
 import { Companion, Plank } from '#components';
 import { useCompanionSplit } from '#hooks';
-import { type ResolvedPart, type Settings } from '#types';
+import { type ResolvedPart } from '#types';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';
@@ -27,7 +27,6 @@ export type DeckPlankProps = ThemedClassName<{
   active?: string[];
   /** Whether the companion pane should be shown for this plank (gated further by attention in multi-mode). */
   companionShown?: boolean;
-  settings?: Settings.Settings;
   path?: string[];
 }>;
 
@@ -38,10 +37,12 @@ export type DeckPlankProps = ThemedClassName<{
  * `PlankContainer`/`PlankComponent`/`PlankHeading` tree.
  */
 export const DeckPlank = memo(
-  ({ id, part, fullscreen = false, active, companionShown, settings, path, classNames }: DeckPlankProps) => {
+  ({ id, part, fullscreen = false, active, companionShown, path, classNames }: DeckPlankProps) => {
     const { findFirstFocusable } = useFocusFinders();
     const rootRef = useRef<HTMLDivElement>(null);
-    // A singleton active deck renders fullbleed; that's the only case a plank can go fullscreen from.
+    // A singleton active deck renders fullbleed; the manual fullscreen toggle (and the increment/close
+    // controls it would otherwise crowd) is only offered in that look. Fullscreen itself (triggered by
+    // e.g. the presenter) is independent of plank count — this only gates the affordance.
     const soloLook = active === undefined || active.length === 1;
     const {
       node,
@@ -57,7 +58,7 @@ export const DeckPlank = memo(
       onAdjust,
       onScrollIntoView,
       onUpdateCompanion,
-    } = useDeckPlank({ id, part, soloLook, active, companionShown, deckEnabled: settings?.enableDeck });
+    } = useDeckPlank({ id, part, soloLook, active, companionShown });
 
     // Memoize the split point per orientation so toggling side-by-side ↔ stacked restores each one.
     const { size: companionSize, onSizeChange: onCompanionSizeChange } = useCompanionSplit(companionOrientation);

@@ -36,15 +36,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
           updateState={updateState}
         >
           <Deck.Content>
-            <Deck.Viewport>
-              {deck.active.length === 0 ? (
-                <Deck.ContentEmpty />
-              ) : deck.active.length === 1 ? (
-                <Deck.SoloMode />
-              ) : (
-                <Deck.MultiMode />
-              )}
-            </Deck.Viewport>
+            <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
           </Deck.Content>
         </Deck.Root>
         <PopoverContent />

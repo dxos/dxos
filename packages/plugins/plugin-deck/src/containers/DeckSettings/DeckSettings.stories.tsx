@@ -28,7 +28,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     settings: {
-      enableDeck: true,
       encapsulatedPlanks: false,
       showHints: true,
       enableNativeRedirect: false,
