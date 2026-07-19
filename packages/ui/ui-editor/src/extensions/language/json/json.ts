@@ -40,7 +40,7 @@ const schemaLinter =
       }
 
       return (
-        validate.errors?.map((err: any) => ({
+        validate.errors?.map((err) => ({
           from: 0,
           to: jsonText.length,
           severity: 'error',
@@ -53,7 +53,7 @@ const schemaLinter =
           from: 0,
           to: view.state.doc.length,
           severity: 'error',
-          message: 'Invalid JSON: ' + (err as Error).message,
+          message: 'Invalid JSON: ' + (err instanceof Error ? err.message : String(err)),
         },
       ];
     }
