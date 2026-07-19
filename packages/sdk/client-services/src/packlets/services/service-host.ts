@@ -33,6 +33,8 @@ import {
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
 import {
+  type EdgeApiClientService,
+  EdgeApiService,
   EdgeClient,
   type EdgeConnection,
   EdgeHttpClient,
@@ -184,6 +186,9 @@ export class ClientServicesHost {
   #devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   #edgeConnection?: EdgeConnection = undefined;
   #edgeHttpClient?: EdgeHttpClient = undefined;
+  // Derived Effect-native edge client, provided alongside `#edgeHttpClient` while consumers migrate
+  // group-by-group. Currently backs the agents endpoints (see `EdgeAgentManager`).
+  #edgeApiClient?: EdgeApiClientService = undefined;
 
   #stackRuntime?: ManagedRuntime.ManagedRuntime<
     ClientServicesHostService | ClientServicesRpcContext | ServiceContextStackContext,
@@ -425,6 +430,7 @@ export class ClientServicesHost {
       const clientTag = resolveTelemetryTag(config);
       this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
       this.#edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
+      this.#edgeApiClient = EdgeApiService.make({ baseUrl: endpoint, clientTag });
     }
 
     const {
@@ -490,6 +496,7 @@ export class ClientServicesHost {
           edgeFeatures: config.get('runtime.client.edgeFeatures'),
           edgeConnection: this.#edgeConnection,
           edgeHttpClient: this.#edgeHttpClient,
+          edgeApiClient: this.#edgeApiClient,
         }),
       ),
       Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
@@ -824,6 +831,11 @@ export class ClientServicesHost {
 
     this.#edgeConnection?.setIdentity(edgeIdentity);
     this.#edgeHttpClient?.setIdentity(edgeIdentity);
+    if (this.#edgeApiClient) {
+      // `setIdentity` is a synchronous `Ref` update; run it eagerly so the derived agents client
+      // presents the current identity on its next request.
+      Effect.runSync(this.#edgeApiClient.setIdentity(edgeIdentity));
+    }
     this.networkManager.setPeerInfo({
       identityDid: edgeIdentity.identityDid,
       peerKey: edgeIdentity.peerKey,
