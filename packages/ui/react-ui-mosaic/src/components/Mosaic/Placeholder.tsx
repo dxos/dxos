@@ -103,7 +103,6 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
         [`data-${MOSAIC_PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
         [`data-${MOSAIC_PLACEHOLDER_LOCATION_ATTR}`]: String(location),
       }}
-      role='none'
       className={mx('relative', classNames)}
       ref={rootRef}
     >

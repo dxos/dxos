@@ -301,12 +301,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const newTarget = defaultMap(
         target[symbolInternals].targetsMap,
         targetKey,
-        // Reuse the root target's event: the central `core.updates` subscription emits on the root's
-        // event only, so a derived record proxy with its own event would never notify its subscribers
-        // (arrays preserve `target[EventId]` for the same reason).
+        // Reuse the root target's event: the central core subscriptions emit on the root's
+        // event only, so a derived record proxy with its own event would never notify its
+        // subscribers (arrays preserve `target[EventId]` for the same reason).
         (): ProxyTarget =>
           createRecordTarget(
-            createInstanceState(target[symbolInternals], namespace, dataPath, { event: target[EventId] }),
+            createInstanceState(target[symbolInternals], namespace, dataPath, {
+              event: target[EventId],
+            }),
           ),
       );
 

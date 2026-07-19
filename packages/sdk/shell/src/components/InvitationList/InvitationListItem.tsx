@@ -60,7 +60,6 @@ const AvatarStackEffect = ({
   return (
     <>
       <span
-        role='none'
         className={mx(
           'absolute right-auto opacity-20',
           reverseEffects ? 'left-3' : 'left-1',
@@ -68,13 +67,11 @@ const AvatarStackEffect = ({
         )}
       >
         <span
-          role='none'
           className={tx('avatar.ring', { ...avatarProps, status, animation })}
           style={{ animationDelay: '400ms' }}
         />
       </span>
       <span
-        role='none'
         className={mx(
           'absolute right-auto opacity-50',
           reverseEffects ? 'left-2' : 'left-2',
@@ -82,7 +79,6 @@ const AvatarStackEffect = ({
         )}
       >
         <span
-          role='none'
           className={tx('avatar.ring', { ...avatarProps, status, animation })}
           style={{ animationDelay: '200ms' }}
         />

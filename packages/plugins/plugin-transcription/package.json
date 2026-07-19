@@ -166,6 +166,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@types/dom-speech-recognition": "catalog:",
