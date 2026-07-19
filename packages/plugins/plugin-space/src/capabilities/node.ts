@@ -7,11 +7,13 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 // alias instead of a relative `node_modules` path (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationHandlerSet } from '@dxos/compute';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, type SpacePluginOptions } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
+
+import { makeCreateInvitationUrl } from './helpers';
 
 export const CreateObject = Capability.lazyModule(
   'CreateObject',
@@ -20,7 +22,12 @@ export const CreateObject = Capability.lazyModule(
 );
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
-  { requires: [ClientCapabilities.Client], provides: [SpaceCapabilities.PersonalSpace] },
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [SpaceCapabilities.PersonalSpace],
+    // Runtime event: the personal space is created when a local identity is created, not at startup.
+    activatesOn: ClientEvents.IdentityCreated,
+  },
   () => import('./identity-created'),
 );
 export const OperationHandler = Capability.lazyModule(
@@ -30,6 +37,12 @@ export const OperationHandler = Capability.lazyModule(
 );
 export const UndoMappings = Capability.lazyModule(
   'UndoMappings',
-  { provides: [Capabilities.UndoMapping, SpaceOperationConfig] },
+  {
+    provides: [Capabilities.UndoMapping, SpaceOperationConfig],
+    props: (options: SpacePluginOptions) => ({
+      createInvitationUrl: makeCreateInvitationUrl(options),
+      observability: options.observability,
+    }),
+  },
   () => import('./undo-mappings'),
 );

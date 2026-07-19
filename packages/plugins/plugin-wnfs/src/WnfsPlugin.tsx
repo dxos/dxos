@@ -17,7 +17,12 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(Dependencies),
   Plugin.addLazyModule(BlobBackend),
   Plugin.addLazyModule(
-    AppCapability.pluginAsset({ pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' }),
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
   ),
   Plugin.make,
 );

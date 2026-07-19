@@ -8,7 +8,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 // alias instead of a relative `node_modules` path (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type LayerSpec, type OperationHandlerSet, type Skill } from '@dxos/compute';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { RoutineCapabilities } from '#types';
 
@@ -47,6 +47,11 @@ export const Templates = Capability.lazyModule(
 );
 export const TriggerRuntimeController = Capability.lazyModule(
   'TriggerRuntimeController',
-  { requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime], provides: [] },
+  {
+    requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
+    provides: [],
+    // Runtime event: triggers only need to react to spaces once the client observes them.
+    activatesOn: ClientEvents.SpacesReady,
+  },
   () => import('./trigger-runtime-controller'),
 );

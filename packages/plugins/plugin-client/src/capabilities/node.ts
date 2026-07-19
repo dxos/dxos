@@ -11,7 +11,7 @@ import type { LayerSpec, OperationHandlerSet } from '@dxos/compute';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationInvoker } from '@dxos/operation';
 
-import { ClientCapabilities } from '#types';
+import { ClientCapabilities, type ClientPluginOptions } from '#types';
 
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',
@@ -35,7 +35,11 @@ export const Migrations = Capability.lazyModule(
 );
 export const NavigationHandler = Capability.lazyModule(
   'NavigationHandler',
-  { requires: [Capabilities.OperationInvoker], provides: [AppCapabilities.NavigationHandler] },
+  {
+    requires: [Capabilities.OperationInvoker],
+    provides: [AppCapabilities.NavigationHandler],
+    props: ({ invitationProp }: ClientPluginOptions) => ({ invitationProp }),
+  },
   () => import('./navigation-handler/navigation-handler'),
 );
 export type { NavigationHandlerOptions } from './navigation-handler';

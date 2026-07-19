@@ -11,21 +11,10 @@ import { SpaceCapabilities, SpaceCapability, type SpacePluginOptions } from '#ty
 
 import { SpaceOperationConfig } from '../operations/helpers';
 
+import { makeCreateInvitationUrl } from './helpers';
+
 export * from './app-graph-builder';
 export { makeCreateObjectEntryForDatabaseType } from '../util';
-
-/** Builds the invitation-link URL builder shared by the props mappings below. */
-const makeCreateInvitationUrl =
-  ({
-    shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
-    invitationPath = '/',
-    invitationProp = 'spaceInvitationCode',
-  }: SpacePluginOptions) =>
-  (invitationCode: string) => {
-    const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
-    baseUrl.searchParams.set(invitationProp, invitationCode);
-    return baseUrl.toString();
-  };
 
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentityCreated = Capability.lazyModule(

@@ -42,7 +42,12 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(PipelineStatus),
   Plugin.addLazyModule(MarkdownExtension),
   Plugin.addLazyModule(
-    AppCapability.pluginAsset({ pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' }),
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
   ),
   Plugin.make,
 );

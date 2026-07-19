@@ -15,7 +15,12 @@ import { translations } from './translations';
 export const TypefullyPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(
-    AppCapability.pluginAsset({ pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' }),
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
   ),
   Plugin.addLazyModule(Connector),
   Plugin.addLazyModule(PublisherService),

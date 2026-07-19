@@ -35,13 +35,16 @@ export const TripPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(Settings),
   Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(
-    AppCapability.pluginAsset({ pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' }),
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
   ),
   Plugin.addLazyModule(
-    Capability.inlineModule(
-      'trip-extractor',
-      { provides: [InboxCapabilities.ObjectExtractor] },
-      () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
+    Capability.inlineModule('trip-extractor', { provides: [InboxCapabilities.ObjectExtractor] }, () =>
+      Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
     ),
   ),
   Plugin.addLazyModule(MarkerProvider),
