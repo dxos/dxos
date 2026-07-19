@@ -17,11 +17,11 @@ import { ThemeCapabilities } from './types';
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 // jsdom does not implement window.matchMedia — stub it for ThemePlugin's dark-mode detection.
-beforeEach(() => {
+const stubMatchMedia = (matches: boolean) => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({
-      matches: false,
+      matches,
       media: query,
       onchange: null,
       addListener: vi.fn(),
@@ -31,6 +31,12 @@ beforeEach(() => {
       dispatchEvent: vi.fn(),
     })),
   });
+};
+
+beforeEach(() => {
+  stubMatchMedia(false); // System preference = light by default.
+  localStorage.clear();
+  document.documentElement.classList.remove('dark');
 });
 
 describe('ThemePlugin', () => {
@@ -94,5 +100,49 @@ describe('ThemePlugin', () => {
     // It is also exposed to the generic settings UI keyed by the plugin.
     const allSettings = harness.getAll(AppCapabilities.Settings);
     expect(allSettings.some((entry) => entry.prefix === meta.profile.key)).toBe(true);
+  });
+
+  test('appearance override forces dark independent of system preference', async ({ expect }) => {
+    // System preference is light (stubMatchMedia(false)).
+    await using harness = await createTestApp({
+      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+    });
+    const registry = harness.get(Capabilities.AtomRegistry);
+    const settingsAtom = harness.get(ThemeCapabilities.Settings);
+
+    registry.set(settingsAtom, { appearance: 'dark' });
+    await Promise.resolve();
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+    registry.set(settingsAtom, { appearance: 'light' });
+    await Promise.resolve();
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+    registry.set(settingsAtom, { appearance: 'system' });
+    await Promise.resolve();
+    expect(document.documentElement.classList.contains('dark')).toBe(false); // Follows light system.
+  });
+
+  test("appearance 'system' follows the OS preference", async ({ expect }) => {
+    stubMatchMedia(true); // System preference = dark.
+    await using _harness = await createTestApp({
+      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+    });
+    // Default appearance is 'system'; with a dark system preference the class is set.
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  test('cross-tab storage event re-applies the theme', async ({ expect }) => {
+    // System preference is light; another tab writes 'dark'.
+    await using _harness = await createTestApp({
+      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+    });
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: meta.profile.key,
+        newValue: JSON.stringify({ appearance: 'dark' }),
+      }),
+    );
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 });
