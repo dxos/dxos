@@ -151,7 +151,11 @@ export const Nested: Story = {
 
 export const Paragraphs: Story = {
   args: {
-    text: generateList({ depth: 3, children: [2, 3], content: () => random.lorem.paragraph() }),
+    text: generateList({
+      depth: 3,
+      children: [2, 3],
+      content: () => random.lorem.paragraph(),
+    }),
   },
 };
 
