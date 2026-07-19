@@ -6,10 +6,10 @@ tasks:
     # in `vite.base.config.ts` for the shared project definition.
     command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=workerd
     deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - vite-plugin-import-source:compile
-      - ^:compile
+      - esbuild-plugins:build
+      - node-std:build
+      - vite-plugin-import-source:build
+      - ^:build
     inputs:
       - '@group(sources)'
       - /vite.base.config.ts
