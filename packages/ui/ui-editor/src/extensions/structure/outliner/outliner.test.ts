@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 
 import { join } from '../../../util';
 import { createMarkdownExtensions } from '../../language/markdown';
+import { blockSelectionField, setBlockSelection } from '../blocks';
 import { deleteItem, indentItemLess, indentItemMore, moveItemDown, moveItemUp, toggleTask } from './commands';
 import { outlinerTree } from './tree';
 
@@ -24,7 +25,7 @@ const LINES = [
 ];
 
 const DOC = join(...LINES);
-const extensions = [createMarkdownExtensions(), outlinerTree()];
+const extensions = [createMarkdownExtensions(), outlinerTree(), blockSelectionField];
 
 // Line-start offset of the nth (0-based) line.
 const lineStart = (doc: string, line: number): number =>
@@ -100,10 +101,29 @@ describe('outliner commands', () => {
     expect(run(DOC, 8, moveItemUp)).to.eq(join(LINES[0], LINES[8], ...LINES.slice(1, 8)));
   });
 
-  test('delete removes the item and its separator', ({ expect }) => {
+  test('delete removes a leaf item and its separator', ({ expect }) => {
     expect(run(DOC, 2, deleteItem)).to.eq(
       join('- [ ] 1', '- [ ] 2', '  - [ ] 2.2', '    - 2.2.1', '    - 2.2.2', '    - 2.2.3', '  - [ ] 2.3', '- [ ] 3'),
     );
+  });
+
+  test('delete removes the whole subtree under the caret item', ({ expect }) => {
+    // Caret on "2" (a parent): its descendants 2.1–2.3 go with it.
+    expect(run(DOC, 1, deleteItem)).to.eq(join('- [ ] 1', '- [ ] 3'));
+  });
+
+  test('delete acts on the block selection, scoped to each selected subtree', ({ expect }) => {
+    // Select "2.2" (owns 2.2.1–2.2.3); delete removes the whole subtree, not just its line.
+    const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
+    try {
+      view.dispatch({ effects: setBlockSelection.of([lineStart(DOC, 3)]) });
+      deleteItem(view);
+      expect(view.state.doc.toString()).to.eq(join('- [ ] 1', '- [ ] 2', '  - [ ] 2.1', '  - [ ] 2.3', '- [ ] 3'));
+      // The selection is cleared after the delete.
+      expect(view.state.field(blockSelectionField)).to.have.length(0);
+    } finally {
+      view.destroy();
+    }
   });
 
   test('toggle turns a bullet into a task and back, preserving indentation', ({ expect }) => {

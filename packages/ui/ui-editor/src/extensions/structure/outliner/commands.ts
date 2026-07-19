@@ -3,11 +3,29 @@
 //
 
 import { getIndentUnit } from '@codemirror/language';
-import { type ChangeSpec, EditorSelection, type Extension } from '@codemirror/state';
+import { type ChangeSpec, EditorSelection, type EditorState, type Extension } from '@codemirror/state';
 import { type Command, type EditorView, keymap } from '@codemirror/view';
 
-import { selectAllItems, selectDown, selectNoneItems, selectUp } from './dnd';
-import { getRange, treeFacet } from './tree';
+import { blockSelectionField, setBlockSelection } from '../blocks';
+import { mergeRanges, selectAllItems, selectDown, selectNoneItems, selectUp } from './dnd';
+import { type Item, getRange, treeFacet } from './tree';
+
+//
+// Menu / action scope.
+//
+
+/**
+ * The items a menu action operates on: the block selection expanded to whole subtrees, or — with no
+ * selection — the caret's item. Menu commands (delete, toggle, ...) act over this scope so that a
+ * selected subtree is the unit of the action rather than a single line.
+ */
+export const getActionScope = (state: EditorState): Item[] => {
+  const tree = state.facet(treeFacet);
+  const anchors = state.field(blockSelectionField, false) ?? [];
+  const found =
+    anchors.length > 0 ? anchors.map((anchor) => tree.find(anchor)) : [tree.find(state.selection.main.from)];
+  return found.filter((item): item is Item => item != null);
+};
 
 //
 // Indentation comnmands.
@@ -132,41 +150,54 @@ export const moveItemUp: Command = (view: EditorView) => {
 // Misc commands.
 //
 
+/** Deletes the action scope — each selected item's whole subtree (or the caret item's) — and clears the selection. */
 export const deleteItem: Command = (view: EditorView) => {
-  const tree = view.state.facet(treeFacet);
-  const pos = view.state.selection.main.from;
-  const current = tree.find(pos);
-  if (current) {
-    view.dispatch({
-      selection: EditorSelection.cursor(current.lineRange.from),
-      changes: [
-        {
-          from: current.lineRange.from,
-          to: Math.min(current.lineRange.to + 1, view.state.doc.length),
-        },
-      ],
-    });
+  const { state } = view;
+  const tree = state.facet(treeFacet);
+  const items = getActionScope(state);
+  if (items.length === 0) {
+    return true;
   }
+
+  // Each item's whole subtree plus its trailing newline; merged so a selected parent and child (or
+  // adjacent selections) collapse into one non-overlapping range.
+  const ranges = mergeRanges(
+    items.map((item) => {
+      const [from, to] = getRange(tree, item);
+      return { from, to: Math.min(to + 1, state.doc.length) };
+    }),
+  );
+
+  view.dispatch({
+    changes: ranges.map((range) => ({ from: range.from, to: range.to })),
+    selection: EditorSelection.cursor(ranges[0].from),
+    effects: setBlockSelection.of([]),
+    userEvent: 'delete.item',
+  });
 
   return true;
 };
 
+/** Toggles every item in the action scope between task and bullet, uniformly (by the first item's type). */
 export const toggleTask: Command = (view: EditorView) => {
-  const tree = view.state.facet(treeFacet);
-  const pos = view.state.selection.main.from;
-  const current = tree.find(pos);
-  if (current) {
-    const type = current.type === 'task' ? 'bullet' : 'task';
-    const indent = ' '.repeat(getIndentUnit(view.state) * current.level);
-    view.dispatch({
-      changes: [
-        {
-          from: current.lineRange.from,
-          to: current.contentRange.from,
-          insert: indent + (type === 'task' ? '- [ ] ' : '- '),
-        },
-      ],
-    });
+  const { state } = view;
+  const items = getActionScope(state);
+  if (items.length === 0) {
+    return true;
+  }
+
+  const unit = getIndentUnit(state);
+  const toTask = items[0].type !== 'task';
+  const changes: ChangeSpec[] = items
+    .filter((item) => (toTask ? item.type !== 'task' : item.type === 'task'))
+    .map((item) => ({
+      from: item.lineRange.from,
+      to: item.contentRange.from,
+      insert: ' '.repeat(unit * item.level) + (toTask ? '- [ ] ' : '- '),
+    }));
+
+  if (changes.length > 0) {
+    view.dispatch({ changes });
   }
 
   return true;

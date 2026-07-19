@@ -198,8 +198,8 @@ const moveItem = (view: EditorView, sourceIndex: number, dropIndex: number, inde
   });
 };
 
-// Merges sorted ranges, combining any that overlap or touch.
-const mergeRanges = (ranges: { from: number; to: number }[]): { from: number; to: number }[] => {
+// Merges sorted ranges, combining any that overlap or touch. Exported for the menu commands.
+export const mergeRanges = (ranges: { from: number; to: number }[]): { from: number; to: number }[] => {
   const sorted = [...ranges].sort((a, b) => a.from - b.from);
   const merged: { from: number; to: number }[] = [];
   for (const range of sorted) {
