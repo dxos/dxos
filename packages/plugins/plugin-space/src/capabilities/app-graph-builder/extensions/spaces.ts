@@ -243,8 +243,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
     }),
 
     // Communications section group — no single plugin owns this category; it lives here so the

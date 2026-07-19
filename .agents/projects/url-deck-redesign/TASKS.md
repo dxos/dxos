@@ -30,7 +30,12 @@ of the dormant per-extension resolver machinery. Lands independently.
 
 ### Tasks
 
-- [ ] **Implement grammar + builder core**
+- [x] **Implement grammar + builder core** — landed; app-graph 110 tests green
+      (incl. 9 new path-resolution tests), UrlPath 51 tests green. NOTE: three
+      LIVE resolver uses were deleted with the machinery (plugin-space
+      `database.ts` typeCollectionObject, plugin-inbox feed-object/event nodes,
+      plugin-meeting story effect) — deep links to those break until A2/A3
+      reimplement them as urlKey-addressed connectors. MUST be covered in A2/A3.
   - `packages/sdk/app-toolkit/src/app/UrlPath.ts` — new, pure parse/format,
     `w` workspace-base rebasing, reserved words.
   - `urlKey` on `CreateExtensionOptions` in `packages/sdk/app-graph/src/graph-builder.ts`.

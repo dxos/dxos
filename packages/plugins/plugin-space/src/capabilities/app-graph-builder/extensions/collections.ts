@@ -177,8 +177,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             .filter(isNonNullable),
         );
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
     }),
 
     // Object actions.

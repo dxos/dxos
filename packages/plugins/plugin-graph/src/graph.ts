@@ -30,7 +30,15 @@ export default Capability.makeModule(
         const next: GraphBuilder.BuilderExtension[] = [];
         for (const [moduleId, extensions] of Object.entries(extensionsByModule)) {
           for (const ext of GraphBuilder.flattenExtensions(extensions)) {
-            next.push({ ...ext, id: `${moduleId}.${ext.id}` });
+            // Default the URL prefix key to the plugin id so every node-producing extension is
+            // URL-addressable out of the box; keys are global (never namespaced by module), unlike
+            // node/extension ids. Action/action-group entries produce no nodes, so they're left
+            // unkeyed unless an extension explicitly sets `urlKey` itself.
+            next.push({
+              ...ext,
+              id: `${moduleId}.${ext.id}`,
+              urlKey: ext.urlKey ?? (ext.connector ? moduleId : undefined),
+            });
           }
         }
         const current = Record.values(registry.get(builder.extensions));

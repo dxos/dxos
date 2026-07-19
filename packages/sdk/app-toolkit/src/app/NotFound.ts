@@ -35,16 +35,11 @@ export type ExistenceChecker = (echoUri: EID.EID) => Effect.Effect<boolean>;
 /**
  * Expand a qualified graph path by expanding each ancestor prefix.
  * This triggers graph connectors to populate child nodes at each level.
- * For any prefix where the node does not exist after expansion, `Graph.initialize`
- * is called as a fallback to trigger resolvers.
  */
 export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): void => {
   const prefixes = expandAttendableId(qualifiedId);
   for (const prefix of prefixes) {
     Graph.expand(graph, prefix, 'child');
-    if (Option.isNone(Graph.getNode(graph, prefix))) {
-      void Graph.initialize(graph, prefix);
-    }
   }
 };
 

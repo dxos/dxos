@@ -11,7 +11,7 @@ import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Entity, Filter, Key, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -164,9 +164,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const typeUri = Type.getURI(schema);
 
-        // View objects are the type node's only visible children; objects of the type are resolved
-        // on demand as hidden children (see the `typeCollectionObject` resolver). The list of all
-        // objects is rendered when the type node is selected (see TypeArticle).
+        // View objects are the type node's only visible children; direct navigation to an object of
+        // the type (previously resolved on demand as a hidden child) is currently unsupported — see
+        // the TODO(graph-path-ids) below. The list of all objects is rendered when the type node is
+        // selected (see TypeArticle).
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
           .getViewsForTypeUri(typeUri)
@@ -185,55 +186,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // Objects of a type are not enumerated in the nav tree; navigating directly to the canonical
-    // object path resolves the object on demand as a hidden child of its type node. Mirrors the
-    // inbox feed-object resolver: a resolver keyed on path shape, not a connector.
-    GraphBuilder.createExtension({
-      id: 'typeCollectionObject',
-      match: () => Option.none(),
-      resolver: (qualifiedId, get) =>
-        Effect.gen(function* () {
-          const segments = qualifiedId.split('/');
-          // Discriminator: the canonical object path `…/database/<slug>/<objectId>`.
-          if (segments.at(-3) !== Paths.Segments.database) {
-            return null;
-          }
-
-          const spaceId = Paths.getSpaceIdFromPath(qualifiedId);
-          const objectId = segments.at(-1);
-          if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
-            return null;
-          }
-
-          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-          const space = client?.spaces.get(spaceId);
-          if (!space) {
-            return null;
-          }
-
-          // Feed-only objects (e.g. games appended via Feed.append) are not in the Automerge graph;
-          // includeAllFeeds scope resolves them from feed queues by id.
-          const object = get(
-            space.db.query(Query.select(Filter.id(objectId)).from(space.db, { includeFeeds: true })).atom,
-          ).at(0);
-          if (!object) {
-            return null;
-          }
-
-          get(Obj.atom(object));
-          const node = AppNode.makeObject({
-            get,
-            db: space.db,
-            object,
-            disposition: 'hidden',
-            draggable: false,
-            droppable: false,
-          });
-          // Resolver nodes are keyed by the requested path (not the local object id) so the parent
-          // type node's child edge connects; `makeObject` uses the local id, so override it here.
-          return node && { ...node, id: qualifiedId };
-        }),
-    }),
+    // TODO(graph-path-ids): Direct navigation to `…/database/<slug>/<objectId>` (a hidden child of
+    // its type node, not enumerated in the nav tree) no longer resolves: this relied on the
+    // now-removed id-keyed resolver machinery. Needs redesign as a urlKey-addressed connector (see
+    // `@dxos/app-graph`'s path-resolution.ts) once phase A2/A3 lands.
 
     // Actions for schema nodes.
     GraphBuilder.createExtension({
