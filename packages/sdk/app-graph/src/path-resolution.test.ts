@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import * as GraphBuilder from './graph-builder';
@@ -88,7 +89,7 @@ describe('path-resolution', () => {
   describe('resolveUrl', () => {
     test('resolves a single pair', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const results = await Effect.runPromise(
+      const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
@@ -99,7 +100,7 @@ describe('path-resolution', () => {
 
     test('resolves a two-pair chain', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const results = await Effect.runPromise(
+      const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [
@@ -116,7 +117,7 @@ describe('path-resolution', () => {
 
     test('resolves a companion pair attached to the preceding plank', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const results = await Effect.runPromise(
+      const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [
@@ -133,7 +134,7 @@ describe('path-resolution', () => {
 
     test('resolves a cross-workspace pair', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const results = await Effect.runPromise(
+      const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [
@@ -150,7 +151,7 @@ describe('path-resolution', () => {
 
     test('unknown key resolves to null', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const results = await Effect.runPromise(
+      const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [{ key: 'bogus', id: 'x', workspace: WORKSPACE_A }],
@@ -161,7 +162,7 @@ describe('path-resolution', () => {
 
     test('a duplicate-key extension is dropped: its nodes are unreachable via that key', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const results = await Effect.runPromise(
+      const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [{ key: 'doc', id: 'shadowedDoc', workspace: WORKSPACE_A }],
@@ -174,7 +175,7 @@ describe('path-resolution', () => {
   describe('representNode', () => {
     test('round-trips a resolved plank', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const [resolved] = await Effect.runPromise(
+      const [resolved] = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
@@ -187,7 +188,7 @@ describe('path-resolution', () => {
 
     test('round-trips a resolved companion without an id', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const results = await Effect.runPromise(
+      const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [
