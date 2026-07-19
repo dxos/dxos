@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 import { beforeEach, describe, test, vi } from 'vitest';
 
-import { Capability, ProcessManagerPlugin } from '@dxos/app-framework';
+import { Capabilities, Capability, ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { ThemePlugin } from '#plugin';
 
 import { meta } from './meta';
+import { ThemeCapabilities } from './types';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
@@ -78,5 +79,20 @@ describe('ThemePlugin', () => {
     );
 
     expect(Effect.runSync(program)).toBe('Salut');
+  });
+
+  test('contributes an appearance setting', async ({ expect }) => {
+    await using harness = await createTestApp({
+      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+    });
+
+    // The plugin-local capability resolves to a writable settings atom, defaulting to 'system'.
+    const registry = harness.get(Capabilities.AtomRegistry);
+    const settingsAtom = harness.get(ThemeCapabilities.Settings);
+    expect(registry.get(settingsAtom).appearance).toBe('system');
+
+    // It is also exposed to the generic settings UI keyed by the plugin.
+    const allSettings = harness.getAll(AppCapabilities.Settings);
+    expect(allSettings.some((entry) => entry.prefix === meta.profile.key)).toBe(true);
   });
 });
