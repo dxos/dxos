@@ -10,7 +10,7 @@ import { trim } from '@dxos/util';
 
 import { extendedMarkdown } from './extended-markdown';
 import TEXT from './testing/text.md?raw';
-import { xmlTags } from './xml-tags';
+import { type XmlWidgetRegistry, xmlTags } from './xml-tags';
 import { type Tag, nodeToJson } from './xml-util';
 
 type ParsedElement = Tag & {
@@ -22,7 +22,7 @@ type ParsedElement = Tag & {
  * Helper to extract all parsed XML elements from a document.
  * Checks completeness by verifying the Element node has a CloseTag child.
  */
-const parseElements = (doc: string, registry: Record<string, any> = {}): ParsedElement[] => {
+const parseElements = (doc: string, registry: XmlWidgetRegistry = {}): ParsedElement[] => {
   const state = EditorState.create({
     doc,
     extensions: [extendedMarkdown({ registry }), xmlTags({ registry })],

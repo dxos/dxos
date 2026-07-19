@@ -11,6 +11,10 @@ import { Doc } from '@dxos/echo-doc';
 
 import { type State } from './defs';
 
+/**
+ * Applies CodeMirror transactions to the Automerge document (via `changeAt` from the last synced
+ * heads) and returns the new heads, or undefined when there are no changes.
+ */
 export const updateAutomerge = (
   field: StateField<State>,
   handle: Doc.Handle,

@@ -10,6 +10,7 @@ import { describe, test } from 'vitest';
 import { trim } from '@dxos/util';
 
 import { extendedMarkdown } from './extended-markdown';
+import { type XmlWidgetRegistry } from './xml-tags';
 import { nodeToJson } from './xml-util';
 
 const testRegistry = {
@@ -26,7 +27,7 @@ const testRegistry = {
 };
 
 describe('extended-markdown', () => {
-  const createEditorState = (doc: string, registry?: Record<string, any>) => {
+  const createEditorState = (doc: string, registry?: XmlWidgetRegistry) => {
     return EditorState.create({
       doc,
       extensions: [extendedMarkdown({ registry: registry ?? testRegistry })],

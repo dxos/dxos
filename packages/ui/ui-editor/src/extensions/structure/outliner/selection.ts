@@ -39,14 +39,18 @@ export const selectAll: Command = (view: EditorView) => {
   return true;
 };
 
-// TODO(burdon): Implement.
-// Decline the key (return false) so it falls through to the default selection behavior until implemented;
-// returning true would swallow Shift-Arrow and break shift-selection.
+/**
+ * Decline the key (return false) so it falls through to the default selection behavior until
+ * implemented; returning true would swallow Shift-Arrow and break shift-selection.
+ * TODO(burdon): Implement.
+ */
 export const selectUp: Command = (view: EditorView) => {
   return false;
 };
 
-// TODO(burdon): Implement.
+/**
+ * TODO(burdon): Implement.
+ */
 export const selectDown: Command = (view: EditorView) => {
   return false;
 };

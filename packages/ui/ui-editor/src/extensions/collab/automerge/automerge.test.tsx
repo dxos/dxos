@@ -35,11 +35,11 @@ const Test = ({ accessor }: { accessor: Doc.Accessor<TestType> }) => {
   useEffect(() => {
     const extensions = [
       automerge(accessor),
-      EditorView.updateListener.of(() => {
-        if (view.state.doc.toString() === 'hello!') {
+      EditorView.updateListener.of((update) => {
+        if (update.view.state.doc.toString() === 'hello!') {
           // Update editor.
-          view.dispatch({
-            changes: { from: view.state.doc.length - 1, insert: ' world' },
+          update.view.dispatch({
+            changes: { from: update.view.state.doc.length - 1, insert: ' world' },
           });
         }
       }),

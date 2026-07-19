@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { createLinkLabel } from './changes';
 
@@ -18,7 +18,7 @@ const testCases = [
 ];
 
 describe('changes', () => {
-  test('createLinkLabel', () => {
+  test('createLinkLabel', ({ expect }) => {
     testCases.forEach(({ input, expected }) => {
       expect(createLinkLabel(new URL(input))).to.eq(expected);
     });

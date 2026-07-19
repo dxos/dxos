@@ -174,12 +174,9 @@ export const markdownTags = {
 
 // TODO(burdon): Customize table parser (make all content monospace).
 //  https://github.com/lezer-parser/markdown/blob/main/src/extension.ts
-Table.defineNodes?.forEach((node: any) => {
-  switch (node?.name) {
-    case 'TableCell': {
-      node.style = markdownTags.TableCell;
-      break;
-    }
+Table.defineNodes?.forEach((node) => {
+  if (typeof node === 'object' && node !== null && node.name === 'TableCell') {
+    node.style = markdownTags.TableCell;
   }
 });
 

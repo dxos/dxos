@@ -17,6 +17,10 @@ import { type EditorView } from '@codemirror/view';
 
 import { reconcileAnnotation } from './defs';
 
+/**
+ * Applies Automerge patches to the CodeMirror view as changes, keeping the given selection mapped
+ * across them (marked with the reconcile annotation so the sync loop ignores the echoed transaction).
+ */
 export const updateCodeMirror = (view: EditorView, selection: EditorSelection, target: Prop[], patches: Patch[]) => {
   for (const patch of patches) {
     const changeSpec = handlePatch(patch, target, view.state);
@@ -90,7 +94,7 @@ const handlePut = (target: Prop[], patch: PutPatch, state: EditorState): Array<C
     return []; // TODO(dmaretskyi): How to handle non-string values?
   }
 
-  return [{ from: 0, to: length, insert: patch.value as any }];
+  return [{ from: 0, to: length, insert: patch.value }];
 };
 
 // If the path of the patch is of the form [path, <index>] then we know this is a path to a character

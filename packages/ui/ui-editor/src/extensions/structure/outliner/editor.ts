@@ -110,11 +110,6 @@ export const editor = () => [
           return;
         }
 
-        // if (!deleteLine && (!startItem || fromA < startItem.contentRange.from || toA > startItem.contentRange.to)) {
-        //   cancel = true;
-        //   return;
-        // }
-
         // Check valid item.
         const currentItem = tree.find(tr.state.selection.main.from);
         if (!currentItem?.contentRange) {
