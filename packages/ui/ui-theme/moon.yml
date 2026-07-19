@@ -7,7 +7,7 @@ tags:
   - pack
   - storybook
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/index.ts'
     deps:
@@ -22,8 +22,8 @@ tasks:
       - '--moduleFormat=esm'
       - '--platform=node'
     deps:
-      - ^:compile
-      - dx-compile:compile
+      - ^:build
+      - dx-compile:build
     options:
       mergeArgs: replace
     outputs:

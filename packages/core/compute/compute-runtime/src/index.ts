@@ -4,7 +4,6 @@
 
 export * from './errors';
 export * as FeedTraceSink from './FeedTraceSink';
-export * from './executor';
 export * from './functions-trace';
 export * as LayerStack from './LayerStack';
 export * from './protocol';
@@ -15,7 +14,6 @@ export * as RemoteProcessManager from './RemoteProcessManager';
 export * as RemoteTraceMonitor from './RemoteTraceMonitor';
 export * as RemoteTriggerManager from './RemoteTriggerManager';
 export * as SwarmTraceSink from './SwarmTraceSink';
-export * from './sdk';
 export * from './services';
 export { layer as storageServiceLayer } from './storage-service-layer';
 export * from './triggers';
