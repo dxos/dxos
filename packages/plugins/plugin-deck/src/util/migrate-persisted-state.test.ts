@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { migratePersistedState, type PersistedStateStorage } from './migrate-persisted-state';
+import { type PersistedStateStorage, migratePersistedState } from './migrate-persisted-state';
 
 const STORAGE_KEY = 'org.dxos.plugin.deck.state';
 
