@@ -155,9 +155,9 @@ const ThreeColumnStory = () => {
   }
 
   return (
-    <div role='none' className='w-full grid grid-cols-3 gap-2'>
+    <div className='w-full grid grid-cols-3 gap-2'>
       <RoutineArticle role='article' subject={routine} attendableId='story' />
-      <div role='none' className='grid grid-rows-2 gap-2 min-h-0'>
+      <div className='grid grid-rows-2 gap-2 min-h-0'>
         <EditableObject key={JSON.stringify(routineSnapshot)} title='Routine' object={routine} />
         {trigger && <EditableObject key={JSON.stringify(triggerSnapshot)} title='Trigger' object={trigger} />}
       </div>

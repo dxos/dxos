@@ -11,7 +11,9 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useIdentity } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
+import { type SpaceCapabilities } from '@dxos/plugin-space';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
@@ -24,6 +26,7 @@ import {
   isToolbarAction,
 } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
+import { diffView } from '@dxos/ui-editor';
 import { Branch, Version } from '@dxos/versioning';
 
 import {
@@ -38,7 +41,6 @@ import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { mergeConflicts, versionDiff } from '../../extensions';
-import { DiffView } from '../DiffView';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
@@ -60,41 +62,92 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
 
-    // Version selection: swap the editor's subject to the active branch Text, or show a
-    // read-only snapshot when viewing a checkpoint. Selection is per-user session state.
+    // Version selection: swap the editor's subject to the active branch (a per-surface binding
+    // for core branches, the forked Text for legacy ones); viewing a checkpoint pins the live
+    // Text to historical heads (the hook manages the pin). Selection is per-user session state.
     const versioning = useVersioning(object);
-    const { document, activeBranch, activeVersion, checkpointContent, branchBaseContent, setSelection, setCompare } =
-      versioning;
+    const {
+      document,
+      activeBranch,
+      activeFork,
+      forkContent,
+      activeVersion,
+      checkpointText,
+      checkpointContent,
+      branchBaseContent,
+      setSelection,
+      setCompare,
+    } = versioning;
     const diffViewMode = settings.diffView ?? 'inline';
     const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
-    const branchText = activeBranch?.content.target;
-    const editorObject = activeVersion
-      ? { id: `${id}--${activeVersion.id}`, text: checkpointContent ?? '' }
+    const branchText = activeBranch ? versioning.activeText : undefined;
+    // The core branch the editor is showing (undefined = main, or a legacy content-copy branch which
+    // carries no registry key). Threaded to extension providers so branch-review affordances (e.g.
+    // comments) scope to the branch in view.
+    const reviewBranch = activeBranch && Branch.isCore(activeBranch) ? activeBranch.key : undefined;
+    // While a core-branch binding is resolving, the editor must not mount against the root object
+    // — edits would silently land on main. Render an empty panel until the binding is ready. The
+    // same applies to a branch CHECKPOINT: its content is read from the branch-bound Text, which
+    // resolves asynchronously; mounting before it is ready would seed the editor with empty text and
+    // never recover (the editor key does not change when the binding later resolves).
+    const branchLoading =
+      (!!activeBranch && !branchText) ||
+      (!!activeVersion?.branch && !checkpointText) ||
+      (!!activeFork && forkContent === undefined);
+    // Checkpoint and fork both render read-only from a DETACHED content snapshot, never the live
+    // (pinned) object: binding CodeMirror's automerge sync to a time-travelled doc mismatches (CM
+    // holds the tip text while the historical read is shorter → out-of-range splice). A checkpoint
+    // shows a version's pinned heads; a fork shows the parent content at the branch anchor.
+    const readonlySnapshot = activeVersion
+      ? { key: `checkpoint-${activeVersion.id}`, content: checkpointContent }
+      : activeFork
+        ? { key: `fork-${activeFork.id}`, content: forkContent }
+        : undefined;
+    const editorObject = readonlySnapshot
+      ? { id: `${id}--${readonlySnapshot.key}`, text: readonlySnapshot.content ?? '' }
       : (branchText ?? object);
-    const initialValue = activeVersion ? checkpointContent : (branchText?.content ?? docContent ?? textContent);
-    const effectiveViewMode = activeVersion ? 'readonly' : viewMode;
+    const initialValue = readonlySnapshot
+      ? readonlySnapshot.content
+      : (branchText?.content ?? docContent ?? textContent);
+    const effectiveViewMode = readonlySnapshot ? 'readonly' : viewMode;
     // Remount the editor when the selection or compare overlay changes so CodeMirror state rebinds cleanly.
     const editorKey = `${
-      activeVersion ? `checkpoint-${activeVersion.id}` : activeBranch ? `branch-${activeBranch.id}` : 'current'
+      readonlySnapshot ? readonlySnapshot.key : activeBranch ? `branch-${activeBranch.id}` : 'current'
     }${compareActive ? `--compare-${diffViewMode}` : ''}`;
+
+    // Leaving a checkpoint view returns to the tip it belongs to: the branch the checkpoint was
+    // taken on (so the reviewer lands back on the editable branch tip), else main's present.
+    const branchOfActiveVersion = useCallback(() => {
+      const branchKey = activeVersion?.branch;
+      return branchKey
+        ? document?.history?.branches.find((branch) => branch.key === branchKey && branch.status === 'active')
+        : undefined;
+    }, [document, activeVersion]);
+    const tipSelection = useCallback((): SpaceCapabilities.VersionSelection => {
+      const branch = branchOfActiveVersion();
+      return branch ? { kind: 'branch', branchId: branch.id } : { kind: 'current' };
+    }, [branchOfActiveVersion]);
 
     const handleRestore = useCallback(() => {
       if (document && activeVersion) {
-        Version.restore(document, activeVersion);
-        setSelection({ kind: 'current' });
+        // A branch checkpoint restores onto the branch document (checkpointText is the branch-bound
+        // Text); a base checkpoint onto the root.
+        Version.restore(document, activeVersion, checkpointText);
+        setSelection(tipSelection());
       }
-    }, [document, activeVersion, setSelection]);
+    }, [document, activeVersion, checkpointText, setSelection, tipSelection]);
 
     const handleBranchFrom = useCallback(
       (name: string) => {
         const target = activeVersion?.target.target;
         if (document && activeVersion && target) {
-          const branch = Branch.create(document, {
+          Branch.create(document, {
             name: name.trim(),
             parent: target,
             heads: activeVersion.heads,
-          });
-          setSelection({ kind: 'branch', branchId: branch.id });
+          })
+            .then((branch) => setSelection({ kind: 'branch', branchId: branch.id }))
+            .catch((error) => log.catch(error));
         }
       },
       [document, activeVersion, setSelection],
@@ -102,17 +155,19 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     const handleMerge = useCallback(() => {
       if (document && activeBranch) {
-        Branch.merge(document, activeBranch);
-        setSelection({ kind: 'current' });
+        Branch.merge(document, activeBranch)
+          .then(() => setSelection({ kind: 'current' }))
+          .catch((error) => log.catch(error));
       }
     }, [document, activeBranch, setSelection]);
 
     const handleCompare = useCallback(() => setCompare(!versioning.compare), [setCompare, versioning.compare]);
 
     const handleCloseBanner = useCallback(() => {
-      setSelection({ kind: 'current' });
+      // Closing a branch-checkpoint banner returns to the branch tip, not main.
+      setSelection(tipSelection());
       setCompare(false);
-    }, [setSelection, setCompare]);
+    }, [setSelection, setCompare, tipSelection]);
 
     // Extensions from other plugins.
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
@@ -125,20 +180,27 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return [...(otherExtensionProviders ?? []), ...(extensionProviders ?? [])]
         .flat()
         .reduce((acc: Extension[], provider) => {
-          const extension = typeof provider === 'function' ? provider({ document, viewMode }) : provider;
+          const extension = typeof provider === 'function' ? provider({ document, viewMode, reviewBranch }) : provider;
           if (extension) {
             acc.push(extension);
           }
 
           return acc;
         }, []);
-    }, [extensionProviders, otherExtensionProviders, object, viewMode]);
+    }, [extensionProviders, otherExtensionProviders, object, viewMode, reviewBranch]);
 
-    // Diff overlay (inline/gutter variants render inside the editor; sideBySide replaces it).
+    // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants
+    // use the custom versionDiff decorations; sideBySide uses the richer editable unified merge
+    // overlay (codemirror merge chunks with review-oriented colouring) — the branch stays editable
+    // in every mode, so a reviewer can adjust the draft while seeing it diffed against the anchor.
     const combinedExtensions = useMemo<Extension[]>(() => {
       const list = [...extensions, mergeConflicts()];
-      if (compareActive && branchBaseContent !== undefined && diffViewMode !== 'sideBySide') {
-        list.push(versionDiff({ base: branchBaseContent, variant: diffViewMode }));
+      if (compareActive && branchBaseContent !== undefined) {
+        list.push(
+          diffViewMode === 'sideBySide'
+            ? diffView({ original: branchBaseContent })
+            : versionDiff({ base: branchBaseContent, variant: diffViewMode }),
+        );
       }
       return list;
     }, [extensions, compareActive, branchBaseContent, diffViewMode]);
@@ -225,6 +287,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       [onSelectObject, invokePromise, attendableId],
     );
 
+    if (branchLoading) {
+      return <Panel.Root role={role} ref={forwardedRef} />;
+    }
+
     return (
       <MarkdownEditorProvider
         key={editorKey}
@@ -257,7 +323,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                   name={Version.label(activeVersion)}
                   detail={activeVersion.name ? new Date(activeVersion.createdAt).toLocaleString() : undefined}
                   onRestore={handleRestore}
-                  onBranchFrom={handleBranchFrom}
+                  // Branching from a BRANCH revision would fork a sub-branch, which is unsupported
+                  // (flat core registry) — offer it only for main revisions. See DESIGN.md.
+                  onBranchFrom={activeVersion.branch ? undefined : handleBranchFrom}
                   onClose={handleCloseBanner}
                 />
               )}
@@ -271,18 +339,24 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                   onClose={handleCloseBanner}
                 />
               )}
+              {activeFork && (
+                <VersionBanner
+                  mode='fork'
+                  name={Branch.label(activeFork)}
+                  detail={new Date(activeFork.createdAt).toLocaleString()}
+                  // Leaving the fork point returns to the branch tip if it is still editable, else main.
+                  onClose={() =>
+                    setSelection(
+                      activeFork.status === 'active'
+                        ? { kind: 'branch', branchId: activeFork.id }
+                        : { kind: 'current' },
+                    )
+                  }
+                />
+              )}
               <Panel.Content>
-                {versioning.compare &&
-                diffViewMode === 'sideBySide' &&
-                branchText &&
-                branchBaseContent !== undefined ? (
-                  <DiffView before={branchBaseContent} after={branchText.content} />
-                ) : (
-                  <>
-                    <MarkdownEditor.Content initialValue={initialValue} />
-                    <Editor.Blocks />
-                  </>
-                )}
+                <MarkdownEditor.Content initialValue={initialValue} />
+                <Editor.Blocks />
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>

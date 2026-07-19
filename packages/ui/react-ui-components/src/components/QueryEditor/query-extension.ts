@@ -12,7 +12,7 @@ import JSON5 from 'json5';
 import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/ui';
-import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
+import { type CompletionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
 import { getHashHue, getStyles, mx } from '@dxos/ui-theme';
 
 export type QueryOptions = {
@@ -28,7 +28,7 @@ export const query = ({ tags }: QueryOptions = {}): Extension => {
     syntaxHighlighting(queryHighlightStyle),
     decorations({ tags }),
     typeahead({
-      onComplete: ({ line }: CompoetionContext) => {
+      onComplete: ({ line }: CompletionContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
           // TODO(burdon): Get suggestion from parser.

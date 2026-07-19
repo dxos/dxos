@@ -60,8 +60,9 @@ export interface Accessor {
 }
 
 type TagKey = readonly [TagIndex, EntityId, string | undefined];
+type TaggedIdsKey = readonly [TagIndex, string];
 
-const tagsEqual = (left: readonly string[], right: readonly string[]): boolean =>
+const arraysEqual = <T>(left: readonly T[], right: readonly T[]): boolean =>
   left.length === right.length && left.every((value, index) => value === right[index]);
 
 const tagFamily = Atom.family((key: TagKey) =>
@@ -86,6 +87,23 @@ const tagFamily = Atom.family((key: TagKey) =>
   }).pipe(Atom.keepAlive),
 );
 
+const taggedIdsFamily = Atom.family((key: TaggedIdsKey) =>
+  Atom.make<readonly EntityId[]>((get) => {
+    const [tagIndex, tagId] = key;
+    const read = (): readonly EntityId[] => bind(tagIndex).objects(tagId);
+    let previous = read();
+    const unsubscribe = Obj.subscribe(tagIndex, () => {
+      const next = read();
+      if (!arraysEqual(next, previous)) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }).pipe(Atom.keepAlive),
+);
+
 const objectTagsFamily = Atom.family((key: TagKey) =>
   Atom.make<string[]>((get) => {
     const [tagIndex, objectId] = key;
@@ -93,7 +111,7 @@ const objectTagsFamily = Atom.family((key: TagKey) =>
     let previous = read();
     const unsubscribe = Obj.subscribe(tagIndex, () => {
       const next = read();
-      if (!tagsEqual(next, previous)) {
+      if (!arraysEqual(next, previous)) {
         previous = next;
         get.setSelf(next);
       }
@@ -121,6 +139,13 @@ export function atom(
   }
   return tagFamily(Data.tuple(tagIndex, objectId, tagUri));
 }
+
+/**
+ * Reactive atom for the ids of every object carrying `tagId` — the inverse of {@link atom}'s
+ * per-object family. Re-renders only when that tag's own id set changes (not on unrelated tags).
+ */
+export const taggedIdsAtom = (tagIndex: TagIndex, tagId: string): Atom.Atom<readonly EntityId[]> =>
+  taggedIdsFamily(Data.tuple(tagIndex, tagId));
 
 /** Binds an {@link Accessor} over a {@link TagIndex} object; all mutations go through `Obj.update`. */
 export const bind = (tagIndex: TagIndex): Accessor => {

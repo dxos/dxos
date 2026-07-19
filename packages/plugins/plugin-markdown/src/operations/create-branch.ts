@@ -15,9 +15,10 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.CreateBranch> = Ma
     Effect.fn(function* ({ doc, name }) {
       const document = yield* Database.load(doc);
       const parent = yield* Database.load(document.content);
-      const branch = Branch.create(document, { name, parent });
-      const branchText = yield* Database.load(branch.content);
-      return { branchId: branch.id, contentId: Obj.getURI(branchText).toString() };
+      const branch = yield* Effect.promise(() => Branch.create(document, { name, parent }));
+      // Core branches share the parent Text's object id (the branch is an alternate timeline of
+      // the same object); branch-scoped agent edits arrive with the stage-3 agent surface.
+      return { branchId: branch.id, contentId: Obj.getURI(parent).toString() };
     }),
   ),
 );
