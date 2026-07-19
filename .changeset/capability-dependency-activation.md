@@ -13,8 +13,12 @@ error. This is a breaking change: the legacy `addModule` event-wiring API,
 
 Multi is the default capability arity: `Capability.make` defines a multi
 (registry) capability and `Capability.makeSingleton` the single-provider case
-(previously `makeMulti`/`make`). Plugins compose as a uniform chain of
-`Plugin.addLazyModule` over spec-carrying module bodies (`Capability.Module`),
-authored via `Capability.lazyModule` (code-split), `Capability.inlineModule`
-(eager), or per-capability makers built with `Capability.moduleMaker`;
-`Plugin.addLazyModule` takes a `props` mapping for options-taking plugins.
+(previously `makeMulti`/`make`). Plugins compose as a uniform chain of bare
+`Plugin.addLazyModule` calls over spec-carrying module bodies — an opaque
+`Capability.Module<Options>`, parameterized only by its options type so a
+module export never leaks a foreign capability's type into declaration
+emit. Bodies are authored via `Capability.lazyModule` (code-split) or
+`Capability.inlineModule` (eager), both taking a spec with
+`requires`/`provides`/`activatesOn` and an optional `props` mapping from
+plugin options to body props; capability owners can also build a maker with
+`Capability.moduleMaker`.

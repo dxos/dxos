@@ -136,8 +136,60 @@ module makers); no explicit types where main had none; multi is the default capa
 - [x] Exemplars: plugin-markdown + plugin-client fully on `Plugin.addLazyModule` chains;
       TS2883 fake imports removed (remaining foreign-requires cases use honest `typeof`
       annotations); framework tests extended (inlineModule/moduleMaker/addLazyModule props)
-- [ ] Boot gate on exemplars
-- [ ] USER REVIEW of exemplar diffs, then full sweep: migrate all ~90 plugins off
-      `AppPlugin.addXModule` (616 call sites), then delete `AppPlugin`
-- [ ] Sweep cleanup: remove remaining TS2883 fake-import blocks (212 files), investigate the
-      2 explicit-generic `Plugin.addLazyModule<...>` workarounds (DeckPlugin, InboxPlugin)
+- [x] Boot gate on exemplars — passed (rolled into the full-repo build gate below)
+- [x] `Capability.Module<Options>` made opaque (parameterized only by its options type;
+      requires/provides are erased runtime values, so no module export leaks foreign
+      capability types into declaration emit); `activatesOn`/props move onto the
+      lazyModule/inlineModule specs; `Plugin.addLazyModule` reduces to bare module
+      references; `AppCapability` makers collapse to one-liners (commit fd9b18e785)
+- [x] USER REVIEW of exemplar diffs → approved; full sweep executed: partial salvage of an
+      interrupted sweep agent (attention, board, chess, conductor, deck, explorer, markdown
+      variants; commit cfbb93adb1), wave 1 (42 packages: assistant..crx, debug..kanban,
+      linear..pipeline; commit 43f62ff4a2), wave 2 (41 packages: presenter..sidekick,
+      simple-layout..thread, tictactoe..zen + app-toolkit playground/stories-inbox fixtures;
+      commit ef6796567a) — all ~89 plugin packages off `AppPlugin.addXModule`
+- [x] `AppPlugin` deleted — zero call sites remained after the sweep; introspect indexer's
+      schema detection updated to match `AppCapability.schema([...])` instead of
+      `addSchemaModule({ schema: [...] })` (commit 08e8245830)
+- [x] Node-barrel drift fix: four plugins' node-only `#capabilities` barrels (plugin-client,
+      plugin-routine, plugin-space, plugin-testing) hadn't received the `activatesOn`/props
+      spec migration and had regressed to startup activation under node; root-caused via
+      cli:test fresh-profile failures (`space.IdentityCreated` activating at startup), fixed
+      (commit 4442a51dff); cli:test 24/24 green
+- [x] Phoenix watchdog import fix — detached watchdog binary still imported the
+      pre-rolldown `dist/lib/node-esm` path after the vite+rolldown build layout change
+      merged from main (commit e700f932c0)
+- [x] composer-app: capability-activation module audit — 432-module inventory from the live
+      plugin manager, tiered startup-deferral plan; `AUDIT.md` §12 + `AUDIT-modules.md`
+      (commit 7dd1c8d8a1)
+- [x] Sweep cleanup: TS2883 fake-import blocks removed by the opaque-module core rework;
+      3 remaining compiler-forced `Plugin.addLazyModule<...>` explicit-generic anchors
+      identified (see Follow-ups)
+- [x] Composer boot gate — 3/3 runs booted with `failed: []` (429–430 active of 432 modules)
+- [x] composer-app e2e — 22 passed / 17 skipped / 1 failed; the sole failure is the
+      pre-existing `basic.spec.ts "reset device"` flake (`waitForRequest(INITIAL_URL, 45s)`
+      races the post-reset navigation). Confirmed NOT a refactor regression: DEBUG-traced the
+      reset path across 3 runs — `onReset` fires and `window.location.pathname='/'` executes
+      identically on pass and fail runs, so the new `props`-mapping wiring is intact. Passes
+      ~2/3 standalone (matching the documented base-commit flake rate). An earlier "4/4 fail"
+      was an orphaned preview server holding port 4173, not the test.
+
+Gates: full-repo build green; full test suite green (cli:test 24/24 after the node-barrel
+fix, all other packages unaffected); boot gate 3/3; e2e green modulo the pre-existing
+reset-device flake.
+
+### Follow-ups
+
+- Startup-deferral opportunities identified by the module audit —
+  `packages/apps/composer-app/AUDIT.md` §12 (tiered plan: post-paint `AfterStartup` event for
+  cold providers, type-presence gating for content-type plugins, on-demand pull for operation
+  handlers; full lists in `AUDIT-modules.md`).
+- Three compiler-forced `Plugin.addLazyModule<void>` explicit-generic anchors remain (without
+  the annotation, inference resolves a following plain `Plugin.addModule` entry's type
+  parameter to `unknown` instead of `void`): plugin-inbox `InboxPlugin.tsx` (`Connector`),
+  plugin-navtree `NavTreePlugin.tsx` (`State`), and one in a plugin-magazine story
+  (`MagazineCurate.stories.tsx`).
+- The `Maker<C>` type alias in `app-toolkit/src/app-framework/AppCapability.ts` guards TS2883
+  on three makers whose capability tag's type structurally carries a type this package
+  doesn't re-export (e.g. `@dxos/compute`'s `Skill.Definition`); kept as an explicit
+  annotation rather than left to inference.
