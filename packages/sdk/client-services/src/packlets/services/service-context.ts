@@ -126,21 +126,14 @@ export const ServiceContextLayer = (
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  | SwarmNetworkManagerService
-  | SignalManagerService
-  | SqlClient.SqlClient
-  | SqlTransactionTag
-  | EdgeConnectionService
-  | EdgeHttpClientService
-> =>
-  Layer.empty.pipe(
-    Layer.provide(
-      FeedSyncerLayer({
-        peerId: '',
-        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
-      }),
-    ),
-    Layer.provideMerge(CrossDeviceSpaceSynchronizerLayer),
+  SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
+> => {
+  const { edgeConnection, edgeHttpClient } = options;
+
+  // Core stack, flattened into a single pipe. Optional replicators expose their service via
+  // `provideMerge` and are read with `serviceOption` down the stack; their absence is modelled by
+  // not wiring the layer, not by a null value.
+  const core = CrossDeviceSpaceSynchronizerLayer.pipe(
     Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
@@ -159,6 +152,21 @@ export const ServiceContextLayer = (
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
     Layer.provideMerge(storageLayer),
+  );
+
+  // Non-edge: just the core.
+  if (!edgeConnection || !edgeHttpClient) {
+    return core;
+  }
+
+  // Edge: the feed syncer sits above the core for its `EchoHostService` requirement; the edge
+  // replicator sits below — it needs only the edge inputs, resolved via `serviceOption` inside the
+  // core. Edge inputs are provided internally so they never surface as stack requirements.
+  return FeedSyncerLayer({
+    peerId: '',
+    syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+  }).pipe(
+    Layer.provideMerge(core),
     Layer.provideMerge(
       options.edgeFeatures?.subductionReplicator
         ? EchoEdgeSubductionReplicatorLayer()
@@ -166,7 +174,15 @@ export const ServiceContextLayer = (
           ? EchoEdgeReplicatorLayer()
           : Layer.empty,
     ),
+    Layer.provideMerge(
+      Layer.mergeAll(
+        Layer.succeed(EdgeConnectionService, edgeConnection),
+        Layer.succeed(EdgeHttpClientService, edgeHttpClient),
+      ),
+    ),
   );
+};
+
 /**
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
  */
