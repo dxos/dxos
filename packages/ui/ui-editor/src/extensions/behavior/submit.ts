@@ -43,16 +43,8 @@ export const submit = ({ fireIfEmpty = false, onSubmit }: SubmitOptions = {}): E
           key: 'Shift-Enter',
           preventDefault: true,
           run: (view) => {
-            view.dispatch({
-              changes: {
-                from: view.state.selection.main.head,
-                insert: '\n',
-              },
-              selection: {
-                anchor: view.state.selection.main.head + 1,
-                head: view.state.selection.main.head + 1,
-              },
-            });
+            // Replace the selection (handles ranges and multiple cursors), not just the main head.
+            view.dispatch(view.state.replaceSelection('\n'));
             return true;
           },
         },

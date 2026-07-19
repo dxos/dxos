@@ -32,6 +32,11 @@ export const typeahead = ({ onComplete }: TypeaheadOptions = {}): Extension => {
       decorations: DecorationSet = Decoration.none;
       hint: string | undefined;
       update(update: ViewUpdate) {
+        // Only recompute on doc/selection changes; skip unrelated updates on this per-keystroke path.
+        if (!update.docChanged && !update.selectionSet) {
+          return;
+        }
+
         const builder = new RangeSetBuilder<Decoration>();
         const selection = update.view.state.selection.main;
         const line = update.view.state.doc.lineAt(selection.from);

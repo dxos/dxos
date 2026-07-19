@@ -214,11 +214,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
           const button = Domino.of('button')
             .classNames('dx-button bg-accent-bg aspect-square')
             .attributes({ 'data-density': 'sm' })
-            .append(
-              Domino.of('dx-icon' as any)
-                .classNames(getSize(4))
-                .attributes({ icon: 'ph--arrow-down--regular' }),
-            )
+            .append(Domino.of('dx-icon').classNames(getSize(4)).attributes({ icon: 'ph--arrow-down--regular' }))
             .on('click', () => {
               setPinned(true);
               view.dispatch({
@@ -235,7 +231,14 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             .classNames('cm-scroll-button transition-opacity duration-300 opacity-0 z-1')
             .append(button).root as HTMLDivElement;
 
-          view.scrollDOM.parentElement!.appendChild(buttonContainer);
+          // The button lives outside CM's managed DOM (the scroller's parent), so remove it on
+          // teardown; otherwise it is orphaned and duplicated when the editor is recreated.
+          view.scrollDOM.parentElement?.appendChild(buttonContainer);
+        }
+
+        destroy() {
+          buttonContainer?.remove();
+          buttonContainer = undefined;
         }
       },
     ),

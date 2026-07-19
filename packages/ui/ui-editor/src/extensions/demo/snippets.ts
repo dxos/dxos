@@ -38,8 +38,12 @@ export const snippets = ({ delay = 75, items = defaultItems }: SnippetsOptions =
         run: (view) => {
           clearTimeout(timer);
           // TODO(burdon): Add space if needed.
+          if (items.length === 0) {
+            return false;
+          }
+
           const text = items[index++];
-          if (index === items?.length) {
+          if (index >= items.length) {
             index = 0;
           }
 

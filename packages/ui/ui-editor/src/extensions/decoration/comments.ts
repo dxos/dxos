@@ -146,9 +146,14 @@ export const comments = (options: CommentsOptions): Extension => {
       const { comments, ...value } = state.field(commentsState);
       changes.iterChanges((from, to, from2, to2) => {
         comments.forEach(({ comment, range }) => {
+          // Only comments with a cursor reach this state (setComments filters cursor-less ones).
+          if (!comment.cursor) {
+            return;
+          }
+
           // Test if range deleted.
           if (from2 === to2) {
-            const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor!);
+            const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor);
             if (!newRange || newRange.to - newRange.from === 0) {
               options.onDelete?.({ id: comment.id });
             }
@@ -156,7 +161,7 @@ export const comments = (options: CommentsOptions): Extension => {
 
           // Update range.
           if (from <= range.to) {
-            const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor!);
+            const newRange = Cursor.getRangeFromCursor(view.state, comment.cursor);
             Object.assign(range, newRange);
             mod = true;
           }

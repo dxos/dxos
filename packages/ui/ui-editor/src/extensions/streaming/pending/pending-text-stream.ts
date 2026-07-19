@@ -126,6 +126,7 @@ export class PendingTextStreamer {
   #postHandle: unknown = null;
   /** The in-flight post-process pass, tracked so `flush()` can await it (drain contract). */
   #postPromise: Promise<void> | null = null;
+  #disposed = false;
 
   constructor(sink: PendingTextSink, options: PendingTextStreamerOptions = {}) {
     this.#sink = sink;
@@ -200,6 +201,7 @@ export class PendingTextStreamer {
   }
 
   dispose(): void {
+    this.#disposed = true;
     [this.#bufferHandle, this.#wordHandle, this.#postHandle].forEach((handle) => this.#clear(handle));
     this.#bufferHandle = this.#wordHandle = this.#postHandle = null;
   }
@@ -248,11 +250,16 @@ export class PendingTextStreamer {
   }
 
   async #runPostProcess(): Promise<void> {
+    const { postProcess } = this.#options;
+    if (!postProcess) {
+      return;
+    }
     const input = this.#final;
     try {
-      const result = await this.#options.postProcess!(input);
-      // Skip if the buffer grew while processing — a later pass will cover the newer text.
-      if (result !== input && this.#final === input) {
+      const result = await postProcess(input);
+      // Skip if disposed while processing (avoid writing into a torn-down sink / destroyed view), or
+      // if the buffer grew — a later pass will cover the newer text.
+      if (!this.#disposed && result !== input && this.#final === input) {
         this.#final = result;
         this.#sink.replaceFinal(result);
       }

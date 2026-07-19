@@ -135,8 +135,8 @@ class TableWidget extends WidgetType {
 
   override eq(other: this) {
     return (
-      this._table.header?.join() === other._table.header?.join() &&
-      this._table.rows?.join() === other._table.rows?.join()
+      JSON.stringify(this._table.header) === JSON.stringify(other._table.header) &&
+      JSON.stringify(this._table.rows) === JSON.stringify(other._table.rows)
     );
   }
 

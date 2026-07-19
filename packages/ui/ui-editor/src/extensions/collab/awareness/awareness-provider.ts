@@ -103,19 +103,18 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   }
 
   update(position: AwarenessPosition | undefined): void {
-    invariant(this._postTask);
     this._localState = {
       peerId: this._peerId,
       position,
       info: this._info,
     };
 
-    this._postTask.schedule();
+    // Safe no-op if called before open() or during async teardown after close().
+    this._postTask?.schedule();
   }
 
   private _handleQueryMessage(): void {
-    invariant(this._postTask);
-    this._postTask.schedule();
+    this._postTask?.schedule();
   }
 
   private _handlePostMessage(message: ProtocolMessage): void {

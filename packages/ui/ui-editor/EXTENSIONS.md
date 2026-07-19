@@ -159,10 +159,23 @@ Per repo policy these must be fixed at the source, not cast away:
 
 ### Review follow-ups (deferred from the reorg PR #12264)
 
-Non-trivial correctness/behavior findings from the review of pre-existing (relocated)
-code. Deferred out of the reorg to keep it low-risk; each warrants its own change +
-test.
+Findings from the review of pre-existing (relocated) code that need real reasoning about
+collab / tree-edit semantics — deferred out of the reorg because they carry regression
+risk and each warrants its own change plus dedicated tests. (The mechanical, low-risk
+findings from the same review — `submit`, `snippets`, `typeahead`, `awareness`, `comments`,
+`table.eq`, `auto-scroll` teardown, `Domino.of` overload, `pending-text-stream` dispose
+guard — were fixed in the PR.)
 
+- **`collab/automerge/update-automerge.ts`** — changes from multiple transactions are
+  collected then reversed together; a later transaction's offsets are relative to the
+  doc after the earlier ones, so applying them out of order corrupts the doc. Collect
+  and reverse **per transaction**, applied in order. (Needs a multi-transaction sync test.)
+- **`structure/outliner/editor.ts`** — the `transactionFilter` validates against the
+  local selection and can **cancel non-user transactions** (Automerge sync / programmatic
+  edits), diverging the document; bypass validation unless `tr.annotation(Transaction.userEvent)`.
+  Also the marker-deletion branch mixes start/new-state coordinates (`tr.state.doc.lineAt(fromA)`
+  with `fromA` from the start state); derive the remaining line text from the start state.
+  (Touches subtle tree-edit filtering with existing tests — needs its own change.)
 - **`decoration/diff.ts`** — `cherryPickHunk`'s hunk match uses strict half-open overlap
   (`h.fromB < range.end && h.toB > range.start`), which never matches a **zero-width** hunk
   (a pure insertion from the compare branch, `fromB === toB`) or a **collapsed cursor**
@@ -170,41 +183,3 @@ test.
   no-ops. Use inclusive containment when either side is zero-width, keeping strict overlap
   for two non-zero ranges; add `diff.test.ts` cases for pure-insertion hunks and cursors.
   (Landed via `main`; not introduced by this reorg.)
-- **`collab/automerge/update-automerge.ts`** — changes from multiple transactions are
-  collected then reversed together; a later transaction's offsets are relative to the
-  doc after the earlier ones, so applying them out of order corrupts the doc. Collect
-  and reverse **per transaction**, applied in order.
-- **`structure/outliner/editor.ts`** — the `transactionFilter` validates against the
-  local selection and can **cancel non-user transactions** (Automerge sync / programmatic
-  edits), diverging the document; bypass validation unless `tr.annotation(Transaction.userEvent)`.
-  Also the marker-deletion branch mixes start/new-state coordinates (`tr.state.doc.lineAt(fromA)`
-  with `fromA` from the start state); derive the remaining line text from the start state.
-- **`language/markdown/table.ts`** — `TableWidget.eq()` compares `header?.join()` /
-  `rows?.join()`; `join()` on `string[][]` is ambiguous when cells contain commas, so
-  structurally-different tables can compare equal and skip re-render. Compare structurally
-  (e.g. `JSON.stringify`).
-- **`behavior/submit.ts`** — Shift-Enter inserts `\n` at the main head instead of using
-  `state.replaceSelection('\n')`; it ignores selected ranges and additional cursors.
-- **`demo/snippets.ts`** — `items[index++]` with `index === items?.length` can read
-  `undefined` (crash on `text[…]`) when `items` is empty; guard empty and wrap with `>=`.
-- **`streaming/pending/pending-text-stream.ts`** — `dispose()` doesn't stop an in-flight
-  `#runPostProcess()`; a late `replaceFinal()` can dispatch into a destroyed `EditorView`.
-  Add a disposed flag and a null check for `postProcess`.
-- **`streaming/scrolling/auto-scroll.ts`** — the scroll-button `ViewPlugin` appends
-  `buttonContainer` to `scrollDOM.parentElement` (outside CM's DOM) and never removes it;
-  add `destroy()`. Also the no-cast items below.
-- **`completion/typeahead.ts`** — `update()` recomputes `onComplete`/decorations on every
-  `ViewUpdate`; guard on `docChanged || selectionSet` like `placeholder.ts`.
-- **`decoration/comments.ts`** — non-null `comment.cursor!` (twice); encode the
-  cursor-required invariant in the state type or guard before use.
-- **`collab/awareness/awareness-provider.ts`** — `update()` / `_handleQueryMessage()` use
-  `invariant(this._postTask)`; prefer optional chaining so a message during async teardown
-  is a safe no-op.
-- **`@dxos/ui` `Domino.of`** — no overload for custom-element tags, forcing
-  `Domino.of('dx-icon' as any)` at call sites; add a `string` overload returning
-  `Domino<HTMLElement>`.
-- **No-cast cleanups** (see the list above) — `auto-scroll.ts` `dx-icon as any` +
-  `parentElement!`, and the other pre-existing `!`/`as any` sites.
-- **Test conventions** (path guideline) — several relocated test files import `expect`
-  from `vitest` rather than the test context and place helpers above the suite; migrate
-  incrementally (e.g. `markdown/formatting.test.ts`, `language/xml/*.test.ts`).
