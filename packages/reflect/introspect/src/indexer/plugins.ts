@@ -147,8 +147,8 @@ const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => 
 
   // Plugins commonly ship multiple entrypoint variants (e.g.
   // `FooPlugin.node.ts` + `FooPlugin.tsx` + `cli/plugin.ts`) that each call
-  // `addSchemaModule({ schema: [...] })` with the same set of types. Each
-  // `addSchemaModule` call produces a separate Schema record, so the same
+  // `AppCapability.schema([...])` with the same set of types. Each
+  // `AppCapability.schema` call produces a separate Schema record, so the same
   // (pluginId, name) ends up duplicated 2-3x. Dedupe — keep first occurrence
   // so the surfaced location is deterministic (first source file walked).
   // Capabilities and operations are intentionally NOT deduped: their `type`
@@ -317,7 +317,7 @@ type Buckets = {
 
 const SURFACE_CALL = 'Surface.create';
 const CAPABILITY_CONTRIBUTES_CALL = 'Capability.contributes';
-const ADD_SCHEMA_MODULE_CALL = 'addSchemaModule';
+const SCHEMA_MODULE_CALL = 'AppCapability.schema';
 
 const extractFromFile = (file: SourceFile, rootPath: string, pluginId: PluginId, buckets: Buckets): void => {
   for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
@@ -352,7 +352,7 @@ const extractFromFile = (file: SourceFile, rootPath: string, pluginId: PluginId,
       continue;
     }
 
-    if (callee.endsWith(ADD_SCHEMA_MODULE_CALL)) {
+    if (callee.endsWith(SCHEMA_MODULE_CALL)) {
       readSchemas(call, pluginId, file, buckets.schemas);
       continue;
     }
@@ -379,21 +379,12 @@ const readSurface = (call: CallExpression, pluginId: PluginId, file: SourceFile)
 };
 
 const readSchemas = (call: CallExpression, pluginId: PluginId, file: SourceFile, into: Schema[]): void => {
-  // `AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject, ...] })`
+  // `AppCapability.schema([Spec.Spec, CodeProject.CodeProject, ...])`
   const arg = call.getArguments()[0];
-  if (!arg || arg.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+  if (!arg || arg.getKind() !== SyntaxKind.ArrayLiteralExpression) {
     return;
   }
-  const obj = arg as ObjectLiteralExpression;
-  const schemaProp = obj.getProperty('schema');
-  if (!schemaProp) {
-    return;
-  }
-  const initializer = schemaProp.getFirstChildByKind(SyntaxKind.ArrayLiteralExpression);
-  if (!initializer) {
-    return;
-  }
-  const arr = initializer as ArrayLiteralExpression;
+  const arr = arg as ArrayLiteralExpression;
   for (const element of arr.getElements()) {
     const text = element.getText();
     into.push({
