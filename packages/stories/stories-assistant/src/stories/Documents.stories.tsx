@@ -158,8 +158,9 @@ const submitPrompt = async (canvasElement: HTMLElement, prompt: string) => {
   await userEvent.type(editor, prompt);
   await userEvent.keyboard('{Enter}');
 
-  // Submitting clears the editor and posts the prompt as a message in the thread.
-  await waitFor(() => expect(editor.textContent).toBe(''));
+  // Submitting clears the editor (its text reverts to the placeholder) and posts the prompt as a
+  // message in the thread. The live agent then responds — not asserted here.
+  await waitFor(() => expect(editor.textContent).not.toContain(prompt));
   await canvas.findByText(prompt, {}, { timeout: 30_000 });
 };
 
