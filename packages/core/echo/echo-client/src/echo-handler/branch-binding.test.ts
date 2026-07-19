@@ -10,7 +10,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EchoTestBuilder } from '../testing';
 import { createBranch, getCurrentBranch, switchBranch } from './branching';
 
-describe('branch bindings (per-surface)', () => {
+describe('branch bindings (independent instance)', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -52,6 +52,26 @@ describe('branch bindings (per-surface)', () => {
     }
   });
 
+  test('Obj.getBranch reports the branch per instance, independent of the device selection', async () => {
+    const { db, root } = await setup();
+    await createBranch(root, 'b1');
+
+    // A binding instance reports its branch; the canonical object is unchanged.
+    const binding = await db.branch(root, 'b1');
+    try {
+      expect(Obj.getBranch(binding.object)).toBe('b1');
+      expect(Obj.getBranch(root)).toBe('main');
+    } finally {
+      binding.dispose();
+    }
+
+    // A device-global switch stamps the canonical instance; switching back restores 'main'.
+    await switchBranch(root, 'b1');
+    expect(Obj.getBranch(root)).toBe('b1');
+    await switchBranch(root, 'main');
+    expect(Obj.getBranch(root)).toBe('main');
+  });
+
   test('multiple bindings to different branches of the same object coexist', async () => {
     const { db, root } = await setup();
     await createBranch(root, 'b1');
@@ -81,7 +101,7 @@ describe('branch bindings (per-surface)', () => {
     const { db, root } = await setup();
     const binding = await db.branch(root, 'main');
     expect(binding.object).toBe(root);
-    expect(binding.branch).toBe('main');
+    expect(Obj.getBranch(binding.object)).toBe('main');
     binding.dispose();
   });
 

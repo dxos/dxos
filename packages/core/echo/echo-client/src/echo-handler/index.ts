@@ -10,6 +10,5 @@ export * from './edit-history';
 export { type ProxyTarget } from './echo-proxy-target';
 export * from './errors';
 export * from './subscription';
-export * from './time-travel';
 export * from './util';
 export * from './version';

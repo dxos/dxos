@@ -7,6 +7,9 @@ import { type ComponentType, lazy } from 'react';
 export type { CreateObjectDialogProps } from './CreateObjectDialog';
 export type { RenameSubject } from './RenamePopover';
 
+// Exported eagerly (not lazy): rendered directly by plugin-markdown stories outside a Suspense boundary.
+export { ObjectHistory, type ObjectHistoryProps } from './ObjectHistory';
+
 export const CollectionArticle: ComponentType<any> = lazy(() => import('./CollectionArticle'));
 export const CollectionSection: ComponentType<any> = lazy(() => import('./CollectionSection'));
 export const CreateObjectDialog: ComponentType<any> = lazy(() => import('./CreateObjectDialog'));

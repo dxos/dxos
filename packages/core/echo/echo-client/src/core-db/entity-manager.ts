@@ -1071,7 +1071,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Core-level per-surface branch binding: an ephemeral `ObjectCore` bound to the branch document
+   * Core-level independent-instance branch binding: an ephemeral `ObjectCore` bound to the branch document
    * of one object, independent of the device-global selection (`switchBranch`) and of other
    * bindings. The caller owns the returned core and must call `dispose` — bindings are never
    * persisted (the {@link BranchStore} records only the device default, which bindings override
@@ -1090,6 +1090,8 @@ export class EntityManager implements IDatabaseBinding {
     const core = new ObjectCore();
     core.id = objectId as EntityId;
     core.bind({ db: this, docHandle: handle, path: ['objects', objectId], assignFromLocalState: false });
+    // This independent instance is bound to `name`; `Obj.getBranch` reads it off the core.
+    core.branch = name;
 
     // Route branch-doc changes to this binding's core directly: the id-keyed `_objects` routing
     // (`_onDocumentUpdate` -> `_emitObjectUpdateEvent`) serves the device-global binding only, and
@@ -1123,9 +1125,6 @@ export class EntityManager implements IDatabaseBinding {
     if (!core) {
       return;
     }
-    // A branch switch is a harder navigation than a time-travel scrub; drop any active pin so reads
-    // reflect the (live) target branch rather than a stale historical view of the previous doc.
-    core.clearTimeTravel();
     const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
     let handle: DocHandleProxy<DatabaseDirectory>;
     if (url) {
@@ -1150,6 +1149,9 @@ export class EntityManager implements IDatabaseBinding {
       handle.on('change', this._onDocumentUpdate);
     }
     core.bind({ db: this, docHandle: handle, path: ['objects', memberId], assignFromLocalState: false });
+    // The canonical instance now views this branch; `Obj.getBranch` reads it. A member absent from the
+    // branch's set was bound to main above (`url` undefined), so it reports `'main'`, not `name`.
+    core.branch = url ? name : 'main';
     this._onObjectBoundToDocument(handle, memberId);
   }
 
