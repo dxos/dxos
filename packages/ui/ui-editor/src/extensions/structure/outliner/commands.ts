@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { indentMore } from '@codemirror/commands';
 import { getIndentUnit } from '@codemirror/language';
 import { type ChangeSpec, EditorSelection, type Extension } from '@codemirror/state';
 import { type Command, type EditorView, keymap } from '@codemirror/view';
@@ -21,8 +20,18 @@ export const indentItemMore: Command = (view: EditorView) => {
   if (current) {
     const previous = tree.prev(current);
     if (previous && current.level <= previous.level) {
-      // TODO(burdon): Indent descendants?
-      indentMore(view);
+      // Indent the current line and all descendants so the whole subtree moves with its parent.
+      // NOTE: The markdown extension doesn't provide an indentation service.
+      const insert = ' '.repeat(getIndentUnit(view.state));
+      const changes: ChangeSpec[] = [];
+      tree.traverse(current, (item) => {
+        const line = view.state.doc.lineAt(item.lineRange.from);
+        changes.push({ from: line.from, insert });
+      });
+
+      if (changes.length > 0) {
+        view.dispatch({ changes });
+      }
     }
   }
 
