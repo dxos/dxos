@@ -16,7 +16,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { openSubjectsOnActiveDeck } from '../layout';
+import { openSubjectsOnActiveDeck, replaceSubjectsOnActiveDeck, resolveDisposition } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
@@ -142,23 +142,50 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       }
 
       // Compute the next active deck state and apply it.
-      // In solo or uninitialized mode the subject list replaces the deck entirely.
-      // In multi (deck) mode, subjects are merged via openSubjectsOnActiveDeck which
-      // uses stack semantics (truncate after pivot, then push new entries).
+      // In solo or uninitialized mode the subject list replaces the deck entirely (unless the
+      // resolved disposition unsolos the deck, see below). In multi (deck) mode, the disposition
+      // decides whether subjects are pushed (openSubjectsOnActiveDeck) or spliced in place
+      // (replaceSubjectsOnActiveDeck) at the pivot/attended plank.
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
-        const next =
-          deck.solo || !deck.initialized
-            ? [...input.subject]
-            : openSubjectsOnActiveDeck(deck.active, input.subject, {
-                pivotId: input.pivotId,
-                key: input.key,
-              });
 
-        const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
+        const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+        const disposition = resolveDisposition(settings?.navigationDefault ?? 'replace', input.disposition);
+
+        if (deck.solo && disposition === 'new-plank') {
+          // Unsolo-push: the solo plank stays open and the subjects join it as additional planks,
+          // rather than the solo-swap that computeActiveUpdates would otherwise apply.
+          const active = [deck.solo, ...input.subject.filter((id) => id !== deck.solo)];
+          yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+            updateActiveDeck(state, {
+              solo: undefined,
+              initialized: true,
+              active,
+              inactive: deck.inactive.filter((id) => !active.includes(id)),
+            }),
+          );
+        } else {
+          let next: string[];
+          if (deck.solo || !deck.initialized) {
+            next = [...input.subject];
+          } else if (disposition === 'new-plank') {
+            next = openSubjectsOnActiveDeck(deck.active, input.subject, {
+              pivotId: input.pivotId,
+              key: input.key,
+            });
+          } else {
+            const pivotIndex = input.pivotId ? deck.active.findIndex((id) => id === input.pivotId) : -1;
+            const [attendedId] = Array.from(attention.getCurrent());
+            const attendedIndex = attendedId ? deck.active.findIndex((id) => id === attendedId) : -1;
+            const index = pivotIndex !== -1 ? pivotIndex : attendedIndex !== -1 ? attendedIndex : 0;
+            next = replaceSubjectsOnActiveDeck(deck.active, input.subject, { index });
+          }
+
+          const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
+          yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
+        }
       }
 
       // Schedule side-effects for the newly opened items: scroll into view, expose in

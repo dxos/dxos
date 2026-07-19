@@ -361,6 +361,14 @@ export const Open = Operation.make({
         Schema.Literal('end').annotations({ description: 'The items are being added after the pivot item.' }),
       ),
     ),
+    disposition: Schema.optional(
+      Schema.Literal('default', 'inverse', 'replace', 'new-plank').annotations({
+        description:
+          'How the deck should place the opened items. `default`/`inverse` resolve against the ' +
+          "user's navigation setting (`inverse` is used when a modifier key is held); `replace`/`new-plank` " +
+          'are explicit overrides that ignore the setting.',
+      }),
+    ),
   }),
   output: Schema.Array(Schema.String).annotations({ description: 'The resolved navigation paths that were opened.' }),
 });

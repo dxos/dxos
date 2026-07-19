@@ -33,6 +33,35 @@ export const openEntry = (deck: readonly string[], entryId: string, options?: Op
   });
 };
 
+/** Effective placement for an {@link LayoutOperation.Open} once the user's setting/modifier has been resolved. */
+export type NavigationSetting = 'replace' | 'new-plank';
+
+/** Requested placement for an {@link LayoutOperation.Open}, before resolving against the user's setting. */
+export type NavigationDisposition = 'default' | 'inverse' | NavigationSetting;
+
+/**
+ * Resolves the effective disposition for an {@link LayoutOperation.Open} from the user's
+ * `navigationDefault` setting and the caller's requested disposition.
+ * `undefined`/`'default'` defers to the setting; `'inverse'` flips it (held for a modifier key, e.g.
+ * shift-click) — inversion is symmetric, so flipping the setting mirrors the modifier behavior for
+ * free; explicit `'replace'`/`'new-plank'` pass through unchanged, for callers that must force a
+ * specific outcome regardless of the setting (e.g. {@link useShowItem}'s pivot-open path).
+ */
+export const resolveDisposition = (
+  setting: NavigationSetting,
+  disposition?: NavigationDisposition,
+): NavigationSetting => {
+  switch (disposition) {
+    case undefined:
+    case 'default':
+      return setting;
+    case 'inverse':
+      return setting === 'replace' ? 'new-plank' : 'replace';
+    default:
+      return disposition;
+  }
+};
+
 export type OpenSubjectsOnActiveDeckOptions = {
   pivotId?: string;
   key?: string;
@@ -61,6 +90,33 @@ export const openSubjectsOnActiveDeck = (
   const pivotIndex = pivotId ? active.findIndex((id) => id === pivotId) : -1;
   const baseDeck = pivotIndex !== -1 ? active.slice(0, pivotIndex + 1) : [...active];
   return subject.reduce((acc, entryId) => openEntry(acc, entryId, { key }), baseDeck);
+};
+
+export type ReplaceSubjectsOnActiveDeckOptions = {
+  /** Index of the plank in `active` to replace. */
+  index: number;
+};
+
+/**
+ * Computes the next `active` list for a `'replace'` disposition {@link LayoutOperation.Open}: swaps
+ * the plank at `index` for `subject`, splicing any additional subjects in immediately after it.
+ * Subjects already open elsewhere in the deck are removed from their old position rather than
+ * duplicated — they relocate into the replaced slot instead.
+ */
+export const replaceSubjectsOnActiveDeck = (
+  active: readonly string[],
+  subject: readonly string[],
+  options: ReplaceSubjectsOnActiveDeckOptions,
+): string[] => {
+  if (subject.length === 0) {
+    return [...active];
+  }
+
+  const { index } = options;
+  // Drop the replaced plank and any subjects already open elsewhere so reinsertion doesn't duplicate them.
+  const withoutTarget = active.filter((id, position) => position !== index && !subject.includes(id));
+  const insertAt = Math.min(index, withoutTarget.length);
+  return [...withoutTarget.slice(0, insertAt), ...subject, ...withoutTarget.slice(insertAt)];
 };
 
 export const closeEntry = (deck: string[], entryId: string): string[] => {

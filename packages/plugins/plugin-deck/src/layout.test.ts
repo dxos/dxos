@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { openEntry, openSubjectsOnActiveDeck } from './layout';
+import { openEntry, openSubjectsOnActiveDeck, replaceSubjectsOnActiveDeck, resolveDisposition } from './layout';
 
 describe('openEntry', () => {
   test('pushes new id to the end', () => {
@@ -55,5 +55,54 @@ describe('openSubjectsOnActiveDeck', () => {
 
   test('truncates after pivot when subject is new even if some are already open', () => {
     expect(openSubjectsOnActiveDeck(['a', 'b', 'c'], ['b', 'd'], { pivotId: 'a' })).toEqual(['a', 'b', 'd']);
+  });
+});
+
+describe('replaceSubjectsOnActiveDeck', () => {
+  test('replaces the plank at the pivot index', () => {
+    expect(replaceSubjectsOnActiveDeck(['a', 'b', 'c'], ['x'], { index: 1 })).toEqual(['a', 'x', 'c']);
+  });
+
+  test('replaces the first plank', () => {
+    expect(replaceSubjectsOnActiveDeck(['a', 'b', 'c'], ['x'], { index: 0 })).toEqual(['x', 'b', 'c']);
+  });
+
+  test('multi-subject replace inserts all subjects at the replaced index', () => {
+    expect(replaceSubjectsOnActiveDeck(['a', 'b', 'c'], ['x', 'y'], { index: 1 })).toEqual(['a', 'x', 'y', 'c']);
+  });
+
+  test('a subject already open elsewhere relocates into the replaced slot instead of duplicating', () => {
+    expect(replaceSubjectsOnActiveDeck(['a', 'b', 'c'], ['c'], { index: 0 })).toEqual(['c', 'b']);
+  });
+
+  test('no-op (returns a copy) when subject is empty', () => {
+    const active = ['a', 'b'];
+    const result = replaceSubjectsOnActiveDeck(active, [], { index: 0 });
+    expect(result).toEqual(active);
+    expect(result).not.toBe(active);
+  });
+});
+
+describe('resolveDisposition', () => {
+  test('undefined defers to the setting', () => {
+    expect(resolveDisposition('replace', undefined)).toBe('replace');
+    expect(resolveDisposition('new-plank', undefined)).toBe('new-plank');
+  });
+
+  test("'default' defers to the setting", () => {
+    expect(resolveDisposition('replace', 'default')).toBe('replace');
+    expect(resolveDisposition('new-plank', 'default')).toBe('new-plank');
+  });
+
+  test("'inverse' flips the setting, symmetrically", () => {
+    expect(resolveDisposition('replace', 'inverse')).toBe('new-plank');
+    expect(resolveDisposition('new-plank', 'inverse')).toBe('replace');
+  });
+
+  test('explicit values pass through regardless of the setting', () => {
+    expect(resolveDisposition('replace', 'replace')).toBe('replace');
+    expect(resolveDisposition('replace', 'new-plank')).toBe('new-plank');
+    expect(resolveDisposition('new-plank', 'replace')).toBe('replace');
+    expect(resolveDisposition('new-plank', 'new-plank')).toBe('new-plank');
   });
 });

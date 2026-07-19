@@ -81,7 +81,10 @@ disposition plumbing every later phase builds on.
 
 ### Tasks
 
-- [ ] **Implement settings + disposition plumbing**
+- [x] **Implement settings + disposition plumbing** — landed; layout.test.ts (21
+      tests incl. disposition matrix + replace splice) green. Markdown editor
+      extension exposes the originating event, so shift-click is threaded end to
+      end (no TODO); third Tree onSelect consumer (`L0Menu.tsx`) updated too.
   - `navigationDefault` setting (`'replace' | 'new-plank'`, default `'replace'`).
   - `disposition` field on `LayoutOperation.Open`; shift-click passes `'inverse'`.
   - `resolveDisposition` + `replaceSubjectsOnActiveDeck` in

@@ -68,8 +68,11 @@ export type ExtensionsOptions = {
    * with no client (awareness only activates when both a space and an identity are present).
    */
   identity?: Identity.Info | null;
-  /** Callback when an internal link is clicked. */
-  onSelectObject?: (objectId: string) => void;
+  /**
+   * Callback when an internal link is clicked. `modifiers.shift` reflects the originating
+   * click/keydown event, so callers can invert the deck's navigation disposition.
+   */
+  onSelectObject?: (objectId: string, modifiers?: { shift: boolean }) => void;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
@@ -261,7 +264,7 @@ const selectionChange = (viewState: ViewStateManager) => {
 };
 
 const createRenderLink =
-  (onSelectObject: (id: string) => void): RenderCallback<{ url: string }> =>
+  (onSelectObject: (id: string, modifiers?: { shift: boolean }) => void): RenderCallback<{ url: string }> =>
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
@@ -277,17 +280,16 @@ const createRenderLink =
         .on('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
-          onSelectObject(qualifiedId);
+          onSelectObject(qualifiedId, { shift: event.shiftKey });
         })
         .on('keydown', (event) => {
-          const keyboardEvent = event as KeyboardEvent;
-          if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') {
+          if (event.key !== 'Enter' && event.key !== ' ') {
             return;
           }
 
-          keyboardEvent.preventDefault();
-          keyboardEvent.stopPropagation();
-          onSelectObject(qualifiedId);
+          event.preventDefault();
+          event.stopPropagation();
+          onSelectObject(qualifiedId, { shift: event.shiftKey });
         });
     }
 

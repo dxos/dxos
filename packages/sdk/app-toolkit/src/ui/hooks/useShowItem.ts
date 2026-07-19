@@ -54,6 +54,8 @@ export const useShowItem = () => {
             return invokePromise(LayoutOperation.Open, {
               subject: [path],
               pivotId: contextId,
+              // The master-detail sibling plank is intentional regardless of the user's navigation setting.
+              disposition: 'new-plank',
               navigation: 'immediate',
             });
           }
