@@ -125,7 +125,7 @@ export class Toolbox {
    * - Create package list.
    */
   async init(): Promise<void> {
-    const configPath = join(this.rootDir, 'toolbox.json');
+    const configPath = join(this.rootDir, '.config', 'toolbox.json');
     this.config = await loadJson<ToolboxConfig>(configPath);
     console.log(`Config: ${configPath}`);
 
