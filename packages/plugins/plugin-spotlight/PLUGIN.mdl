@@ -174,8 +174,8 @@ feat F-4: Navigation Forwarding to Main Window
     then: the workspace change is forwarded to the main window without hiding spotlight
 
   req F-4.3:
-    when: LayoutOperation.SetLayoutMode, UpdateSidebar, UpdateComplementary,
-          UpdatePopover, RevertWorkspace, Set, ScrollIntoView, Expose, AddToast are dispatched
+    when: LayoutOperation.UpdateSidebar, UpdateComplementary, UpdatePopover, RevertWorkspace,
+          Set, ScrollIntoView, Expose, AddToast are dispatched
     then: these operations are silently ignored (no-ops) in the spotlight context
 ```
 
@@ -185,7 +185,7 @@ feat F-5: Layout State Publication
   req F-5.1:
     when: the spotlight plugin initialises
     then: State capability contributes an AppCapabilities.Layout atom with
-          mode='spotlight', sidebarOpen=false, complementarySidebarOpen=false,
+          variant='spotlight', fullscreen=false, sidebarOpen=false, complementarySidebarOpen=false,
           active=[], inactive=[]
 ```
 

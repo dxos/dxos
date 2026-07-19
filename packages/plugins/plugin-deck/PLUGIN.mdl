@@ -24,29 +24,24 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Types
 
-```mdl
-type LayoutMode
-  literals: multi | solo | solo--fullscreen
-```
+There is a single deck mode: presentation is derived from plank count rather than stored. A singleton
+`active` renders `fullbleed`; two or more render `sliding`. Fullscreen is a transient overlay
+(`EphemeralDeckState.fullscreen`), not a mode.
 
 ```mdl
 type PartAdjustment
-  literals: close | companion | solo | solo--fullscreen | increment-start | increment-end
+  literals: close | companion | fullscreen | increment-start | increment-end
 ```
 
 ```mdl
 type DeckState
   fields:
-    initialized: boolean          # false until the deck has left solo mode for the first time
-    active: string[]              # item IDs of planks displayed in multi mode
+    active: string[]              # item IDs of the deck's planks; fullbleed when length 1, sliding when 2+
     inactive: string[]            # item IDs that have been closed; persisted for reopening
-    solo?: string                 # item ID of the single plank in solo or fullscreen mode
-    fullscreen: boolean           # true when the solo plank is displayed without any chrome
-    plankSizing: Record<string, number>   # persisted plank widths in rem, keyed by item ID
+    plankSizing: Record<string, number>   # persisted plank widths in rem, keyed by item ID (sliding presentation only)
     companionOpen: boolean        # whether the companion pane is visible
-    companionOrientation?: 'horizontal' | 'vertical'   # companion splitter orientation (side-by-side / stacked)
     companionFrameSizing: Record<string, number>  # companion frame widths in rem
-    # NOTE: the selected companion variant and per-orientation split size now live in react-ui-attention
+    # NOTE: the selected companion variant and per-orientation split size live in react-ui-attention
     # view state (global, localStorage), not on DeckState — see util/companion-view-state.ts.
 ```
 
@@ -60,13 +55,13 @@ type StoredDeckState
     activeDeck: string
     previousDeck: string
     decks: Record<string, DeckState>
-    previousMode: Record<string, LayoutMode>
 ```
 
 ```mdl
 type EphemeralDeckState
   desc: Transient plugin state that is NOT persisted across sessions.
   fields:
+    fullscreen?: string           # item ID of the plank currently displayed fullscreen (headless); never in the URL
     dialogOpen: boolean
     dialogType?: default | alert
     dialogBlockAlign?: start | center | end
@@ -85,7 +80,7 @@ type EphemeralDeckState
 ```mdl
 type DeckSettings
   fields:
-    enableDeck?: boolean          # display multiple panels side by side
+    navigationDefault?: replace | new-plank  # whether opening an item replaces the attended plank or opens a new one beside it; shift-click inverts
     encapsulatedPlanks?: boolean  # render each plank in an isolated container
     showHints?: boolean           # show keyboard shortcut hints in the UI
     enableNativeRedirect?: boolean  # redirect supported URLs to the native desktop app
@@ -96,14 +91,16 @@ type DeckSettings
 ```mdl
 component Matrix
   desc: |
-    The primary workspace canvas. Renders the active planks side by side in multi mode,
-    or a single plank in solo/fullscreen mode. Manages plank-resize handles and the
-    companion pane alongside each plank.
+    The primary workspace canvas. Renders `active` planks through a single Mosaic.Stack pipeline,
+    styled by the presentation derived from plank count: fullbleed for one plank, sliding
+    (resizable, horizontally scrollable) for two or more. Fullscreen is a transient overlay that
+    replaces the whole stack with one plank, headless. Manages plank-resize handles and the
+    companion pane alongside the attended plank.
   props:
     state: StoredDeckState        # persisted layout state atom
     ephemeral: EphemeralDeckState # transient state atom
   state:
-    mode: LayoutMode              # current layout mode derived from state
+    presentation: fullbleed | sliding   # derived from active.length, not stored
   actions:
     openPlank(id: string)
     closePlank(id: string)
@@ -135,13 +132,16 @@ component DeckSettings
 op Open
   desc: |
     Opens one or more subjects (item IDs or navigation paths) in the deck.
-    In multi mode uses stack semantics: truncates after the pivot then appends.
-    In solo or uninitialised mode, replaces the current subject entirely.
+    `disposition` resolves how they're placed: 'new-plank' uses stack semantics (truncates the
+    deck after the pivot then appends); 'replace' splices the subjects in at the pivot/attended-plank
+    index. 'default'/'inverse' (the default when omitted) resolve against the navigationDefault
+    setting — 'inverse' flips it, e.g. for shift-click.
     Validates each target against the app graph and redirects to a 404 node if not found.
     Fires ScrollIntoView, Expose, and an observability event for each newly opened item.
   input:
     subject: string[]             # item IDs or navigation paths to open
-    pivotId?: string              # truncate deck after this item before appending
+    disposition?: default | inverse | replace | new-plank
+    pivotId?: string              # truncate deck after this item before appending (new-plank only)
     key?: string                  # replace an existing plank whose ID shares this key prefix
     workspace?: string            # switch to this workspace before opening
     navigation?: immediate        # skip validation; expand path only
@@ -164,22 +164,6 @@ op Close
   output: void
   effects: [layout:state]
   requires: [DeckCapabilities, AttentionCapabilities]
-```
-
-```mdl
-op SetLayoutMode
-  desc: |
-    Transitions to a new layout mode (multi, solo, solo--fullscreen) or reverts
-    to the previously recorded mode. Persists the previous mode so it can be
-    restored later. Toggling solo--fullscreen flips the fullscreen flag rather
-    than unconditionally setting it.
-  input:
-    mode?: LayoutMode             # target mode; omit if reverting
-    subject?: string              # item to solo; used only for solo / solo--fullscreen
-    revert?: boolean              # revert to the previously persisted mode
-  output: void
-  effects: [layout:state]
-  requires: [DeckCapabilities]
 ```
 
 ```mdl
@@ -250,7 +234,9 @@ op UpdateCompanion
 
 ```mdl
 op AdjustPlank
-  desc: Apply a PartAdjustment to a specific plank (close, solo, move, companion).
+  desc: |
+    Apply a PartAdjustment to a specific plank (close, fullscreen, move, companion). 'fullscreen'
+    toggles EphemeralDeckState.fullscreen for the given plank rather than mutating active.
   input:
     id: string
     type: PartAdjustment
@@ -314,14 +300,15 @@ op RevertWorkspace
 ## Features
 
 ```mdl
-feat F-1: Multi-Plank Layout (Deck)
+feat F-1: Sliding-Deck Presentation
 
   req F-1.1:
-    when: enableDeck setting is true
-    then: deck renders active planks side by side in a scrollable row
+    when: two or more planks are active
+    then: deck renders them side by side in a scrollable, resizable row (the sliding presentation);
+          a single active plank instead renders fullbleed
 
   req F-1.2:
-    when: user opens a new subject with a pivot
+    when: user opens a new subject with disposition 'new-plank' and a pivot
     then: deck is truncated after the pivot and the new subject is appended
 
   req F-1.3:
@@ -330,23 +317,24 @@ feat F-1: Multi-Plank Layout (Deck)
 
   req F-1.4:
     when: user resizes a plank
-    then: new width is persisted in plankSizing and restored on next load
+    then: new width is persisted in plankSizing and restored on next load (sliding presentation only)
 ```
 
 ```mdl
-feat F-2: Solo / Fullscreen Mode
+feat F-2: Fullscreen
 
   req F-2.1:
-    when: user triggers SetLayoutMode with mode=solo
-    then: only the targeted plank is visible; other planks move to inactive
+    when: user triggers AdjustPlank with type=fullscreen for a plank
+    then: EphemeralDeckState.fullscreen is set to that plank's id; it fills the viewport headless
+          (sidebar and heading chrome hidden), independent of how many planks are active
 
   req F-2.2:
-    when: user triggers SetLayoutMode with mode=solo--fullscreen
-    then: plank fills the viewport; sidebar and heading chrome are hidden
+    when: user triggers AdjustPlank with type=fullscreen for the currently-fullscreen plank
+    then: EphemeralDeckState.fullscreen is cleared and the deck returns to its normal presentation
 
   req F-2.3:
-    when: user triggers SetLayoutMode with revert=true
-    then: layout returns to the previously persisted mode
+    when: the app reloads
+    then: fullscreen is not restored — it is transient and never persisted or reflected in the URL
 ```
 
 ```mdl
@@ -408,9 +396,9 @@ feat F-6: Toast Notifications
 ## Acceptance
 
 ```mdl
-test T-1: Open subject in multi mode
-  given: deck is in multi mode with planks A and B active
-  when: Open({ subject: ['C'] }) is dispatched
+test T-1: Open subject beside an active plank
+  given: deck has planks A and B active (sliding presentation)
+  when: Open({ subject: ['C'], disposition: 'new-plank' }) is dispatched
   then:
     - plank C is appended to the right of plank B
     - browser URL reflects the new deck state
@@ -420,7 +408,7 @@ test T-1: Open subject in multi mode
 ```mdl
 test T-2: Open with pivot truncation
   given: deck has planks [A, B, C] active
-  when: Open({ subject: ['D'], pivotId: 'A' }) is dispatched
+  when: Open({ subject: ['D'], disposition: 'new-plank', pivotId: 'A' }) is dispatched
   then:
     - active deck becomes [A, D]
     - planks B and C are moved to inactive
@@ -436,22 +424,22 @@ test T-3: Open already-visible subject
 ```
 
 ```mdl
-test T-4: Solo mode
-  given: deck is in multi mode
-  when: SetLayoutMode({ mode: 'solo', subject: 'A' }) is dispatched
+test T-4: Enter fullscreen
+  given: deck has planks [A, B] active
+  when: AdjustPlank({ id: 'A', type: 'fullscreen' }) is dispatched
   then:
-    - only plank A is visible
-    - mode is stored as solo in StoredDeckState
-    - previousMode records 'multi' for the active deck
+    - EphemeralDeckState.fullscreen is 'A'
+    - only plank A is rendered, headless (sidebar and heading chrome hidden)
+    - active is unchanged ([A, B])
 ```
 
 ```mdl
-test T-5: Revert from solo to multi
-  given: layout mode is solo, previousMode is multi
-  when: SetLayoutMode({ revert: true }) is dispatched
+test T-5: Exit fullscreen
+  given: EphemeralDeckState.fullscreen is 'A'
+  when: AdjustPlank({ id: 'A', type: 'fullscreen' }) is dispatched
   then:
-    - deck returns to multi mode
-    - previously inactive planks are restored
+    - EphemeralDeckState.fullscreen is cleared
+    - the deck returns to its normal presentation for the unchanged active list
 ```
 
 ```mdl

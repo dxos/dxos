@@ -1,6 +1,6 @@
 # URL & Deck Redesign — Tasks
 
-_Resume: kick off B1 (settings + disposition plumbing); A1 (grammar + builder core) can start in parallel. Uncommitted: none. Last: spec authored + project registered._
+_Resume: watch PR #12273 CI to green, then manual e2e pass against the preview (script in the spec Verification section) and mark ready for review. Uncommitted: none. Last: all phases (B1, A1, A2, B2, B3, A3, B4) implemented, validated, and pushed._
 
 > **Execution policy** — of paramount importance for all execution: delegate the
 > bulk of the work to cheaper models. Sonnet subagents do the file-by-file
@@ -154,7 +154,8 @@ Land after A3.
 
 ### Tasks
 
-- [ ] **Clean up**
+- [x] **Clean up** — landed; DESIGN/PLAN/Matrix SPEC + 4 PLUGIN.mdl files
+      updated to current architecture, dead SetLayoutMode comment removed.
   - Translations.
   - plugin-deck `DESIGN.md`/`PLAN.md`/Matrix `SPEC.md` updates.
   - Stories.
