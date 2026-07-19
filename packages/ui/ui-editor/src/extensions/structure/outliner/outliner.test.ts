@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Command, EditorSelection, EditorState } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorSelection, EditorState } from '@codemirror/state';
+import { type Command, EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { join } from '../../../util';
