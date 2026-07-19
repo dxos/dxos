@@ -84,7 +84,8 @@ history: Schema.optional(Schema.Struct({
 
 - `Document.content` remains the canonical root ("main").
 - The branch **tree** is formed by `Branch.parent` references; branch-of-branch works
-  without extra machinery.
+  without extra machinery. (Superseded by the ECHO-core model below, whose flat registry does
+  **not** yet support true nested branch-of-branch — see the "landed" section's Remaining.)
 - Branch Texts are children of the Document (`Obj.setParent`) so they load and delete
   with it.
 - **Selection is local state.** Which branch/checkpoint a user is viewing is per-user UI
@@ -159,21 +160,42 @@ Operations (see `operations` skill) so agents can draft and propose changes:
 - Storybook stories rendered + console-checked for all new components.
 - `moon run plugin-markdown:build` / `:test` / `:lint` + `pnpm format` gates.
 
-## Phase 2: upstreaming
+## Convergence with ECHO-core branching (landed)
 
-See [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md)
-for the staged convergence with PR #11829's ECHO-core branching (true CRDT forks).
+The staged convergence with PR #11829's ECHO-core branching
+([`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md))
+has landed. The content-copy fork described above is superseded; the current model:
 
-Not built now; the phase-1 shapes are chosen to make this a lift, not a migration:
+- **True CRDT forks.** `Branch.create` forks the parent Text as an ECHO-core branch (same object
+  id, shared automerge history) via `db.createBranch`; the `Branch` record is product metadata
+  keyed into the space-root branch registry by `Branch.key`. `mergeBranch` is a conflict-free CRDT
+  merge (`db.mergeBranch`) — no marker conflicts between core branches.
+- **Per-surface bindings.** `db.branch(obj, name)` returns a caller-owned writable binding, so an
+  agent (or a second plank) edits a branch while the user stays on main; the editor and the
+  branch-scoped `Update`/`AcceptChange` operations write through it.
+- **Checkpoints** view via `setTimeTravel` pinning (not snapshot-swap); a checkpoint taken on a
+  branch carries `Version.branch` (its heads live in the branch doc) and resolves against it.
+- **Generic history companion.** The git-graph companion lives in plugin-space, gated per-type by
+  `SpaceCapabilities.HistoryProvider`; markdown contributes the provider. Each lane ends in a
+  synthetic tip node — `Now` on main, `Tip` on each active branch — that reselects the editable
+  present of that lane; selecting a branch checkpoint pins the branch-bound Text and closing the
+  banner returns to the branch tip (not main).
+- **Review workflow.** Branch-aware comments (`AnchoredTo.branch`, scoped to the review branch) +
+  per-hunk `AcceptChange` cherry-pick; the editable unified merge overlay backs the sideBySide
+  compare. Instant CRDT merge is the default.
 
-- DONE: `Version`/`Branch` and the model now live in `@dxos/versioning`. Remaining: generalize
-  record refs over `Ref(Obj.Any)` targets so non-Text objects (sketches, sheets) can be versioned.
-- True CRDT forks: core ECHO API to fork a leaf doc with shared history (object-id
-  rewrite or fragment surgery) enabling `A.merge`-quality merge-back; replaces the
-  textual 3-way merge behind the same `mergeBranch` signature.
-- Alignment with subduction fragments (`FragmentMeta.checkpoints`) for history
-  compaction; branch-level access control (draft visible only to its author).
-- Generic history companion usable by any plugin.
+`merge3` and the conflict-marker editor are retained for **external/imported** content (and any
+legacy content-copy `Branch` record — `key` unset, `content` set — which stays mergeable via
+`merge3` until it drains); they are no longer the branch-merge path.
+
+Remaining: generalize record refs over `Ref(Obj.Any)` so non-Text objects (sketches, sheets) can be
+versioned; branch-level access control (draft visible only to its author); alignment with subduction
+fragments (`FragmentMeta.checkpoints`) for history compaction. **True nested branch-of-branch** (a
+branch forked off another branch's tip, kept live, merged child→parent→main) is not yet supported:
+the core registry (`DatabaseDirectory.branches`) is flat, keyed by the root object id, and forks
+always derive from the root doc, so forking at a sub-branch's frontier hits an unreachable frontier.
+Chained fork→merge→fork→merge sequences work today (`ChainedBranches` story); true nesting needs a
+nested/parent-aware registry key.
 
 ## Risks / notes
 
@@ -184,3 +206,27 @@ Not built now; the phase-1 shapes are chosen to make this a lift, not a migratio
   same limit.
 - Restore/merge are plain edits, so they interleave safely with concurrent collaborator
   edits under normal CRDT semantics.
+
+## Status
+
+Current risk in the product/UI layer (plugin-markdown, plugin-space, plugin-comments, ui-editor).
+Echo-core-layer risk is tracked separately in
+[`@dxos/echo-client` VERSIONING.md § Status](../../core/echo/echo-client/docs/VERSIONING.md#status).
+
+- **Shared `Timeline` component change.** The `currentBranch`-effect guard (keep the highlight on an
+  explicitly selected commit) also affects plugin-assistant's `TracePanel`. Reasoned safe — it only
+  skips a redundant jump — and the Timeline's own stories pass, but `TracePanel` was not re-verified
+  end to end.
+- **Nested branch-of-branch is guarded, not solved.** "New branch" is disabled on a branch / branch
+  revision and the checkpoint banner's "Branch from" is hidden for branch revisions, so a fork can
+  never silently derive from main; true sub-branching is unavailable (see the ECHO-core
+  [nested-branches design](../../core/echo/echo-client/docs/VERSIONING.md#nested-branches-planned)).
+- **Merged-branch revision viewing** reads read-only against the root document after merge, relying
+  on the echo-core head-reachability guarantee; the UI never binds the deleted branch.
+- **Memoized LLM fixtures** regenerated for this change (assistant-toolkit, assistant-e2e,
+  crm-mailbox) are brittle and a plausible CI-failure source.
+- **Verification.** Only affected-package build/lint/tests were run locally; the full CI "Check" was
+  still pending at authoring time.
+- **`Branch` record type** does not yet enforce the core/legacy invariant (exactly one of
+  `key`/`content`); only the runtime `Branch.isCore` guard distinguishes them, pending the stage-4
+  legacy drain.

@@ -3,8 +3,9 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 
-import { type Database, Obj, Ref, Tag } from '@dxos/echo';
+import { Database, Obj, Ref, Tag } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 import { Tagging, TagIndex } from '@dxos/schema';
 
@@ -13,6 +14,9 @@ import { Tagging, TagIndex } from '@dxos/schema';
  * labels, JMAP mailbox roles + keywords), so a Gmail star, a JMAP `$flagged` keyword, and a
  * locally-toggled star resolve to the *same* {@link Tag} object (likewise inbox/sent/etc.). Custom user
  * labels/folders keep their own provider-scoped tags (`findOrCreateGmailTag`/`findOrCreateJmapTag`).
+ *
+ * `draft` is the one entry with no provider mapping: applied/removed locally at compose/send time
+ * (`DraftEmailAndOpen`, `useSendEmail`), never synced from a provider's own draft signal.
  *
  * The source is space-general (`org.dxos.tag`), not mail-specific, so the same tag identities apply to
  * any object in the space.
@@ -27,6 +31,7 @@ export const SystemTag = {
   inbox: { id: 'inbox', label: 'Inbox', hue: 'blue' },
   important: { id: 'important', label: 'Important', hue: 'orange' },
   sent: { id: 'sent', label: 'Sent', hue: 'green' },
+  draft: { id: 'draft', label: 'Draft', hue: 'yellow' },
   personal: { id: 'personal', label: 'Personal', hue: 'neutral' },
   social: { id: 'social', label: 'Social', hue: 'cyan' },
   promotions: { id: 'promotions', label: 'Promotions', hue: 'emerald' },
@@ -78,14 +83,19 @@ export const tagAtom = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string 
   return (memberId: EntityId) => TagIndex.atom(tagIndex, memberId, tagUri);
 };
 
-/** Toggles a canonical system tag on a member object, provisioning the container's tag index on first use. */
-export const toggleTag = async (
+/**
+ * Toggles a canonical system tag on a member object, provisioning the container's tag index on first
+ * use. Depends on `Database.Service` for `db` — run within a layer that provides it, or
+ * `.pipe(Effect.provide(Database.layer(db)))` from a plain `Database.Database`.
+ */
+export const toggleTag = Effect.fn('SystemTags.toggleTag')(function* (
   container: Obj.Any & TagContainer,
   // Member is tagged via the container's index (keyed by id), so an immutable snapshot works too.
   object: Obj.Any | Obj.Snapshot<Obj.Any>,
-  db: Database.Database,
   tagId: SystemTagId,
-): Promise<void> => {
+) {
+  const { db } = yield* Database.Service;
+
   // Lazily provision the tag index for containers created before the `tags` field existed.
   let index = container.tags?.target;
   if (!index) {
@@ -96,11 +106,11 @@ export const toggleTag = async (
     });
   }
 
-  const tag = await findOrCreateSystemTag(db, tagId);
+  const tag = yield* Effect.promise(() => findOrCreateSystemTag(db, tagId));
   const uri = Obj.getURI(tag).toString();
   if (Tagging.get(object, { index }).includes(uri)) {
     Tagging.unset(object, uri, { index });
   } else {
     Tagging.set(object, uri, { index });
   }
-};
+});

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -12,39 +11,16 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { type ViewStateManager, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
+import { createComment } from '@dxos/ui-editor';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
-import { CommentCapabilities, type CommentState } from '#types';
 
 import { getAnchor } from '../util';
-
-type CommentDisabledParams = {
-  stateAtom: Atom.Atom<Atom.Writable<CommentState>[]>;
-  viewState: ViewStateManager;
-  objectId: string;
-  commentsType: string;
-};
-
-/**
- * Atom family to derive whether the comment button should be disabled.
- * Uses a composite key to ensure proper caching.
- */
-const commentDisabledFamily = Atom.family(({ stateAtom, viewState, objectId, commentsType }: CommentDisabledParams) =>
-  Atom.make((get) => {
-    const stateAtoms = get(stateAtom);
-    const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
-    const toolbar = state?.toolbar ?? {};
-    const selection = get(viewState.atom(selectionAspect, objectId));
-    const anchor = getAnchor(selection);
-    const invalidSelection = !anchor;
-    const overlappingComment = toolbar[objectId];
-    return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
-  }),
-);
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
 const whenCommentableObject = NodeMatcher.whenAll(
@@ -66,7 +42,8 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
-          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          const typename = Obj.getTypename(node.data);
+          const commentConfig = typename ? getCommentConfig(typename) : undefined;
           return commentConfig ? Option.some(node) : Option.none();
         },
         connector: () =>
@@ -86,37 +63,44 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
-          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          const typename = Obj.getTypename(node.data);
+          const commentConfig = typename ? getCommentConfig(typename) : undefined;
           return commentConfig ? Option.some(node) : Option.none();
         },
-        actions: (matched, get) => {
+        actions: (matched) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
-          const stateAtom = capabilities.atom(CommentCapabilities.State);
           const viewState = capabilities.get(AttentionCapabilities.ViewState);
-          const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
-
-          const disabled = get(
-            commentDisabledFamily({
-              stateAtom,
-              viewState,
-              objectId: objectUri,
-              commentsType: commentConfig.comments,
-            }),
-          );
 
           return Effect.succeed([
             {
               id: 'comment',
               data: Effect.fnUntraced(function* () {
-                const config = getCommentConfig(Obj.getTypename(object)!)!;
+                const typename = Obj.getTypename(object);
+                const config = typename ? getCommentConfig(typename) : undefined;
+                if (!config) {
+                  return;
+                }
+
+                // Route editor-backed objects through the editor's create-comment command so the
+                // anchor snaps to the largest logical region (the diff hunk under the cursor, else
+                // the word) and the thread is branch-tagged by the editor's comment extension. The
+                // view registry is keyed by attendable id, so look it up by document id (the object
+                // URI) instead. Fall back to the raw selection for objects without a live editor.
+                const view = capabilities.getAll(MarkdownCapabilities.EditorViews)[0]?.getByDocumentId(objectUri)?.view;
+                if (view) {
+                  createComment(view);
+                  return;
+                }
+
+                // Fallback (non-editor objects): anchor to the current selection, or create an
+                // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
+                // placeholder is not a cursor range and would throw in `getAnchorLabel`.
                 const selection = viewState.get(selectionAspect, objectUri);
-                const anchor =
-                  (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
-                const name = config.getAnchorLabel?.(object, anchor);
+                const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
                 yield* Operation.invoke(CommentOperation.Create, {
-                  anchor,
-                  name,
+                  anchor: cursorAnchor ?? Date.now().toString(),
+                  name: cursorAnchor ? config.getAnchorLabel?.(object, cursorAnchor) : undefined,
                   subject: object,
                 });
               }),
@@ -124,7 +108,9 @@ export default Capability.makeModule(
                 label: ['add-comment.label', { ns: meta.profile.key }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
-                disabled,
+                // Always enabled: the create-comment command snaps to a sensible region, so a precise
+                // selection is not required. (The toolbar is disabled wholesale in read-only mode.)
+                disabled: false,
                 testId: 'comments.comment.add',
               },
             },

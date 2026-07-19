@@ -13,6 +13,7 @@ import { statSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -85,11 +86,13 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
                 },
               };
             `,
-            // `import.meta.dirname` (not `new URL('.', import.meta.url)`) so the library bundler does
-            // not mistake the `new URL(..., import.meta.url)` pattern for an asset reference and inline
-            // this module as a `data:video/mp2t;base64,…` URL — which would make `resolveDir` garbage and
-            // break resolution of the `@dxos/compute-runtime` / `@dxos/functions-runtime-cloudflare` deps.
-            resolveDir: import.meta.dirname,
+            // NOTE: Compute the module directory via `fileURLToPath`, not
+            // `new URL('.', import.meta.url)`. Vite's library-mode build treats the latter as an
+            // asset reference and base64-inlines the resolved `.ts` module as a
+            // `data:video/mp2t;base64,…` data URL, so `resolveDir` becomes garbage in `dist` and
+            // the bundler can no longer resolve `@dxos/compute-runtime` /
+            // `@dxos/functions-runtime-cloudflare`.
+            resolveDir: dirname(fileURLToPath(import.meta.url)),
           }));
         },
       },

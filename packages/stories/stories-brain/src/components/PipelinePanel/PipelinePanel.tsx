@@ -74,7 +74,7 @@ export const PipelinePanel = ({
               </Select.Content>
             </Select.Portal>
           </Select.Root>
-          <div role='none' className='grow' />
+          <div className='grow' />
           <span className='text-sm text-description tabular-nums'>{processed} processed</span>
           <IconButton
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
