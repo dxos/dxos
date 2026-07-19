@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
 
@@ -23,16 +23,16 @@ export const StorySyncPlugin = Plugin.define(
     name: 'Mailbox Sync Story',
   }),
 ).pipe(
-  AppPlugin.addOperationHandlerModule({
-    provides: [Capabilities.OperationHandler],
-    activate: () =>
+  Plugin.addLazyModule(
+    Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
         Capability.provide(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
         ),
       ]),
-  }),
+    ),
+  ),
   Plugin.make,
 );
 

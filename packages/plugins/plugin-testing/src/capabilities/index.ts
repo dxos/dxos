@@ -2,19 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit import so the emitted `.d.ts` references the package via its public alias instead of a
-// relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as Effect from 'effect/Effect';
 
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+
+import { Layout } from '#components';
 import { StorybookCapabilities } from '#types';
 
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactContext = Capability.inlineModule(
+  'storybook-layout',
+  { provides: [Capabilities.ReactContext] },
+  () =>
+    Effect.succeed([
+      Capability.provide(Capabilities.ReactContext, {
+        id: 'storybook-layout',
+        context: Layout,
+      }),
+    ]),
 );
 export const State = Capability.lazyModule(
   'State',

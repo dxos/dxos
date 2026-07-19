@@ -3,46 +3,26 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit type imports so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type LayerSpec, type OperationHandlerSet, type Skill } from '@dxos/compute';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { SpaceCapability } from '@dxos/plugin-space';
 
 import { RoutineCapabilities } from '#types';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const NavigationResolver = Capability.lazyModule(
   'NavigationResolver',
   { provides: [AppCapabilities.NavigationPathResolver] },
   () => import('./navigation-resolver'),
 );
-export const CreateObject = Capability.lazyModule(
-  'CreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const LayerSpecs = Capability.lazyModule(
   'LayerSpecs',
   { provides: [Capabilities.LayerSpec, Capabilities.TraceSink] },
   () => import('./layer-specs'),
 );
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 export const RegistrySync = Capability.lazyModule(
   'RegistrySync',
   {

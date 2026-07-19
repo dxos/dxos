@@ -3,20 +3,12 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet, Skill } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 
 import { TranscriptionCapabilities } from '#types';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const EntityLookup = Capability.lazyModule(
   'EntityLookup',
   { provides: [TranscriptionCapabilities.EntityLookup] },
@@ -37,31 +29,11 @@ export const RecordingSession = Capability.lazyModule(
   { provides: [TranscriptionCapabilities.RecordingSession] },
   () => import('./recording-session'),
 );
-export const TranscriptionDriver = Capability.lazyModule(
-  'TranscriptionDriver',
-  { provides: [Capabilities.ReactContext] },
-  () => import('./transcription-driver'),
-);
-export const SkillDefinition = Capability.lazyModule(
-  'SkillDefinition',
-  { provides: [AppCapabilities.SkillDefinition] },
-  () => import('./skill-definition'),
-);
-export const TextContent = Capability.lazyModule(
-  'TextContent',
-  { provides: [AppCapabilities.TextContent] },
-  () => import('./text-content'),
-);
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const TranscriptionDriver = AppCapability.reactContext(() => import('./transcription-driver'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const TextContent = AppCapability.textContent(() => import('./text-content'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 export const Transcriber = Capability.lazyModule(
   'Transcriber',
   {
@@ -70,8 +42,6 @@ export const Transcriber = Capability.lazyModule(
   },
   () => import('./transcriber'),
 );
-export const TranscriptionSettings = Capability.lazyModule(
-  'TranscriptionSettings',
-  { provides: [TranscriptionCapabilities.Settings, AppCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const TranscriptionSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [TranscriptionCapabilities.Settings],
+});

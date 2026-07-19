@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ProgressStatusIndicator } from '#components';
 
-export default Capability.makeModule(() =>
+export default Capability.inlineModule('ReactSurface', { provides: [Capabilities.ReactSurface] }, () =>
   Effect.succeed([
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({

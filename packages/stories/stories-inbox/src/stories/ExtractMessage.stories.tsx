@@ -10,7 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { AiService } from '@dxos/ai';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
@@ -44,9 +44,8 @@ const MockDeckOperationsPlugin = Plugin.define(
     name: 'Mock Deck Ops',
   }),
 ).pipe(
-  AppPlugin.addOperationHandlerModule({
-    provides: [Capabilities.OperationHandler],
-    activate: () =>
+  Plugin.addLazyModule(
+    Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
         Capability.provide(
           Capabilities.OperationHandler,
@@ -57,7 +56,8 @@ const MockDeckOperationsPlugin = Plugin.define(
           ),
         ),
       ]),
-  }),
+    ),
+  ),
   Plugin.make,
 );
 

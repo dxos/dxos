@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { Connector, PublisherService } from '#capabilities';
 import { meta } from '#meta';
@@ -13,10 +13,10 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 import { translations } from './translations';
 
 export const TypefullyPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({ pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' }),
+  ),
   Plugin.addLazyModule(Connector),
   Plugin.addLazyModule(PublisherService),
   Plugin.make,

@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -11,18 +11,10 @@ import { translations } from '#translations';
 import { Template } from '#types';
 
 export const TemplatePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addSchemaModule({ schema: [Template.Data] }),
-  AppPlugin.addSurfaceModule({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(AppCapability.schema([Template.Data])),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

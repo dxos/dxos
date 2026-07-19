@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
 import { DataTypes } from '@dxos/schema';
 import {
@@ -27,21 +27,11 @@ import { database, queue, space } from './commands';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  AppPlugin.addCommandModule({
-    commands: [database, queue, space],
-  }),
-  AppPlugin.addCreateObjectModule({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule({
-    schema: [
+  Plugin.addLazyModule(AppCapability.commands([database, queue, space])),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(
+    AppCapability.schema([
       ...DataTypes,
       AnchoredTo.AnchoredTo,
       Employer.Employer,
@@ -54,8 +44,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Pipeline.Pipeline,
       Tag.Tag,
       Task.Task,
-    ],
-  }),
+    ]),
+  ),
   Plugin.addLazyModule(UndoMappings),
   Plugin.addLazyModule(IdentityCreated),
   Plugin.make,

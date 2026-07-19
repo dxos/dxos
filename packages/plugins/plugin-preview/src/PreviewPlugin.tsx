@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Organization, Person } from '@dxos/types';
 
 import { PreviewPopover, ReactSurface } from '#capabilities';
@@ -11,13 +11,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule<void>({ schema: [Person.Person, Organization.Organization] }),
-  AppPlugin.addSurfaceModule<void>({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule<void>({ translations }),
+  Plugin.addLazyModule(AppCapability.schema([Person.Person, Organization.Organization])),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(PreviewPopover, { id: 'preview-popover' }),
   Plugin.make,
 );

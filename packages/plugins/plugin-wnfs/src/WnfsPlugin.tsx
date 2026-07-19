@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { BlobBackend, Dependencies } from '#capabilities';
 import { meta } from '#meta';
@@ -13,12 +13,12 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(Dependencies),
   Plugin.addLazyModule(BlobBackend),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({ pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' }),
+  ),
   Plugin.make,
 );
 

@@ -25,7 +25,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppSpace } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -89,32 +89,36 @@ const StoryGraphPlugin = () =>
       name: 'Transcription Pipeline Story Graph',
     }),
   ).pipe(
-    AppPlugin.addAppGraphModule({
-      activate: Effect.fnUntraced(function* () {
-        const capabilities = yield* Capability.Service;
-        const extensions = yield* GraphBuilder.createExtension({
-          id: 'storyDocs',
-          match: NodeMatcher.whenRoot,
-          connector: (_, get) =>
-            Effect.gen(function* () {
-              // Tolerate the teardown window when stories swap: the Client capability may already be
-              // removed while this reactive connector recomputes once more (use `getAll`, not the
-              // throwing `get`).
-              const [client] = capabilities.getAll(ClientCapabilities.Client);
-              const space = client && AppSpace.getPersonalSpace(client);
-              if (!space) {
-                return [];
-              }
+    Plugin.addLazyModule(
+      Capability.inlineModule(
+        'AppGraphBuilder',
+        { provides: [AppCapabilities.AppGraphBuilder] },
+        Effect.fnUntraced(function* () {
+          const capabilities = yield* Capability.Service;
+          const extensions = yield* GraphBuilder.createExtension({
+            id: 'storyDocs',
+            match: NodeMatcher.whenRoot,
+            connector: (_, get) =>
+              Effect.gen(function* () {
+                // Tolerate the teardown window when stories swap: the Client capability may already be
+                // removed while this reactive connector recomputes once more (use `getAll`, not the
+                // throwing `get`).
+                const [client] = capabilities.getAll(ClientCapabilities.Client);
+                const space = client && AppSpace.getPersonalSpace(client);
+                if (!space) {
+                  return [];
+                }
 
-              const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-              return docs
-                .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-                .filter(isNonNullable);
-            }),
-        });
-        return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
-      }),
-    }),
+                const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+                return docs
+                  .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
+                  .filter(isNonNullable);
+              }),
+          });
+          return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
+        }),
+      ),
+    ),
     Plugin.make,
   )();
 

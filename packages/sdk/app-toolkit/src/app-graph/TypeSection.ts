@@ -198,8 +198,10 @@ export const createTypeSectionExtension = (
  * not yet materialised in the graph — causing navigation to the custom type section
  * (including deep-links and page reloads) to silently 404.
  *
- * Register with `AppPlugin.addNavigationResolverModule`. One resolver per type is enough;
- * the capability system fans them out until one returns `Option.some`.
+ * Register with `Capability.lazyModule(name, { provides: [AppCapabilities.NavigationPathResolver] }, loader)`
+ * (the `navigationResolver` maker targets `NavigationTargetResolver`, a different capability, so it
+ * doesn't apply here). One resolver per type is enough; the capability system fans them out until one
+ * returns `Option.some`.
  *
  * Also set `targetNodeId: getSectionPath(options.db.spaceId)` in the plugin's `CreateObjectEntry`
  * so the create dialog navigates to the type section rather than the generic database section:

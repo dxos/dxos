@@ -2,17 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
   CreateObject,
   HelpState,
+  OnSpaceCreated,
   OperationHandler,
   ReactRoot,
   ReactSurface,
@@ -21,7 +18,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Support, SupportOperation, type Tour } from '#types';
+import { Support, type Tour } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -29,51 +26,25 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule<SupportPluginOptions, typeof AppGraphBuilder.requires>({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addSkillDefinitionModule<SupportPluginOptions>({
-    requires: SkillDefinition.requires,
-    provides: SkillDefinition.provides,
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addCreateObjectModule<SupportPluginOptions>({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addOperationHandlerModule<SupportPluginOptions>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule<SupportPluginOptions>({ schema: [Support.Ticket] }),
-  AppPlugin.addSurfaceModule<SupportPluginOptions>({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule<SupportPluginOptions>({ translations }),
-  Plugin.addLazyModule<SupportPluginOptions>(HelpState),
-  Plugin.addLazyModule<{ helpSteps?: Tour.Step[] }, SupportPluginOptions>(ReactRoot),
-  // Genuine runtime event: fired imperatively by `plugin-space`'s create-space operation.
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    provides: [SpaceCapabilities.OnCreateSpace],
-    activate: () =>
-      Effect.succeed([
-        Capability.provide(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(SupportOperation.OnCreateSpace, params),
-        ),
-      ]),
-  }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(AppCapability.schema([Support.Ticket])),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addLazyModule(HelpState),
+  Plugin.addLazyModule(ReactRoot),
+  Plugin.addLazyModule(OnSpaceCreated),
   Plugin.addLazyModule(SupportSettings, { id: 'settings' }),
-  AppPlugin.addPluginAssetModule<SupportPluginOptions>({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

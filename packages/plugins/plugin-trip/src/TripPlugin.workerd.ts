@@ -3,13 +3,13 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 import { Booking, Trip } from '#types';
 
 export const TripPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Trip.Trip, Booking.Booking] }),
+  Plugin.addLazyModule(AppCapability.schema([Trip.Trip, Booking.Booking])),
   Plugin.make,
 );
 

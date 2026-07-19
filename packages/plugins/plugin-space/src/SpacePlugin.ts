@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -46,33 +46,13 @@ import { type SpacePluginOptions } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  AppPlugin.addCreateObjectModule<SpacePluginOptions>({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
-    requires: NavigationHandler.requires,
-    provides: NavigationHandler.provides,
-    activate: () => NavigationHandler({ invitationProp }),
-  })),
-  AppPlugin.addNavigationResolverModule({
-    requires: NavigationResolver.requires,
-    provides: NavigationResolver.provides,
-    activate: NavigationResolver,
-  }),
-  AppPlugin.addOperationHandlerModule<SpacePluginOptions>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addReactRootModule<SpacePluginOptions>({
-    requires: ReactRoot.requires,
-    provides: ReactRoot.provides,
-    activate: ReactRoot,
-  }),
-  AppPlugin.addSchemaModule<SpacePluginOptions>({
-    schema: [
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(NavigationHandler),
+  Plugin.addLazyModule(NavigationResolver),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(ReactRoot),
+  Plugin.addLazyModule(
+    AppCapability.schema([
       ...DataTypes,
       AnchoredTo.AnchoredTo,
       Employer.Employer,
@@ -86,16 +66,12 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Project.Project,
       Tag.Tag,
       Task.Task,
-    ],
-  }),
-  AppPlugin.addSettingsModule<SpacePluginOptions>({
-    requires: SpaceSettings.requires,
-    provides: SpaceSettings.provides,
-    activate: SpaceSettings,
-  }),
-  AppPlugin.addTranslationsModule<SpacePluginOptions>({
-    translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
-  }),
+    ]),
+  ),
+  Plugin.addLazyModule(SpaceSettings),
+  Plugin.addLazyModule(
+    AppCapability.translations([...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations]),
+  ),
   Plugin.addLazyModule(SpaceState),
   Plugin.addLazyModule(ReactSurface),
   Plugin.addLazyModule(AppGraphBuilder),
@@ -103,9 +79,14 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addLazyModule(IdentityCreated),
   Plugin.addLazyModule(SpacesReady),
   Plugin.addLazyModule(Repair),
-  AppPlugin.addPluginAssetModule<SpacePluginOptions>({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

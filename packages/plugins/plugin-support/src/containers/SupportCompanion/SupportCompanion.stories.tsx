@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
@@ -28,7 +28,7 @@ const TestPluginMeta = {
   ],
 };
 const TestPlugin = Plugin.define(TestPluginMeta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Support.Ticket] }),
+  Plugin.addLazyModule(AppCapability.schema([Support.Ticket])),
   Plugin.make,
 );
 

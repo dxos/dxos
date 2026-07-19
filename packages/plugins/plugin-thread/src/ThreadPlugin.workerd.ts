@@ -3,21 +3,15 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Channel, Message, Thread } from '@dxos/types';
 
 import { ChannelBackendFeed, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule({
-    schema: [Channel.Channel, Message.Message, Thread.Thread],
-  }),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(AppCapability.schema([Channel.Channel, Message.Message, Thread.Thread])),
   Plugin.addLazyModule(ChannelBackendFeed),
   Plugin.make,
 );

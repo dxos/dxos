@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
 import { DataTypes } from '@dxos/schema';
 import {
@@ -23,13 +23,9 @@ import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const SpacePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule({
-    schema: [
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(
+    AppCapability.schema([
       ...DataTypes,
       AnchoredTo.AnchoredTo,
       Employer.Employer,
@@ -42,8 +38,8 @@ export const SpacePlugin = Plugin.define(meta).pipe(
       Pipeline.Pipeline,
       Tag.Tag,
       Task.Task,
-    ],
-  }),
+    ]),
+  ),
   Plugin.make,
 );
 

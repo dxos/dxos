@@ -3,16 +3,14 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
 import { plugin, registry } from './commands';
 
 export const RegistryPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCommandModule({
-    commands: [plugin, registry],
-  }),
+  Plugin.addLazyModule(AppCapability.commands([plugin, registry])),
   Plugin.make,
 );
 

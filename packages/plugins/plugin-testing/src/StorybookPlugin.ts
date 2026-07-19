@@ -2,13 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+import { Plugin } from '@dxos/app-framework';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-
-import { OperationHandler, State } from '#capabilities';
-import { Layout } from '#components';
+import { OperationHandler, ReactContext, State } from '#capabilities';
 import { meta } from '#meta';
 import { StorybookCapabilities } from '#types';
 
@@ -17,22 +13,8 @@ export type StorybookPluginOptions = {
 };
 
 export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
-  AppPlugin.addOperationHandlerModule<StorybookPluginOptions>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addReactContextModule<StorybookPluginOptions>({
-    requires: [],
-    provides: [Capabilities.ReactContext],
-    activate: () =>
-      Effect.succeed([
-        Capability.provide(Capabilities.ReactContext, {
-          id: 'storybook-layout',
-          context: Layout,
-        }),
-      ]),
-  }),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(ReactContext),
   Plugin.addLazyModule(State),
   Plugin.make,
 );

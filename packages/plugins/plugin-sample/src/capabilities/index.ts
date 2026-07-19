@@ -3,45 +3,22 @@
 //
 
 // Capabilities barrel with lazy-loaded modules.
-// `Capability.lazyModule()` pairs a requires/provides spec (evaluated before the module's
-// code loads) with the deferred loader; the spec drives dependency ordering, the loader
-// enables code-splitting. The string argument is a debug tag used in error messages and tracing.
+// `AppCapability.*` makers pair a capability's requires/provides spec (evaluated before the
+// module's code loads) with the deferred loader, enabling code-splitting; plugin-local
+// capabilities that have no maker use `Capability.lazyModule()` directly.
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type OperationHandlerSet } from '@dxos/compute';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { AppCapability } from '@dxos/app-toolkit';
+import { SpaceCapability } from '@dxos/plugin-space';
 
 import { SampleCapabilities } from '#types';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
-export const CreateObject = Capability.lazyModule(
-  'CreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 
-export const SampleSettings = Capability.lazyModule(
-  'SampleSettings',
-  { provides: [AppCapabilities.Settings, SampleCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const SampleSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [SampleCapabilities.Settings],
+});

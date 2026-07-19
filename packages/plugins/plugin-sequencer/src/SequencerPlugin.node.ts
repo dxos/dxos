@@ -3,13 +3,13 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 import { Score } from '#types';
 
 export const SequencerPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Score.Score] }),
+  Plugin.addLazyModule(AppCapability.schema([Score.Score])),
   Plugin.make,
 );
 

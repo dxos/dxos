@@ -9,10 +9,27 @@ import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AppPlugin } from '../../app-framework';
 import { LogOperation } from './schema';
 
 const Toolbar = Capability.lazyModule('Toolbar', { provides: [Capabilities.ReactSurface] }, () => import('./Toolbar'));
+
+const OperationHandler = Capability.inlineModule(
+  'OperationHandler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.provide(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(LogOperation, ({ message }) =>
+            Effect.sync(() => {
+              log.info(message);
+            }),
+          ),
+        ),
+      ),
+    ]),
+);
 
 const meta = Plugin.makeMeta({
   key: DXN.make('org.dxos.test.logger'),
@@ -20,22 +37,7 @@ const meta = Plugin.makeMeta({
 });
 
 export const LoggerPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
-    provides: [Capabilities.OperationHandler],
-    activate: () =>
-      Effect.succeed([
-        Capability.provide(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LogOperation, ({ message }) =>
-              Effect.sync(() => {
-                log.info(message);
-              }),
-            ),
-          ),
-        ),
-      ]),
-  }),
+  Plugin.addLazyModule(OperationHandler),
   Plugin.addLazyModule(Toolbar),
   Plugin.make,
 );

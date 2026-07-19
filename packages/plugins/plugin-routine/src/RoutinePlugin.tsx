@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
 
 import {
@@ -25,38 +25,29 @@ import { Routine } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addCreateObjectModule({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addNavigationResolverModule({
-    requires: NavigationResolver.requires,
-    provides: NavigationResolver.provides,
-    activate: NavigationResolver,
-  }),
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
-  AppPlugin.addSchemaModule({
-    schema: [Routine.Routine, Operation.PersistentOperation, Instructions.Instructions, Trigger.Trigger, Trace.Message],
-  }),
-  AppPlugin.addSurfaceModule({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(NavigationResolver),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
+  Plugin.addLazyModule(
+    AppCapability.schema([
+      Routine.Routine,
+      Operation.PersistentOperation,
+      Instructions.Instructions,
+      Trigger.Trigger,
+      Trace.Message,
+    ]),
+  ),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   // Dependency-mode: the specs resolve services (client, database, ...) lazily at
   // slice-materialisation time, so activation needs nothing — and providing
   // Capabilities.LayerSpec soft-orders this module before the process-manager snapshot.

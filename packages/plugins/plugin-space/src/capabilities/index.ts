@@ -3,21 +3,11 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { PluginManager } from '@dxos/app-framework';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Graph, GraphBuilder } from '@dxos/app-graph';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { SpaceCapabilities, type SpacePluginOptions } from '#types';
+import { SpaceCapabilities, SpaceCapability, type SpacePluginOptions } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
 
@@ -37,11 +27,7 @@ const makeCreateInvitationUrl =
     return baseUrl.toString();
   };
 
-export const CreateObject = Capability.lazyModule(
-  'CreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -62,24 +48,11 @@ export const NavigationResolver = Capability.lazyModule(
   },
   () => import('./navigation-resolver'),
 );
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactRoot = Capability.lazyModule(
-  'ReactRoot',
-  { provides: [Capabilities.ReactRoot] },
-  () => import('./react-root'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  {
-    provides: [Capabilities.ReactSurface],
-    props: (options: SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
-  },
-  () => import('./react-surface'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  props: (options: SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
+});
 export const Repair = Capability.lazyModule(
   'Repair',
   {
@@ -89,11 +62,9 @@ export const Repair = Capability.lazyModule(
   },
   () => import('./repair'),
 );
-export const SpaceSettings = Capability.lazyModule(
-  'SpaceSettings',
-  { provides: [SpaceCapabilities.Settings, AppCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [SpaceCapabilities.Settings],
+});
 export const SpacesReady = Capability.lazyModule(
   'SpacesReady',
   {
@@ -121,14 +92,10 @@ export const SpaceState = Capability.lazyModule(
   },
   () => import('./state'),
 );
-export const UndoMappings = Capability.lazyModule(
-  'UndoMappings',
-  {
-    provides: [Capabilities.UndoMapping, SpaceOperationConfig],
-    props: (options: SpacePluginOptions) => ({
-      createInvitationUrl: makeCreateInvitationUrl(options),
-      observability: options.observability,
-    }),
-  },
-  () => import('./undo-mappings'),
-);
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+  provides: [SpaceOperationConfig],
+  props: (options: SpacePluginOptions) => ({
+    createInvitationUrl: makeCreateInvitationUrl(options),
+    observability: options.observability,
+  }),
+});

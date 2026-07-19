@@ -2,20 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet, Skill } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
 
-export const SkillDefinition = Capability.lazyModule(
-  'SkillDefinition',
-  { provides: [AppCapabilities.SkillDefinition] },
-  () => import('./skill-definition'),
-);
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
