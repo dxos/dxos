@@ -9,9 +9,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { decorateMarkdown } from '../markdown';
 import { commands } from './commands';
+import { outlinerDnd } from './dnd';
 import { editor } from './editor';
 import { menu } from './menu';
-import { selectionCompartment, selectionEquals, selectionFacet } from './selection';
 import { outlinerTree, treeFacet } from './tree';
 
 // ISSUES:
@@ -40,9 +40,6 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 
-  // Selection.
-  selectionCompartment.of(selectionFacet.of([])),
-
   // State.
   outlinerTree(),
 
@@ -52,10 +49,10 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Floating menu.
   menu(),
 
-  // Drag-to-reorder items.
-  // outlinerDnd(),
+  // Block selection, drag-to-reorder, highlight, and clipboard (built on the `blocks` extensions).
+  outlinerDnd(),
 
-  // Line decorations.
+  // Current-item indicator (the selection highlight is drawn by `outlinerDnd`).
   decorations(),
 
   // Default markdown decorations.
@@ -66,7 +63,8 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
 ];
 
 /**
- * Line decorations (for border and selection).
+ * Structural row layout plus a subtle border on the current (caret) item. The selection highlight is
+ * drawn by `outlinerDnd` (the shared `blocks` layer), so this no longer renders selection.
  */
 const decorations = () => [
   ViewPlugin.fromClass(
@@ -77,26 +75,14 @@ const decorations = () => [
       }
 
       update(update: ViewUpdate) {
-        const selectionChanged = !selectionEquals(
-          update.state.facet(selectionFacet),
-          update.startState.facet(selectionFacet),
-        );
-
-        if (
-          update.focusChanged ||
-          update.docChanged ||
-          update.viewportChanged ||
-          update.selectionSet ||
-          selectionChanged
-        ) {
+        if (update.focusChanged || update.docChanged || update.viewportChanged || update.selectionSet) {
           this.updateDecorations(update.state, update.view);
         }
       }
 
       private updateDecorations(state: EditorState, { viewport: { from, to }, hasFocus }: EditorView) {
-        const selection = state.facet(selectionFacet);
         const tree = state.facet(treeFacet);
-        const current = tree.find(state.selection.ranges[state.selection.mainIndex]?.from);
+        const current = tree.find(state.selection.main.from);
         const doc = state.doc;
 
         const decorations: Range<Decoration>[] = [];
@@ -106,14 +92,13 @@ const decorations = () => [
           if (item) {
             const lineFrom = doc.lineAt(item.contentRange.from);
             const lineTo = doc.lineAt(item.contentRange.to);
-            const isSelected = selection.includes(item.index) || item === current;
             decorations.push(
               Decoration.line({
                 class: mx(
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  isSelected && (hasFocus ? 'cm-list-item-focused' : 'cm-list-item-selected'),
+                  hasFocus && item === current && 'cm-list-item-current',
                 ),
               }).range(line.from, line.from),
             );
@@ -129,40 +114,36 @@ const decorations = () => [
   ),
 
   // Theme.
-  EditorView.theme(
-    Object.assign({
-      '.cm-list-item': {
-        borderLeftWidth: '1px',
-        borderRightWidth: '1px',
-        paddingLeft: '32px',
-        borderColor: 'transparent',
-      },
-      '.cm-list-item.cm-codeblock-start': {
-        borderRadius: '0',
-      },
+  EditorView.theme({
+    '.cm-list-item': {
+      borderLeftWidth: '1px',
+      borderRightWidth: '1px',
+      paddingLeft: '32px',
+      borderColor: 'transparent',
+    },
+    '.cm-list-item.cm-codeblock-start': {
+      borderRadius: '0',
+    },
 
-      '.cm-list-item-start': {
-        borderTopWidth: '1px',
-        borderTopLeftRadius: '4px',
-        borderTopRightRadius: '4px',
-        paddingTop: '4px',
-        marginTop: '2px',
-      },
+    '.cm-list-item-start': {
+      borderTopWidth: '1px',
+      borderTopLeftRadius: '4px',
+      borderTopRightRadius: '4px',
+      paddingTop: '4px',
+      marginTop: '2px',
+    },
 
-      '.cm-list-item-end': {
-        borderBottomWidth: '1px',
-        borderBottomLeftRadius: '4px',
-        borderBottomRightRadius: '4px',
-        paddingBottom: '4px',
-        marginBottom: '2px',
-      },
+    '.cm-list-item-end': {
+      borderBottomWidth: '1px',
+      borderBottomLeftRadius: '4px',
+      borderBottomRightRadius: '4px',
+      paddingBottom: '4px',
+      marginBottom: '2px',
+    },
 
-      '.cm-list-item-focused': {
-        borderColor: 'var(--color-focus-ring-subtle)',
-      },
-      '&:focus-within .cm-list-item-selected': {
-        borderColor: 'var(--color-separator)',
-      },
-    }),
-  ),
+    // Subtle border on the item under the caret; distinct from the accent selection highlight.
+    '.cm-list-item-current': {
+      borderColor: 'var(--color-focus-ring-subtle)',
+    },
+  }),
 ];

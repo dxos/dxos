@@ -7,7 +7,7 @@ import { getIndentUnit } from '@codemirror/language';
 import { type ChangeSpec, EditorSelection, type Extension } from '@codemirror/state';
 import { type Command, type EditorView, keymap } from '@codemirror/view';
 
-import { getSelection, selectAll, selectDown, selectNone, selectUp } from './selection';
+import { selectAllItems, selectDown, selectNoneItems, selectUp } from './dnd';
 import { getRange, treeFacet } from './tree';
 
 //
@@ -15,7 +15,7 @@ import { getRange, treeFacet } from './tree';
 //
 
 export const indentItemMore: Command = (view: EditorView) => {
-  const pos = getSelection(view.state).from;
+  const pos = view.state.selection.main.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
   if (current) {
@@ -30,7 +30,7 @@ export const indentItemMore: Command = (view: EditorView) => {
 };
 
 export const indentItemLess: Command = (view: EditorView) => {
-  const pos = getSelection(view.state).from;
+  const pos = view.state.selection.main.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
   if (current) {
@@ -58,7 +58,7 @@ export const indentItemLess: Command = (view: EditorView) => {
 //
 
 export const moveItemDown: Command = (view: EditorView) => {
-  const pos = getSelection(view.state)?.from;
+  const pos = view.state.selection.main.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
   if (current && current.nextSibling) {
@@ -89,7 +89,7 @@ export const moveItemDown: Command = (view: EditorView) => {
 };
 
 export const moveItemUp: Command = (view: EditorView) => {
-  const pos = getSelection(view.state)?.from;
+  const pos = view.state.selection.main.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
   if (current && current.prevSibling) {
@@ -125,7 +125,7 @@ export const moveItemUp: Command = (view: EditorView) => {
 
 export const deleteItem: Command = (view: EditorView) => {
   const tree = view.state.facet(treeFacet);
-  const pos = getSelection(view.state).from;
+  const pos = view.state.selection.main.from;
   const current = tree.find(pos);
   if (current) {
     view.dispatch({
@@ -144,7 +144,7 @@ export const deleteItem: Command = (view: EditorView) => {
 
 export const toggleTask: Command = (view: EditorView) => {
   const tree = view.state.facet(treeFacet);
-  const pos = getSelection(view.state)?.from;
+  const pos = view.state.selection.main.from;
   const current = tree.find(pos);
   if (current) {
     const type = current.type === 'task' ? 'bullet' : 'task';
@@ -181,7 +181,7 @@ export const commands = (): Extension =>
     {
       key: 'Enter',
       shift: (view) => {
-        const pos = getSelection(view.state).from;
+        const pos = view.state.selection.main.from;
         const insert = '\n  '; // TODO(burdon): Fix parsing.
         view.dispatch({
           changes: [{ from: pos, to: pos, insert }],
@@ -199,7 +199,7 @@ export const commands = (): Extension =>
       // Jump to next item (default moves to end of currentline).
       run: (view) => {
         const tree = view.state.facet(treeFacet);
-        const item = tree.find(getSelection(view.state).from);
+        const item = tree.find(view.state.selection.main.from);
         if (
           item &&
           view.state.doc.lineAt(item.lineRange.to).number - view.state.doc.lineAt(item.lineRange.from).number === 0
@@ -222,12 +222,12 @@ export const commands = (): Extension =>
     {
       key: 'Mod-a',
       preventDefault: true,
-      run: selectAll,
+      run: selectAllItems,
     },
     {
       key: 'Escape',
       preventDefault: true,
-      run: selectNone,
+      run: selectNoneItems,
     },
     {
       key: 'ArrowUp',

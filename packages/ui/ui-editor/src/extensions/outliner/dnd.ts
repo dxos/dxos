@@ -3,11 +3,12 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { type Command, EditorView } from '@codemirror/view';
 
 import {
   type Block,
   type BlockOps,
+  blockSelectionField,
   createBlockDrag,
   createBlockSelection,
   createBlockSelectionHighlight,
@@ -17,6 +18,9 @@ import { type Item, type Tree, getRange, treeFacet } from './tree';
 
 // Narrower than the markdown block gutter — outliner items are indented and tightly packed.
 const GUTTER_CLASS = 'cm-outlinerDragGutter';
+
+// The outliner row adds `paddingTop` to its first line, so push the grip down to center on the checkbox.
+const GRIP_INSET_TOP = 4;
 
 /**
  * Flattens the tree into draggable units in document order, one per item. Each unit spans only the
@@ -46,6 +50,19 @@ const getBlocks = (state: EditorState): Block[] =>
     // The item's own lines end just before its first child (or at its line range end for a leaf).
     to: item.children.length > 0 ? item.children[0].lineRange.from - 1 : item.lineRange.to,
   }));
+
+// The range a block visually occupies for selection/drag: its whole subtree (item + descendants), so
+// selecting or dragging a parent covers its children. `getBlocks` still yields per-item own-lines.
+// Exported for tests.
+export const getExtent = (state: EditorState, block: Block): Block => {
+  const tree = state.facet(treeFacet);
+  const item = tree.find(block.from);
+  if (!item) {
+    return block;
+  }
+  const [from, to] = getRange(tree, item);
+  return { from, to };
+};
 
 /** Leading-whitespace width of the line at `pos` (indentation depth in characters). */
 const indentAt = (state: EditorState, pos: number): number => {
@@ -249,12 +266,55 @@ const outlinerBlockOps: BlockOps = {
  * extensions operate on item lines. The gutter is narrower — outliner items are indented and packed.
  */
 export const outlinerDnd = (): Extension => [
-  createBlockSelectionHighlight(getBlocks),
+  createBlockSelectionHighlight(getBlocks, getExtent),
   createBlockSelection(outlinerBlockOps),
-  createBlockDrag({ getBlocks, moveBlocks, gutterClass: GUTTER_CLASS }),
+  createBlockDrag({ getBlocks, moveBlocks, getExtent, gutterClass: GUTTER_CLASS, gripInsetTop: GRIP_INSET_TOP }),
   EditorView.theme({
     [`.${GUTTER_CLASS}`]: {
       width: '24px',
     },
   }),
 ];
+
+//
+// Selection commands over the block selection (each item's line-start anchor). Replaces the outliner's
+// former `selectionFacet`, so keyboard selection and the grip share one model.
+//
+
+const itemAnchors = (state: EditorState): number[] => flattenItems(state).map((item) => item.lineRange.from);
+
+/** Select every item; pressing again (when all are selected) clears the selection. */
+export const selectAllItems: Command = (view) => {
+  const anchors = itemAnchors(view.state);
+  const current = view.state.field(blockSelectionField, false) ?? [];
+  view.dispatch({ effects: setBlockSelection.of(current.length === anchors.length ? [] : anchors) });
+  return true;
+};
+
+/** Clear the block selection. */
+export const selectNoneItems: Command = (view) => {
+  view.dispatch({ effects: setBlockSelection.of([]) });
+  return true;
+};
+
+// Extend the block selection by one item toward `delta`, moving the caret into the target item.
+const extendSelection = (view: EditorView, delta: -1 | 1): boolean => {
+  const items = flattenItems(view.state);
+  const caret = view.state.selection.main.head;
+  const index = items.findIndex((item) => caret >= item.lineRange.from && caret <= item.lineRange.to);
+  if (index < 0) {
+    return false;
+  }
+  const target = Math.min(items.length - 1, Math.max(0, index + delta));
+  const anchors = new Set(view.state.field(blockSelectionField, false) ?? []);
+  anchors.add(items[index].lineRange.from);
+  anchors.add(items[target].lineRange.from);
+  view.dispatch({
+    selection: { anchor: items[target].contentRange.from },
+    effects: setBlockSelection.of([...anchors].sort((a, b) => a - b)),
+  });
+  return true;
+};
+
+export const selectUp: Command = (view) => extendSelection(view, -1);
+export const selectDown: Command = (view) => extendSelection(view, 1);
