@@ -10,8 +10,9 @@ import type { ComponentType } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { type Collection, type Database, type Type } from '@dxos/echo';
+import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
+import { type Text } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
 
@@ -49,6 +50,37 @@ export namespace SpaceCapabilities {
   export const EphemeralState = Capability.make<Atom.Writable<SpaceEphemeralState>>(
     `${meta.profile.key}.capability.ephemeral-state`,
   );
+
+  /** Which version of an object the local user is viewing. Never replicated. */
+  export type VersionSelection =
+    | { kind: 'current' }
+    | { kind: 'branch'; branchId: string }
+    // The branch's fork point: a read-only view of the parent content at the branch anchor (the
+    // state the branch was created from). Distinct from `branch` (the editable branch tip).
+    | { kind: 'fork'; branchId: string }
+    | { kind: 'checkpoint'; versionId: string };
+
+  export type VersioningState = {
+    /** Selection keyed by object id. Missing entry = current. */
+    selection: Record<string, VersionSelection>;
+    /** Whether the diff/compare overlay is enabled, keyed by object id. */
+    compare: Record<string, boolean>;
+  };
+
+  /** In-memory (per-session) version selection state. */
+  export const VersioningState = Capability.make<Atom.Writable<VersioningState>>(
+    `${meta.profile.key}.capability.versioning-state`,
+  );
+
+  /**
+   * Per-type opt-in to the generic history companion (checkpoints/branches timeline).
+   * `id` is the typename gating the companion; `getTarget` resolves the versioned Text root.
+   */
+  export type HistoryProvider = Readonly<{
+    id: string;
+    getTarget: (object: Obj.Unknown) => Text.Text | undefined;
+  }>;
+  export const HistoryProvider = Capability.make<HistoryProvider>(`${meta.profile.key}.capability.history-provider`);
 
   export type SettingsSection = { id: string; label: Label; position?: Position.Position };
   export const SettingsSection = Capability.make<SettingsSection>(`${meta.profile.key}.capability.settings-section`);

@@ -19,6 +19,8 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
 import { SketchBuilder } from '@dxos/plugin-sketch/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -155,6 +157,8 @@ const meta = {
             }),
         }),
 
+        // Contributes the versioning-state atom consumed by useVersioning.
+        SpacePlugin({}),
         MarkdownPlugin(),
         PreviewPlugin(),
       ],
@@ -163,7 +167,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations,
+    translations: [...translations, ...spaceTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

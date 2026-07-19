@@ -4,9 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
+import { EntityId } from '@dxos/keys';
 
-import { buildMailboxSelection, getSearchText } from './mailbox-search';
+import { buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
 
 describe('buildMailboxSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
@@ -43,5 +45,21 @@ describe('getSearchText', () => {
 
   test('undefined filter returns undefined', () => {
     expect(getSearchText(undefined)).toBeUndefined();
+  });
+});
+
+describe('buildSystemTagSelection', () => {
+  test('ANDs the message type with the resolved member ids', () => {
+    const id = EntityId.deterministic('test-message-1');
+    const selection = buildSystemTagSelection([id]);
+    expect(selection.ast).toMatchObject({
+      type: 'and',
+      filters: [{ type: 'object' }, { type: 'object', id: [id] }],
+    });
+  });
+
+  test('selects nothing when no messages are tagged yet (e.g. before first sync)', () => {
+    const selection = buildSystemTagSelection([]);
+    expect(selection.ast).toMatchObject(Filter.nothing().ast);
   });
 });

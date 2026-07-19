@@ -143,9 +143,8 @@ export const translations = [
 
         'mailboxes-section.label': 'Mailboxes',
         'all-mail.label': 'All Mail',
+        'sent.label': 'Sent',
         'drafts.label': 'Drafts',
-        'drafts.article.description': 'Draft list (coming soon).',
-        'drafts.empty.message': 'No drafts yet.',
         'subscriptions.label': 'Subscriptions',
         'subscriptions.toolbar.title': 'Subscriptions toolbar',
         'subscriptions.empty.message': 'No bulk-mail subscriptions found.',

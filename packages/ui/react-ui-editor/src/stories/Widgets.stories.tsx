@@ -176,8 +176,11 @@ const FixedHeightPreview = ({ label, dxn }: XmlWidgetProps<{ label: string; dxn:
  * Faithfully mimics a Surface-backed embed (the real plugin-markdown block): the content mounts
  * asynchronously (like a Surface resolving) and runs an inner ResizeObserver (like the sketch's
  * auto-fit) that re-lays-out whenever the container size changes — including the 0↔height blips that
- * CM's scroll-culling produces as the kept-alive node is detached and re-parented. This is the
- * differentiator from `FixedHeightPreview` (a plain, inert div that does not jump).
+ * CM's scroll-culling produces as the node is detached and re-parented.
+ *
+ * NOTE: The scroll-*jump* on large scroll deltas is NOT specific to this async variant — verified via
+ * Playwright, `FixedHeightPreview` (plain inert div) jumps identically. It is CM's height-estimate
+ * re-anchor, not the widget. See `StubWidget` and CM #1727.
  */
 const SurfaceLikePreview = ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) => {
   const height = parseBlockHeight(label) ?? 200;
