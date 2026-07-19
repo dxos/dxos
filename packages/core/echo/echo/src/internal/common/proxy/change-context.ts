@@ -124,7 +124,7 @@ export const executeChange = (
     batchEvents(() => callback(proxy));
   } finally {
     exitContext();
-    // Fire primary notification.
+    // Fire the primary notification (a real change).
     if (hasPendingNotifications(contextKey)) {
       clearPendingNotifications(contextKey);
       (eventTarget as any)[EventId]?.emit();

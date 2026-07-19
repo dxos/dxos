@@ -62,6 +62,12 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -93,6 +99,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../sdk/versioning"
     },
     {
       "path": "../../ui/lit-ui"

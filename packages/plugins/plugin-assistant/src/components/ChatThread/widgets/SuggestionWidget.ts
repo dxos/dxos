@@ -31,7 +31,7 @@ export class SuggestionWidget extends WidgetType {
           })
           .classNames(mx('dx-button gap-2 w-full overflow-hidden'))
           .append(
-            Domino.of('dx-icon' as any).attributes({
+            Domino.of('dx-icon').attributes({
               icon: 'ph--lightning--regular',
             }),
             Domino.of('span').classNames('flex-1 truncate min-w-0').text(this.text),

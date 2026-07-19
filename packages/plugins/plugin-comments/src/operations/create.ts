@@ -17,7 +17,7 @@ import { CommentOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
+    Effect.fnUntraced(function* ({ name, anchor: _anchor, subject, branch }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(CommentCapabilities.State);
       const subjectId = Obj.getURI(subject);
@@ -40,6 +40,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
         [Relation.Source]: thread,
         [Relation.Target]: subject,
         anchor: _anchor,
+        branch,
       });
 
       const state = registry.get(stateAtom);

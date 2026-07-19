@@ -3,6 +3,7 @@
 //
 
 import { Filter, QueryAST } from '@dxos/echo';
+import { type EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 /** Whether the filter AST contains a text-search node anywhere. */
@@ -46,3 +47,12 @@ export const buildMailboxSelection = (filterText: string, filter: Filter.Any | u
 export const getSearchText = (filter: Filter.Any | undefined): string | undefined => {
   return filter && findTextSearch(filter.ast)?.text;
 };
+
+/**
+ * Selects messages carrying a system tag (Inbox/Sent/Draft), given member ids already resolved from
+ * the mailbox's `TagIndex`. A bare `Filter.tag` can't do this — feed/drafts carry no `meta.tags` of
+ * their own, membership lives in `TagIndex` instead — so selection is by id. Scope (`.from(...)`) is
+ * the caller's job. An empty `ids` selects nothing (correct pre-sync/no-drafts-yet behavior).
+ */
+export const buildSystemTagSelection = (ids: readonly EntityId[]): Filter.Any =>
+  ids.length === 0 ? Filter.nothing() : Filter.and(Filter.type(Message.Message), Filter.id(...ids));

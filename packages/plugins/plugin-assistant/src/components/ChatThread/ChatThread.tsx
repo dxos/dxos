@@ -4,8 +4,8 @@
 
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Identity } from '@dxos/halo';
 import { PublicKey } from '@dxos/keys';
-import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, setRef } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
@@ -25,7 +25,7 @@ const defaultOptions: MarkdownStreamProps['options'] = {
 
 export type ChatThreadProps = ThemedClassName<
   {
-    identity?: Identity;
+    identity?: Identity.Info;
     messages?: Message.Message[];
     error?: Error;
     viewType?: Assistant.ChatView;
@@ -59,7 +59,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     );
 
     const userHue = useMemo(
-      () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
+      () =>
+        identity?.data?.hue ||
+        keyToFallback(identity?.identityKey ? PublicKey.fromHex(identity.identityKey) : PublicKey.random()).hue,
       [identity],
     );
 

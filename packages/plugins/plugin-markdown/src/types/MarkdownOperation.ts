@@ -98,7 +98,7 @@ export const ScrollToAnchor = Operation.make({
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the markdown editor.' }),
     cursor: Schema.String.annotations({ description: 'Cursor position to scroll to.' }),
-    ref: Schema.optional(Schema.String.annotations({ description: 'Reference ID (e.g. thread ID).' })),
+    id: Schema.optional(Schema.String.annotations({ description: 'Reference ID (e.g. thread ID).' })),
   }),
   output: Schema.Void,
 });
@@ -138,7 +138,7 @@ export const CreateBranch = Operation.make({
     name: 'Create Branch',
     description: trim`
       Creates a draft branch of the document. Edit the branch content with the update operation
-      using the returned branch document id, then merge it back for review.
+      by passing the returned branch id as branchId, then merge it back for review.
     `,
     icon: 'ph--git-branch--regular',
   },
@@ -210,6 +210,12 @@ export const Update = Operation.make({
       description:
         'The edits to apply to the document. Each edit finds oldString and replaces it with newString; omit oldString to append newString to the end.',
     }),
+    branchId: Schema.optional(
+      Schema.String.annotations({
+        description:
+          'Apply the edits to this draft branch (the id returned by createBranch) instead of the live document.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     newContent: Schema.String,

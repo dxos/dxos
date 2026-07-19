@@ -9,6 +9,7 @@ import {
   type DocumentId,
   type DocumentQuery,
   interpretAsDocumentId,
+  isValidAutomergeUrl,
 } from '@automerge/automerge-repo';
 
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -18,14 +19,30 @@ import { type DocMetrics, measureDocMetrics } from './automerge-metrics';
 
 export class DatabaseRoot {
   static mapLinks(doc: DocHandle<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
-    doc.change((d) => {
-      if (!d.links) {
-        return;
+    const remap = (url: string): string | undefined => {
+      if (!isValidAutomergeUrl(url)) {
+        return undefined;
       }
-      for (const [key, value] of Object.entries(d.links)) {
-        const documentId = interpretAsDocumentId(value.toString() as any);
-        if (mapping[documentId]) {
-          d.links[key] = `automerge:${mapping[documentId]}`;
+      const documentId = interpretAsDocumentId(url);
+      return mapping[documentId] ? `automerge:${mapping[documentId]}` : undefined;
+    };
+    doc.change((draft) => {
+      for (const [key, value] of Object.entries(draft.links ?? {})) {
+        const mapped = remap(value.toString());
+        if (mapped && draft.links) {
+          draft.links[key] = mapped;
+        }
+      }
+      // Branch documents live in the `branches` registry, not `links`, so they must be remapped here
+      // too — otherwise an imported/copied space's branches point at the source space's documents.
+      for (const byName of Object.values(draft.branches ?? {})) {
+        for (const record of Object.values(byName)) {
+          for (const [objectId, value] of Object.entries(record.members ?? {})) {
+            const mapped = remap(value.toString());
+            if (mapped) {
+              record.members[objectId] = mapped;
+            }
+          }
         }
       }
     });
@@ -99,8 +116,12 @@ export class DatabaseRoot {
     const doc = this.doc();
     invariant(doc);
 
-    // .toString() to handle RawString.
-    return Object.values(doc.links ?? {}).map((s) => s.toString()) as AutomergeUrl[];
+    // .toString() to handle RawString. Branch documents are referenced via the `branches` registry
+    // (not `links`), so they must be collected here too in order to replicate.
+    return [
+      ...Object.values(doc.links ?? {}).map((s) => s.toString()),
+      ...DatabaseDirectory.getAllBranchDocUrls(doc),
+    ] as AutomergeUrl[];
   }
 
   measureMetrics(): DocMetrics | null {
