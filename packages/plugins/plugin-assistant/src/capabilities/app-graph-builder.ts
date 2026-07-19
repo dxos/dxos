@@ -206,6 +206,9 @@ export default Capability.makeModule(
           Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
         ),
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+        // Set explicitly: the Chat schema lives in @dxos/assistant-toolkit (bundled for
+        // workerd), which must not import the UrlPrefixAnnotation from @dxos/app-toolkit.
+        urlKey: 'chat',
       }),
 
       // Create-chat action on the Chats section header.

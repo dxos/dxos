@@ -7,7 +7,6 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
 import { Harness } from '@dxos/assistant';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
@@ -36,7 +35,6 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
       icon: 'ph--sparkle--regular',
       hue: 'amber',
     }),
-    AppAnnotation.UrlPrefixAnnotation.set('chat'),
   ),
 ) {}
 
