@@ -126,36 +126,26 @@ export const ServiceContextLayer = (
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
-> => {
-  const { edgeConnection, edgeHttpClient } = options;
-
-  // Non-edge: just the core.
-  if (!edgeConnection || !edgeHttpClient) {
-    return coreLayers(options);
-  }
-
-  // Edge: the feed-syncer sits above the core for its `EchoHostService` requirement. The edge
-  // replicator sits below the core — it needs only the edge inputs — so `DataSpaceManagerLayer`
-  // (inside the core) resolves `EdgeAutomergeReplicatorService` via `serviceOption`, exactly the
-  // way it resolves the mesh replicator. Edge inputs are provided at the bottom.
-  return feedSyncerLayer.pipe(
-    Layer.provideMerge(coreLayers(options)),
-    Layer.provideMerge(edgeReplicatorLayer(options)),
-    Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient)),
-  );
-};
-
-/**
- * Composes the non-optional core layers into a single stack.
- */
-const coreLayers = (options: ServiceContextLayerOptions) =>
-  CrossDeviceSpaceSynchronizerLayer.pipe(
+  | SwarmNetworkManagerService
+  | SignalManagerService
+  | SqlClient.SqlClient
+  | SqlTransactionTag
+  | EdgeConnectionService
+  | EdgeHttpClientService
+> =>
+  Layer.empty.pipe(
+    Layer.provide(
+      FeedSyncerLayer({
+        peerId: '',
+        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+      }),
+    ),
+    Layer.provideMerge(CrossDeviceSpaceSynchronizerLayer),
     Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
     Layer.provideMerge(identityProviderLayer),
-    Layer.provideMerge(meshReplicatorLayer(options)),
+    Layer.provideMerge(options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer()),
     Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
     Layer.provideMerge(InvitationsManagerLayer()),
     Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
@@ -169,47 +159,14 @@ const coreLayers = (options: ServiceContextLayerOptions) =>
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
     Layer.provideMerge(storageLayer),
+    Layer.provideMerge(
+      options.edgeFeatures?.subductionReplicator
+        ? EchoEdgeSubductionReplicatorLayer()
+        : options.edgeFeatures?.echoReplicator
+          ? EchoEdgeReplicatorLayer()
+          : Layer.empty,
+    ),
   );
-
-/**
- * Optional mesh replicator: read via `serviceOption`, so its `ROut` is hidden (`Layer<never>`) —
- * absence when p2p is disabled is modelled by not providing it, not by a null value.
- */
-const meshReplicatorLayer = (options: ServiceContextLayerOptions): Layer.Layer<never, never, never> =>
-  options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer();
-
-/**
- * Optional edge replicator (subduction / echo / none) — `ROut` hidden, read via `serviceOption`.
- */
-const edgeReplicatorLayer = (
-  options: ServiceContextLayerOptions,
-): Layer.Layer<never, never, EdgeConnectionService | EdgeHttpClientService> =>
-  options.edgeFeatures?.subductionReplicator
-    ? EchoEdgeSubductionReplicatorLayer()
-    : options.edgeFeatures?.echoReplicator
-      ? EchoEdgeReplicatorLayer()
-      : Layer.empty;
-
-/**
- * Provides the edge inputs internally so they never appear in the stack's declared requirements.
- */
-const edgeInputLayer = (
-  edgeConnection: EdgeConnection,
-  edgeHttpClient: EdgeHttpClient,
-): Layer.Layer<EdgeConnectionService | EdgeHttpClientService> =>
-  Layer.mergeAll(
-    Layer.succeed(EdgeConnectionService, edgeConnection),
-    Layer.succeed(EdgeHttpClientService, edgeHttpClient),
-  );
-
-/**
- * Optional feed syncer (only wired into the stack when edge is configured).
- */
-const feedSyncerLayer = FeedSyncerLayer({
-  peerId: '',
-  syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
-});
-
 /**
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
  */
