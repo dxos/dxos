@@ -11,6 +11,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import {
+  type Credential,
   FunctionError,
   Header,
   InvalidOperationInputError,
@@ -29,8 +30,20 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { type FunctionServices } from './sdk';
-import { FunctionInvocationService, configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
+import { configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
+
+/**
+ * Services provided to invoked function handlers in the EDGE runtime.
+ * Handlers reach other operations via `Operation.Service` (backed by the EDGE
+ * `FunctionsService`); remote dispatch is keyed by the operation's `deployedId`.
+ */
+type EdgeFunctionServices =
+  | AiService.AiService
+  | Credential.CredentialsService
+  | Database.Service
+  | Trace.TraceService
+  | Operation.Service
+  | Registry.Service;
 
 export interface FunctionWrappingOptions {
   /**
@@ -106,7 +119,7 @@ export const wrapFunctionHandler = (
 
         if (Effect.isEffect(result)) {
           result = await EffectEx.runAndForwardErrors(
-            (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
+            (result as Effect.Effect<unknown, unknown, EdgeFunctionServices>).pipe(
               Effect.orDie,
               Effect.provide(funcContext.createLayer()),
             ),
@@ -188,7 +201,7 @@ class FunctionContext extends Resource {
     await this.client?.close();
   }
 
-  createLayer(): Layer.Layer<FunctionServices> {
+  createLayer(): Layer.Layer<EdgeFunctionServices> {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
@@ -230,11 +243,6 @@ class FunctionContext extends Resource {
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
       registryLayer,
-
-      // `FunctionInvocationService` is deprecated; new code should yield `Operation.Service`.
-      // The cloudflare wrapper provides only the unavailable layer to satisfy the (still-present)
-      // type union — handlers that yield it will die at invocation time.
-      FunctionInvocationService.layerNotAvailable,
     );
   }
 }

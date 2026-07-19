@@ -3,6 +3,6 @@ language: typescript
 tags:
   - ts-compile
 tasks:
-  compile:
+  build:
     deps:
-      - dx-build:compile
+      - dx-build:build

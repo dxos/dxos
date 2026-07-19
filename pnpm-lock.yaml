@@ -17447,6 +17447,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.2(effect@3.21.4)
