@@ -63,6 +63,55 @@ Markdown blocks pass no hook (extent = own range, unchanged). The outliner passe
 the subtree mapper. This keeps `blocks` generic and leaves markdown behavior
 byte-for-byte identical.
 
+## Drag reindent — drop level rules
+
+Dragging an item moves its whole subtree (`getExtent`). On drop the subtree is
+**re-indented** to a target level; the drag preview shows that level live so the
+drop is predictable. The subtlety is at a **branch boundary** — dropping into the
+gap before an item that is _shallower_ than the item above the gap. Example:
+
+```
+- A
+  - B
+  - C
+- D
+```
+
+Dropping `B` into the gap between `C` and `D` is ambiguous:
+
+- **(i)** `B` stays a child of `A` (a sibling of `C`), or
+- **(ii)** `B` becomes a sibling of `A` (aligned with `D`).
+
+### Rule
+
+For a drop into the slot before `target` (the item at the drop index), let
+`above` be the last item before the slot that is not part of the dragged subtree,
+and `unit = getIndentUnit`. Working in leading-space counts:
+
+- `min = indent(target)` — shallowest: a sibling of `target` (leave the branch).
+- `max = indent(above) + unit` — deepest: a child of `above`.
+- **default (i)** `stay = clamp(indent(source), min, max)` — the dragged item keeps
+  its **own** level (staying in its branch), clamped so it is at most a child of
+  `above` and at least a sibling of `target`.
+- **(ii)** applies only at a real branch boundary (`min < stay`) **and** only while
+  the pointer is vertically **over the `target` row** (`pointerY ≥ target.top`);
+  then the level drops to `min` (a sibling of `target`).
+
+So the default is always (i) — the dragged item keeps its place in the current
+branch — and it outdents to (ii) only when the pointer moves down onto the
+shallower next item (`D`). At the end of the document, or with no `target`, the
+level stays at `above`'s branch.
+
+### Preview + wiring
+
+`blocks/drag.ts` stays hierarchy-agnostic. The outliner supplies an optional
+`getDropIndent(view, sourceIndices, dropIndex, pointerY)` hook returning
+`{ indent, offset }` — the target leading-space count and the horizontal pixel
+offset for the preview (`(indent − sourceIndent) / unit × bulletListIndentationWidth`).
+The drag plugin shifts the floating preview by `offset` each pointer move and, on
+drop, passes `indent` to `moveBlocks` so the committed re-indent matches the
+preview. Markdown blocks pass no hook (no reindent, preview unshifted).
+
 ## Selection (single model)
 
 - `blockSelectionField` is the only selection state.

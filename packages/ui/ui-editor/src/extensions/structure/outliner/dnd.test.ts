@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import { join } from '../../../util';
 import { createMarkdownExtensions } from '../../language/markdown';
 import { blockSelectionField } from '../blocks';
-import { getExtent, moveBlocks, replaceBlocks, selectAllItems, selectDown, selectUp } from './dnd';
+import { getDropIndent, getExtent, moveBlocks, replaceBlocks, selectAllItems, selectDown, selectUp } from './dnd';
 import { outlinerTree, treeFacet } from './tree';
 
 const LINES = ['- [ ] 1', '- [ ] 2', '  - [ ] 2.1', '  - [ ] 2.2', '    - 2.2.1', '  - [ ] 2.3', '- [ ] 3'];
@@ -95,6 +95,46 @@ describe('outliner blocks', () => {
       selectUp(view);
       // Extending back up adds the item above the caret's current item.
       expect(view.state.field(blockSelectionField)).to.include(getPos(0));
+    } finally {
+      view.destroy();
+    }
+  });
+});
+
+// See DESIGN "Drag reindent — drop level rules". The live `getDropIndent` (pointer-driven) is verified in
+// storybook; here we lock in the drop application: `moveBlocks(view, sources, dropIndex, indent)` re-roots
+// the moved subtree to the given level. Doc:  - A / (  - B) / (  - C) / - D.
+describe('outliner drag reindent', () => {
+  const BRANCH = ['- A', '  - B', '  - C', '- D'];
+  const branchView = (fn: (view: EditorView) => void): string => {
+    const view = new EditorView({
+      state: EditorState.create({ doc: join(...BRANCH), extensions }),
+    });
+    try {
+      fn(view);
+      return view.state.doc.toString();
+    } finally {
+      view.destroy();
+    }
+  };
+
+  test('(i) default — B dropped before D keeps its level (a child of A)', ({ expect }) => {
+    // indent 2 = a sibling of C = a child of A.
+    expect(branchView((view) => moveBlocks(view, [1], 3, 2))).to.eq(join('- A', '  - C', '  - B', '- D'));
+  });
+
+  test('(ii) outdent — B dropped before D at level 0 becomes a sibling of A', ({ expect }) => {
+    expect(branchView((view) => moveBlocks(view, [1], 3, 0))).to.eq(join('- A', '  - C', '- B', '- D'));
+  });
+
+  test('getDropIndent defaults to (i) — keeps the item in its branch, no preview shift', ({ expect }) => {
+    const view = new EditorView({ state: EditorState.create({ doc: join(...BRANCH), extensions }) });
+    try {
+      // Drop B (idx 1) before D (idx 3) with the pointer well above D's row (not over it): stays a child
+      // of A (indent 2, its own level), so the preview is not shifted.
+      expect(getDropIndent(view, [1], 3, -1000)).to.deep.eq({ indent: 2, offset: 0 });
+      // Multi-item drags do not single-re-root.
+      expect(getDropIndent(view, [1, 2], 3, -1000)).to.eq(null);
     } finally {
       view.destroy();
     }

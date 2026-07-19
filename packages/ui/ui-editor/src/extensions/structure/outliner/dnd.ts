@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { getIndentUnit } from '@codemirror/language';
 import { type EditorState, type Extension } from '@codemirror/state';
 import { type Command, EditorView } from '@codemirror/view';
 
+import { bulletListIndentationWidth } from '../../language/markdown/styles';
 import {
   type Block,
   type BlockOps,
@@ -64,6 +66,59 @@ const indentAt = (state: EditorState, pos: number): number => {
 };
 
 /**
+ * Resolves the drop indentation for a single-item drag (see DESIGN "Drag reindent — drop level rules").
+ * The dragged subtree stays in the branch of the item above the drop slot by default, outdenting to a
+ * sibling of the (shallower) drop target only while the pointer is over that target's row. Returns the
+ * target leading-space count and the horizontal pixel offset that previews it. Exported for tests.
+ */
+export const getDropIndent = (
+  view: EditorView,
+  sourceIndices: number[],
+  dropIndex: number,
+  pointerY: number,
+): { indent: number; offset: number } | null => {
+  // Multi-item group moves keep their own relative indentation (no single re-root).
+  if (sourceIndices.length !== 1) {
+    return null;
+  }
+
+  const { state } = view;
+  const items = flattenItems(state);
+  const count = items.length;
+  const unit = getIndentUnit(state);
+  const sourceIndent = indentAt(state, items[sourceIndices[0]].lineRange.from);
+
+  // The item directly above the drop slot, skipping the dragged item.
+  const sources = new Set(sourceIndices);
+  let aboveIndex = dropIndex - 1;
+  while (aboveIndex >= 0 && sources.has(aboveIndex)) {
+    aboveIndex--;
+  }
+  const above = aboveIndex >= 0 ? items[aboveIndex] : null;
+  const target = dropIndex < count ? items[dropIndex] : null;
+
+  const aboveIndent = above ? indentAt(state, above.lineRange.from) : 0;
+  // Valid range for the slot: a sibling of the target (shallowest) up to a child of the item above.
+  const minIndent = target ? indentAt(state, target.lineRange.from) : 0;
+  const maxIndent = above ? aboveIndent + unit : minIndent;
+  const clamp = (value: number) => Math.max(minIndent, Math.min(maxIndent, value));
+
+  // Default: keep the dragged item at its own level (staying in its branch), clamped to the slot's range.
+  let indent = clamp(sourceIndent);
+  // Outdent to a sibling of the target only at a real branch boundary and while over the target row.
+  if (target && minIndent < indent) {
+    const top = view.coordsAtPos(target.lineRange.from)?.top;
+    if (top != null && pointerY >= top) {
+      indent = minIndent;
+    }
+  }
+
+  // Preview offset: one indentation width per indent unit of delta from the source's own indent.
+  const offset = ((indent - sourceIndent) / unit) * bulletListIndentationWidth;
+  return { indent, offset };
+};
+
+/**
  * Re-roots `text` (a moved subtree) from `fromIndent` to `toIndent` by shifting every line's leading
  * whitespace, preserving the subtree's internal relative indentation. Keeps the moved item valid at
  * its new depth (e.g. dragging a nested task to the top level).
@@ -88,7 +143,7 @@ const reindent = (text: string, fromIndent: number, toIndent: number): string =>
  * end of the document when `dropIndex === items.length`. Expressed as a minimal delete + insert so it
  * is a single undo step and syncs as a small edit.
  */
-const moveItem = (view: EditorView, sourceIndex: number, dropIndex: number): void => {
+const moveItem = (view: EditorView, sourceIndex: number, dropIndex: number, indent?: number): void => {
   const { state } = view;
   const tree: Tree = state.facet(treeFacet);
   const items = flattenItems(state);
@@ -108,7 +163,8 @@ const moveItem = (view: EditorView, sourceIndex: number, dropIndex: number): voi
   }
 
   const sourceIndent = indentAt(state, from);
-  const targetIndent = dropIndex < count ? indentAt(state, items[dropIndex].lineRange.from) : 0;
+  // The drop level resolved live during the drag (`getDropIndent`), else the drop-target's own indent.
+  const targetIndent = indent ?? (dropIndex < count ? indentAt(state, items[dropIndex].lineRange.from) : 0);
   const text = reindent(state.doc.sliceString(from, to), sourceIndent, targetIndent);
 
   // Remove the subtree together with one adjacent newline so no blank line is orphaned.
@@ -176,7 +232,7 @@ const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): {
  * best-effort for multi-selection reorder).
  */
 // Exported for tests (the drag path calls this via `outlinerBlockOps`).
-export const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number): void => {
+export const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number, indent?: number): void => {
   const { state } = view;
   const items = flattenItems(state);
   const count = items.length;
@@ -185,7 +241,8 @@ export const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex:
     return;
   }
   if (sources.length === 1) {
-    moveItem(view, sources[0], dropIndex);
+    // Single-item drags re-root the whole subtree to the drag's resolved drop level (`getDropIndent`).
+    moveItem(view, sources[0], dropIndex, indent);
     return;
   }
 
@@ -265,7 +322,7 @@ export const outlinerDnd = (): Extension => [
   // The selection highlight is drawn by `outliner.ts` as a line decoration (aligned to the actual rows);
   // the `blocks` RectangleMarker layer is skipped here because it drifts against the outliner's row CSS.
   createBlockSelection(outlinerBlockOps),
-  createBlockDrag({ getBlocks, moveBlocks, getExtent, keepTrailingBreak: true }),
+  createBlockDrag({ getBlocks, moveBlocks, getExtent, keepTrailingBreak: true, getDropIndent }),
 ];
 
 //

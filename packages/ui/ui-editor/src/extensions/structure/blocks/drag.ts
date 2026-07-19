@@ -18,9 +18,22 @@ export type BlockDragOptions = {
   getBlocks: (state: EditorState) => Block[];
   /**
    * Moves the blocks at `sourceIndices` to the slot before `dropIndex` (the end of the document when
-   * `dropIndex === blocks.length`), preserving their relative order, as a single edit.
+   * `dropIndex === blocks.length`), preserving their relative order, as a single edit. `indent` (from
+   * `getDropIndent`, when provided) is the leading-space count the moved block(s) should re-root to.
    */
-  moveBlocks: (view: EditorView, sourceIndices: number[], dropIndex: number) => void;
+  moveBlocks: (view: EditorView, sourceIndices: number[], dropIndex: number, indent?: number) => void;
+  /**
+   * Resolves the drop target's indentation live during a drag: the leading-space count the dragged block(s)
+   * would re-root to at `dropIndex` for the current `pointerY`, plus the horizontal pixel `offset` to shift
+   * the preview so it previews that level. Omit for blocks whose drop never re-indents (markdown). The
+   * outliner uses it to keep an item in its branch vs. outdenting it to a sibling of an ancestor.
+   */
+  getDropIndent?: (
+    view: EditorView,
+    sourceIndices: number[],
+    dropIndex: number,
+    pointerY: number,
+  ) => { indent: number; offset: number } | null;
   /**
    * Pin the drag preview to the block's left edge so it only tracks vertically (default `true`).
    * When `false`, the preview follows the pointer on both axes.
@@ -254,6 +267,7 @@ const createDragPlugin = (
   clampX: boolean,
   getExtent?: BlockExtent,
   keepTrailingBreak = false,
+  getDropIndent?: BlockDragOptions['getDropIndent'],
 ) =>
   ViewPlugin.fromClass(
     class {
@@ -263,6 +277,9 @@ const createDragPlugin = (
       // Active drag state (null until a press crosses the drag threshold).
       #sourceIndices: number[] | null = null;
       #dropIndex: number | null = null;
+      // Resolved drop indentation for the current pointer (from `getDropIndent`), or null when the block
+      // kind does not re-indent on drop. `offset` shifts the preview to preview the target level.
+      #dropIndent: { indent: number; offset: number } | null = null;
       #collapseHeights: number[] = [];
       #placeholderKey: string | null = null;
       #preview: HTMLElement | null = null;
@@ -422,6 +439,7 @@ const createDragPlugin = (
         this.#blockRect = null;
         this.#sourceIndices = null;
         this.#dropIndex = null;
+        this.#dropIndent = null;
         this.#lastPointer = null;
       }
 
@@ -571,7 +589,10 @@ const createDragPlugin = (
       }
 
       #positionPreview(clientX: number, clientY: number) {
-        const dx = clampX ? 0 : clientX - this.#grabX;
+        // Preview the target indent level (from `getDropIndent`) by shifting the preview horizontally,
+        // even when X is otherwise clamped — this is the live drop-level indicator.
+        const indentOffset = this.#dropIndent?.offset ?? 0;
+        const dx = (clampX ? 0 : clientX - this.#grabX) + indentOffset;
         const dy = clientY - this.#grabY;
         if (this.#preview && this.#previewOrigin && this.#blockRect) {
           const left = this.#blockRect.left + dx - this.#previewOrigin.left;
@@ -612,10 +633,12 @@ const createDragPlugin = (
       };
 
       #updateFromPointer() {
-        if (!this.#lastPointer) {
+        if (!this.#lastPointer || this.#sourceIndices == null) {
           return;
         }
         this.#dropIndex = this.#dropIndexAt(this.#lastPointer.clientY);
+        this.#dropIndent =
+          getDropIndent?.(this.view, this.#sourceIndices, this.#dropIndex, this.#lastPointer.clientY) ?? null;
         this.#updateDragDeco(this.#dropIndex);
         this.#positionPreview(this.#lastPointer.clientX, this.#lastPointer.clientY);
       }
@@ -655,9 +678,10 @@ const createDragPlugin = (
       #onUp = () => {
         const sources = this.#sourceIndices;
         const drop = this.#dropIndex;
+        const indent = this.#dropIndent?.indent;
         this.#stop();
         if (sources != null && drop != null) {
-          moveBlocks(this.view, sources, drop);
+          moveBlocks(this.view, sources, drop, indent);
         }
       };
 
@@ -785,8 +809,9 @@ export const createBlockDrag = ({
   clampX = true,
   getExtent,
   keepTrailingBreak = false,
+  getDropIndent,
 }: BlockDragOptions): Extension => {
-  const dragPlugin = createDragPlugin(getBlocks, moveBlocks, clampX, getExtent, keepTrailingBreak);
+  const dragPlugin = createDragPlugin(getBlocks, moveBlocks, clampX, getExtent, keepTrailingBreak, getDropIndent);
   return [
     dragTheme,
     dragDecoField,
