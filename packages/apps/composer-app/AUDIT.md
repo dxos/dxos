@@ -954,3 +954,71 @@ inner-loop developer experience.
 - Shared `cacheDir` across worktrees — useful given how many `claude/<*>`
   worktrees exist on this machine, but cache-invalidation correctness
   needs review before flipping.
+
+## 12. Capability-activation module audit — deferral opportunities (2026-07-19)
+
+After the capability-dependency activation refactor (multi-default arity, opaque
+`Capability.Module<Options>`, `activatesOn`/`props` declared at the authoring site), the
+entire module population is uniform and auditable in one probe:
+`globalThis.composer.manager.getModules()` on a booted dev instance. Snapshot (dev boot,
+`failed: []`, 432 modules; full lists in
+[`.agents/projects/app-framework-capability-activation/AUDIT-modules.md`](../../../.agents/projects/app-framework-capability-activation/AUDIT-modules.md)):
+
+| Population                                                                   | Count |
+| ---------------------------------------------------------------------------- | ----: |
+| Total modules                                                                |   432 |
+| Dependency-mode                                                              |   422 |
+| — startup roots (no `requires`)                                              |   359 |
+| — of which chunk-bearing (lazy `import()` at boot)                           |   234 |
+| — of which value-only (translations/schema/pluginAsset, data in entry chunk) |   122 |
+| Event-mode (`activatesOn`)                                                   |    10 |
+| No `provides` (pure consumers / side effects)                                |    22 |
+
+Startup roots by provided capability: translations 50, ReactSurface 46,
+OperationHandler 38, PluginAsset 38, Schema 34, CreateObjectEntry 26, AppGraphBuilder 20,
+Settings 17, SkillDefinition 17, tail ~70. Only 5 production activation events exist
+(`Startup`, `SpacesReady`, `IdentityCreated`, `SpaceCreated`, `TypeAdded`, plus the
+lazily-fired `script.SetupCompiler`); 4 fire in a normal boot.
+
+**Structural findings**
+
+1. Nothing `requires` `Capabilities.ReactSurface` or `AppCapabilities.AppGraphBuilder` at
+   startup — those 66 providers sit on the critical path only because dependency-mode
+   roots auto-activate. Both capabilities are consumed reactively (live `Contributions`
+   atoms — late providers pop in), so deferring them is an activation-policy change, not
+   a consumer refactor.
+2. `Capabilities.OperationHandler` (38 providers) and `AppCapabilities.SkillDefinition`
+   (17) are pinned to startup by three eager barrier consumers —
+   `routine.RegistrySync`, `deck.NotificationTracker`, `processManager.ProcessManager` —
+   which topological ordering forces to wait for every provider.
+3. `table.on-type-added` (event-mode on `SpaceEvents.TypeAdded`) is the working precedent
+   for per-type deferral; note `TypeAdded` only fires on add operations
+   (`plugin-space/src/operations/add-type.ts`), not for types already present at boot.
+
+**Deferral plan (tiered)**
+
+1. **Post-paint batch (cheapest).** Add a framework `AfterStartup` event fired by
+   `useApp` after first paint/idle; flip cold providers onto it (SkillDefinition 17,
+   CreateObjectEntry 26, non-shell surfaces, PluginAsset if chunked). Each flip is one
+   `activatesOn:` line in the module's maker options. Improves TTI without changing
+   total work.
+2. **Type-presence gating for content plugins (biggest win).** ~26 content-type plugins
+   contribute surface + graph-builder + operation-handler + create-object chunks needed
+   only when a document of that type exists/opens. Requires a companion event fired by
+   plugin-space when enumerating types in ready spaces (TypeAdded does not cover
+   pre-existing data) and a surface-miss placeholder for deck-restored planks.
+3. **On-demand pull for operation handlers.** Extend the operation invoker to
+   pull-and-await an unresolved handler's provider (the manager already has
+   `_pullDependencyProviders`). Prerequisite: move `RegistrySync` and
+   `NotificationTracker` to event-mode on `SpacesReady`; audit whether
+   `ProcessManager`'s one-shot `LayerSpec` snapshot genuinely needs eager collection.
+4. **Leave at startup:** Schema (must precede ECHO materialization of existing objects;
+   value-only anyway), translations (no chunk to save; deferral risks untranslated-key
+   flashes), Settings (their atoms are read by sibling modules — defer only per-plugin
+   with tier 2).
+
+Rough sizing: tiers 1–3 remove ~130 of the 234 chunk-bearing startup activations from
+the critical path. Before implementing, extend the §2 profiler to record per-module
+activation timing in the startup pass so flips are ordered by measured cost — the
+1,128–1,141 ms `AppGraphBuilder` cluster in §0 suggests fan-out concurrency, not
+per-module weight, may dominate some of it.
