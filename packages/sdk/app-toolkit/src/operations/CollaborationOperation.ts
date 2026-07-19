@@ -52,3 +52,25 @@ export const AcceptChange = Operation.make({
   }),
   output: Schema.Void,
 });
+
+/**
+ * Reject an individual change from a branch: revert the hunk at `anchor` (a range in the base
+ * subject) on the author's `branch` back to the base text, so the suggestion disappears. The reject
+ * counterpart to {@link AcceptChange} — accept splices the branch's version into the base, reject
+ * splices the base back into the branch.
+ */
+export const RejectChange = Operation.make({
+  meta: {
+    key: DXN.make(`${COLLABORATION_OPERATION}.rejectChange`),
+    name: 'Reject Change',
+    description: 'Reject an individual change from a branch.',
+    icon: 'ph--x--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    subject: Schema.Any,
+    anchor: Schema.String,
+    branch: Schema.String,
+  }),
+  output: Schema.Void,
+});

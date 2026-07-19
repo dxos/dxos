@@ -337,7 +337,7 @@ Foundation: make the existing single-branch accept flow durable-symmetric and un
 #### Phase 3 — multi-source overlay compositor + grouping (`@dxos/ui-editor/review`)
 
 - **`suggestions({ base, sources })` extension** generalizing `suggestChanges`: `sources:
-  Array<{ author, colour, content }>`. Per source compute `diffHunks(base, content)`, tag each hunk
+Array<{ author, colour, content }>`. Per source compute `diffHunks(base, content)`, tag each hunk
   with author/colour, and compose one decoration set — overlapping hunks stack deterministically
   (offset, then author). `suggestChanges` becomes the `sources.length === 1` wrapper.
 - **`groupHunks(hunks, policy)`** pure fn (`review/diff.ts`): coalesce an author's adjacent hunks;

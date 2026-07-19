@@ -13,6 +13,7 @@ export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./get-history'),
   () => import('./merge-branch'),
   () => import('./open'),
+  () => import('./reject-change'),
   () => import('./scroll-to-anchor'),
   () => import('./set-view-mode'),
   () => import('./update-markdown'),

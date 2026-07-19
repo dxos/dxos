@@ -131,3 +131,26 @@ export const cherryPickHunk = (
     insert: compare.slice(hunk.fromA, Math.min(hunk.toA, compare.length)),
   };
 };
+
+/**
+ * Resolve the splice that reverts a single change on `compare` (a branch) back to `base` (main) —
+ * the reject counterpart to {@link cherryPickHunk}. `baseRange` is a character range in `base`; the
+ * hunk overlapping it is located and the returned splice (in `compare` coordinates) replaces the
+ * branch's version with the base text. Returns undefined if no hunk overlaps the range.
+ */
+export const revertHunk = (
+  base: string,
+  compare: string,
+  baseRange: { start: number; end: number },
+): { from: number; del: number; insert: string } | undefined => {
+  // A = base, B = compare (branch); locate the hunk by its base-side range.
+  const hunk = computeHunks(base, compare).find((h) => h.fromA < baseRange.end && h.toA > baseRange.start);
+  if (!hunk) {
+    return undefined;
+  }
+  return {
+    from: hunk.fromB,
+    del: Math.min(hunk.toB, compare.length) - hunk.fromB,
+    insert: base.slice(hunk.fromA, Math.min(hunk.toA, base.length)),
+  };
+};

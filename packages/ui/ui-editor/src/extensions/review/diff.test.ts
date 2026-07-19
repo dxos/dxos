@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks } from './diff';
+import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, revertHunk } from './diff';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');
@@ -52,6 +52,28 @@ describe('diff hunks', () => {
     // "Line two." is identical in both → no hunk there.
     const start = modified.indexOf('Line two');
     expect(cherryPickHunk(modified, original, { start, end: start + 4 })).toBeUndefined();
+  });
+
+  test('revertHunk reverts the branch hunk at a base-side range back to base', ({ expect }) => {
+    const base = 'alpha\nbravo\ncharlie\n';
+    const branch = 'alpha\nBRAVO\ncharlie\n';
+    // Range over 'bravo' in the base.
+    const start = base.indexOf('bravo');
+    const splice = revertHunk(base, branch, { start, end: start + 5 });
+    expect(splice).toBeDefined();
+    if (!splice) {
+      return;
+    }
+    // Applying the splice to the branch restores the base text at that hunk.
+    const applied = branch.slice(0, splice.from) + splice.insert + branch.slice(splice.from + splice.del);
+    expect(applied).toBe(base);
+  });
+
+  test('revertHunk returns undefined when the base range is not on a changed hunk', ({ expect }) => {
+    const base = 'alpha\nbravo\ncharlie\n';
+    const branch = 'alpha\nBRAVO\ncharlie\n';
+    const start = base.indexOf('charlie');
+    expect(revertHunk(base, branch, { start, end: start + 4 })).toBeUndefined();
   });
 });
 
