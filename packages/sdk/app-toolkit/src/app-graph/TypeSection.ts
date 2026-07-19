@@ -79,6 +79,12 @@ export const createTypeSectionExtension = (
      * The action label is resolved from `add-object.label` in the type's i18n namespace.
      */
     createObject?: (space: Space) => Effect.Effect<any, any, any>;
+    /**
+     * Override the registered URL prefix key for this section's connector. Takes precedence over
+     * {@link AppAnnotation.UrlPrefixAnnotation} on the schema — use when annotating the schema is
+     * awkward (e.g. the schema lives in a package that cannot depend on `@dxos/app-toolkit`).
+     */
+    urlKey?: string;
   },
 ): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -90,6 +96,14 @@ export const createTypeSectionExtension = (
   const defaultQuery = Query.select(filter);
   const testId = `${typename}.section`;
 
+  // Sourced from the explicit override, then the schema's own annotation, then a fallback derived
+  // from the typename — every type section is URL-addressable out of the box, no manual wiring
+  // needed for the common case (see `@dxos/app-graph`'s `path-resolution.ts`).
+  const urlKey =
+    options?.urlKey ??
+    Option.getOrUndefined(AppAnnotation.UrlPrefixAnnotation.get(Type.getSchema(type))) ??
+    (typename.split('.').pop() ?? typename).toLowerCase();
+
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
 
   // Only allow reordering within this section — reject drops from other type sections.
@@ -98,6 +112,7 @@ export const createTypeSectionExtension = (
 
   const sectionExtension = GraphBuilder.createExtension({
     id: typename,
+    urlKey,
     match: options?.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];

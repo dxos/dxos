@@ -34,6 +34,7 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
+    AppAnnotation.UrlPrefixAnnotation.set('doc'),
     CardAnnotation.set(true),
     CollectionItemAnnotation.set(true),
   ),

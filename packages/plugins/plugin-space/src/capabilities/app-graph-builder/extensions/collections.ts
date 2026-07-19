@@ -144,6 +144,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Children of Collection.Collection nodes.
     GraphBuilder.createExtension({
       id: 'objects',
+      // Recursive over nested collections at any depth, so `collection/<id>` addresses any object
+      // reachable through a space's collection tree, not just the root collection's direct children.
+      urlKey: 'collection',
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);

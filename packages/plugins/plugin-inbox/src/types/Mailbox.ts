@@ -77,6 +77,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
     FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    AppAnnotation.UrlPrefixAnnotation.set('mail'),
     // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
     ConnectorAuthAnnotation.set({ connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID], bindTarget: true }),
   ),

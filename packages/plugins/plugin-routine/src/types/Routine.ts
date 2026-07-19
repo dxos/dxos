@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { Instructions, Runnable, Trigger } from '@dxos/compute';
 import type { Operation } from '@dxos/compute';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -57,6 +58,7 @@ export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.ro
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),
+    AppAnnotation.UrlPrefixAnnotation.set('routine'),
   ),
 ) {}
 

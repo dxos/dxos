@@ -62,6 +62,7 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'plugins',
+        urlKey: 'plugin',
         match: NodeMatcher.whenId(Paths.getSpacePath(SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);

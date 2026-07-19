@@ -55,7 +55,13 @@ Every extension declares (or inherits) its `urlKey`; old URLs still work.
 
 ### Tasks
 
-- [ ] **Declare keys across plugins**
+- [x] **Declare keys across plugins** — landed; 17 distinct keys, no reserved
+      collisions. A1's deleted live resolvers reinstated as hidden-children
+      connectors (plugin-space `obj`, plugin-inbox `message`/`event`).
+      plugin-space + inbox suites green locally (sync-e2e needs infra).
+      Dormant flags for A3: `doc` annotation has no dedicated Document
+      extension (reachable via `collection`/`database`/`obj`); `mail`
+      annotation is documentation-only (key set directly on the extension).
   - TypeSection auto `urlKey` + `AppAnnotation.UrlPrefixAnnotation`.
   - plugin-space keys: `collection`, `database`, `home`, generic `obj`.
   - settings/registry `plugin` key.

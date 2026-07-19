@@ -150,6 +150,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
       id: 'schemaChildren',
+      urlKey: 'database',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         // Scoped to the Database section's own type nodes (both static and database schemas — see
@@ -164,10 +165,9 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const typeUri = Type.getURI(schema);
 
-        // View objects are the type node's only visible children; direct navigation to an object of
-        // the type (previously resolved on demand as a hidden child) is currently unsupported — see
-        // the TODO(graph-path-ids) below. The list of all objects is rendered when the type node is
-        // selected (see TypeArticle).
+        // View objects are the type node's only visible children; every object of the type (viewed
+        // or not) is also reachable via the `databaseObjects` extension below, keyed generically as
+        // `obj`. The list of all objects is rendered when the type node is selected (see TypeArticle).
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
           .getViewsForTypeUri(typeUri)
@@ -186,10 +186,49 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // TODO(graph-path-ids): Direct navigation to `…/database/<slug>/<objectId>` (a hidden child of
-    // its type node, not enumerated in the nav tree) no longer resolves: this relied on the
-    // now-removed id-keyed resolver machinery. Needs redesign as a urlKey-addressed connector (see
-    // `@dxos/app-graph`'s path-resolution.ts) once phase A2/A3 lands.
+    // Every object of a type — not just its views — as a hidden child of its type node, so
+    // `…/database/<slug>/<objectId>` resolves via the generic `obj` key even when the type has no
+    // dedicated section of its own. Disjoint from `schemaChildren`'s view nodes (`viewIndex.isView`
+    // excludes them) so the two connectors never emit a node with the same id under the same parent.
+    // The generic key that guarantees every ECHO object a URL (see the design's "Unmapped nodes").
+    GraphBuilder.createExtension({
+      id: 'databaseObjects',
+      urlKey: 'obj',
+      match: (node) => {
+        const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+        return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
+          ? Option.some({ space, schema: node.data })
+          : Option.none();
+      },
+      connector: ({ space, schema }, get) => {
+        const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
+        const typeUri = Type.getURI(schema);
+        const viewIndex = buildViewIndex(get, space, schemas);
+
+        // Feed-only objects (e.g. games appended via Feed.append) are not in the Automerge graph;
+        // includeFeeds resolves them too — mirrors the removed `typeCollectionObject` resolver.
+        const objects = get(
+          space.db.query(Query.select(Filter.type(typeUri)).from(space.db, { includeFeeds: true })).atom,
+        );
+
+        return Effect.succeed(
+          objects
+            .filter((object) => !viewIndex.isView(object))
+            .map((object) =>
+              AppNode.makeObject({
+                get,
+                db: space.db,
+                object,
+                disposition: 'hidden',
+                draggable: false,
+                droppable: false,
+              }),
+            )
+            .filter(isNonNullable),
+        );
+      },
+    }),
 
     // Actions for schema nodes.
     GraphBuilder.createExtension({

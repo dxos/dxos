@@ -17,11 +17,11 @@ import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
-import { Event, Message } from '@dxos/types';
+import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Calendar, InboxOperation, Mailbox, SystemTags } from '#types';
+import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
 import { createSyncProgressKey } from '../operations/mail/mail-sync';
@@ -39,12 +39,6 @@ import { dedupeSupersededDrafts, syncTarget } from '../util';
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
-
-// TODO(graph-path-ids): Deep-linking directly to a mailbox message or calendar event (a hidden
-// `~childId`-linked-segment child of its parent, resolved by parent/feed lookup) no longer works:
-// this relied on the now-removed id-keyed resolver machinery (`createFeedObjectNodeExtension`,
-// deleted). Needs redesign as a urlKey-addressed connector (see `@dxos/app-graph`'s
-// path-resolution.ts) once phase A2/A3 lands.
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -83,6 +77,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'mailboxListing',
+        urlKey: 'mail',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -284,6 +279,44 @@ export default Capability.makeModule(
         },
       }),
 
+      // Every message in a mailbox's feed, plus its in-progress local drafts, as a hidden child of
+      // the mailbox node — so `…/mailboxes/<mailboxId>/<messageId>` resolves via the `message` key
+      // even though messages aren't otherwise enumerated in the nav tree. Reinstates the deep-link
+      // behavior of the removed `createFeedObjectNodeExtension` (mailbox variant) as a connector.
+      GraphBuilder.createExtension({
+        id: 'mailboxMessages',
+        urlKey: 'message',
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        connector: (mailbox, get) => {
+          const db = Obj.getDatabase(mailbox);
+          const feed = get(mailbox.feed.atom);
+          if (!db || !feed) {
+            return Effect.succeed([]);
+          }
+
+          const feedMessages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
+          // Drafts live in the space db, not the feed (mirrors `mailboxMessage` above).
+          const draftMessages = get(db.query(Filter.type(Message.Message)).atom).filter((message) =>
+            DraftMessage.belongsTo(message, Obj.getURI(mailbox)),
+          );
+
+          return Effect.succeed(
+            [...feedMessages, ...draftMessages].map((message) =>
+              Node.make({
+                id: message.id,
+                type: Type.getTypename(Message.Message),
+                data: message,
+                properties: {
+                  label: message.properties?.subject ?? ['message.label', { ns: meta.profile.key }],
+                  icon: 'ph--envelope-open--regular',
+                  disposition: 'hidden',
+                },
+              }),
+            ),
+          );
+        },
+      }),
+
       GraphBuilder.createExtension({
         id: 'mailboxesSectionActions',
         match: (node) => {
@@ -368,10 +401,44 @@ export default Capability.makeModule(
         },
       }),
 
-      // TODO(graph-path-ids): URI-keyed deep-link / bookmark resolution for a calendar event (e.g.
-      // navigating directly to echo:<spaceId>/<eventId>) no longer works: this relied on the
-      // now-removed id-keyed resolver machinery. Needs redesign as a urlKey-addressed connector
-      // (see `@dxos/app-graph`'s path-resolution.ts) once phase A2/A3 lands.
+      // Every event in a calendar's feed, plus its local draft events, as a hidden child of the
+      // calendar node — so `…/calendars/<calendarId>/<eventId>` resolves via the `event` key.
+      // Reinstates both the removed `createFeedObjectNodeExtension` (calendar variant) and the
+      // EID-keyed `eventObjectNode` resolver: both existed only to make an event reachable by id,
+      // which enumerating events as children now does uniformly for any deep-link shape.
+      GraphBuilder.createExtension({
+        id: 'calendarEvents',
+        urlKey: 'event',
+        match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        connector: (calendar, get) => {
+          const db = Obj.getDatabase(calendar);
+          const feed = calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined;
+          if (!db || !feed) {
+            return Effect.succeed([]);
+          }
+
+          const feedEvents = get(db.query(Query.select(Filter.type(Event.Event)).from(feed)).atom);
+          // Draft events live in the space db (not the feed), parented to their calendar.
+          const draftEvents = get(db.query(Filter.type(Event.Event)).atom).filter((event) =>
+            DraftEvent.belongsTo(event, calendar.id),
+          );
+
+          return Effect.succeed(
+            [...feedEvents, ...draftEvents].map((event) =>
+              Node.make({
+                id: event.id,
+                type: Type.getTypename(Event.Event),
+                data: event,
+                properties: {
+                  label: event.title ?? ['event.label', { ns: meta.profile.key }],
+                  icon: 'ph--calendar-dot--regular',
+                  disposition: 'hidden',
+                },
+              }),
+            ),
+          );
+        },
+      }),
 
       GraphBuilder.createExtension({
         id: 'syncMailbox',

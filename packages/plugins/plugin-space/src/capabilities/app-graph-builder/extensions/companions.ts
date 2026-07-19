@@ -36,6 +36,7 @@ export const createCompanionExtensions: (
     // Object settings plank companion.
     GraphBuilder.createExtension({
       id: 'settings',
+      urlKey: 'settings',
       match: NodeMatcher.whenEchoObjectMatches,
       connector: (node) =>
         Effect.succeed([

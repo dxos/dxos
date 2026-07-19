@@ -48,6 +48,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     GraphBuilder.createExtension({
       id: 'spaceHome',
       position: Position.first,
+      urlKey: 'home',
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
