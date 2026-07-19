@@ -13,7 +13,7 @@ tasks:
       mergeOutputs: replace
     outputs:
       - dist/bundle
-  compile:
+  build:
     args:
       - '--entryPoint=src/react.ts'
       - '--entryPoint=src/testing/index.ts'

@@ -6,7 +6,7 @@ tags:
   - ts-test-workerd
   - pack
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/index.ts'
       - '--bundlePackage=base32-decode'

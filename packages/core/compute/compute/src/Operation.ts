@@ -325,7 +325,7 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
 
     /**
      * List of required services.
-     * Match the Context.Tag keys of the FunctionServices variants.
+     * Match the Context.Tag keys of the services the operation handler declares.
      */
     services: Schema$.optional(Schema$.Array(Schema$.String)),
 
