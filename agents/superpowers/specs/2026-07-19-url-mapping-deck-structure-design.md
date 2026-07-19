@@ -56,7 +56,7 @@ Parsing is registry-driven: every segment after the leading `w` pair must be a
 registered prefix key. Whether a key consumes a following id segment is a property
 of its registration, not of the parser — a plank-opening key like `doc` always takes
 an id; a companion key like `comments` never does. A node pair whose key opens a
-plank starts a new plank; a companion key instead attaches to the *preceding*
+plank starts a new plank; a companion key instead attaches to the _preceding_
 plank's node. Plank count is simply the number of plank pairs in the chain — there
 is no separate mode token and no attention marker in the URL at all.
 
@@ -83,13 +83,13 @@ routing:
 
 Examples:
 
-| URL | Meaning |
-| --- | --- |
-| `/w/B2AK…/doc/01JGDOC…` | one plank |
-| `/w/B2AK…/doc/A…/sheet/B…` | two planks |
-| `/w/B2AK…/doc/A…/comments` | plank + comments companion |
-| `/w/B2AK…/doc/A…/w/C7QP…/task/B…` | second plank sourced from another space |
-| `/w/!dxos:settings/plugin/org.dxos.plugin.deck` | pinned workspace |
+| URL                                             | Meaning                                 |
+| ----------------------------------------------- | --------------------------------------- |
+| `/w/B2AK…/doc/01JGDOC…`                         | one plank                               |
+| `/w/B2AK…/doc/A…/sheet/B…`                      | two planks                              |
+| `/w/B2AK…/doc/A…/comments`                      | plank + comments companion              |
+| `/w/B2AK…/doc/A…/w/C7QP…/task/B…`               | second plank sourced from another space |
+| `/w/!dxos:settings/plugin/org.dxos.plugin.deck` | pinned workspace                        |
 
 A generic `obj` key (owned by plugin-space) guarantees that every ECHO object has a
 URL even if no more specific key applies.
@@ -176,11 +176,11 @@ pair, if one is open, is appended after it.
 
 **Capability fates:**
 
-| Capability | Fate |
-| --- | --- |
+| Capability                                                                                                                      | Fate                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `NavigationPathResolver` (capability, `AppPlugin.addNavigationResolverModule`, and the 7 plugin `navigation-resolver.ts` files) | Deleted. The two `NavigationTargetResolver` contributions currently embedded inside plugin-space's and plugin-inbox's resolver files are extracted first, into standalone `navigation-target-resolver.ts` files, before the surrounding resolver machinery is removed. |
-| `NavigationTargetResolver` | Kept — used by assistant to turn a query into target paths; unrelated to URL resolution. |
-| `NavigationHandler` | Kept — owns invitation/OAuth query-param side effects, which stay out of scope for this design. |
+| `NavigationTargetResolver`                                                                                                      | Kept — used by assistant to turn a query into target paths; unrelated to URL resolution.                                                                                                                                                                               |
+| `NavigationHandler`                                                                                                             | Kept — owns invitation/OAuth query-param side effects, which stay out of scope for this design.                                                                                                                                                                        |
 
 No compatibility shims are introduced anywhere; every call site is updated in the
 same change, per the repo's no-shim rule.
@@ -352,17 +352,17 @@ Two workstreams. Workstream A (URL mapping & resolution) and Workstream B (singl
 
 **End-to-end** (running Composer, `moon run composer-app:serve`):
 
-| Scenario | Expected |
-|---|---|
-| Open a doc | Renders fullbleed |
-| Shift-click a second item | Opens sliding deck |
-| Plain click | Replaces the attended plank |
-| Flip `navigationDefault` | Shift-click inversion is symmetric |
-| Fullscreen + Escape + reload | Ephemeral — does not survive reload |
-| Solo-user migration | Preserves the previously open plank |
-| Reload multi-plank URL | Restores planks + companion; attention is NOT restored from URL, defaults to last plank |
-| Cross-workspace deep link | Round-trips its mid-chain `w` pair |
-| Not-yet-replicated object | Hits the remote existence check |
-| `/reset`, invitation params, `composer://` | Unaffected |
-| Mobile (simple-layout) | Unaffected |
-| Presenter flow | Intact |
+| Scenario                                   | Expected                                                                                |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Open a doc                                 | Renders fullbleed                                                                       |
+| Shift-click a second item                  | Opens sliding deck                                                                      |
+| Plain click                                | Replaces the attended plank                                                             |
+| Flip `navigationDefault`                   | Shift-click inversion is symmetric                                                      |
+| Fullscreen + Escape + reload               | Ephemeral — does not survive reload                                                     |
+| Solo-user migration                        | Preserves the previously open plank                                                     |
+| Reload multi-plank URL                     | Restores planks + companion; attention is NOT restored from URL, defaults to last plank |
+| Cross-workspace deep link                  | Round-trips its mid-chain `w` pair                                                      |
+| Not-yet-replicated object                  | Hits the remote existence check                                                         |
+| `/reset`, invitation params, `composer://` | Unaffected                                                                              |
+| Mobile (simple-layout)                     | Unaffected                                                                              |
+| Presenter flow                             | Intact                                                                                  |
