@@ -7,12 +7,13 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/ui-theme';
 
+import { blockSelectionField } from '../blocks';
 import { decorateMarkdown } from '../markdown';
 import { commands } from './commands';
 import { outlinerDnd } from './dnd';
 import { editor } from './editor';
 import { menu } from './menu';
-import { outlinerTree, treeFacet } from './tree';
+import { getRange, outlinerTree, treeFacet } from './tree';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
@@ -75,7 +76,15 @@ const decorations = () => [
       }
 
       update(update: ViewUpdate) {
-        if (update.focusChanged || update.docChanged || update.viewportChanged || update.selectionSet) {
+        const selectionChanged =
+          update.startState.field(blockSelectionField, false) !== update.state.field(blockSelectionField, false);
+        if (
+          update.focusChanged ||
+          update.docChanged ||
+          update.viewportChanged ||
+          update.selectionSet ||
+          selectionChanged
+        ) {
           this.updateDecorations(update.state, update.view);
         }
       }
@@ -84,6 +93,17 @@ const decorations = () => [
         const tree = state.facet(treeFacet);
         const current = tree.find(state.selection.main.from);
         const doc = state.doc;
+
+        // The block selection stores each selected item's line-start anchor; a line is selected when it
+        // falls within any selected item's subtree. Rendered as a line background (not the `blocks`
+        // RectangleMarker layer) so it stays aligned to the actual rows.
+        const selectedRanges = (state.field(blockSelectionField, false) ?? [])
+          .map((anchor) => {
+            const item = tree.find(anchor);
+            return item ? getRange(tree, item) : null;
+          })
+          .filter((range): range is [number, number] => range != null);
+        const isSelected = (pos: number) => selectedRanges.some(([rangeFrom, rangeTo]) => pos >= rangeFrom && pos <= rangeTo);
 
         const decorations: Range<Decoration>[] = [];
         for (let lineNum = doc.lineAt(from).number; lineNum <= doc.lineAt(to).number; lineNum++) {
@@ -98,6 +118,7 @@ const decorations = () => [
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
+                  isSelected(line.from) && 'cm-list-item-selected',
                   hasFocus && item === current && 'cm-list-item-current',
                 ),
               }).range(line.from, line.from),
@@ -139,6 +160,12 @@ const decorations = () => [
       borderBottomRightRadius: '4px',
       paddingBottom: '4px',
       marginBottom: '2px',
+    },
+
+    // Accent background behind the selected subtree; flat so adjacent selected rows read as one region.
+    '.cm-list-item-selected': {
+      backgroundColor: 'color-mix(in oklch, var(--color-accent-text) 12%, transparent)',
+      borderRadius: '0',
     },
 
     // Subtle border on the item under the caret; distinct from the accent selection highlight.
