@@ -37,7 +37,7 @@ a `WidgetType.toDOM()` creates a DOM placeholder, and React portals render conte
 
 | File                                                                                | Role                                                                                                   |
 | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `packages/ui/ui-editor/src/extensions/language/xml/xml-tags.ts`                             | Definition                                                                                             |
+| `packages/ui/ui-editor/src/extensions/language/xml/xml-tags.ts`                     | Definition                                                                                             |
 | `packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.tsx`               | Chat thread renderer — XML tags + dxn:/echo: url-scheme widgets                                        |
 | `packages/plugins/plugin-assistant/src/components/ChatThread/registry.tsx`          | Defines component registry (summary, surface, toolCall, toolResult, toolkit, json, inline factories)   |
 | `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx`                      | Editor — registers `dxn-preview` (block) and `link-preview` (inline) url-scheme widgets                |
