@@ -27,7 +27,7 @@ export const defaultOptions: TimelineOptions = {
   lineHeight: 24,
   columnWidth: 14,
   nodeRadius: 5,
-  lineStyle: 'stroke-2',
+  lineStyle: 'stroke-1',
 };
 
 export const compactOptions: TimelineOptions = {
@@ -346,11 +346,14 @@ export const Timeline = memo(
                   key={commit.id}
                   data-index={index}
                   aria-current={current === index}
-                  className='dx-row dx-current dx-hover group/row col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]'
+                  className={mx(
+                    'group/row col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]',
+                    'dx-row aria-[current=true]:bg-current-surface! hover:bg-hover-surface-subtle',
+                  )}
                   style={{ height: `${options.lineHeight}px` }}
                   onClick={handleClick}
                 >
-                  <div className='px-1'>
+                  <div className='px-2'>
                     <LineVector
                       branchLane={branchLane}
                       laneCount={laneCount}
@@ -369,7 +372,7 @@ export const Timeline = memo(
                   {showIcon && <CommitIcon commit={commit} />}
                   <div
                     className={mx(
-                      'text-sm truncate cursor-pointer text-subdued font-thin dx-current-row dx-hover-row',
+                      'text-sm truncate cursor-pointer text-subdued font-thin group-aria-[current=true]/row:text-current-fg hover:text-current-fg',
                       hasLink && 'underline decoration-dotted underline-offset-2',
                     )}
                   >
@@ -410,7 +413,14 @@ type Span = {
   end: number;
 };
 
-const colors = [
+type Color = {
+  stroke: string;
+  fill: string;
+};
+
+const defaultColor: Color = { stroke: 'stroke-neutral-surface', fill: 'fill-neutral-surface' };
+
+const colors: Color[] = [
   { stroke: 'stroke-orange-500', fill: 'group-aria-[current=true]:fill-orange-500' },
   { stroke: 'stroke-sky-500', fill: 'group-aria-[current=true]:fill-sky-500' },
   { stroke: 'stroke-green-500', fill: 'group-aria-[current=true]:fill-green-500' },
@@ -499,6 +509,7 @@ const LineVector = memo(
           if (lane < 0) {
             return null;
           }
+
           const color = colors[lane % colors.length];
           const path = createPath(index, commit, branch, span);
           if (!path) {
@@ -506,11 +517,15 @@ const LineVector = memo(
           }
 
           return (
-            <path key={branch} d={path} fill='none' className={mx(options.lineStyle, color.stroke, opacity(branch))} />
+            <path
+              key={branch}
+              d={path}
+              fill='none'
+              className={mx(options.lineStyle, color.stroke, color.fill, opacity(branch))}
+            />
           );
         })}
 
-        {/* Node */}
         <circle
           cx={cx(col)}
           cy={halfHeight}
@@ -521,7 +536,7 @@ const LineVector = memo(
           cx={cx(col)}
           cy={halfHeight}
           r={options.nodeRadius}
-          className={mx('fill-base-surface', options.lineStyle, color.stroke, color.fill, opacity(commit.branch))}
+          className={mx('fill-base-surface', options.lineStyle, color?.stroke, color?.fill, opacity(commit.branch))}
         />
       </svg>
     );
