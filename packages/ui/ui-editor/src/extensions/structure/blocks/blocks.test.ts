@@ -14,29 +14,6 @@ import { blockSelectionField } from './selection';
 const extensions = [markdown({ base: markdownLanguage }), blockSelectionField];
 const create = (doc: string) => EditorState.create({ doc, extensions });
 
-// The blocks selected in a state, as their source strings.
-const selectedText = (state: EditorState): string[] => {
-  const anchors = state.field(blockSelectionField);
-  const byFrom = new Map(findBlocks(state).map((block) => [block.from, block]));
-  return anchors.map((anchor) => {
-    const block = byFrom.get(anchor);
-    invariant(block, `no block at anchor ${anchor}`);
-    return state.doc.sliceString(block.from, block.to);
-  });
-};
-
-// Applies a (non-null) transaction spec and returns the resulting state.
-const apply = (state: EditorState, spec: TransactionSpec | null): EditorState => {
-  invariant(spec, 'expected a transaction spec');
-  return state.update(spec).state;
-};
-
-// The character at the caret's left, so tests can assert the caret lands at the end of a moved block.
-const charBeforeCaret = (state: EditorState) => {
-  const head = state.selection.main.head;
-  return state.doc.sliceString(head - 1, head);
-};
-
 describe('findBlocks', () => {
   test('splits into top-level blocks', ({ expect }) => {
     const state = create('# Heading\n\npara\n\n- a\n- b');
@@ -135,3 +112,26 @@ describe('replaceBlocksSpec', () => {
     expect(replaceBlocksSpec(state, [], 'X')).to.eq(null);
   });
 });
+
+// The blocks selected in a state, as their source strings.
+const selectedText = (state: EditorState): string[] => {
+  const anchors = state.field(blockSelectionField);
+  const byFrom = new Map(findBlocks(state).map((block) => [block.from, block]));
+  return anchors.map((anchor) => {
+    const block = byFrom.get(anchor);
+    invariant(block, `no block at anchor ${anchor}`);
+    return state.doc.sliceString(block.from, block.to);
+  });
+};
+
+// Applies a (non-null) transaction spec and returns the resulting state.
+const apply = (state: EditorState, spec: TransactionSpec | null): EditorState => {
+  invariant(spec, 'expected a transaction spec');
+  return state.update(spec).state;
+};
+
+// The character at the caret's left, so tests can assert the caret lands at the end of a moved block.
+const charBeforeCaret = (state: EditorState) => {
+  const head = state.selection.main.head;
+  return state.doc.sliceString(head - 1, head);
+};

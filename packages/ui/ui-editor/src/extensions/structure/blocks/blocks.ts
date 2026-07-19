@@ -183,9 +183,10 @@ export const replaceBlocksSpec = (
   }
 
   const deletes = deleteRanges(state, blocks, sources);
-  const changes = deletes.map(
-    (range) => ({ from: range.from, to: range.to }) as { from: number; to: number; insert?: string },
-  );
+  const changes: { from: number; to: number; insert?: string }[] = deletes.map((range) => ({
+    from: range.from,
+    to: range.to,
+  }));
   let anchor = deletes[0].from;
   if (text != null && text.length > 0) {
     // Replace the first removed range with the pasted text (keeping a trailing blank unless at doc end).
