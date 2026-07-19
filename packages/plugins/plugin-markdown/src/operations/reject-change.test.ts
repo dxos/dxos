@@ -63,7 +63,7 @@ describe('reject-change operation', () => {
         // Reject only the 'bravo' change: anchor covers 'bravo' on the base (main).
         const accessor = Doc.createAccessor(rootText, ['content']);
         const anchor = toCursorRange(accessor, 6, 11);
-        yield* Operation.invoke(CollaborationOperation.RejectChange, {
+        const { undo } = yield* Operation.invoke(CollaborationOperation.RejectChange, {
           subject: doc,
           anchor,
           branch: branchId,
@@ -73,6 +73,17 @@ describe('reject-change operation', () => {
         // main is untouched.
         expect(yield* branchContent(rootText, branchId)).toBe('alpha\nbravo\ncharlie\nDELTA\n');
         expect(rootText.content).toBe('alpha\nbravo\ncharlie\ndelta\n');
+
+        // Undo the reject via the returned splice (RestoreText on the branch): the suggestion returns.
+        expect(undo).toBeDefined();
+        yield* Operation.invoke(CollaborationOperation.RestoreText, {
+          subject: doc,
+          branch: branchId,
+          from: undo!.from,
+          del: undo!.del,
+          insert: undo!.insert,
+        });
+        expect(yield* branchContent(rootText, branchId)).toBe('alpha\nBRAVO\ncharlie\nDELTA\n');
       },
       WithProperties,
       Effect.provide(TestLayer),

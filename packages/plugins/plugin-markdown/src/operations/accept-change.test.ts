@@ -52,7 +52,7 @@ describe('accept-change operation', () => {
         // Anchor covering the 'bravo' region on the base (core branch name === branchId).
         const accessor = Doc.createAccessor(rootText, ['content']);
         const anchor = toCursorRange(accessor, 6, 11);
-        yield* Operation.invoke(CollaborationOperation.AcceptChange, {
+        const { undo } = yield* Operation.invoke(CollaborationOperation.AcceptChange, {
           subject: doc,
           anchor,
           branch: branchId,
@@ -60,6 +60,16 @@ describe('accept-change operation', () => {
 
         // The changed hunk lands on the base; the surrounding lines are unchanged.
         expect(rootText.content).toBe('alpha\nBRAVO\ncharlie\n');
+
+        // Undo the accept via the returned splice (RestoreText): the base reverts.
+        expect(undo).toBeDefined();
+        yield* Operation.invoke(CollaborationOperation.RestoreText, {
+          subject: doc,
+          from: undo!.from,
+          del: undo!.del,
+          insert: undo!.insert,
+        });
+        expect(rootText.content).toBe('alpha\nbravo\ncharlie\n');
       },
       WithProperties,
       Effect.provide(TestLayer),

@@ -14,6 +14,16 @@ import { ContentBlock } from '@dxos/types';
 
 const COLLABORATION_OPERATION = 'org.dxos.app-framework.collaboration.operation';
 
+/**
+ * A text splice `[from, from+del) → insert`. Accept/Reject return the splice that undoes them (see
+ * {@link RestoreText}), so the undo registry can reverse a partial cherry-pick.
+ */
+const TextSplice = Schema.Struct({
+  from: Schema.Number,
+  del: Schema.Number,
+  insert: Schema.String,
+});
+
 export const AcceptProposal = Operation.make({
   meta: {
     key: DXN.make(`${COLLABORATION_OPERATION}.acceptProposal`),
@@ -50,7 +60,8 @@ export const AcceptChange = Operation.make({
     anchor: Schema.String,
     branch: Schema.String,
   }),
-  output: Schema.Void,
+  // The splice that undoes the accept (restores the base text on the subject); absent on a no-op.
+  output: Schema.Struct({ undo: Schema.optional(TextSplice) }),
 });
 
 /**
@@ -71,6 +82,29 @@ export const RejectChange = Operation.make({
     subject: Schema.Any,
     anchor: Schema.String,
     branch: Schema.String,
+  }),
+  // The splice that undoes the reject (re-applies the suggested text on the branch); absent on a no-op.
+  output: Schema.Struct({ undo: Schema.optional(TextSplice) }),
+});
+
+/**
+ * Apply a text splice to a subject's content (main), or to one of its branches when `branch` is set.
+ * Used as the inverse operation for {@link AcceptChange}/{@link RejectChange} undo.
+ */
+export const RestoreText = Operation.make({
+  meta: {
+    key: DXN.make(`${COLLABORATION_OPERATION}.restoreText`),
+    name: 'Restore Text',
+    description: 'Apply a text splice to a document or one of its branches.',
+    icon: 'ph--arrow-counter-clockwise--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    subject: Schema.Any,
+    branch: Schema.optional(Schema.String),
+    from: Schema.Number,
+    del: Schema.Number,
+    insert: Schema.String,
   }),
   output: Schema.Void,
 });

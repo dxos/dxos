@@ -14,6 +14,7 @@ export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./merge-branch'),
   () => import('./open'),
   () => import('./reject-change'),
+  () => import('./restore-text'),
   () => import('./scroll-to-anchor'),
   () => import('./set-view-mode'),
   () => import('./update-markdown'),
