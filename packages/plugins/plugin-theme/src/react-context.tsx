@@ -10,9 +10,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
-import { Settings, ThemeCapabilities } from './types';
-
 import { meta } from './meta';
+import { Settings, ThemeCapabilities } from './types';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;
@@ -27,7 +26,9 @@ const parseAppearance = (value: string | null): Settings.Appearance => {
     return 'system';
   }
   try {
-    const appearance = (JSON.parse(value) as Settings.Settings)?.appearance;
+    const parsed: unknown = JSON.parse(value);
+    const appearance =
+      typeof parsed === 'object' && parsed !== null && 'appearance' in parsed ? parsed.appearance : undefined;
     return appearance === 'light' || appearance === 'dark' ? appearance : 'system';
   } catch {
     return 'system';

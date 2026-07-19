@@ -8,9 +8,9 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
-import { Settings, ThemeCapabilities } from './types';
-
 import { meta } from '#meta';
+
+import { Settings, ThemeCapabilities } from './types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
