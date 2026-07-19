@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ContentBlock } from '@dxos/types';
 
@@ -25,6 +26,29 @@ export const AcceptProposal = Operation.make({
     subject: Schema.Any,
     anchor: Schema.String,
     proposal: ContentBlock.Proposal,
+  }),
+  output: Schema.Void,
+});
+
+/**
+ * Accept an individual change from another branch at an anchored region, without merging the whole
+ * branch. The handler recomputes the latest diff between the subject's current branch and `branch`,
+ * finds the hunk at `anchor`, and applies the compare branch's current text into the current branch
+ * (a partial cherry-pick) — so the latest version is applied, not a snapshot.
+ */
+export const AcceptChange = Operation.make({
+  meta: {
+    key: DXN.make(`${COLLABORATION_OPERATION}.acceptChange`),
+    name: 'Accept Change',
+    description: 'Accept an individual change from a branch.',
+    icon: 'ph--check--regular',
+  },
+  // The handler resolves and edits the subject's content Text; it needs database access only.
+  services: [Database.Service],
+  input: Schema.Struct({
+    subject: Schema.Any,
+    anchor: Schema.String,
+    branch: Schema.String,
   }),
   output: Schema.Void,
 });

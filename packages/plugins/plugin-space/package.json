@@ -91,6 +91,11 @@
       "types": "./dist/types/src/components/index.d.ts",
       "import": "./dist/lib/components.mjs"
     },
+    "./containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "import": "./dist/lib/containers.mjs"
+    },
     "./constants": {
       "source": "./src/constants.ts",
       "types": "./dist/types/src/constants.d.ts",
@@ -166,6 +171,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/versioning": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/cli": "catalog:",

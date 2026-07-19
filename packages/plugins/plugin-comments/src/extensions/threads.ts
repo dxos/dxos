@@ -37,6 +37,10 @@ export const threads = (
   store: ThreadStore,
   doc?: Markdown.Document,
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
+  // The active review branch (the core branch the editor is showing); undefined = main. Threaded from
+  // the markdown editor (which resolves it from the per-object version selection) rather than read
+  // from core `getCurrentBranch`, which stays 'main' under this branch's per-surface binding model.
+  reviewBranch?: string,
 ): Extension => {
   const db = doc && Obj.getDatabase(doc);
   if (!doc || !db || !invokePromise) {
@@ -49,14 +53,16 @@ export const threads = (
   const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
 
-  // Get current anchors by combining query results with store drafts.
+  // Get current anchors by combining query results with store drafts, scoped to the review branch so
+  // inline marks show only the comments for the branch currently in view (undefined tag = main).
   const getAnchors = () =>
     query.results
       .filter((anchor) => {
         const thread = Relation.getSource(anchor);
         return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
       })
-      .concat(registry.get(stateAtom).drafts[objectId] ?? []);
+      .concat(registry.get(stateAtom).drafts[objectId] ?? [])
+      .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'));
 
   return [
     EditorView.updateListener.of((update) => {
@@ -79,6 +85,10 @@ export const threads = (
 
     comments({
       id: objectId,
+      // Tag new comments with the review branch so they scope to the branch under review; main stays untagged.
+      reviewBranch,
+      // `getAnchors()` is already branch-scoped, so selection-style highlights show only the review
+      // branch's comments.
       getComments: () =>
         getAnchors()
           .filter((anchor) => anchor.anchor)
@@ -95,12 +105,13 @@ export const threads = (
           unsubStore();
         };
       },
-      onCreate: ({ cursor }) => {
+      onCreate: ({ cursor, branch }) => {
         const name = getName(doc, cursor);
         void invokePromise(CommentOperation.Create, {
           anchor: cursor,
           name,
           subject: doc,
+          branch,
         });
       },
       onDelete: ({ id }) => {
