@@ -139,25 +139,29 @@ const createHoverPlugin = (getBlocks: BlockDragOptions['getBlocks'], dragPlugin:
     },
   );
 
-// Indices of the blocks whose grips are shown, ascending: every selected block (so the group has a grab
-// point and each can be shift-toggled), the block at the caret, and the block under the pointer (hover).
-const activeBlockIndices = (state: EditorState, getBlocks: BlockDragOptions['getBlocks']): number[] => {
+// The single block whose grip is shown: the block under the pointer, else the block at the caret (only
+// one handle is ever visible). Grabbing it drags the whole block selection when it is part of one.
+const activeBlockIndex = (state: EditorState, getBlocks: BlockDragOptions['getBlocks']): number | null => {
   const blocks = getBlocks(state);
-  const indices = new Set(getSelectedBlocks(state, getBlocks).map((entry) => entry.index));
-  const head = state.selection.main.head;
-  const cursorIndex = blocks.findIndex((block) => head >= block.from && head <= block.to);
-  if (cursorIndex >= 0) {
-    indices.add(cursorIndex);
-  }
   const hovered = state.field(hoveredBlockField, false);
   if (hovered != null) {
     const hoverIndex = blocks.findIndex((block) => block.from === hovered);
     if (hoverIndex >= 0) {
-      indices.add(hoverIndex);
+      return hoverIndex;
     }
   }
-  return [...indices].sort((a, b) => a - b);
+  const head = state.selection.main.head;
+  const cursorIndex = blocks.findIndex((block) => head >= block.from && head <= block.to);
+  return cursorIndex >= 0 ? cursorIndex : null;
 };
+
+// Builds a grip element (outer `dx-button` + inner phosphor glyph). Shared by the floating overlay and the
+// drag preview; callers attach behavior and position it.
+const createGripElement = (): HTMLElement =>
+  Domino.of('div')
+    .classNames('dx-button aspect-square cm-blockDragHandle')
+    .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
+    .append(Domino.of('div').classNames('cm-blockDragHandleIcon').append(Domino.svg(GRIP_ICON))).root;
 
 //
 // The in-progress drag's decorations, or `null` when idle: each dragged block (with its trailing blank
@@ -254,6 +258,10 @@ const createDragPlugin = (
       #placeholderKey: string | null = null;
       #preview: HTMLElement | null = null;
       #previewOrigin: { left: number; top: number } | null = null;
+      // A grip that rides along with the preview so a drag handle stays visible while dragging (the static
+      // overlay grip is hidden during a drag). `#gripOrigin` is its resting viewport position at grab time.
+      #previewGrip: HTMLElement | null = null;
+      #gripOrigin: { left: number; top: number } | null = null;
       // The first dragged block's viewport rect (the preview lifts off from here) and the grab point.
       #blockRect: { left: number; top: number; width: number; height: number; layoutHeight: number } | null = null;
       #grabX = 0;
@@ -366,6 +374,14 @@ const createDragPlugin = (
           const rect = this.#preview.getBoundingClientRect();
           this.#previewOrigin = { left: rect.left, top: rect.top };
         }
+        // A grip rides with the preview: hidden as the static overlay grip, re-shown here at the same
+        // resting spot (gutter-centered, on the first row) and translated by the pointer delta each move.
+        this.#gripOrigin = this.#measureGripOrigin(indices[0]);
+        if (this.#gripOrigin) {
+          this.#previewGrip = createGripElement();
+          this.#previewGrip.classList.add('cm-blockDragPreviewHandle');
+          this.view.dom.appendChild(this.#previewGrip);
+        }
         this.#positionPreview(event.clientX, event.clientY);
         this.#updateDragDeco(this.#dropIndex);
         this.view.scrollDOM.classList.add('cm-blockDragging');
@@ -391,6 +407,9 @@ const createDragPlugin = (
         this.#preview?.remove();
         this.#preview = null;
         this.#previewOrigin = null;
+        this.#previewGrip?.remove();
+        this.#previewGrip = null;
+        this.#gripOrigin = null;
         this.#blockRect = null;
         this.#sourceIndices = null;
         this.#dropIndex = null;
@@ -527,15 +546,33 @@ const createDragPlugin = (
         return this.view.dom.appendChild(preview);
       }
 
-      #positionPreview(clientX: number, clientY: number) {
-        if (!this.#preview || !this.#previewOrigin || !this.#blockRect) {
-          return;
+      // The grip's resting viewport position for the block at `sourceIndex`: gutter-centered horizontally
+      // (matching the static overlay grip) and centered on the block's first row.
+      #measureGripOrigin(sourceIndex: number): { left: number; top: number } | null {
+        const block = getBlocks(this.view.state)[sourceIndex];
+        const coords = block && this.view.coordsAtPos(block.from);
+        if (!coords) {
+          return null;
         }
+        const contentRect = this.view.contentDOM.getBoundingClientRect();
+        return {
+          left: contentRect.left - GUTTER / 2 - GRIP_SIZE / 2,
+          top: (coords.top + coords.bottom) / 2 - GRIP_SIZE / 2,
+        };
+      }
+
+      #positionPreview(clientX: number, clientY: number) {
         const dx = clampX ? 0 : clientX - this.#grabX;
         const dy = clientY - this.#grabY;
-        const left = this.#blockRect.left + dx - this.#previewOrigin.left;
-        const top = this.#blockRect.top + dy - this.#previewOrigin.top;
-        this.#preview.style.transform = `translate(${left}px, ${top}px)`;
+        if (this.#preview && this.#previewOrigin && this.#blockRect) {
+          const left = this.#blockRect.left + dx - this.#previewOrigin.left;
+          const top = this.#blockRect.top + dy - this.#previewOrigin.top;
+          this.#preview.style.transform = `translate(${left}px, ${top}px)`;
+        }
+        if (this.#previewGrip && this.#gripOrigin) {
+          this.#previewGrip.style.left = `${this.#gripOrigin.left + dx}px`;
+          this.#previewGrip.style.top = `${this.#gripOrigin.top + dy}px`;
+        }
       }
 
       // The slot the pointer is over: the first non-source block whose vertical midpoint is below the
@@ -680,6 +717,15 @@ const dragTheme = EditorView.theme({
   '.cm-blockDragHandle:hover .cm-blockDragHandleIcon': {
     opacity: '1',
   },
+  // The grip carried by the drag preview: above the preview, fully opaque, non-interactive.
+  '.cm-blockDragPreviewHandle': {
+    zIndex: '7',
+    cursor: 'grabbing',
+    pointerEvents: 'none',
+  },
+  '.cm-blockDragPreviewHandle .cm-blockDragHandleIcon': {
+    opacity: '1',
+  },
   '.cm-scroller.cm-blockDragging': {
     cursor: 'grabbing',
   },
@@ -792,25 +838,25 @@ const createGripOverlay = (
       }
 
       #read(view: EditorView): GripPosition[] {
-        const blocks = getBlocks(view.state);
-        const contentRect = view.contentDOM.getBoundingClientRect();
-        const scrollRect = view.scrollDOM.getBoundingClientRect();
-        // Centered within the 3rem gutter immediately left of the content.
-        const left = contentRect.left - GUTTER / 2 - GRIP_SIZE / 2;
-        const positions: GripPosition[] = [];
-        // During a drag, show only the dragged block(s)' grip(s); otherwise the caret/hover/selection set.
-        const drag = view.plugin(dragPlugin);
-        const indices = drag?.dragging ? (drag.sourceIndices ?? []) : activeBlockIndices(view.state, getBlocks);
-        for (const index of indices) {
-          const block = blocks[index];
-          const coords = block && view.coordsAtPos(block.from);
-          // Drop grips whose first row is scrolled out of the editor viewport.
-          if (!coords || coords.bottom <= scrollRect.top || coords.top >= scrollRect.bottom) {
-            continue;
-          }
-          positions.push({ index, anchor: block.from, left, top: (coords.top + coords.bottom) / 2 - GRIP_SIZE / 2 });
+        // While dragging, the static grip is hidden — the drag preview carries its own handle instead.
+        if (view.plugin(dragPlugin)?.dragging) {
+          return [];
         }
-        return positions;
+        const index = activeBlockIndex(view.state, getBlocks);
+        if (index == null) {
+          return [];
+        }
+        const block = getBlocks(view.state)[index];
+        const coords = block && view.coordsAtPos(block.from);
+        const scrollRect = view.scrollDOM.getBoundingClientRect();
+        // Drop the grip when its first row is scrolled out of the editor viewport.
+        if (!coords || coords.bottom <= scrollRect.top || coords.top >= scrollRect.bottom) {
+          return [];
+        }
+        // Centered within the 3rem gutter immediately left of the content.
+        const contentRect = view.contentDOM.getBoundingClientRect();
+        const left = contentRect.left - GUTTER / 2 - GRIP_SIZE / 2;
+        return [{ index, anchor: block.from, left, top: (coords.top + coords.bottom) / 2 - GRIP_SIZE / 2 }];
       }
 
       #write(positions: GripPosition[]) {
@@ -835,24 +881,20 @@ const createGripOverlay = (
       }
 
       #createGrip(): HTMLElement {
-        // Outer `dx-button` carries the hover affordance; inner element holds the phosphor drag-handle glyph.
-        const grip = Domino.of('div')
-          .classNames('dx-button aspect-square cm-blockDragHandle')
-          .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
-          .append(Domino.of('div').classNames('cm-blockDragHandleIcon').append(Domino.svg(GRIP_ICON)))
-          .on('mousedown', (event) => {
-            if (event.button !== 0) {
-              return;
-            }
-            // Resolve the block from the grip's anchor at press time (indices shift as the doc changes).
-            const anchor = Number(grip.dataset.anchor);
-            const sourceIndex = getBlocks(this.view.state).findIndex((entry) => entry.from === anchor);
-            if (sourceIndex < 0) {
-              return;
-            }
-            this.view.plugin(dragPlugin)?.arm(sourceIndex, event);
-            event.preventDefault();
-          }).root;
+        const grip = createGripElement();
+        grip.addEventListener('mousedown', (event) => {
+          if (event.button !== 0) {
+            return;
+          }
+          // Resolve the block from the grip's anchor at press time (indices shift as the doc changes).
+          const anchor = Number(grip.dataset.anchor);
+          const sourceIndex = getBlocks(this.view.state).findIndex((entry) => entry.from === anchor);
+          if (sourceIndex < 0) {
+            return;
+          }
+          this.view.plugin(dragPlugin)?.arm(sourceIndex, event);
+          event.preventDefault();
+        });
         this.view.scrollDOM.appendChild(grip);
         return grip;
       }
