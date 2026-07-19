@@ -72,7 +72,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('subscribeMessages', {
-    payload: protoMessage('dxos.edge.messenger.Peer'),
+    payload: protoMessage('dxos.edge.signal.SubscribeMessagesRequest'),
     success: protoMessage('dxos.edge.signal.Message'),
     error: serviceError,
     stream: true,

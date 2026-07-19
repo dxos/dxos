@@ -43,6 +43,7 @@ import * as ProcessManager from './ProcessManager';
 import * as ProcessMonitor from './ProcessMonitor';
 import * as RemoteOperationInvoker from './RemoteOperationInvoker';
 import * as RemoteProcessManager from './RemoteProcessManager';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor';
 import { TestDatabaseLayer } from './testing';
 
 //
@@ -291,6 +292,7 @@ const ProcessWithRpcs = Process.make(
 const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
   Layer.provideMerge(RemoteProcessManager.layerNoop),
+  Layer.provideMerge(RemoteTraceMonitor.layerNoop),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
   Layer.provide(
     TestDatabaseLayer({
@@ -689,6 +691,7 @@ describe('ProcessOperationInvoker edge dispatch', () => {
     Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
       Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
       Layer.provideMerge(RemoteProcessManager.layerNoop),
+      Layer.provideMerge(RemoteTraceMonitor.layerNoop),
       Layer.provideMerge(Layer.succeed(RemoteOperationInvoker.Service, { invoke })),
       Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
       Layer.provide(TestDatabaseLayer({ types: [Organization.Organization] })),
@@ -849,6 +852,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   const InheritanceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(RemoteProcessManager.layerNoop),
+    Layer.provideMerge(RemoteTraceMonitor.layerNoop),
     Layer.provideMerge(SpaceAwareResolverLayer),
     Layer.provideMerge(
       TestDatabaseLayer({
