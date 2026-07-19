@@ -2,25 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { AiModelResolver } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Graph, GraphBuilder } from '@dxos/app-graph';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-import { AppCapabilities } from '@dxos/app-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Credential, LayerSpec, OperationHandlerSet, Skill } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { SpaceCapability } from '@dxos/plugin-space';
 
 import { AssistantCapabilities } from '#types';
 
@@ -49,11 +39,7 @@ export const Connector = Capability.lazyModule(
   { provides: [ConnectorCapability] },
   () => import('./connector'),
 );
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const NavigationResolver = Capability.lazyModule(
   'NavigationResolver',
   { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationPathResolver] },
@@ -64,17 +50,9 @@ export const AutomationTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template] },
   () => import('./automation-templates'),
 );
-export const SkillDefinition = Capability.lazyModule(
-  'SkillDefinition',
-  {
-    provides: [
-      AppCapabilities.SkillDefinition,
-      Capabilities.OperationHandler,
-      RoutineCapabilities.AgentDelegationStrategy,
-    ],
-  },
-  () => import('./skill-definition'),
-);
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  provides: [Capabilities.OperationHandler, RoutineCapabilities.AgentDelegationStrategy],
+});
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
   {
@@ -91,11 +69,7 @@ export const CompanionChatProvisioner = Capability.lazyModule(
   },
   () => import('./companion-chat-provisioner'),
 );
-export const CreateObject = Capability.lazyModule(
-  'CreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
   { provides: [AppCapabilities.AiModelResolver] },
@@ -116,21 +90,11 @@ export const Migrations = Capability.lazyModule(
   { provides: [ClientCapabilities.Migration] },
   () => import('./migrations'),
 );
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
-export const Settings = Capability.lazyModule(
-  'Settings',
-  { provides: [AppCapabilities.Settings, AssistantCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const Settings = AppCapability.settings(() => import('./settings'), {
+  provides: [AssistantCapabilities.Settings],
+});
 export const AssistantState = Capability.lazyModule(
   'AssistantState',
   {

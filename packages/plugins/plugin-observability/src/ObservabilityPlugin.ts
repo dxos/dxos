@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   ClientReady,
@@ -22,12 +22,8 @@ import { ObservabilityCapabilities, type ObservabilityPluginOptions } from '#typ
 export type { ObservabilityPluginOptions } from '#types';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
-  AppPlugin.addSurfaceModule<ObservabilityPluginOptions>({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule<ObservabilityPluginOptions>({ translations }),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addModule(({ observability }: ObservabilityPluginOptions) => ({
     id: 'observability',
     requires: [],
@@ -55,11 +51,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
         downloadLogs !== undefined ? [Capability.provide(ObservabilityCapabilities.LogDownloader, downloadLogs)] : [],
       ),
   })),
-  AppPlugin.addOperationHandlerModule<ObservabilityPluginOptions>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
+  Plugin.addLazyModule(OperationHandler),
   Plugin.addLazyModule(PrivacyNotice),
   Plugin.addLazyModule(ClientReady),
   Plugin.make,

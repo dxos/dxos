@@ -3,21 +3,13 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { CrxCapabilities } from '#types';
 
-export const CrxSettings = Capability.lazyModule(
-  'CrxSettings',
-  { provides: [CrxCapabilities.Settings, AppCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const CrxSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [CrxCapabilities.Settings],
+});
 export const InstallPageActions = Capability.lazyModule(
   'InstallPageActions',
   {
@@ -26,18 +18,10 @@ export const InstallPageActions = Capability.lazyModule(
   },
   () => import('./install-page-actions'),
 );
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const PageActionProvider = Capability.lazyModule(
   'PageActionProvider',
   { provides: [CrxCapabilities.PageAction] },
   () => import('./page-action-provider'),
 );
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

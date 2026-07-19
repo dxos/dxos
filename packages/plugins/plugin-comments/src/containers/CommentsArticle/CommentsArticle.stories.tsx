@@ -9,7 +9,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
@@ -130,48 +130,52 @@ const StubAgentRunner: CommentCapabilities.AgentRunner = {
  * 2. Stubs out plugin-deck's layout operations (`UpdateCompanion`,
  *    `ScrollIntoView`) that CommentsPlugin and the CommentsArticle invoke.
  */
+const StoryAppGraphBuilder = Capability.inlineModule(
+  'StoryAppGraphBuilder',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const extensions = yield* GraphBuilder.createExtension({
+      id: 'storyDocs',
+      match: NodeMatcher.whenRoot,
+      connector: (_, get) =>
+        Effect.gen(function* () {
+          const client = capabilities.get(ClientCapabilities.Client);
+          const space = AppSpace.getPersonalSpace(client);
+          if (!space) {
+            return [];
+          }
+          const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+          return docs
+            .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
+            .filter(isNonNullable);
+        }),
+    });
+    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
+  }),
+);
+
+const StoryOperationHandler = Capability.inlineModule(
+  'StoryOperationHandler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.provide(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+          Operation.withHandler(LayoutOperation.ScrollIntoView, () => Effect.void),
+        ),
+      ),
+    ]),
+);
+
 const StoryGraphPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.comments.story.storyGraph'),
     name: 'Story Graph',
   }),
-).pipe(
-  AppPlugin.addAppGraphModule({
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      const extensions = yield* GraphBuilder.createExtension({
-        id: 'storyDocs',
-        match: NodeMatcher.whenRoot,
-        connector: (_, get) =>
-          Effect.gen(function* () {
-            const client = capabilities.get(ClientCapabilities.Client);
-            const space = AppSpace.getPersonalSpace(client);
-            if (!space) {
-              return [];
-            }
-            const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-            return docs
-              .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-              .filter(isNonNullable);
-          }),
-      });
-      return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
-    }),
-  }),
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed([
-        Capability.provide(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-            Operation.withHandler(LayoutOperation.ScrollIntoView, () => Effect.void),
-          ),
-        ),
-      ]),
-  }),
-  Plugin.make,
-);
+).pipe(Plugin.addLazyModule(StoryAppGraphBuilder), Plugin.addLazyModule(StoryOperationHandler), Plugin.make);
 
 type StoryArgs = {
   /**

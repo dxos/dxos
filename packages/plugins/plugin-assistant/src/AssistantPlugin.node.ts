@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
@@ -30,28 +30,12 @@ import { type AssistantPluginOptions } from '#types';
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    AppPlugin.addAppGraphModule<AssistantPluginOptions | void>({
-      requires: AppGraphBuilder.requires,
-      provides: AppGraphBuilder.provides,
-      activate: AppGraphBuilder,
-    }),
-    AppPlugin.addSkillDefinitionModule<AssistantPluginOptions | void>({
-      requires: SkillDefinition.requires,
-      provides: SkillDefinition.provides,
-      activate: SkillDefinition,
-    }),
-    AppPlugin.addCreateObjectModule<AssistantPluginOptions | void>({
-      requires: CreateObject.requires,
-      provides: CreateObject.provides,
-      activate: CreateObject,
-    }),
-    AppPlugin.addOperationHandlerModule<AssistantPluginOptions | void>({
-      requires: OperationHandler.requires,
-      provides: OperationHandler.provides,
-      activate: OperationHandler,
-    }),
-    AppPlugin.addSchemaModule<AssistantPluginOptions | void>({
-      schema: [
+    Plugin.addLazyModule(AppGraphBuilder),
+    Plugin.addLazyModule(SkillDefinition),
+    Plugin.addLazyModule(CreateObject),
+    Plugin.addLazyModule(OperationHandler),
+    Plugin.addLazyModule(
+      AppCapability.schema([
         Chat.Chat,
         Chat.CompanionTo,
         Skill.Skill,
@@ -66,8 +50,8 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Sequence.Sequence,
         Memory.Memory,
         Text.Text,
-      ],
-    }),
+      ]),
+    ),
     Plugin.addLazyModule(EdgeModelResolver),
     Plugin.addLazyModule(LocalModelResolver),
     Plugin.addLazyModule(AiService),

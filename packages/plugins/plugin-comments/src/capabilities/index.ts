@@ -3,15 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet, Skill } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
+import { AppCapability } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 
 import { CommentCapabilities } from '#types';
@@ -21,16 +13,8 @@ export const AgentRunner = Capability.lazyModule(
   { provides: [CommentCapabilities.AgentRunner] },
   () => import('./agent-runner'),
 );
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
-export const SkillDefinition = Capability.lazyModule(
-  'SkillDefinition',
-  { provides: [AppCapabilities.SkillDefinition] },
-  () => import('./skill-definition'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
   {
@@ -39,28 +23,14 @@ export const Markdown = Capability.lazyModule(
   },
   () => import('./markdown-extension'),
 );
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
-export const CommentsSettings = Capability.lazyModule(
-  'CommentsSettings',
-  { provides: [CommentCapabilities.Settings, AppCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const CommentsSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [CommentCapabilities.Settings],
+});
 export const CommentState = Capability.lazyModule(
   'CommentState',
   { provides: [CommentCapabilities.State, CommentCapabilities.ViewState] },
   () => import('./state'),
 );
-export const UndoMappings = Capability.lazyModule(
-  'UndoMappings',
-  { provides: [Capabilities.UndoMapping] },
-  () => import('./undo-mappings'),
-);
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));

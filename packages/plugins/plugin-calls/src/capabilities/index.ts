@@ -3,16 +3,14 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { CallsCapabilities } from '#types';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { requires: [CallsCapabilities.Manager], provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [CallsCapabilities.Manager],
+});
 export const CallManager = Capability.lazyModule(
   'CallManager',
   { requires: [ClientCapabilities.Client, Capabilities.AtomRegistry], provides: [CallsCapabilities.Manager] },
@@ -23,13 +21,5 @@ export const CallTransport = Capability.lazyModule(
   { requires: [ClientCapabilities.Client], provides: [CallsCapabilities.CallTransportProvider] },
   () => import('./call-transport'),
 );
-export const ReactRoot = Capability.lazyModule(
-  'ReactRoot',
-  { provides: [Capabilities.ReactRoot] },
-  () => import('./react-root'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

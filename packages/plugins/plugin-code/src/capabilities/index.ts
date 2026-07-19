@@ -2,48 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet, Skill } from '@dxos/compute';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+import { SpaceCapability } from '@dxos/plugin-space';
 
 import { CodeCapabilities } from '#types';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { requires: [AppCapabilities.PluginAsset], provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
-export const SkillDefinition = Capability.lazyModule(
-  'SkillDefinition',
-  { provides: [AppCapabilities.SkillDefinition] },
-  () => import('./skill-definition'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [AppCapabilities.PluginAsset],
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const BuildRunState = Capability.lazyModule(
   'BuildRunState',
   { provides: [CodeCapabilities.BuildRun] },
   () => import('./build-run-state'),
 );
-export const CreateObject = Capability.lazyModule(
-  'CreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
-export const Settings = Capability.lazyModule(
-  'Settings',
-  { provides: [AppCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const Settings = AppCapability.settings(() => import('./settings'));

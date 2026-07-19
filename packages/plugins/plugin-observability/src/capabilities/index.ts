@@ -2,17 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type OperationHandlerSet } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Observability } from '@dxos/observability';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { ObservabilityCapabilities, ObservabilityEvents, type ObservabilityPluginOptions } from '#types';
 
@@ -46,21 +37,11 @@ export const PrivacyNotice = Capability.lazyModule(
   },
   () => import('./privacy-notice'),
 );
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
-export const ObservabilitySettings = Capability.lazyModule(
-  'ObservabilitySettings',
-  { provides: [ObservabilityCapabilities.Settings, AppCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ObservabilitySettings = AppCapability.settings(() => import('./settings'), {
+  provides: [ObservabilityCapabilities.Settings],
+});
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',
   {

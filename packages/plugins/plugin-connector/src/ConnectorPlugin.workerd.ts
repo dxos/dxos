@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 
@@ -12,15 +12,10 @@ import { meta } from '#meta';
 import { Connection } from '#types';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule({
-    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
-  }),
-
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(
+    AppCapability.schema([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed]),
+  ),
   Plugin.make,
 );
 

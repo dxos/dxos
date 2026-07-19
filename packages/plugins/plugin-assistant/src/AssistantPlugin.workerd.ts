@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Plugin } from '@dxos/app-framework';
-import { AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
@@ -15,35 +15,36 @@ import { HasSubject, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import OperationHandler from './capabilities/operation-handler';
-import SkillDefinition from './capabilities/skill-definition';
-import Toolkit from './capabilities/toolkit';
+import operationHandler from './capabilities/operation-handler';
+import skillDefinition from './capabilities/skill-definition';
+import toolkit from './capabilities/toolkit';
 
-export const AssistantPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule<void>({
-    id: 'skill-definition',
-    requires: [],
+const SkillDefinition = Capability.inlineModule(
+  'skill-definition',
+  {
     provides: [
       AppCapabilities.SkillDefinition,
       Capabilities.OperationHandler,
       RoutineCapabilities.AgentDelegationStrategy,
     ],
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addOperationHandlerModule<void>({
-    id: 'operation-handler',
-    requires: [],
-    provides: [Capabilities.OperationHandler],
-    activate: OperationHandler,
-  }),
-  Plugin.addModule({
-    id: 'toolkit',
-    requires: [],
-    provides: [AppCapabilities.Toolkit],
-    activate: Toolkit,
-  }),
-  AppPlugin.addSchemaModule<void>({
-    schema: [
+  },
+  skillDefinition,
+);
+
+const OperationHandler = Capability.inlineModule(
+  'operation-handler',
+  { provides: [Capabilities.OperationHandler] },
+  operationHandler,
+);
+
+const Toolkit = Capability.inlineModule('toolkit', { provides: [AppCapabilities.Toolkit] }, toolkit);
+
+export const AssistantPlugin = Plugin.define(meta).pipe(
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(Toolkit),
+  Plugin.addLazyModule(
+    AppCapability.schema([
       Chat.Chat,
       Chat.CompanionTo,
       Skill.Skill,
@@ -58,8 +59,8 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Sequence.Sequence,
       Memory.Memory,
       Text.Text,
-    ],
-  }),
+    ]),
+  ),
   Plugin.make,
 );
 

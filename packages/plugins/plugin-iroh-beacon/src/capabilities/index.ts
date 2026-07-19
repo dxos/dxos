@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { BeaconCapabilities } from './beacon-service';
@@ -19,8 +20,4 @@ export const BeaconServiceModule = Capability.lazyModule(
   () => import('./beacon-service'),
 );
 
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

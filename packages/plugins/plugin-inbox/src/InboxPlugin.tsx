@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Topic } from '@dxos/pipeline-email';
 import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';
@@ -26,33 +26,13 @@ import { translations } from '#translations';
 import { Calendar, ExtractedFrom, InboxCapabilities, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule<void>({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addSkillDefinitionModule<void>({
-    requires: SkillDefinition.requires,
-    provides: SkillDefinition.provides,
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addCreateObjectModule<void>({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addNavigationResolverModule<void>({
-    requires: NavigationResolver.requires,
-    provides: NavigationResolver.provides,
-    activate: NavigationResolver,
-  }),
-  AppPlugin.addOperationHandlerModule<void>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule<void>({
-    schema: [
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(NavigationResolver),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(
+    AppCapability.schema([
       Event.Event,
       Mailbox.Mailbox,
       Calendar.Calendar,
@@ -60,15 +40,13 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
       Topic,
-    ],
-  }),
-  AppPlugin.addSurfaceModule<void>({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule<void>({ translations }),
+    ]),
+  ),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(InboxSettings),
+  // Compiler-forced: without the explicit type argument here, inference for the plain
+  // `Plugin.addModule` extractor entries below resolves `T` to `unknown` instead of `void`.
   Plugin.addLazyModule<void>(Connector),
   Plugin.addModule({
     id: 'contact-extractor',

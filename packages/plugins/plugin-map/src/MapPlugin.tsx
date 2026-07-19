@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -23,43 +23,24 @@ import { Map } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MapPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addSkillDefinitionModule<void>({
-    requires: SkillDefinition.requires,
-    provides: SkillDefinition.provides,
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addCreateObjectModule<void>({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addOperationHandlerModule<void>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule<void>({ schema: [Map.Map] }),
-  AppPlugin.addSurfaceModule<void>({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addSettingsModule<void>({
-    requires: MapSettings.requires,
-    provides: MapSettings.provides,
-    activate: MapSettings,
-  }),
-  AppPlugin.addTranslationsModule<void>({ translations }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(AppCapability.schema([Map.Map])),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(MapSettings),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(MarkerProvider),
   Plugin.addLazyModule(MapState),
-  AppPlugin.addPluginAssetModule<void>({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { BeaconServiceModule, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -14,14 +14,10 @@ export const IrohBeaconPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(BeaconServiceModule),
 
   // Status indicator surface.
-  AppPlugin.addSurfaceModule({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
+  Plugin.addLazyModule(ReactSurface),
 
   // Translations.
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
 
   Plugin.make,
 );

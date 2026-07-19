@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, AutomationTemplates, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
@@ -14,27 +14,20 @@ import { ProfileOf } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrmPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({
-    requires: SkillDefinition.requires,
-    provides: SkillDefinition.provides,
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addAppGraphModule({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addSchemaModule({ schema: [ProfileOf.ProfileOf] }),
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(AppCapability.schema([ProfileOf.ProfileOf])),
   Plugin.addLazyModule(AutomationTemplates),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

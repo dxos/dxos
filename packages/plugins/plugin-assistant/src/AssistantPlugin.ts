@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
@@ -43,33 +43,13 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    AppPlugin.addAppGraphModule<AssistantPluginOptions | void>({
-      requires: AppGraphBuilder.requires,
-      provides: AppGraphBuilder.provides,
-      activate: AppGraphBuilder,
-    }),
-    AppPlugin.addNavigationResolverModule({
-      requires: NavigationResolver.requires,
-      provides: NavigationResolver.provides,
-      activate: NavigationResolver,
-    }),
-    AppPlugin.addSkillDefinitionModule<AssistantPluginOptions | void>({
-      requires: SkillDefinition.requires,
-      provides: SkillDefinition.provides,
-      activate: SkillDefinition,
-    }),
-    AppPlugin.addCreateObjectModule<AssistantPluginOptions | void>({
-      requires: CreateObject.requires,
-      provides: CreateObject.provides,
-      activate: CreateObject,
-    }),
-    AppPlugin.addOperationHandlerModule<AssistantPluginOptions | void>({
-      requires: OperationHandler.requires,
-      provides: OperationHandler.provides,
-      activate: OperationHandler,
-    }),
-    AppPlugin.addSchemaModule<AssistantPluginOptions | void>({
-      schema: [
+    Plugin.addLazyModule(AppGraphBuilder),
+    Plugin.addLazyModule(NavigationResolver),
+    Plugin.addLazyModule(SkillDefinition),
+    Plugin.addLazyModule(CreateObject),
+    Plugin.addLazyModule(OperationHandler),
+    Plugin.addLazyModule(
+      AppCapability.schema([
         Chat.Chat,
         Chat.CompanionTo,
         Skill.Skill,
@@ -84,19 +64,11 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Sequence.Sequence,
         Memory.Memory,
         Text.Text,
-      ],
-    }),
-    AppPlugin.addSettingsModule<AssistantPluginOptions | void>({
-      requires: Settings.requires,
-      provides: Settings.provides,
-      activate: Settings,
-    }),
-    AppPlugin.addSurfaceModule<AssistantPluginOptions | void>({
-      requires: ReactSurface.requires,
-      provides: ReactSurface.provides,
-      activate: ReactSurface,
-    }),
-    AppPlugin.addTranslationsModule<AssistantPluginOptions | void>({ translations }),
+      ]),
+    ),
+    Plugin.addLazyModule(Settings),
+    Plugin.addLazyModule(ReactSurface),
+    Plugin.addLazyModule(AppCapability.translations(translations)),
     Plugin.addLazyModule(AutomationTemplates, { id: 'automation-templates' }),
     Plugin.addLazyModule(MarkdownExtension, { id: 'markdown' }),
     // TODO(wittjosiah): Does not integrate with settings store.
@@ -120,9 +92,14 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
     Plugin.addLazyModule(CompanionChatProvisioner),
     Plugin.addLazyModule(Migrations),
     Plugin.addLazyModule(Connector),
-    AppPlugin.addPluginAssetModule<AssistantPluginOptions | void>({
-      asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-    }),
+    Plugin.addLazyModule(
+      AppCapability.pluginAsset({
+        pluginId: meta.profile.key,
+        path: 'PLUGIN.mdl',
+        content: pluginSpec,
+        mimeType: 'application/x-mdl',
+      }),
+    ),
     Plugin.make,
   );
 

@@ -3,27 +3,13 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Graph, GraphBuilder } from '@dxos/app-graph';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Client } from '@dxos/client';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type OperationHandlerSet } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { OnboardingCapabilities } from './capabilities';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const DefaultContent = Capability.lazyModule(
   'DefaultContent',
   {
@@ -42,11 +28,7 @@ export const DefaultContent = Capability.lazyModule(
   },
   () => import('./default-content'),
 );
-export const Settings = Capability.lazyModule(
-  'Settings',
-  { provides: [AppCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const Settings = AppCapability.settings(() => import('./settings'));
 export const OAuthRecoveryRedirect = Capability.lazyModule(
   'OAuthRecoveryRedirect',
   { provides: [] },
@@ -65,15 +47,7 @@ export const Onboarding = Capability.lazyModule(
   },
   () => import('./onboarding'),
 );
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 
 export * from './capabilities';

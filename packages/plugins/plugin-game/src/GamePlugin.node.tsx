@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -16,8 +16,8 @@ import { Game } from '#types';
  * downstream bundlers don't resolve cleanly under nested pnpm symlinks.
  */
 export const GamePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Game.Game] }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(AppCapability.schema([Game.Game])),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -22,42 +22,23 @@ import { CodeProject, SourceFile, Spec } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CodePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addSkillDefinitionModule({
-    requires: SkillDefinition.requires,
-    provides: SkillDefinition.provides,
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addCreateObjectModule({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile] }),
-  AppPlugin.addSettingsModule({
-    requires: SettingsCapability.requires,
-    provides: SettingsCapability.provides,
-    activate: SettingsCapability,
-  }),
-  AppPlugin.addSurfaceModule({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(AppCapability.schema([Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile])),
+  Plugin.addLazyModule(SettingsCapability),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(BuildRunState),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

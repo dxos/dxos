@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -21,37 +21,22 @@ import { translations } from './translations';
 import { Ibkr } from './types';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addSchemaModule({ schema: [Ibkr.Portfolio, Ibkr.Report, Ibkr.Instrument, Ibkr.Lot] }),
-  AppPlugin.addCreateObjectModule({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addSkillDefinitionModule({
-    requires: SkillDefinition.requires,
-    provides: SkillDefinition.provides,
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSurfaceModule({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(AppCapability.schema([Ibkr.Portfolio, Ibkr.Report, Ibkr.Instrument, Ibkr.Lot])),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule(Connector),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

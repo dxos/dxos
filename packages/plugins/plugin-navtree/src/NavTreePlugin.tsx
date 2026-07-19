@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Plugin } from '@dxos/app-framework';
-import { AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppCapability, LayoutOperation } from '@dxos/app-toolkit';
 import { Graph } from '@dxos/plugin-graph';
 
 import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
@@ -16,22 +16,10 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule<void>({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addOperationHandlerModule<void>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSurfaceModule<void>({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule<void>({ translations }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
   Plugin.addLazyModule<void>(State),
   Plugin.addModule({
     id: 'expose',
@@ -53,9 +41,14 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
     }),
   }),
   Plugin.addLazyModule(Keyboard),
-  AppPlugin.addPluginAssetModule<void>({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

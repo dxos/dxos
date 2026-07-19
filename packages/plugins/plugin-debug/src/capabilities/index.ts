@@ -3,29 +3,18 @@
 //
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 
 import { DebugCapabilities, type DebugPluginOptions } from '#types';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  {
-    requires: [Capabilities.AtomRegistry, DebugCapabilities.Settings, AppCapabilities.FileUploader],
-    provides: [Capabilities.ReactSurface],
-    props: ({ logStore }: DebugPluginOptions) => ({ logStore }),
-  },
-  () => import('./react-surface'),
-);
-export const DebugSettings = Capability.lazyModule(
-  'DebugSettings',
-  { provides: [AppCapabilities.Settings, DebugCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  requires: [Capabilities.AtomRegistry, DebugCapabilities.Settings, AppCapabilities.FileUploader],
+  props: ({ logStore }: DebugPluginOptions) => ({ logStore }),
+});
+export const DebugSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [DebugCapabilities.Settings],
+});
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',
   {

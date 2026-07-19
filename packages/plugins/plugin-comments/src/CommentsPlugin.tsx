@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -42,35 +42,13 @@ export type CommentsPluginOptions = {
 };
 
 export const CommentsPlugin = Plugin.define<CommentsPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule<CommentsPluginOptions>({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addSkillDefinitionModule<CommentsPluginOptions>({
-    requires: SkillDefinition.requires,
-    provides: SkillDefinition.provides,
-    activate: SkillDefinition,
-  }),
-  AppPlugin.addOperationHandlerModule<CommentsPluginOptions>({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addUndoMappingsModule<CommentsPluginOptions>({
-    requires: UndoMappings.requires,
-    provides: UndoMappings.provides,
-    activate: UndoMappings,
-  }),
-  AppPlugin.addSchemaModule<CommentsPluginOptions>({
-    schema: [AnchoredTo.AnchoredTo, Message.Message, Thread.Thread],
-  }),
-  AppPlugin.addSurfaceModule<CommentsPluginOptions>({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule<CommentsPluginOptions>({ translations: [...translations, ...threadTranslations] }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(UndoMappings),
+  Plugin.addLazyModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations([...translations, ...threadTranslations])),
   Plugin.addLazyModule(CommentState),
   Plugin.addLazyModule(Markdown),
   // Default comment-thread agent runner (one-shot LLM call per scheduled turn). `AgentRunner`
@@ -99,9 +77,14 @@ export const CommentsPlugin = Plugin.define<CommentsPluginOptions>(meta).pipe(
     activate: () =>
       Effect.succeed([Capability.provide(AgentIdentity, options.agentIdentity ?? DEFAULT_AGENT_IDENTITY)]),
   })),
-  AppPlugin.addPluginAssetModule<CommentsPluginOptions>({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

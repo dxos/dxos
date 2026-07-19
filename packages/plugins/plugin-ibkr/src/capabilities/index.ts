@@ -2,43 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet, Skill } from '@dxos/compute';
+import { Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { SpaceCapability } from '@dxos/plugin-space';
 
 export const Connector = Capability.lazyModule(
   'IbkrConnector',
   { provides: [ConnectorCapability] },
   () => import('./connector'),
 );
-export const CreateObject = Capability.lazyModule(
-  'IbkrCreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
-export const OperationHandler = Capability.lazyModule(
-  'IbkrOperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const AppGraphBuilder = Capability.lazyModule(
-  'IbkrAppGraphBuilder',
-  { requires: [AttentionCapabilities.ViewState], provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
-export const ReactSurface = Capability.lazyModule(
-  'IbkrReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
-export const SkillDefinition = Capability.lazyModule(
-  'IbkrSkillDefinition',
-  { provides: [AppCapabilities.SkillDefinition] },
-  () => import('./skill-definition'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [AttentionCapabilities.ViewState],
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));

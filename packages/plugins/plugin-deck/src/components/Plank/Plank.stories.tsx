@@ -8,7 +8,6 @@ import React, { useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppPlugin } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Node } from '@dxos/plugin-graph';
@@ -29,11 +28,7 @@ random.seed(99);
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addLazyModule(DeckState),
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
+  Plugin.addLazyModule(OperationHandler),
   Plugin.make,
 );
 

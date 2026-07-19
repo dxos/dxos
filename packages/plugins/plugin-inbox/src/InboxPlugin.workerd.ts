@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Event, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -12,15 +12,13 @@ import { Calendar, Mailbox } from '#types';
 import OperationHandler from './capabilities/operation-handler';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
+  Plugin.addModule({
     id: 'operation-handler',
     requires: [],
     provides: [Capabilities.OperationHandler],
     activate: OperationHandler,
   }),
-  AppPlugin.addSchemaModule({
-    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
-  }),
+  Plugin.addLazyModule(AppCapability.schema([Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message])),
   Plugin.make,
 );
 

@@ -13,7 +13,6 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppPlugin } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { type Client } from '@dxos/client';
@@ -48,10 +47,11 @@ const aiServiceSpec = LayerSpec.make({ affinity: 'space', requires: [], provides
 const AgentRuntimePlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.magazineStoryAgent'), name: 'Magazine Story Agent Runtime' }),
 ).pipe(
-  AppPlugin.addOperationHandlerModule<void>({
-    provides: [Capabilities.OperationHandler],
-    activate: () => Effect.succeed([Capability.provide(Capabilities.OperationHandler, AgentHandlers)]),
-  }),
+  Plugin.addLazyModule<void>(
+    Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed([Capability.provide(Capabilities.OperationHandler, AgentHandlers)]),
+    ),
+  ),
   Plugin.addModule({
     id: 'ai-service',
     provides: [Capabilities.LayerSpec],

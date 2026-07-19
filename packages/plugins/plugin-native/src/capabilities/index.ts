@@ -2,27 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { AiModelResolver } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Credential } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Ollama as OllamaTypes } from '@dxos/plugin-assistant';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
 import { NativeCapabilities } from '#types';
 
-export const NativeSettings = Capability.lazyModule(
-  'NativeSettings',
-  { provides: [NativeCapabilities.Settings, AppCapabilities.Settings] },
-  () => import('./settings'),
-);
+export const NativeSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [NativeCapabilities.Settings],
+});
 export const Ollama = Capability.lazyModule(
   'Ollama',
   {
@@ -31,11 +19,7 @@ export const Ollama = Capability.lazyModule(
   },
   () => import('./ollama'),
 );
-export const ReactSurface = Capability.lazyModule(
-  'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
-);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
 export const SpotlightListener = Capability.lazyModule(
   'SpotlightListener',
   { requires: [Capabilities.OperationInvoker], provides: [] },

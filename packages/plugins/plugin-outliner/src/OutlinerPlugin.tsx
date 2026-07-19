@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -14,33 +14,20 @@ import { Journal, Outline } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
-    requires: AppGraphBuilder.requires,
-    provides: AppGraphBuilder.provides,
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addCreateObjectModule({
-    requires: CreateObject.requires,
-    provides: CreateObject.provides,
-    activate: CreateObject,
-  }),
-  AppPlugin.addOperationHandlerModule({
-    requires: OperationHandler.requires,
-    provides: OperationHandler.provides,
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSchemaModule({
-    schema: [Journal.JournalEntry, Journal.Journal, Outline.Outline],
-  }),
-  AppPlugin.addSurfaceModule({
-    requires: ReactSurface.requires,
-    provides: ReactSurface.provides,
-    activate: ReactSurface,
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(AppCapability.schema([Journal.JournalEntry, Journal.Journal, Outline.Outline])),
+  Plugin.addLazyModule(ReactSurface),
+  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addLazyModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

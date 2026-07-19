@@ -12,7 +12,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -33,26 +33,27 @@ import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
+const MockDeckOperations = Capability.inlineModule(
+  'operation-handler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.provide(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(LayoutOperation.Select, () => Effect.void),
+          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+        ),
+      ),
+    ]),
+);
+
 const MockDeckOperationsPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'),
     name: 'Mock Deck Ops',
   }),
-).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed([
-        Capability.provide(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LayoutOperation.Select, () => Effect.void),
-            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-          ),
-        ),
-      ]),
-  }),
-  Plugin.make,
-);
+).pipe(Plugin.addLazyModule(MockDeckOperations), Plugin.make);
 
 /** Real term repeated across several `SAMPLE_MESSAGES` entries; used by `SearchFilter`'s play test. */
 const SEARCH_TERM = 'invoice';
