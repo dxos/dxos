@@ -163,6 +163,13 @@ Non-trivial correctness/behavior findings from the review of pre-existing (reloc
 code. Deferred out of the reorg to keep it low-risk; each warrants its own change +
 test.
 
+- **`decoration/diff.ts`** — `cherryPickHunk`'s hunk match uses strict half-open overlap
+  (`h.fromB < range.end && h.toB > range.start`), which never matches a **zero-width** hunk
+  (a pure insertion from the compare branch, `fromB === toB`) or a **collapsed cursor**
+  (`range.start === range.end`), so accepting an inserted change at that caret silently
+  no-ops. Use inclusive containment when either side is zero-width, keeping strict overlap
+  for two non-zero ranges; add `diff.test.ts` cases for pure-insertion hunks and cursors.
+  (Landed via `main`; not introduced by this reorg.)
 - **`collab/automerge/update-automerge.ts`** — changes from multiple transactions are
   collected then reversed together; a later transaction's offsets are relative to the
   doc after the earlier ones, so applying them out of order corrupts the doc. Collect
