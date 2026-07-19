@@ -5,6 +5,7 @@
 import { Chunk, unifiedMergeView } from '@codemirror/merge';
 import { type Extension, Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
+import { diffWordsWithSpace } from 'diff';
 
 export type DiffOptions = {
   /**
@@ -45,6 +46,52 @@ export const diffView = ({ original }: DiffOptions): Extension => [
   unifiedMergeView({ original, mergeControls: false }),
   reviewOrientationTheme,
 ];
+
+/**
+ * A single reviewable change between `before` (the original) and `after` (the proposal), anchored in
+ * the BEFORE text so it can be rendered as a suggestion over the original document and applied in
+ * place. `[from, to)` is the original range the hunk replaces (`from === to` for a pure insertion);
+ * `removed` is the original text in that range, `inserted` is the proposal text that replaces it.
+ */
+export type DiffHunk = {
+  from: number;
+  to: number;
+  removed: string;
+  inserted: string;
+};
+
+/**
+ * Groups the word-level diff between `before` and `after` into contiguous {@link DiffHunk}s — each a
+ * maximal run of insertions/deletions bounded by unchanged text. Used to render Google-Docs-style
+ * suggestions (accept/reject per hunk) over the original document (see {@link suggestChanges}).
+ */
+export const diffHunks = (before: string, after: string): DiffHunk[] => {
+  const hunks: DiffHunk[] = [];
+  let position = 0;
+  let pending: DiffHunk | undefined;
+  const flush = () => {
+    if (pending) {
+      hunks.push(pending);
+      pending = undefined;
+    }
+  };
+  for (const change of diffWordsWithSpace(before, after)) {
+    if (change.added) {
+      pending ??= { from: position, to: position, removed: '', inserted: '' };
+      pending.inserted += change.value;
+    } else if (change.removed) {
+      pending ??= { from: position, to: position, removed: '', inserted: '' };
+      pending.removed += change.value;
+      pending.to = position + change.value.length;
+      position += change.value.length;
+    } else {
+      flush();
+      position += change.value.length;
+    }
+  }
+  flush();
+  return hunks;
+};
 
 /** A changed hunk between two documents as character ranges in each (A = original, B = modified). */
 export type Hunk = { fromA: number; toA: number; fromB: number; toB: number };

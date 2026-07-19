@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
+import { Compartment, type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
@@ -11,9 +11,7 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useIdentity } from '@dxos/halo-react';
-import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
-import { type SpaceCapabilities } from '@dxos/plugin-space';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
@@ -26,21 +24,21 @@ import {
   isToolbarAction,
 } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
-import { diffView } from '@dxos/ui-editor';
-import { Branch, Version } from '@dxos/versioning';
+import { diffView, suggestChanges } from '@dxos/ui-editor';
+import { Branch } from '@dxos/versioning';
 
 import {
   MarkdownEditor,
   type MarkdownEditorContentProps,
   MarkdownEditorProvider,
   type MarkdownEditorProviderProps,
-  VersionBanner,
 } from '#components';
 import { useLinkQuery, useVersioning } from '#hooks';
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { mergeConflicts, versionDiff } from '../../extensions';
+import { VersionBanners } from './VersionBanners';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
@@ -52,6 +50,11 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
     Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
 >;
+
+// The compare/diff overlay is swapped in and out through a compartment so toggling Compare
+// reconfigures the live editor rather than remounting it (which would rebind automerge and lose
+// scroll/selection). The branch binding is unchanged while comparing, so only the overlay moves.
+const compareCompartment = new Compartment();
 
 export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   (
@@ -76,11 +79,15 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       checkpointContent,
       branchBaseContent,
       setSelection,
-      setCompare,
     } = versioning;
     const diffViewMode = settings.diffView ?? 'inline';
     const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
     const branchText = activeBranch ? versioning.activeText : undefined;
+    // Suggestion review: instead of binding the editor to the branch, keep it on the parent (main)
+    // and overlay the branch's changes as accept/reject suggestions. Accepting a change splices it
+    // into the parent (merging it); rejecting hides it. The editor stays read-only — edits are made
+    // only through the accept controls.
+    const suggestActive = compareActive && diffViewMode === 'suggest' && branchText !== undefined;
     // The core branch the editor is showing (undefined = main, or a legacy content-copy branch which
     // carries no registry key). Threaded to extension providers so branch-review affordances (e.g.
     // comments) scope to the branch in view.
@@ -105,69 +112,25 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         : undefined;
     const editorObject = readonlySnapshot
       ? { id: `${id}--${readonlySnapshot.key}`, text: readonlySnapshot.content ?? '' }
-      : (branchText ?? object);
+      : suggestActive
+        ? object
+        : (branchText ?? object);
     const initialValue = readonlySnapshot
       ? readonlySnapshot.content
-      : (branchText?.content ?? docContent ?? textContent);
-    const effectiveViewMode = readonlySnapshot ? 'readonly' : viewMode;
-    // Remount the editor when the selection or compare overlay changes so CodeMirror state rebinds cleanly.
-    const editorKey = `${
-      readonlySnapshot ? readonlySnapshot.key : activeBranch ? `branch-${activeBranch.id}` : 'current'
-    }${compareActive ? `--compare-${diffViewMode}` : ''}`;
-
-    // Leaving a checkpoint view returns to the tip it belongs to: the branch the checkpoint was
-    // taken on (so the reviewer lands back on the editable branch tip), else main's present.
-    const branchOfActiveVersion = useCallback(() => {
-      const branchKey = activeVersion?.branch;
-      return branchKey
-        ? document?.history?.branches.find((branch) => branch.key === branchKey && branch.status === 'active')
-        : undefined;
-    }, [document, activeVersion]);
-    const tipSelection = useCallback((): SpaceCapabilities.VersionSelection => {
-      const branch = branchOfActiveVersion();
-      return branch ? { kind: 'branch', branchId: branch.id } : { kind: 'current' };
-    }, [branchOfActiveVersion]);
-
-    const handleRestore = useCallback(() => {
-      if (document && activeVersion) {
-        // A branch checkpoint restores onto the branch document (checkpointText is the branch-bound
-        // Text); a base checkpoint onto the root.
-        Version.restore(document, activeVersion, checkpointText);
-        setSelection(tipSelection());
-      }
-    }, [document, activeVersion, checkpointText, setSelection, tipSelection]);
-
-    const handleBranchFrom = useCallback(
-      (name: string) => {
-        const target = activeVersion?.target.target;
-        if (document && activeVersion && target) {
-          Branch.create(document, {
-            name: name.trim(),
-            parent: target,
-            heads: activeVersion.heads,
-          })
-            .then((branch) => setSelection({ kind: 'branch', branchId: branch.id }))
-            .catch((error) => log.catch(error));
-        }
-      },
-      [document, activeVersion, setSelection],
-    );
-
-    const handleMerge = useCallback(() => {
-      if (document && activeBranch) {
-        Branch.merge(document, activeBranch)
-          .then(() => setSelection({ kind: 'current' }))
-          .catch((error) => log.catch(error));
-      }
-    }, [document, activeBranch, setSelection]);
-
-    const handleCompare = useCallback(() => setCompare(!versioning.compare), [setCompare, versioning.compare]);
-
-    const handleCloseBanner = useCallback(() => {
-      // Closing a branch-checkpoint banner returns to the branch tip, not main.
-      setSelection(tipSelection());
-      setCompare(false);
-    }, [setSelection, setCompare, tipSelection]);
+      : suggestActive
+        ? (docContent ?? textContent)
+        : (branchText?.content ?? docContent ?? textContent);
+    const effectiveViewMode = readonlySnapshot || suggestActive ? 'readonly' : viewMode;
+    // Remount only when the editor's bound document changes (checkpoint/fork snapshot, branch, or the
+    // suggest overlay which rebinds to the parent). Toggling Compare keeps the same binding — its
+    // overlay is reconfigured live via `compareCompartment`, so it is deliberately NOT in the key.
+    const editorKey = readonlySnapshot
+      ? readonlySnapshot.key
+      : suggestActive
+        ? `suggest-${activeBranch?.id}`
+        : activeBranch
+          ? `branch-${activeBranch.id}`
+          : 'current';
 
     // Extensions from other plugins.
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
@@ -189,21 +152,32 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         }, []);
     }, [extensionProviders, otherExtensionProviders, object, viewMode, reviewBranch]);
 
-    // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants
-    // use the custom versionDiff decorations; sideBySide uses the richer editable unified merge
-    // overlay (codemirror merge chunks with review-oriented colouring) — the branch stays editable
-    // in every mode, so a reviewer can adjust the draft while seeing it diffed against the anchor.
+    // The compare overlay lives in a compartment (reconfigured live, see `compareCompartment`), so it
+    // is intentionally absent here — its config changing must not alter this array, which would make
+    // `useTextEditor` recreate the view. The suggest overlay stays baked in: it rebinds the editor to
+    // the parent and so already remounts via `editorKey`.
     const combinedExtensions = useMemo<Extension[]>(() => {
-      const list = [...extensions, mergeConflicts()];
-      if (compareActive && branchBaseContent !== undefined) {
-        list.push(
-          diffViewMode === 'sideBySide'
-            ? diffView({ original: branchBaseContent })
-            : versionDiff({ base: branchBaseContent, variant: diffViewMode }),
-        );
+      const list = [...extensions, mergeConflicts(), compareCompartment.of([])];
+      if (suggestActive && branchText) {
+        // Editor is bound to the parent; the branch content is the proposal. Accept splices the
+        // change into the parent document, reject hides it.
+        list.push(suggestChanges({ proposal: branchText.content }));
       }
       return list;
-    }, [extensions, compareActive, branchBaseContent, diffViewMode]);
+    }, [extensions, suggestActive, branchText]);
+
+    // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants use
+    // the custom versionDiff decorations; sideBySide uses the richer editable unified merge overlay
+    // (codemirror merge chunks with review-oriented colouring) — the branch stays editable in every
+    // mode, so a reviewer can adjust the draft while seeing it diffed against the anchor.
+    const compareOverlay = useMemo<Extension | undefined>(() => {
+      if (compareActive && branchBaseContent !== undefined && diffViewMode !== 'suggest') {
+        return diffViewMode === 'sideBySide'
+          ? diffView({ original: branchBaseContent })
+          : versionDiff({ base: branchBaseContent, variant: diffViewMode });
+      }
+      return undefined;
+    }, [compareActive, branchBaseContent, diffViewMode]);
 
     // Toolbar actions from app graph, plus the branch switcher dropdown.
     const { graph } = useAppGraph();
@@ -250,7 +224,6 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           ],
         };
       });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [graph, attendableId, id, document, branchesKey, activeBranch?.id, activeVersion?.id, setSelection]);
 
     // File upload.
@@ -311,50 +284,15 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         {(editorRootProps) => (
           <Editor.Root {...editorRootProps}>
             <RegisterEditorView id={id} attendableId={attendableId} />
+            <CompareOverlay overlay={compareOverlay} />
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar>
                   <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
                 </Panel.Toolbar>
               )}
-              {activeVersion && (
-                <VersionBanner
-                  mode='checkpoint'
-                  name={Version.label(activeVersion)}
-                  detail={activeVersion.name ? new Date(activeVersion.createdAt).toLocaleString() : undefined}
-                  onRestore={handleRestore}
-                  // Branching from a BRANCH revision would fork a sub-branch, which is unsupported
-                  // (flat core registry) — offer it only for main revisions. See DESIGN.md.
-                  onBranchFrom={activeVersion.branch ? undefined : handleBranchFrom}
-                  onClose={handleCloseBanner}
-                />
-              )}
-              {activeBranch && (
-                <VersionBanner
-                  mode='branch'
-                  name={Branch.label(activeBranch)}
-                  detail={new Date(activeBranch.createdAt).toLocaleString()}
-                  onMerge={handleMerge}
-                  onCompare={handleCompare}
-                  onClose={handleCloseBanner}
-                />
-              )}
-              {activeFork && (
-                <VersionBanner
-                  mode='fork'
-                  name={Branch.label(activeFork)}
-                  detail={new Date(activeFork.createdAt).toLocaleString()}
-                  // Leaving the fork point returns to the branch tip if it is still editable, else main.
-                  onClose={() =>
-                    setSelection(
-                      activeFork.status === 'active'
-                        ? { kind: 'branch', branchId: activeFork.id }
-                        : { kind: 'current' },
-                    )
-                  }
-                />
-              )}
-              <Panel.Content>
+              <Panel.Content classNames='flex flex-col'>
+                <VersionBanners versioning={versioning} />
                 <MarkdownEditor.Content initialValue={initialValue} />
                 <Editor.Blocks />
               </Panel.Content>
@@ -382,6 +320,22 @@ const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: s
       return () => editorViews.unregister(attendableId ?? id);
     }
   }, [view, editorViews, attendableId, id]);
+
+  return null;
+};
+
+/**
+ * Reconfigures the compare/diff overlay on the live editor when Compare is toggled, avoiding a
+ * remount. Must render inside `Editor.Root`.
+ */
+const CompareOverlay = ({ overlay }: { overlay?: Extension }) => {
+  const { controller } = useEditorContext('MarkdownArticle.CompareOverlay');
+  const view = controller?.view;
+  useEffect(() => {
+    if (view) {
+      view.dispatch({ effects: compareCompartment.reconfigure(overlay ?? []) });
+    }
+  }, [view, overlay]);
 
   return null;
 };

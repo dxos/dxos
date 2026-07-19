@@ -4,13 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { NamePopover } from '@dxos/plugin-space/components';
-import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { NamePopover } from '@dxos/app-framework/ui';
+import { Button, Icon, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-export type VersionBannerProps = ThemedClassName<{
+export type VersionBannerProps = {
   /**
    * Checkpoint mode is read-only time travel; branch mode is an editable draft; fork mode is a
    * read-only view of a branch's creation point.
@@ -23,14 +22,13 @@ export type VersionBannerProps = ThemedClassName<{
   onMerge?: () => void;
   onCompare?: () => void;
   onClose: () => void;
-}>;
+};
 
 /**
  * Slim banner shown between the editor toolbar and content while the user is
  * viewing a checkpoint or editing a branch (i.e. off "main @ now").
  */
 export const VersionBanner = ({
-  classNames,
   mode,
   name,
   detail,
@@ -44,13 +42,7 @@ export const VersionBanner = ({
   const [namingBranch, setNamingBranch] = useState(false);
 
   return (
-    <div
-      role='status'
-      className={mx(
-        'flex items-center gap-2 pli-2 plb-1 text-sm bg-hoverSurface border-be border-separator',
-        classNames,
-      )}
-    >
+    <Toolbar.Root>
       <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} size={4} />
       <span className='truncate'>
         {t(`version-banner-${mode}.label`)} <span className='font-medium'>{name}</span>
@@ -66,6 +58,7 @@ export const VersionBanner = ({
           <NamePopover
             open={namingBranch}
             placeholder={t('branch-name.placeholder')}
+            submitLabel={t('create.label')}
             onSubmit={(name) => {
               setNamingBranch(false);
               onBranchFrom(name);
@@ -96,7 +89,7 @@ export const VersionBanner = ({
           onClick={onClose}
         />
       </div>
-    </div>
+    </Toolbar.Root>
   );
 };
 

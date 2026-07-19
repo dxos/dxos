@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
 import { Script, Skill, Template } from '@dxos/compute';
@@ -71,12 +72,15 @@ const addSpellingMistakes = (text: string, mistakeCount: number): string => {
 export const WithMarkdown: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ MarkdownPlugin }, { CommentsPlugin }] = await Promise.all([
+      // SpacePlugin contributes the `versioning-state` capability that the Comments article surface
+      // (and the versioning UI) reads; without it the story throws "No capability found".
+      const [{ MarkdownPlugin }, { CommentsPlugin }, { SpacePlugin }] = await Promise.all([
         import('@dxos/plugin-markdown/plugin'),
         import('@dxos/plugin-comments/plugin'),
+        import('@dxos/plugin-space/plugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), CommentsPlugin()],
+        plugins: [MarkdownPlugin(), CommentsPlugin(), SpacePlugin({})],
       };
     },
     config: config.remote, // TODO(burdon): Issue making persistent.
@@ -104,6 +108,59 @@ export const WithMarkdown: Story = {
     layout: [[Module.Chat], [Module.Comments]],
     skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
   },
+};
+
+/**
+ * Enters a prompt into the chat that asks the assistant to rewrite the document to match the style
+ * guide (both are bound into the chat context). The assistant uses the markdown update tool to edit
+ * the live document in place.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithMarkdownStyleGuide: Story = {
+  ...WithMarkdown,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Update the Document to obey the Style Guide');
+  },
+};
+
+/**
+ * As above, but asks the assistant to make the edits on a NEW branch rather than the live document.
+ * The assistant creates a branch (create-branch tool) and applies the style-guide edits to it
+ * (update tool with the branchId), leaving the branch unmerged for review — the input to Phase 2's
+ * branch-diff view.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithMarkdownStyleGuideBranch: Story = {
+  ...WithMarkdown,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Update the Document in a new branch to obey the Style Guide');
+  },
+};
+
+/** Types a prompt into the chat's CodeMirror editor and submits it, asserting it lands as a message. */
+const submitPrompt = async (canvasElement: HTMLElement, prompt: string) => {
+  const canvas = within(canvasElement);
+
+  // The chat prompt is a CodeMirror editor; locate it via its placeholder.
+  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+  if (!editor) {
+    throw new Error('Chat editor not found.');
+  }
+
+  await userEvent.click(editor);
+  await userEvent.type(editor, prompt);
+  await userEvent.keyboard('{Enter}');
+
+  // Submitting clears the editor and posts the prompt as a message in the thread.
+  await waitFor(() => expect(editor.textContent).toBe(''));
+  await canvas.findByText(prompt, {}, { timeout: 30_000 });
 };
 
 export const WithSkills: Story = {
