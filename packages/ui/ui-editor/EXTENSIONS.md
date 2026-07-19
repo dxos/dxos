@@ -3,7 +3,7 @@
 Public extensions exported by this package, grouped by their theme folder under `src/extensions/`.
 Each is a value (or factory) you drop into an editor's `extensions` array.
 
-```
+```text
 extensions/
   core/
     createBasicExtensions         — base editor: keymaps, history, brackets, read-only, wrapping, tabs

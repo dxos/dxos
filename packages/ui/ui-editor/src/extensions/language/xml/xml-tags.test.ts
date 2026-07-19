@@ -77,7 +77,12 @@ const xmlDecorations = (view: EditorView): Descriptor[] => {
       continue;
     }
     for (const { from, to, value } of decorationSetToArray(set)) {
-      const spec: any = value.spec ?? {};
+      const spec: {
+        tag?: string;
+        block?: boolean;
+        streaming?: boolean;
+        widget?: { props?: { id?: string }; id?: string };
+      } = value.spec ?? {};
       // Only xmlTags decorations carry a `tag` spec.
       if (spec.tag === undefined) {
         continue;

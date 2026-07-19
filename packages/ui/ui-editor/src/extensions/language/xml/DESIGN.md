@@ -7,7 +7,7 @@ a `WidgetType.toDOM()` creates a DOM placeholder, and React portals render conte
 
 ## `xmlTags` / `StubWidget`
 
-**Source:** `packages/ui/ui-editor/src/extensions/tags/xml-tags.ts`
+**Source:** `packages/ui/ui-editor/src/extensions/language/xml/xml-tags.ts`
 
 **How it works:**
 
@@ -37,14 +37,14 @@ a `WidgetType.toDOM()` creates a DOM placeholder, and React portals render conte
 
 | File                                                                                | Role                                                                                                   |
 | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `packages/ui/ui-editor/src/extensions/tags/xml-tags.ts`                             | Definition                                                                                             |
+| `packages/ui/ui-editor/src/extensions/language/xml/xml-tags.ts`                             | Definition                                                                                             |
 | `packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.tsx`               | Chat thread renderer — XML tags + dxn:/echo: url-scheme widgets                                        |
 | `packages/plugins/plugin-assistant/src/components/ChatThread/registry.tsx`          | Defines component registry (summary, surface, toolCall, toolResult, toolkit, json, inline factories)   |
 | `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx`                      | Editor — registers `dxn-preview` (block) and `link-preview` (inline) url-scheme widgets                |
 | `packages/plugins/plugin-inbox/src/components/MarkdownViewer/MarkdownViewer.tsx`    | Read-only viewer — inline anchor chips via url-scheme registry                                         |
 | `packages/ui/react-ui-transcription/src/components/Transcription/Transcription.tsx` | Transcription viewer — inline anchor chips via url-scheme registry                                     |
 | `packages/ui/react-ui-editor/src/stories/Widgets.stories.tsx`                       | Stories: `XmlTags` (XML tag registry) and `Preview` (url-scheme registry with `EditorPreviewProvider`) |
-| `packages/ui/ui-editor/src/extensions/tags/xml-util.test.ts`                        | Unit tests                                                                                             |
+| `packages/ui/ui-editor/src/extensions/language/xml/xml-tags.test.ts`                | Unit tests                                                                                             |
 | `packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.stories.tsx`       | Story defining dom-widget (factory) and react-widget (Component)                                       |
 
 ---

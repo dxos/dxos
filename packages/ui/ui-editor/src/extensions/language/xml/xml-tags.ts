@@ -606,11 +606,13 @@ const buildDecorations = (
                   ...widgetState,
                 } satisfies XmlWidgetProps;
 
-                // Create widget.
+                // Create widget. Known-height block widgets get their reserved height so StubWidget's
+                // fixed-height keep-alive applies to Component element tags too, not just url-scheme widgets.
+                const blockHeight = block ? def.estimatedHeight?.(props) : undefined;
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new StubWidget(widgetId, Component, props, notifier, false, !!block, undefined, def.debug)
+                    ? new StubWidget(widgetId, Component, props, notifier, false, !!block, blockHeight, def.debug)
                     : undefined;
 
                 // Add decoration.
