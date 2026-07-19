@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
         enableDeck: false,
         enableNativeRedirect: false,
         encapsulatedPlanks: false,
-        navigationDefault: 'replace',
+        navigationDefault: 'replace' as const,
       }),
     });
 
