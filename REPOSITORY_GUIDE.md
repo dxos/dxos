@@ -276,7 +276,9 @@ New packages are created with `"private": true` in their `package.json` (see [Ne
 
 1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
 2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
-3. Run `npm login && pnpm publish-package @dxos/<PACKAGE>`
+3. Run `pnpm login`, then either:
+   - one package: `pnpm publish-package @dxos/<PACKAGE>`
+   - all packages failing the published-package gate: `pnpm publish-unpublished-packages --yes`
 4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
    - Repository: `dxos/dxos`
    - Workflow file: `publish-all.yml`

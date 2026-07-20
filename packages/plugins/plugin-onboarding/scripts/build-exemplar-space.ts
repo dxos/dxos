@@ -63,7 +63,7 @@ const OUTPUT_PATH = resolve(__dirname, '../src/content/exemplar-space.dx.json');
 const ABOUT_MD_PATH = resolve(__dirname, '../src/content/about-bramble.md');
 const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 
-// -----------------------------------------------------------------------------
+//
 // RoastLog — exemplar-specific schema defined entirely in this build script.
 //
 // This is intentionally NOT a registered plugin type — it demonstrates that
@@ -72,7 +72,7 @@ const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 //
 // The jsonSchema is baked into each View.View so Table/Kanban can render these
 // objects at runtime without the schema being registered in the app.
-// -----------------------------------------------------------------------------
+//
 const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
   S.Struct({
     title: S.String.pipe(S.annotations({ title: 'Batch' })),
@@ -149,9 +149,9 @@ const textBlock = (text: string): ContentBlock.Text => ({ _tag: 'text', text }) 
 
 const actor = (name: string, email: string): Actor.Actor => ({ role: 'user', name, email });
 
-// -----------------------------------------------------------------------------
+//
 // Space population
-// -----------------------------------------------------------------------------
+//
 
 const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
@@ -246,9 +246,9 @@ const appendToFeed = async (space: Space, feed: Feed.Feed, items: Obj.Unknown[])
   await space.db.appendToFeed(feed, items);
 };
 
-// -----------------------------------------------------------------------------
+//
 // Organizations
-// -----------------------------------------------------------------------------
+//
 
 type OrganizationsBundle = {
   organizations: Record<OrgKey, Organization.Organization>;
@@ -330,9 +330,9 @@ const addOrganizations = (space: Space): OrganizationsBundle => {
   return { organizations };
 };
 
-// -----------------------------------------------------------------------------
+//
 // People
-// -----------------------------------------------------------------------------
+//
 
 type PeopleBundle = {
   people: Record<PersonKey, Person.Person>;
@@ -438,9 +438,9 @@ const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Orga
   return { people };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Organization views (Table / Kanban / Map)
-// -----------------------------------------------------------------------------
+//
 
 const addOrganizationViews = (space: Space): void => {
   const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
@@ -463,9 +463,9 @@ const addOrganizationViews = (space: Space): void => {
   space.db.add(MapView.make({ name: 'Map', view: mapView, center: [-100, 30], zoom: 2 }));
 };
 
-// -----------------------------------------------------------------------------
+//
 // Mailbox
-// -----------------------------------------------------------------------------
+//
 
 const makeMailbox = (
   people: Record<PersonKey, Person.Person>,
@@ -643,9 +643,9 @@ const makeMailbox = (
   return { mailbox, messages };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Calendar
-// -----------------------------------------------------------------------------
+//
 
 const makeCalendar = (
   people: Record<PersonKey, Person.Person>,
@@ -751,9 +751,9 @@ const makeCalendar = (
   return { calendar, events };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Project + tasks
-// -----------------------------------------------------------------------------
+//
 
 const makeProject = (people: Record<PersonKey, Person.Person>): { project: Project.Project; tasks: Task.Task[] } => {
   const project = Project.make({
@@ -816,9 +816,9 @@ const makeProject = (people: Record<PersonKey, Person.Person>): { project: Proje
   return { project, tasks };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Markdown notes (with inline DXN links and block embeds)
-// -----------------------------------------------------------------------------
+//
 
 type NotesBundle = {
   cuppingNotes: Markdown.Document;
@@ -935,9 +935,9 @@ const makeNotes = (
   return { cuppingNotes, itinerary, tastingProtocol };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Roast Log — custom exemplar schema entries + Table / Kanban views
-// -----------------------------------------------------------------------------
+//
 
 const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Person>): Obj.Any[] => {
   // Stamp objects with the persisted type entity so their `@type` is the space-relative EID,
@@ -1118,7 +1118,7 @@ const addRoastLogViews = async (space: Space, people: Record<PersonKey, Person.P
   space.db.add(Kanban.make({ name: 'Kanban', view: kanbanView }));
 };
 
-// -----------------------------------------------------------------------------
+//
 // Sketches — tldraw v3 store format
 //
 // Records are created via the @tldraw/tlschema + @tldraw/store API so the
@@ -1139,7 +1139,7 @@ const addRoastLogViews = async (space: Space, people: Record<PersonKey, Person.P
 //   - The error is silently swallowed by plugin-sketch's useAsyncEffect, so a
 //     bad index key results in an empty canvas with no console error in the UI.
 //   - Upstream reference: packages/plugins/plugin-sketch/src/hooks/useStoreAdapter.ts
-// -----------------------------------------------------------------------------
+//
 
 // Minimal tldraw v3 schema with geo shapes only.
 const tlSchema = createTLSchema({
@@ -1305,9 +1305,9 @@ const makeSketches = (): { floorPlan: Sketch.Sketch; flavorWheel: Sketch.Sketch 
   flavorWheel: Sketch.make({ name: 'Spring blend flavor wheel', canvas: { content: makeFlavorWheelContent() } }),
 });
 
-// -----------------------------------------------------------------------------
+//
 // Sheets
-// -----------------------------------------------------------------------------
+//
 
 const makeSheets = (): { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet } => {
   const greenInventory = Sheet.make({
@@ -1394,9 +1394,9 @@ const makeSheets = (): { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet } =
   return { greenInventory, priceList };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Entry point
-// -----------------------------------------------------------------------------
+//
 
 const aboutMd = await readFile(ABOUT_MD_PATH, 'utf8');
 const welcomeMd = await readFile(WELCOME_MD_PATH, 'utf8');

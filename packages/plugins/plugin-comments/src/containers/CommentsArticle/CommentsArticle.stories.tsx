@@ -15,6 +15,7 @@ import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
+import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -24,7 +25,7 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -72,27 +73,30 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
     if (start < 0) {
       continue;
     }
+
     const anchor = toCursorRange(accessor, start, start + phrase.length);
-    const thread = Thread.make({
-      name: phrase,
-      status: 'active',
-      messages: [
-        Ref.make(
-          Obj.make(Message.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'user', name: 'Alice' },
-            blocks: [{ _tag: 'text', text: `Comment on “${phrase}”.` }],
-          }),
-        ),
-      ],
-    });
-    const relation = Relation.make(AnchoredTo.AnchoredTo, {
-      [Relation.Source]: thread,
-      [Relation.Target]: doc,
-      anchor,
-    });
-    space.db.add(thread);
-    space.db.add(relation);
+    const thread = space.db.add(
+      Thread.make({
+        name: phrase,
+        status: 'active',
+        messages: [
+          Ref.make(
+            Obj.make(Message.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user', name: 'Alice' },
+              blocks: [{ _tag: 'text', text: `Comment on “${phrase}”.` }],
+            }),
+          ),
+        ],
+      }),
+    );
+    space.db.add(
+      Relation.make(AnchoredTo.AnchoredTo, {
+        [Relation.Source]: thread,
+        [Relation.Target]: doc,
+        anchor,
+      }),
+    );
   }
 };
 
@@ -282,9 +286,6 @@ const meta = {
         SpacePlugin({}),
         MarkdownPlugin(),
         StoryGraphPlugin(),
-        // The stub agent plugin must come BEFORE CommentsPlugin so its
-        // `AgentRunner` contribution wins over CommentsPlugin's default
-        // (LLM-backed) runner — `Capability.get` returns the first match.
         StoryStubAgentPlugin(),
         CommentsPlugin(),
       ],

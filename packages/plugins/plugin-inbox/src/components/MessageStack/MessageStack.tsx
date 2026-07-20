@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Atom from '@effect-atom/atom/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
+import type { PaginationResult } from '@dxos/echo-react';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
@@ -523,7 +523,6 @@ type ConversationMessageRowProps = {
  */
 const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: ConversationMessageRowProps) => {
   const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
-
   const searchSnippet = useMemo(
     () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
     [message, searchQuery],
@@ -532,7 +531,7 @@ const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: Conver
   return (
     <Card.Row>
       <Card.Block>
-        <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
+        <DxAvatar hue={hue} hueVariant='surface' variant='circle' size={6} fallback={from} />
       </Card.Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>

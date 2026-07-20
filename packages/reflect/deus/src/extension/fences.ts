@@ -254,6 +254,8 @@ export const mdlFenceHighlight: Extension = [
         }
       }
     },
-    { decorations: (instance) => instance.decorations },
+    {
+      decorations: (instance) => instance.decorations,
+    },
   ),
 ];

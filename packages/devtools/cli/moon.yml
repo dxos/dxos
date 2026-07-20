@@ -5,16 +5,16 @@ tags:
   - ts-test
 tasks:
   # Bundles the CLI into per-platform executables. This is the CLI's real build
-  # artifact (not a library `compile`), so it is intentionally NOT named `compile`
-  # and the project is not tagged `ts-build` — that keeps `cli` out of the
-  # `^:compile` / `#ts-build:build` fan-out (e.g. storybook serve no longer waits
-  # on it). Type-checking is provided by the `typecheck` tag's `build` task.
+  # artifact, but it is intentionally NOT named `build` and the project is not
+  # tagged `ts-build`/`ts-vite-build` — that keeps `cli` out of the `^:build` /
+  # `#ts-build:build` fan-out (e.g. storybook serve no longer waits on it).
+  # Type-checking is provided by the `typecheck` tag's `build` task.
   bundle:
     command: bun
     args:
       - ./scripts/build.ts
     deps:
-      - ^:compile
+      - ^:build
     options:
       timeout: 60
     inputs:

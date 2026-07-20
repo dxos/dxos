@@ -10,10 +10,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useResolveRef, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -69,7 +70,7 @@ const meta = {
               const { personalSpace } = yield* initializeIdentity(client);
               // Thread pool of size 1 assigns every seeded message the same threadId — a single
               // conversation of exactly `length` messages, oldest to newest.
-              yield* Effect.promise(() => initializeMailbox(personalSpace, length, 1));
+              yield* Effect.promise(() => initializeMailbox(personalSpace.db, length, 1));
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -101,16 +102,20 @@ export const Spec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Wait for identity/client/mailbox seeding (all async) to finish and the thread to render.
-    const replyButton = await canvas.findByRole('button', { name: 'Reply' }, { timeout: 12_000 });
+    // Wait for identity/client/mailbox seeding (all async) to finish and the thread to render. Only the
+    // most recent message is expanded by default, so exactly one Reply All shows; the two older messages
+    // render as collapsed summaries.
+    const replyButtons = await canvas.findAllByRole('button', { name: 'Reply All' }, { timeout: 12_000 });
+    await expect(replyButtons).toHaveLength(1);
+    await expect(canvas.getAllByTestId('message.expand')).toHaveLength(2);
 
-    // Pressing Reply appends a draft composer inline at the bottom of the thread — no navigation.
-    await userEvent.click(replyButton);
+    // Reply All on the newest message appends a draft composer inline at the bottom — no navigation.
+    await userEvent.click(replyButtons[0]);
     await canvas.findByText('Draft', undefined, { timeout: 5_000 });
     await expect(await canvas.findAllByTestId('edit-email-form', undefined, { timeout: 5_000 })).toHaveLength(1);
 
-    // Pressing Reply again appends a second draft — multiple drafts per thread are allowed.
-    await userEvent.click(canvas.getByRole('button', { name: 'Reply' }));
+    // Pressing it again appends a second draft — multiple drafts per thread are allowed.
+    await userEvent.click(canvas.getByRole('button', { name: 'Reply All' }));
     await waitFor(() => expect(canvas.getAllByTestId('edit-email-form')).toHaveLength(2), { timeout: 5_000 });
   },
 };

@@ -5,7 +5,7 @@
 import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fns';
 
 import { Obj } from '@dxos/echo';
-import { type ContentBlock, type Message } from '@dxos/types';
+import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
 
 import { type Mailbox } from '#types';
@@ -104,6 +104,9 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
     // Top-level `threadId` (not just `properties.threadId`) is what the thread-grouping query and the
     // mailbox conversation aggregate key on; without it a reply draft never joins its thread.
     ...(message?.threadId && mode !== 'compose' ? { threadId: message.threadId } : {}),
+    // Record the specific message being answered so the thread can render the draft directly after it
+    // (see `orderThreadItems`) rather than always at the bottom.
+    ...(message && mode !== 'compose' ? { parentMessage: message.id } : {}),
     blocks: [{ _tag: 'text' as const, text: draftBody }],
     properties: {
       to,
@@ -112,6 +115,60 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
       ...properties,
     },
   };
+};
+
+/**
+ * Orders a conversation for display so a reply draft renders immediately after the message it answers
+ * (matched via the draft's `parentMessage`), while every other message keeps its chronological order.
+ * Drafts without a resolvable non-draft parent in the thread (e.g. a bare compose) stay where they are.
+ */
+export const orderThreadItems = (messages: Message.Message[]): Message.Message[] => {
+  const byId = new Map(messages.map((message) => [message.id, message]));
+  const childDrafts = new Map<string, Message.Message[]>();
+  const standalone: Message.Message[] = [];
+  for (const message of messages) {
+    const parentId = DraftMessage.instanceOf(message) ? message.parentMessage : undefined;
+    const parent = parentId ? byId.get(parentId) : undefined;
+    if (parentId && parent && !DraftMessage.instanceOf(parent)) {
+      const drafts = childDrafts.get(parentId) ?? [];
+      drafts.push(message);
+      childDrafts.set(parentId, drafts);
+    } else {
+      standalone.push(message);
+    }
+  }
+
+  if (childDrafts.size === 0) {
+    return messages;
+  }
+
+  return standalone.flatMap((message) => {
+    const drafts = childDrafts.get(message.id);
+    return drafts ? [message, ...drafts] : [message];
+  });
+};
+
+/**
+ * Drops a draft superseded by its already-synced sent copy (`properties.sentMessageId` matched against
+ * the synced messages' foreign-key ids). Synced messages and this mailbox's still-unsent drafts always
+ * pass; a draft from a different mailbox is dropped. Used by the `mailboxMessage` companion connector,
+ * which can briefly see both a draft and its just-synced copy in the same thread.
+ */
+export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
+  const syncedIds = new Set(
+    messages
+      .filter((message) => !DraftMessage.instanceOf(message))
+      .flatMap((message) => Obj.getMeta(message).keys.map((key) => key.id)),
+  );
+  return messages.filter((message) => {
+    if (!DraftMessage.instanceOf(message)) {
+      return true;
+    }
+    if (!DraftMessage.belongsTo(message, mailboxUri)) {
+      return false;
+    }
+    return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
+  });
 };
 
 /**
@@ -155,6 +212,7 @@ type MessageProps = {
   text: string;
   date: string;
   from?: string;
+  to?: string;
   email?: string;
   subject: string;
   snippet: string;
@@ -210,11 +268,12 @@ export const getMessageProps = (
   const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
+  const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? getMessageBodyText(message);
   const hue = toHue(hashString(from));
-  return { id, text, date, from, email, subject, snippet, hue };
+  return { id, text, date, from, to, email, subject, snippet, hue };
 };
 
 /**

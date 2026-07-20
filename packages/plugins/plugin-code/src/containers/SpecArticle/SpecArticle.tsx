@@ -7,8 +7,9 @@ import React, { forwardRef, useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
 import { Doc } from '@dxos/echo-doc';
-import { getSpace, useObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useObject } from '@dxos/echo-react';
+import { useIdentity } from '@dxos/halo-react';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {

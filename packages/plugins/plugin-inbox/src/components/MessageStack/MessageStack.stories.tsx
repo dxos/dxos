@@ -3,30 +3,22 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
+import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Message, Person } from '@dxos/types';
+import { Message } from '@dxos/types';
 
-import { Builder, MessagesOptions, initializeMailbox } from '#testing';
+import { Builder, MessagesOptions } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
 import { MessageStack, type MessageStackItem, MessageStackProps } from './MessageStack';
 
 type DefaultStoryProps = MessageStackProps & {
@@ -133,36 +125,10 @@ export const WithMessages: Story = {
 export const WithConversations: Story = {
   args: {
     id: 'story',
-    groupByThread: true,
     count: 100,
+    groupByThread: true,
     options: {
       threads: 10,
     },
   },
-};
-
-export const WithCompanion = {
-  render: CompanionStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
-              const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace));
-              log.info('mailbox', { id: mailbox.id });
-            }),
-        }),
-        StorybookPlugin({}),
-        InboxPlugin(),
-        PreviewPlugin(),
-      ],
-    }),
-  ],
 };

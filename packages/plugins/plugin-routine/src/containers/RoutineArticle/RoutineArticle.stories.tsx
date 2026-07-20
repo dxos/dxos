@@ -9,10 +9,11 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Feed, Filter, Json, Obj, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { type Space, useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -155,9 +156,9 @@ const ThreeColumnStory = () => {
   }
 
   return (
-    <div role='none' className='w-full grid grid-cols-3 gap-2'>
+    <div className='w-full grid grid-cols-3 gap-2'>
       <RoutineArticle role='article' subject={routine} attendableId='story' />
-      <div role='none' className='grid grid-rows-2 gap-2 min-h-0'>
+      <div className='grid grid-rows-2 gap-2 min-h-0'>
         <EditableObject key={JSON.stringify(routineSnapshot)} title='Routine' object={routine} />
         {trigger && <EditableObject key={JSON.stringify(triggerSnapshot)} title='Trigger' object={trigger} />}
       </div>

@@ -14,13 +14,16 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter } from '@dxos/echo';
+import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
+import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { Connection } from '@dxos/plugin-connector';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -71,6 +74,8 @@ type StoryArgs = {
   conversations?: boolean;
   /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
   seedSearchTerm?: boolean;
+  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "Mailbox empty" instead of "No connections configured". */
+  bound?: boolean;
 };
 
 const DefaultStory = ({ conversations }: StoryArgs) => {
@@ -98,12 +103,20 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false } }) => ({
+    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
+          types: [
+            Feed.Feed,
+            Mailbox.Mailbox,
+            Message.Message,
+            Person.Person,
+            AccessToken.AccessToken,
+            Connection.Connection,
+            Cursor.Cursor,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
@@ -146,7 +159,18 @@ const meta = {
                   );
                 }
               } else {
-                yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
+                const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace.db, count, threads));
+                if (bound) {
+                  const accessToken = personalSpace.db.add(
+                    AccessToken.make({ source: 'imap.example.com', account: 'user@example.com', token: 'story-token' }),
+                  );
+                  const connection = personalSpace.db.add(
+                    Connection.make({ name: 'Story Mail', accessToken: Ref.make(accessToken) }),
+                  );
+                  personalSpace.db.add(
+                    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }),
+                  );
+                }
               }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
@@ -176,19 +200,25 @@ export const Default: Story = {
   },
 };
 
-export const Conversations: Story = {
+// TODO(wittjosiah): Remove? Conversation grouping is on by default now, so `Default` already covers
+// it — this exists only to exercise the flat/ungrouped fallback (`conversations: false`).
+export const Flat: Story = {
   args: {
     count: 500,
-    // A thread pool comfortably larger than the page size (10 conversations) so scrolling
-    // exercises group-level pagination — with the default pool of 10 everything fits on one page.
-    threads: 100,
-    conversations: true,
+    conversations: false,
+  },
+};
+
+export const NoConnection: Story = {
+  args: {
+    count: 0,
   },
 };
 
 export const Empty: Story = {
   args: {
     count: 0,
+    bound: true,
   },
 };
 
