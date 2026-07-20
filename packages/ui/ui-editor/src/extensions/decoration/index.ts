@@ -4,7 +4,6 @@
 
 export * from './annotations';
 export * from './assistant';
-export * from './blocks';
 export * from './comments';
 export * from './diff';
 export * from './fader';

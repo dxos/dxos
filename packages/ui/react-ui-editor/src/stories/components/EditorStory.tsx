@@ -60,8 +60,6 @@ export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
       [debug, extensionsProp],
     );
 
-    console.log('!!');
-
     return (
       <div className={mx('dx-container grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
@@ -125,8 +123,19 @@ const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
         selection,
         initialValue: text,
         extensions: [
-          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
-          createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
+          createBasicExtensions({
+            lineNumbers,
+            placeholder,
+            readOnly,
+            scrollPastEnd: true,
+            search: true,
+          }),
+          createThemeExtensions({
+            monospace,
+            slots,
+            syntaxHighlighting: true,
+            themeMode,
+          }),
           createMarkdownExtensions(),
           extensions || [],
         ],

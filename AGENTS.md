@@ -8,9 +8,31 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
 
 ## Start of session
 
+- **MANDATORY FIRST ACTION — check the branch before any file op. The branch, not
+  the directory, decides whether editing is safe.** The harness assigns this
+  session a branch and a worktree, but ~10% of the time it mis-instantiates them:
+  the assigned `claude/…` branch gets checked out at the _primary checkout_ while
+  the worktree path is left an empty `.claude`/`.moon` stub. Editing at the primary
+  checkout is still safe **as long as HEAD is your assigned branch** — your commits
+  land there, not on `main`. The bare-root path does NOT by itself mean `main`.
+  Before reading, editing, or running anything, run:
+  ```
+  git rev-parse --show-toplevel && git branch --show-current
+  ```
+  - **On a `claude/…` (or any non-`main`) branch → proceed.** Edits are data-safe
+    even if `--show-toplevel` is the primary checkout instead of
+    `.../.claude/worktrees/<name>`. If the path is not the assigned worktree, say
+    so once: that only affects whether the Desktop UI tracks the session
+    (recoverable), not data safety. Do NOT run `git worktree add <path> <branch>`
+    to "fix" it — the branch is already checked out, so that command fails (and the
+    `git worktree add` guard denies it anyway). If UI pairing matters, ask the user
+    to work-in-place or restart the session; do not halt the task over it.
+  - **On `main` → STOP, write nothing, tell the user.** Only here do edits pollute
+    the shared branch irreversibly. Do not create a worktree or branch to escape
+    (the harness owns those) — ask the user how to proceed.
 - Confirm you understand these instructions and list the guidance files you are
   aware of (this file, `.claude/CLAUDE.md`, relevant `.agents/skills/*`).
-- State the worktree you are operating in.
+- State the branch and the `--show-toplevel` path you are operating on.
 - When asking a question, make it yes/no or give numbered options — never an
   unnumbered a-or-b.
 - If unsure how to implement something, ask rather than guess.
@@ -58,9 +80,13 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   out-of-range on any bump and would cascade the fixed publish group to a
   spurious major. Do not "simplify" it to `*`. Why it matters:
   `.github/RELEASE-SPEC.md`.
-- **Never edit the main checkout.** All file edits target the assigned worktree
-  path, never the bare repo root or another worktree (the `guard-worktree.sh`
-  hook denies these).
+- **Never edit while on the `main` branch.** The safety signal is the branch, not
+  the directory: run `git branch --show-current` before your first edit. If it is
+  `main`, stop — edits pollute the shared branch. Editing the primary checkout
+  directory is fine when HEAD is your assigned `claude/…` branch (the ~10%
+  mis-instantiation case in Start-of-session); the bare-root path does **not**
+  imply `main`. `guard-worktree.sh` fences edits whose target working tree is on
+  `main`, but treat it as a backstop, not a guarantee — self-verify the branch.
 - **Commit nothing silently.** Before any commit/push, `git status` and account
   for every modified/untracked file — including the user's own edits in the
   shared worktree. Commit them or explicitly confirm exclusion.

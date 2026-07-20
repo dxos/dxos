@@ -7,7 +7,6 @@ import { type EditorView, ViewPlugin } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
-import { getSelection } from './selection';
 import { treeFacet } from './tree';
 
 const LIST_ITEM_REGEX = /^\s*- (\[ \]|\[x\])? /;
@@ -18,18 +17,29 @@ const LIST_ITEM_REGEX = /^\s*- (\[ \]|\[x\])? /;
 const initialize = () => {
   return ViewPlugin.fromClass(
     class {
+      #timer: ReturnType<typeof setTimeout> | null = null;
+
       constructor(view: EditorView) {
         const first = view.state.doc.lineAt(0);
         const text = view.state.sliceDoc(first.from, first.to);
         const match = text.match(LIST_ITEM_REGEX);
         if (!match) {
-          setTimeout(() => {
+          // Deferred so the dispatch runs after the view finishes constructing; cleared on destroy so it
+          // never fires on a torn-down view.
+          this.#timer = setTimeout(() => {
+            this.#timer = null;
             const insert = '- [ ] ';
             view.dispatch({
               changes: [{ from: 0, to: 0, insert }],
               selection: EditorSelection.cursor(insert.length),
             });
           });
+        }
+      }
+
+      destroy() {
+        if (this.#timer != null) {
+          clearTimeout(this.#timer);
         }
       }
     },
@@ -49,7 +59,7 @@ export const editor = () => [
     // Check cursor is in a valid position.
     //
     if (!tr.docChanged) {
-      const current = getSelection(tr.state).from;
+      const current = tr.state.selection.main.from;
       if (current != null) {
         const currentItem = tree.find(current);
         if (!currentItem) {
@@ -58,7 +68,7 @@ export const editor = () => [
 
         // Check if outside of editable range.
         if (current < currentItem.contentRange.from || current > currentItem.contentRange.to) {
-          const prev = getSelection(tr.startState).from;
+          const prev = tr.startState.selection.main.from;
           const prevItem = prev != null ? tree.find(prev) : undefined;
           if (!prevItem) {
             return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];

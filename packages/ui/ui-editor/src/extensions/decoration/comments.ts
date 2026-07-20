@@ -559,6 +559,9 @@ export const createComment: Command = (view) => {
 
   const cursor = Cursor.getCursorFromRange(view.state, { from, to });
   if (cursor) {
+    // Collapse the text selection now that the range is captured by the comment (the caret stays within
+    // the new comment, keeping it the current thread).
+    view.dispatch({ selection: { anchor: from } });
     // Create thread via callback; branch-tag it with the branch under review (undefined = main).
     options.onCreate?.({ cursor, from, location: view.coordsAtPos(from), branch: options.reviewBranch });
     return true;

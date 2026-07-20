@@ -5,18 +5,17 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { random } from '@dxos/random';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
 import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
-import { EditorStory } from './components';
+import { EditorStory, EditorStoryProps, generateList } from './components';
 
-type StoryArgs = {
-  text?: string;
-};
+type StoryArgs = EditorStoryProps;
 
-const DefaultStory = ({ text }: StoryArgs) => {
+const DefaultStory = (props: StoryArgs) => {
   const [controller, setController] = useState<EditorController | null>(null);
 
   const extensions = useMemo(() => [outliner(), hashtag()], []);
@@ -37,6 +36,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
     ],
     [],
   );
+
   const getView = useCallback(() => controller?.view ?? null, [controller]);
 
   return (
@@ -51,9 +51,8 @@ const DefaultStory = ({ text }: StoryArgs) => {
     >
       <EditorStory
         ref={setController}
-        text={text}
+        {...props}
         extensions={extensions}
-        debug='raw+tree'
         debugCustom={(view) => {
           const tree = view.state.facet(treeFacet);
           const lines: string[] = [];
@@ -82,8 +81,19 @@ export const Empty: Story = {
   args: {},
 };
 
+export const Paragraphs: Story = {
+  args: {
+    text: generateList({
+      depth: 3,
+      children: [2, 3],
+      content: () => random.lorem.paragraph(),
+    }),
+  },
+};
+
 export const Basic: Story = {
   args: {
+    debug: 'raw+tree',
     text: join(
       //
       '- [ ] A',
@@ -99,6 +109,7 @@ export const Basic: Story = {
 
 export const Nested: Story = {
   args: {
+    // debug: 'raw+tree',
     text: join(
       //
       '- [ ] A',
