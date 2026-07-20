@@ -8,9 +8,10 @@ import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Database, DXN, Feed, Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import { usePagination, useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
-import { usePagination, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { persistentClientServices, withClientProvider } from '@dxos/react-client/testing';
 import { Button, Card, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';

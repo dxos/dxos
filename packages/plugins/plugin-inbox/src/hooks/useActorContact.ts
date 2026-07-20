@@ -5,8 +5,8 @@
 import { useMemo } from 'react';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client/echo';
 import { type Actor, Person } from '@dxos/types';
 
 // TODO(burdon): Factor out lazy update pattern.

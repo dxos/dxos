@@ -12,8 +12,8 @@ import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import {
   Button,
   type ThemedClassName,

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { useSelection } from '@dxos/react-ui-attention';
 
 import { VideoPlayer } from '#components';
