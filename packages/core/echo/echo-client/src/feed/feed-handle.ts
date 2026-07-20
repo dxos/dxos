@@ -428,17 +428,6 @@ export class FeedHandle {
     });
   }
 
-  async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
-    invariant(EntityId.isValid(obj.id), 'object missing valid id');
-    const decoded = await Obj.fromJSON(obj, {
-      refResolver: this._refResolver,
-      uri: EID.make({ spaceId: this._spaceId, entityId: obj.id }),
-      database: this._database,
-      parent: this._parentEntity,
-    });
-    return decoded;
-  }
-
   /**
    * The single materialization entry point for feed JSON: reconciles into an existing core's
    * working-set instance, or decodes and registers a fresh live core. Used by polling, reference
