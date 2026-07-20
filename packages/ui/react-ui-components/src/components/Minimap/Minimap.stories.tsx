@@ -33,14 +33,18 @@ const DefaultStory = ({ markers, ...props }: MinimapProps) => {
   const visibleRange = useMemo(() => ({ from: start, to: start + WINDOW }), [start]);
 
   return (
-    <div className='relative grid grid-cols-[3rem_1fr] gap-6'>
+    <div className='relative grid grid-cols-[3rem_1fr] gap-6 p-4'>
       <div>
-        <div className='absolute left-0 top-0'>
+        <div className='absolute left-4 top-4'>
           <Minimap
             {...props}
             markers={markers}
             visibleRange={visibleRange}
-            onSelect={(marker) => setSelected(marker)}
+            onSelect={(marker) => {
+              setSelected(marker);
+              // Clicking a tick moves the visible range to that marker.
+              setStart(Math.max(0, Math.min(marker.range.from, DOC_LENGTH - WINDOW)));
+            }}
           />
         </div>
       </div>
@@ -78,9 +82,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { markers: defaultMarkers },
+  args: {
+    markers: defaultMarkers,
+  },
 };
 
 export const Empty: Story = {
-  args: { markers: [] },
+  args: {
+    markers: [],
+  },
 };

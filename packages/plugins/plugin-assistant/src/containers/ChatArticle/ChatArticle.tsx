@@ -85,7 +85,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content>
             <ChatComponent.Content>
               <div className='dx-container relative'>
-                {viewType !== 'summary' && <ChatComponent.Minimap classNames='absolute inset-y-0 left-0 z-10' />}
+                {viewType !== 'summary' && (
+                  <ChatComponent.Minimap classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
+                )}
                 <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
                 {viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
