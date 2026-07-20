@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SuggestionSource } from '@dxos/ui-editor';
+import { type DiffHunk, type GroupPolicy, type SuggestionSource, diffHunks, groupHunks } from '@dxos/ui-editor';
 
 /**
  * A resolved suggestion branch: its author (identity DID) and current content. The review layer
@@ -39,3 +39,24 @@ export const buildSuggestionSources = (branches: ResolvedSuggestionBranch[]): Su
   branches
     .map(({ author, content }) => ({ author, colour: suggestionColour(author), content }))
     .sort((a, b) => (a.author < b.author ? -1 : a.author > b.author ? 1 : 0));
+
+/** One reviewable suggestion card: a grouped change from a single author, anchored in the base text. */
+export type SuggestionGroup = DiffHunk & {
+  author: string;
+  colour: string;
+};
+
+/**
+ * Flatten every {@link SuggestionSource} into the per-author grouped changes the review layer renders
+ * as cards — one card per {@link groupHunks} group. Anchored in `base`, ordered by offset then author
+ * so the card list matches the editor overlay's stacking order.
+ */
+export const suggestionGroups = (base: string, sources: SuggestionSource[], policy?: GroupPolicy): SuggestionGroup[] =>
+  sources
+    .flatMap((source) => {
+      const hunks = policy
+        ? groupHunks(diffHunks(base, source.content), base, policy)
+        : diffHunks(base, source.content);
+      return hunks.map((hunk) => ({ ...hunk, author: source.author, colour: source.colour }));
+    })
+    .sort((a, b) => a.from - b.from || a.to - b.to || (a.author < b.author ? -1 : a.author > b.author ? 1 : 0));

@@ -3,3 +3,4 @@
 //
 
 export * from './CommentThread';
+export * from './SuggestionCard';

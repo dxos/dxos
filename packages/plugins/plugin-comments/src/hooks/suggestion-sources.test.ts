@@ -4,7 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { buildSuggestionSources, suggestionColour } from './suggestion-sources';
+import { buildSuggestionSources, suggestionColour, suggestionGroups } from './suggestion-sources';
+
+const source = (author: string, content: string) => ({ author, colour: suggestionColour(author), content });
 
 describe('suggestionColour', () => {
   test('is deterministic per author', () => {
@@ -36,5 +38,41 @@ describe('buildSuggestionSources', () => {
 
   test('handles no branches', () => {
     expect(buildSuggestionSources([])).toEqual([]);
+  });
+});
+
+describe('suggestionGroups', () => {
+  const BASE = 'The quick brown fox jumps over the lazy dog.';
+
+  test('produces an attributed card per change, tagged by author', () => {
+    const groups = suggestionGroups(BASE, [
+      source('did:alice', 'The fast brown fox jumps over the sleepy dog.'),
+      source('did:bob', 'The swift brown fox leaps over the lazy dog.'),
+    ]);
+    // Alice: quick→fast, lazy→sleepy; Bob: quick→swift, jumps→leaps.
+    expect(groups).toHaveLength(4);
+    expect(groups.every((group) => group.colour === suggestionColour(group.author))).toBe(true);
+    expect(groups.every((group) => BASE.slice(group.from, group.to) === group.removed)).toBe(true);
+  });
+
+  test('orders by offset then author (matches overlay stacking)', () => {
+    const groups = suggestionGroups(BASE, [
+      source('did:bob', 'The swift brown fox jumps over the lazy dog.'),
+      source('did:alice', 'The fast brown fox jumps over the lazy dog.'),
+    ]);
+    // Both change "quick" at the same offset → Alice before Bob.
+    expect(groups.map((group) => [group.author, group.inserted])).toEqual([
+      ['did:alice', 'fast'],
+      ['did:bob', 'swift'],
+    ]);
+  });
+
+  test('coalesces adjacent hunks into one card when a grouping policy is given', () => {
+    const ungrouped = suggestionGroups('alpha bravo charlie', [source('did:alice', 'ALPHA bravo CHARLIE')]);
+    expect(ungrouped).toHaveLength(2);
+    const grouped = suggestionGroups('alpha bravo charlie', [source('did:alice', 'ALPHA bravo CHARLIE')], {
+      maxGap: 8,
+    });
+    expect(grouped).toHaveLength(1);
   });
 });
