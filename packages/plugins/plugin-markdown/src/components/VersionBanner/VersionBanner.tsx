@@ -5,9 +5,17 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/ui';
+import { type SpaceCapabilities } from '@dxos/plugin-space';
 import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+
+type BranchView = SpaceCapabilities.BranchView;
+
+/** The `base`/`diff`/`branch` view options, in banner display order. */
+const BRANCH_VIEWS: BranchView[] = ['base', 'diff', 'branch'];
+
+const isBranchView = (value: string): value is BranchView => (BRANCH_VIEWS as string[]).includes(value);
 
 /** Compact "time since" for the banner tag — `now`, `30m`, `5h`, `2d`, `3w`, `6mo`, `1y`. */
 const relativeTime = (iso: string): string => {
@@ -48,7 +56,9 @@ export type VersionBannerProps = {
   onRestore?: () => void;
   onBranchFrom?: (name: string) => void;
   onMerge?: () => void;
-  onCompare?: () => void;
+  /** Active branch view; renders the `[Base | Diff | Branch]` selector when paired with `onViewChange`. */
+  view?: BranchView;
+  onViewChange?: (view: BranchView) => void;
   onClose: () => void;
 };
 
@@ -63,7 +73,8 @@ export const VersionBanner = ({
   onRestore,
   onBranchFrom,
   onMerge,
-  onCompare,
+  view,
+  onViewChange,
   onClose,
 }: VersionBannerProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -104,14 +115,19 @@ export const VersionBanner = ({
           </Toolbar.Button>
         </NamePopover>
       )}
-      {mode === 'branch' && onCompare && (
-        <Toolbar.IconButton
-          variant='ghost'
-          icon='ph--git-diff--regular'
-          iconOnly
-          label={t('compare.label')}
-          onClick={onCompare}
-        />
+      {mode === 'branch' && view && onViewChange && (
+        <Toolbar.ToggleGroup
+          type='single'
+          value={view}
+          // Radix emits '' when the active item is toggled off; ignore it so a view is always selected.
+          onValueChange={(next) => isBranchView(next) && onViewChange(next)}
+        >
+          {BRANCH_VIEWS.map((option) => (
+            <Toolbar.ToggleGroupItem key={option} value={option} data-testid={`version-banner-view-${option}`}>
+              {t(`branch-view-${option}.label`)}
+            </Toolbar.ToggleGroupItem>
+          ))}
+        </Toolbar.ToggleGroup>
       )}
       {mode === 'branch' && onMerge && (
         <Toolbar.IconButton variant='ghost' icon='ph--git-merge--regular' label={t('merge.label')} onClick={onMerge} />
