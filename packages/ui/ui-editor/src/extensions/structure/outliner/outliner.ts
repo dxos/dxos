@@ -7,26 +7,22 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/ui-theme';
 
-import { decorateMarkdown } from '../../language/markdown';
+import { decorateMarkdown } from '../../language';
+import { CONTENT_WIDTH, blockSelectionField } from '../blocks';
 import { commands } from './commands';
+import { outlinerDnd } from './dnd';
 import { editor } from './editor';
 import { menu } from './menu';
-import { selectionCompartment, selectionEquals, selectionFacet } from './selection';
-import { outlinerTree, treeFacet } from './tree';
+import { getRange, outlinerTree, treeFacet } from './tree';
 
-// ISSUES:
+// ISSUES: (move to DESIGN.md)
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
 // TODO(burdon): Prevent unterminated fenced code from breaking subsequent items ("firewall" markdown parsing within each item?)
 // TODO(burdon): What if a different editor "breaks" the layout?
 // TODO(burdon): Check Automerge recognizes text that is moved/indented (e.g., concurrent editing item while being moved).
-
-// NEXT:
-// TODO(burdon): Update selection when adding/removing items.
 // TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Convert to task object and insert link (menu button).
-// TODO(burdon): Smart Cut-and-paste.
-// TODO(burdon): DND.
 
 export type OutlinerProps = {};
 
@@ -41,30 +37,31 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 
-  // Selection.
-  selectionCompartment.of(selectionFacet.of([])),
-
   // State.
   outlinerTree(),
 
   // Filter and possibly modify changes.
   editor(),
 
-  // Floating menu.
-  menu(),
+  // Block selection, drag-to-reorder, highlight, and clipboard (built on the `blocks` extensions).
+  outlinerDnd(),
 
-  // Line decorations.
+  // Current-item indicator (the selection highlight is drawn by `outlinerDnd`).
   decorations(),
 
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
 
-  // Researve space for menu.
-  EditorView.contentAttributes.of({ class: 'w-full !mr-[3rem]' }),
+  // Floating menu (with reserved margins left/right for the grip and menu).
+  menu(),
+  EditorView.contentAttributes.of({
+    class: CONTENT_WIDTH,
+  }),
 ];
 
 /**
- * Line decorations (for border and selection).
+ * Structural row layout plus a subtle border on the current (caret) item. The selection highlight is
+ * drawn by `outlinerDnd` (the shared `blocks` layer), so this no longer renders selection.
  */
 const decorations = () => [
   ViewPlugin.fromClass(
@@ -75,11 +72,8 @@ const decorations = () => [
       }
 
       update(update: ViewUpdate) {
-        const selectionChanged = !selectionEquals(
-          update.state.facet(selectionFacet),
-          update.startState.facet(selectionFacet),
-        );
-
+        const selectionChanged =
+          update.startState.field(blockSelectionField, false) !== update.state.field(blockSelectionField, false);
         if (
           update.focusChanged ||
           update.docChanged ||
@@ -92,10 +86,21 @@ const decorations = () => [
       }
 
       private updateDecorations(state: EditorState, { viewport: { from, to }, hasFocus }: EditorView) {
-        const selection = state.facet(selectionFacet);
         const tree = state.facet(treeFacet);
-        const current = tree.find(state.selection.ranges[state.selection.mainIndex]?.from);
+        const current = tree.find(state.selection.main.from);
         const doc = state.doc;
+
+        // The block selection stores each selected item's line-start anchor; a line is selected when it
+        // falls within any selected item's subtree. Rendered as a line background (not the `blocks`
+        // RectangleMarker layer) so it stays aligned to the actual rows.
+        const selectedRanges = (state.field(blockSelectionField, false) ?? [])
+          .map((anchor) => {
+            const item = tree.find(anchor);
+            return item ? getRange(tree, item) : null;
+          })
+          .filter((range): range is [number, number] => range != null);
+        const isSelected = (pos: number) =>
+          selectedRanges.some(([rangeFrom, rangeTo]) => pos >= rangeFrom && pos <= rangeTo);
 
         const decorations: Range<Decoration>[] = [];
         for (let lineNum = doc.lineAt(from).number; lineNum <= doc.lineAt(to).number; lineNum++) {
@@ -104,14 +109,14 @@ const decorations = () => [
           if (item) {
             const lineFrom = doc.lineAt(item.contentRange.from);
             const lineTo = doc.lineAt(item.contentRange.to);
-            const isSelected = selection.includes(item.index) || item === current;
             decorations.push(
               Decoration.line({
                 class: mx(
                   'cm-list-item',
                   lineFrom.number === line.number && 'cm-list-item-start',
                   lineTo.number === line.number && 'cm-list-item-end',
-                  isSelected && (hasFocus ? 'cm-list-item-focused' : 'cm-list-item-selected'),
+                  isSelected(line.from) && 'cm-list-item-selected',
+                  hasFocus && item === current && 'cm-list-item-current',
                 ),
               }).range(line.from, line.from),
             );
@@ -127,14 +132,10 @@ const decorations = () => [
   ),
 
   // Theme.
-  styles,
-];
-
-const styles = EditorView.theme(
-  Object.assign({
+  EditorView.theme({
     '.cm-list-item': {
-      borderLeftWidth: '1px',
-      borderRightWidth: '1px',
+      // borderLeftWidth: '1px',
+      // borderRightWidth: '1px',
       paddingLeft: '32px',
       borderColor: 'transparent',
     },
@@ -142,27 +143,31 @@ const styles = EditorView.theme(
       borderRadius: '0',
     },
 
+    // No vertical margins: CodeMirror's gutter/height-map measures each line's border-box but not its
+    // margins, so any inter-row margin makes the drag grips drift further from center down the list (and
+    // shows as gaps between selected rows). Keep row spacing in the padding, which CM does measure.
     '.cm-list-item-start': {
-      borderTopWidth: '1px',
-      borderTopLeftRadius: '4px',
-      borderTopRightRadius: '4px',
+      // borderTopWidth: '1px',
+      // borderTopLeftRadius: '4px',
+      // borderTopRightRadius: '4px',
       paddingTop: '4px',
-      marginTop: '2px',
     },
-
     '.cm-list-item-end': {
-      borderBottomWidth: '1px',
-      borderBottomLeftRadius: '4px',
-      borderBottomRightRadius: '4px',
+      // borderBottomWidth: '1px',
+      // borderBottomLeftRadius: '4px',
+      // borderBottomRightRadius: '4px',
       paddingBottom: '4px',
-      marginBottom: '2px',
     },
 
-    '.cm-list-item-focused': {
+    // Accent background behind the selected subtree; flat so adjacent selected rows read as one region.
+    '.cm-list-item-selected': {
+      boxSizing: 'border-box',
+      backgroundColor: 'var(--color-cm-highlight-surface)',
+      borderRadius: '0',
+    },
+    // Subtle border on the item under the caret; distinct from the accent selection highlight.
+    '.cm-list-item-current': {
       borderColor: 'var(--color-focus-ring-subtle)',
     },
-    '&:focus-within .cm-list-item-selected': {
-      borderColor: 'var(--color-separator)',
-    },
   }),
-);
+];
