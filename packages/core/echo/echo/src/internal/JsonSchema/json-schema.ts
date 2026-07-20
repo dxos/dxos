@@ -120,8 +120,11 @@ export const toJsonSchema = (
   return jsonSchema;
 };
 
-const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType> => {
-  const withRefinements = withEchoRefinements(ast, '#');
+const _toJsonSchemaAST = (
+  ast: SchemaAST.AST,
+  inProgress: Set<SchemaAST.AST> = new Set(),
+): Types.DeepMutable<JsonSchemaType> => {
+  const withRefinements = withEchoRefinements(ast, '#', new Map(), inProgress);
   const jsonSchema = JSONSchema.fromAST(withRefinements, {
     definitions: {},
   }) as Types.DeepMutable<JsonSchemaType>;
@@ -133,6 +136,10 @@ const withEchoRefinements = (
   ast: SchemaAST.AST,
   path: string | undefined,
   suspendCache = new Map<SchemaAST.AST, string>(),
+  // Suspended ASTs whose expansion is currently in flight (see the `isSuspend` branch below) —
+  // distinct from `suspendCache`, which only remembers ASTs already visited within the *same*
+  // fresh expansion and cannot see across it.
+  inProgress: Set<SchemaAST.AST> = new Set(),
 ): SchemaAST.AST => {
   if (path) {
     suspendCache.set(ast, path);
@@ -144,21 +151,44 @@ const withEchoRefinements = (
     const suspendedAst = ast.f();
     const cachedPath = suspendCache.get(suspendedAst);
     if (cachedPath) {
-      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
-        [SchemaAST.JSONSchemaAnnotationId]: {
-          $ref: cachedPath,
+      recursiveResult = new SchemaAST.Suspend(
+        () => withEchoRefinements(suspendedAst, path, suspendCache, inProgress),
+        {
+          [SchemaAST.JSONSchemaAnnotationId]: {
+            $ref: cachedPath,
+          },
         },
-      });
+      );
+    } else if (inProgress.has(suspendedAst)) {
+      // `suspendedAst` is already being expanded higher up this call stack, reached again through a
+      // *different* suspended type (e.g. two mutually-recursive schemas, A embedding B and B embedding
+      // A) rather than through itself. `suspendCache` alone can't catch this: each fresh expansion (the
+      // `else` branch below) starts from an empty cache, so A's expansion re-triggers B's expansion,
+      // which re-triggers A's, forever. Stop here with an opaque placeholder instead of recursing again.
+      recursiveResult = new SchemaAST.Suspend(
+        () => withEchoRefinements(suspendedAst, path, suspendCache, inProgress),
+        { [SchemaAST.JSONSchemaAnnotationId]: {} },
+      );
     } else {
-      const jsonSchema = _toJsonSchemaAST(suspendedAst);
-      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
-        [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
-      });
+      inProgress.add(suspendedAst);
+      const jsonSchema = _toJsonSchemaAST(suspendedAst, inProgress);
+      inProgress.delete(suspendedAst);
+      recursiveResult = new SchemaAST.Suspend(
+        () => withEchoRefinements(suspendedAst, path, suspendCache, inProgress),
+        {
+          [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
+        },
+      );
     }
   } else if (SchemaAST.isTypeLiteral(ast)) {
     // Add property order annotations
     recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
-      withEchoRefinements(ast, path && typeof key === 'string' ? `${path}/${key}` : undefined, suspendCache),
+      withEchoRefinements(
+        ast,
+        path && typeof key === 'string' ? `${path}/${key}` : undefined,
+        suspendCache,
+        inProgress,
+      ),
     );
     recursiveResult = addJsonSchemaFields(recursiveResult, {
       propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
@@ -172,6 +202,7 @@ const withEchoRefinements = (
         ast,
         path && (typeof key === 'string' || typeof key === 'number') ? `${path}/${key}` : undefined,
         suspendCache,
+        inProgress,
       ),
     );
   }
