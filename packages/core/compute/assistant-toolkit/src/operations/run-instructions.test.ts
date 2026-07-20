@@ -76,7 +76,6 @@ describe('Agent prompt', () => {
       ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -122,7 +121,6 @@ describe('Agent prompt', () => {
       ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 });
 

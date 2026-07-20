@@ -67,7 +67,6 @@ describe('Database Skill', () => {
       Effect.provide(testLayer([operationToolCall(SchemaList, {}), ScriptedAiService.text('Those are the schemas.')])),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -142,7 +141,6 @@ describe('Database Skill', () => {
       ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   //
@@ -167,7 +165,6 @@ describe('Database Skill', () => {
       ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -204,7 +201,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -229,7 +225,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -257,7 +252,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   //
@@ -282,7 +276,6 @@ describe('Database Skill', () => {
       ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -308,7 +301,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   //
@@ -347,7 +339,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -380,7 +371,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   //
@@ -414,7 +404,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -445,7 +434,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   //
@@ -475,7 +463,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -505,7 +492,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -570,7 +556,6 @@ describe('Database Skill', () => {
       ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -664,7 +649,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -712,7 +696,6 @@ describe('Database Skill', () => {
         TestHelpers.provideTestContext,
       );
     })(),
-    { timeout: 60_000 },
   );
 });
 
