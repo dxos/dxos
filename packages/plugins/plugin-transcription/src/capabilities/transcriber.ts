@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -26,13 +27,14 @@ export default Capability.makeModule(
       messageEnricher,
     }) => {
       const client = capabilities.get(ClientCapabilities.Client);
+      const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
       const transcriptionManager = new TranscriptionManagerImpl({
         edgeClient: client.edge.http,
         messageEnricher,
         registry,
       });
 
-      const identity = client.halo.identity.get();
+      const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
       if (identity) {
         transcriptionManager.setIdentityDid(identity.did);
       }

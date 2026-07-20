@@ -7,10 +7,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
@@ -21,19 +17,23 @@ import { threads } from '../extensions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capabilities.OperationInvoker;
-    const registry = yield* Capabilities.AtomRegistry;
-    const stateAtom = yield* CommentCapabilities.State;
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
 
     return [
       Capability.provide(MarkdownCapabilities.ExtensionProvider, [
-        ({ document: doc }) => {
-          return threads({ registry, stateAtom }, doc, invokePromise);
+        ({ document: doc, reviewBranch }) => {
+          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+          const registry = capabilities.get(Capabilities.AtomRegistry);
+          const stateAtom = capabilities.get(CommentCapabilities.State);
+          return threads({ registry, stateAtom }, doc, invokePromise, reviewBranch);
         },
         ({ document: doc }) => {
           if (!doc) {
             return [];
           }
+          const registry = capabilities.get(Capabilities.AtomRegistry);
+          const stateAtom = capabilities.get(CommentCapabilities.State);
 
           return EditorView.updateListener.of((update) => {
             if (update.docChanged || update.selectionSet) {
@@ -51,6 +51,7 @@ export default Capability.makeModule(
           if (!doc) {
             return [];
           }
+          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
           return EditorView.updateListener.of((update) => {
             update.transactions.forEach((transaction) => {

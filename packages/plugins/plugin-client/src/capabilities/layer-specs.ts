@@ -10,6 +10,8 @@ import { ClientService } from '@dxos/client';
 import { Credential, LayerSpec } from '@dxos/compute';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import { Database } from '@dxos/echo';
+import { Identity, Space } from '@dxos/halo';
+import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
 import { invariant } from '@dxos/invariant';
 
 import { ClientCapabilities } from '#types';
@@ -81,10 +83,50 @@ const CredentialsLayerSpec = LayerSpec.make(
   () => credentialsLayerFromDatabase(),
 );
 
+/**
+ * The HALO {@link Identity.Service} backed by the client adapter. Application-scoped: it manages
+ * the local identity and its devices for the whole client.
+ */
+const IdentityLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [Identity.Service],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return layerIdentity(client);
+      }),
+    ),
+);
+
+/**
+ * The HALO {@link Space.Service} backed by the client adapter. Application-scoped: its verbs are
+ * keyed by {@link SpaceId} and cover every space on the client, not a single space slice.
+ */
+const SpaceLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [Space.Service],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return layerSpace(client);
+      }),
+    ),
+);
+
 export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.provide(Capabilities.LayerSpec, ClientLayerSpec),
     Capability.provide(Capabilities.LayerSpec, DatabaseLayerSpec),
     Capability.provide(Capabilities.LayerSpec, CredentialsLayerSpec),
+    Capability.provide(Capabilities.LayerSpec, IdentityLayerSpec),
+    Capability.provide(Capabilities.LayerSpec, SpaceLayerSpec),
   ]),
 );

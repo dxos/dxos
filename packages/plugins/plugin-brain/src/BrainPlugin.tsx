@@ -4,8 +4,19 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
+import { Topic } from '@dxos/compute';
 
-import { FactStore, MailboxAction, OperationHandler, ReactSurface, Settings, SkillDefinition } from '#capabilities';
+import {
+  AppGraphBuilder,
+  CreateObject,
+  FactStore,
+  MailboxAction,
+  NavigationResolver,
+  OperationHandler,
+  ReactSurface,
+  Settings,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -15,6 +26,10 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const BrainPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(OperationHandler),
   Plugin.addLazyModule(SkillDefinition),
+  Plugin.addLazyModule(AppCapability.schema([Topic.Topic])),
+  Plugin.addLazyModule(CreateObject),
+  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addLazyModule(NavigationResolver),
   Plugin.addLazyModule(ReactSurface),
   Plugin.addLazyModule(
     AppCapability.pluginAsset({

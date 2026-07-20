@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useObject } from '@dxos/echo-react';
+import { useIdentity } from '@dxos/halo-react';
 import { Card } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
@@ -24,6 +23,14 @@ const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => 
       views.delete(attendableId);
     },
     get: (attendableId) => views.get(attendableId),
+    getByDocumentId: (documentId) => {
+      for (const entry of views.values()) {
+        if (entry.documentId === documentId) {
+          return entry;
+        }
+      }
+      return undefined;
+    },
   };
 };
 
@@ -43,16 +50,10 @@ export default Capability.makeModule(
 
     const editorViews = createEditorViewRegistry();
 
-    // Version selection is per-user, per-session view state — deliberately not persisted.
-    const versioningAtom = Atom.make<MarkdownCapabilities.VersioningState>({ selection: {}, compare: {} }).pipe(
-      Atom.keepAlive,
-    );
-
     return [
       Capability.provide(MarkdownCapabilities.State, stateAtom),
       Capability.provide(MarkdownCapabilities.EditorState, editorState),
       Capability.provide(MarkdownCapabilities.EditorViews, editorViews),
-      Capability.provide(MarkdownCapabilities.VersioningState, versioningAtom),
     ];
   }),
 );

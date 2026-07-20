@@ -15,6 +15,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -22,7 +23,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection } from '@dxos/plugin-connector';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -158,7 +159,7 @@ const meta = {
                   );
                 }
               } else {
-                const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
+                const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace.db, count, threads));
                 if (bound) {
                   const accessToken = personalSpace.db.add(
                     AccessToken.make({ source: 'imap.example.com', account: 'user@example.com', token: 'story-token' }),

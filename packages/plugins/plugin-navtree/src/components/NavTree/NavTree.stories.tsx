@@ -110,7 +110,7 @@ const DefaultStory = () => {
         <NavTreeContainer tab={state.tab} />
       </Main.NavigationSidebar>
       <Main.Content bounce handlesFocus>
-        <div role='none' className='flex grow overflow-x-auto'>
+        <div className='flex grow overflow-x-auto'>
           <StoryPlank attendableId='space-0:object-0' />
           <StoryPlank attendableId='space-0:object-1' />
         </div>

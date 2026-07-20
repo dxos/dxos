@@ -16,6 +16,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { type ThemeColorParams, cssColorToOklch, processEmailColors } from './transform-colors';
 
+// TODO(burdon): Factor out (react-ui-html).
+
 export type HtmlViewerProps = ThemedClassName<{
   html: string;
   /** When false (default), remote image `src`s are stripped so tracking pixels don't load. */
@@ -35,7 +37,7 @@ export type HtmlViewerProps = ThemedClassName<{
 // from the host, so unstyled email text already picks up the app's typography/foreground.
 const BASE_CSS = [
   ':host{display:block;}',
-  '.dx-email-root{padding:8px 16px;overflow-wrap:anywhere;word-break:break-word;}',
+  '.dx-email-root{overflow-wrap:anywhere;word-break:break-word;}',
   'img{max-width:100%!important;height:auto!important;}',
   'table{max-width:100%;}',
   'pre.dx-plain{white-space:pre-wrap;font-family:inherit;margin:0;}',
@@ -55,6 +57,10 @@ const BASE_CSS = [
   '.dx-email-quote-toggle:hover{background:color-mix(in oklab, currentColor 28%, transparent);}',
 ].join('');
 
+// For simple (non-table) emails, normalize typography to the app font so personal mail reads natively.
+const FONT_CSS =
+  '.dx-email-root *:not(code):not(pre):not(code *):not(pre *){font-family:inherit!important;line-height:1.5!important;}';
+
 // Wrappers email clients use for quoted reply/forward history (the content that follows "On … wrote:").
 const QUOTE_SELECTORS = [
   '.gmail_quote_container',
@@ -65,10 +71,6 @@ const QUOTE_SELECTORS = [
   '#appendonsend',
   '#divRplyFwdMsg',
 ].join(',');
-
-// For simple (non-table) emails, normalize typography to the app font so personal mail reads natively.
-const FONT_CSS =
-  '.dx-email-root *:not(code):not(pre):not(code *):not(pre *){font-family:inherit!important;line-height:1.5!important;}';
 
 /** Escapes text so a plaintext body can be shown verbatim. */
 const escapeHtml = (text: string): string => text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
@@ -266,8 +268,8 @@ export const HtmlViewer = ({
       }
     }
 
-    // Personal mail is themed regardless of layout; otherwise only simple (non-table) bodies are, so
-    // marketing emails keep their brand design.
+    // Personal mail is themed regardless of layout; otherwise only simple (non-table) bodies are,
+    // so marketing emails keep their brand design.
     const hasTable = content.querySelector('table') !== null;
     const shouldTheme = isPersonal || !hasTable;
     const style = document.createElement('style');

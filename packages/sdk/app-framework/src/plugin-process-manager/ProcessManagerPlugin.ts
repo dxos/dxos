@@ -14,6 +14,7 @@ const ProcessManagerCapability = Capability.lazyModule(
       Capabilities.LayerSpec,
       Capabilities.TraceSink,
       Capabilities.OperationHandler,
+      Capabilities.RemoteTraceMonitor,
     ],
     provides: [
       Capabilities.ProcessManagerRuntime,

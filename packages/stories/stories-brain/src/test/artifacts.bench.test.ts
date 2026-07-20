@@ -126,18 +126,18 @@ describe.skipIf(!fixtureExists())('overnight artifacts (topics / profiles / samp
         progress.done();
         const topics = materializeTopics(enriched);
         const subjectById = new Map(threads.map((thread) => [thread.threadId, thread.subject]));
-        const sections = [...topics]
-          .sort((left, right) => right.threadIds.length - left.threadIds.length)
-          .map((topic) => ({
-            title: `${topic.label} (${topic.threadIds.length} threads)`,
-            body:
-              `${topic.summary.trim()}\n\n` +
-              `**Keywords:** ${topic.keywords.join(', ') || '—'}\n` +
-              `**Participants:** ${topic.participants.join(', ') || '—'}\n\n` +
-              `**Threads:**\n${topic.threadIds.map((id) => `- ${subjectById.get(id) ?? id}`).join('\n')}`,
-          }));
-        writeResponses('topics', sections.length ? sections : [{ title: 'topics', body: '_(no topics produced)_' }]);
-        log.info('topics', { threads: threads.length, topics: topics.length });
+        // const sections = [...topics]
+        //   .sort((left, right) => right.threadIds.length - left.threadIds.length)
+        //   .map((topic) => ({
+        //     title: `${topic.name} (${topic.threadIds.length} threads)`,
+        //     body:
+        //       `${topic.summary.trim()}\n\n` +
+        //       `**Keywords:** ${topic.keywords.join(', ') || '—'}\n` +
+        //       `**Participants:** ${topic.participants.join(', ') || '—'}\n\n` +
+        //       `**Threads:**\n${topic.threadIds.map((id) => `- ${subjectById.get(id) ?? id}`).join('\n')}`,
+        //   }));
+        // writeResponses('topics', sections.length ? sections : [{ title: 'topics', body: '_(no topics produced)_' }]);
+        // log.info('topics', { threads: threads.length, topics: topics.length });
       }
 
       // --- Profiles: built from the FULL fact store (facts as accumulated memory of a person). ---

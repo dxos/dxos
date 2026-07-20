@@ -9,10 +9,11 @@ import React, { useCallback, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
 

@@ -6,7 +6,7 @@ import { addMinutes, differenceInMinutes, format } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Card, Icon, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';

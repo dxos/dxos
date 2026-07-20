@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';

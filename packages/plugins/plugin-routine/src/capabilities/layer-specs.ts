@@ -171,8 +171,9 @@ const RemoteOperationInvokerSpec = LayerSpec.make(
 
 /**
  * Space-scoped remote (EDGE) trigger manager, consumed by the aggregate
- * {@link TriggerMonitor}. Uses the EDGE implementation when edge agents are
- * enabled, otherwise a no-op.
+ * {@link TriggerMonitor}. Uses the EDGE implementation whenever an edge service
+ * is configured (a trigger is routed here by its own `remote` flag, so the
+ * manager should exist wherever edge is reachable), otherwise a no-op.
  */
 const RemoteTriggerManagerSpec = LayerSpec.make(
   {
@@ -185,8 +186,8 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for RemoteTriggerManager');
         const client = yield* ClientService;
-        const edgeAgents = client.config.get('runtime.client.edgeFeatures.agents');
-        return edgeAgents ? EdgeTriggerManager.fromClient(client, context.space) : RemoteTriggerManager.layerNoop;
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeTriggerManager.fromClient(client, context.space) : RemoteTriggerManager.layerNoop;
       }),
     ),
 );

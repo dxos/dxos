@@ -4,7 +4,8 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
-import { Topic } from '@dxos/pipeline-email';
+import { Topic } from '@dxos/compute';
+import { AccessToken, Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';
 
@@ -38,7 +39,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Message.Message,
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
-      Topic,
+      Topic.Topic,
+      AccessToken.AccessToken,
+      Cursor.Cursor,
     ]),
   ),
   Plugin.addLazyModule(ReactSurface),

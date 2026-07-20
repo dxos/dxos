@@ -9,10 +9,11 @@ import React from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Booking, type BookingSearch as BookingSearchType, Segment, Trip, TripCapabilities } from '#types';

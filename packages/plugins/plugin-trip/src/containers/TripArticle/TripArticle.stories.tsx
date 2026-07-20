@@ -10,6 +10,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -17,7 +18,7 @@ import { MapInline } from '@dxos/plugin-map';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 

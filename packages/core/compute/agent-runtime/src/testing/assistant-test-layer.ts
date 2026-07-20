@@ -32,6 +32,7 @@ import {
   ProcessManager,
   ProcessMonitor,
   RemoteProcessManager,
+  RemoteTraceMonitor,
   TriggerDispatcher,
   TriggerStateStore,
   configuredCredentialsLayer,
@@ -137,6 +138,7 @@ export const AssistantTestLayer = (
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(ProcessMonitor.layer),
     Layer.provideMerge(RemoteProcessManager.layerNoop),
+    Layer.provideMerge(RemoteTraceMonitor.layerNoop),
     Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     // Order matters: in a `provideMerge` chain each layer's *requirements* are satisfied only by

@@ -20,7 +20,10 @@ import type {
   ServiceResolver as ServiceResolver$,
   Trace as Trace$,
 } from '@dxos/compute';
-import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
+import type {
+  ProcessManager as ProcessManager$,
+  RemoteTraceMonitor as RemoteTraceMonitor$,
+} from '@dxos/compute-runtime';
 import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 
 import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
@@ -136,6 +139,18 @@ export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace$.Sink;
  * @category Capability
  */
 export const TraceSink = Capability$.make<TraceSinkFactory>('org.dxos.app-framework.capability.traceSink');
+
+/**
+ * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).
+ * Contributed by a client-aware plugin; the process-manager capability wires the first contribution
+ * (or a no-op) into the aggregate {@link ProcessMonitor} so its `subscribeToTraceMessages` surfaces
+ * remote progress alongside local.
+ *
+ * @category Capability
+ */
+export const RemoteTraceMonitor = Capability$.make<RemoteTraceMonitor$.Monitor>(
+  'org.dxos.app-framework.capability.remoteTraceMonitor',
+);
 
 /**
  * Service resolver backing the shared {@link ProcessManagerRuntime}.

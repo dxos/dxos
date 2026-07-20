@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 
@@ -28,10 +28,10 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
-  {
-    requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry, CommentCapabilities.State],
-    provides: [MarkdownCapabilities.ExtensionProvider],
-  },
+  // OperationInvoker/AtomRegistry/CommentCapabilities.State are accessed lazily inside the
+  // extension-provider callbacks (via the ambient Capability.Service), not yielded at
+  // activation time, so they aren't declared here.
+  { provides: [MarkdownCapabilities.ExtensionProvider] },
   () => import('./markdown-extension'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

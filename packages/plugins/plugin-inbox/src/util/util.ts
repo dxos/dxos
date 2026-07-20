@@ -149,6 +149,29 @@ export const orderThreadItems = (messages: Message.Message[]): Message.Message[]
 };
 
 /**
+ * Drops a draft superseded by its already-synced sent copy (`properties.sentMessageId` matched against
+ * the synced messages' foreign-key ids). Synced messages and this mailbox's still-unsent drafts always
+ * pass; a draft from a different mailbox is dropped. Used by the `mailboxMessage` companion connector,
+ * which can briefly see both a draft and its just-synced copy in the same thread.
+ */
+export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
+  const syncedIds = new Set(
+    messages
+      .filter((message) => !DraftMessage.instanceOf(message))
+      .flatMap((message) => Obj.getMeta(message).keys.map((key) => key.id)),
+  );
+  return messages.filter((message) => {
+    if (!DraftMessage.instanceOf(message)) {
+      return true;
+    }
+    if (!DraftMessage.belongsTo(message, mailboxUri)) {
+      return false;
+    }
+    return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
+  });
+};
+
+/**
  * Hashes a string into a number
  * @param str String to hash
  * @returns A non-negative number hash
@@ -189,6 +212,7 @@ type MessageProps = {
   text: string;
   date: string;
   from?: string;
+  to?: string;
   email?: string;
   subject: string;
   snippet: string;
@@ -244,11 +268,12 @@ export const getMessageProps = (
   const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
+  const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? getMessageBodyText(message);
   const hue = toHue(hashString(from));
-  return { id, text, date, from, email, subject, snippet, hue };
+  return { id, text, date, from, to, email, subject, snippet, hue };
 };
 
 /**

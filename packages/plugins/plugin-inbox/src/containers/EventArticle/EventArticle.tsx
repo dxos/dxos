@@ -3,14 +3,15 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Graph } from '@dxos/plugin-graph';
-import { useQuery } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
@@ -51,7 +52,9 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (eventCalendar && db) {
-      void SystemTags.toggleTag(eventCalendar, event, db, 'starred');
+      void Effect.runFork(
+        SystemTags.toggleTag(eventCalendar, event, 'starred').pipe(Effect.provide(Database.layer(db))),
+      );
     }
   }, [eventCalendar, event, db]);
 

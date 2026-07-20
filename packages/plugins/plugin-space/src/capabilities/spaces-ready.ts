@@ -14,6 +14,10 @@ import type { GraphBuilder } from '@dxos/app-graph';
 import { AppAnnotation, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
+// Explicit import so the emitted `.d.ts` references the package via its public alias
+// instead of a relative `node_modules` path (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Identity, Invitation } from '@dxos/halo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
@@ -53,6 +57,7 @@ export default Capability.makeModule(
     const stateAtom = yield* SpaceCapabilities.State;
     const ephemeralAtom = yield* SpaceCapabilities.EphemeralState;
     const client = yield* ClientCapabilities.Client;
+    const haloIdentity = yield* ClientCapabilities.IdentityService;
 
     //
     // Personal space initialization — deferred until found.
@@ -219,7 +224,7 @@ export default Capability.makeModule(
 
       const send = () => {
         const spaces = client.spaces.get();
-        const identity = client.halo.identity.get();
+        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           // Group parts by space for efficient messaging.
           const idsBySpace = reduceGroupBy(active, (id: string) => {
@@ -256,7 +261,7 @@ export default Capability.makeModule(
 
             void space
               .postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
+                identityKey: identity.identityKey,
                 attended: current,
                 added,
                 removed,
@@ -295,10 +300,10 @@ export default Capability.makeModule(
             const { added, removed, attended } = message.payload;
 
             const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-            const currentIdentity = client.halo.identity.get();
+            const currentIdentity = Option.getOrUndefined(haloIdentity.getSnapshot());
             if (
               identityKey &&
-              !currentIdentity?.identityKey.equals(identityKey) &&
+              currentIdentity?.identityKey !== identityKey.toHex() &&
               Array.isArray(added) &&
               Array.isArray(removed)
             ) {

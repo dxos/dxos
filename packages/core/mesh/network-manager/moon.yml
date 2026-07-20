@@ -9,8 +9,8 @@ tasks:
   # (and `#tcp-transport-impl`) to `./dist/lib/node-esm/transport/tcp/...mjs`
   # under the `node` condition. Tests import `#tcp-transport` via
   # `src/testing/test-builder.ts`, so the package's own dist must exist
-  # before tests run. The inherited `:test` task only depends on upstream
-  # compile (`^:compile`), not on the package's own compile.
+  # before tests run. The inherited `:test` task only depends on the upstream
+  # build (`^:build`), not on the package's own build.
   test:
     deps:
-      - ~:compile
+      - ~:build

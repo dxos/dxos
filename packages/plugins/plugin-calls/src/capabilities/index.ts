@@ -13,7 +13,10 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 export const CallManager = Capability.lazyModule(
   'CallManager',
-  { requires: [ClientCapabilities.Client, Capabilities.AtomRegistry], provides: [CallsCapabilities.Manager] },
+  {
+    requires: [ClientCapabilities.Client, Capabilities.AtomRegistry, ClientCapabilities.IdentityService],
+    provides: [CallsCapabilities.Manager],
+  },
   () => import('./call-manager'),
 );
 export const CallTransport = Capability.lazyModule(

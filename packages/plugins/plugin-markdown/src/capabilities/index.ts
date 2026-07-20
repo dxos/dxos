@@ -5,7 +5,7 @@
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { SpaceCapability } from '@dxos/plugin-space';
+import { SpaceCapabilities, SpaceCapability } from '@dxos/plugin-space';
 
 import { MarkdownCapabilities } from '#types';
 
@@ -16,7 +16,11 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort')
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const HistoryProvider = Capability.lazyModule(
+  'HistoryProvider',
+  { requires: [AppCapabilities.Schema], provides: [SpaceCapabilities.HistoryProvider] },
+  () => import('./history-provider'),
+);
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
@@ -27,12 +31,7 @@ export const MarkdownState = Capability.lazyModule(
   'MarkdownState',
   {
     requires: [AttentionCapabilities.ViewState],
-    provides: [
-      MarkdownCapabilities.State,
-      MarkdownCapabilities.EditorState,
-      MarkdownCapabilities.EditorViews,
-      MarkdownCapabilities.VersioningState,
-    ],
+    provides: [MarkdownCapabilities.State, MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
   },
   () => import('./state'),
 );

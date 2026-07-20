@@ -65,6 +65,7 @@ export const SpacesReady = Capability.lazyModule(
       SpaceCapabilities.State,
       SpaceCapabilities.EphemeralState,
       ClientCapabilities.Client,
+      ClientCapabilities.IdentityService,
     ],
     provides: [],
     // Runtime event: spaces become ready when the client observes them, not at startup.
@@ -76,7 +77,7 @@ export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
     requires: [Capabilities.AtomRegistry, Capabilities.PluginManager],
-    provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
+    provides: [SpaceCapabilities.State, SpaceCapabilities.VersioningState, SpaceCapabilities.EphemeralState],
   },
   () => import('./state'),
 );

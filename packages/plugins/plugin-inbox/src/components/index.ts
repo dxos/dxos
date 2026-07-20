@@ -11,7 +11,6 @@ export * from './HtmlViewer';
 export * from './Initialize';
 export * from './MarkdownViewer';
 export * from './MessageStack';
-export * from './Message';
 export * from './Mailbox/useInjectedMailboxActions';
 export * from './Mailbox/useMailboxExtractorActions';
 export * from './ObjectArticle';

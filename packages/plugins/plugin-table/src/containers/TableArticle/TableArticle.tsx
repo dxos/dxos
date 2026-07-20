@@ -10,10 +10,10 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useAppGraph, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
+import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {

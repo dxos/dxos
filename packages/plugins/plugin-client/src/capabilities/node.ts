@@ -20,7 +20,14 @@ export const AppGraphBuilder = Capability.lazyModule(
 );
 export const Client = Capability.lazyModule(
   'Client',
-  { provides: [ClientCapabilities.Client, Capabilities.Layer] },
+  {
+    provides: [
+      ClientCapabilities.Client,
+      Capabilities.Layer,
+      ClientCapabilities.IdentityService,
+      ClientCapabilities.SpaceService,
+    ],
+  },
   () => import('./client'),
 );
 export const LayerSpecs = Capability.lazyModule(

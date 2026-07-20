@@ -20,7 +20,14 @@ export const HubHttpClient = Capability.lazyModule(
 );
 export const Client = Capability.lazyModule(
   'Client',
-  { provides: [ClientCapabilities.Client, Capabilities.Layer] },
+  {
+    provides: [
+      ClientCapabilities.Client,
+      Capabilities.Layer,
+      ClientCapabilities.IdentityService,
+      ClientCapabilities.SpaceService,
+    ],
+  },
   () => import('./client'),
 );
 export const LayerSpecs = Capability.lazyModule(
@@ -57,6 +64,11 @@ export const SchemaDefs = Capability.lazyModule(
   { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema], provides: [] },
   () => import('./schema-defs'),
 );
+export const RemoteTraceMonitor = Capability.lazyModule(
+  'RemoteTraceMonitor',
+  { provides: [Capabilities.RemoteTraceMonitor] },
+  () => import('./remote-trace-monitor'),
+);
 export const SpaceReplicationProgress = Capability.lazyModule(
   'SpaceReplicationProgress',
   {
@@ -66,4 +78,15 @@ export const SpaceReplicationProgress = Capability.lazyModule(
     activatesOn: ClientEvents.SpacesReady,
   },
   () => import('./space-replication-progress'),
+);
+export const TraceProgress = Capability.lazyModule(
+  'TraceProgress',
+  {
+    requires: [AppCapabilities.ProgressRegistry, Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime],
+    provides: [],
+    // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
+    // registry are all available by the time spaces are observed.
+    activatesOn: ClientEvents.SpacesReady,
+  },
+  () => import('./trace-progress'),
 );

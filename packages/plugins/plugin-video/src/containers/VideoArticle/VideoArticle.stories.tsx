@@ -8,10 +8,11 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';

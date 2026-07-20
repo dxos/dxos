@@ -12,13 +12,12 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayerSpec } from '@dxos/compute';
+import { Topic } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
-import { Topic } from '@dxos/pipeline-email';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
-import { TopicsArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -51,7 +50,7 @@ const MockAiServicePlugin = Plugin.define(
 const Story = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const topics = useQuery(space?.db, Filter.type(Topic));
+  const topics = useQuery(space?.db, Filter.type(Topic.Topic));
   const { invokePromise } = useOperationInvoker();
 
   const handleCreate = useCallback(() => {
@@ -78,9 +77,9 @@ const Story = () => {
   return (
     <div className='flex flex-col bs-full'>
       <Button onClick={handleCreate}>Create Topic</Button>
-      <div className='grow' data-testid='topic-count' data-count={topics.length}>
-        <TopicsArticle role='article' space={space} attendableId='story' mailbox={mailbox} />
-      </div>
+      {/* Accepted/created topics render in the space-level Topics section (plugin-brain); this story
+          asserts creation via the space db count rather than an inbox list. */}
+      <div className='grow' data-testid='topic-count' data-count={topics.length} />
     </div>
   );
 };
@@ -95,7 +94,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Mailbox.Mailbox, Topic, AnchoredTo.AnchoredTo, Message.Message],
+          types: [Mailbox.Mailbox, Topic.Topic, AnchoredTo.AnchoredTo, Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
@@ -124,18 +123,19 @@ type StoryType = StoryObj<typeof meta>;
 
 export const Default: StoryType = {};
 
-/** Clicking "Create Topic" invokes the operation and a Topic (labelled from the message subject) appears. */
+/** Clicking "Create Topic" invokes the operation and materializes a `Topic` in the space db. */
 export const Test: StoryType = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // No topics initially.
     const button = await waitFor(() => canvas.getByRole('button', { name: /create topic/i }));
-    void expect(canvas.queryByTestId('topic-card')).toBeNull();
+    // No topics initially.
+    void expect(canvas.getByTestId('topic-count').getAttribute('data-count')).toBe('0');
 
     await userEvent.click(button);
 
-    // The operation clusters the single thread and materializes a Topic (label from the subject tokens).
-    const card = await waitFor(() => canvas.getByTestId('topic-card'), { timeout: 10_000 });
-    void expect(within(card).getByText(/project|kickoff/i)).toBeInTheDocument();
+    // The operation clusters the single thread and materializes one Topic.
+    await waitFor(() => expect(canvas.getByTestId('topic-count').getAttribute('data-count')).toBe('1'), {
+      timeout: 10_000,
+    });
   },
 };

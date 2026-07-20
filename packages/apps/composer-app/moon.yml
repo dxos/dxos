@@ -33,9 +33,6 @@ tasks:
       - scripts/fetch-ollama.mjs
     outputs:
       - src-tauri/sidecar
-  compile:
-    deps:
-      - prebuild
   prebuild:
     script: pnpm run --silent copy:assets
     deps:

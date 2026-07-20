@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 

@@ -11,8 +11,9 @@ import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } fro
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useHomeVisibility, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
+import { useType } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
-import { type Space, SpaceState, getSpace, isSpace, useSpaces, useType } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -30,6 +31,7 @@ import {
   JoinDialog,
   MembersContainer,
   ObjectCardStack,
+  ObjectHistory,
   RecordArticle,
   RelatedArticle,
   RenamePopover,
@@ -154,6 +156,16 @@ export default Capability.makeModule(
             AppSurface.companion(AppSurface.Article),
           ),
           component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
+        }),
+        Surface.create({
+          id: 'companion.objectHistory',
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, 'history'),
+            AppSurface.companion(AppSurface.Article),
+          ),
+          component: ({ data, role, ref }) => (
+            <ObjectHistory role={role} attendableId={data.attendableId} subject={data.companionTo} ref={ref} />
+          ),
         }),
         Surface.create({
           id: 'spaceSettingsProperties',

@@ -9,9 +9,9 @@ import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
-  AppGraphBuilder,
   CommentConfig,
   CreateObject,
+  HistoryProvider,
   MarkdownSettings,
   MarkdownState,
   OperationHandler,
@@ -25,6 +25,8 @@ import { Markdown } from '#types';
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(SkillDefinition),
   Plugin.addLazyModule(CommentConfig),
+  // Opts documents into the generic history companion contributed by plugin-space.
+  Plugin.addLazyModule(HistoryProvider),
   Plugin.addLazyModule(CreateObject),
   Plugin.addLazyModule(OperationHandler),
   Plugin.addLazyModule(AppCapability.schema([Markdown.Document, Text.Text])),
@@ -33,7 +35,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(MarkdownSettings),
   Plugin.addLazyModule(MarkdownState),
   Plugin.addLazyModule(AnchorSort),
-  Plugin.addLazyModule(AppGraphBuilder),
   Plugin.make,
 );
 

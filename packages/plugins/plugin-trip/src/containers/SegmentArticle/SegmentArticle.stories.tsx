@@ -8,10 +8,11 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { TripBuilder } from '#testing';
