@@ -5,7 +5,7 @@ tags:
   - ts-test
   - pack
 tasks:
-  # `bin/watchdog.mjs` imports from `../dist/lib/node-esm/index.mjs`, so the
+  # `bin/watchdog.mjs` imports from `../dist/lib/index.mjs`, so the
   # package's own dist must exist before tests run. The inherited `:test` task
   # only depends on the upstream build (`^:build`), not the package's own.
   test:
