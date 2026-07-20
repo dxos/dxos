@@ -188,9 +188,9 @@ export const GroupBy = Object.freeze({
       while (end < items.length && getKey(items[end]) === key) {
         end += 1;
       }
-      let members = items.slice(index, end);
+      const members = items.slice(index, end);
       if (itemsOrder && compareByOrder) {
-        members = [...members].sort((a, b) => {
+        members.sort((a, b) => {
           for (const order of itemsOrder) {
             const comparison = compareByOrder(a, b, order);
             if (comparison !== 0) {

@@ -1976,13 +1976,13 @@ describe('QueryPlanner', () => {
       expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
     });
 
-    test('_filterContainsInQuery detects a nested in-query in object props', () => {
+    test('filterContainsInQuery detects a nested in-query in object props', () => {
       const filter = Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }).ast;
       expect(filterContainsInQuery(filter)).toBe(true);
       expect(filterContainsInQuery(Filter.type(TestSchema.Task).ast)).toBe(false);
     });
 
-    test('_filterContainsInQuery detects in-query nested inside and/or/not', () => {
+    test('filterContainsInQuery detects in-query nested inside and/or/not', () => {
       const inQueryFilter = Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }).ast;
       expect(filterContainsInQuery({ type: 'not', filter: inQueryFilter })).toBe(true);
       expect(filterContainsInQuery({ type: 'and', filters: [Filter.type(TestSchema.Person).ast, inQueryFilter] })).toBe(
