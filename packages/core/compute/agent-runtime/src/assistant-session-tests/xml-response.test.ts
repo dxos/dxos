@@ -6,15 +6,24 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
 import { AssistantTestLayer } from '../testing';
 
+// The model is scripted inline: a single streaming text turn containing an unrecognized xml tag,
+// matching the original recorded response. No recorded conversation, so editing prompts/tools no
+// longer breaks this test.
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(ToolExecutionServices),
-  Layer.provideMerge(AssistantTestLayer({ tracing: 'noop' })),
+  Layer.provideMerge(
+    AssistantTestLayer({
+      tracing: 'noop',
+      aiService: ScriptedAiService.layer([ScriptedAiService.text('<assistant>Claude</assistant>')]),
+    }),
+  ),
 );
 
 describe('AiRequest.Request xml response', () => {
@@ -60,6 +69,5 @@ describe('AiRequest.Request xml response', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 });

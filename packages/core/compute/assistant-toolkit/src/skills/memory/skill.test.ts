@@ -7,34 +7,41 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { AssistantTestLayer, operationToolCall } from '@dxos/agent-runtime/testing';
 import { OpaqueToolkit } from '@dxos/ai';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { Skill } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
 
 import { Memory } from '../../types/Memory';
 import { WebSearchToolkit } from '../websearch';
-import { MemoryHandlers } from './operations';
+import { MemoryHandlers, MemoryOperations } from './operations';
 import MemorySkill from './skill';
 
-EntityId.dangerouslyDisableRandomness();
+// The agent's tool-calling behaviour is scripted inline per test via a mock model (no recorded
+// conversation to regenerate). Non-ref tool inputs are type-checked against each operation's input
+// schema through `operationToolCall`; the ref-bearing `delete-memory` input is scripted with a raw
+// tool call whose top-level ref parameter resolves lazily from a mutable holder the test fills
+// before submitting the prompt.
+const testLayer = (script: ScriptedAiService.Script) =>
+  AssistantTestLayer({
+    operationHandlers: MemoryHandlers,
+    types: [Memory, Skill.Skill, Feed.Feed],
+    skills: [MemorySkill.make()],
+    tracing: 'pretty',
+    aiService: ScriptedAiService.layer(script),
+  });
 
-const TestLayer = AssistantTestLayer({
-  operationHandlers: MemoryHandlers,
-  types: [Memory, Skill.Skill, Feed.Feed],
-  skills: [MemorySkill.make()],
-  tracing: 'pretty',
-});
-
-const TestLayerWithWebSearch = AssistantTestLayer({
-  operationHandlers: MemoryHandlers,
-  toolkits: [OpaqueToolkit.make(WebSearchToolkit, Layer.empty)],
-  types: [Memory, Skill.Skill, Feed.Feed],
-  skills: [MemorySkill.make()],
-  tracing: 'pretty',
-});
+const testLayerWithWebSearch = (script: ScriptedAiService.Script) =>
+  AssistantTestLayer({
+    operationHandlers: MemoryHandlers,
+    toolkits: [OpaqueToolkit.make(WebSearchToolkit, Layer.empty)],
+    types: [Memory, Skill.Skill, Feed.Feed],
+    skills: [MemorySkill.make()],
+    tracing: 'pretty',
+    aiService: ScriptedAiService.layer(script),
+  });
 
 describe('Memory Skill', () => {
   it.effect(
@@ -49,10 +56,17 @@ describe('Memory Skill', () => {
         const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
         expect(memories.length).toBeGreaterThanOrEqual(1);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(
+        testLayer([
+          operationToolCall(MemoryOperations.SaveMemory, {
+            title: 'Favorite Programming Language',
+            content: "The user's favorite programming language is TypeScript.",
+          }),
+          ScriptedAiService.text("Got it! I've saved that your favorite programming language is TypeScript."),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -77,35 +91,49 @@ describe('Memory Skill', () => {
         yield* agent.submitPrompt('Search your memories for anything about colors.');
         yield* agent.waitForCompletion();
       },
-      Effect.provide(TestLayer),
+      Effect.provide(
+        testLayer([
+          operationToolCall(MemoryOperations.QueryMemories, { text: 'colors' }),
+          ScriptedAiService.text('I searched my memories for anything about colors.'),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   it.effect(
     'delete: removes a memory',
-    Effect.fnUntraced(
-      function* (_) {
-        yield* Database.add(
-          Obj.make(Memory, {
-            title: 'Outdated fact',
-            content: 'The sky is green.',
-          }),
-        );
-        const agent = yield* AgentService.createSession({
-          skills: [MemorySkill.make()],
-        });
-        yield* agent.submitPrompt('Delete the memory about "Outdated fact".');
-        yield* agent.waitForCompletion();
-        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
-        const found = memories.find((memory) => memory.title === 'Outdated fact');
-        expect(found).toBeUndefined();
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 60_000 },
+    (() => {
+      const ref: { memory?: string } = {};
+      return Effect.fnUntraced(
+        function* (_) {
+          const memory = yield* Database.add(
+            Obj.make(Memory, {
+              title: 'Outdated fact',
+              content: 'The sky is green.',
+            }),
+          );
+          // A top-level ref parameter (`delete-memory`'s `memory`) is a bare URI string.
+          ref.memory = Obj.getURI(memory);
+          const agent = yield* AgentService.createSession({
+            skills: [MemorySkill.make()],
+          });
+          yield* agent.submitPrompt('Delete the memory about "Outdated fact".');
+          yield* agent.waitForCompletion();
+          const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
+          const found = memories.find((entry) => entry.title === 'Outdated fact');
+          expect(found).toBeUndefined();
+        },
+        Effect.provide(
+          testLayer([
+            operationToolCall(MemoryOperations.QueryMemories, { text: 'Outdated fact' }),
+            ScriptedAiService.toolCall('delete-memory', () => ({ memory: ref.memory })),
+            ScriptedAiService.text('I\'ve deleted the memory titled "Outdated fact".'),
+          ]),
+        ),
+        TestHelpers.provideTestContext,
+      );
+    })(),
   );
 
   // TODO(dmaretskyi): Flaky. The model does not reliably call save-memory after a provider-executed web search.
@@ -130,9 +158,8 @@ describe('Memory Skill', () => {
         );
         expect(hasLAMemory).toBe(true);
       },
-      Effect.provide(TestLayerWithWebSearch),
+      Effect.provide(testLayerWithWebSearch([])),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 120_000 },
   );
 });
