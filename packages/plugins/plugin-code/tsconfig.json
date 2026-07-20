@@ -49,6 +49,9 @@
       "path": "../../core/echo/echo-doc"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/halo/halo"
     },
     {

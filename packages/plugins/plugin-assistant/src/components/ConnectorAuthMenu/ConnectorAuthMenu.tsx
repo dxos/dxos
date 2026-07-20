@@ -7,9 +7,9 @@ import React, { useContext, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { type Database, Filter, type Obj, type Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Connection, Connector, CONNECTOR_AUTH_GROUP_ID, connectorAuthActions } from '@dxos/plugin-connector';
 import { Graph, useActionRunner } from '@dxos/plugin-graph';
-import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Menu, useGraphMenuActions } from '@dxos/react-ui-menu';
 

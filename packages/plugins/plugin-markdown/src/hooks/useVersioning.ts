@@ -6,9 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
 import { type Database, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { SpaceCapabilities } from '@dxos/plugin-space';
-import { useObject } from '@dxos/react-client/echo';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 

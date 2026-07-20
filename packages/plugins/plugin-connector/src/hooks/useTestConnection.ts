@@ -9,8 +9,8 @@ import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import { useCallback, useEffect, useState } from 'react';
 
+import { useObject } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { useObject } from '@dxos/react-client/echo';
 
 import { useConnector } from '#hooks';
 
