@@ -161,9 +161,12 @@ const withEchoRefinements = (
       // *different* suspended type (e.g. two mutually-recursive schemas, A embedding B and B embedding
       // A) rather than through itself. `suspendCache` alone can't catch this: each fresh expansion (the
       // `else` branch below) starts from an empty cache, so A's expansion re-triggers B's expansion,
-      // which re-triggers A's, forever. Stop here with an opaque placeholder instead of recursing again.
+      // which re-triggers A's, forever. Stop here with an "any" placeholder (the same self-contained
+      // `$id` shape `effect`'s own JSONSchema.fromAST emits for `Schema.Any`, see `toEffectSchema` above)
+      // instead of recursing again — a real `$ref` would need the path this suspend was *first* entered
+      // from, which isn't available here (that expansion is a different, already-abandoned `suspendCache`).
       recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
-        [SchemaAST.JSONSchemaAnnotationId]: {},
+        [SchemaAST.JSONSchemaAnnotationId]: { $id: '/schemas/any' },
       });
     } else {
       inProgress.add(suspendedAst);
