@@ -87,7 +87,29 @@ const RetryOp = Operation.make({
   services: [Database.Service],
 });
 
+/**
+ * Receives a raw subscription event, resolves `event.subject`, and echoes the mutation type plus the
+ * resolved object's id — used to assert `subject` dereferences to the mutated object.
+ */
+const SubjectProbeOp = Operation.make({
+  meta: { key: DXN.make('test.trigger-dispatcher.subjectProbe'), name: 'Subject Probe' },
+  input: Schema.Any,
+  output: Schema.Struct({ type: Schema.String, subjectId: Schema.optional(Schema.String) }),
+  services: [Database.Service],
+});
+
 const TestHanlers = OperationHandlerSet.make(
+  SubjectProbeOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* (event: TriggerEvent.SubscriptionEvent) {
+        const resolved = yield* Effect.orElseSucceed(
+          Effect.promise(() => event.subject.tryLoad()),
+          () => undefined,
+        );
+        return { type: event.type, subjectId: resolved?.id };
+      }),
+    ),
+  ),
   ProbeOp.pipe(
     Operation.withHandler(
       Effect.fn(function* () {
@@ -734,7 +756,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestLayer())),
     );
 
-    it.effect.skip(
+    it.effect(
       'should not invoke triggers for unchanged objects',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = yield* registerOperation(Reply);
@@ -849,9 +871,224 @@ describe('TriggerDispatcher', () => {
         invariant(Exit.isSuccess(exit));
         expect(exit.value).to.deep.include({
           objectId: person.id,
-          changeType: 'unknown', // TODO: This should be 'create' or 'update'
+          changeType: 'created',
           triggerId: trigger.id,
         });
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'reports updated for a modified object',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const person = yield* Database.add(Obj.make(Person.Person, { fullName: 'Uma' }));
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
+          input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        // First dispatch consumes the `created`.
+        yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+
+        Obj.update(person, (person) => {
+          person.fullName = 'Uma Thurman';
+        });
+        yield* Database.flush({ indexes: true });
+
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({ changeType: 'updated', objectId: person.id });
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'reports deleted for a removed object, then a fresh created on re-add',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const person = yield* Database.add(Obj.make(Person.Person, { fullName: 'Del' }));
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
+          input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+
+        yield* Database.remove(person);
+        yield* Database.flush({ indexes: true });
+
+        {
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+          expect(results.length).toBe(1);
+          const exit = results[0].result;
+          invariant(Exit.isSuccess(exit));
+          expect(exit.value).to.deep.include({ changeType: 'deleted', objectId: person.id });
+        }
+
+        // The delete dropped the processed-version key, so a new object reads as a fresh create.
+        const replacement = yield* Database.add(Obj.make(Person.Person, { fullName: 'Del II' }));
+        yield* Database.flush({ indexes: true });
+        {
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+          expect(results.length).toBe(1);
+          const exit = results[0].result;
+          invariant(Exit.isSuccess(exit));
+          expect(exit.value).to.deep.include({ changeType: 'created', objectId: replacement.id });
+        }
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'event.subject dereferences to the mutated object',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(SubjectProbeOp);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        const person = yield* Database.add(Obj.make(Person.Person, { fullName: 'Subj' }));
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({ type: 'created', subjectId: person.id });
+      }, Effect.provide(TestLayer())),
+    );
+  });
+
+  describe('Feed-sourced Subscription', () => {
+    it.effect(
+      'reports created for a feed-appended object',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specSubscriptionFromFeed(feed),
+          input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        const person = Obj.make(Person.Person, { fullName: 'Feedy' });
+        yield* Feed.append(feed, [person]);
+
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({ changeType: 'created', objectId: person.id });
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'reports updated for a re-appended (mutated) feed object',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specSubscriptionFromFeed(feed),
+          input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        const person = Obj.make(Person.Person, { fullName: 'FeedUp' });
+        yield* Feed.append(feed, [person]);
+        yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+
+        Obj.update(person, (person) => {
+          person.fullName = 'FeedUp v2';
+        });
+        yield* Database.flush({ indexes: true });
+
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({ changeType: 'updated', objectId: person.id });
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'reports deleted for a removed feed object (id-set diff)',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specSubscriptionFromFeed(feed),
+          input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        const person = Obj.make(Person.Person, { fullName: 'FeedDel' });
+        yield* Feed.append(feed, [person]);
+        yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+
+        yield* Feed.remove(feed, [person]);
+        yield* Database.flush({ indexes: true });
+
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({ changeType: 'deleted', objectId: person.id });
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'only fires for feed items matching the filter',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specSubscriptionFromFeed(feed, Filter.type(Task.Task)),
+          input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'ignored' })]);
+        const task = Obj.make(Task.Task, { title: 'watched' });
+        yield* Feed.append(feed, [task]);
+
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({ changeType: 'created', objectId: task.id });
       }, Effect.provide(TestLayer())),
     );
   });

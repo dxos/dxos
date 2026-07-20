@@ -1,9 +1,22 @@
 # Subscription trigger mutation types, `subject` coverage, and feed-sourced queries
 
-Status: PLAN (not yet implemented)
+Status: IMPLEMENTED
 Owner: (assign)
 Branch: `t3code/edb619e9`
 Related area: `@dxos/compute` (types) + `@dxos/functions-runtime` (dispatcher)
+
+## Implementation notes (deviations from the plan)
+
+- **Change detection is content-signature based, not `Obj.version`.** The spike confirmed feed-backed
+  live objects are *unversioned* (no automerge heads), so version comparison never sees a feed
+  re-append as an update. The dispatcher now compares a canonical JSON signature (`objectSignature`),
+  which covers both the database and feed sources uniformly. `processedVersions` now stores that
+  signature instead of an encoded version.
+- **Feed deletes use the id-set diff** (spike outcome): `Feed.remove` leaves no queryable tombstone
+  (`deleted: 'include'` returns nothing for a removed feed item), so feed-scoped deletes are detected
+  by diffing previously-seen ids against the current live set. The database source still uses
+  `deleted: 'include'` + `Obj.isDeleted` for a precise tombstone signal; a database object merely
+  falling out of the filter predicate is intentionally NOT reported as deleted.
 
 ## Goal
 
@@ -13,7 +26,7 @@ Extend the subscription-trigger contract so that:
 2. The `subject` ref on `SubscriptionEvent` is exercised and asserted (dereferences to the changed object; behaves correctly on delete).
 3. Subscription queries can be sourced from a **feed** (queue), not just the space database, so subscription semantics apply to feed items.
 
-Plus: a **test matrix** for the trigger dispatcher covering (1)–(3) across the relevant conditions, including mutations that happen *in a feed*.
+Plus: a **test matrix** for the trigger dispatcher covering (1)–(3) across the relevant conditions, including mutations that happen _in a feed_.
 
 ## Current state (as of this branch)
 
@@ -117,42 +130,45 @@ export const specSubscriptionFromFeed = (
 Note: `Scope.feed` needs the feed URI (`Feed.getFeedUri(feed)`), which requires the feed to be persisted. Confirm import surface (`Scope`, `Filter` from `@dxos/echo`). If building the URI at spec-construction time is awkward, alternative is to store the feed ref on the spec and resolve at dispatch — but prefer encoding the scope in the AST to keep the dispatcher source-agnostic.
 
 **b. Dispatcher** — should require **no special-casing** if the scope is in the AST, because `Query.fromAst(ast)` already resolves the feed scope through `Database.query`. Verify:
+
 - `deleted: 'include'` option composes with a feed scope (feed `Feed.remove` → does the item surface as `isDeleted`? or does it simply disappear?). **This is the key runtime risk to validate.** If feed removal does NOT produce a tombstone visible to the query, delete-in-feed detection needs the id-set diff fallback for feed-scoped queries. Validate with a spike test before finalizing the delete path.
 - Version tracking (`processedVersions`) is keyed by object id, which is stable across feed re-append, so `updated` detection should work.
 
 ## Files to change
 
-| File | Change |
-|------|--------|
-| `packages/core/compute/compute/src/TriggerEvent.ts` | `SubscriptionMutationType` literal; retype `SubscriptionEvent.type`. |
-| `packages/core/compute/compute/src/Trigger.ts` | Add `specSubscriptionFromFeed` (+ exports). |
-| `packages/core/compute/functions-runtime/src/triggers/trigger-dispatcher.ts` | Classify mutation type; `deleted: 'include'`; drop key on delete; emit typed event. |
-| `packages/core/compute/functions-runtime/src/triggers/trigger-dispatcher.test.ts` | Test matrix (below). |
-| (maybe) `packages/core/compute/compute/src/index.ts` barrel | Export new symbol if needed. |
+| File                                                                              | Change                                                                              |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `packages/core/compute/compute/src/TriggerEvent.ts`                               | `SubscriptionMutationType` literal; retype `SubscriptionEvent.type`.                |
+| `packages/core/compute/compute/src/Trigger.ts`                                    | Add `specSubscriptionFromFeed` (+ exports).                                         |
+| `packages/core/compute/functions-runtime/src/triggers/trigger-dispatcher.ts`      | Classify mutation type; `deleted: 'include'`; drop key on delete; emit typed event. |
+| `packages/core/compute/functions-runtime/src/triggers/trigger-dispatcher.test.ts` | Test matrix (below).                                                                |
+| (maybe) `packages/core/compute/compute/src/index.ts` barrel                       | Export new symbol if needed.                                                        |
 
 ## Test matrix
 
 Add under `describe('Database Triggers (Subscription)')` (and a sibling `describe('Feed-sourced Subscription')`). Use existing `TestLayer()` (manual time control), `Reply` op, `Person`/`Task` types, `Feed`.
 
 Dimensions:
+
 - **Source**: `database` (space) | `feed` (queue).
 - **Mutation**: `created` | `updated` | `deleted`.
 - **Assertion focus**: fires exactly once; `event.type` correct; `event.subject` resolves to (or identifies) the right object; `changedObjectId` matches.
 
-| # | Source | Mutation | Setup → Action | Expect |
-|---|--------|----------|----------------|--------|
-| 1 | database | created | add trigger, refresh, `Database.add(person)` | 1 result, `type==='created'`, `subject` resolves to person, `changedObjectId===person.id` |
-| 2 | database | updated | add person, add trigger, first dispatch (consumes `created`), `Obj.update` + flush | next dispatch: 1 result, `type==='updated'`, subject resolves, same id |
-| 3 | database | deleted | add person, add trigger, first dispatch, `Obj.delete(person)` + flush | next dispatch: 1 result, `type==='deleted'`, `changedObjectId===person.id`, `subject` URI matches (resolved value may be undefined) |
-| 4 | database | no-op | after processing, dispatch again with no changes | 0 results (un-skip the existing skipped test) |
-| 5 | database | created→deleted→created | delete then re-add same-typed object | fresh `created` after re-add (key was dropped on delete) |
-| 6 | feed | created | feed-scoped trigger, `Feed.append(feed, [person])` | 1 result, `type==='created'`, subject/id correct |
-| 7 | feed | updated | append, dispatch, `Obj.update(item)` + `Database.flush` | 1 result, `type==='updated'` |
-| 8 | feed | deleted | append, dispatch, `Feed.remove(feed, [item])` | 1 result, `type==='deleted'` — **gated on the feed-tombstone spike (see risks); if feed removal is invisible, implement id-set diff fallback and keep this test** |
-| 9 | feed | filtered | feed-scoped trigger with `Filter.type(Task)`; append a `Person` then a `Task` | only the `Task` fires |
-| 10 | subject (cross-cutting) | created+updated | reuse #1/#2 | dereference `event.subject` (via `Database.load`/`Ref` resolve) and assert identity equals the mutated object |
+| #   | Source                  | Mutation                | Setup → Action                                                                     | Expect                                                                                                                                                            |
+| --- | ----------------------- | ----------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | database                | created                 | add trigger, refresh, `Database.add(person)`                                       | 1 result, `type==='created'`, `subject` resolves to person, `changedObjectId===person.id`                                                                         |
+| 2   | database                | updated                 | add person, add trigger, first dispatch (consumes `created`), `Obj.update` + flush | next dispatch: 1 result, `type==='updated'`, subject resolves, same id                                                                                            |
+| 3   | database                | deleted                 | add person, add trigger, first dispatch, `Obj.delete(person)` + flush              | next dispatch: 1 result, `type==='deleted'`, `changedObjectId===person.id`, `subject` URI matches (resolved value may be undefined)                               |
+| 4   | database                | no-op                   | after processing, dispatch again with no changes                                   | 0 results (un-skip the existing skipped test)                                                                                                                     |
+| 5   | database                | created→deleted→created | delete then re-add same-typed object                                               | fresh `created` after re-add (key was dropped on delete)                                                                                                          |
+| 6   | feed                    | created                 | feed-scoped trigger, `Feed.append(feed, [person])`                                 | 1 result, `type==='created'`, subject/id correct                                                                                                                  |
+| 7   | feed                    | updated                 | append, dispatch, `Obj.update(item)` + `Database.flush`                            | 1 result, `type==='updated'`                                                                                                                                      |
+| 8   | feed                    | deleted                 | append, dispatch, `Feed.remove(feed, [item])`                                      | 1 result, `type==='deleted'` — **gated on the feed-tombstone spike (see risks); if feed removal is invisible, implement id-set diff fallback and keep this test** |
+| 9   | feed                    | filtered                | feed-scoped trigger with `Filter.type(Task)`; append a `Person` then a `Task`      | only the `Task` fires                                                                                                                                             |
+| 10  | subject (cross-cutting) | created+updated         | reuse #1/#2                                                                        | dereference `event.subject` (via `Database.load`/`Ref` resolve) and assert identity equals the mutated object                                                     |
 
 Notes:
+
 - Prefer a small table-driven helper to reduce duplication, but keep each `it.effect` independently readable (per testing conventions).
 - Assert on `results.length` AND `Exit.isSuccess(result)` AND the templated output (extend the existing input-template test to assert `changeType` now equals the real mutation kind, removing the `TODO`).
 - For `subject` resolution use the dispatcher’s space db (`Database.load(event.subject)` inside the op, or resolve in-test) and compare `.id`.

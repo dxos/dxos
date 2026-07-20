@@ -24,10 +24,11 @@ import * as Struct from 'effect/Struct';
 
 import { Operation, Process, RunAgainError, Trigger, TriggerEvent } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { EntityId } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { filterReadyFeedItems } from './feed-position';
@@ -671,7 +672,14 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const objects = yield* Database.query(Query.fromAst(spec.query.ast)).run;
+              const { db } = yield* Database.Service;
+              const feedScoped = queryHasFeedScope(spec.query.ast);
+
+              // Include tombstones so deletions surface for the database source (see `Obj.isDeleted`
+              // branch below). Feed removals do not leave a visible tombstone, so feed-scoped deletes
+              // are instead detected by the id-set diff further down; `deleted: 'include'` is a no-op
+              // there.
+              const objects = yield* Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' })).run;
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TriggerStateNotFound', () =>
@@ -686,37 +694,68 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 ),
               );
               invariant(state.state?._tag === 'subscription');
+              const processedVersions = state.state.processedVersions;
+
+              const fire = (type: TriggerEvent.SubscriptionMutationType, objectId: string, uri: URI.URI) =>
+                this.invokeTrigger({
+                  trigger,
+                  event: {
+                    type,
+                    subject: db.makeRef(uri),
+                    changedObjectId: objectId,
+                  } satisfies TriggerEvent.SubscriptionEvent,
+                });
 
               let updated = false;
+              const seenIds = new Set<string>();
               for (const object of objects) {
-                const existingVersion = Record.get(state.state.processedVersions, object.id).pipe(
-                  Option.map(Obj.decodeVersion),
-                );
-                const currentVersion = Obj.version(object);
-                const run =
-                  Option.isNone(existingVersion) ||
-                  Obj.compareVersions(currentVersion, existingVersion.value) === 'different';
+                seenIds.add(object.id);
+                const existingSignature = Record.get(processedVersions, object.id);
 
-                if (!run) {
+                // Database tombstone: emit `deleted` once, then drop the key so a later re-creation
+                // reads as a fresh `created`.
+                if (Obj.isDeleted(object)) {
+                  if (Option.isSome(existingSignature)) {
+                    invocations.push(yield* fire('deleted', object.id, Obj.getURI(object)));
+                    delete (processedVersions as Record<string, string>)[object.id];
+                    updated = true;
+                  }
                   continue;
                 }
 
-                const { db } = yield* Database.Service;
-                invocations.push(
-                  yield* this.invokeTrigger({
-                    trigger,
-                    event: {
-                      // TODO(dmaretskyi): Change type not supported.
-                      type: 'unknown',
+                // Change detection is by content signature rather than `Obj.version`: feed-backed
+                // objects are unversioned (no automerge heads), so version comparison can't see a
+                // re-append as an update. A canonical JSON signature covers both the database and
+                // feed sources uniformly.
+                const currentSignature = objectSignature(object);
+                const type: TriggerEvent.SubscriptionMutationType | undefined = Option.isNone(existingSignature)
+                  ? 'created'
+                  : existingSignature.value !== currentSignature
+                    ? 'updated'
+                    : undefined;
+                if (!type) {
+                  continue;
+                }
 
-                      subject: db.makeRef(Obj.getURI(object)),
-
-                      changedObjectId: object.id,
-                    } satisfies TriggerEvent.SubscriptionEvent,
-                  }),
-                );
-                (state.state.processedVersions as any)[object.id] = Obj.encodeVersion(currentVersion);
+                invocations.push(yield* fire(type, object.id, Obj.getURI(object)));
+                (processedVersions as Record<string, string>)[object.id] = currentSignature;
                 updated = true;
+              }
+
+              // Feed removals leave no visible tombstone (unlike the database source), so detect
+              // deletes by diffing previously-seen ids against the current live result set. Only for
+              // feed-scoped queries: for the database source a real tombstone is authoritative and an
+              // object merely falling out of the filter predicate must not be reported as deleted.
+              if (feedScoped) {
+                for (const objectId of Object.keys(processedVersions)) {
+                  if (!seenIds.has(objectId)) {
+                    invocations.push(
+                      yield* fire('deleted', objectId, EID.make({ spaceId: db.spaceId, entityId: objectId })),
+                    );
+                    delete (processedVersions as Record<string, string>)[objectId];
+                    updated = true;
+                  }
+                }
               }
 
               if (updated) {
@@ -900,3 +939,41 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
  * Key for the current cursor for feed triggers.
  */
 export const KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';
+
+/**
+ * True when the query's `from` clause carries at least one feed scope (`Scope.feed(...)`).
+ * Feed-scoped subscriptions detect deletes by an id-set diff, since feed removals leave no visible
+ * tombstone (unlike the database source).
+ */
+const queryHasFeedScope = (query: QueryAST.Query): boolean => {
+  let found = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.some((scope) => scope._tag === 'feed')) {
+      found = true;
+    }
+  });
+  return found;
+};
+
+/**
+ * Canonical content signature of an entity, used by subscription triggers to detect changes across
+ * both the database and feed sources. Keys are sorted so the string is stable regardless of property
+ * order; a change to any field (or to the feed queue position on re-append) yields a new signature.
+ */
+const objectSignature = (object: Obj.Unknown): string => {
+  const sortKeys = (input: unknown): unknown => {
+    if (Array.isArray(input)) {
+      return input.map(sortKeys);
+    }
+    if (input !== null && typeof input === 'object') {
+      return Object.keys(input as Record<string, unknown>)
+        .sort()
+        .reduce<Record<string, unknown>>((acc, key) => {
+          acc[key] = sortKeys((input as Record<string, unknown>)[key]);
+          return acc;
+        }, {});
+    }
+    return input;
+  };
+  return JSON.stringify(sortKeys(Entity.toJSON(object)));
+};
