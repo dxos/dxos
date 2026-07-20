@@ -18,7 +18,6 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed, Text.Text],
-  disableLlmMemoization: true,
 });
 
 const makeAgent = Effect.fnUntraced(function* () {

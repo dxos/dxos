@@ -8,16 +8,32 @@ import * as Layer from 'effect/Layer';
 
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { EntityId } from '@dxos/keys';
 
 import * as AiService from './AiService';
 import * as AiSummarizer from './AiSummarizer';
-import { TestAiService, TestData } from './testing';
+import { ScriptedAiService, TestData } from './testing';
 
-EntityId.dangerouslyDisableRandomness();
-
+// `AiSummarizer.summarize` issues a single non-streaming `generateText` call, so the response is
+// scripted under the model's `generate` bucket rather than the (streaming-only) top-level `turns`.
 const TestLanguageModel = AiService.model('com.anthropic.model.claude-sonnet-4-6.default').pipe(
-  Layer.provide(TestAiService()),
+  Layer.provideMerge(
+    ScriptedAiService.layer({
+      models: {
+        sonnet: {
+          generate: [
+            ScriptedAiService.text(
+              'Processed an email notification about a redirected parcel ready for pickup.\n\n' +
+                'Action taken: found the existing order object matching the tracking number and updated its ' +
+                'status and address to the temporary pickup point, and recorded the pickup code and deadline in ' +
+                'notes.\n\n' +
+                'Order details preserved: item description, price, order date, order id, tracking number, ' +
+                'offer id, payment id, and delivery fee.',
+            ),
+          ],
+        },
+      },
+    }),
+  ),
 );
 
 describe('AiSummarizer', () => {

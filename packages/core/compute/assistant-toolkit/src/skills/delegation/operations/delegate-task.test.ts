@@ -23,7 +23,6 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: DelegationHandlers,
   types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed],
   skills: [DelegationSkill.make()],
-  disableLlmMemoization: true,
 });
 
 const invokeDelegateTask = (input: { id?: Plan.TaskId; title?: string }, chatFeed: Feed.Feed) =>

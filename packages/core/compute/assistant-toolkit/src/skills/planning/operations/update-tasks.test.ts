@@ -24,7 +24,6 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: PlanningHandlers,
   types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
-  disableLlmMemoization: true,
 });
 
 describe('UpdateTasks', () => {

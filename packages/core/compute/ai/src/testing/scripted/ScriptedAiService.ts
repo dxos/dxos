@@ -252,7 +252,12 @@ const makeLanguageModel = (state: ScriptState, model: string): Effect.Effect<Lan
       ),
   });
 
-const makeService = (script: Script): AiService.Service => {
+/**
+ * Builds a scripted {@link AiService.Service} directly (not wrapped in a `Layer`) — for callers that
+ * need to install it as middleware over an already-resolved service (e.g. `AssistantPluginOptions.aiServiceMiddleware`)
+ * rather than provide it as a dependency. Most callers want {@link layer} instead.
+ */
+export const make = (script: Script): AiService.Service => {
   const state: ScriptState = {
     spec: normalizeSpec(script),
     cursors: new Map(),
@@ -284,4 +289,4 @@ const makeService = (script: Script): AiService.Service => {
  * ```
  */
 export const layer = (script: Script): Layer.Layer<AiService.AiService> =>
-  Layer.sync(AiService.AiService, () => makeService(script));
+  Layer.sync(AiService.AiService, () => make(script));

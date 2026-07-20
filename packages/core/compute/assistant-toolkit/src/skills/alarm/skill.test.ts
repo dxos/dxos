@@ -27,7 +27,6 @@ const TestLayer = AssistantTestLayer({
   types: [Organization.Organization, Feed.Feed, Skill.Skill],
   operationHandlers: AlarmHandlers,
   skills: [AlarmSkill.make()],
-  disableLlmMemoization: true,
 });
 
 describe('Alarm skill', () => {

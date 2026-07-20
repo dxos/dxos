@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { traceFeedPrettyPrintSubscription } from '@dxos/agent-runtime/testing';
 import { AiService } from '@dxos/ai';
-import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
+import { MemoizedAiService, MemoizedLanguageModel, ScriptedAiService, TestAiService } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -72,6 +72,12 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
   inferenceProvider?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
 
   disableLlmMemoization?: boolean;
+
+  /**
+   * Statically scripts the agent's model turn-by-turn instead of replaying a recorded conversation.
+   * When set, `inferenceProvider` and `disableLlmMemoization` are ignored.
+   */
+  script?: ScriptedAiService.Script;
 
   /** Additional plugins registered after the default composer plugin set. */
   plugins?: Plugin.Plugin[];
@@ -154,6 +160,17 @@ const DEFAULT_CLIENT_TYPES: Type.AnyEntity[] = [
   Mailbox.Mailbox,
 ];
 
+const makeAiServiceMiddleware = async (
+  ctx: TestContext,
+  options: AgentTestOptions,
+): Promise<(upstream: AiService.Service) => AiService.Service> => {
+  const { script } = options;
+  if (script !== undefined) {
+    return () => ScriptedAiService.make(script);
+  }
+  return makeMemoizedAiServiceMiddleware(ctx, options);
+};
+
 const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions): Promise<Plugin.Plugin[]> => [
   ClientPlugin({
     ...(options.edge || options.sandbox
@@ -162,7 +179,7 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
     types: [...DEFAULT_CLIENT_TYPES, ...(options.clientTypes ?? [])],
   }),
   AssistantPlugin({
-    aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx, options),
+    aiServiceMiddleware: await makeAiServiceMiddleware(ctx, options),
   }),
   RoutinePlugin(),
   InboxPlugin(),
@@ -307,7 +324,8 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
 
 /**
  * Returns the appropriate e2e test timeout: full generation timeout when LLM generation is
- * enabled or memoization is disabled, and a shorter replay timeout for memoized runs.
+ * enabled or memoization is disabled, and a shorter replay timeout for memoized runs. Not needed for
+ * scripted tests (`options.script`) — scripted replay is fast, so omit the `timeout` option entirely.
  */
 export const agentTestTimeout = (opts?: Pick<AgentTestOptions, 'disableLlmMemoization'>) =>
   MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : MEMOIZED_TEST_TIMEOUT;
