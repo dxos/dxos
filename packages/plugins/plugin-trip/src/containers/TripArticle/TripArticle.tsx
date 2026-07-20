@@ -13,7 +13,6 @@ import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { MapInline } from '@dxos/plugin-map';
 import { MapCapabilities } from '@dxos/plugin-map/types';
-import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -144,13 +143,13 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
 
   const handleAddSegment = useCallback(
     (kind: Segment.Kind) => {
-      const space = getSpace(subject);
-      if (!space) {
+      const db = Obj.getDatabase(subject);
+      if (!db) {
         return;
       }
       // The chronologically-last leg, used to chain the new segment's origin from where it ended.
       const previous = segments.at(-1);
-      const segment = space.db.add(Segment.makeDefault(kind));
+      const segment = db.add(Segment.makeDefault(kind));
       Trip.addSegment(subject, segment);
       // Pre-fill the start (and end, for a range) from the current calendar selection.
       if (calendarSelection?.from) {
