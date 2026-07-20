@@ -239,7 +239,8 @@ export default Capability.makeModule(
       let companion: { attendedId: string; node: PathResolution.RepresentedNode } | undefined;
       if (deck.companionOpen && deck.active.length > 0) {
         const [attendedId] = attention.getCurrent();
-        const plankId = attendedId && deck.active.includes(attendedId) ? attendedId : deck.active[deck.active.length - 1];
+        const plankId =
+          attendedId && deck.active.includes(attendedId) ? attendedId : deck.active[deck.active.length - 1];
         const selection = viewState.get(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${linkedSegment(selection.variant)}`;
