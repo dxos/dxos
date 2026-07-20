@@ -3,21 +3,19 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import { type TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { TestContextService } from '@dxos/effect/testing';
-import { DXN, EntityId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -28,8 +26,6 @@ import { AssistantPlugin } from '#plugin';
 
 import { meta } from './meta';
 import { AssistantSkill } from './skills/assistant';
-
-EntityId.dangerouslyDisableRandomness();
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
@@ -68,13 +64,21 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can memoize ai-service requests', async (ctx) => {
-    const { expect } = ctx;
+  test('can override ai-service requests via aiServiceMiddleware', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+          // A non-streaming `generateText` call, so the response is scripted under the model's
+          // `generate` bucket rather than the (streaming-only) top-level `turns`.
+          aiServiceMiddleware: () =>
+            ScriptedAiService.make({
+              models: {
+                'claude-haiku-4-5': {
+                  generate: [ScriptedAiService.text('The capital of France is Paris.')],
+                },
+              },
+            }),
         }),
       ],
     });
@@ -98,13 +102,18 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
-    const { expect } = ctx;
+  test('can run instructions through the plugin', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+          // The agent calls the inline `completeJob` tool with the output, then produces a final
+          // text turn so the agent loop terminates.
+          aiServiceMiddleware: () =>
+            ScriptedAiService.make([
+              ScriptedAiService.toolCall('completeJob', { success: { capital: 'paris' } }),
+              ScriptedAiService.text('Done.'),
+            ]),
         }),
         RoutinePlugin(),
       ],
@@ -142,13 +151,13 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('smoke test for agent service with standard skills', { timeout: 120_000 }, async (ctx) => {
-    const { expect } = ctx;
+  test('smoke test for agent service with standard skills', async () => {
     await using harness = await createComposerTestApp({
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+          // No tools needed — the prompt is purely conversational.
+          aiServiceMiddleware: () => ScriptedAiService.make([ScriptedAiService.text('Hi! How can I help you?')]),
         }),
         RoutinePlugin(),
       ],
@@ -185,15 +194,3 @@ describe('AssistantPlugin', () => {
     );
   });
 });
-
-const makeMemoizedAiServiceMiddleware = (
-  ctx: TestContext,
-): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.AiService.pipe(
-    Effect.provide(
-      TestAiService({ preset: 'direct' }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
-    ),
-    // Ignoring actual AI service the plugin contructs and using our own.
-    Effect.map((service) => (_upstream: AiService.Service) => service),
-    Effect.runPromise,
-  );
