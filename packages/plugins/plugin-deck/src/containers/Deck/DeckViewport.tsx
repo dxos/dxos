@@ -270,6 +270,17 @@ export const DeckPlanks = () => {
           <ExitFullscreenButton onExit={toggleFullscreen} />
           <DeckPlank id={fullscreenId} part='main' fullscreen classNames={mx('absolute inset-0', mainIntrinsicSize)} />
         </>
+      ) : presentation === 'fullbleed' && active[0] ? (
+        // A singleton deck renders the plank directly as an absolute-inset child of this filled
+        // container (today's solo look). Routing it through the horizontal Mosaic.Stack/ScrollArea
+        // collapses it — an `absolute inset-0` plank contributes no intrinsic size to a flex tile.
+        <DeckPlank
+          id={active[0]}
+          part='main'
+          active={active}
+          companionShown={deck.companionOpen}
+          classNames={mx('absolute inset-0', mainIntrinsicSize)}
+        />
       ) : (
         <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
           <ScrollArea.Root orientation='horizontal' classNames='size-full'>
