@@ -526,7 +526,7 @@ describe('json-to-effect', () => {
       typename: 'com.example.type.project',
       version: '0.1.0',
     });
-    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('echo:/01JERV1HQCQZDQ4NVCJ42QB38F');
+    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('echo:///01JERV1HQCQZDQ4NVCJ42QB38F');
   });
 
   test('symbol annotations get compared', () => {

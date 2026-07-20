@@ -10,17 +10,20 @@ import type { EntityId } from './entity-id';
 import type { SpaceId } from './space-id';
 import type * as URI from './URI';
 
-// Canonical-form regex covering all three EID shapes.
+// Canonical-form regex covering all accepted EID shapes.
 //   echo://<spaceId>/<objectId>
 //   echo://<spaceId>
-//   echo:/<objectId>      (local)
-//   echo:///<objectId>    (local, alt form)
+//   echo:///<objectId>    (local, canonical)
+//   echo:/<objectId>      (local, legacy — accepted on read, normalized to the canonical triple-slash form)
 const ECHO_URI_REGEXP = /^echo:(?:\/\/[^/]+(?:\/[^/]+)?|(?:\/\/\/|\/)[^/]+)$/;
 
 // Sub-patterns used for extraction.
 const QUALIFIED_RE = /^echo:\/\/([^/]+)\/([^/]+)$/;
 const SPACE_ONLY_RE = /^echo:\/\/([^/]+)$/;
 const LOCAL_RE = /^echo:(?:\/\/\/|\/)([^/]+)$/;
+// Legacy single-slash local form (`echo:/<objectId>`), distinguished from the canonical
+// triple-slash form so `parse` can normalize it. The negative lookahead rejects `echo://…`.
+const LOCAL_LEGACY_RE = /^echo:\/(?!\/)([^/]+)$/;
 
 /**
  * Addresses an ECHO object or space. Uses the `echo:` URI scheme.
@@ -28,7 +31,7 @@ const LOCAL_RE = /^echo:(?:\/\/\/|\/)([^/]+)$/;
  * @example
  * ```
  * echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6
- * echo:/01J00J9B45YHYSGZQTQMSKMGJ6
+ * echo:///01J00J9B45YHYSGZQTQMSKMGJ6
  * echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE
  * ```
  */
@@ -40,13 +43,18 @@ export type EID = URI.URI & { readonly __EID: unique symbol };
 export const isEID = (value: unknown): value is EID => typeof value === 'string' && value.startsWith('echo:');
 
 /**
- * Parses a string to EID. Throws if the string is not a valid canonical `echo:` EID.
+ * Parses a string to EID. Throws if the string is not a valid `echo:` EID.
+ *
+ * The legacy single-slash local form (`echo:/<objectId>`) is accepted and normalized to the
+ * canonical triple-slash form (`echo:///<objectId>`) so that legacy and freshly-produced EIDs
+ * compare equal.
  */
 export const parse = (uri: string): EID => {
   if (!ECHO_URI_REGEXP.test(uri)) {
     throw new Error(`Invalid EID: ${uri}`);
   }
-  return uri as EID;
+  const legacy = LOCAL_LEGACY_RE.exec(uri);
+  return (legacy ? `echo:///${legacy[1]}` : uri) as EID;
 };
 
 /**
@@ -64,7 +72,7 @@ export const tryParse = (uri: string): EID | undefined => {
  * Constructs an EID. Validates the result via `parse`.
  *
  * - `{ spaceId, entityId }` → `echo://<spaceId>/<entityId>` (fully qualified)
- * - `{ entityId }`          → `echo:/<entityId>` (local — current space)
+ * - `{ entityId }`          → `echo:///<entityId>` (local — current space)
  * - `{ spaceId }`           → `echo://<spaceId>` (space-only)
  *
  * Throws if neither id is provided, or if the result is not a valid EID.
@@ -74,7 +82,7 @@ export const make = ({ spaceId, entityId }: { spaceId?: SpaceId; entityId?: Enti
   if (spaceId != null && entityId != null) {
     raw = `echo://${spaceId}/${entityId}`;
   } else if (entityId != null) {
-    raw = `echo:/${entityId}`;
+    raw = `echo:///${entityId}`;
   } else if (spaceId != null) {
     raw = `echo://${spaceId}`;
   } else {
@@ -145,7 +153,7 @@ const Schema_: Schema.Schema<EID, EID> = Schema.String.pipe(
   }),
   Schema.annotations({
     title: 'EID',
-    description: 'ECHO object/space URI: echo://<spaceId>[/<objectId>] or echo:/<objectId>',
+    description: 'ECHO object/space URI: echo://<spaceId>[/<objectId>] or echo:///<objectId>',
   }),
 ) as unknown as Schema.Schema<EID, EID>;
 export { Schema_ as Schema };
