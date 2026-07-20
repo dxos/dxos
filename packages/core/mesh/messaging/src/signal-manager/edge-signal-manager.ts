@@ -46,11 +46,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   >(PublicKey.hash);
 
   /**
-   * OR-subscription tag set for broadcast messages (DX-1125). A single set is maintained across all
-   * joined swarms; the edge fans out any broadcast whose tags intersect this set. Re-sent on
+   * OR-subscription tag refcounts for broadcast messages (DX-1125). One count per distinct tag across
+   * all subscribers, so one consumer's unsubscribe releases only its own registration rather than
+   * clobbering another consumer's identical subscription. The effective tag set (the keys) is shared
+   * across all joined swarms; the edge fans out any broadcast whose tags intersect it. Re-sent on
    * reconnect and whenever a swarm is (re-)joined.
    */
-  private readonly _subscribedTags = new Set<string>();
+  private readonly _subscribedTags = new Map<string, number>();
 
   private readonly _edgeConnection: EdgeConnection;
 
@@ -197,15 +199,21 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   async subscribeMessages(peerInfo: PeerInfo, tags?: string[]): Promise<void> {
+    // #region DEBUG
+    log.info('[DEBUG H4] subscribeMessages', { tags, before: Array.from(this._subscribedTags.keys()) });
+    // #endregion DEBUG
     // Point-to-point delivery needs no registration (the edge relays targeted messages to this peer's
     // socket). Only tag broadcasts require a subscription registered on the swarm (DX-1125).
     if (!tags?.length) {
       return;
     }
     let changed = false;
-    for (const tag of tags) {
-      if (!this._subscribedTags.has(tag)) {
-        this._subscribedTags.add(tag);
+    // Dedupe so one call counts each tag once regardless of repeats in the input; the matching
+    // unsubscribe releases exactly one count per distinct tag.
+    for (const tag of new Set(tags)) {
+      const count = this._subscribedTags.get(tag) ?? 0;
+      this._subscribedTags.set(tag, count + 1);
+      if (count === 0) {
         changed = true;
       }
     }
@@ -214,13 +222,40 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
   }
 
-  async unsubscribeMessages(peerInfo: PeerInfo): Promise<void> {
+  async unsubscribeMessages(peerInfo: PeerInfo, tags?: string[]): Promise<void> {
+    // #region DEBUG
+    log.info('[DEBUG H5] unsubscribeMessages', {
+      tags,
+      before: Array.from(this._subscribedTags.keys()),
+      stack: new Error('unsubscribe caller').stack,
+    });
+    // #endregion DEBUG
     if (this._subscribedTags.size === 0) {
       return;
     }
-    // TODO(dmaretskyi): Per-subscriber tag accounting; today a single set is cleared wholesale.
-    this._subscribedTags.clear();
-    await this._sendSubscription(this._ctx);
+    let changed = false;
+    if (tags?.length) {
+      // Release this subscriber's registration only; the tag stays live while other subscribers hold it.
+      for (const tag of new Set(tags)) {
+        const count = this._subscribedTags.get(tag);
+        if (count === undefined) {
+          continue;
+        }
+        if (count > 1) {
+          this._subscribedTags.set(tag, count - 1);
+        } else {
+          this._subscribedTags.delete(tag);
+          changed = true;
+        }
+      }
+    } else {
+      // Legacy wholesale clear (no tags supplied). Kept for callers that own the whole subscription.
+      this._subscribedTags.clear();
+      changed = true;
+    }
+    if (changed) {
+      await this._sendSubscription(this._ctx);
+    }
   }
 
   /**
@@ -229,6 +264,12 @@ export class EdgeSignalManager extends Resource implements SignalManager {
    */
   private async _sendSubscription(ctx: Context): Promise<void> {
     const swarmKeys = Array.from(this._swarmPeers.keys()).map((topic) => topic.toHex());
+    // #region DEBUG
+    log.info('[DEBUG H4] _sendSubscription', {
+      tags: Array.from(this._subscribedTags.keys()),
+      swarmCount: swarmKeys.length,
+    });
+    // #endregion DEBUG
     if (swarmKeys.length === 0) {
       return;
     }
@@ -243,7 +284,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         payload: {
           action: SwarmRequestAction.SUBSCRIBE,
           swarmKeys,
-          subscribeTags: Array.from(this._subscribedTags),
+          subscribeTags: Array.from(this._subscribedTags.keys()),
         },
       }),
     );
