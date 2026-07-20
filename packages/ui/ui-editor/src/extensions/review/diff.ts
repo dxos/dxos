@@ -93,6 +93,40 @@ export const diffHunks = (before: string, after: string): DiffHunk[] => {
   return hunks;
 };
 
+/**
+ * Coalesce an author's adjacent {@link DiffHunk}s into one hunk per group, so a run of nearby edits
+ * reviews as a single unit (e.g. one anchored card in the comment-style layer). Two hunks merge when
+ * the unchanged `before` gap between them is at most `maxGap` characters; the merged hunk spans both
+ * and absorbs the gap text into `removed` (and, unchanged, into `inserted`) so it still reconstructs
+ * `after`. With `respectBlockBoundaries` (default) a gap containing a blank line (paragraph break) is
+ * never bridged, keeping edits in different blocks as separate groups.
+ *
+ * `hunks` must be ordered and non-overlapping as {@link diffHunks} returns them. Defaults
+ * (`maxGap: 0`) make grouping a no-op — each hunk is its own group — so callers opt into wider
+ * coalescing explicitly.
+ */
+export type GroupPolicy = { maxGap?: number; respectBlockBoundaries?: boolean };
+
+export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolicy = {}): DiffHunk[] => {
+  const { maxGap = 0, respectBlockBoundaries = true } = policy;
+  const groups: DiffHunk[] = [];
+  for (const hunk of hunks) {
+    const previous = groups.at(-1);
+    const gap = previous ? before.slice(previous.to, hunk.from) : '';
+    const bridgeable =
+      previous !== undefined && gap.length <= maxGap && !(respectBlockBoundaries && /\n[ \t]*\n/.test(gap));
+    if (bridgeable) {
+      // Absorb the unchanged gap into both sides so the merged hunk still maps `removed` → `inserted`.
+      previous.to = hunk.to;
+      previous.removed += gap + hunk.removed;
+      previous.inserted += gap + hunk.inserted;
+    } else {
+      groups.push({ ...hunk });
+    }
+  }
+  return groups;
+};
+
 /** A changed hunk between two documents as character ranges in each (A = original, B = modified). */
 export type Hunk = { fromA: number; toA: number; fromB: number; toB: number };
 
