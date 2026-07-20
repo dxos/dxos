@@ -97,6 +97,7 @@ const DefaultStory = () => (
       [Module.Archive, Module.Stats, Module.SyncState],
       [Module.Connector, Module.Triggers],
       [Module.Trace],
+      [Module.SwarmTrace],
     ]}
     compact
   />
