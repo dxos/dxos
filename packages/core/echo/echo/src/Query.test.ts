@@ -955,6 +955,27 @@ describe('query api', () => {
         Schema.validateSync(QueryAST.Query)(query.ast);
       });
 
+      test('items carries its own per-group order, independent of the query-level orderBy', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).aggregate({
+          email: Aggregate.group('email'),
+          items: Aggregate.items({ limit: 20, order: [Order.property('name', 'asc')] }),
+        });
+
+        expect(query.ast).toMatchObject({
+          type: 'aggregate',
+          aggregates: [
+            { name: 'email', kind: 'group', property: 'email' },
+            {
+              name: 'items',
+              kind: 'items',
+              limit: 20,
+              order: [{ kind: 'property', property: 'name', direction: 'asc' }],
+            },
+          ],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
       test('aggregate declares named aggregates on the aggregate node', () => {
         const query = Query.select(Filter.type(TestSchema.Person)).aggregate({
           email: Aggregate.group('email'),

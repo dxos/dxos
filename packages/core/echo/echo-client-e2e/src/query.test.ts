@@ -446,6 +446,33 @@ describe('Query', () => {
       expect(byKey.get('b')?.items).to.have.length(1);
     });
 
+    test('items order is its own per-group ordering, independent of a differently-ordered orderBy', async () => {
+      const { db } = await builder.createDatabase();
+      for (let i = 0; i < 5; i++) {
+        db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: i }));
+      }
+      await db.flush();
+
+      // The outer orderBy sorts ascending (only relevant to initial group formation here, since a
+      // single group needs no reordering by a following orderBy), but `items.order` asks for the
+      // top 2 by rank *descending* — a different order than the outer orderBy establishes.
+      const groups = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .aggregate({
+              category: Aggregate.group('category'),
+              count: Aggregate.count(),
+              items: Aggregate.items({ limit: 2, order: [Order.property('rank', 'desc')] }),
+            }),
+        )
+        .run();
+
+      expect(groups).to.have.length(1);
+      expect(groups[0].count).to.equal(5);
+      expect(groups[0].items.map((obj) => obj.rank)).to.deep.equal([4, 3]);
+    });
+
     test('groups by multiple properties (composite key)', async () => {
       const { db } = await builder.createDatabase();
       db.add(Obj.make(TestSchema.Expando, { category: 'a', value: 1 }));

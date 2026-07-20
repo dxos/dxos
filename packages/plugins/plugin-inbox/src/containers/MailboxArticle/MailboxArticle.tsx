@@ -151,12 +151,14 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       ? conversations
         ? selection
             .from(scopes)
-            .orderBy(Order.property('created', 'desc'))
             .aggregate({
               threadId: Aggregate.group('threadId'),
               lastMessageAt: Aggregate.max('created'),
               count: Aggregate.count(),
-              items: Aggregate.items({ limit: MAILBOX_THREAD_PREVIEW_COUNT }),
+              items: Aggregate.items({
+                limit: MAILBOX_THREAD_PREVIEW_COUNT,
+                order: [Order.property('created', 'desc')],
+              }),
             })
             .orderBy(Order.property('lastMessageAt', direction))
             .limit(MAILBOX_PAGE_SIZE)

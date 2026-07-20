@@ -136,6 +136,7 @@ export class WorkingSetQueryExecutor {
       (item) => GroupBy.serializeGroupKey(item.groupKey!),
       step.aggregates,
       (item, property) => WorkingSetItem.getProperty(item, [property]),
+      (a, b, order) => this._compareByOrder(a, b, order),
     );
   }
 

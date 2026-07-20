@@ -172,16 +172,18 @@ export interface Query<T> {
    * {@link Order.property}.
    *
    * Groups are ordered by the first occurrence of their key in the incoming stream, so a preceding
-   * `orderBy` controls group order too. For example, message threads ordered by their most recent
+   * `orderBy` controls group order in the absence of a following one. {@link Aggregate.items}'s own
+   * `order` option is a separate, explicit per-group member ordering — pass it there rather than
+   * relying on a preceding `orderBy`, whose only well-defined job once `aggregate` follows is
+   * establishing initial group order. For example, message threads ordered by their most recent
    * message, each retaining up to 20 members newest-first:
    *
    * ```ts
    * Query.type(Message)
-   *   .orderBy(Order.property('created', 'desc'))
    *   .aggregate({
    *     threadId: Aggregate.group('threadId'),
    *     lastMessageAt: Aggregate.max('created'),
-   *     items: Aggregate.items({ limit: 20 }),
+   *     items: Aggregate.items({ limit: 20, order: [Order.property('created', 'desc')] }),
    *   })
    *   .orderBy(Order.property('lastMessageAt', 'desc'));
    * ```

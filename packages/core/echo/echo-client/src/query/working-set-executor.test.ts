@@ -344,6 +344,27 @@ describe('WorkingSetQueryExecutor', () => {
     expect(byId.get(bob.id)).toEqual({ age: 40 });
   });
 
+  test("items order re-sorts each group's members, independent of a differently-ordered orderBy", async ({
+    expect,
+  }) => {
+    const objects = [0, 1, 2, 3, 4].map((rank) => db.add(Obj.make(TestSchema.Expando, { category: 'a', rank })));
+    await db.flush();
+
+    // The outer orderBy sorts ascending; `items.order` asks for descending — a different order.
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Expando))
+        .orderBy(Order.property('rank', 'asc'))
+        .aggregate({
+          category: Aggregate.group('category'),
+          items: Aggregate.items({ order: [Order.property('rank', 'desc')] }),
+        }),
+    );
+
+    expect(results).toHaveLength(5);
+    expect(results.map((item) => item.objectId)).toEqual([...objects].reverse().map((obj) => obj.id));
+  });
+
   test('limit after aggregate pages over whole groups (not flat items)', async ({ expect }) => {
     // Three groups by category, each with two members, ordered by rank so group order is a<b<c.
     for (const [category, rank] of [
