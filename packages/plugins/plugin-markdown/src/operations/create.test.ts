@@ -6,14 +6,13 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { AssistantTestLayer, operationToolCall } from '@dxos/agent-runtime/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation, Skill } from '@dxos/compute';
 import { Collection, Database, EID, Feed, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { HasSubject } from '@dxos/types';
 
@@ -23,15 +22,17 @@ import MarkdownSkill from '../skills/markdown-skill';
 import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
-EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayer({
-  aiServicePreset: 'edge-remote',
-  operationHandlers: MarkdownOperationHandlerSet,
-  types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
-  skills: [MarkdownSkill.make()],
-  tracing: 'pretty',
-});
+// The agent's tool-calling behaviour is scripted inline per test via a mock model (no recorded
+// conversation to regenerate). The `create` tool's input carries no refs, so it is type-checked
+// against the operation's input schema through `operationToolCall`.
+const testLayer = (script: ScriptedAiService.Script) =>
+  AssistantTestLayer({
+    operationHandlers: MarkdownOperationHandlerSet,
+    types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
+    skills: [MarkdownSkill.make()],
+    tracing: 'pretty',
+    aiService: ScriptedAiService.layer(script),
+  });
 
 describe('create', () => {
   it.effect(
@@ -51,7 +52,8 @@ describe('create', () => {
         expect(text.content).toBe(content);
       },
       WithProperties,
-      Effect.provide(TestLayer),
+      // Direct operation invocation — no agent, so no scripted turns are consumed.
+      Effect.provide(testLayer([])),
       TestHelpers.provideTestContext,
     ),
   );
@@ -81,9 +83,17 @@ describe('create', () => {
         }
       },
       WithProperties,
-      Effect.provide(TestLayer),
+      Effect.provide(
+        testLayer([
+          operationToolCall(MarkdownOperation.Create, {
+            name: 'Classic Chocolate Chip Cookies',
+            content:
+              '# Classic Chocolate Chip Cookies\n\n## Ingredients\n\n- 2¼ cups all-purpose flour\n- 1 tsp baking soda\n- 1 tsp salt\n- 1 cup butter\n- ¾ cup granulated sugar\n- ¾ cup brown sugar\n- 2 eggs\n- 2 tsp vanilla extract\n- 2 cups chocolate chips\n\n## Instructions\n\n1. Preheat the oven to 375°F.\n2. Combine the dry ingredients.\n3. Cream the butter and sugars, then beat in the eggs and vanilla.\n4. Mix in the flour, then fold in the chocolate chips.\n5. Bake for 9–12 minutes until golden.\n',
+          }),
+          ScriptedAiService.text('I created a document with a classic chocolate chip cookie recipe.'),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 });
