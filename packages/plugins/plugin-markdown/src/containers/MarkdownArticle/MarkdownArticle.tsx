@@ -82,7 +82,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       branchBaseContent,
       setSelection,
     } = versioning;
-    const diffViewMode = settings.diffView ?? 'inline';
+    // Default branch compare to the accept/reject review overlay ('suggest'); the read-only diff
+    // modes (inline/sideBySide/gutter) are opt-in via settings.
+    const diffViewMode = settings.diffView ?? 'suggest';
     const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
     const branchText = activeBranch ? versioning.activeText : undefined;
     // Suggestion review: instead of binding the editor to the branch, keep it on the parent (main)

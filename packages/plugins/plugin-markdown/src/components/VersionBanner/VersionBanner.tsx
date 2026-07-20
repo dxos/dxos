@@ -71,14 +71,14 @@ export const VersionBanner = ({
 
   return (
     <Toolbar.Root data-testid={`version-banner-${mode}`}>
-      <div className='flex items-center gap-0.5 px-1 truncate'>
-        <Tag classNames='flex gap-2'>
-          <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
+      <div className='flex items-center gap-1 px-2 truncate'>
+        <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
+        <Tag hue='neutral' classNames='flex gap-2'>
           {name}
         </Tag>
         {timestamp && (
           <TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
-            <Tag hue='indigo'>{relativeTime(timestamp)}</Tag>
+            <Tag hue='sky'>{relativeTime(timestamp)}</Tag>
           </TextTooltip>
         )}
       </div>
@@ -100,7 +100,7 @@ export const VersionBanner = ({
               onBranchFrom(name);
             }}
           >
-            <Toolbar.Button density='sm' variant='ghost' onClick={() => setNamingBranch(true)}>
+            <Toolbar.Button variant='ghost' onClick={() => setNamingBranch(true)}>
               {t('branch-from.label')}
             </Toolbar.Button>
           </NamePopover>
@@ -119,7 +119,6 @@ export const VersionBanner = ({
             variant='ghost'
             icon='ph--git-merge--regular'
             label={t('merge.label')}
-            iconOnly
             onClick={onMerge}
           />
         )}
