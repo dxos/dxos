@@ -15,7 +15,7 @@ import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
+import { Module, ModuleContainer, addToRootCollection, config, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -30,20 +30,25 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const MARKDOWN_DOCUMENT = trim`
-  # Hello, world!
+  # DXOS
 
-  This is a test document that contains Markdown content.
-  Markdown is a lightweight markup language for writing formatted text in plain text form.
-  Its goal is to be easy to read and write in raw form, easy to convert to HTML.
+  DXOS is an open-source platform for building local-first, decentralized, and collaborative applications. 
+  Its core premise is that user data should live on user devices and synchronize directly between peers, rather than being locked inside centralized cloud servers. 
+  This approach preserves privacy, keeps apps responsive and functional offline, and removes the operational burden of running backend infrastructure. 
+  Developers use DXOS to add real-time, multiplayer collaboration to their applications without having to design and maintain their own sync engine.
 
-  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters.
-  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion.
+  At the heart of DXOS is **ECHO**, a decentralized database that handles data storage, replication, and automatic conflict resolution. 
+  ECHO is built on Automerge, a Conflict-free Replicated Data Type (CRDT) that allows many users to edit the same data concurrently without losing changes or producing conflicts. 
+  The result is transparent, peer-to-peer data synchronization that behaves reliably even when devices go offline and reconnect later, making shared state feel seamless across collaborators and devices.
 
-  Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
+  For developers, DXOS packages these protocols into SDKs and tooling that lower the barrier to building sophisticated collaborative software.
+  Rather than assembling authentication, real-time sync, and networking from scratch, teams can focus on their application's features while DXOS handles the hard distributed-systems problems underneath. 
+  This makes it a compelling foundation for anyone building modern apps that prioritize user ownership of data, offline capability, and privacy-preserving collaboration.
 `;
 
 const STYLE_GUIDE = trim`
   # Style Guide
+
   - Use short, simple sentences.
   - Organize content with headings and bullet points.
   - Avoid jargon and explain technical terms.
@@ -53,14 +58,14 @@ const STYLE_GUIDE = trim`
   - Proofread for clarity and correctness.
 `;
 
-const addSpellingMistakes = (text: string, mistakeCount: number): string => {
+const addSpellingMistakes = (text: string, mistakeCount: number, noise = ''): string => {
   const words = text.split(' ');
   for (let mistakeIndex = 0; mistakeIndex < mistakeCount; mistakeIndex++) {
     const idx = Math.floor(Math.random() * words.length);
     const word = words[idx];
     const charIdx = Math.floor(Math.random() * word.length);
     const typoChar = String.fromCharCode(word.charCodeAt(charIdx) + 1);
-    words[idx] = word.slice(0, charIdx) + typoChar + word.slice(charIdx + 1);
+    words[idx] = word.slice(0, charIdx) + typoChar + word.slice(charIdx + 1) + noise;
   }
 
   return words.join(' ');
@@ -83,20 +88,23 @@ export const WithMarkdown: Story = {
         plugins: [MarkdownPlugin(), CommentsPlugin(), SpacePlugin({})],
       };
     },
-    config: config.remote, // TODO(burdon): Issue making persistent.
+    config: config.remote,
     onInit: async ({ space }) => {
-      space.db.add(
+      const document = space.db.add(
         Markdown.make({
-          name: 'My Document',
-          content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
+          name: 'DXOS',
+          content: addSpellingMistakes(MARKDOWN_DOCUMENT, 3, '!!!').replaceAll(/(?<!\n)\n(?!\n)/g, '\n\n'),
         }),
       );
-      space.db.add(
+      const styleGuide = space.db.add(
         Markdown.make({
           name: 'Style Guide',
           content: STYLE_GUIDE,
         }),
       );
+      // Register the documents in the space root collection so plugin-space builds app-graph nodes
+      // for them — this is what makes the editor's comment toolbar (a graph action) resolvable.
+      addToRootCollection(space, [document, styleGuide]);
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Markdown.Document)).run();
@@ -104,8 +112,7 @@ export const WithMarkdown: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat], [Module.Comments]],
+    layout: [[Module.Chat], [Module.Document], [Module.History, Module.Comments]],
     skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
   },
 };

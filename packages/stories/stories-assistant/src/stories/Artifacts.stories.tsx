@@ -75,8 +75,7 @@ export const WithChess: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[Module.Chat], [Module.Context]],
     skills: [AssistantSkill.key, ChessSkill.key],
   },
 };
@@ -125,8 +124,7 @@ export const WithMap: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[Module.Chat], [Module.Context]],
     skills: [AssistantSkill.key, MapSkill.key],
   },
 };
@@ -188,8 +186,7 @@ export const WithTrip: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[Module.Chat], [Module.Context]],
   },
 };
 
@@ -217,7 +214,6 @@ export const WithBoard: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[Module.Chat], [Module.Context]],
   },
 };
