@@ -101,7 +101,15 @@ class SuggestionWidget extends WidgetType {
   }
 
   override eq(other: SuggestionWidget): boolean {
-    return other.#hunk.removed === this.#hunk.removed && other.#hunk.inserted === this.#hunk.inserted;
+    // Include the offsets: if an unrelated edit shifts the hunk, the widget must be recreated so its
+    // handlers close over the current `from`/`to` — otherwise a reused DOM node would splice at a
+    // stale position.
+    return (
+      other.#hunk.from === this.#hunk.from &&
+      other.#hunk.to === this.#hunk.to &&
+      other.#hunk.removed === this.#hunk.removed &&
+      other.#hunk.inserted === this.#hunk.inserted
+    );
   }
 
   override toDOM(view: EditorView): HTMLElement {

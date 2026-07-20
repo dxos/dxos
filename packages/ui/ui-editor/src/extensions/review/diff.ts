@@ -99,6 +99,13 @@ export type Hunk = { fromA: number; toA: number; fromB: number; toB: number };
 /**
  * Compute the changed hunks between `original` (A) and `modified` (B) as character ranges. Used to
  * locate and apply an individual change (e.g. accepting one hunk from a branch) outside an editor.
+ *
+ * Granularity is LINE-level (via `@codemirror/merge` `Chunk.build`), unlike the word-level
+ * {@link diffHunks} the suggestion UI renders. This means {@link cherryPickHunk} / {@link revertHunk}
+ * accept or revert a whole changed line, even when only one word on it differs: an anchor anywhere on
+ * the line resolves to the same line-sized splice. Per-word cherry-pick would require a word-level
+ * hunk carrying both A and B ranges (extending {@link diffHunks}, which anchors in the before text
+ * only) and reworking the anchor contract these functions' tests encode — deferred as a follow-up.
  */
 export const computeHunks = (original: string, modified: string): Hunk[] =>
   Chunk.build(Text.of(original.split('\n')), Text.of(modified.split('\n'))).map((chunk) => ({

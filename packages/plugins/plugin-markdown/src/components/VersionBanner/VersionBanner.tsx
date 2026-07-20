@@ -70,7 +70,7 @@ export const VersionBanner = ({
   const [namingBranch, setNamingBranch] = useState(false);
 
   return (
-    <Toolbar.Root data-testid={`version-banner-${mode}`}>
+    <Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
       <div className='flex items-center gap-1 px-2 truncate'>
         <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
         <Tag hue='neutral' classNames='flex gap-2'>

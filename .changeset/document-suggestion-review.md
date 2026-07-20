@@ -1,8 +1,6 @@
 ---
 '@dxos/ui-editor': patch
-'@dxos/app-framework': patch
 '@dxos/plugin-markdown': patch
-'@dxos/plugin-space': patch
 ---
 
 Document versioning: Google-Docs-style suggestion review.
