@@ -8,9 +8,25 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
 
 ## Start of session
 
+- **MANDATORY FIRST ACTION — verify the worktree before any file op.** The harness
+  fails to instantiate the assigned worktree roughly 10% of the time, leaving an
+  empty stub whose git resolves up to the bare repo root — so edits silently land
+  on `main`. Before reading, editing, or running anything, run:
+  ```
+  git rev-parse --show-toplevel && git branch --show-current
+  ```
+  The toplevel MUST equal the environment's assigned worktree path
+  (`.../.claude/worktrees/<name>`). If it instead resolves to the bare repo root
+  `/Users/burdon/Code/dxos/dxos`, or the assigned path is missing/empty/absent from
+  `git worktree list`, the worktree was never created: **STOP, write nothing, and
+  tell the user.** Do not `cd` to the bare repo root and do not build absolute
+  paths from it — every path must start with the assigned worktree root. (Only on
+  the user's explicit instruction, recover with
+  `git -C <bare-root> checkout main` then
+  `git worktree add <assigned-path> <branch>`.)
 - Confirm you understand these instructions and list the guidance files you are
   aware of (this file, `.claude/CLAUDE.md`, relevant `.agents/skills/*`).
-- State the worktree you are operating in.
+- State the worktree you are operating in (the verified `--show-toplevel` path).
 - When asking a question, make it yes/no or give numbered options — never an
   unnumbered a-or-b.
 - If unsure how to implement something, ask rather than guess.
@@ -58,9 +74,11 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   out-of-range on any bump and would cascade the fixed publish group to a
   spurious major. Do not "simplify" it to `*`. Why it matters:
   `.github/RELEASE-SPEC.md`.
-- **Never edit the main checkout.** All file edits target the assigned worktree
-  path, never the bare repo root or another worktree (the `guard-worktree.sh`
-  hook denies these).
+- **Never edit the main checkout.** All file edits (and `cd` targets) use the
+  assigned worktree path, never the bare repo root or another worktree. Do NOT
+  rely on `guard-worktree.sh` to catch this — when `CLAUDE_PROJECT_DIR` is unset
+  the hook is a no-op. Self-verify per the Start-of-session check: if
+  `git rev-parse --show-toplevel` is the bare repo root, you are on `main` — stop.
 - **Commit nothing silently.** Before any commit/push, `git status` and account
   for every modified/untracked file — including the user's own edits in the
   shared worktree. Commit them or explicitly confirm exclusion.

@@ -753,9 +753,6 @@ catalogs:
     '@types/react-syntax-highlighter':
       specifier: ^15.5.13
       version: 15.5.13
-    '@types/react-test-renderer':
-      specifier: ^19.1.0
-      version: 19.1.0
     '@types/react-virtualized':
       specifier: ^9.22.3
       version: 9.22.3
@@ -1581,9 +1578,6 @@ catalogs:
     react-syntax-highlighter:
       specifier: ^15.6.1
       version: 15.6.6
-    react-test-renderer:
-      specifier: ~19.2.7
-      version: 19.2.7
     react-virtualized:
       specifier: ^9.22.6
       version: 9.22.6
@@ -7609,7 +7603,7 @@ importers:
         version: 0.96.2(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4)
@@ -7739,7 +7733,7 @@ importers:
         version: 0.96.2(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4)
@@ -10408,7 +10402,7 @@ importers:
         version: 0.75.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
@@ -21891,51 +21885,12 @@ importers:
 
   packages/ui/react-ui-editor:
     dependencies:
-      '@automerge/automerge':
-        specifier: 3.3.0-fragments.2
-        version: 3.3.0-fragments.2
-      '@codemirror/autocomplete':
-        specifier: 'catalog:'
-        version: 6.20.3
-      '@codemirror/commands':
-        specifier: 'catalog:'
-        version: 6.10.4
-      '@codemirror/lang-html':
-        specifier: 'catalog:'
-        version: 6.4.11
-      '@codemirror/lang-javascript':
-        specifier: 'catalog:'
-        version: 6.2.5
-      '@codemirror/lang-json':
-        specifier: 'catalog:'
-        version: 6.0.2
-      '@codemirror/lang-markdown':
-        specifier: 'catalog:'
-        version: 6.5.0
-      '@codemirror/lang-xml':
-        specifier: 'catalog:'
-        version: 6.1.0
-      '@codemirror/lang-yaml':
-        specifier: 'catalog:'
-        version: 6.1.3
-      '@codemirror/language':
-        specifier: 'catalog:'
-        version: 6.12.4
-      '@codemirror/language-data':
-        specifier: 'catalog:'
-        version: 6.5.2
-      '@codemirror/lint':
-        specifier: 'catalog:'
-        version: 6.9.7
       '@codemirror/search':
         specifier: 'catalog:'
         version: 6.7.1
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.0
-      '@codemirror/theme-one-dark':
-        specifier: 'catalog:'
-        version: 6.1.3
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.6
@@ -21945,18 +21900,40 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/client':
+      '@dxos/invariant':
         specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/context':
+        version: link:../../common/invariant
+      '@dxos/log':
         specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/debug':
+        version: link:../../common/log
+      '@dxos/react-ui-menu':
         specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/display-name':
+        version: link:../react-ui-menu
+      '@dxos/ui-editor':
         specifier: workspace:*
-        version: link:../../common/display-name
+        version: link:../ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
+      '@radix-ui/react-use-controllable-state':
+        specifier: 'catalog:'
+        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
+    devDependencies:
+      '@codemirror/autocomplete':
+        specifier: 'catalog:'
+        version: 6.20.3
+      '@codemirror/lang-javascript':
+        specifier: 'catalog:'
+        version: 6.2.5
+      '@codemirror/lang-markdown':
+        specifier: 'catalog:'
+        version: 6.5.0
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -21966,115 +21943,12 @@ importers:
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../lit-ui
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      '@dxos/react-hooks':
-        specifier: workspace:*
-        version: link:../react-primitives/react-hooks
-      '@dxos/react-ui-menu':
-        specifier: workspace:*
-        version: link:../react-ui-menu
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
-      '@dxos/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../ui-editor
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@fluentui/react-tabster':
-        specifier: 'catalog:'
-        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@lezer/common':
-        specifier: ^1.5.2
-        version: 1.5.2
-      '@lezer/generator':
-        specifier: 'catalog:'
-        version: 1.8.0
-      '@lezer/highlight':
-        specifier: ^1.2.3
-        version: 1.2.3
-      '@lezer/markdown':
-        specifier: ^1.6.3
-        version: 1.6.3
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
-      '@replit/codemirror-vim':
-        specifier: 'catalog:'
-        version: 6.3.0(@codemirror/commands@6.10.4)(@codemirror/language@6.12.4)(@codemirror/search@6.7.1)(@codemirror/state@6.7.0)(@codemirror/view@6.43.6)
-      '@replit/codemirror-vscode-keymap':
-        specifier: 'catalog:'
-        version: 6.0.2(@codemirror/autocomplete@6.20.3)(@codemirror/commands@6.10.4)(@codemirror/language@6.12.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.1)(@codemirror/state@6.7.0)(@codemirror/view@6.43.6)
-      '@uiw/codemirror-theme-vscode':
-        specifier: 'catalog:'
-        version: 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.0)(@codemirror/view@6.43.6)
-      ajv:
-        specifier: 'catalog:'
-        version: 8.18.0
-      bind-event-listener:
-        specifier: 'catalog:'
-        version: 3.0.0
-      codemirror:
-        specifier: 'catalog:'
-        version: 6.0.2
-      lib0:
-        specifier: 'catalog:'
-        version: 0.2.78
-      lodash.defaultsdeep:
-        specifier: 'catalog:'
-        version: 4.6.1
-      lodash.merge:
-        specifier: 'catalog:'
-        version: 4.6.2
-      lodash.sortby:
-        specifier: 'catalog:'
-        version: 4.7.0
-      style-mod:
-        specifier: 'catalog:'
-        version: 4.1.0
-    devDependencies:
-      '@automerge/automerge-repo':
-        specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
-      '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: 'catalog:'
-        version: 2.6.0-subduction.40
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -22087,6 +21961,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
@@ -22096,6 +21973,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
@@ -22117,21 +22000,12 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: 'catalog:'
         version: 4.6.7
-      '@types/lodash.merge':
-        specifier: 'catalog:'
-        version: 4.6.9
-      '@types/lodash.sortby':
-        specifier: 'catalog:'
-        version: 4.7.7
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
-      '@types/react-test-renderer':
-        specifier: 'catalog:'
-        version: 19.1.0
       chai:
         specifier: 'catalog:'
         version: 4.4.1
@@ -22147,6 +22021,9 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0)
+      lodash.defaultsdeep:
+        specifier: 'catalog:'
+        version: 4.6.1
       mocha:
         specifier: 'catalog:'
         version: 10.6.0
@@ -22155,9 +22032,6 @@ importers:
         version: 19.2.7
       react-dom:
         specifier: ~19.2.7
-        version: 19.2.7(react@19.2.7)
-      react-test-renderer:
-        specifier: 'catalog:'
         version: 19.2.7(react@19.2.7)
       vite:
         specifier: '>=8.1.4'
@@ -33041,9 +32915,6 @@ packages:
   '@types/react-syntax-highlighter@15.5.13':
     resolution: {integrity: sha512-uLGJ87j6Sz8UaBAooU0T6lWJ0dBmjZgN1PZTrj05TNql2/XpC6+4HhMT5syIdFUUt+FASfCeLLv4kBygNU+8qA==}
 
-  '@types/react-test-renderer@19.1.0':
-    resolution: {integrity: sha512-XD0WZrHqjNrxA/MaR9O22w/RNidWR9YZmBdRGI7wcnWGrv/3dA8wKCJ8m63Sn+tLJhcjmuhOi629N66W6kgWzQ==}
-
   '@types/react-virtualized@9.22.3':
     resolution: {integrity: sha512-UKRWeBIrECaKhE4O//TSFhlgwntMwyiEIOA7WZoVkr52Jahv0dH6YIOorqc358N2V3oKFclsq5XxPmx2PiYB5A==}
 
@@ -41405,11 +41276,6 @@ packages:
     peerDependencies:
       react: ~19.2.7
 
-  react-test-renderer@19.2.7:
-    resolution: {integrity: sha512-U4TyPDJ9MsC8rFimXuJum8w40aPc9kbOZYO8Pc2/4A884i8hwJsMNA/JNyuOc/f2/37wHvk7HjpVl1V4re7Dig==}
-    peerDependencies:
-      react: ~19.2.7
-
   react-uid@2.4.0:
     resolution: {integrity: sha512-+MVs/25NrcZuGrmlVRWPOSsbS8y72GJOBsR7d68j3/wqOrRBF52U29XAw4+XSelw0Vm6s5VmGH5mCbTCPGVCVg==}
     engines: {node: '>=10'}
@@ -49705,7 +49571,7 @@ snapshots:
       effect: 3.21.4
       multipasta: 0.2.7
 
-  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
+  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
     dependencies:
       '@effect/cluster': 0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform': 0.96.2(effect@3.21.4)
@@ -55310,10 +55176,6 @@ snapshots:
       '@types/react': 19.2.17
 
   '@types/react-syntax-highlighter@15.5.13':
-    dependencies:
-      '@types/react': 19.2.17
-
-  '@types/react-test-renderer@19.1.0':
     dependencies:
       '@types/react': 19.2.17
 
@@ -66031,12 +65893,6 @@ snapshots:
       prismjs: 1.30.0
       react: 19.2.7
       refractor: 3.6.0
-
-  react-test-renderer@19.2.7(react@19.2.7):
-    dependencies:
-      react: 19.2.7
-      react-is: 19.2.7
-      scheduler: 0.27.0
 
   react-uid@2.4.0(@types/react@19.2.17)(react@19.2.7):
     dependencies:
