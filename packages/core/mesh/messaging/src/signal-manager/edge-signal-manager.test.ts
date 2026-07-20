@@ -117,6 +117,98 @@ describe('EdgeSignalManager broadcast (DX-1125)', () => {
     expect(subscriber.broadcasts).toHaveLength(1);
   });
 
+  test('one consumer unsubscribing does not clobber another consumer of the same tag', async ({ expect }) => {
+    const mesh = new TestEdgeMesh();
+    const topic = PublicKey.random();
+    const publisher = await setupPeer(mesh, topic, 'publisher');
+    const subscriber = await setupPeer(mesh, topic, 'subscriber');
+
+    // Two consumers on the same client share the manager's tag subscription (e.g. trace-progress
+    // and a story module both watching status updates). The bug (DX-1125): the first consumer's
+    // teardown wholesale-cleared the shared tag set, so the second consumer went silent.
+    await subscriber.manager.subscribeMessages(subscriber.peer, [TRACE_TAG]);
+    await subscriber.manager.subscribeMessages(subscriber.peer, [TRACE_TAG, 'space:test-space']);
+    await subscriber.manager.unsubscribeMessages(subscriber.peer, [TRACE_TAG, 'space:test-space']);
+
+    await publisher.manager.sendBroadcast(Context.default(), {
+      author: publisher.peer,
+      swarmKey: topic.toHex(),
+      tags: [TRACE_TAG],
+      payload: payload([5]),
+    });
+
+    // The first consumer's registration of TRACE_TAG survives; the released space tag does not.
+    expect(subscriber.broadcasts).toHaveLength(1);
+    expect([...subscriber.broadcasts[0].payload.value]).toEqual([5]);
+
+    await publisher.manager.sendBroadcast(Context.default(), {
+      author: publisher.peer,
+      swarmKey: topic.toHex(),
+      tags: ['space:test-space'],
+      payload: payload([6]),
+    });
+    expect(subscriber.broadcasts).toHaveLength(1);
+  });
+
+  test('releasing the last registration of a tag stops delivery', async ({ expect }) => {
+    const mesh = new TestEdgeMesh();
+    const topic = PublicKey.random();
+    const publisher = await setupPeer(mesh, topic, 'publisher');
+    const subscriber = await setupPeer(mesh, topic, 'subscriber');
+
+    await subscriber.manager.subscribeMessages(subscriber.peer, [TRACE_TAG]);
+    await subscriber.manager.unsubscribeMessages(subscriber.peer, [TRACE_TAG]);
+
+    await publisher.manager.sendBroadcast(Context.default(), {
+      author: publisher.peer,
+      swarmKey: topic.toHex(),
+      tags: [TRACE_TAG],
+      payload: payload([8]),
+    });
+
+    expect(subscriber.broadcasts).toHaveLength(0);
+  });
+
+  test('unsubscribe without tags clears the whole subscription (legacy)', async ({ expect }) => {
+    const mesh = new TestEdgeMesh();
+    const topic = PublicKey.random();
+    const publisher = await setupPeer(mesh, topic, 'publisher');
+    const subscriber = await setupPeer(mesh, topic, 'subscriber');
+
+    await subscriber.manager.subscribeMessages(subscriber.peer, [TRACE_TAG]);
+    await subscriber.manager.subscribeMessages(subscriber.peer, ['space:test-space']);
+    await subscriber.manager.unsubscribeMessages(subscriber.peer);
+
+    await publisher.manager.sendBroadcast(Context.default(), {
+      author: publisher.peer,
+      swarmKey: topic.toHex(),
+      tags: [TRACE_TAG, 'space:test-space'],
+      payload: payload([9]),
+    });
+
+    expect(subscriber.broadcasts).toHaveLength(0);
+  });
+
+  test('unsubscribe with an empty tags array is a no-op', async ({ expect }) => {
+    const mesh = new TestEdgeMesh();
+    const topic = PublicKey.random();
+    const publisher = await setupPeer(mesh, topic, 'publisher');
+    const subscriber = await setupPeer(mesh, topic, 'subscriber');
+
+    await subscriber.manager.subscribeMessages(subscriber.peer, [TRACE_TAG]);
+    await subscriber.manager.unsubscribeMessages(subscriber.peer, []);
+
+    await publisher.manager.sendBroadcast(Context.default(), {
+      author: publisher.peer,
+      swarmKey: topic.toHex(),
+      tags: [TRACE_TAG],
+      payload: payload([10]),
+    });
+
+    expect(subscriber.broadcasts).toHaveLength(1);
+    expect([...subscriber.broadcasts[0].payload.value]).toEqual([10]);
+  });
+
   test('still delivers point-to-point messages', async ({ expect }) => {
     const mesh = new TestEdgeMesh();
     const topic = PublicKey.random();

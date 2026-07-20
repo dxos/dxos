@@ -120,10 +120,19 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
         void this.signalManager.subscribeMessages(peer, tags);
       }
 
+      // This stream crosses the client-services RPC (protobufjs codec, e.g. dedicated worker → main
+      // thread). Its `Message.payload` is a `google.protobuf.Any` without `preserve_any`, and the
+      // codec refuses to encode an Any lacking '@type' — stamping the opaque form
+      // ('@type': 'google.protobuf.Any' + type_url/value) makes it pass through verbatim.
+      const encodableAny = (payload: Message['payload']): Message['payload'] => ({
+        ...payload,
+        '@type': 'google.protobuf.Any',
+      });
+
       // Point-to-point messages addressed to this peer.
       this.signalManager.onMessage.on(ctx, (message) => {
         if (message.recipient.peerKey === peer.peerKey) {
-          void emit.single(message);
+          void emit.single({ ...message, payload: encodableAny(message.payload) });
         }
       });
 
@@ -134,7 +143,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
           void emit.single({
             author: broadcast.author,
             recipient: peer,
-            payload: broadcast.payload,
+            payload: encodableAny(broadcast.payload),
             tags: broadcast.tags,
           });
         }
@@ -142,7 +151,9 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
 
       return Effect.promise(() => {
         if (tags.length > 0) {
-          void this.signalManager.unsubscribeMessages(peer);
+          // Release only this stream's tags (refcounted) — a bare unsubscribe would wholesale-clear
+          // every concurrent subscriber's tags on the edge (DX-1125).
+          void this.signalManager.unsubscribeMessages(peer, tags);
         }
         return ctx.dispose();
       });
