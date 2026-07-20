@@ -135,8 +135,11 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
 /**
  * Returns the feed object's EID when the feed is stored in a space.
  *
- * Used internally by the feed service layer.
+ * Private-ish and on track to be removed — prefer resolving feed scopes via higher-level APIs
+ * (e.g. `Feed.query`) rather than threading the raw queue URI. Used internally by the feed service
+ * layer.
  */
+// TODO(dmaretskyi): Remove — private-ish, prefer higher-level feed-scope APIs.
 export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
 
 //

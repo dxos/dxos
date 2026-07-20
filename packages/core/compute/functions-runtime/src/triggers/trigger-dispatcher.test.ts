@@ -24,7 +24,7 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
-import { Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -982,7 +982,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specSubscriptionFromFeed(feed),
+          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!))),
           input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
         });
         yield* Database.add(trigger);
@@ -1009,7 +1009,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specSubscriptionFromFeed(feed),
+          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!))),
           input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
         });
         yield* Database.add(trigger);
@@ -1034,7 +1034,7 @@ describe('TriggerDispatcher', () => {
     );
 
     it.effect(
-      'reports deleted for a removed feed object (id-set diff)',
+      'reports deleted for a removed feed object',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
@@ -1042,7 +1042,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specSubscriptionFromFeed(feed),
+          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!))),
           input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
         });
         yield* Database.add(trigger);
@@ -1073,7 +1073,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specSubscriptionFromFeed(feed, Filter.type(Task.Task)),
+          spec: Trigger.specSubscription(Query.select(Filter.type(Task.Task)).from(Scope.feed(Feed.getFeedUri(feed)!))),
           input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
         });
         yield* Database.add(trigger);

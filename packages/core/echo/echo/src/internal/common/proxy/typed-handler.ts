@@ -302,7 +302,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, EventId, new Event());
     }
 
-    defineHiddenProperty(target, ObjectDeletedId, false);
+    // Default to not-deleted, but preserve a deletion marker already stamped on the target (e.g. by
+    // `objectFromJSON` when hydrating a tombstone snapshot).
+    if (!(ObjectDeletedId in target)) {
+      defineHiddenProperty(target, ObjectDeletedId, false);
+    }
 
     // Only set owners if this is a root object (no existing owner).
     // Nested objects already have owners set by their root's initialization.

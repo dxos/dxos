@@ -287,15 +287,21 @@ export class EntityMetaIndex implements Index {
               const objectId = castData.id;
 
               // Check for existing record by (spaceId, queueId) or (spaceId, documentId).
-              let existing: readonly { recordId: number }[];
+              type ExistingRow = {
+                recordId: number;
+                entityKind: string;
+                typeDXN: string;
+                source: string | null;
+                target: string | null;
+                parent: string | null;
+              };
+              let existing: readonly ExistingRow[];
               if (documentId) {
-                existing = yield* sql<{
-                  recordId: number;
-                }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                existing =
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
               } else if (queueId) {
-                existing = yield* sql<{
-                  recordId: number;
-                }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                existing =
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
               } else {
                 // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
                 existing = [];
@@ -306,17 +312,41 @@ export class EntityMetaIndex implements Index {
               const [{ v }] = result;
               const version = (v ?? 0) + 1;
 
+              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
+              // tombstone appended by `Feed.remove`. Preserve the prior row's body-derived columns
+              // (type, kind, relation endpoints, parent) rather than recomputing them from the empty
+              // block; otherwise `typeDXN` collapses to the `'type'` fallback and type-scoped queries
+              // with `deleted: 'include'` stop matching the deleted object. Only `deleted`/`version`/
+              // `updatedAt` advance for such a block.
+              const priorRow = existing.length > 0 ? existing[0] : undefined;
+              const isPartialBlock = castData[ATTR_TYPE] === undefined;
+              const preserveBody = isPartialBlock && priorRow !== undefined;
+
               // Extract metadata.
-              const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
+              const entityKind = preserveBody
+                ? priorRow.entityKind
+                : castData[ATTR_RELATION_SOURCE]
+                  ? 'relation'
+                  : 'object';
               // Type identifier as stored on `system.type`: a typename DXN for static schemas,
               // an `echo:` EID for stored (dynamic) schemas.
-              const typeDXN = URI.make(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type');
+              const typeDXN = preserveBody
+                ? priorRow.typeDXN
+                : URI.make(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type');
               const deleted = castData[ATTR_DELETED] ? 1 : 0;
               // Relations.
-              const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
-              const target = entityKind === 'relation' ? (castData[ATTR_RELATION_TARGET] ?? null) : null;
+              const source = preserveBody
+                ? priorRow.source
+                : entityKind === 'relation'
+                  ? (castData[ATTR_RELATION_SOURCE] ?? null)
+                  : null;
+              const target = preserveBody
+                ? priorRow.target
+                : entityKind === 'relation'
+                  ? (castData[ATTR_RELATION_TARGET] ?? null)
+                  : null;
               // Parent (nullable).
-              const parent = castData[ATTR_PARENT] ?? null;
+              const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
 
               const updatedAtTimestamp = object.updatedAt;
               // Prefer the creation timestamp stored in the document (survives compaction/migrations).

@@ -33,6 +33,7 @@ import {
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
   ObjectDatabaseId,
+  ObjectDeletedId,
   type ObjectJSON,
   RelationSourceDXNId,
   RelationSourceId,
@@ -174,6 +175,10 @@ export const objectFromJSON = async (
   if (database) {
     defineHiddenProperty(obj, ObjectDatabaseId, database);
   }
+
+  // Carry the deletion marker so a tombstone snapshot (e.g. a feed item removed via `Feed.remove`)
+  // hydrates with `Obj.isDeleted === true` rather than as a live object.
+  defineHiddenProperty(obj, ObjectDeletedId, jsonData[ATTR_DELETED] === true);
 
   assertObjectModel(obj);
   invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');

@@ -11,10 +11,9 @@ import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, DXN, Feed, Filter, Obj, Query, QueryAST, Ref, Scope, Type } from '@dxos/echo';
+import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
-import { invariant } from '@dxos/invariant';
 
 import * as Runnable from './Runnable';
 import type * as TriggerEvent from './TriggerEvent';
@@ -95,22 +94,6 @@ export const specSubscription = (
       }
     : undefined,
 });
-
-/**
- * Construct a Subscription trigger spec scoped to a feed, so subscription semantics
- * (created/updated/deleted mutations) apply to feed items rather than the space database.
- *
- * The feed must be persisted (added to the database) so its queue URI is resolvable.
- */
-export const specSubscriptionFromFeed = (
-  feed: Feed.Feed,
-  filter: Filter.Any = Filter.everything(),
-  options?: { deep?: boolean; delay?: number },
-): SubscriptionSpec => {
-  const feedUri = Feed.getFeedUri(feed);
-  invariant(feedUri, 'Feed must be persisted before building a subscription spec.');
-  return specSubscription(Query.select(filter).from(Scope.feed(feedUri)), options);
-};
 
 /**
  * Direct invocation only; never scheduled by the dispatcher (invoked on demand by a caller).

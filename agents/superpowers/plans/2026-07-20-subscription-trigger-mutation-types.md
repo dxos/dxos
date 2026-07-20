@@ -8,7 +8,7 @@ Related area: `@dxos/compute` (types) + `@dxos/functions-runtime` (dispatcher)
 ## Implementation notes (deviations from the plan)
 
 - **Change detection is content-signature based, not `Obj.version`.** The spike confirmed feed-backed
-  live objects are *unversioned* (no automerge heads), so version comparison never sees a feed
+  live objects are _unversioned_ (no automerge heads), so version comparison never sees a feed
   re-append as an update. The dispatcher now compares a canonical JSON signature (`objectSignature`),
   which covers both the database and feed sources uniformly. `processedVersions` now stores that
   signature instead of an encoded version.

@@ -25,10 +25,9 @@ import * as Struct from 'effect/Struct';
 import { Operation, Process, RunAgainError, Trigger, TriggerEvent } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { EID, EntityId, type URI } from '@dxos/keys';
+import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { filterReadyFeedItems } from './feed-position';
@@ -673,12 +672,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               }
 
               const { db } = yield* Database.Service;
-              const feedScoped = queryHasFeedScope(spec.query.ast);
 
-              // Include tombstones so deletions surface for the database source (see `Obj.isDeleted`
-              // branch below). Feed removals do not leave a visible tombstone, so feed-scoped deletes
-              // are instead detected by the id-set diff further down; `deleted: 'include'` is a no-op
-              // there.
+              // Include tombstones so deletions surface uniformly for both sources via the
+              // `Obj.isDeleted` branch below: the database emits a real tombstone, and a feed
+              // removal (`Feed.remove`) now also produces a queryable tombstone that retains the
+              // object's type/body (the index merges the `{ id, '@deleted': true }` block onto the
+              // prior snapshot — see `FtsIndex.update` / `EntityMetaIndex.update`).
               const objects = yield* Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' })).run;
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
@@ -694,6 +693,11 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 ),
               );
               invariant(state.state?._tag === 'subscription');
+              // `processedVersions` grows with the number of distinct objects ever seen by this
+              // trigger (an entry is dropped only when an object is observed deleted). That is
+              // acceptable for the local dispatcher, whose state is process-scoped; an edge
+              // dispatcher persisting this across restarts needs a bounded strategy (e.g. TTL or
+              // a high-water-mark cursor) instead of an unbounded per-object signature map.
               const processedVersions = state.state.processedVersions;
 
               const fire = (type: TriggerEvent.SubscriptionMutationType, objectId: string, uri: URI.URI) =>
@@ -707,13 +711,11 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 });
 
               let updated = false;
-              const seenIds = new Set<string>();
               for (const object of objects) {
-                seenIds.add(object.id);
                 const existingSignature = Record.get(processedVersions, object.id);
 
-                // Database tombstone: emit `deleted` once, then drop the key so a later re-creation
-                // reads as a fresh `created`.
+                // Tombstone (database or feed): emit `deleted` once, then drop the key so a later
+                // re-creation reads as a fresh `created`.
                 if (Obj.isDeleted(object)) {
                   if (Option.isSome(existingSignature)) {
                     invocations.push(yield* fire('deleted', object.id, Obj.getURI(object)));
@@ -740,22 +742,6 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 invocations.push(yield* fire(type, object.id, Obj.getURI(object)));
                 (processedVersions as Record<string, string>)[object.id] = currentSignature;
                 updated = true;
-              }
-
-              // Feed removals leave no visible tombstone (unlike the database source), so detect
-              // deletes by diffing previously-seen ids against the current live result set. Only for
-              // feed-scoped queries: for the database source a real tombstone is authoritative and an
-              // object merely falling out of the filter predicate must not be reported as deleted.
-              if (feedScoped) {
-                for (const objectId of Object.keys(processedVersions)) {
-                  if (!seenIds.has(objectId)) {
-                    invocations.push(
-                      yield* fire('deleted', objectId, EID.make({ spaceId: db.spaceId, entityId: objectId })),
-                    );
-                    delete (processedVersions as Record<string, string>)[objectId];
-                    updated = true;
-                  }
-                }
               }
 
               if (updated) {
@@ -939,21 +925,6 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
  * Key for the current cursor for feed triggers.
  */
 export const KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';
-
-/**
- * True when the query's `from` clause carries at least one feed scope (`Scope.feed(...)`).
- * Feed-scoped subscriptions detect deletes by an id-set diff, since feed removals leave no visible
- * tombstone (unlike the database source).
- */
-const queryHasFeedScope = (query: QueryAST.Query): boolean => {
-  let found = false;
-  QueryAST.visit(query, (node) => {
-    if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.some((scope) => scope._tag === 'feed')) {
-      found = true;
-    }
-  });
-  return found;
-};
 
 /**
  * Canonical content signature of an entity, used by subscription triggers to detect changes across
