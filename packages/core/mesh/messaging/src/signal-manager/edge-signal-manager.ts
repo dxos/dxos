@@ -224,8 +224,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       return;
     }
     let changed = false;
-    if (tags?.length) {
+    if (tags === undefined) {
+      // Legacy wholesale clear (no tags supplied). Kept for callers that own the whole subscription.
+      this._subscribedTags.clear();
+      changed = true;
+    } else {
       // Release this subscriber's registration only; the tag stays live while other subscribers hold it.
+      // An explicit empty array is a no-op (distinct from omitting tags).
       for (const tag of new Set(tags)) {
         const count = this._subscribedTags.get(tag);
         if (count === undefined) {
@@ -238,10 +243,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
           changed = true;
         }
       }
-    } else {
-      // Legacy wholesale clear (no tags supplied). Kept for callers that own the whole subscription.
-      this._subscribedTags.clear();
-      changed = true;
     }
     if (changed) {
       await this._sendSubscription(this._ctx);

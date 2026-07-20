@@ -189,6 +189,26 @@ describe('EdgeSignalManager broadcast (DX-1125)', () => {
     expect(subscriber.broadcasts).toHaveLength(0);
   });
 
+  test('unsubscribe with an empty tags array is a no-op', async ({ expect }) => {
+    const mesh = new TestEdgeMesh();
+    const topic = PublicKey.random();
+    const publisher = await setupPeer(mesh, topic, 'publisher');
+    const subscriber = await setupPeer(mesh, topic, 'subscriber');
+
+    await subscriber.manager.subscribeMessages(subscriber.peer, [TRACE_TAG]);
+    await subscriber.manager.unsubscribeMessages(subscriber.peer, []);
+
+    await publisher.manager.sendBroadcast(Context.default(), {
+      author: publisher.peer,
+      swarmKey: topic.toHex(),
+      tags: [TRACE_TAG],
+      payload: payload([10]),
+    });
+
+    expect(subscriber.broadcasts).toHaveLength(1);
+    expect([...subscriber.broadcasts[0].payload.value]).toEqual([10]);
+  });
+
   test('still delivers point-to-point messages', async ({ expect }) => {
     const mesh = new TestEdgeMesh();
     const topic = PublicKey.random();

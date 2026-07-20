@@ -41,7 +41,7 @@ export const Module = {
   Stats: Role.make<Record<string, any>>('org.dxos.storybook.inbox.stats'),
   SyncState: Role.make<Record<string, any>>('org.dxos.storybook.inbox.syncState'),
   Trace: Role.make<Record<string, any>>('org.dxos.storybook.inbox.trace'),
-  SwarmTrace: Role.make<Record<string, any>>('org.dxos.storybook.inbox.swarmTrace'),
+  SwarmTrace: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.swarmTrace'),
   Triggers: Role.make<Record<string, any>>('org.dxos.storybook.inbox.triggers'),
 };
 
