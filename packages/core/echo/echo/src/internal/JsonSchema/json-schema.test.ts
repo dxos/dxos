@@ -267,11 +267,10 @@ describe('effect-to-json', () => {
   });
 
   test('serialize a pair of mutually-recursive schemas (A embeds B, B embeds A)', () => {
-    // A self-referential suspend (e.g. FilterObject.props.value: suspend(() => Filter)) is caught by
-    // `suspendCache` immediately, since the cycle is detected within the same top-level expansion.
-    // A *mutual* cycle spanning two distinct suspended schemas is different: each side's expansion
-    // starts from a fresh `suspendCache` that has no memory of the other side already being in
-    // flight, so without the `inProgress` guard this recurses forever (A -> B -> A -> B -> ...).
+    // Unlike a schema that's self-referential (caught by suspendCache within one expansion), a
+    // *mutual* cycle across two distinct schemas isn't: each side starts a fresh suspendCache with
+    // no memory of the other already being in flight, so without the `inProgress` guard this
+    // recurses forever (A -> B -> A -> B -> ...).
     interface A {
       readonly kind: 'a';
       readonly b?: B;

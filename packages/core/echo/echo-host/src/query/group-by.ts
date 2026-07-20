@@ -166,9 +166,8 @@ export const GroupBy = Object.freeze({
    * assembly, from the (possibly now re-sorted) member order this function returns.
    *
    * All members of a group share a single member order, so at most one distinct `order` may be
-   * requested across the group's `items`-kind aggregates — two `items` aggregates in the same
-   * `aggregate()` call requesting different orders is rejected rather than silently honoring only
-   * one of them.
+   * requested across the group's `items`-kind aggregates — two conflicting orders are rejected
+   * rather than silently honoring only one of them.
    */
   withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
     items: readonly T[],

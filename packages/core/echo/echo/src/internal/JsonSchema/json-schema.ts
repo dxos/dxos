@@ -136,9 +136,8 @@ const withEchoRefinements = (
   ast: SchemaAST.AST,
   path: string | undefined,
   suspendCache = new Map<SchemaAST.AST, string>(),
-  // Suspended ASTs whose expansion is currently in flight (see the `isSuspend` branch below) —
-  // distinct from `suspendCache`, which only remembers ASTs already visited within the *same*
-  // fresh expansion and cannot see across it.
+  // Suspended ASTs whose expansion is currently in flight — unlike `suspendCache`, this is shared
+  // across the fresh caches each new expansion starts with, so it also catches mutual cycles.
   inProgress: Set<SchemaAST.AST> = new Set(),
 ): SchemaAST.AST => {
   if (path) {
@@ -157,14 +156,11 @@ const withEchoRefinements = (
         },
       });
     } else if (inProgress.has(suspendedAst)) {
-      // `suspendedAst` is already being expanded higher up this call stack, reached again through a
-      // *different* suspended type (e.g. two mutually-recursive schemas, A embedding B and B embedding
-      // A) rather than through itself. `suspendCache` alone can't catch this: each fresh expansion (the
-      // `else` branch below) starts from an empty cache, so A's expansion re-triggers B's expansion,
-      // which re-triggers A's, forever. Stop here with an "any" placeholder (the same self-contained
-      // `$id` shape `effect`'s own JSONSchema.fromAST emits for `Schema.Any`, see `toEffectSchema` above)
-      // instead of recursing again — a real `$ref` would need the path this suspend was *first* entered
-      // from, which isn't available here (that expansion is a different, already-abandoned `suspendCache`).
+      // Reached via a *different* suspended type already being expanded (e.g. two mutually-recursive
+      // schemas, A embedding B and B embedding A) rather than via itself — `suspendCache` alone won't
+      // catch this, since each fresh expansion below starts from an empty one. Stop with an "any"
+      // placeholder (the same shape effect's own JSONSchema.fromAST emits for Schema.Any) instead of
+      // expanding again.
       recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
         [SchemaAST.JSONSchemaAnnotationId]: { $id: '/schemas/any' },
       });
