@@ -290,8 +290,8 @@ describe('effect-to-json', () => {
     });
 
     const jsonSchema = toJsonSchema(A);
-    expect(jsonSchema.properties!.kind).toEqual({ type: 'string', enum: ['a'] });
-    expect(jsonSchema.properties!.b).toBeDefined();
+    expect(jsonSchema.properties?.kind).toEqual({ type: 'string', enum: ['a'] });
+    expect(jsonSchema.properties?.b).toBeDefined();
   });
 
   test('tuple schema with description', () => {
