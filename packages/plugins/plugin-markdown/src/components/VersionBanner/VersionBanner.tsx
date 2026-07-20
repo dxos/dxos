@@ -4,36 +4,62 @@
 
 import React, { useState } from 'react';
 
-import { NamePopover } from '@dxos/plugin-space/components';
-import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { NamePopover } from '@dxos/app-framework/ui';
+import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-export type VersionBannerProps = ThemedClassName<{
+/** Compact "time since" for the banner tag — `now`, `30m`, `5h`, `2d`, `3w`, `6mo`, `1y`. */
+const relativeTime = (iso: string): string => {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 1) {
+    return 'now';
+  }
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  if (days < 7) {
+    return `${days}d`;
+  }
+  if (days < 30) {
+    return `${Math.floor(days / 7)}w`;
+  }
+  if (days < 365) {
+    return `${Math.floor(days / 30)}mo`;
+  }
+  return `${Math.floor(days / 365)}y`;
+};
+
+export type VersionBannerProps = {
   /**
    * Checkpoint mode is read-only time travel; branch mode is an editable draft; fork mode is a
    * read-only view of a branch's creation point.
    */
   mode: 'checkpoint' | 'branch' | 'fork';
   name: string;
-  detail?: string;
+  /** ISO timestamp — shown as a compact age tag (`2d`, `5h`, `30m`) with the full date in a tooltip. */
+  timestamp?: string;
   onRestore?: () => void;
   onBranchFrom?: (name: string) => void;
   onMerge?: () => void;
   onCompare?: () => void;
   onClose: () => void;
-}>;
+};
 
 /**
  * Slim banner shown between the editor toolbar and content while the user is
  * viewing a checkpoint or editing a branch (i.e. off "main @ now").
  */
 export const VersionBanner = ({
-  classNames,
   mode,
   name,
-  detail,
+  timestamp,
   onRestore,
   onBranchFrom,
   onMerge,
@@ -44,59 +70,54 @@ export const VersionBanner = ({
   const [namingBranch, setNamingBranch] = useState(false);
 
   return (
-    <div
-      role='status'
-      className={mx(
-        'flex items-center gap-2 pli-2 plb-1 text-sm bg-hoverSurface border-be border-separator',
-        classNames,
-      )}
-    >
-      <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} size={4} />
-      <span className='truncate'>
-        {t(`version-banner-${mode}.label`)} <span className='font-medium'>{name}</span>
-        {detail && <span className='text-description'> · {detail}</span>}
-      </span>
-      <div className='flex items-center gap-1 ms-auto'>
-        {mode === 'checkpoint' && onRestore && (
-          <Button density='sm' variant='ghost' onClick={onRestore}>
-            {t('restore.label')}
-          </Button>
+    <Toolbar.Root data-testid={`version-banner-${mode}`}>
+      <div className='flex items-center gap-1 px-2 truncate'>
+        <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
+        <Tag hue='neutral' classNames='flex gap-2'>
+          {name}
+        </Tag>
+        {timestamp && (
+          <TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
+            <Tag hue='sky'>{relativeTime(timestamp)}</Tag>
+          </TextTooltip>
         )}
-        {mode === 'checkpoint' && onBranchFrom && (
-          <NamePopover
-            open={namingBranch}
-            placeholder={t('branch-name.placeholder')}
-            onSubmit={(name) => {
-              setNamingBranch(false);
-              onBranchFrom(name);
-            }}
-            onCancel={() => setNamingBranch(false)}
-          >
-            <Button density='sm' variant='ghost' onClick={() => setNamingBranch(true)}>
-              {t('branch-from.label')}
-            </Button>
-          </NamePopover>
-        )}
-        {mode === 'branch' && onCompare && (
-          <Button density='sm' variant='ghost' onClick={onCompare}>
-            {t('compare.label')}
-          </Button>
-        )}
-        {mode === 'branch' && onMerge && (
-          <Button density='sm' variant='ghost' onClick={onMerge}>
-            {t('merge.label')}
-          </Button>
-        )}
-        <IconButton
-          density='sm'
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('close.label')}
-          onClick={onClose}
-        />
       </div>
-    </div>
+      <Toolbar.Separator />
+      {mode === 'checkpoint' && onRestore && (
+        <Toolbar.Button variant='ghost' onClick={onRestore}>
+          {t('restore.label')}
+        </Toolbar.Button>
+      )}
+      {mode === 'checkpoint' && onBranchFrom && (
+        <NamePopover
+          open={namingBranch}
+          placeholder={t('branch-name.placeholder')}
+          submitLabel={t('create.label')}
+          onCancel={() => setNamingBranch(false)}
+          onSubmit={(name) => {
+            setNamingBranch(false);
+            onBranchFrom(name);
+          }}
+        >
+          <Toolbar.Button variant='ghost' onClick={() => setNamingBranch(true)}>
+            {t('branch-from.label')}
+          </Toolbar.Button>
+        </NamePopover>
+      )}
+      {mode === 'branch' && onCompare && (
+        <Toolbar.IconButton
+          variant='ghost'
+          icon='ph--git-diff--regular'
+          iconOnly
+          label={t('compare.label')}
+          onClick={onCompare}
+        />
+      )}
+      {mode === 'branch' && onMerge && (
+        <Toolbar.IconButton variant='ghost' icon='ph--git-merge--regular' label={t('merge.label')} onClick={onMerge} />
+      )}
+      <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
+    </Toolbar.Root>
   );
 };
 

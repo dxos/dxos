@@ -18,6 +18,7 @@ import {
   OperationHandler,
   ReactSurface,
   SkillDefinition,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -33,6 +34,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   AppPlugin.addSurfaceModule({
     activate: ReactSurface,

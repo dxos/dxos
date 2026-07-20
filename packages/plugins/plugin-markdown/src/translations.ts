@@ -48,6 +48,7 @@ export const translations = [
         'close.label': 'Close',
         'branches.title': 'Branches',
         'checkpoints.title': 'Checkpoints',
+        'create.label': 'Create',
         'create-checkpoint.label': 'Create revision',
         'delete-branch.label': 'Delete',
         'current.label': 'Current',

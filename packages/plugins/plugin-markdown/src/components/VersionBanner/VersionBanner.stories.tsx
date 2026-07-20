@@ -29,7 +29,7 @@ export const Checkpoint: Story = {
   args: {
     mode: 'checkpoint',
     name: 'v2 outline',
-    detail: '2 days ago',
+    timestamp: '2026-07-17T10:00:00.000Z',
     onRestore: fn(),
     onBranchFrom: fn(),
     onClose: fn(),
@@ -40,7 +40,7 @@ export const Branch: Story = {
   args: {
     mode: 'branch',
     name: 'agent-draft',
-    detail: 'anchored at v2 outline',
+    timestamp: '2026-07-19T09:00:00.000Z',
     onMerge: fn(),
     onCompare: fn(),
     onClose: fn(),
@@ -51,7 +51,7 @@ export const Fork: Story = {
   args: {
     mode: 'fork',
     name: 'agent-draft',
-    detail: '2 days ago',
+    timestamp: '2026-07-17T10:00:00.000Z',
     onClose: fn(),
   },
 };

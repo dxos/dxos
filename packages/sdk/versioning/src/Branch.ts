@@ -13,6 +13,7 @@ export {
 export {
   type CreateBranchProps as CreateProps,
   type MergeResult,
+  archiveIfEmpty,
   bindBranch as bind,
   createBranch as create,
   discardBranch as discard,
@@ -20,4 +21,5 @@ export {
   isCoreBranch as isCore,
   branchLabel as label,
   mergeBranch as merge,
+  suggestionBranch as suggestion,
 } from './internal/model';
