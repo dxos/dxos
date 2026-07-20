@@ -7,7 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type Database, Filter, Obj, type Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,

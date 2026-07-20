@@ -4,6 +4,9 @@
 
 import { type EditorView } from '@codemirror/view';
 
+/** Escapes a string for safe embedding in RegExp source. */
+export const escapeRegExpSource = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const insertAtCursor = (view: EditorView, from: number, insert: string) => {
   view.dispatch({
     changes: { from, to: from, insert },

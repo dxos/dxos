@@ -106,8 +106,12 @@ export const EditorMenuProvider = ({
       const view = getViewRef.current?.();
       invariant(view);
       onSelect?.({ view, item });
+      // Close the popover after acting (e.g. Delete) and return focus to the editor; otherwise the menu
+      // lingers open over the now-changed document.
+      setOpen(false);
+      view.focus();
     },
-    [getViewRef, onSelect],
+    [getViewRef, onSelect, setOpen],
   );
 
   const menuGroups = groups?.filter((group) => group.items.length > 0) ?? [];

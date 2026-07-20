@@ -5,6 +5,7 @@
 import * as Rpc from '@effect/rpc/Rpc';
 import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Context from 'effect/Context';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 
@@ -31,3 +32,8 @@ export class Rpcs extends RpcGroup.make(
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
 
 export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpcs>> {}
+
+/**
+ * Effect service tag for the `EdgeAgentService` RPC handlers.
+ */
+export class Tag extends Context.Tag('@dxos/protocols/rpc/EdgeAgentService')<Tag, Handlers>() {}

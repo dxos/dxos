@@ -18,6 +18,11 @@ export type { Message, SwarmEvent };
 export type PeerInfo = Peer;
 export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
 
+/**
+ * A broadcast message delivered by tag intersection rather than to a single recipient (DX-1125).
+ */
+export type BroadcastMessage = Pick<Message, 'author' | 'payload'> & { tags: string[] };
+
 export type SignalStatus = {
   host: string;
   state: SignalState;
@@ -39,9 +44,15 @@ export interface SignalMethods {
   swarmEvent: Event<SwarmEvent>;
 
   /**
-   * Emits when a message is received.
+   * Emits when a point-to-point message addressed to this peer is received.
    */
   onMessage: Event<Message>;
+
+  /**
+   * Emits when a tag broadcast matching this peer's subscription is received (DX-1125).
+   * Only edge signaling delivers broadcasts; other transports leave this undefined.
+   */
+  onBroadcast?: Event<BroadcastMessage>;
 
   /**
    * Emits when the swarm state changes.
@@ -64,20 +75,29 @@ export interface SignalMethods {
   query: (ctx: Context, params: QueryRequest) => Promise<SwarmResponse>;
 
   /**
-   * Send message to peer.
+   * Send a point-to-point message to a peer.
    */
   sendMessage: (ctx: Context, message: Message) => Promise<void>;
 
   /**
-   * Start receiving messages from peer.
-   * @deprecated
+   * Broadcast a tagged message to a swarm (DX-1125). Fanned out to every peer whose tag subscription
+   * intersects `tags`. Only supported by edge signaling.
    */
-  // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
-  subscribeMessages: (peer: PeerInfo) => Promise<void>;
+  sendBroadcast?: (
+    ctx: Context,
+    params: { author: PeerInfo; swarmKey: string; tags: string[]; payload: Message['payload'] },
+  ) => Promise<void>;
 
   /**
-   * Stop receiving messages from peer.
-   * @deprecated
+   * Start receiving messages addressed to `peer`. When `tags` are provided (DX-1125), also register an
+   * OR-subscription so the peer receives swarm broadcasts whose tags intersect `tags` (emitted on
+   * {@link onBroadcast}). Tags are only meaningful for edge signaling; other transports ignore them.
+   */
+  // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
+  subscribeMessages: (peer: PeerInfo, tags?: string[]) => Promise<void>;
+
+  /**
+   * Stop receiving messages from peer and clear any tag subscription.
    */
   unsubscribeMessages: (peer: PeerInfo) => Promise<void>;
 }

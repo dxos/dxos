@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Cursor, isRangeVisible, scrollThreadIntoView } from '@dxos/ui-editor';
+import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor';
 
 import { MarkdownCapabilities, MarkdownOperation } from '../types';
 
@@ -15,7 +15,7 @@ const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = MarkdownOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, cursor, ref }) {
+    Effect.fnUntraced(function* ({ subject, cursor, id }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
       const entry = editorViews.get(subject);
       if (!entry) {
@@ -24,8 +24,8 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
 
       // When a thread ref is supplied, delegate to the shared editor helper which
       // scrolls (only if not already visible) and marks the comment current.
-      if (ref) {
-        scrollThreadIntoView(entry.view, ref, SCROLL_OPTIONS);
+      if (id) {
+        scrollCommentIntoView(entry.view, id, SCROLL_OPTIONS);
         return;
       }
 

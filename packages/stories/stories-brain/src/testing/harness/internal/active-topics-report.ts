@@ -25,7 +25,7 @@ export const uniqueSlugs = (active: readonly ActiveTopic[]): Map<ActiveTopic, st
   const used = new Set<string>();
   const slugs = new Map<ActiveTopic, string>();
   for (const topic of active) {
-    const base = topicSlug(topic.label);
+    const base = topicSlug(topic.name);
     let candidate = base;
     let suffix = 2;
     while (used.has(candidate)) {
@@ -43,7 +43,7 @@ export const uniqueSlugs = (active: readonly ActiveTopic[]): Map<ActiveTopic, st
  */
 export const renderIndex = (
   { active, suggested }: ActiveTopicsResult,
-  slugFor: (topic: ActiveTopic) => string = (topic) => topicSlug(topic.label),
+  slugFor: (topic: ActiveTopic) => string = (topic) => topicSlug(topic.name),
 ): string => {
   const lines: string[] = ['# Active Topics', ''];
 
@@ -56,7 +56,7 @@ export const renderIndex = (
     for (const topic of active) {
       const done = populatedChecklist(topic);
       lines.push(
-        `| [${escapeCell(topic.label)}](${slugFor(topic)}.md) | ${pct(topic.confidence)} | ${check(done.status)} | ${check(done.facts)} | ${check(done.tasks)} | ${check(done.drafts)} | ${escapeCell(topic.rationale)} |`,
+        `| [${escapeCell(topic.name)}](${slugFor(topic)}.md) | ${pct(topic.confidence)} | ${check(done.status)} | ${check(done.facts)} | ${check(done.tasks)} | ${check(done.drafts)} | ${escapeCell(topic.rationale)} |`,
       );
     }
     lines.push('');
@@ -70,7 +70,7 @@ export const renderIndex = (
     lines.push('| --- | --- | --- | --- | --- |');
     for (const topic of suggested) {
       lines.push(
-        `| ${escapeCell(topic.label)} | ${pct(topic.confidence)} | ${topic.threadCount} | ${topic.participantCount} | ${escapeCell(topic.rationale)} |`,
+        `| ${escapeCell(topic.name)} | ${pct(topic.confidence)} | ${topic.threadCount} | ${topic.participantCount} | ${escapeCell(topic.rationale)} |`,
       );
     }
     lines.push('');
@@ -81,7 +81,7 @@ export const renderIndex = (
 
 /** A per-active-topic report: status · threads · task outline · facts · drafts. */
 export const renderTopicReport = (topic: ActiveTopic): string => {
-  const lines: string[] = [`# ${topic.label}`, '', `_Confidence ${pct(topic.confidence)} — ${topic.rationale}_`, ''];
+  const lines: string[] = [`# ${topic.name}`, '', `_Confidence ${pct(topic.confidence)} — ${topic.rationale}_`, ''];
 
   lines.push('## Status', '', topic.status.trim().length > 0 ? topic.status.trim() : '_(none)_', '');
 
@@ -111,7 +111,7 @@ export const renderTopicReport = (topic: ActiveTopic): string => {
 /** JSON-serializable view (inlines each Outline's Text content). */
 export const serializeActiveTopics = ({ active, suggested }: ActiveTopicsResult) => ({
   active: active.map((topic) => ({
-    label: topic.label,
+    name: topic.name,
     summary: topic.summary,
     threadIds: [...topic.threadIds],
     participants: [...topic.participants],
@@ -132,7 +132,7 @@ export const writeActiveTopicsReports = (dir: string, result: ActiveTopicsResult
   mkdirSync(dir, { recursive: true });
   // One resolved slug per active topic — shared by the index links and the report filenames.
   const slugs = uniqueSlugs(result.active);
-  const slugFor = (topic: ActiveTopic): string => slugs.get(topic) ?? topicSlug(topic.label);
+  const slugFor = (topic: ActiveTopic): string => slugs.get(topic) ?? topicSlug(topic.name);
   writeFileSync(join(dir, 'index.md'), renderIndex(result, slugFor));
   for (const topic of result.active) {
     writeFileSync(join(dir, `${slugFor(topic)}.md`), renderTopicReport(topic));

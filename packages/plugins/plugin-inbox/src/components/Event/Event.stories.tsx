@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { Fragment, useMemo } from 'react';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
-import { createObject, useQuery } from '@dxos/react-client/echo';
+import { createObject } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';

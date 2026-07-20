@@ -8,8 +8,8 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'reac
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 

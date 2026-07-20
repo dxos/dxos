@@ -66,6 +66,7 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { createDeviceLocalBranchStore } from './branch-store';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
@@ -75,6 +76,8 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
  * Use {@link Obj.getDatabase} when you only need DB/`spaceId` access; this
  * helper is retained only for callers that need {@link Space} proxy members
  * (`properties`, `members`, `key`, `state`, `listen`, identity).
+ *
+ * @deprecated Use {@link Obj.getSpace} instead.
  */
 // TODO(burdon): Hypergraph.getSpace().
 export const getSpace = (object?: any): Space | undefined => {
@@ -175,6 +178,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       spaceId: this.id,
       spaceKey: this.key,
       owningObject: this,
+      branchStore: createDeviceLocalBranchStore(this.id),
     });
 
     const self = this;

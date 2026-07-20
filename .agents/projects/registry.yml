@@ -15,7 +15,7 @@ projects:
     tasks: packages/stories/stories-brain/TASKS.md
     design: packages/stories/stories-brain/fixtures/REPORT.md
     prs: [12163, 12167, 12178]
-    resume: 'PR #12178 (Topics UX v2: bulk triage, opt-in suggestions, TopicArticle master/detail, create-from-message) opened — watch the Check workflow to green + surface the Composer preview. Deferred follow-ups in TASKS.md: Phase A live-feed thread resolution + deck-peer path; Phase C fact extraction; AnchoredTo cleanup on topic delete. Earlier open work: private-corpus evals + two-tier latency design.'
+    resume: 'PRs #12178 + #12205 merged (Topics UX v2 + Topics/Subscriptions Mosaic lists). In progress (uncommitted, NOT yet a PR): converted plugin-inbox folder articles to the ObjectArticleProps<Mailbox> pattern (db from subject, folder graph nodes carry data:mailbox, sentinels dropped) + SubscriptionsArticle unsubscribe removes on success. Build/lint/fmt + 167 unit tests green. NOTE: TopicsArticle/CreateTopic storybook play-tests fail on the committed baseline too (pre-existing, headless topic-query returns empty). Next: commit this work / open PR when ready; then Priority 1 manual topics + management. Deferred: Active Topics v2 (LLM labels + personEmails), two-tier latency, re-sync dedup bug, MailboxArticle search wiring.'
 
   - name: task-planning-skill-update
     status: active
@@ -47,7 +47,7 @@ projects:
     summary: Document revisions & branches (checkpoints, draft branches, merge) for markdown + @dxos/versioning; convergence with PR 11829 core branching.
     tasks: .agents/projects/document-revisions/TASKS.md
     design: packages/plugins/plugin-markdown/DESIGN.md
-    prs: [12237]
-    resume: 'PR #12237 in merge queue (auto-merge enabled; blockers cleared, exports-map fix pushed). After landing, in a fresh session: stage 1 of agents/superpowers/plans/2026-07-17-branching-convergence.md — revive PR 11829 commits 1-3 rebased on main, add coverage + writable per-surface BranchBinding API (spec in plan), wittjosiah reviews. Stages 2-4 in TASKS.md.'
+    prs: [12237, 12246]
+    resume: 'PR #12246 GREEN (Check passed on HEAD e7b6ec0a0c) with ALL stages 1-4 complete + all post-merge/CI fixes. NEXT (morning): review + land (submit-pr/land skill); no failures outstanding, no new review comments. Future (not blocking, own PR): discriminated-union Branch shape after legacy content-copy records drain; generalize @dxos/versioning to non-Text objects; branch-level access control. User has role=none cleanup WIP uncommitted in the shared worktree (theirs, untouched by me). Overnight-fixed: flaky forkDump head-count assertion; useVersioning tolerant of absent VersioningState (plugin-blogger crash); assistant-e2e markdown + crm-mailbox memoized fixtures regenerated for the branchId/accept-change tool-schema change.'
 
 ended: []

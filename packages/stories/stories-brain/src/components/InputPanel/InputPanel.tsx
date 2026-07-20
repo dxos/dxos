@@ -145,7 +145,7 @@ export const InputPanel = ({
           <Button variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
             Record
           </Button>
-          <div role='none' className='grow' />
+          <div className='grow' />
           {mode === 'document' && parse && (
             <Input.Root>
               <div className='flex items-center gap-2 px-2'>

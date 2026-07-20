@@ -41,13 +41,17 @@ describe('SystemTags', () => {
 
     const starredTag = await SystemTags.findOrCreateSystemTag(db, 'starred');
     const starredUri = Obj.getURI(starredTag).toString();
-    await SystemTags.toggleTag(mailbox, message, db, 'starred');
+    const toggleStar = () =>
+      EffectEx.runAndForwardErrors(
+        SystemTags.toggleTag(mailbox, message, 'starred').pipe(Effect.provide(Database.layer(db))),
+      );
+    await toggleStar();
 
     const starred = SystemTags.tagAtom(mailbox.tags!.target!, starredUri);
     const registry = Registry.make();
     expect(registry.get(starred(message.id))).toBe(true);
 
-    await SystemTags.toggleTag(mailbox, message, db, 'starred');
+    await toggleStar();
     expect(registry.get(starred(message.id))).toBe(false);
   });
 });

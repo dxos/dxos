@@ -14,9 +14,10 @@ import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { AgentService, Credential, ServiceResolver } from '@dxos/compute';
 import { Database, Obj, Ref, Registry } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type Space, useObject } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type Assistant } from '#types';

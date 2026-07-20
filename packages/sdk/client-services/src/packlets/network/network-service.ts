@@ -14,12 +14,13 @@ import {
   type SubscribeSwarmStateRequest,
   type UpdateConfigRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import {
   type JoinRequest,
   type LeaveRequest,
   type Message,
   type QueryRequest,
+  type SubscribeMessagesRequest,
 } from '@dxos/protocols/proto/dxos/edge/signal';
 import { type NetworkService } from '@dxos/protocols/rpc';
 
@@ -109,16 +110,42 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.subscribeMessages'](peer: Peer): EffectStream.Stream<Message, Error> {
+  ['NetworkService.subscribeMessages'](request: SubscribeMessagesRequest): EffectStream.Stream<Message, Error> {
+    const { peer, tags = [] } = request;
     return EffectStream.async<Message, Error>((emit) => {
       const ctx = Context.default();
+      // Register the tag subscription so the edge fans broadcasts out to this peer (DX-1125). Targeted
+      // delivery needs no registration.
+      if (tags.length > 0) {
+        void this.signalManager.subscribeMessages(peer, tags);
+      }
+
+      // Point-to-point messages addressed to this peer.
       this.signalManager.onMessage.on(ctx, (message) => {
         if (message.recipient.peerKey === peer.peerKey) {
           void emit.single(message);
         }
       });
 
-      return Effect.promise(() => ctx.dispose());
+      // Broadcasts whose tags intersect the subscription (logical OR); surfaced as a message addressed
+      // to this peer, carrying the broadcast tags.
+      this.signalManager.onBroadcast?.on(ctx, (broadcast) => {
+        if (tags.length > 0 && broadcast.tags.some((tag) => tags.includes(tag))) {
+          void emit.single({
+            author: broadcast.author,
+            recipient: peer,
+            payload: broadcast.payload,
+            tags: broadcast.tags,
+          });
+        }
+      });
+
+      return Effect.promise(() => {
+        if (tags.length > 0) {
+          void this.signalManager.unsubscribeMessages(peer);
+        }
+        return ctx.dispose();
+      });
     });
   }
 }

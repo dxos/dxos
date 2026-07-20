@@ -325,7 +325,7 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
 
     /**
      * List of required services.
-     * Match the Context.Tag keys of the FunctionServices variants.
+     * Match the Context.Tag keys of the services the operation handler declares.
      */
     services: Schema$.optional(Schema$.Array(Schema$.String)),
 
@@ -521,6 +521,12 @@ export interface InvokeOptions {
    * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
    */
   tracing?: unknown;
+
+  /**
+   * Specifies the runtime environment for the operation.
+   * By default, the operation is executed on the local runtime.
+   */
+  on?: 'edge' | 'local';
 }
 
 /**

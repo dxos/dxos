@@ -42,13 +42,13 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
 
   return (
     <Form.Section title={t('versions.title')}>
-      <div role='none' className='flex items-center gap-2 pli-1 text-sm'>
+      <div className='flex items-center gap-2 pli-1 text-sm'>
         <span className='truncate'>{currentLabel}</span>
         <span className='ms-auto shrink-0 text-xs text-description'>
           {t('branch-count.label', { count: branchCount })} · {t('checkpoint-count.label', { count: versionCount })}
         </span>
       </div>
-      <div role='none' className='flex gap-1 pli-1'>
+      <div className='flex gap-1 pli-1'>
         <IconButton
           icon='ph--bookmark-simple--regular'
           label={t('create-checkpoint.label')}
