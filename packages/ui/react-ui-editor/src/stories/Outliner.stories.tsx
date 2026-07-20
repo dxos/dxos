@@ -11,44 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
 import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
-import { EditorStory, EditorStoryProps } from './components';
-
-random.seed(1);
-
-type GenerateListOptions = {
-  /** Maximum nesting depth. */
-  depth?: number;
-  /** Children per node — a fixed count or an inclusive `[min, max]` range. */
-  children?: number | [number, number];
-  /** Emit task markers (`- [ ]`) rather than plain bullets (`- `). */
-  task?: boolean;
-  /** Spaces of indentation per level. */
-  indent?: number;
-  /** Content generator for each item (default: a lorem sentence). */
-  content?: () => string;
-};
-
-/**
- * Generates a hierarchical markdown list for the outliner stories. Deterministic under `random.seed`.
- */
-const generateList = ({
-  depth = 3,
-  children = [1, 3],
-  task = true,
-  indent = 2,
-  content = () => random.lorem.sentence(),
-}: GenerateListOptions = {}): string => {
-  const count = (value: number | [number, number]): number =>
-    Array.isArray(value) ? random.number.int({ min: value[0], max: value[1] }) : value;
-
-  const build = (level: number): string[] =>
-    Array.from({ length: count(children) }).flatMap(() => {
-      const line = ' '.repeat(indent * level) + (task ? '- [ ] ' : '- ') + content();
-      return level + 1 < depth ? [line, ...build(level + 1)] : [line];
-    });
-
-  return join(...build(0));
-};
+import { EditorStory, EditorStoryProps, generateList } from './components';
 
 type StoryArgs = EditorStoryProps;
 
@@ -73,6 +36,7 @@ const DefaultStory = (props: StoryArgs) => {
     ],
     [],
   );
+
   const getView = useCallback(() => controller?.view ?? null, [controller]);
 
   return (
@@ -117,6 +81,16 @@ export const Empty: Story = {
   args: {},
 };
 
+export const Paragraphs: Story = {
+  args: {
+    text: generateList({
+      depth: 3,
+      children: [2, 3],
+      content: () => random.lorem.paragraph(),
+    }),
+  },
+};
+
 export const Basic: Story = {
   args: {
     debug: 'raw+tree',
@@ -146,16 +120,6 @@ export const Nested: Story = {
       '    - [ ] F',
       '- [ ] G',
     ),
-  },
-};
-
-export const Paragraphs: Story = {
-  args: {
-    text: generateList({
-      depth: 3,
-      children: [2, 3],
-      content: () => random.lorem.paragraph(),
-    }),
   },
 };
 

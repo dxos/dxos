@@ -75,12 +75,12 @@ const mergeRanges = (ranges: { from: number; to: number }[]): { from: number; to
 // layer so the drag preview lifts off exactly over the source block.
 const BOX_PADDING = 2;
 
-// Amount (px) the box extends left of the content, into the gutter, so its left border is not flush
-// against the text. Only the left edge moves.
-const BOX_INSET_X = 8;
+// Amount (px) the preview box extends left of the content. Kept at 0 so the box, the cloned content,
+// and the drop placeholder all share the content's left edge (they otherwise drift by this much).
+const BOX_INSET_X = 0;
 
-// Fine horizontal adjustment of the cloned preview text (the 1px preview border shifts it right by 1px).
-const PREVIEW_OFFSET = { x: -1, y: 0 };
+// Fine adjustment of the cloned preview content relative to the source (0 = flush over the source line).
+const PREVIEW_OFFSET = { x: 0, y: 0 };
 
 // Distance (px) from the viewport's top/bottom edge within which a drag auto-scrolls the editor.
 const AUTOSCROLL_ZONE = 48;
@@ -93,7 +93,8 @@ const DRAG_THRESHOLD = 4;
 
 // Reserved strip (px) left of the content for the grip (mirrors the menu strip on the right); the grip is
 // centered within it. 3rem.
-const GUTTER = 48;
+export const GUTTER_WIDTH = 48;
+export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-6rem)]! mx-auto';
 
 // Square grip size (px) and its drag-handle icon. Matches `dx-button` density `xs` + `aspect-square`
 // (`size-6`), so the button's own box lines up with the centering math below.
@@ -601,7 +602,7 @@ const createDragPlugin = (
         }
         const contentRect = this.view.contentDOM.getBoundingClientRect();
         return {
-          left: contentRect.left - GUTTER / 2 - GRIP_SIZE / 2,
+          left: contentRect.left - GUTTER_WIDTH / 2 - GRIP_SIZE / 2,
           top: (coords.top + coords.bottom) / 2 - GRIP_SIZE / 2,
         };
       }
@@ -813,7 +814,8 @@ const dragTheme = EditorView.theme({
     boxSizing: 'border-box',
     overflow: 'hidden',
     opacity: '0.9',
-    padding: '1px 0',
+    // Matches the height reserved by BOX_PADDING so the content sits symmetrically (no extra bottom gap).
+    padding: `${BOX_PADDING}px 0`,
     backgroundColor: 'var(--color-base-surface, Canvas)',
     boxShadow: '0 8px 24px rgb(0 0 0 / 0.35)',
   },
@@ -923,7 +925,7 @@ const createGripOverlay = (
         }
         // Centered within the 3rem gutter immediately left of the content.
         const contentRect = view.contentDOM.getBoundingClientRect();
-        const left = contentRect.left - GUTTER / 2 - GRIP_SIZE / 2;
+        const left = contentRect.left - GUTTER_WIDTH / 2 - GRIP_SIZE / 2;
         return [{ index, anchor: block.from, left, top: (coords.top + coords.bottom) / 2 - GRIP_SIZE / 2 }];
       }
 

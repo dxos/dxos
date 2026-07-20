@@ -8,7 +8,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { mx } from '@dxos/ui-theme';
 
 import { decorateMarkdown } from '../../language';
-import { blockSelectionField } from '../blocks';
+import { CONTENT_WIDTH, blockSelectionField } from '../blocks';
 import { commands } from './commands';
 import { outlinerDnd } from './dnd';
 import { editor } from './editor';
@@ -52,12 +52,10 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
 
-  // Floating menu (reserve space).
+  // Floating menu (with reserved margins left/right for the grip and menu).
   menu(),
-
-  // Centered content column; the grip (left) and menu (right) float in the 3rem margins on each side.
   EditorView.contentAttributes.of({
-    class: 'mx-auto w-full max-w-[min(50rem,100%-6rem)]!',
+    class: CONTENT_WIDTH,
   }),
 ];
 
