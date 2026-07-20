@@ -114,7 +114,10 @@ export const turn = (spec: ScriptedTurn): ScriptedTurn => spec;
 // Service.
 //
 
-const normalizeSpec = (script: Script): ScriptSpec => (Array.isArray(script) ? { turns: script } : script);
+// `Array.isArray` does not narrow a `readonly` array out of the union, so use an explicit predicate.
+const isScriptSpec = (script: Script): script is ScriptSpec => !Array.isArray(script);
+
+const normalizeSpec = (script: Script): ScriptSpec => (isScriptSpec(script) ? script : { turns: script });
 
 /** Narrows a tool-call input to the lazy resolver form (see {@link ScriptedToolCall.input}). */
 const isInputResolver = (input: ScriptedToolCall['input']): input is (ctx: TurnContext) => unknown =>
