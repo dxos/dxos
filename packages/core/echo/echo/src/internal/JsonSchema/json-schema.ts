@@ -151,34 +151,27 @@ const withEchoRefinements = (
     const suspendedAst = ast.f();
     const cachedPath = suspendCache.get(suspendedAst);
     if (cachedPath) {
-      recursiveResult = new SchemaAST.Suspend(
-        () => withEchoRefinements(suspendedAst, path, suspendCache, inProgress),
-        {
-          [SchemaAST.JSONSchemaAnnotationId]: {
-            $ref: cachedPath,
-          },
+      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
+        [SchemaAST.JSONSchemaAnnotationId]: {
+          $ref: cachedPath,
         },
-      );
+      });
     } else if (inProgress.has(suspendedAst)) {
       // `suspendedAst` is already being expanded higher up this call stack, reached again through a
       // *different* suspended type (e.g. two mutually-recursive schemas, A embedding B and B embedding
       // A) rather than through itself. `suspendCache` alone can't catch this: each fresh expansion (the
       // `else` branch below) starts from an empty cache, so A's expansion re-triggers B's expansion,
       // which re-triggers A's, forever. Stop here with an opaque placeholder instead of recursing again.
-      recursiveResult = new SchemaAST.Suspend(
-        () => withEchoRefinements(suspendedAst, path, suspendCache, inProgress),
-        { [SchemaAST.JSONSchemaAnnotationId]: {} },
-      );
+      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
+        [SchemaAST.JSONSchemaAnnotationId]: {},
+      });
     } else {
       inProgress.add(suspendedAst);
       const jsonSchema = _toJsonSchemaAST(suspendedAst, inProgress);
       inProgress.delete(suspendedAst);
-      recursiveResult = new SchemaAST.Suspend(
-        () => withEchoRefinements(suspendedAst, path, suspendCache, inProgress),
-        {
-          [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
-        },
-      );
+      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
+        [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
+      });
     }
   } else if (SchemaAST.isTypeLiteral(ast)) {
     // Add property order annotations
