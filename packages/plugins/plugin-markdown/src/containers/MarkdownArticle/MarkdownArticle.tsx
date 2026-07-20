@@ -7,9 +7,11 @@ import { Atom } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { toCursorRange } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
@@ -24,7 +26,7 @@ import {
   isToolbarAction,
 } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
-import { diffView, suggestChanges } from '@dxos/ui-editor';
+import { type DiffHunk, diffView, suggestChanges } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
 import {
@@ -152,6 +154,33 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         }, []);
     }, [extensionProviders, otherExtensionProviders, object, viewMode, reviewBranch]);
 
+    // Route the inline suggestion Accept/Reject controls through the durable, undoable collaboration
+    // ops. The anchor is a cursor range over the parent (main) content — the editor is bound to main
+    // in suggest mode — and `branch` is the compare (author) branch key (`reviewBranch`).
+    const { invokePromise } = useOperationInvoker();
+    const handleAcceptChange = useCallback(
+      (hunk: DiffHunk) => {
+        const content = Obj.instanceOf(Markdown.Document, object) ? object.content?.target : undefined;
+        if (!content || !reviewBranch) {
+          return;
+        }
+        const anchor = toCursorRange(Doc.createAccessor(content, ['content']), hunk.from, hunk.to);
+        void invokePromise?.(CollaborationOperation.AcceptChange, { subject: object, anchor, branch: reviewBranch });
+      },
+      [object, reviewBranch, invokePromise],
+    );
+    const handleRejectChange = useCallback(
+      (hunk: DiffHunk) => {
+        const content = Obj.instanceOf(Markdown.Document, object) ? object.content?.target : undefined;
+        if (!content || !reviewBranch) {
+          return;
+        }
+        const anchor = toCursorRange(Doc.createAccessor(content, ['content']), hunk.from, hunk.to);
+        void invokePromise?.(CollaborationOperation.RejectChange, { subject: object, anchor, branch: reviewBranch });
+      },
+      [object, reviewBranch, invokePromise],
+    );
+
     // The compare overlay lives in a compartment (reconfigured live, see `compareCompartment`), so it
     // is intentionally absent here — its config changing must not alter this array, which would make
     // `useTextEditor` recreate the view. The suggest overlay stays baked in: it rebinds the editor to
@@ -159,12 +188,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const combinedExtensions = useMemo<Extension[]>(() => {
       const list = [...extensions, mergeConflicts(), compareCompartment.of([])];
       if (suggestActive && branchText) {
-        // Editor is bound to the parent; the branch content is the proposal. Accept splices the
-        // change into the parent document, reject hides it.
-        list.push(suggestChanges({ proposal: branchText.content }));
+        // Editor is bound to the parent; the branch content is the proposal. Accept cherry-picks the
+        // hunk into the parent (AcceptChange); reject reverts it on the author's branch (RejectChange).
+        list.push(
+          suggestChanges({ proposal: branchText.content, onAccept: handleAcceptChange, onReject: handleRejectChange }),
+        );
       }
       return list;
-    }, [extensions, suggestActive, branchText]);
+    }, [extensions, suggestActive, branchText, handleAcceptChange, handleRejectChange]);
 
     // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants use
     // the custom versionDiff decorations; sideBySide uses the richer editable unified merge overlay
@@ -243,7 +274,6 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
 
     // Open linked objects.
-    const { invokePromise } = useOperationInvoker();
     const handleSelectObject = useCallback(
       (targetId: string) => {
         if (onSelectObject) {

@@ -13,11 +13,17 @@ export type SuggestChangesOptions = {
   /** The proposal (e.g. a branch's content) whose changes are suggested over the editor's document. */
   proposal: string;
   /**
-   * Invoked when a change is accepted, in addition to splicing it into the document. Lets the
-   * container route the accept through an operation (e.g. merge the hunk to the parent) when the
-   * editor is bound to the live document.
+   * Invoked when a change is accepted. When provided, the container owns the mutation (routing the
+   * accept through a durable operation that merges the hunk to the parent), so the extension does NOT
+   * splice locally — it only dismisses the widget. Absent ⇒ the extension splices the proposal into
+   * the document directly (standalone use).
    */
   onAccept?: (hunk: DiffHunk) => void;
+  /**
+   * Invoked when a change is rejected. Lets the container route the reject through a durable operation
+   * (revert the hunk on the author's branch). The widget is dismissed either way.
+   */
+  onReject?: (hunk: DiffHunk) => void;
 };
 
 /** Position-independent key so a dismissal survives offset shifts from unrelated edits. */
@@ -38,7 +44,7 @@ type SuggestionState = {
  * hunk into the document (merging the change); Reject hides the suggestion without altering the
  * document (a view-only dismissal for the session).
  */
-export const suggestChanges = ({ proposal, onAccept }: SuggestChangesOptions): Extension => {
+export const suggestChanges = ({ proposal, onAccept, onReject }: SuggestChangesOptions): Extension => {
   const build = (state: EditorState, dismissed: ReadonlySet<string>): DecorationSet => {
     const builder = new RangeSetBuilder<Decoration>();
     for (const hunk of diffHunks(state.doc.toString(), proposal)) {
@@ -48,7 +54,11 @@ export const suggestChanges = ({ proposal, onAccept }: SuggestChangesOptions): E
       if (hunk.to > hunk.from) {
         builder.add(hunk.from, hunk.to, deleteMark);
       }
-      builder.add(hunk.to, hunk.to, Decoration.widget({ widget: new SuggestionWidget(hunk, onAccept), side: 1 }));
+      builder.add(
+        hunk.to,
+        hunk.to,
+        Decoration.widget({ widget: new SuggestionWidget(hunk, onAccept, onReject), side: 1 }),
+      );
     }
     return builder.finish();
   };
@@ -81,11 +91,13 @@ const deleteMark = Decoration.mark({ class: 'cm-suggest-delete' });
 class SuggestionWidget extends WidgetType {
   #hunk: DiffHunk;
   #onAccept?: (hunk: DiffHunk) => void;
+  #onReject?: (hunk: DiffHunk) => void;
 
-  constructor(hunk: DiffHunk, onAccept?: (hunk: DiffHunk) => void) {
+  constructor(hunk: DiffHunk, onAccept?: (hunk: DiffHunk) => void, onReject?: (hunk: DiffHunk) => void) {
     super();
     this.#hunk = hunk;
     this.#onAccept = onAccept;
+    this.#onReject = onReject;
   }
 
   override eq(other: SuggestionWidget): boolean {
@@ -106,8 +118,15 @@ class SuggestionWidget extends WidgetType {
         .append(Domino.svg('ph--check--regular'))
         .on('mousedown', (event) => {
           event.preventDefault();
-          view.dispatch({ changes: { from: this.#hunk.from, to: this.#hunk.to, insert: this.#hunk.inserted } });
-          this.#onAccept?.(this.#hunk);
+          if (this.#onAccept) {
+            // The container owns the mutation (durable cherry-pick op); the op's edit flows back and
+            // re-diffs the hunk away. Dismiss for immediate feedback — do not splice locally (that
+            // would double-apply the change onto the parent).
+            view.dispatch({ effects: dismissEffect.of(suggestionKey(this.#hunk)) });
+            this.#onAccept(this.#hunk);
+          } else {
+            view.dispatch({ changes: { from: this.#hunk.from, to: this.#hunk.to, insert: this.#hunk.inserted } });
+          }
         }),
       Domino.of('div')
         .classNames('dx-button aspect-square cm-suggest-reject -mt-[3px]')
@@ -116,6 +135,7 @@ class SuggestionWidget extends WidgetType {
         .on('mousedown', (event) => {
           event.preventDefault();
           view.dispatch({ effects: dismissEffect.of(suggestionKey(this.#hunk)) });
+          this.#onReject?.(this.#hunk);
         }),
     );
 
