@@ -83,47 +83,40 @@ export const VersionBanner = ({
         )}
       </div>
       <Toolbar.Separator />
-      <div className='flex items-center gap-1 ms-auto'>
-        {mode === 'checkpoint' && onRestore && (
-          <Toolbar.Button variant='ghost' onClick={onRestore}>
-            {t('restore.label')}
+      {mode === 'checkpoint' && onRestore && (
+        <Toolbar.Button variant='ghost' onClick={onRestore}>
+          {t('restore.label')}
+        </Toolbar.Button>
+      )}
+      {mode === 'checkpoint' && onBranchFrom && (
+        <NamePopover
+          open={namingBranch}
+          placeholder={t('branch-name.placeholder')}
+          submitLabel={t('create.label')}
+          onCancel={() => setNamingBranch(false)}
+          onSubmit={(name) => {
+            setNamingBranch(false);
+            onBranchFrom(name);
+          }}
+        >
+          <Toolbar.Button variant='ghost' onClick={() => setNamingBranch(true)}>
+            {t('branch-from.label')}
           </Toolbar.Button>
-        )}
-        {mode === 'checkpoint' && onBranchFrom && (
-          <NamePopover
-            open={namingBranch}
-            placeholder={t('branch-name.placeholder')}
-            submitLabel={t('create.label')}
-            onCancel={() => setNamingBranch(false)}
-            onSubmit={(name) => {
-              setNamingBranch(false);
-              onBranchFrom(name);
-            }}
-          >
-            <Toolbar.Button variant='ghost' onClick={() => setNamingBranch(true)}>
-              {t('branch-from.label')}
-            </Toolbar.Button>
-          </NamePopover>
-        )}
-        {mode === 'branch' && onCompare && (
-          <Toolbar.IconButton
-            variant='ghost'
-            icon='ph--git-diff--regular'
-            iconOnly
-            label={t('compare.label')}
-            onClick={onCompare}
-          />
-        )}
-        {mode === 'branch' && onMerge && (
-          <Toolbar.IconButton
-            variant='ghost'
-            icon='ph--git-merge--regular'
-            label={t('merge.label')}
-            onClick={onMerge}
-          />
-        )}
-        <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
-      </div>
+        </NamePopover>
+      )}
+      {mode === 'branch' && onCompare && (
+        <Toolbar.IconButton
+          variant='ghost'
+          icon='ph--git-diff--regular'
+          iconOnly
+          label={t('compare.label')}
+          onClick={onCompare}
+        />
+      )}
+      {mode === 'branch' && onMerge && (
+        <Toolbar.IconButton variant='ghost' icon='ph--git-merge--regular' label={t('merge.label')} onClick={onMerge} />
+      )}
+      <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
     </Toolbar.Root>
   );
 };
