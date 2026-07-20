@@ -12,8 +12,9 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Skill } from '@dxos/compute';
 import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
+import { useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useContextBinder } from '#hooks';

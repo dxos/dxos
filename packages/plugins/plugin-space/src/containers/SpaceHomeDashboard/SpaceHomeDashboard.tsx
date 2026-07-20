@@ -7,7 +7,8 @@ import React, { useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { Collection, Filter, Obj, Query } from '@dxos/echo';
-import { type Space, useMembers, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type ActivityDatum, Dashboard } from '@dxos/react-ui-dashboard';
 

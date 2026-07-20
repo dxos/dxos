@@ -41,6 +41,7 @@
     "@codemirror/view": "catalog:",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

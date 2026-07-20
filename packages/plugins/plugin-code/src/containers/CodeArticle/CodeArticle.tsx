@@ -10,9 +10,10 @@ import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { getSpace, useObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
