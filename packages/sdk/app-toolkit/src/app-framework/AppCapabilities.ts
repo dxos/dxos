@@ -305,6 +305,24 @@ export const NavigationTargetResolver = Capability$.make<NavigationTargetResolve
 );
 
 /**
+ * Loads/verifies a navigation target by its `(spaceId, entityId)` so graph resolution can materialize
+ * its node. Contributed by the plugin that owns object storage (plugin-client), consumed by layout
+ * plugins — this is the abstraction that keeps layout plugins from depending on the client for
+ * loading. `load` loads the object into local ECHO when present locally (so a URL-driven restore
+ * materializes the plank's node), and resolves `true` if the object exists locally or, as a fallback,
+ * remotely. A remote-only object resolves `true` but cannot render until it replicates locally.
+ * @category Capability
+ */
+export type NavigationTargetLoader = Readonly<{
+  id: string;
+  load: (target: { spaceId: string; entityId: string }) => Effect$.Effect<boolean>;
+}>;
+
+export const NavigationTargetLoader = Capability$.make<NavigationTargetLoader>(
+  'org.dxos.app-framework.capability.navigationTargetLoader',
+);
+
+/**
  * Handler called by layout plugins on navigation events (page load, popstate, deep link).
  * Plugins contribute handlers to react to URL query params or other URL parts
  * without the layout plugin needing to know about specific params.

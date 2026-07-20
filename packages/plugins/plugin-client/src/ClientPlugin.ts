@@ -13,6 +13,7 @@ import {
   LayerSpecs,
   Migrations,
   NavigationHandler,
+  NavigationTargetLoader,
   OperationHandler,
   ReactContext,
   ReactSurface,
@@ -45,6 +46,10 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
     activate: AccountCache,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activate: NavigationTargetLoader,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,

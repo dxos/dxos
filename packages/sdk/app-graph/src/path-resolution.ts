@@ -57,16 +57,18 @@ const isReservedUrlKey = (key: string): boolean =>
   RESERVED_URL_KEYS.has(key) || SpaceId.isValid(key) || EntityId.isValid(key);
 
 /**
- * Ordered, deduped `urlKey`-declaring extensions: sorted by Position then insertion order (matching
- * connector-ordering semantics elsewhere in this package), with reserved-word and duplicate keys
- * dropped (each with a `log.warn`) so the first registration of a key wins. Shared by
- * {@link buildKeyTable} (reverse `key -> extensionId` lookup) and {@link buildUrlKeyTable} (the
- * `UrlPath.parse` table), so the dedup/reservation rules are expressed exactly once.
+ * Ordered `urlKey`-declaring extensions: sorted by Position then insertion order (matching
+ * connector-ordering semantics elsewhere in this package), with reserved-word keys dropped (each with
+ * a `log.warn`). A single key may legitimately be shared by more than one extension (e.g. plugin-space
+ * declares `collection` on both the root-collection children connector and the nested-collection
+ * children connector, which together address any object reachable through a space's collection tree),
+ * so keys are NOT deduped here — {@link buildKeyTable} groups the sharers under one key and forward
+ * resolution matches a node produced by any of them. Shared with {@link buildUrlKeyTable} so the
+ * reservation rule is expressed exactly once.
  */
 const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): GraphBuilder.BuilderExtension[] => {
   const extensions = Function.pipe(Record.values(builder.getExtensions()), Array.sortBy(Position.compare));
 
-  const seen = new Set<string>();
   const keyed: GraphBuilder.BuilderExtension[] = [];
   for (const extension of extensions) {
     const key = extension.urlKey;
@@ -77,25 +79,28 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): GraphBuilder.Bu
       log.warn('reserved URL prefix key', { key, extension: extension.id });
       continue;
     }
-    if (seen.has(key)) {
-      log.warn('duplicate URL prefix key', { key, extension: extension.id });
-      continue;
-    }
-    seen.add(key);
     keyed.push(extension);
   }
   return keyed;
 };
 
 /**
- * Build the global `urlKey -> extensionId` table from the builder's current extensions. Recomputed
+ * Build the global `urlKey -> extensionIds` table from the builder's current extensions. Recomputed
  * on every call — cheap (a synchronous scan of already-registered extensions) and always current, so
- * activating/deactivating plugins can never leave a stale table around.
+ * activating/deactivating plugins can never leave a stale table around. A key maps to the ordered list
+ * of every extension that declared it (usually one); forward resolution treats a node produced by any
+ * of them as a match for the key.
  */
-const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string> => {
-  const table = new Map<string, string>();
+const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string[]> => {
+  const table = new Map<string, string[]>();
   for (const extension of getKeyedExtensions(builder)) {
-    table.set(extension.urlKey!, extension.id);
+    const key = extension.urlKey!;
+    const existing = table.get(key);
+    if (existing) {
+      existing.push(extension.id);
+    } else {
+      table.set(key, [extension.id]);
+    }
   }
   return table;
 };
@@ -117,7 +122,15 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   const table = new Map<string, UrlKeyTableEntry>();
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.urlKey!;
-    table.set(key, { key, hasId: extension.urlKeyHasId ?? true });
+    const hasId = extension.urlKeyHasId ?? true;
+    const existing = table.get(key);
+    if (existing && existing.hasId !== hasId) {
+      // Extensions that share a key must agree on whether it carries an id — the parse table has one
+      // entry per key. A mismatch is a declaration bug; keep the first and warn.
+      log.warn('conflicting urlKeyHasId for shared URL prefix key', { key, extension: extension.id });
+      continue;
+    }
+    table.set(key, { key, hasId });
   }
   return table;
 };
@@ -166,7 +179,7 @@ const expandAncestors = async (builder: GraphBuilder.GraphBuilder, qualifiedId: 
 const bfsResolve = async (
   builder: GraphBuilder.GraphBuilder,
   workspaceBaseId: string,
-  extensionId: string,
+  extensionIds: ReadonlySet<string>,
   id: string,
 ): Promise<string | null> => {
   const graph = builder.graph;
@@ -193,7 +206,8 @@ const bfsResolve = async (
         visited.add(child.id);
         nextFrontier.push(child.id);
 
-        if (builder.getNodeExtensionId(child.id) === extensionId) {
+        const childExtensionId = builder.getNodeExtensionId(child.id);
+        if (childExtensionId && extensionIds.has(childExtensionId)) {
           const lastSegment = child.id.slice(child.id.lastIndexOf('/') + 1);
           if (lastSegment === id) {
             return child.id;
@@ -211,21 +225,37 @@ const bfsResolve = async (
   return null;
 };
 
+/** An extension registered for a URL key: its id (for provenance matching) and optional static path. */
+type KeyedExtension = { id: string; urlPath?: string[] };
+
 /**
- * Resolve a single `(key, id)` pair to a qualified node id, anchored at the workspace base.
- * Tries the memoized shape first (a candidate id built from the last-learned ancestor template);
- * falls back to a full BFS on a miss, and records the shape it finds for next time.
+ * Resolve a single `(key, id)` pair to a qualified node id, anchored at the workspace base. Tries the
+ * cheapest deterministic route first and only escalates on a miss:
+ *   1. A declared static `urlPath` (fixed-shape extension) — an exact candidate, no search.
+ *   2. The memoized runtime shape (a candidate built from the last-learned ancestor template).
+ *   3. A guided BFS, recording the shape it finds so subsequent lookups skip straight to step 2.
  */
 const resolveKeyId = async (
   builder: GraphBuilder.GraphBuilder,
   workspaceBaseId: string,
   key: string,
-  extensionId: string,
+  extensions: ReadonlyArray<KeyedExtension>,
   id: string,
 ): Promise<string | null> => {
+  // 1. Deterministic: an extension that declares a static ancestor template gives an exact candidate
+  // with no search — the common case (type sections, root-collection children, database objects).
+  for (const extension of extensions) {
+    if (extension.urlPath) {
+      const candidateId = [workspaceBaseId, ...extension.urlPath, id].join('/');
+      await expandAncestors(builder, candidateId);
+      if (Option.isSome(Graph.getNode(builder.graph, candidateId))) {
+        return candidateId;
+      }
+    }
+  }
+
   const shapeCache = getShapeCache(builder);
   const template = shapeCache.get(key);
-
   if (template) {
     const candidateId = [workspaceBaseId, ...template, id].join('/');
     await expandAncestors(builder, candidateId);
@@ -235,7 +265,8 @@ const resolveKeyId = async (
     // Learned shape no longer matches this id; fall through to a full BFS below.
   }
 
-  const found = await bfsResolve(builder, workspaceBaseId, extensionId, id);
+  const extensionIds = new Set(extensions.map((extension) => extension.id));
+  const found = await bfsResolve(builder, workspaceBaseId, extensionIds, id);
   if (found) {
     const relative = found.slice(workspaceBaseId.length + 1).split('/');
     shapeCache.set(key, relative.slice(0, -1));
@@ -251,14 +282,15 @@ const resolveKeyId = async (
 const resolveCompanion = async (
   builder: GraphBuilder.GraphBuilder,
   precedingNodeId: string,
-  extensionId: string,
+  extensionIds: ReadonlySet<string>,
 ): Promise<string | null> => {
   Graph.expand(builder.graph, precedingNodeId, 'child');
   await GraphBuilder.flush(builder);
 
-  const match = Graph.getConnections(builder.graph, precedingNodeId, 'child').find(
-    (child) => builder.getNodeExtensionId(child.id) === extensionId,
-  );
+  const match = Graph.getConnections(builder.graph, precedingNodeId, 'child').find((child) => {
+    const childExtensionId = builder.getNodeExtensionId(child.id);
+    return childExtensionId ? extensionIds.has(childExtensionId) : false;
+  });
   return match?.id ?? null;
 };
 
@@ -274,9 +306,9 @@ const resolveUrlAsync = async (
 
   for (let pairIndex = 0; pairIndex < parsed.pairs.length; pairIndex++) {
     const pair = parsed.pairs[pairIndex];
-    const extensionId = keyTable.get(pair.key);
+    const extensionIdList = keyTable.get(pair.key);
 
-    if (!extensionId) {
+    if (!extensionIdList || extensionIdList.length === 0) {
       log.warn('unknown URL prefix key', { key: pair.key });
       results.push(null);
       if (pair.id !== undefined) {
@@ -287,13 +319,19 @@ const resolveUrlAsync = async (
 
     if (pair.id === undefined) {
       // Companion pair: attach to the preceding plank, if any.
-      const nodeId = lastPlankNodeId ? await resolveCompanion(builder, lastPlankNodeId, extensionId) : null;
+      const extensionIds = new Set(extensionIdList);
+      const nodeId = lastPlankNodeId ? await resolveCompanion(builder, lastPlankNodeId, extensionIds) : null;
       results.push(nodeId ? { pairIndex, nodeId } : null);
       continue;
     }
 
     const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
-    const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.key, extensionId, pair.id);
+    const allExtensions = builder.getExtensions();
+    const extensions: KeyedExtension[] = extensionIdList.map((extensionId) => ({
+      id: extensionId,
+      urlPath: allExtensions[extensionId]?.urlPath,
+    }));
+    const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.key, extensions, pair.id);
     results.push(nodeId ? { pairIndex, nodeId } : null);
     lastPlankNodeId = nodeId ?? undefined;
   }

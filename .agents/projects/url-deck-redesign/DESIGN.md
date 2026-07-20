@@ -30,3 +30,25 @@ Full spec: `agents/superpowers/specs/2026-07-19-url-mapping-deck-structure-desig
 - No compatibility shims anywhere in the cutover.
 
 See TASKS.md in this directory for the phased execution ledger.
+
+## Phase C decisions (post-e2e)
+
+- **A key may be shared by multiple extensions.** The original "drop duplicates" rule broke the
+  root-collection vs nested-collection split (both need `collection`). The key table now groups
+  sharers; forward resolution matches a node from any of them. Reverse mapping was already per-node.
+- **Static path templates, search as fallback.** Reverse mapping is trivial (a node id _is_ its
+  path); forward mapping's intermediate segments are missing from the short URL. Fixed-shape
+  extensions declare a `urlPath` template for deterministic `expandPath`; recursive shapes (nested
+  collections — variable ancestor ids not in the URL) fall back to the guided BFS. This finishes the
+  A1 "static path derivation from extension metadata" intent as declarative data, not resolver code.
+- **Loading is behind a capability, not a client dependency.** Layout plugins must not depend on the
+  client for loading. `AppCapabilities.NavigationTargetLoader` (contributed by plugin-client) loads a
+  target by `(spaceId, entityId)`; `plugin-deck` dropped its `@dxos/plugin-client` dep. (Loader ≈ the
+  existing `NavigationTargetResolver`, which also loads by URI — but the resolver constructs a
+  per-plugin path and needs `Database.Service` provided by the caller; the loader is path-free and
+  self-contained, preserving graph-derived paths.)
+- **Cold restore needs a bounded resolve retry.** Loading the target object does not load its
+  container chain; `expandPath` triggers those loads but cannot await them. The url-handler retries
+  resolution for loader-confirmed planks until ancestors materialize. Deferred optimization (per
+  user): persist the learned key→ancestor-template cache to localStorage so warm devices skip the
+  search entirely; true cold-start on a new device still needs the loader + retry.

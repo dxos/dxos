@@ -94,9 +94,15 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    // Root collection objects under the Collections virtual node.
+    // Root collection objects under the Collections virtual node. Shares the `collection` urlKey with
+    // the nested-collection `objects` connector below so a space's root-collection children are
+    // addressed the same way as objects nested deeper in the tree (see path-resolution's key table).
+    // Its shape is fixed (`root/<space>/content/collections/<id>`), so it declares a static `urlPath`
+    // for deterministic forward resolution; the recursive `objects` connector below cannot.
     GraphBuilder.createExtension({
       id: 'collections',
+      urlKey: 'collection',
+      urlPath: [Paths.GroupSegments.content, Paths.Segments.collections],
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

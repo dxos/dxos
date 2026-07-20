@@ -65,6 +65,15 @@ export type BuilderExtension = Readonly<{
    * encode. Read by `path-resolution.ts`'s key-table derivation, consumed by `UrlPath.parse`.
    */
   urlKeyHasId?: boolean;
+  /**
+   * Fixed ancestor node-id segments between the workspace base and this connector's leaf nodes, when
+   * the shape is static (independent of runtime data). Enables deterministic forward URL resolution —
+   * the node id is `${Node.RootId}/<workspace>/<...urlPath>/<id>` — so `path-resolution.ts` can expand
+   * that exact path instead of falling back to a guided breadth-first search. Omit for recursive or
+   * data-dependent shapes (e.g. nested collections at arbitrary depth), which cannot be derived from
+   * `(key, id)` alone and resolve via the search fallback.
+   */
+  urlPath?: string[];
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 }>;
 
@@ -540,6 +549,7 @@ export type CreateExtensionRawOptions = {
   position?: Position.Position;
   urlKey?: string;
   urlKeyHasId?: boolean;
+  urlPath?: string[];
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
   actionGroups?: ActionGroupsExtension;
@@ -611,6 +621,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
           relation: normalizedRelation,
           urlKey,
           urlKeyHasId,
+          urlPath: extension.urlPath,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -690,6 +701,8 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   urlKey?: string;
   /** Whether `urlKey` consumes a following id segment (default `true`); see {@link BuilderExtension.urlKeyHasId}. */
   urlKeyHasId?: boolean;
+  /** Fixed ancestor node-id segments for deterministic forward URL resolution; see {@link BuilderExtension.urlPath}. */
+  urlPath?: string[];
 };
 
 /**
@@ -722,7 +735,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   options: CreateExtensionOptions<TMatched, R>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
-    const { id, match, actions, actionGroups, connector, relation, position, urlKey, urlKeyHasId } = options;
+    const { id, match, actions, actionGroups, connector, relation, position, urlKey, urlKeyHasId, urlPath } = options;
 
     const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
@@ -769,6 +782,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
       position,
       urlKey,
       urlKeyHasId,
+      urlPath,
       connector: connectorExtension,
       actions: actionsExtension,
       actionGroups: actionGroupsExtension,

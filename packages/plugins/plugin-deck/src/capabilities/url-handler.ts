@@ -21,6 +21,10 @@ import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
 import { COMPANION_VIEW_STATE_CONTEXT, companionVariantAspect, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
+/** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
+const RESOLVE_RETRY_ATTEMPTS = 15;
+const RESOLVE_RETRY_INTERVAL = '150 millis';
+
 /** Dispatch all NavigationHandler contributions with a given URL. */
 const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
   const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
@@ -123,7 +127,41 @@ export default Capability.makeModule(
         return;
       }
 
-      const resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
+      // Preload the URL's plank objects so a cold restore materializes their graph nodes before
+      // resolution. `resolveUrl` walks the graph, which only surfaces objects ECHO has already loaded;
+      // without this the walk races async loading and falls to not-found on reload/deep-link. The
+      // NavigationTargetLoader (contributed by plugin-client) keeps this plugin free of a client
+      // dependency; absent (e.g. headless), resolution simply falls back to its guided search. The
+      // per-pair boolean records which planks the loader confirmed exist, gating the resolve retry
+      // below so a genuine 404 fails fast instead of waiting out the timeout.
+      const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
+      const confirmed = new Array<boolean>(pairs.length).fill(false);
+      if (loaders.length > 0) {
+        yield* Effect.forEach(
+          pairs,
+          (pair, index) => {
+            if (pair.id === undefined) {
+              return Effect.void;
+            }
+            const entityId = pair.id;
+            return Effect.forEach(loaders, (loader) =>
+              loader.load({ spaceId: pair.workspace, entityId }).pipe(Effect.catchAll(() => Effect.succeed(false))),
+            ).pipe(Effect.tap((results) => Effect.sync(() => (confirmed[index] = results.some(Boolean)))));
+          },
+          { concurrency: 'unbounded' },
+        );
+      }
+
+      // Loading an object does not load its container chain (e.g. the collection it lives in), which
+      // `resolveUrl`'s expansion triggers but cannot synchronously await. Retry the confirmed-existing
+      // planks (bounded) until their ancestors materialize, so a cold reload lands on the object.
+      let resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
+      const hasPendingConfirmed = () =>
+        pairs.some((pair, index) => pair.id !== undefined && confirmed[index] && !resolved[index]);
+      for (let attempt = 0; attempt < RESOLVE_RETRY_ATTEMPTS && hasPendingConfirmed(); attempt++) {
+        yield* Effect.sleep(RESOLVE_RETRY_INTERVAL);
+        resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
+      }
 
       // Planks resolve in chain order; a companion (id-less) pair attaches to the preceding plank but
       // is not itself a plank, so it's tracked separately rather than added to `plankIds`.

@@ -19,6 +19,9 @@ const WORKSPACE_TYPE = 'test.workspace';
 const DOC_TYPE = 'test.document';
 const OTHER_DOC_TYPE = 'test.other-document';
 const COMMENTS_TYPE = 'test.comments';
+const GROUP_TYPE = 'test.group';
+const GROUP_ID = 'group';
+const SECTIONED_TYPE = 'test.sectioned';
 
 const WORKSPACE_A = 'workspaceA';
 const WORKSPACE_B = 'workspaceB';
@@ -26,7 +29,7 @@ const WORKSPACE_B = 'workspaceB';
 /**
  * Test graph, two levels deep: root -> workspace (no urlKey, internal plumbing) -> doc (urlKey
  * `doc`) -> comments companion (urlKey `comments`, id-less). A second, later-registered extension
- * also declares `doc` to exercise duplicate-key drop.
+ * also declares `doc` to exercise a shared key: both extensions' nodes are reachable via `doc`.
  */
 const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const registry = Registry.make();
@@ -70,18 +73,39 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     }),
   );
 
-  // Registered after `docs` with the same urlKey: first registration wins, this one is dropped
-  // (with a log.warn) — its nodes exist in the graph but are never reachable via the `doc` key.
-  const duplicateDocs = Effect.runSync(
+  // Registered after `docs` with the same urlKey: the key is shared, so this extension's nodes are
+  // also reachable via `doc` (forward resolution matches a node produced by any sharer of the key).
+  const sharedKeyDocs = Effect.runSync(
     GraphBuilder.createExtension({
-      id: 'duplicateDocs',
+      id: 'sharedKeyDocs',
       urlKey: 'doc',
       match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
-      connector: () => Effect.succeed([{ id: 'shadowedDoc', type: OTHER_DOC_TYPE }]),
+      connector: () => Effect.succeed([{ id: 'sharedDoc', type: OTHER_DOC_TYPE }]),
     }),
   );
 
-  GraphBuilder.addExtension(builder, [workspaces, docs, comments, duplicateDocs]);
+  // A fixed-shape subtree: a group node under the workspace, with sectioned docs nested beneath it.
+  // The sectioned-docs extension declares a static `urlPath` ([GROUP_ID]) so forward resolution can
+  // expand the exact path `root/<ws>/group/<id>` deterministically, without a search.
+  const group = Effect.runSync(
+    GraphBuilder.createExtension({
+      id: 'group',
+      match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
+      connector: () => Effect.succeed([{ id: GROUP_ID, type: GROUP_TYPE }]),
+    }),
+  );
+
+  const sectionedDocs = Effect.runSync(
+    GraphBuilder.createExtension({
+      id: 'sectionedDocs',
+      urlKey: 'sectioned',
+      urlPath: [GROUP_ID],
+      match: NodeMatcher.whenNodeType(GROUP_TYPE),
+      connector: () => Effect.succeed([{ id: 'secDocA', type: SECTIONED_TYPE }]),
+    }),
+  );
+
+  GraphBuilder.addExtension(builder, [workspaces, docs, comments, sharedKeyDocs, group, sectionedDocs]);
   return builder;
 };
 
@@ -160,15 +184,39 @@ describe('path-resolution', () => {
       expect(results).toEqual([null]);
     });
 
-    test('a duplicate-key extension is dropped: its nodes are unreachable via that key', async ({ expect }) => {
+    test('resolves a nested node via a declared static urlPath template', async ({ expect }) => {
       const builder = buildTestBuilder();
       const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
-          pairs: [{ key: 'doc', id: 'shadowedDoc', workspace: WORKSPACE_A }],
+          pairs: [{ key: 'sectioned', id: 'secDocA', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([null]);
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/secDocA` }]);
+    });
+
+    test('round-trips a static-urlPath node back to its key/id', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'sectioned', id: 'secDocA', workspace: WORKSPACE_A }],
+        }),
+      );
+      invariant(resolved, 'expected the pair to resolve');
+      const represented = PathResolution.representNode(builder, resolved.nodeId);
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'sectioned', id: 'secDocA', workspace: WORKSPACE_A });
+    });
+
+    test('a key shared by two extensions resolves nodes produced by either', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'doc', id: 'sharedDoc', workspace: WORKSPACE_A }],
+        }),
+      );
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/sharedDoc` }]);
     });
   });
 

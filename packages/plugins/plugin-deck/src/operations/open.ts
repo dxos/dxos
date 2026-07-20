@@ -8,11 +8,9 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, NotFound, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Context } from '@dxos/context';
-import { Database, EID, Obj } from '@dxos/echo';
+import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
@@ -28,30 +26,29 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
-      // Validate navigation targets, redirecting to 404 if not found.
-      const client = yield* Capability.get(ClientCapabilities.Client).pipe(
-        Effect.catchAll(() => Effect.succeed(undefined)),
+      // Validate navigation targets, redirecting to 404 if not found. Existence/loading is delegated
+      // to the NavigationTargetLoader capability (contributed by plugin-client) so this layout plugin
+      // has no direct client dependency; loading the object also materializes its graph node.
+      const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader).pipe(
+        Effect.catchAll(() => Effect.succeed([])),
       );
-      // Existence checkers for the resolved EID: local (load + catchTag) first, then remote (edge).
-      const checkLocalExistence = client
-        ? (id: EID.EID) => {
-            const spaceId = EID.getSpaceId(id);
-            const space = spaceId ? client.spaces.get(spaceId) : undefined;
-            if (!space) {
-              return Effect.succeed(false);
-            }
-            return Database.load(space.db.makeRef(id)).pipe(
-              Effect.as(true),
-              Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
-              Effect.catchAll(() => Effect.succeed(false)),
-            );
-          }
-        : undefined;
-      const checkRemoteExistence = client
-        ? NotFound.createEdgeExistenceChecker((spaceId, body) =>
-            client.edge.http.execQuery(new Context(), spaceId, body),
-          )
-        : undefined;
+      const checkExistence: NotFound.ExistenceChecker | undefined =
+        loaders.length > 0
+          ? (id: EID.EID) =>
+              Effect.gen(function* () {
+                const spaceId = EID.getSpaceId(id);
+                const entityId = EID.getEntityId(id);
+                if (!spaceId || !entityId) {
+                  return false;
+                }
+                for (const loader of loaders) {
+                  if (yield* loader.load({ spaceId, entityId })) {
+                    return true;
+                  }
+                }
+                return false;
+              })
+          : undefined;
 
       // Immediate: skip 404 / resolver checks but still expand the path (same as validate’s first step).
       if (input.navigation === 'immediate') {
@@ -67,8 +64,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             : NotFound.validateNavigationTarget({
                 graph,
                 subjectId,
-                checkLocalExistence,
-                checkRemoteExistence,
+                checkLocalExistence: checkExistence,
               }),
         ),
       );

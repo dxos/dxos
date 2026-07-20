@@ -1,6 +1,37 @@
 # URL & Deck Redesign — Tasks
 
-_Resume: watch PR #12273 CI to green, then manual e2e pass against the preview (script in the spec Verification section) and mark ready for review. Uncommitted: none. Last: all phases (B1, A1, A2, B2, B3, A3, B4) implemented, validated, and pushed._
+_Resume: Phase C (below) fixes the two runtime bugs found in manual e2e — urlKey fallback and deck-renders-nothing-on-reload. All implemented + browser-verified locally; uncommitted (not yet committed/pushed to PR #12273). Next: commit Phase C, run full lint/fmt, re-verify nested-collection + type-section deep links, then mark PR ready. Earlier: all phases (B1, A1, A2, B2, B3, A3, B4) implemented, validated, and pushed._
+
+## Phase C: Runtime fixes (manual-e2e findings)
+
+Two bugs surfaced driving the real app: (1) selecting a root-collection object serialized the
+plugin-id fallback key instead of `collection`; (2) reload/deep-link to an object showed Not Found
+(forward resolution raced ECHO's async loading).
+
+### Tasks
+
+- [x] **One key → many extensions** — `path-resolution.ts` key table maps a key to the ordered list
+      of every extension declaring it; forward resolution matches a node produced by any. Root
+      collection `collections` extension now also declares `urlKey: 'collection'` (was inheriting the
+      `org.dxos.plugin.space` plugin-id default). Fixes bug #1. Browser-verified: URL is
+      `/w/<ws>/collection/<id>`. app-graph 112 tests green.
+- [x] **Declarative static path template** — new `urlPath` field on `CreateExtensionOptions`
+      (`graph-builder.ts`); `resolveKeyId` tries the declared template first (exact `expandPath`, no
+      search), then the learned shape cache, then guided BFS. Declared on the root-collection
+      connector (`[content, collections]`) and TypeSection (`[typename]`, default whenSpace match
+      only). Recursive shapes (nested collections) omit it → BFS fallback.
+- [x] **NavigationTargetLoader capability** — new app-toolkit capability contributed by plugin-client;
+      loads an object by `(spaceId, entityId)` (waits for the space to be ready; bounded remote-edge
+      fallback). Removes plugin-deck's `@dxos/plugin-client` dependency: `open.ts` and the deck
+      url-handler consume the capability instead of the client. `open.ts`/url-handler no longer import
+      the client, edge, or `Database`.
+- [x] **Bounded resolve retry on cold restore** — loading a target object does not load its container
+      chain (e.g. its collection), which `expandPath` triggers but cannot synchronously await; the
+      deck url-handler retries `resolveUrl` (15 × 150ms) for loader-confirmed planks until their
+      ancestors materialize. Fixes bug #2. Browser-verified: cold deep-link/reload renders the object.
+- [ ] **Re-verify nested-collection + type-section deep links** — root-collection + warm cases done;
+      confirm a nested-collection object (BFS fallback) and a type-section object deep-link cold-load.
+- [ ] **Commit Phase C + full lint/fmt** — then fold into PR #12273.
 
 > **Execution policy** — of paramount importance for all execution: delegate the
 > bulk of the work to cheaper models. Sonnet subagents do the file-by-file

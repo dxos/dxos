@@ -13,6 +13,10 @@ export const LayerSpecs = Capability.lazy<void, Capability.Any[]>('LayerSpecs', 
 export const Migrations = Capability.lazy('Migrations', () => import('./migrations'));
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
+export const NavigationTargetLoader = Capability.lazy(
+  'NavigationTargetLoader',
+  () => import('./navigation-target-loader'),
+);
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

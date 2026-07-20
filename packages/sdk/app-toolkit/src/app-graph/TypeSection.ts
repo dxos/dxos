@@ -112,6 +112,11 @@ export const createTypeSectionExtension = (
   const sectionExtension = GraphBuilder.createExtension({
     id: typename,
     urlKey,
+    // With the default whenSpace match the section is a direct child of the space, so its objects
+    // live at the fixed path `root/<space>/<typename>/<id>` — declare it for deterministic forward
+    // resolution. A custom `match` (e.g. under a group node) changes the shape, so skip the template
+    // there and let resolution fall back to a search.
+    urlPath: options?.match ? undefined : [typename],
     match: options?.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];
