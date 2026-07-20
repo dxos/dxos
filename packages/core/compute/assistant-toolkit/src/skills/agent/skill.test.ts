@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 
-import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
-import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
+import { AssistantTestLayerWithTriggers, operationToolCall } from '@dxos/agent-runtime/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation, OperationHandlerSet, Skill, Trigger } from '@dxos/compute';
@@ -17,7 +17,6 @@ import { Collection, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo'
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { EntityId } from '@dxos/keys';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
@@ -28,39 +27,39 @@ import { trim } from '@dxos/util';
 
 import { Agent, Chat, Plan } from '../../types';
 import { AgentWizardHandlers, AgentWizardOperations } from '../agent-wizard';
-import { PlanningHandlers, PlanningSkill } from '../planning';
+import { PlanningHandlers, PlanningOperations, PlanningSkill } from '../planning';
 import { AgentSkillHandlers } from './operations';
 import { AgentWorker } from './operations/definitions';
 import AgentSkillDef from './skill';
 
-EntityId.dangerouslyDisableRandomness();
-
-const TestLayer = AssistantTestLayerWithTriggers({
-  aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(
-    AgentSkillHandlers,
-    AgentWizardHandlers,
-    MarkdownOperationHandlerSet,
-    PlanningHandlers,
-  ),
-  types: [
-    Agent.Agent,
-    Plan.Plan,
-    Chat.CompanionTo,
-    Chat.Chat,
-    SpaceProperties,
-    Skill.Skill,
-    Trigger.Trigger,
-    Text.Text,
-    Markdown.Document,
-    Collection.Collection,
-  ],
-  tracing: 'pretty',
-  // EntityIds are deterministic (via dangerouslyDisableRandomness) but their values shift when
-  // internal ECHO object creation changes. Canonicalize them so recordings match structurally
-  // regardless of which specific IDs the current code generates.
-  dynamicValuePatterns: [MemoizedLanguageModel.SPACE_ID_PATTERN, MemoizedLanguageModel.ENTITY_ID_PATTERN],
-});
+// The agent's tool-calling behaviour is scripted inline per test via a mock model (no recorded
+// conversation to regenerate). Where a tool references an object created at run time (an artifact
+// document), the test pre-creates the object and resolves the ref lazily from a mutable holder filled
+// before the prompt is submitted — see the `object-create with a reference` pattern in the
+// `database/skill.test.ts` worked example.
+const testLayer = (script: ScriptedAiService.Script) =>
+  AssistantTestLayerWithTriggers({
+    operationHandlers: OperationHandlerSet.merge(
+      AgentSkillHandlers,
+      AgentWizardHandlers,
+      MarkdownOperationHandlerSet,
+      PlanningHandlers,
+    ),
+    types: [
+      Agent.Agent,
+      Plan.Plan,
+      Chat.CompanionTo,
+      Chat.Chat,
+      SpaceProperties,
+      Skill.Skill,
+      Trigger.Trigger,
+      Text.Text,
+      Markdown.Document,
+      Collection.Collection,
+    ],
+    tracing: 'pretty',
+    aiService: ScriptedAiService.layer(script),
+  });
 
 const SYSTEM = trim`
   You are a helpful assistant that can help with tasks in the outside world.
@@ -74,146 +73,237 @@ describe('Agent', () => {
 
   it.scoped(
     'agent adds artifact to agent',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* Agent.makeInitialized(
-          {
-            name: 'Test Agent',
-            instructions: 'A test agent for adding artifacts.',
-            skills: [Ref.make(MarkdownSkill.make())],
-          },
-          skill,
-        );
-        yield* Database.flush();
+    (() => {
+      const ref: { doc?: string } = {};
+      return Effect.fnUntraced(
+        function* (_) {
+          const agent = yield* Agent.makeInitialized(
+            {
+              name: 'Test Agent',
+              instructions: 'A test agent for adding artifacts.',
+              skills: [Ref.make(MarkdownSkill.make())],
+            },
+            skill,
+          );
+          yield* Database.flush();
 
-        const document = yield* Database.add(
-          Obj.make(Markdown.Document, {
-            name: 'Test Document',
-            content: Ref.make(Text.make({ content: 'This is a test document with some content.' })),
-          }),
-        );
-        yield* Database.flush();
+          const document = yield* Database.add(
+            Obj.make(Markdown.Document, {
+              name: 'Test Document',
+              content: Ref.make(Text.make({ content: 'This is a test document with some content.' })),
+            }),
+          );
+          yield* Database.flush();
+          ref.doc = Obj.getURI(document);
 
-        expect(agent.artifacts).toHaveLength(0);
+          expect(agent.artifacts).toHaveLength(0);
 
-        const chatFeed = agent.chat?.target?.feed?.target;
-        invariant(chatFeed, 'Agent chat feed not found.');
-        const runtime = yield* Effect.runtime<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(
-          () => new AiSession.Session({ feed: chatFeed, runtime }),
-        );
-        yield* Effect.promise(() => session.context.open());
+          const chatFeed = agent.chat?.target?.feed?.target;
+          invariant(chatFeed, 'Agent chat feed not found.');
+          const runtime = yield* Effect.runtime<Database.Service>();
+          const session = yield* EffectEx.acquireReleaseResource(
+            () => new AiSession.Session({ feed: chatFeed, runtime }),
+          );
+          yield* Effect.promise(() => session.context.open());
 
-        const documentUri = Obj.getURI(document);
-        yield* session
-          .createRequest({
-            system: SYSTEM,
-            prompt: `Please add the document ${documentUri} as an artifact named "My Test Document" to this agent.`,
-          })
-          .pipe(Effect.provide(session.makeToolExecutionServices()));
+          yield* session
+            .createRequest({
+              system: SYSTEM,
+              prompt: `Please add the document ${ref.doc} as an artifact named "My Test Document" to this agent.`,
+            })
+            .pipe(Effect.provide(session.makeToolExecutionServices()));
 
-        // The model may retry with a corrected id, leaving an extra dangling entry — assert the
-        // requested artifact resolves rather than an exact count.
-        const named = agent.artifacts.filter((artifact) => artifact.name === 'My Test Document');
-        expect(named.length).toBeGreaterThanOrEqual(1);
-        const resolved = yield* Effect.forEach(named, (artifact) => artifact.data.pipe(Database.load, Effect.option));
-        const documents = resolved.filter(Option.isSome).map((option) => option.value);
-        expect(documents.some((data) => Obj.instanceOf(Markdown.Document, data))).toBe(true);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+          // The model may retry with a corrected id, leaving an extra dangling entry — assert the
+          // requested artifact resolves rather than an exact count.
+          const named = agent.artifacts.filter((artifact) => artifact.name === 'My Test Document');
+          expect(named.length).toBeGreaterThanOrEqual(1);
+          const resolved = yield* Effect.forEach(named, (artifact) => artifact.data.pipe(Database.load, Effect.option));
+          const documents = resolved.filter(Option.isSome).map((option) => option.value);
+          expect(documents.some((data) => Obj.instanceOf(Markdown.Document, data))).toBe(true);
+        },
+        Effect.provide(
+          testLayer([
+            ScriptedAiService.toolCall('add-artifact', () => ({ name: 'My Test Document', artifact: ref.doc }), {
+              text: 'I will add that document as an artifact to the agent.',
+            }),
+            ScriptedAiService.text('I added the document "My Test Document" as an artifact.'),
+          ]),
+        ),
+        TestHelpers.provideTestContext,
+      );
+    })(),
   );
 
   it.scoped(
     'shopping list',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* Agent.makeInitialized(
-          {
-            name: 'Shopping list',
-            instructions: 'Keep a shopping list of items to buy.',
-            skills: [Ref.make(MarkdownSkill.make())],
-          },
-          skill,
-        );
-        const chatFeed = agent.chat?.target?.feed?.target;
-        invariant(chatFeed, 'Agent chat feed not found.');
-        yield* Database.flush();
-        const runtime = yield* Effect.runtime<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(
-          () => new AiSession.Session({ feed: chatFeed, runtime }),
-        );
-        yield* Effect.promise(() => session.context.open());
+    (() => {
+      const ref: { doc?: string } = {};
+      return Effect.fnUntraced(
+        function* (_) {
+          const agent = yield* Agent.makeInitialized(
+            {
+              name: 'Shopping list',
+              instructions: 'Keep a shopping list of items to buy.',
+              skills: [Ref.make(MarkdownSkill.make())],
+            },
+            skill,
+          );
+          const chatFeed = agent.chat?.target?.feed?.target;
+          invariant(chatFeed, 'Agent chat feed not found.');
+          yield* Database.flush();
 
-        yield* session
-          .createRequest({
-            system: SYSTEM,
-            prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
-          })
-          .pipe(Effect.provide(session.makeToolExecutionServices()));
+          const document = yield* Database.add(
+            Obj.make(Markdown.Document, {
+              name: 'Shopping List',
+              content: Ref.make(
+                Text.make({
+                  content:
+                    '# Shopping List\n\n## Scrambled Eggs on Toast\n\n- [ ] Eggs\n- [ ] Bread\n- [ ] Butter\n- [ ] Milk\n- [ ] Salt\n- [ ] Black pepper\n',
+                }),
+              ),
+            }),
+          );
+          yield* Database.flush();
+          ref.doc = Obj.getURI(document);
 
-        console.log(yield* Effect.promise(() => dumpAgent(agent)));
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+          const runtime = yield* Effect.runtime<Database.Service>();
+          const session = yield* EffectEx.acquireReleaseResource(
+            () => new AiSession.Session({ feed: chatFeed, runtime }),
+          );
+          yield* Effect.promise(() => session.context.open());
+
+          yield* session
+            .createRequest({
+              system: SYSTEM,
+              prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
+            })
+            .pipe(Effect.provide(session.makeToolExecutionServices()));
+
+          console.log(yield* Effect.promise(() => dumpAgent(agent)));
+        },
+        Effect.provide(
+          testLayer([
+            ScriptedAiService.toolCall('add-artifact', () => ({ name: 'Shopping List', artifact: ref.doc }), {
+              text: 'I will create a shopping list with the ingredients for scrambled eggs on toast.',
+            }),
+            ScriptedAiService.text('I created a shopping list for scrambled eggs on toast.'),
+          ]),
+        ),
+        TestHelpers.provideTestContext,
+      );
+    })(),
   );
 
   it.scoped(
     'expense tracking list',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* Agent.makeInitialized(
-          {
-            name: 'Expense tracking',
-            instructions: trim`
-              Keep a list of expenses in a markdown document (create artifact "Expenses").
-              Process incoming emails, add the relevant ones to the list.
+    (() => {
+      const ref: { doc?: string } = {};
+      return Effect.fnUntraced(
+        function* (_) {
+          const agent = yield* Agent.makeInitialized(
+            {
+              name: 'Expense tracking',
+              instructions: trim`
+                Keep a list of expenses in a markdown document (create artifact "Expenses").
+                Process incoming emails, add the relevant ones to the list.
 
-              Format:
+                Format:
 
-              ## Expenses
-              - Flight to London (2026-02-01): £100
-              - Hotel in London (2026-02-01): £100
-            `,
-            skills: [Ref.make(MarkdownSkill.make())],
-          },
-          skill,
-        );
-        yield* Database.flush();
-
-        const inboxFeed = yield* Database.add(Feed.make());
-        yield* Database.add(
-          Trigger.make({
-            enabled: true,
-            spec: Trigger.specFeed(inboxFeed),
-            runnable: Ref.make(Operation.serialize(AgentWorker)),
-            input: {
-              agent: Ref.make(agent),
-              event: '{{event}}',
+                ## Expenses
+                - Flight to London (2026-02-01): £100
+                - Hotel in London (2026-02-01): £100
+              `,
+              skills: [Ref.make(MarkdownSkill.make())],
             },
-          }),
-        );
+            skill,
+          );
+          yield* Database.flush();
 
-        yield* Feed.append(
-          inboxFeed,
-          TEST_MESSAGES.map((message) => Obj.clone(message)),
-        );
+          const expenses = yield* Database.add(
+            Obj.make(Markdown.Document, {
+              name: 'Expenses',
+              content: Ref.make(Text.make({ content: '## Expenses\n' })),
+            }),
+          );
+          yield* Database.flush();
+          ref.doc = Obj.getURI(expenses);
 
-        const dispatcher = yield* TriggerDispatcher;
-        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
-        expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
+          const inboxFeed = yield* Database.add(Feed.make());
+          yield* Database.add(
+            Trigger.make({
+              enabled: true,
+              spec: Trigger.specFeed(inboxFeed),
+              runnable: Ref.make(Operation.serialize(AgentWorker)),
+              input: {
+                agent: Ref.make(agent),
+                event: '{{event}}',
+              },
+            }),
+          );
 
-        console.log(yield* Effect.promise(() => dumpAgent(agent)));
-      },
-      WithProperties,
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+          yield* Feed.append(
+            inboxFeed,
+            TEST_MESSAGES.map((message) => Obj.clone(message)),
+          );
+
+          const dispatcher = yield* TriggerDispatcher;
+          const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
+          expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
+
+          console.log(yield* Effect.promise(() => dumpAgent(agent)));
+        },
+        WithProperties,
+        Effect.provide(
+          testLayer([
+            // Email 1/10 (British Airways outbound flight) — relevant.
+            ScriptedAiService.toolCall('update', () => ({
+              doc: ref.doc,
+              edits: [{ newString: '- Flight SFO to London (BA287) (2026-02-15): £612.50\n' }],
+            })),
+            ScriptedAiService.text('I added the British Airways flight to the Expenses list.'),
+            // Email 2/10 (Savoy hotel booking) — relevant.
+            ScriptedAiService.toolCall('update', () => ({
+              doc: ref.doc,
+              edits: [{ newString: '- Hotel in London (The Savoy) (2026-02-15): £450.00\n' }],
+            })),
+            ScriptedAiService.text('I added the hotel booking to the Expenses list.'),
+            // Email 3/10 (Uber receipt) — relevant.
+            ScriptedAiService.toolCall('update', () => ({
+              doc: ref.doc,
+              edits: [{ newString: '- Uber from Heathrow to The Savoy (2026-02-15): £53.34\n' }],
+            })),
+            ScriptedAiService.text('I added the Uber trip to the Expenses list.'),
+            // Email 4/10 (The Ivy receipt) — relevant.
+            ScriptedAiService.toolCall('update', () => ({
+              doc: ref.doc,
+              edits: [{ newString: '- Dinner at The Ivy (2026-02-16): £161.44\n' }],
+            })),
+            ScriptedAiService.text('I added the restaurant expense to the Expenses list.'),
+            // Email 5/10 (Amazon order) — relevant.
+            ScriptedAiService.toolCall('update', () => ({
+              doc: ref.doc,
+              edits: [{ newString: '- Amazon order (travel guide & adapter) (2026-02-17): £26.48\n' }],
+            })),
+            ScriptedAiService.text('I added the Amazon order to the Expenses list.'),
+            // Email 6/10 (TechCrunch newsletter) — unrelated, no tool call.
+            ScriptedAiService.text('This email is a newsletter, not an expense receipt. Nothing to add.'),
+            // Email 7/10 (personal coffee-plans email) — unrelated.
+            ScriptedAiService.text('This email is a personal message, not an expense receipt. Nothing to add.'),
+            // Email 8/10 (Nike promotion) — unrelated.
+            ScriptedAiService.text('This email is a promotional message, not an expense receipt. Nothing to add.'),
+            // Email 9/10 (GitHub notification) — unrelated.
+            ScriptedAiService.text('This email is a GitHub notification, not an expense receipt. Nothing to add.'),
+            // Email 10/10 (British Airways return flight) — relevant.
+            ScriptedAiService.toolCall('update', () => ({
+              doc: ref.doc,
+              edits: [{ newString: '- Flight London to SFO (BA288) (2026-02-20): £655.00\n' }],
+            })),
+            ScriptedAiService.text('I added the return flight to the Expenses list.'),
+          ]),
+        ),
+        TestHelpers.provideTestContext,
+      );
+    })(),
   );
 
   it.scoped(
@@ -253,69 +343,125 @@ describe('Agent', () => {
         invariant(Obj.instanceOf(Operation.PersistentOperation, operation));
         expect(Obj.getMeta(operation).key).toBe(AgentWorker.meta.key);
       },
-      Effect.provide(TestLayer),
+      // No agent turn happens (SyncTriggers is a plain operation invocation), so no scripted turns
+      // are consumed.
+      Effect.provide(testLayer([])),
       TestHelpers.provideTestContext,
     ),
   );
 
   it.scoped(
     'planning',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* Agent.makeInitialized(
-          {
-            name: 'Egg making',
-            instructions: trim`
-              I'm testing how planning (task management) works.
-              Create tasks to make scrambled eggs.
+    (() => {
+      const ref: { doc?: string } = {};
+      return Effect.fnUntraced(
+        function* (_) {
+          const agent = yield* Agent.makeInitialized(
+            {
+              name: 'Egg making',
+              instructions: trim`
+                I'm testing how planning (task management) works.
+                Create tasks to make scrambled eggs.
 
-              Then simulate this plan execution in a markdown document.
-              The document should reflect the state of all objects involved in the cooking process.
-              The document should also have the log of actions taken.
+                Then simulate this plan execution in a markdown document.
+                The document should reflect the state of all objects involved in the cooking process.
+                The document should also have the log of actions taken.
 
-              Important: simualte actions one by one, in the order they are listed.
-              Simlate by updating the local document.
+                Important: simualte actions one by one, in the order they are listed.
+                Simlate by updating the local document.
+              `,
+              skills: [Ref.make(MarkdownSkill.make()), Ref.make(Obj.clone(PlanningSkill.make()))],
+            },
+            skill,
+          );
+          yield* Database.flush();
 
-              <example>
-                # State
+          const document = yield* Database.add(
+            Obj.make(Markdown.Document, {
+              name: 'Scrambled Eggs — Simulation',
+              content: Ref.make(Text.make({ content: '# State\n\n- 2 raw eggs\n- 1 frying pan\n\n# Action log\n' })),
+            }),
+          );
+          yield* Database.flush();
+          ref.doc = Obj.getURI(document);
 
-                - 2 raw eggs
-                - 1 frying pan
-                
-                # Action log
-                
-                - Taken 2 raw eggs out of the fridge.
-              </example>
-            `,
-            skills: [Ref.make(MarkdownSkill.make()), Ref.make(Obj.clone(PlanningSkill.make()))],
-          },
-          skill,
-        );
-        yield* Database.flush();
+          const chatFeed = agent.chat?.target?.feed?.target;
+          invariant(chatFeed, 'Agent chat feed not found.');
+          yield* Database.flush();
+          const runtime = yield* Effect.runtime<Database.Service>();
+          const session = yield* EffectEx.acquireReleaseResource(
+            () => new AiSession.Session({ feed: chatFeed, runtime }),
+          );
+          yield* Effect.promise(() => session.context.open());
 
-        const chatFeed = agent.chat?.target?.feed?.target;
-        invariant(chatFeed, 'Agent chat feed not found.');
-        yield* Database.flush();
-        const runtime = yield* Effect.runtime<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(
-          () => new AiSession.Session({ feed: chatFeed, runtime }),
-        );
-        yield* Effect.promise(() => session.context.open());
+          yield* session
+            .createRequest({
+              system: SYSTEM,
+              prompt: `Go`,
+            })
+            .pipe(Effect.provide(session.makeToolExecutionServices()));
 
-        yield* session
-          .createRequest({
-            system: SYSTEM,
-            prompt: `Go`,
-          })
-          .pipe(Effect.provide(session.makeToolExecutionServices()));
-
-        console.log(yield* Effect.promise(() => dumpAgent(agent)));
-      },
-      WithProperties,
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+          console.log(yield* Effect.promise(() => dumpAgent(agent)));
+        },
+        WithProperties,
+        Effect.provide(
+          testLayer([
+            operationToolCall(
+              PlanningOperations.UpdateTasks,
+              {
+                tasks: [
+                  { id: Plan.TaskId.make('gather'), title: 'Gather ingredients and tools', status: 'in-progress' },
+                  { id: Plan.TaskId.make('cook'), title: 'Cook the eggs', status: 'todo' },
+                  { id: Plan.TaskId.make('plate'), title: 'Plate the eggs', status: 'todo' },
+                ],
+              },
+              { text: 'I will create the task plan for making scrambled eggs, then simulate its execution.' },
+            ),
+            ScriptedAiService.toolCall(
+              'add-artifact',
+              () => ({ name: 'Scrambled Eggs — Simulation', artifact: ref.doc }),
+              {
+                text: 'I will register the document as an artifact, then simulate each step.',
+              },
+            ),
+            ScriptedAiService.toolCall(
+              'update',
+              () => ({ doc: ref.doc, edits: [{ newString: '- Gathered the eggs and the frying pan.\n' }] }),
+              { text: '**Step 1: Gather ingredients and tools.**' },
+            ),
+            operationToolCall(PlanningOperations.UpdateTasks, {
+              tasks: [
+                { id: Plan.TaskId.make('gather'), title: 'Gather ingredients and tools', status: 'done' },
+                { id: Plan.TaskId.make('cook'), title: 'Cook the eggs', status: 'in-progress' },
+              ],
+            }),
+            ScriptedAiService.toolCall(
+              'update',
+              () => ({ doc: ref.doc, edits: [{ newString: '- Cooked the eggs in the pan.\n' }] }),
+              { text: '**Step 2: Cook the eggs.**' },
+            ),
+            operationToolCall(PlanningOperations.UpdateTasks, {
+              tasks: [
+                { id: Plan.TaskId.make('cook'), title: 'Cook the eggs', status: 'done' },
+                { id: Plan.TaskId.make('plate'), title: 'Plate the eggs', status: 'in-progress' },
+              ],
+            }),
+            ScriptedAiService.toolCall(
+              'update',
+              () => ({ doc: ref.doc, edits: [{ newString: '- Plated the scrambled eggs.\n' }] }),
+              { text: '**Step 3: Plate the eggs.**' },
+            ),
+            operationToolCall(PlanningOperations.UpdateTasks, {
+              tasks: [{ id: Plan.TaskId.make('plate'), title: 'Plate the eggs', status: 'done' }],
+            }),
+            ScriptedAiService.text(
+              'Done! Summary: 1. Gathered the eggs and pan. 2. Cooked the eggs. 3. Plated the scrambled eggs.',
+            ),
+          ]),
+        ),
+        TestHelpers.provideTestContext,
+      );
+    })(),
   );
 
   it.scoped(
@@ -353,7 +499,9 @@ describe('Agent', () => {
         expect(triggersAfter).toHaveLength(triggers.length);
         expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
       },
-      Effect.provide(TestLayer),
+      // No agent turn happens (SyncTriggers is a plain operation invocation), so no scripted turns
+      // are consumed.
+      Effect.provide(testLayer([])),
       TestHelpers.provideTestContext,
     ),
   );
