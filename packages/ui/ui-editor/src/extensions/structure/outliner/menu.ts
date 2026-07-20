@@ -8,10 +8,10 @@ import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type CleanupFn, addEventListener } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
-// Right-hand strip (px) mirroring the drag grip's left strip; the trigger is centered within it. 3rem.
-const GUTTER = 48;
+import { GUTTER_WIDTH } from '../blocks';
 
 // Square trigger size (px), matching the drag grip (`dx-button` density `xs` + `aspect-square` → `size-6`).
+// The right-hand strip (`GUTTER_WIDTH`, shared with the grip's left strip) centers the trigger within it.
 const TRIGGER_SIZE = 24;
 
 export type MenuOptions = {
@@ -107,7 +107,7 @@ export const menu = (options: MenuOptions = {}): Extension => [
 
         const offsetTop = coords.top + dy;
         // Center the trigger within the 3rem gutter immediately right of the content (mirrors the grip).
-        const offsetLeft = x + width + GUTTER / 2 - TRIGGER_SIZE / 2;
+        const offsetLeft = x + width + GUTTER_WIDTH / 2 - TRIGGER_SIZE / 2;
 
         this.tag.style.top = `${offsetTop}px`;
         this.tag.style.left = `${offsetLeft}px`;

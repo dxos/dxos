@@ -91,8 +91,10 @@ const AUTOSCROLL_MAX_SPEED = 14;
 // Pointer travel (px) past which an armed handle press becomes a drag rather than a click.
 const DRAG_THRESHOLD = 4;
 
-// Reserved strip (px) left of the content for the grip (mirrors the menu strip on the right); the grip is
-// centered within it. 3rem.
+// The gutters on each side of the content, where the grip (left) and menu (right) float, centered within.
+// `GUTTER_WIDTH` (3rem) is the strip width; `CONTENT_WIDTH` reserves one on each side (`6rem` = 2×3rem) and
+// centers the column — keep the two in sync. Shared by the grip (`drag.ts`), menu (`menu.ts`), and the
+// outliner content (`outliner.ts`).
 export const GUTTER_WIDTH = 48;
 export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-6rem)]! mx-auto';
 
