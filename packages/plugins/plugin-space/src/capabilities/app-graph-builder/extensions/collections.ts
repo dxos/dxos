@@ -11,6 +11,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
@@ -144,6 +145,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Children of Collection.Collection nodes.
     GraphBuilder.createExtension({
       id: 'objects',
+      // Recursive over nested collections at any depth, so `collection/<id>` addresses any object
+      // reachable through a space's collection tree, not just the root collection's direct children.
+      urlKey: 'collection',
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
@@ -177,8 +181,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             .filter(isNonNullable),
         );
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
     }),
 
     // Object actions.
@@ -329,9 +331,15 @@ const constructObjectActions = ({
           Node.makeAction({
             id: 'copyLink',
             data: () =>
-              Effect.promise(async () => {
-                const url = new URL(Paths.toUrlPath(nodeId), shareableLinkOrigin);
-                await navigator.clipboard.writeText(url.toString());
+              Effect.gen(function* () {
+                const { builder } = yield* Capability.get(AppCapabilities.AppGraph);
+                const path = Paths.getShareableLinkPath(builder, nodeId);
+                if (Option.isNone(path)) {
+                  log.warn('object has no URL representation; cannot copy link', { nodeId });
+                  return;
+                }
+                const url = new URL(path.value, shareableLinkOrigin);
+                yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),
             properties: {
               label: COPY_LINK_LABEL,

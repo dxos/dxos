@@ -18,7 +18,7 @@ import {
   Connector,
   CreateObject,
   InboxSettings,
-  NavigationResolver,
+  NavigationTargetResolver,
   OperationHandler,
   ReactSurface,
   SkillDefinition,
@@ -35,7 +35,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
+  Plugin.addModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationTargetResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [

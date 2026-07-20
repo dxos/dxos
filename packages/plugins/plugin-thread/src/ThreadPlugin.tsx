@@ -4,18 +4,10 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import {
-  AppGraphBuilder,
-  ChannelBackendFeed,
-  CreateObject,
-  NavigationResolver,
-  OperationHandler,
-  ReactSurface,
-} from '#capabilities';
+import { AppGraphBuilder, ChannelBackendFeed, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -26,7 +18,6 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

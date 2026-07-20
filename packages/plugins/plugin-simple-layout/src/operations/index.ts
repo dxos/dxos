@@ -7,7 +7,6 @@ export const SimpleLayoutOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./open'),
   () => import('./revert-workspace'),
   () => import('./set'),
-  () => import('./set-layout-mode'),
   () => import('./switch-workspace'),
   () => import('./update-complementary'),
   () => import('./update-dialog'),

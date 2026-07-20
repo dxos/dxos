@@ -58,7 +58,6 @@ export type GraphProps = {
   nodes?: MakeOptional<Node.Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
   onExpand?: (id: string, relation: Node.Relation) => void;
-  onInitialize?: (id: string) => Promise<void>;
   onRemoveNode?: (id: string) => void;
 };
 
@@ -140,13 +139,11 @@ class GraphImpl implements WritableGraph {
   }>();
 
   readonly _onExpand?: GraphProps['onExpand'];
-  readonly _onInitialize?: GraphProps['onInitialize'];
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
   readonly _registry: Registry.Registry;
   readonly _expanded = Record.empty<string, boolean>();
   readonly _pendingExpands = new Set<string>();
-  readonly _initialized = Record.empty<string, boolean>();
   readonly _initialEdges = Record.empty<string, Edges>();
   readonly _initialNodes = Record.fromEntries([
     [
@@ -235,9 +232,8 @@ class GraphImpl implements WritableGraph {
     }).pipe(Atom.withLabel(`graph:json:${id}`));
   });
 
-  constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphProps = {}) {
+  constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
     this._registry = registry ?? Registry.make();
-    this._onInitialize = onInitialize;
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
 
@@ -663,42 +659,6 @@ export function waitForPath(
 }
 
 /**
- * Implementation helper for initialize.
- */
-const initializeImpl = async <T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T> => {
-  const internal = getInternal(graph);
-  const initialized = Record.get(internal._initialized, id).pipe(Option.getOrElse(() => false));
-  log('initialize', { id, initialized });
-  if (!initialized) {
-    Record.set(internal._initialized, id, true);
-    await internal._onInitialize?.(id);
-  }
-  return graph;
-};
-
-/**
- * Initialize a node in the graph.
- *
- * Fires the `onInitialize` callback to provide initial data for a node.
- */
-export function initialize<T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T>;
-export function initialize(id: string): <T extends ExpandableGraph | WritableGraph>(graph: T) => Promise<T>;
-export function initialize<T extends ExpandableGraph | WritableGraph>(
-  graphOrId: T | string,
-  id?: string,
-): Promise<T> | (<T extends ExpandableGraph | WritableGraph>(graph: T) => Promise<T>) {
-  if (typeof graphOrId === 'string') {
-    // Curried: initialize(id)
-    const id = graphOrId;
-    return <T extends ExpandableGraph | WritableGraph>(graph: T) => initializeImpl(graph, id);
-  } else {
-    // Direct: initialize(graph, id)
-    const graph = graphOrId;
-    return initializeImpl(graph, id!);
-  }
-}
-
-/**
  * Implementation helper for expand.
  * If the node does not exist yet, the expand is recorded as pending and applied when the node is added.
  */
@@ -1008,7 +968,7 @@ const removeNodeImpl = <T extends WritableGraph>(graph: T, id: string, edges = f
   // TODO(wittjosiah): Is there a way to mark these atom values for garbage collection?
   internal._registry.set(nodeAtom, Option.none());
   graph.onNodeChanged.emit({ id, node: Option.none() });
-  // TODO(wittjosiah): Reset expanded and initialized flags?
+  // TODO(wittjosiah): Reset expanded flags?
 
   if (edges) {
     const nodeEdges = internal._registry.get(internal._edges(id));

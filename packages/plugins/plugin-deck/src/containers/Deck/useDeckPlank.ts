@@ -13,31 +13,30 @@ import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
+import { DeckOperation, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];
 
 /** Capability flags that gate the plank toolbar controls. */
 export type PlankCapabilities = {
-  deck?: boolean;
-  solo?: boolean;
+  /** Eligible for the fullscreen toggle (a main, non-mobile plank). */
+  fullscreenToggle?: boolean;
   incrementStart?: boolean;
   incrementEnd?: boolean;
-  fullscreen?: boolean;
   companion?: boolean;
 };
 
 export type UseDeckPlankOptions = {
   id: string;
-  /** Resolved part for the primary plank (`solo` | `multi` | `complementary`). */
+  /** Resolved part for the primary plank (`main` | `complementary`). */
   part: ResolvedPart;
-  layoutMode: LayoutMode;
+  /** Whether the deck currently shows a single active plank (fullbleed look). */
+  soloLook: boolean;
   /** Ordered active planks (multi mode); enables increment/close-range semantics. */
   active?: string[];
   /** Whether the companion pane should be shown for this plank (gated further by attention in multi-mode). */
   companionShown?: boolean;
-  deckEnabled?: boolean;
 };
 
 export type DeckPlank = {
@@ -46,8 +45,8 @@ export type DeckPlank = {
   resolvedCompanionId: string | undefined;
   currentCompanion: Node.Node | undefined;
   hasCompanion: boolean;
-  /** Splitter orientation for the companion pane (defaults to `horizontal`). */
-  companionOrientation: 'horizontal' | 'vertical';
+  /** Splitter orientation for the companion pane (vertical companions were dropped in the single-mode deck redesign). */
+  companionOrientation: 'horizontal';
   capabilities: PlankCapabilities;
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
   sigilActions: AttentionSigilAction[][] | undefined;
@@ -65,17 +64,10 @@ export type DeckPlank = {
  * operation dispatchers that mutate deck layout state. This re-homes the framework wiring that the legacy
  * `PlankContainer`/`PlankHeading` bundled, so the presentational components stay free of capabilities.
  */
-export const useDeckPlank = ({
-  id,
-  part,
-  layoutMode,
-  active,
-  companionShown,
-  deckEnabled,
-}: UseDeckPlankOptions): DeckPlank => {
+export const useDeckPlank = ({ id, part, soloLook, active, companionShown }: UseDeckPlankOptions): DeckPlank => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
-  const { state, deck } = useDeckState();
+  const { state } = useDeckState();
   const runAction = useActionRunner();
   const breakpoint = useBreakpoints();
   const node = useNode(graph, id);
@@ -87,15 +79,16 @@ export const useDeckPlank = ({
   const { hasAttention } = useAttention(id);
   const selectedVariant = useSelectedCompanionVariant();
 
-  // The companion is shown when open; in multi mode it attaches only to the attended plank (hidden until
-  // a plank gains attention). Which companion shows follows the globally-selected variant (view state),
-  // falling back to the first when none is stored.
-  const showCompanion = !!companionShown && (layoutMode !== 'multi' || hasAttention);
+  // The companion is shown when open; in a multi-plank deck it attaches only to the attended plank
+  // (hidden until a plank gains attention). Which companion shows follows the globally-selected
+  // variant (view state), falling back to the first when none is stored.
+  const showCompanion = !!companionShown && (soloLook || hasAttention);
   const { companionId } = useSelectedCompanion(companions, showCompanion ? selectedVariant : undefined);
   const resolvedCompanionId = showCompanion ? companionId : undefined;
   const currentCompanion = companions.find((companion) => companion.id === resolvedCompanionId);
   const hasCompanion = !!(resolvedCompanionId && currentCompanion);
-  const companionOrientation = deck.companionOrientation ?? 'horizontal';
+  // Vertical companions were dropped in the single-mode deck redesign; the splitter is always horizontal.
+  const companionOrientation = 'horizontal' as const;
 
   // Ordering within the active stack drives the increment-start/end affordances.
   const index = active ? active.findIndex((entryId) => entryId === id) : -1;
@@ -106,22 +99,20 @@ export const useDeckPlank = ({
   const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
   const capabilities = useMemo<PlankCapabilities>(
     () => ({
-      deck: deckEnabled ?? true,
-      solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'multi'),
+      fullscreenToggle: breakpoint !== 'mobile' && part === 'main',
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      fullscreen: !isCompanionNode,
-      // Offer to open the companion (solo, or the attended plank in multi) when one exists and isn't shown.
-      companion: !isCompanionNode && companions.length > 0 && !hasCompanion && (layoutMode !== 'multi' || hasAttention),
+      // Offer to open the companion (solo, or the attended plank in a multi-plank deck) when one
+      // exists and isn't shown.
+      companion: !isCompanionNode && companions.length > 0 && !hasCompanion && (soloLook || hasAttention),
     }),
     [
-      deckEnabled,
       breakpoint,
       part,
       canIncrementStart,
       canIncrementEnd,
       isCompanionNode,
-      layoutMode,
+      soloLook,
       companions.length,
       hasCompanion,
       hasAttention,

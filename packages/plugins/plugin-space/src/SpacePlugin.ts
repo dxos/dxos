@@ -30,7 +30,7 @@ import {
   CreateObject,
   IdentityCreated,
   NavigationHandler,
-  NavigationResolver,
+  NavigationTargetResolver,
   OperationHandler,
   ReactRoot,
   ReactSurface,
@@ -53,7 +53,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
     activate: () => NavigationHandler({ invitationProp }),
   })),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
+  Plugin.addModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationTargetResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({

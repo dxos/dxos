@@ -99,7 +99,13 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
         case 'tab':
           return onTabChange?.(item);
         case 'link':
-          return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
+          return onSelect?.({
+            item,
+            path,
+            current: !getItem(path).current,
+            option: event.altKey,
+            shift: event.shiftKey,
+          });
       }
     },
     [item, parent, type, getItem, onSelect, onTabChange, isLg, runAction],

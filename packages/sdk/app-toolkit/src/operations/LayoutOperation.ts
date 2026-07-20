@@ -257,33 +257,6 @@ export const AddToast = Operation.make({
 });
 
 //
-// Layout Mode Operations
-//
-
-export const SetLayoutMode = Operation.make({
-  meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.setLayoutMode`),
-    name: 'Set Layout Mode',
-    description: 'Set the layout mode (solo, deck, fullscreen, etc.).',
-    icon: 'ph--layout--regular',
-  },
-  executionMode: 'sync',
-  services: [Capability.Service],
-  input: Schema.Union(
-    Schema.Struct({
-      subject: Schema.optional(
-        Schema.String.annotations({ description: 'Item which is the subject of the new layout mode.' }),
-      ),
-      mode: Schema.String.annotations({ description: 'The new layout mode.' }),
-    }),
-    Schema.Struct({
-      revert: Schema.Boolean.annotations({ description: 'Revert to the previous layout mode.' }),
-    }),
-  ),
-  output: Schema.Void,
-});
-
-//
 // Workspace Operations
 //
 
@@ -360,6 +333,14 @@ export const Open = Operation.make({
         Schema.Literal('start').annotations({ description: 'The items are being added before the pivot item.' }),
         Schema.Literal('end').annotations({ description: 'The items are being added after the pivot item.' }),
       ),
+    ),
+    disposition: Schema.optional(
+      Schema.Literal('default', 'inverse', 'replace', 'new-plank').annotations({
+        description:
+          'How the deck should place the opened items. `default`/`inverse` resolve against the ' +
+          "user's navigation setting (`inverse` is used when a modifier key is held); `replace`/`new-plank` " +
+          'are explicit overrides that ignore the setting.',
+      }),
     ),
   }),
   output: Schema.Array(Schema.String).annotations({ description: 'The resolved navigation paths that were opened.' }),

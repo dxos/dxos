@@ -4,19 +4,18 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph } from '@dxos/plugin-graph';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { Calendar } from '@dxos/plugin-inbox/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
@@ -52,18 +51,6 @@ const DefaultStory = (_: StoryArgs) => {
 
   // The selected feed event (first by chronological order from the builder).
   const event = events[0];
-
-  const { graph } = useAppGraph();
-  const eventUri = event ? Obj.getURI(event) : undefined;
-  // Initialize (run the URI-keyed resolver to create the hidden Event node) and expand its action
-  // relation, mirroring what plugin-deck's plank does for an attended node in the running app.
-  useEffect(() => {
-    if (!eventUri) {
-      return;
-    }
-
-    void Graph.initialize(graph, eventUri).then(() => Graph.expand(graph, eventUri, 'action'));
-  }, [graph, eventUri]);
 
   if (!db || !calendar || !event) {
     return <Loading data={{ db: !!db, calendar, event, meeting }} />;
@@ -231,13 +218,13 @@ export const Default: Story = {
 /**
  * Asserts plugin-meeting's contributed "Open meeting" action renders in the Event-article toolbar.
  * The story seeds a Meeting already linked to the event, so the action resolves to its open variant.
- * This exercises the full graph: the article's `attendableId` is the event URI, plugin-inbox's
- * `eventObjectNode` resolver creates a hidden `Event.Event` node at that id, and plugin-meeting's
- * type extension attaches the action.
  */
 export const MeetingAction: Story = {
   // TODO(burdon): Skipped — the event toolbar's overflow dropdown does not yet render contributed
   //   graph actions, so the "Open meeting" menu item isn't surfaced (pending react-ui-menu work).
+  // TODO(graph-path-ids): Also blocked on the hidden Event.Event node no longer materializing here:
+  //   this relied on plugin-inbox's now-removed `eventObjectNode` resolver. Needs redesign as a
+  //   urlKey-addressed connector (see `@dxos/app-graph`'s path-resolution.ts) once phase A2/A3 lands.
   tags: ['!test'],
   args: {
     withMeeting: true,

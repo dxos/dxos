@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
@@ -157,20 +157,24 @@ export const PreviewComponent = ({
   );
 
   // Open the referenced object: defer to the caller's handler when provided, else navigate to it.
-  const handleOpen = useCallback(() => {
-    if (!uri || !object) {
-      return;
-    }
+  const handleOpen = useCallback(
+    (event: MouseEvent) => {
+      if (!uri || !object) {
+        return;
+      }
 
-    if (onOpen) {
-      onOpen(uri);
-    } else {
-      void invokePromise?.(LayoutOperation.Open, {
-        subject: [Paths.getObjectPathFromObject(object)],
-        navigation: 'immediate',
-      });
-    }
-  }, [uri, object, onOpen, invokePromise]);
+      if (onOpen) {
+        onOpen(uri);
+      } else {
+        void invokePromise?.(LayoutOperation.Open, {
+          subject: [Paths.getObjectPathFromObject(object)],
+          disposition: event.shiftKey ? 'inverse' : 'default',
+          navigation: 'immediate',
+        });
+      }
+    },
+    [uri, object, onOpen, invokePromise],
+  );
 
   if (!uri || !object || !data) {
     return null;

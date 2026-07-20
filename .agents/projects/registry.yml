@@ -50,4 +50,15 @@ projects:
     prs: [12237, 12246]
     resume: 'PR #12246 GREEN (Check passed on HEAD e7b6ec0a0c) with ALL stages 1-4 complete + all post-merge/CI fixes. NEXT (morning): review + land (submit-pr/land skill); no failures outstanding, no new review comments. Future (not blocking, own PR): discriminated-union Branch shape after legacy content-copy records drain; generalize @dxos/versioning to non-Text objects; branch-level access control. User has role=none cleanup WIP uncommitted in the shared worktree (theirs, untouched by me). Overnight-fixed: flaky forkDump head-count assertion; useVersioning tolerant of absent VersioningState (plugin-blogger crash); assistant-e2e markdown + crm-mailbox memoized fixtures regenerated for the branchId/accept-change tool-schema change.'
 
+  - name: url-deck-redesign
+    status: active
+    user: josiah
+    host: remote
+    created: 2026-07-19
+    summary: Pair-chain URLs (/w/<workspace>/<key>/<id>…) resolved by the graph builder (dissolve NavigationPathResolver) + single-mode deck (presentation from plank count, navigationDefault setting).
+    tasks: .agents/projects/url-deck-redesign/TASKS.md
+    design: .agents/projects/url-deck-redesign/DESIGN.md
+    prs: [12273]
+    resume: 'All phases implemented and pushed on PR 12273 (spec + B1/A1/A2/B2/B3/A3/B4). HEAD 7381366f: main merged twice (post-echo-react-migration; useExtensions.tsx conflict resolved = main useObject from @dxos/echo-react + branch EffectEx/log; pnpm-lock.yaml regenerated from main), and the fullbleed single-plank render fix (4bef5d38) is deployed to the preview. IMPORTANT: this work was done in the remote (Claude-on-web) env where the moon toolchain is blocked (github.com/moonrepo/plugins outside session GitHub scope), so build/test/lint were NEVER run locally — CI is the only compile/test signal so far. NEXT (do locally, network is unrestricted): (1) proto install && moon setup && pnpm install; (2) run build + `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism` + `moon run :lint -- --fix` + `pnpm format` and fix anything red; (3) manual e2e pass against the preview per spec Verification section; (4) mark PR ready for review. Deferred: collection-object `collection` urlKey (needs resolver to allow one key -> multiple extensions: plugin-space `collections` section-children vs `objects` recursive). Execution policy: Sonnet subagents do the writing, Fable drives/validates.'
+
 ended: []

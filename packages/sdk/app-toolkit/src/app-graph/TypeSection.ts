@@ -9,14 +9,12 @@ import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Annotation, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Position, inferObjectOrder } from '@dxos/util';
 
-import { Paths } from '../app';
-import { AppCapabilities } from '../app-framework';
 import { AppNodeMatcher } from '../app-graph';
 import { AppNode } from '../app-graph';
 import { AppAnnotation } from '../echo';
@@ -51,10 +49,11 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
  * typename and annotations — no manual wiring needed. The section is suppressed
  * when the space has no matching objects.
  *
- * Requires four coordinated pieces: {@link Paths.createTypeSectionPaths}, this extension,
- * a {@link SpaceCapabilities.CreateObjectEntry} with
- * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)`, and a
- * {@link createTypeSectionPathResolver} registered via {@link AppCapabilities.NavigationPathResolver}.
+ * Requires two coordinated pieces: `Paths.createTypeSectionPaths` and this extension, with a
+ * {@link SpaceCapabilities.CreateObjectEntry} set to
+ * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)`. URL resolution (both directions)
+ * is automatic — no path resolver to register — since the extension's `urlKey` declaration is all
+ * `@dxos/app-graph`'s `path-resolution.ts` needs.
  *
  * Pass `createObject` to add a "+" action on the section header automatically.
  */
@@ -79,6 +78,12 @@ export const createTypeSectionExtension = (
      * The action label is resolved from `add-object.label` in the type's i18n namespace.
      */
     createObject?: (space: Space) => Effect.Effect<any, any, any>;
+    /**
+     * Override the registered URL prefix key for this section's connector. Takes precedence over
+     * {@link AppAnnotation.UrlPrefixAnnotation} on the schema — use when annotating the schema is
+     * awkward (e.g. the schema lives in a package that cannot depend on `@dxos/app-toolkit`).
+     */
+    urlKey?: string;
   },
 ): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -90,6 +95,14 @@ export const createTypeSectionExtension = (
   const defaultQuery = Query.select(filter);
   const testId = `${typename}.section`;
 
+  // Sourced from the explicit override, then the schema's own annotation, then a fallback derived
+  // from the typename — every type section is URL-addressable out of the box, no manual wiring
+  // needed for the common case (see `@dxos/app-graph`'s `path-resolution.ts`).
+  const urlKey =
+    options?.urlKey ??
+    Option.getOrUndefined(AppAnnotation.UrlPrefixAnnotation.get(Type.getSchema(type))) ??
+    (typename.split('.').pop() ?? typename).toLowerCase();
+
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
 
   // Only allow reordering within this section — reject drops from other type sections.
@@ -98,6 +111,7 @@ export const createTypeSectionExtension = (
 
   const sectionExtension = GraphBuilder.createExtension({
     id: typename,
+    urlKey,
     match: options?.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];
@@ -188,53 +202,4 @@ export const createTypeSectionExtension = (
   });
 
   return Effect.map(Effect.all([sectionExtension, actionsExtension]), ([section, actions]) => [...section, ...actions]);
-};
-
-/**
- * Creates a `AppCapabilities.NavigationPathResolver` that recognises paths of the form
- * `root/<spaceId>/<typename>/<objectId>` and maps them to ECHO EIDs.
- *
- * Without a resolver, `validateNavigationTarget` returns NOT_FOUND for any path
- * not yet materialised in the graph — causing navigation to the custom type section
- * (including deep-links and page reloads) to silently 404.
- *
- * Register with `AppPlugin.addNavigationResolverModule`. One resolver per type is enough;
- * the capability system fans them out until one returns `Option.some`.
- *
- * Also set `targetNodeId: getSectionPath(options.db.spaceId)` in the plugin's `CreateObjectEntry`
- * so the create dialog navigates to the type section rather than the generic database section:
- * ```ts
- * targetNodeId: options.targetNodeId ?? getSectionPath(options.db.spaceId),
- * ```
- */
-export const createTypeSectionPathResolver = (
-  type: Type.AnyEntity,
-  options?: {
-    /** Group node ID to include as a path segment between the space and the typename, e.g. 'ai'. */
-    groupId?: string;
-  },
-): AppCapabilities.NavigationPathResolver => {
-  const typename = Type.getTypename(type);
-  invariant(typename, 'Schema must have a typename to create a type section path resolver.');
-  return (qualifiedPath) => {
-    const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);
-    if (!spaceId) {
-      return Effect.succeed(Option.none());
-    }
-
-    const sectionPath = options?.groupId
-      ? Paths.getSpacePath(spaceId, options.groupId, typename)
-      : Paths.getSpacePath(spaceId, typename);
-    if (!qualifiedPath.startsWith(`${sectionPath}/`)) {
-      return Effect.succeed(Option.none());
-    }
-
-    // The immediate segment after the section path is the object ID.
-    const objectId = qualifiedPath.slice(sectionPath.length + 1).split('/')[0];
-    if (!objectId || !Key.EntityId.isValid(objectId)) {
-      return Effect.succeed(Option.none());
-    }
-
-    return Effect.succeed(Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId })));
-  };
 };

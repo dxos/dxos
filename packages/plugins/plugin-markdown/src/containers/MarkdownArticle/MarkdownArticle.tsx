@@ -272,13 +272,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // Open linked objects.
     const { invokePromise } = useOperationInvoker();
     const handleSelectObject = useCallback(
-      (targetId: string) => {
+      (targetId: string, modifiers?: { shift: boolean }) => {
         if (onSelectObject) {
           onSelectObject(targetId);
         } else {
           void invokePromise?.(LayoutOperation.Open, {
             subject: [targetId],
             pivotId: attendableId,
+            disposition: modifiers?.shift ? 'inverse' : 'default',
             // TODO(wittjosiah): This should probably pre-validate.
             navigation: 'immediate',
           });

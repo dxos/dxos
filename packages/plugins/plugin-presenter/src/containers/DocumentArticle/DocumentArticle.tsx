@@ -17,7 +17,7 @@ export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Docume
 export const DocumentArticle = ({ role, subject: document }: DocumentArticleProps) => {
   const handleExit = useExitPresenter(document);
   const layout = useLayout();
-  const fullscreen = layout.mode === 'solo--fullscreen';
+  const fullscreen = layout.fullscreen;
   // RevealPlayer seeds its deck once from `content` (via a `defaultValue`); wait for the markdown ref to
   // resolve so the presentation isn't initialized empty and left blank when the content arrives later.
   const content = document.content.target?.content;

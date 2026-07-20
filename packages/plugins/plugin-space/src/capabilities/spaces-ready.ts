@@ -132,7 +132,6 @@ export default Capability.makeModule(
 
           const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
           if (!node && (isEchoRef(id) || id.length === SPACE_ID_LENGTH)) {
-            void Graph.initialize(graph, id);
             const timeout = setTimeout(async () => {
               const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
               if (!node) {

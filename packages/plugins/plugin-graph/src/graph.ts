@@ -29,8 +29,20 @@ export default Capability.makeModule(
       (extensionsByModule) => {
         const next: GraphBuilder.BuilderExtension[] = [];
         for (const [moduleId, extensions] of Object.entries(extensionsByModule)) {
+          // Module ids are `${pluginId}.module.${moduleName}` (see app-framework `plugin.ts`); the
+          // URL fallback keys by the plugin, not the module, so a plugin's several graph modules
+          // share one readable prefix.
+          const pluginId = moduleId.replace(/\.module\..+$/, '');
           for (const ext of GraphBuilder.flattenExtensions(extensions)) {
-            next.push({ ...ext, id: `${moduleId}.${ext.id}` });
+            // Default the URL prefix key to the plugin id so every node-producing extension is
+            // URL-addressable out of the box; keys are global (never namespaced by module), unlike
+            // node/extension ids. Action/action-group entries produce no nodes, so they're left
+            // unkeyed unless an extension explicitly sets `urlKey` itself.
+            next.push({
+              ...ext,
+              id: `${moduleId}.${ext.id}`,
+              urlKey: ext.urlKey ?? (ext.connector ? pluginId : undefined),
+            });
           }
         }
         const current = Record.values(registry.get(builder.extensions));
@@ -48,7 +60,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(
       AppCapabilities.AppGraph,
-      { graph: builder.graph, explore: GraphBuilder.explore },
+      { graph: builder.graph, explore: GraphBuilder.explore, builder },
       () =>
         Effect.sync(() => {
           // clearInterval(interval);

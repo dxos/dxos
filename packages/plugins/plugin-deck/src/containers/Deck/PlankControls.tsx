@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type DeckOperation, type LayoutMode } from '#types';
+import { type DeckOperation } from '#types';
 
 import { type PlankCapabilities } from './useDeckPlank';
 
@@ -59,7 +59,10 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
   capabilities: PlankCapabilities;
-  layoutMode?: LayoutMode;
+  /** Whether the deck currently shows a single active plank (fullbleed look). */
+  soloLook?: boolean;
+  /** Whether this plank is currently displayed fullscreen. */
+  fullscreen?: boolean;
   pin?: 'start' | 'end' | 'both';
 };
 
@@ -68,81 +71,57 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
 // NOTE(thure): Pinning & unpinning are disabled indefinitely.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
-    { children, classNames, variant = 'default', capabilities, layoutMode, pin, close = false, onClick, ...props },
+    {
+      children,
+      classNames,
+      variant = 'default',
+      capabilities,
+      soloLook,
+      fullscreen,
+      pin,
+      close = false,
+      onClick,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.profile.key);
     const buttonClassNames =
       variant === 'hide-disabled' ? `disabled:hidden ${plankControlSpacing}` : plankControlSpacing;
 
-    const layoutIsAnySolo = !!layoutMode?.startsWith('solo');
-
     return (
       <ButtonGroup {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
-        {capabilities.deck ? (
-          <>
-            {capabilities.solo && (
-              <>
-                {layoutMode === 'solo' && (
-                  <PlankControl
-                    label={t('show-fullscreen-plank.label')}
-                    classNames={buttonClassNames}
-                    icon='ph--corners-out--regular'
-                    onClick={() => onClick?.('solo--fullscreen')}
-                  />
-                )}
-                <PlankControl
-                  label={t(
-                    layoutMode === 'solo--fullscreen'
-                      ? 'exit-fullscreen.label'
-                      : layoutIsAnySolo
-                        ? 'show-deck-plank.label'
-                        : 'show-solo-plank.label',
-                  )}
-                  classNames={buttonClassNames}
-                  icon={
-                    layoutMode === 'solo--fullscreen'
-                      ? 'ph--corners-in--regular'
-                      : layoutIsAnySolo
-                        ? 'ph--arrows-in-line-horizontal--regular'
-                        : 'ph--arrows-out-line-horizontal--regular'
-                  }
-                  onClick={() => onClick?.(layoutMode === 'solo--fullscreen' ? 'solo--fullscreen' : 'solo')}
-                />
-              </>
-            )}
-
-            {!layoutIsAnySolo && layoutMode !== 'multi' && (
-              <>
-                <PlankControl
-                  label={t('increment-start.label')}
-                  disabled={!capabilities.incrementStart}
-                  classNames={buttonClassNames}
-                  icon='ph--caret-left--regular'
-                  onClick={() => onClick?.('increment-start')}
-                />
-                <PlankControl
-                  label={t('increment-end.label')}
-                  disabled={!capabilities.incrementEnd}
-                  classNames={buttonClassNames}
-                  icon='ph--caret-right--regular'
-                  onClick={() => onClick?.('increment-end')}
-                />
-              </>
-            )}
-          </>
-        ) : (
-          capabilities.fullscreen && (
-            <PlankControl
-              label={t(layoutMode === 'solo--fullscreen' ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
-              classNames={buttonClassNames}
-              icon={layoutMode === 'solo--fullscreen' ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
-              onClick={() => onClick?.('solo--fullscreen')}
-            />
-          )
+        {/* Fullscreen is only offered for a singleton-active (solo-look) deck; "solo this plank" out of a
+            multi-plank deck is covered by the existing close-others graph action instead. */}
+        {capabilities.fullscreenToggle && soloLook && (
+          <PlankControl
+            label={t(fullscreen ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
+            classNames={buttonClassNames}
+            icon={fullscreen ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
+            onClick={() => onClick?.('fullscreen')}
+          />
         )}
 
-        {close && !layoutIsAnySolo && (
+        {!soloLook && (
+          <>
+            <PlankControl
+              label={t('increment-start.label')}
+              disabled={!capabilities.incrementStart}
+              classNames={buttonClassNames}
+              icon='ph--caret-left--regular'
+              onClick={() => onClick?.('increment-start')}
+            />
+            <PlankControl
+              label={t('increment-end.label')}
+              disabled={!capabilities.incrementEnd}
+              classNames={buttonClassNames}
+              icon='ph--caret-right--regular'
+              onClick={() => onClick?.('increment-end')}
+            />
+          </>
+        )}
+
+        {close && !soloLook && (
           <PlankControl
             label={t(`${typeof close === 'string' ? 'minify' : 'close'}.label`)}
             classNames={buttonClassNames}
@@ -159,22 +138,13 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
         )}
 
         {capabilities.companion && (
-          <ButtonGroup>
-            <PlankControl
-              label={t('open-companion.label')}
-              classNames={buttonClassNames}
-              data-testid='plankHeading.companion'
-              icon='ph--square-split-horizontal--regular'
-              onClick={() => onClick?.('companion')}
-            />
-            <PlankControl
-              label={t('open-companion-vertical.label')}
-              classNames={buttonClassNames}
-              data-testid='plankHeading.companion-vertical'
-              icon='ph--square-split-vertical--regular'
-              onClick={() => onClick?.('companion-vertical')}
-            />
-          </ButtonGroup>
+          <PlankControl
+            label={t('open-companion.label')}
+            classNames={buttonClassNames}
+            data-testid='plankHeading.companion'
+            icon='ph--square-split-horizontal--regular'
+            onClick={() => onClick?.('companion')}
+          />
         )}
         {children}
       </ButtonGroup>

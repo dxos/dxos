@@ -17,9 +17,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),
   Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
-  Schema.Literal('companion-vertical').annotations({ description: 'Open the companion plank stacked vertically.' }),
-  Schema.Literal('solo').annotations({ description: 'Solo the plank.' }),
-  Schema.Literal('solo--fullscreen').annotations({ description: 'Fullscreen the plank.' }),
+  Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
   Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
   Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
 );

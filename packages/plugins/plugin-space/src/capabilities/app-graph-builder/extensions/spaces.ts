@@ -48,6 +48,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     GraphBuilder.createExtension({
       id: 'spaceHome',
       position: Position.first,
+      urlKey: 'home',
+      // Home is a fixed singleton per space (no variable id), so its URL pair never consumes an id.
+      urlKeyHasId: false,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
@@ -243,8 +246,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
     }),
 
     // Communications section group — no single plugin owns this category; it lives here so the

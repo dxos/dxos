@@ -17,7 +17,7 @@ export type ShowItemOptions = {
   /** Companion segment target, e.g. `linkedSegment('message')`. */
   companion: string;
   /**
-   * Navigation path used only in `'multi'` layout mode. Omit to fall back to
+   * Navigation path used only in the `'deck'` layout variant. Omit to fall back to
    * companion behavior.
    */
   path?: string;
@@ -25,10 +25,10 @@ export type ShowItemOptions = {
 
 /**
  * Master-detail dispatch helper. Selects the item in the attention context,
- * then — based on the current layout mode — shows its detail surface:
+ * then — based on the current layout variant — shows its detail surface:
  *
  * - `'simple'`: expand the complementary sidebar on the given companion segment.
- * - `'multi'`: open the item as a sibling plank beside the master (`pivotId = contextId`), when a `path` is provided.
+ * - `'deck'`: open the item as a sibling plank beside the master (`pivotId = contextId`), when a `path` is provided.
  * - otherwise: swap the current plank's companion to the given segment.
  */
 export const useShowItem = () => {
@@ -42,18 +42,20 @@ export const useShowItem = () => {
         subject: { mode: 'single', id: selectionId },
       });
 
-      switch (layout.mode) {
+      switch (layout.variant) {
         case 'simple':
           return invokePromise(LayoutOperation.UpdateComplementary, {
             subject: companion,
             state: 'expanded',
           });
 
-        case 'multi':
+        case 'deck':
           if (path) {
             return invokePromise(LayoutOperation.Open, {
               subject: [path],
               pivotId: contextId,
+              // The master-detail sibling plank is intentional regardless of the user's navigation setting.
+              disposition: 'new-plank',
               navigation: 'immediate',
             });
           }
@@ -62,6 +64,6 @@ export const useShowItem = () => {
 
       return invokePromise(LayoutOperation.UpdateCompanion, { subject: companion });
     },
-    [invokePromise, layout.mode],
+    [invokePromise, layout.variant],
   );
 };

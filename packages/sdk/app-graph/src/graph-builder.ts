@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
 
-import { type CleanupFn, type Trigger } from '@dxos/async';
+import { type CleanupFn } from '@dxos/async';
 import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
@@ -21,24 +21,11 @@ import { scheduleTask, yieldOrContinue } from '#scheduler';
 import * as Graph from './graph';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
-import {
-  getParentId,
-  nodeArgsUnchanged,
-  normalizeRelation,
-  primaryKey,
-  primaryParts,
-  qualifyId,
-  validateSegmentId,
-} from './util';
+import { nodeArgsUnchanged, normalizeRelation, primaryKey, primaryParts, qualifyId, validateSegmentId } from './util';
 
 //
 // Extension Types
 //
-
-/**
- * Graph builder extension for adding nodes to the graph based on a node id.
- */
-export type ResolverExtension = (id: string) => Atom.Atom<Node.NodeArg<any> | null>;
 
 /**
  * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
@@ -65,7 +52,19 @@ export type BuilderExtension = Readonly<{
   id: string;
   position?: Position.Position;
   relation?: Node.RelationInput;
-  resolver?: ResolverExtension;
+  /**
+   * Registered URL prefix key for nodes this extension's connector produces. Defaults to the
+   * plugin id at the plugin-graph layer when omitted. Global and unique; see
+   * `path-resolution.ts` for how the key table is derived and used.
+   */
+  urlKey?: string;
+  /**
+   * Whether a `urlKey` pair consumes a following id segment. `true` (the default) for a
+   * plank-opening key (e.g. `doc`, addressing a real object id); `false` for a companion key (e.g.
+   * `comments`) or a fixed singleton node (e.g. `home`), neither of which has a variable id to
+   * encode. Read by `path-resolution.ts`'s key-table derivation, consumed by `UrlPath.parse`.
+   */
+  urlKeyHasId?: boolean;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 }>;
 
@@ -95,6 +94,14 @@ export interface GraphBuilder extends Pipeable.Pipeable {
   readonly [GraphBuilderTypeId]: GraphBuilderTypeId;
   readonly graph: Graph.ExpandableGraph;
   readonly extensions: Atom.Atom<Record<string, BuilderExtension>>;
+  /** Read the currently registered extensions synchronously (used for URL key-table derivation). */
+  getExtensions(): Record<string, BuilderExtension>;
+  /**
+   * The id of the extension whose connector produced the given node, if known. Populated as
+   * connectors materialize nodes and cleared on removal; used by `path-resolution.ts` for
+   * reverse (node → URL) mapping.
+   */
+  getNodeExtensionId(nodeId: string): string | undefined;
 }
 
 /**
@@ -138,8 +145,12 @@ class GraphBuilderImpl implements GraphBuilder {
     Atom.keepAlive,
     Atom.withLabel('graph-builder:extensions'),
   );
-  /** Triggers signalling that a node's resolver has fired at least once. */
-  readonly _initialized: Record<string, Trigger> = {};
+  /**
+   * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly
+   * as connectors materialize/remove nodes, so reverse (node → URL) mapping in
+   * `path-resolution.ts` can look up the producing extension without a reactive read.
+   */
+  readonly _nodeExtensions = new Map<string, string>();
   /** Shared atom registry for reactive subscriptions. */
   readonly _registry: Registry.Registry;
   /** Backing graph with internal accessors for node atoms and construction. */
@@ -154,7 +165,6 @@ class GraphBuilderImpl implements GraphBuilder {
       ...params,
       registry: this._registry,
       onExpand: (id, relation) => this._onExpand(id, relation),
-      onInitialize: (id) => this._onInitialize(id),
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
     // Access internal methods via type assertion since GraphBuilder needs them
@@ -170,6 +180,14 @@ class GraphBuilderImpl implements GraphBuilder {
 
   get extensions() {
     return this._extensions;
+  }
+
+  getExtensions(): Record<string, BuilderExtension> {
+    return this._registry.get(this._extensions);
+  }
+
+  getNodeExtensionId(nodeId: string): string | undefined {
+    return this._nodeExtensions.get(nodeId);
   }
 
   /** Apply a set of node changes for a single connector key. */
@@ -226,50 +244,40 @@ class GraphBuilderImpl implements GraphBuilder {
     }
   }
 
-  private readonly _resolvers = Atom.family<string, Atom.Atom<Option.Option<Node.NodeArg<any>>>>((id) => {
-    return Atom.make((get) => {
-      return Function.pipe(
-        get(this._extensions),
-        Record.values,
-        Array.sortBy(Position.compare),
-        Array.map(({ resolver }) => resolver),
-        Array.filter(isNonNullable),
-        Array.map((resolver) => get(resolver(id))),
-        Array.filter(isNonNullable),
-        Array.head,
-      );
-    });
-  });
+  /** A connector-produced node, tagged with the id of the extension that produced it (provenance). */
+  private readonly _connectors = Atom.family<string, Atom.Atom<{ extensionId: string; node: Node.NodeArg<any> }[]>>(
+    (key) => {
+      return Atom.make((get) => {
+        const { id, relation } = relationFromConnectorKey(key);
+        const node = this._graph.node(id);
 
-  private readonly _connectors = Atom.family<string, Atom.Atom<Node.NodeArg<any>[]>>((key) => {
-    return Atom.make((get) => {
-      const { id, relation } = relationFromConnectorKey(key);
-      const node = this._graph.node(id);
+        const sourceNode = Option.getOrElse(get(node), () => undefined);
+        if (!sourceNode) {
+          return [];
+        }
 
-      const sourceNode = Option.getOrElse(get(node), () => undefined);
-      if (!sourceNode) {
-        return [];
-      }
+        const extensions = Function.pipe(
+          get(this._extensions),
+          Record.values,
+          Array.sortBy(Position.compare),
+          Array.filter(
+            (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
+              Graph.relationKey(ext.relation ?? 'child') === Graph.relationKey(relation) && ext.connector != null,
+          ),
+        );
 
-      const extensions = Function.pipe(
-        get(this._extensions),
-        Record.values,
-        Array.sortBy(Position.compare),
-        Array.filter(
-          (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
-            Graph.relationKey(ext.relation ?? 'child') === Graph.relationKey(relation) && ext.connector != null,
-        ),
-      );
+        const entries: { extensionId: string; node: Node.NodeArg<any> }[] = [];
+        for (const ext of extensions) {
+          const result = get(ext.connector(node));
+          for (const nodeArg of result) {
+            entries.push({ extensionId: ext.id, node: nodeArg });
+          }
+        }
 
-      const nodes: Node.NodeArg<any>[] = [];
-      for (const ext of extensions) {
-        const result = get(ext.connector(node));
-        nodes.push(...result);
-      }
-
-      return nodes;
-    }).pipe(Atom.withLabel(`graph-builder:connectors:${key}`));
-  });
+        return entries;
+      }).pipe(Atom.withLabel(`graph-builder:connectors:${key}`));
+    },
+  );
 
   private _onExpand(id: string, relation: Node.Relation): void {
     log('onExpand', { id, relation, registry: getDebugName(this._registry) });
@@ -287,8 +295,14 @@ class GraphBuilderImpl implements GraphBuilder {
 
     const cancel = this._registry.subscribe(
       connectors,
-      (rawNodes) => {
-        const nodes = qualifyNodeArgs(id)(rawNodes);
+      (entries) => {
+        const nodes = qualifyNodeArgs(id)(entries.map((entry) => entry.node));
+        // Record provenance for each qualified top-level node so reverse (node → URL) mapping
+        // can find the producing extension's `urlKey`.
+        entries.forEach((entry, index) => {
+          this._nodeExtensions.set(nodes[index].id, entry.extensionId);
+        });
+
         const previous = this._connectorPrevious.get(key) ?? [];
         const ids = nodes.map((n) => n.id);
 
@@ -309,42 +323,8 @@ class GraphBuilderImpl implements GraphBuilder {
     this._subscriptions.set(subscriptionKey(id, 'expand', key), cancel);
   }
 
-  private async _onInitialize(id: string) {
-    log('onInitialize', { id });
-    const resolver = this._resolvers(id);
-
-    const cancel = this._registry.subscribe(
-      resolver,
-      (node) => {
-        const trigger = this._initialized[id];
-        const connectorOwned = [...this._connectorPrevious.values()].some((ids) => ids.includes(id));
-        Option.match(node, {
-          onSome: (node) => {
-            if (!connectorOwned) {
-              Graph.addNodes(this._graph, [node]);
-              // Connect resolved node to its parent via a child edge.
-              const parentId = getParentId(id);
-              if (parentId) {
-                Graph.addEdges(this._graph, [{ source: parentId, target: id, relation: 'child' }]);
-              }
-            }
-            trigger?.wake();
-          },
-          onNone: () => {
-            trigger?.wake();
-            if (!connectorOwned) {
-              Graph.removeNodes(this._graph, [id]);
-            }
-          },
-        });
-      },
-      { immediate: true },
-    );
-
-    this._subscriptions.set(subscriptionKey(id, 'init'), cancel);
-  }
-
   private _onRemoveNode(id: string): void {
+    this._nodeExtensions.delete(id);
     for (const [key, cleanup] of this._subscriptions) {
       if (primaryParts(key)[0] === id) {
         cleanup();
@@ -548,7 +528,8 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
  * @param params.id The unique id of the extension.
  * @param params.relation The relation the graph is being expanded from the existing node.
  * @param params.position Affects the order the extensions are processed in.
- * @param params.resolver A function to add nodes to the graph based on just the node id.
+ * @param params.urlKey Registered URL prefix key for nodes this extension's connector produces.
+ * @param params.urlKeyHasId Whether `urlKey` consumes a following id segment (default `true`).
  * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
  * @param params.actions A function to add actions to the graph based on a connection to an existing node.
  * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
@@ -557,7 +538,8 @@ export type CreateExtensionRawOptions = {
   id: string;
   relation?: Node.RelationInput;
   position?: Position.Position;
-  resolver?: ResolverExtension;
+  urlKey?: string;
+  urlKeyHasId?: boolean;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
   actionGroups?: ActionGroupsExtension;
@@ -585,7 +567,8 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     id,
     position,
     relation = 'child',
-    resolver: _resolver,
+    urlKey,
+    urlKeyHasId,
     connector: _connector,
     actions: _actions,
     actionGroups: _actionGroups,
@@ -601,9 +584,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
   }
   const normalizedRelation = normalizeRelation(relation);
   const getId = (key: string) => `${id}/${key}`;
-
-  const resolver =
-    _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
 
   const connector =
     _connector &&
@@ -624,12 +604,13 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     );
 
   return [
-    resolver ? { id: getId('resolver'), position, resolver } : undefined,
     connector
       ? ({
           id: getId('connector'),
           position,
           relation: normalizedRelation,
+          urlKey,
+          urlKeyHasId,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -703,9 +684,12 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
     get: Atom.Context,
   ) => Effect.Effect<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data'>[], never, R>;
   connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
+  /** Registered URL prefix key for nodes this extension's connector produces. */
+  urlKey?: string;
+  /** Whether `urlKey` consumes a following id segment (default `true`); see {@link BuilderExtension.urlKeyHasId}. */
+  urlKeyHasId?: boolean;
 };
 
 /**
@@ -738,7 +722,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   options: CreateExtensionOptions<TMatched, R>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
-    const { id, match, actions, actionGroups, connector, resolver, relation, position } = options;
+    const { id, match, actions, actionGroups, connector, relation, position, urlKey, urlKeyHasId } = options;
 
     const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
@@ -779,19 +763,15 @@ export const createExtension = <TMatched = Node.Node, R = never>(
           )
       : undefined;
 
-    const resolverExtension = resolver
-      ? (nodeId: string) =>
-          Atom.make((get) => runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null)
-      : undefined;
-
     return createExtensionRaw({
       id,
       relation,
       position,
+      urlKey,
+      urlKeyHasId,
       connector: connectorExtension,
       actions: actionsExtension,
       actionGroups: actionGroupsExtension,
-      resolver: resolverExtension,
     });
   });
 

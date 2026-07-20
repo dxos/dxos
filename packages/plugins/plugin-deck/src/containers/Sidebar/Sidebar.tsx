@@ -10,18 +10,16 @@ import { type Label, Main } from '@dxos/react-ui';
 
 import { useBreakpoints, useDeckState } from '#hooks';
 import { meta } from '#meta';
-import { getMode } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
 
 const label = ['sidebar.title', { ns: meta.profile.key }] satisfies Label;
 
 export const Sidebar = () => {
-  const { state, deck } = useDeckState();
-  const { popoverAnchorId, activeDeck: current } = state;
+  const { state } = useDeckState();
+  const { popoverAnchorId, activeDeck: current, fullscreen } = state;
   const breakpoint = useBreakpoints();
-  const layoutMode = getMode(deck);
-  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
 
   const navigationData = useMemo<AppSurface.NavigationData<{ topbar: boolean }>>(
     () => ({ popoverAnchorId, topbar, current }),

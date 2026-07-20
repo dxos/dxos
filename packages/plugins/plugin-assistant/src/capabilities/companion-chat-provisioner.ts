@@ -103,7 +103,7 @@ export default Capability.makeModule(
       }
 
       const companionVariant = registry.get(variantAtom).variant;
-      const plankIds = new Set(deck.solo ? [deck.solo] : deck.active);
+      const plankIds = new Set(deck.active);
 
       // Remove subscriptions for planks that are no longer active.
       for (const trackedId of plankSubs.keys()) {

@@ -21,8 +21,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const id = input.subject[0];
 
       // Validate navigation target, redirecting to 404 if not found.
-      const capabilities = yield* Capability.Service;
-      const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
       const client = yield* Capability.get(ClientCapabilities.Client).pipe(
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
@@ -53,7 +51,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           : yield* NotFound.validateNavigationTarget({
               graph,
               subjectId: id,
-              pathResolvers,
               checkLocalExistence,
               checkRemoteExistence,
             });

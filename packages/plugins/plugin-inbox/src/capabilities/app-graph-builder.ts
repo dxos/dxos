@@ -10,20 +10,18 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Feed, Filter, Key, Obj, Order, Query, Scope, Type } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { Feed, Filter, Obj, Order, Query, Scope, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Calendar, InboxOperation, Mailbox, SystemTags } from '#types';
+import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
 import { createSyncProgressKey } from '../operations/mail/mail-sync';
@@ -41,97 +39,6 @@ import { dedupeSupersededDrafts, syncTarget } from '../util';
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
-
-type FeedObjectNodeConfig<Parent extends Obj.Unknown, Child extends Obj.Unknown> = {
-  id: string;
-  /** Parent ECHO type entity; derives the parent filter and (by default) the path segment name. */
-  parentType: Type.AnyEntity;
-  /**
-   * Override the path segment used to locate the parent ID.
-   * Defaults to `Type.getTypename(parentType)`.
-   * Required when the parent lives under a custom section segment (e.g. mailboxes use `'mailboxes'`).
-   */
-  parentSegmentName?: string;
-  /** Child ECHO type entity; derives the node type string. */
-  childType: Type.AnyEntity;
-  /** Resolve the feed for the parent, using the reactive getter to dereference the feed ref. */
-  getFeed: (parent: Parent, get: (atom: any) => any) => Feed.Feed | undefined;
-  /** Validate a db-fallback object as a child of this parent (not needed for feed-sourced objects). */
-  isDbChild: (parent: Parent, obj: Obj.Unknown) => obj is Child;
-  getNodeLabel: (child: Child) => string | [string, { ns: string }];
-  nodeIcon: string;
-};
-
-/**
- * Creates a hidden, navigable feed-object node extension using the `~childId` linked-segment path pattern.
- * Resolves paths of the form `root/<spaceId>/…/<parentId>/~<childId>` to a hidden node for the child object.
- * Used for mailbox messages and calendar events, which live in a parent's feed rather than the space db directly.
- */
-const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends Obj.Unknown>(
-  config: FeedObjectNodeConfig<Parent, Child>,
-) =>
-  GraphBuilder.createExtension({
-    id: config.id,
-    match: () => Option.none(),
-    resolver: (qualifiedId, get) =>
-      Effect.gen(function* () {
-        if (!isLinkedSegment(qualifiedId)) {
-          return null;
-        }
-
-        const segments = qualifiedId.split('/');
-        const childId = getLinkedVariant(qualifiedId);
-        const spaceId = Paths.getSpaceIdFromPath(qualifiedId);
-        const segmentName = config.parentSegmentName ?? Type.getTypename(config.parentType);
-        const segmentIdx = segments.indexOf(segmentName);
-        const parentId = segmentIdx >= 0 ? segments[segmentIdx + 1] : undefined;
-
-        if (!spaceId || !parentId || !Key.EntityId.isValid(parentId) || !Key.EntityId.isValid(childId)) {
-          return null;
-        }
-
-        const client = yield* Capability.get(ClientCapabilities.Client);
-        const space = client.spaces.get(spaceId);
-        if (!space) {
-          return null;
-        }
-
-        // parentType is a runtime entity; Filter.type resolves to Filter<Parent> at the type boundary.
-        const parents = get(space.db.query(Filter.type(config.parentType)).atom) as Parent[];
-        const parent = parents.find((p) => p.id === parentId);
-        if (!parent) {
-          return null;
-        }
-
-        const feed = config.getFeed(parent, get);
-
-        let child: Child | undefined;
-        if (feed) {
-          // Objects sourced from the parent's feed are already scoped correctly; no extra type check needed.
-          child = get(space.db.query(Query.select(Filter.id(childId)).from(feed)).atom)[0] as Child | undefined;
-        }
-        if (!child) {
-          const fromDb = get(space.db.query(Query.select(Filter.id(childId))).atom)[0];
-          if (fromDb && config.isDbChild(parent, fromDb)) {
-            child = fromDb;
-          }
-        }
-        if (!child) {
-          return null;
-        }
-
-        return {
-          id: qualifiedId,
-          type: Type.getTypename(config.childType),
-          data: child,
-          properties: {
-            label: config.getNodeLabel(child),
-            icon: config.nodeIcon,
-            disposition: 'hidden',
-          },
-        };
-      }).pipe(Effect.orDie),
-  });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -170,6 +77,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'mailboxListing',
+        urlKey: 'mail',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -371,19 +279,42 @@ export default Capability.makeModule(
         },
       }),
 
-      createFeedObjectNodeExtension<Mailbox.Mailbox, Message.Message>({
-        id: 'feedObjectNode',
-        parentType: Mailbox.Mailbox,
-        // Mailboxes live under a custom 'mailboxes' section segment, not their ECHO typename.
-        parentSegmentName: getMailboxesSectionId(),
-        childType: Message.Message,
-        getFeed: (mailbox, get) => (mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined),
-        // obj is cast to Message.Message because DraftMessage.belongsTo checks message-specific structure;
-        // the type guard itself is the runtime proof.
-        isDbChild: (mailbox, obj): obj is Message.Message =>
-          DraftMessage.belongsTo(obj as Message.Message, Obj.getURI(mailbox)),
-        getNodeLabel: (message) => message.properties?.subject ?? ['message.label', { ns: meta.profile.key }],
-        nodeIcon: 'ph--envelope-open--regular',
+      // Every message in a mailbox's feed, plus its in-progress local drafts, as a hidden child of
+      // the mailbox node — so `…/mailboxes/<mailboxId>/<messageId>` resolves via the `message` key
+      // even though messages aren't otherwise enumerated in the nav tree. Reinstates the deep-link
+      // behavior of the removed `createFeedObjectNodeExtension` (mailbox variant) as a connector.
+      GraphBuilder.createExtension({
+        id: 'mailboxMessages',
+        urlKey: 'message',
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        connector: (mailbox, get) => {
+          const db = Obj.getDatabase(mailbox);
+          const feed = get(mailbox.feed.atom);
+          if (!db || !feed) {
+            return Effect.succeed([]);
+          }
+
+          const feedMessages = get(db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom);
+          // Drafts live in the space db, not the feed (mirrors `mailboxMessage` above).
+          const draftMessages = get(db.query(Filter.type(Message.Message)).atom).filter((message) =>
+            DraftMessage.belongsTo(message, Obj.getURI(mailbox)),
+          );
+
+          return Effect.succeed(
+            [...feedMessages, ...draftMessages].map((message) =>
+              Node.make({
+                id: message.id,
+                type: Type.getTypename(Message.Message),
+                data: message,
+                properties: {
+                  label: message.properties?.subject ?? ['message.label', { ns: meta.profile.key }],
+                  icon: 'ph--envelope-open--regular',
+                  disposition: 'hidden',
+                },
+              }),
+            ),
+          );
+        },
       }),
 
       GraphBuilder.createExtension({
@@ -412,6 +343,9 @@ export default Capability.makeModule(
       }),
 
       TypeSection.createTypeSectionExtension(Calendar.Calendar, {
+        // Set here rather than via a schema annotation so the URL key does not leak into the
+        // schema serialized in LLM prompts (memoized assistant conversations).
+        urlKey: 'calendar',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
@@ -470,76 +404,43 @@ export default Capability.makeModule(
         },
       }),
 
-      // Resolves a URI-keyed event node for deep-link / bookmark paths that use the EID format
-      // (e.g. navigating directly to echo:<spaceId>/<eventId>). Events live in a calendar's feed
-      // (Google sync), with a space-db fallback for locally-created drafts.
+      // Every event in a calendar's feed, plus its local draft events, as a hidden child of the
+      // calendar node — so `…/calendars/<calendarId>/<eventId>` resolves via the `event` key.
+      // Reinstates both the removed `createFeedObjectNodeExtension` (calendar variant) and the
+      // EID-keyed `eventObjectNode` resolver: both existed only to make an event reachable by id,
+      // which enumerating events as children now does uniformly for any deep-link shape.
       GraphBuilder.createExtension({
-        id: 'eventObjectNode',
-        match: () => Option.none(),
-        resolver: (qualifiedId, get) =>
-          Effect.gen(function* () {
-            const eid = EID.tryParse(qualifiedId);
-            if (!eid) {
-              return null;
-            }
-            const spaceId = EID.getSpaceId(eid);
-            const entityId = EID.getEntityId(eid);
-            if (!spaceId || !entityId || !Key.EntityId.isValid(entityId)) {
-              return null;
-            }
+        id: 'calendarEvents',
+        urlKey: 'event',
+        match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        connector: (calendar, get) => {
+          const db = Obj.getDatabase(calendar);
+          const feed = calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined;
+          if (!db || !feed) {
+            return Effect.succeed([]);
+          }
 
-            const client = yield* Capability.get(ClientCapabilities.Client);
-            const space = client.spaces.get(spaceId);
-            if (!space) {
-              return null;
-            }
+          const feedEvents = get(db.query(Query.select(Filter.type(Event.Event)).from(feed)).atom);
+          // Draft events live in the space db (not the feed), parented to their calendar.
+          const draftEvents = get(db.query(Filter.type(Event.Event)).atom).filter((event) =>
+            DraftEvent.belongsTo(event, calendar.id),
+          );
 
-            const calendars = get(space.db.query(Filter.type(Calendar.Calendar)).atom);
-            let event: Event.Event | undefined;
-            for (const calendar of calendars) {
-              const calendarSnapshot = get(Obj.atom(calendar));
-              const feed = calendarSnapshot.feed
-                ? (get(calendarSnapshot.feed.atom) as Feed.Feed | undefined)
-                : undefined;
-              if (feed) {
-                event = get(space.db.query(Query.select(Filter.id(entityId)).from(feed)).atom)[0];
-              }
-              if (event) {
-                break;
-              }
-            }
-            // Draft events live in the space db (not a feed); fall back to a db lookup.
-            if (!event) {
-              const fromDb = get(space.db.query(Query.select(Filter.id(entityId))).atom)[0];
-              if (Obj.instanceOf(Event.Event, fromDb)) {
-                event = fromDb;
-              }
-            }
-            if (!event) {
-              return null;
-            }
-
-            return {
-              id: qualifiedId,
-              type: Type.getTypename(Event.Event),
-              data: event,
-              properties: {
-                label: event.title ?? ['event.label', { ns: meta.profile.key }],
-                icon: 'ph--calendar-dot--regular',
-                disposition: 'hidden',
-              },
-            };
-          }).pipe(Effect.orDie),
-      }),
-
-      createFeedObjectNodeExtension<Calendar.Calendar, Event.Event>({
-        id: 'calendarFeedObjectNode',
-        parentType: Calendar.Calendar,
-        childType: Event.Event,
-        getFeed: (calendar, get) => (calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined),
-        isDbChild: (_, obj): obj is Event.Event => Obj.instanceOf(Event.Event, obj),
-        getNodeLabel: (event) => event.title ?? ['event.label', { ns: meta.profile.key }],
-        nodeIcon: 'ph--calendar-dot--regular',
+          return Effect.succeed(
+            [...feedEvents, ...draftEvents].map((event) =>
+              Node.make({
+                id: event.id,
+                type: Type.getTypename(Event.Event),
+                data: event,
+                properties: {
+                  label: event.title ?? ['event.label', { ns: meta.profile.key }],
+                  icon: 'ph--calendar-dot--regular',
+                  disposition: 'hidden',
+                },
+              }),
+            ),
+          );
+        },
       }),
 
       GraphBuilder.createExtension({

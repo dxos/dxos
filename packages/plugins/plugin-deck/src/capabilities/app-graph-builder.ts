@@ -28,26 +28,6 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         actions: (_node, get) =>
           Effect.gen(function* () {
-            // NOTE(Zan): This is currently disabled.
-            // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
-            // const _fullscreen = {
-            //   id: `${LayoutAction.UpdateLayout._tag}/fullscreen`,
-            //   data: async () => {
-            //     const { dispatchPromise: dispatch } = context.get(Capabilities.IntentDispatcher);
-            //     await dispatch(
-            //       createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'fullscreen' } }),
-            //     );
-            //   },
-            //   properties: {
-            //     label: ['toggle-fullscreen.label', { ns: meta.id }],
-            //     icon: 'ph--arrows-out--regular',
-            //     keyBinding: {
-            //       macos: 'ctrl+meta+f',
-            //       windows: 'shift+ctrl+f',
-            //     },
-            //   },
-            // };
-
             const closeCurrent = {
               id: `${LayoutOperation.Close.meta.key}.current`,
               data: Effect.fnUntraced(function* () {
@@ -118,7 +98,7 @@ export default Capability.makeModule(
               },
             };
 
-            return !deck?.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
+            return deck?.active.length !== 1 ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
           }).pipe(Effect.orDie),
       }),
     ]);

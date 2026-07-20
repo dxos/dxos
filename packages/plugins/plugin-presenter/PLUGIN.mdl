@@ -111,13 +111,15 @@ component SlideArticle
 op TogglePresentation
   desc: |
     Toggles presentation mode for a Markdown document or Collection.
-    Opens the presenter companion node in solo-fullscreen layout via the Deck plugin.
-    If the deck is not already in fullscreen, switches to solo--fullscreen before opening.
+    Opens the presenter companion node via the Deck plugin, driving the deck's ephemeral
+    fullscreen state (EphemeralDeckState.fullscreen) rather than a layout mode.
+    If the presenter companion isn't already fullscreen, toggles it fullscreen before opening;
+    exiting reverts fullscreen and re-opens the source object.
   input:
     object: Markdown.Document | Collection.Collection
     state?: boolean             # explicit on/off override; omit to toggle
   output: void
-  effects: [layout:navigate, deck:solo-fullscreen]
+  effects: [layout:navigate, deck:fullscreen]
   requires: [DeckCapabilities.State, DeckOperation.Adjust, LayoutOperation.Open]
   note: |
     Resolves the presenter companion node path as `<objectPath>/presenter`.

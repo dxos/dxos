@@ -19,7 +19,7 @@ export default Config2.make({
       Layout operations that modify the main Composer window (Open, SwitchWorkspace) are
       intercepted and forwarded to the main window via Tauri inter-window events, then the
       spotlight panel is dismissed. Operations that are irrelevant in the popover context
-      (SetLayoutMode, UpdateSidebar, UpdatePopover, etc.) are silently ignored.
+      (UpdateSidebar, UpdatePopover, etc.) are silently ignored.
 
       The panel auto-dismisses when the window loses focus or the user presses Escape, and
       resets to the default commands dialog each time it regains focus. A short debounce on

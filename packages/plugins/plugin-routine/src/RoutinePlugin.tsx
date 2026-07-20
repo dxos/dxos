@@ -11,7 +11,6 @@ import {
   AppGraphBuilder,
   CreateObject,
   LayerSpecs,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   RegistrySync,
@@ -28,7 +27,6 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const RoutinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

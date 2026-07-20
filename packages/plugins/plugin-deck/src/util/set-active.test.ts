@@ -14,93 +14,55 @@ const makeDeck = (overrides: Partial<DeckState> = {}): DeckState => ({
 });
 
 describe('computeActiveUpdates', () => {
-  describe('routing to solo vs active', () => {
-    test('routes to solo when initialized is false and solo is undefined', ({ expect }) => {
-      const deck = makeDeck({ initialized: false });
+  describe('active', () => {
+    test('sets active to the requested list', ({ expect }) => {
+      const deck = makeDeck({ active: [] });
       const { deckUpdates } = computeActiveUpdates({ next: ['item1'], deck });
-      expect(deckUpdates.solo).toBe('item1');
-      expect(deckUpdates.active).toEqual([]);
+      expect(deckUpdates.active).toEqual(['item1']);
     });
 
-    test('routes to solo when solo is set (regardless of initialized)', ({ expect }) => {
-      const deck = makeDeck({ solo: 'current', initialized: true });
+    test('replaces a multi-plank active list', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b', 'c'] });
       const { deckUpdates } = computeActiveUpdates({ next: ['item1'], deck });
-      expect(deckUpdates.solo).toBe('item1');
-      expect(deckUpdates.active).toEqual([]);
+      expect(deckUpdates.active).toEqual(['item1']);
     });
 
-    test('routes to active when initialized is true and solo is undefined', ({ expect }) => {
-      const deck = makeDeck({ initialized: true });
-      const { deckUpdates } = computeActiveUpdates({ next: ['item1', 'item2'], deck });
-      expect(deckUpdates.solo).toBeUndefined();
-      expect(deckUpdates.active).toEqual(['item1', 'item2']);
-    });
-  });
-
-  describe('active preservation', () => {
-    test('preserves active unchanged when routing to solo', ({ expect }) => {
-      const deck = makeDeck({ solo: 'current', active: ['a', 'b', 'c'], initialized: true });
-      const { deckUpdates } = computeActiveUpdates({ next: ['item1'], deck });
-      expect(deckUpdates.solo).toBe('item1');
-      expect(deckUpdates.active).toEqual(['a', 'b', 'c']);
-    });
-
-    test('preserves active when initialized is false', ({ expect }) => {
-      const deck = makeDeck({ initialized: false, active: ['stale'] });
-      const { deckUpdates } = computeActiveUpdates({ next: ['item1'], deck });
-      expect(deckUpdates.solo).toBe('item1');
-      expect(deckUpdates.active).toEqual(['stale']);
+    test('grows active with additional planks', ({ expect }) => {
+      const deck = makeDeck({ active: ['a'] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['a', 'b'], deck });
+      expect(deckUpdates.active).toEqual(['a', 'b']);
     });
   });
 
   describe('inactive handling', () => {
     test('moves removed items to inactive', ({ expect }) => {
-      const deck = makeDeck({ initialized: true, active: ['a', 'b', 'c'] });
+      const deck = makeDeck({ active: ['a', 'b', 'c'] });
       const { deckUpdates } = computeActiveUpdates({ next: ['a', 'c'], deck });
       expect(deckUpdates.active).toEqual(['a', 'c']);
       expect(deckUpdates.inactive).toContain('b');
     });
 
-    test('moves displaced solo item to inactive', ({ expect }) => {
-      const deck = makeDeck({ solo: 'old', initialized: true });
+    test('moves a displaced single active plank to inactive', ({ expect }) => {
+      const deck = makeDeck({ active: ['old'] });
       const { deckUpdates } = computeActiveUpdates({ next: ['new'], deck });
-      expect(deckUpdates.solo).toBe('new');
+      expect(deckUpdates.active).toEqual(['new']);
       expect(deckUpdates.inactive).toContain('old');
     });
 
     test('does not duplicate items already in inactive', ({ expect }) => {
-      const deck = makeDeck({ solo: 'old', initialized: true, inactive: ['old'] });
+      const deck = makeDeck({ active: ['old'], inactive: ['old'] });
       const { deckUpdates } = computeActiveUpdates({ next: ['new'], deck });
       const oldCount = deckUpdates.inactive.filter((id) => id === 'old').length;
       expect(oldCount).toBe(1);
     });
   });
 
-  describe('fullscreen', () => {
-    test('clears fullscreen when solo is cleared', ({ expect }) => {
-      const deck = makeDeck({ solo: 'item', fullscreen: true, initialized: true });
-      const { deckUpdates } = computeActiveUpdates({ next: [], deck });
-      expect(deckUpdates.fullscreen).toBe(false);
-    });
-
-    test('preserves fullscreen when solo is set', ({ expect }) => {
-      const deck = makeDeck({ solo: 'old', fullscreen: true, initialized: true });
-      const { deckUpdates } = computeActiveUpdates({ next: ['new'], deck });
-      expect(deckUpdates.fullscreen).toBe(true);
-    });
-  });
-
   describe('empty next', () => {
-    test('clears solo when next is empty and in solo mode', ({ expect }) => {
-      const deck = makeDeck({ solo: 'item', initialized: false });
-      const { deckUpdates } = computeActiveUpdates({ next: [], deck });
-      expect(deckUpdates.solo).toBeUndefined();
-    });
-
-    test('clears active when next is empty and in deck mode', ({ expect }) => {
-      const deck = makeDeck({ initialized: true, active: ['a', 'b'] });
+    test('clears active when next is empty', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'] });
       const { deckUpdates } = computeActiveUpdates({ next: [], deck });
       expect(deckUpdates.active).toEqual([]);
+      expect(deckUpdates.inactive).toEqual(expect.arrayContaining(['a', 'b']));
     });
   });
 });

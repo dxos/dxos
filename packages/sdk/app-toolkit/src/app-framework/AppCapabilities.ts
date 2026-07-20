@@ -8,7 +8,6 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
-import type * as Option from 'effect/Option';
 import * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
@@ -18,7 +17,7 @@ import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Credential, Operation, Skill } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
-import { EID, type URI } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 
@@ -45,7 +44,11 @@ export const FileInfoSchema = Schema$.Struct({
 export type FileInfo = Schema$.Schema.Type<typeof FileInfoSchema>;
 
 export type Layout = Readonly<{
-  mode: string;
+  variant: string;
+  /**
+   * Whether the active plank is displayed fullscreen (headless, no chrome).
+   */
+  fullscreen: boolean;
   dialogOpen: boolean;
   sidebarOpen: boolean;
   complementarySidebarOpen: boolean;
@@ -138,6 +141,12 @@ export const StatsPanel = Capability$.make<StatsPanelStore>('org.dxos.app-toolki
 export type AppGraph = Readonly<{
   graph: Graph.ExpandableGraph;
   explore: typeof GraphBuilder.explore;
+  /**
+   * The graph builder instance backing {@link graph}, exposed so URL resolution
+   * (`@dxos/app-graph`'s `path-resolution.ts`) can read `urlKey` declarations and reverse-map nodes
+   * back to their producing extension — neither of which is derivable from `graph` alone.
+   */
+  builder: GraphBuilder.GraphBuilder;
 }>;
 
 /**
@@ -305,19 +314,6 @@ export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 
 export const NavigationHandler = Capability$.make<NavigationHandler>(
   'org.dxos.app-toolkit.capability.navigationHandler',
-);
-
-/**
- * Resolves a qualified graph path to a DXN.
- * Each plugin recognizes its own path patterns and returns the corresponding DXN.
- * Returns None if the path is not recognized by this resolver.
- * Used to validate navigation targets against remote services (e.g., edge).
- * @category Capability
- */
-export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
-
-export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
-  'org.dxos.app-framework.capability.navigationPathResolver',
 );
 
 /** A transient progress monitor handle — the update side of one registry entry. */
