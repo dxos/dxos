@@ -9,7 +9,6 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
@@ -42,7 +41,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   // Result filter: all vs starred-only (ephemeral view state).
   const [view, setView] = useState<'all' | 'starred'>('all');
 
-  const db = getSpace(search)?.db;
+  const db = Obj.getDatabase(search);
 
   // Results are immutable entries in the Search's feed queue.
   const echoFeed = search.feed?.target;
