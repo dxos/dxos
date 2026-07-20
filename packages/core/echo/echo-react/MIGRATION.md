@@ -29,7 +29,7 @@ The following symbols now import from `@dxos/echo-react` across
 `ObjectUpdateCallback`, `ObjectPropUpdateCallback`.
 
 Result: every plugin/ui file that used the `@dxos/react-client/echo` barrel
-*only* for these hooks (106 files) dropped the `@dxos/react-client/echo` import
+_only_ for these hooks (106 files) dropped the `@dxos/react-client/echo` import
 entirely; files that also use space-bound symbols kept those and split the hooks
 out. `@dxos/echo-react` was added as a `workspace:*` dependency to every package
 that needed it.
