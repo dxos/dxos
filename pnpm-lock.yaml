@@ -17146,6 +17146,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/i18n':
         specifier: workspace:*
         version: link:../../common/i18n
