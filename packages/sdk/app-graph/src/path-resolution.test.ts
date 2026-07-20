@@ -22,6 +22,9 @@ const COMMENTS_TYPE = 'test.comments';
 const GROUP_TYPE = 'test.group';
 const GROUP_ID = 'group';
 const SECTIONED_TYPE = 'test.sectioned';
+const INLINE_SECTION_TYPE = 'test.inline-section';
+const INLINE_SECTION_ID = 'inlineSection';
+const INLINE_DOC_TYPE = 'test.inline-doc';
 
 const WORKSPACE_A = 'workspaceA';
 const WORKSPACE_B = 'workspaceB';
@@ -105,7 +108,22 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     }),
   );
 
-  GraphBuilder.addExtension(builder, [workspaces, docs, comments, sharedKeyDocs, group, sectionedDocs]);
+  // A section connector that returns its objects as inline children (like TypeSection), rather than as
+  // top-level connector nodes. Provenance must still be recorded for the inline children so they carry
+  // the extension's urlKey — otherwise they have no URL representation.
+  const inlineDocs = Effect.runSync(
+    GraphBuilder.createExtension({
+      id: 'inlineDocs',
+      urlKey: 'inline',
+      match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
+      connector: () =>
+        Effect.succeed([
+          { id: INLINE_SECTION_ID, type: INLINE_SECTION_TYPE, nodes: [{ id: 'inlineDocA', type: INLINE_DOC_TYPE }] },
+        ]),
+    }),
+  );
+
+  GraphBuilder.addExtension(builder, [workspaces, docs, comments, sharedKeyDocs, group, sectionedDocs, inlineDocs]);
   return builder;
 };
 
@@ -208,6 +226,19 @@ describe('path-resolution', () => {
       expect(Option.getOrThrow(represented)).toEqual({ key: 'sectioned', id: 'secDocA', workspace: WORKSPACE_A });
     });
 
+    test('resolves an inline child node (produced in a parent node’s nodes array)', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'inline', id: 'inlineDocA', workspace: WORKSPACE_A }],
+        }),
+      );
+      expect(results).toEqual([
+        { pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${INLINE_SECTION_ID}/inlineDocA` },
+      ]);
+    });
+
     test('a key shared by two extensions resolves nodes produced by either', async ({ expect }) => {
       const builder = buildTestBuilder();
       const results = await EffectEx.runPromise(
@@ -249,6 +280,19 @@ describe('path-resolution', () => {
       invariant(companion, 'expected the companion to resolve');
       const represented = PathResolution.representNode(builder, companion.nodeId);
       expect(Option.getOrThrow(represented)).toEqual({ key: 'comments', workspace: WORKSPACE_A });
+    });
+
+    test('round-trips an inline child node back to its key/id', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'inline', id: 'inlineDocA', workspace: WORKSPACE_A }],
+        }),
+      );
+      invariant(resolved, 'expected the inline child to resolve');
+      const represented = PathResolution.representNode(builder, resolved.nodeId);
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'inline', id: 'inlineDocA', workspace: WORKSPACE_A });
     });
 
     test('returns none for a node with no key-declaring producer', async ({ expect }) => {

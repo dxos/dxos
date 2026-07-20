@@ -29,9 +29,16 @@ plugin-id fallback key instead of `collection`; (2) reload/deep-link to an objec
       chain (e.g. its collection), which `expandPath` triggers but cannot synchronously await; the
       deck url-handler retries `resolveUrl` (15 × 150ms) for loader-confirmed planks until their
       ancestors materialize. Fixes bug #2. Browser-verified: cold deep-link/reload renders the object.
-- [ ] **Re-verify nested-collection + type-section deep links** — root-collection + warm cases done;
-      confirm a nested-collection object (BFS fallback) and a type-section object deep-link cold-load.
-- [ ] **Commit Phase C + full lint/fmt** — then fold into PR #12273.
+- [x] **Type-section objects had no URL (inline-child provenance)** — `GraphBuilder` recorded node
+      provenance (`_nodeExtensions`, read by `getNodeExtensionId`) only for top-level connector nodes,
+      not inline children returned in a parent node's `nodes` array. TypeSection returns its objects
+      inline, so every type-section object (routines, mail, calendar, channel, chat, topic, …) had no
+      `urlKey` mapping → workspace-only URL. Fixed: `_recordProvenance` recurses into inline `nodes`.
+      Fixes both reverse (representNode) and forward (BFS keys off getNodeExtensionId). Browser-verified
+      on a Routine: select → `/w/<ws>/routine/<id>`; cold reload resolves + renders. app-graph 114 green.
+- [ ] **Re-verify nested-collection deep link** — root-collection + type-section (routine) + warm cases
+      done; still confirm a *nested*-collection object (BFS fallback) cold-load.
+- [ ] **Fold Phase C into PR #12273** — committed locally (25ebc0842a + provenance fix); push when ready.
 
 > **Execution policy** — of paramount importance for all execution: delegate the
 > bulk of the work to cheaper models. Sonnet subagents do the file-by-file

@@ -199,6 +199,14 @@ class GraphBuilderImpl implements GraphBuilder {
     return this._nodeExtensions.get(nodeId);
   }
 
+  /** Record `extensionId` as the producer of a qualified node and all of its inline `nodes` descendants. */
+  private _recordProvenance(node: Node.NodeArg<any>, extensionId: string): void {
+    this._nodeExtensions.set(node.id, extensionId);
+    for (const child of node.nodes ?? []) {
+      this._recordProvenance(child, extensionId);
+    }
+  }
+
   /** Apply a set of node changes for a single connector key. */
   private _applyConnectorUpdate(key: string, nodes: Node.NodeArg<any>[], previous: string[]): void {
     const { id, relation } = relationFromConnectorKey(key);
@@ -306,10 +314,13 @@ class GraphBuilderImpl implements GraphBuilder {
       connectors,
       (entries) => {
         const nodes = qualifyNodeArgs(id)(entries.map((entry) => entry.node));
-        // Record provenance for each qualified top-level node so reverse (node → URL) mapping
-        // can find the producing extension's `urlKey`.
+        // Record provenance for each qualified node — top-level and inline descendants alike — so
+        // reverse (node → URL) mapping and the forward search can find the producing extension's
+        // `urlKey`. Inline children (e.g. a TypeSection's objects, returned in the section node's
+        // `nodes` array) are produced by the same extension, so they carry the same provenance;
+        // without this they would have no URL representation.
         entries.forEach((entry, index) => {
-          this._nodeExtensions.set(nodes[index].id, entry.extensionId);
+          this._recordProvenance(nodes[index], entry.extensionId);
         });
 
         const previous = this._connectorPrevious.get(key) ?? [];
