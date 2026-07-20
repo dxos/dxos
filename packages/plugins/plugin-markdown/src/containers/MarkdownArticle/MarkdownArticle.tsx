@@ -85,7 +85,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // Default branch compare to the accept/reject review overlay ('suggest'); the read-only diff
     // modes (inline/sideBySide/gutter) are opt-in via settings.
     const diffViewMode = settings.diffView ?? 'suggest';
-    const compareActive = versioning.compare && !!activeBranch && branchBaseContent !== undefined;
+    const compareActive = versioning.view === 'diff' && !!activeBranch && branchBaseContent !== undefined;
+    // The `base` view shows the parent content at the branch anchor read-only (the state the branch
+    // diverged from) — rendered from a detached snapshot like a checkpoint/fork, never the live doc.
+    const baseActive = versioning.view === 'base' && !!activeBranch && branchBaseContent !== undefined;
     const branchText = activeBranch ? versioning.activeText : undefined;
     // Suggestion review: instead of binding the editor to the branch, keep it on the parent (main)
     // and overlay the branch's changes as accept/reject suggestions. Accepting a change splices it
@@ -102,7 +105,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // resolves asynchronously; mounting before it is ready would seed the editor with empty text and
     // never recover (the editor key does not change when the binding later resolves).
     const branchLoading =
-      (!!activeBranch && !branchText) ||
+      // The base view renders a detached parent snapshot, so it does not wait on the branch binding.
+      (!!activeBranch && !branchText && !baseActive) ||
       (!!activeVersion?.branch && !checkpointText) ||
       (!!activeFork && forkContent === undefined);
     // Checkpoint and fork both render read-only from a DETACHED content snapshot, never the live
@@ -113,7 +117,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       ? { key: `checkpoint-${activeVersion.id}`, content: checkpointContent }
       : activeFork
         ? { key: `fork-${activeFork.id}`, content: forkContent }
-        : undefined;
+        : baseActive
+          ? { key: `base-${activeBranch?.id}`, content: branchBaseContent }
+          : undefined;
     const editorObject = readonlySnapshot
       ? { id: `${id}--${readonlySnapshot.key}`, text: readonlySnapshot.content ?? '' }
       : suggestActive

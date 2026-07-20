@@ -51,7 +51,8 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   checkpoint — interrupt immediately only when fully blocked.
 - **Automate the user's role where you can.** If their step is mechanical
   (running a command, checking output), do it yourself rather than asking.
-- **Name** When referencing the user (e.g., in commentary) use their name.
+- **Name.** When the user's name is known, refer to them by it in commentary;
+  otherwise use a neutral form of address.
 
 ## Non-negotiables
 

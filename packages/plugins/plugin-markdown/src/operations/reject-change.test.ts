@@ -13,6 +13,7 @@ import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { getObjectOnBranch, toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { TestHelpers } from '@dxos/effect/testing';
+import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
@@ -75,13 +76,13 @@ describe('reject-change operation', () => {
         expect(rootText.content).toBe('alpha\nbravo\ncharlie\ndelta\n');
 
         // Undo the reject via the returned splice (RestoreText on the branch): the suggestion returns.
-        expect(undo).toBeDefined();
+        invariant(undo);
         yield* Operation.invoke(CollaborationOperation.RestoreText, {
           subject: doc,
           branch: branchId,
-          from: undo!.from,
-          del: undo!.del,
-          insert: undo!.insert,
+          from: undo.from,
+          del: undo.del,
+          insert: undo.insert,
         });
         expect(yield* branchContent(rootText, branchId)).toBe('alpha\nBRAVO\ncharlie\nDELTA\n');
       },

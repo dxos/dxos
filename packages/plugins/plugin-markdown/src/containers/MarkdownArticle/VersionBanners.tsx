@@ -18,11 +18,10 @@ export type VersionBannersProps = {
 /**
  * The version-review banner row shown above the editor while off "main @ now" — a slim strip for the
  * active checkpoint / branch / fork (at most one is selected at a time). Owns the selection handlers
- * (restore, branch-from, merge, compare, close) so the container only wires the versioning state.
+ * (restore, branch-from, merge, view-select, close) so the container only wires the versioning state.
  */
 export const VersionBanners = ({ versioning }: VersionBannersProps) => {
-  const { document, activeVersion, activeBranch, activeFork, checkpointText, compare, setSelection, setCompare } =
-    versioning;
+  const { document, activeVersion, activeBranch, activeFork, checkpointText, view, setSelection, setView } = versioning;
 
   // Leaving a checkpoint view returns to the tip it belongs to: the branch the checkpoint was
   // taken on (so the reviewer lands back on the editable branch tip), else main's present.
@@ -70,13 +69,11 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
     }
   }, [document, activeBranch, setSelection]);
 
-  const handleCompare = useCallback(() => setCompare(!compare), [setCompare, compare]);
-
   const handleCloseBanner = useCallback(() => {
     // Closing a branch-checkpoint banner returns to the branch tip, not main.
     setSelection(tipSelection());
-    setCompare(false);
-  }, [setSelection, setCompare, tipSelection]);
+    setView('branch');
+  }, [setSelection, setView, tipSelection]);
 
   return (
     <>
@@ -98,7 +95,8 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
           name={Branch.label(activeBranch)}
           timestamp={activeBranch.createdAt}
           onMerge={handleMerge}
-          onCompare={handleCompare}
+          view={view}
+          onViewChange={setView}
           onClose={handleCloseBanner}
         />
       )}

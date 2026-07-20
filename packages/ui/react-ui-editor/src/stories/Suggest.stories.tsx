@@ -18,6 +18,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   suggestChanges,
+  suggestions,
 } from '@dxos/ui-editor';
 
 import { Editor, type EditorViewProps } from '../components';
@@ -48,6 +49,37 @@ const Render = (args: EditorViewProps) => {
       // The editor is bound to the parent (ORIGINAL); the branch is the proposal.
       automerge(Doc.createAccessor(createObject(Text.make({ content: ORIGINAL })), ['content'])),
       suggestChanges({ proposal: PROPOSAL }),
+    ],
+    [themeMode],
+  );
+
+  return (
+    <Editor.Root>
+      <Editor.View {...args} extensions={extensions} />
+    </Editor.Root>
+  );
+};
+
+// Two reviewers proposing over the same base: Alice and Bob both rewrite "quick" (an overlap), and
+// each has one further, non-overlapping change — a multi-author suggestion overlay.
+const ALICE = 'The fast brown fox jumps over the sleepy dog.';
+const BOB = 'The swift brown fox leaps over the lazy dog.';
+
+const MultiAuthorRender = (args: EditorViewProps) => {
+  const { themeMode } = useThemeContext();
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions(),
+      createThemeExtensions({ themeMode }),
+      createMarkdownExtensions(),
+      automerge(Doc.createAccessor(createObject(Text.make({ content: ORIGINAL })), ['content'])),
+      // Colours would come from the collaboration awareness palette in the app; fixed here.
+      suggestions({
+        sources: [
+          { author: 'did:alice', colour: '#2563eb', content: ALICE },
+          { author: 'did:bob', colour: '#d97706', content: BOB },
+        ],
+      }),
     ],
     [themeMode],
   );
@@ -99,5 +131,32 @@ export const AcceptReject: Story = {
     await userEvent.click(rejectButtons()[0]);
     await waitFor(() => expect(acceptButtons()).toHaveLength(1));
     await waitFor(() => expect(documentText(canvasElement)).toBe(before));
+  },
+};
+
+/**
+ * Two authors reviewing the same base, overlapping on one word. Each change is independently
+ * attributable and accepting one re-diffs the rest (the overlapping author's change persists).
+ * Deterministic — no AI, so it runs in CI.
+ */
+export const MultipleAuthors: Story = {
+  render: MultiAuthorRender,
+  play: async ({ canvasElement }) => {
+    const acceptButtons = () => canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-accept');
+    const insertText = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-insert')).map((node) => node.textContent);
+
+    // Four suggestions total: Alice{fast, sleepy} + Bob{swift, leaps}; "fast"/"swift" overlap on "quick".
+    await waitFor(() => expect(documentText(canvasElement)).toContain('quick'), { timeout: 15_000 });
+    await waitFor(() => expect(acceptButtons()).toHaveLength(4));
+    await waitFor(() => expect(insertText()).toEqual(expect.arrayContaining(['fast', 'swift', 'sleepy', 'leaps'])));
+
+    // Accept the first (offset then author order ⇒ Alice's "quick"→"fast"): the base takes "fast".
+    // Bob's overlapping "quick"→"swift" re-diffs against the new base and remains as a suggestion.
+    await userEvent.click(acceptButtons()[0]);
+    await waitFor(() => expect(acceptButtons()).toHaveLength(3));
+    await waitFor(() => expect(documentText(canvasElement)).toContain('fast'));
+    await waitFor(() => expect(documentText(canvasElement)).not.toContain('quick'));
+    await waitFor(() => expect(insertText()).toEqual(expect.arrayContaining(['swift'])));
   },
 };

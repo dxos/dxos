@@ -37,10 +37,16 @@ describe('suggestChanges', () => {
 
   test('rejecting hides one change by its position-independent key', ({ expect }) => {
     const hunks = diffHunks(ORIGINAL, PROPOSAL);
-    const dismissed = new Set([suggestionKey(hunks[0])]);
-    const visible = hunks.filter((hunk) => !dismissed.has(suggestionKey(hunk)));
+    const author = '';
+    const dismissed = new Set([suggestionKey(hunks[0], author)]);
+    const visible = hunks.filter((hunk) => !dismissed.has(suggestionKey(hunk, author)));
     expect(visible).toHaveLength(hunks.length - 1);
     // The rejected hunk's key does not collide with the others.
-    expect(visible.some((hunk) => suggestionKey(hunk) === suggestionKey(hunks[0]))).toBe(false);
+    expect(visible.some((hunk) => suggestionKey(hunk, author) === suggestionKey(hunks[0], author))).toBe(false);
+  });
+
+  test('the same change by two authors gets distinct keys', ({ expect }) => {
+    const [hunk] = diffHunks(ORIGINAL, PROPOSAL);
+    expect(suggestionKey(hunk, 'did:alice')).not.toBe(suggestionKey(hunk, 'did:bob'));
   });
 });
