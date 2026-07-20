@@ -26,7 +26,6 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
     FeedAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-    AppAnnotation.UrlPrefixAnnotation.set('calendar'),
     // Offer "Connect" in the calendar toolbar; bind the calendar as the new connection's sync target.
     ConnectorAuthAnnotation.set({ connectorIds: [GOOGLE_CALENDAR_CONNECTOR_ID], bindTarget: true }),
   ),
