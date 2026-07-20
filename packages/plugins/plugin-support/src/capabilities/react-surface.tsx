@@ -11,10 +11,10 @@ import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framew
 import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
 import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
-import { useObject } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import {

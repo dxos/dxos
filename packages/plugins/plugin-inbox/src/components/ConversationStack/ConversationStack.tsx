@@ -10,9 +10,9 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRedu
 import { type Capabilities } from '@dxos/app-framework';
 import { type Graph } from '@dxos/app-graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { normalizeText } from '@dxos/markdown';
-import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
 import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';

@@ -10,8 +10,9 @@ import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
-import { useObject, useRegistry } from '@dxos/react-client/echo';
+import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';

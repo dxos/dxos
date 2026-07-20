@@ -8,11 +8,11 @@ import React, { useCallback } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, type Database, DXN, Filter, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';

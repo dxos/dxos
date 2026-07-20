@@ -12,8 +12,8 @@ import React, { useCallback } from 'react';
 
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
-import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import {
   type ActionExecutor,
