@@ -24,9 +24,9 @@ export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
   Plugin.addLazyModule(Settings),
   Plugin.addLazyModule(ReactSurface),
   Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(OAuthRecoveryRedirect, { id: 'oauth-recovery-redirect' }),
-  Plugin.addLazyModule(DefaultContent, { id: 'default-content' }),
-  Plugin.addLazyModule(Onboarding, { id: 'onboarding' }),
+  Plugin.addLazyModule(OAuthRecoveryRedirect),
+  Plugin.addLazyModule(DefaultContent),
+  Plugin.addLazyModule(Onboarding),
   Plugin.make,
 );
 

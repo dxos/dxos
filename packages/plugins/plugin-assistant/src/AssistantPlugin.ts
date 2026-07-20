@@ -69,8 +69,8 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
     Plugin.addLazyModule(Settings),
     Plugin.addLazyModule(ReactSurface),
     Plugin.addLazyModule(AppCapability.translations(translations)),
-    Plugin.addLazyModule(AutomationTemplates, { id: 'automation-templates' }),
-    Plugin.addLazyModule(MarkdownExtension, { id: 'markdown' }),
+    Plugin.addLazyModule(AutomationTemplates),
+    Plugin.addLazyModule(MarkdownExtension),
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?

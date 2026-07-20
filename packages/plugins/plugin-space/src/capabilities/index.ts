@@ -10,7 +10,6 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceCapability, type SpacePluginOptions } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
-
 import { makeCreateInvitationUrl } from './helpers';
 
 export * from './app-graph-builder';

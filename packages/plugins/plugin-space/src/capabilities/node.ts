@@ -12,7 +12,6 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, type SpacePluginOptions } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
-
 import { makeCreateInvitationUrl } from './helpers';
 
 export const CreateObject = Capability.lazyModule(

@@ -184,12 +184,41 @@ reset-device flake.
   `packages/apps/composer-app/AUDIT.md` §12 (tiered plan: post-paint `AfterStartup` event for
   cold providers, type-presence gating for content-type plugins, on-demand pull for operation
   handlers; full lists in `AUDIT-modules.md`).
-- Three compiler-forced `Plugin.addLazyModule<void>` explicit-generic anchors remain (without
-  the annotation, inference resolves a following plain `Plugin.addModule` entry's type
-  parameter to `unknown` instead of `void`): plugin-inbox `InboxPlugin.tsx` (`Connector`),
-  plugin-navtree `NavTreePlugin.tsx` (`State`), and one in a plugin-magazine story
-  (`MagazineCurate.stories.tsx`).
 - The `Maker<C>` type alias in `app-toolkit/src/app-framework/AppCapability.ts` guards TS2883
   on three makers whose capability tag's type structurally carries a type this package
   doesn't re-export (e.g. `@dxos/compute`'s `Skill.Definition`); kept as an explicit
   annotation rather than left to inference.
+- One `Plugin.addLazyModule<void>` anchor remains, in a plugin-magazine story
+  (`MagazineCurate.stories.tsx`) — the two in `src` (plugin-inbox `Connector`, plugin-navtree
+  `State`) were removed below.
+
+### Post-closure addendum — unnecessary module id audit (2026-07-20)
+
+User-prompted audit of every `Plugin.addLazyModule(X, { id })`/raw `Plugin.addModule({ id, ... })`
+site repo-wide, now that every module carries its own tag from where it's authored:
+
+- [x] 8 redundant `{ id }` overrides removed (module already tagged; override was just a
+      kebab-case restyle, unreferenced by any test/consumer): plugin-debug (`StatsPanel`),
+      plugin-preview (`PreviewPopover`), plugin-assistant (`AutomationTemplates`,
+      `MarkdownExtension`), plugin-onboarding (`DefaultContent`, `Onboarding`),
+      plugin-magazine (`RoutineTemplates`), plugin-support (`SupportSettings`)
+- [x] plugin-onboarding's `OAuthRecoveryRedirect` override dropped + its test updated to
+      assert the default tag instead of the kebab string
+- [x] 3 files' raw `Plugin.addModule({ id, activate: <inline> })` sites (leftover from
+      before lazy modules existed) converted to tagged `Capability.inlineModule` in their
+      capabilities barrels + bare `Plugin.addLazyModule`: plugin-navtree (`expose`),
+      plugin-inbox (`contact-extractor`, `summarize-extractor`, workerd `operation-handler`).
+      This let the `Plugin.addLazyModule<void>` compiler-forced anchors on `State` and
+      `Connector` (respectively) be removed too — the raw `addModule` shape mixed into the
+      chain was the cause of the inference collapse.
+- [x] plugin-observability (`observability`, `namespace`) and plugin-comments
+      (`agent-identity`) converted the same way, using the module spec's `props` mapping
+      for their options-dependent values
+- [x] Left untouched, confirmed structurally necessary (not a naming issue): plugin-observability
+      `log-downloader` (declared `provides` is itself conditional on plugin options — a static
+      module spec can't express that) and plugin-comments `agent-runner-override` (branches
+      between two entirely different module shapes depending on options)
+
+Gates: build+test green for all 10 touched packages; one pre-existing `plugin-assistant`
+failure (`can run memoized instructions`, `ServiceNotAvailable`) confirmed unrelated via
+`git stash` A/B; full-repo build green; lint/format clean.

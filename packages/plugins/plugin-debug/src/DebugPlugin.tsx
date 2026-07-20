@@ -18,7 +18,7 @@ export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
   Plugin.addLazyModule(DebugSettings),
   Plugin.addLazyModule(ReactSurface),
   Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(StatsPanel, { id: 'stats-panel' }),
+  Plugin.addLazyModule(StatsPanel),
   Plugin.addLazyModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

@@ -22,7 +22,7 @@ describe('OnboardingPlugin', () => {
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
         moduleId('Settings'),
-        moduleId('oauth-recovery-redirect'),
+        moduleId('OAuthRecoveryRedirect'),
         moduleId('ReactSurface'),
         moduleId('AppGraphBuilder'),
         moduleId('OperationHandler'),

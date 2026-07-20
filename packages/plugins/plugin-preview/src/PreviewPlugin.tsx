@@ -14,7 +14,7 @@ export const PreviewPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(AppCapability.schema([Person.Person, Organization.Organization])),
   Plugin.addLazyModule(ReactSurface),
   Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(PreviewPopover, { id: 'preview-popover' }),
+  Plugin.addLazyModule(PreviewPopover),
   Plugin.make,
 );
 

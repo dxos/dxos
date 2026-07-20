@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
 import { Event, Message } from '@dxos/types';
 
@@ -11,13 +11,14 @@ import { Calendar, Mailbox } from '#types';
 
 import OperationHandler from './capabilities/operation-handler';
 
+const OperationHandlerModule = Capability.inlineModule(
+  'operation-handler',
+  { provides: [Capabilities.OperationHandler] },
+  OperationHandler,
+);
+
 export const InboxPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'operation-handler',
-    requires: [],
-    provides: [Capabilities.OperationHandler],
-    activate: OperationHandler,
-  }),
+  Plugin.addLazyModule(OperationHandlerModule),
   Plugin.addLazyModule(AppCapability.schema([Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message])),
   Plugin.make,
 );

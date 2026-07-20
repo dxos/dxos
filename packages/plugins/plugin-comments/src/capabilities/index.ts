@@ -2,12 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 
-import { CommentCapabilities } from '#types';
+import type { CommentsPluginOptions } from '#plugin';
+import { AgentIdentity, CommentCapabilities, DEFAULT_AGENT_IDENTITY } from '#types';
 
+export const AgentIdentityModule = Capability.inlineModule(
+  'agent-identity',
+  {
+    provides: [AgentIdentity],
+    props: (options: CommentsPluginOptions) => options.agentIdentity ?? DEFAULT_AGENT_IDENTITY,
+  },
+  (identity) => Effect.succeed([Capability.provide(AgentIdentity, identity)]),
+);
 export const AgentRunner = Capability.lazyModule(
   'AgentRunner',
   { provides: [CommentCapabilities.AgentRunner] },

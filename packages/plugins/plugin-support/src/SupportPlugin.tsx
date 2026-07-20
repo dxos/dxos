@@ -36,7 +36,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addLazyModule(HelpState),
   Plugin.addLazyModule(ReactRoot),
   Plugin.addLazyModule(OnSpaceCreated),
-  Plugin.addLazyModule(SupportSettings, { id: 'settings' }),
+  Plugin.addLazyModule(SupportSettings),
   Plugin.addLazyModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

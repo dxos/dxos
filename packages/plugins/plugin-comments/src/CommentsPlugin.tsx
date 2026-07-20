@@ -10,6 +10,7 @@ import { translations as threadTranslations } from '@dxos/react-ui-thread/transl
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import {
+  AgentIdentityModule,
   AgentRunner,
   AppGraphBuilder,
   CommentState,
@@ -21,12 +22,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import {
-  AgentIdentity,
-  type AgentIdentity as AgentIdentityType,
-  CommentCapabilities,
-  DEFAULT_AGENT_IDENTITY,
-} from '#types';
+import { type AgentIdentity as AgentIdentityType, CommentCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -69,14 +65,7 @@ export const CommentsPlugin = Plugin.define<CommentsPluginOptions>(meta).pipe(
           activate: AgentRunner,
         };
   }),
-  // Default agent identity, overridable via `CommentsPluginOptions.agentIdentity` for the same
-  // singleton-arity reason as `AgentRunner` above.
-  Plugin.addModule((options: CommentsPluginOptions) => ({
-    id: 'agent-identity',
-    provides: [AgentIdentity],
-    activate: () =>
-      Effect.succeed([Capability.provide(AgentIdentity, options.agentIdentity ?? DEFAULT_AGENT_IDENTITY)]),
-  })),
+  Plugin.addLazyModule(AgentIdentityModule),
   Plugin.addLazyModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

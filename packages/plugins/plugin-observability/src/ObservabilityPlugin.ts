@@ -9,6 +9,8 @@ import { AppCapability } from '@dxos/app-toolkit';
 
 import {
   ClientReady,
+  Namespace,
+  Observability,
   ObservabilitySettings,
   ObservabilityState,
   OperationHandler,
@@ -24,24 +26,10 @@ export type { ObservabilityPluginOptions } from '#types';
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
   Plugin.addLazyModule(ReactSurface),
   Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addModule(({ observability }: ObservabilityPluginOptions) => ({
-    id: 'observability',
-    requires: [],
-    provides: [ObservabilityCapabilities.Observability],
-    activate: () =>
-      Effect.gen(function* () {
-        const obs = yield* Effect.tryPromise(() => observability());
-        return [Capability.provide(ObservabilityCapabilities.Observability, obs, () => obs.close())];
-      }),
-  })),
+  Plugin.addLazyModule(Observability),
   Plugin.addLazyModule(ObservabilitySettings),
   Plugin.addLazyModule(ObservabilityState),
-  Plugin.addModule(({ namespace }: ObservabilityPluginOptions) => ({
-    id: 'namespace',
-    requires: [],
-    provides: [ObservabilityCapabilities.Namespace],
-    activate: () => Effect.succeed([Capability.provide(ObservabilityCapabilities.Namespace, namespace)]),
-  })),
+  Plugin.addLazyModule(Namespace),
   Plugin.addModule(({ downloadLogs }: ObservabilityPluginOptions) => ({
     id: 'log-downloader',
     requires: [],
