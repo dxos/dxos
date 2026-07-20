@@ -126,7 +126,10 @@ describe('scripted model', () => {
       Effect.provide(
         AddToolkit.layer.pipe(
           Layer.provideMerge(
-            scriptedLayer([ScriptedAiService.toolCall('add', { a: 47, b: 23 }), ScriptedAiService.text('The answer is 70.')]),
+            scriptedLayer([
+              ScriptedAiService.toolCall('add', { a: 47, b: 23 }),
+              ScriptedAiService.text('The answer is 70.'),
+            ]),
           ),
         ),
       ),
@@ -135,18 +138,38 @@ describe('scripted model', () => {
 
   it.effect(
     'isolates cursors per (model, stream) bucket',
-    Effect.fnUntraced(
-      function* () {
-        const opus = yield* LanguageModel.generateText({ prompt: 'x' }).pipe(
-          Effect.provide(scriptedLayer({ models: { opus: { generate: [ScriptedAiService.text('from-opus')] }, sonnet: { generate: [ScriptedAiService.text('from-sonnet')] } }, turns: [] }, OPUS)),
-        );
-        const sonnet = yield* LanguageModel.generateText({ prompt: 'x' }).pipe(
-          Effect.provide(scriptedLayer({ models: { opus: { generate: [ScriptedAiService.text('from-opus')] }, sonnet: { generate: [ScriptedAiService.text('from-sonnet')] } }, turns: [] }, SONNET)),
-        );
-        expect(opus.text).toBe('from-opus');
-        expect(sonnet.text).toBe('from-sonnet');
-      },
-    ),
+    Effect.fnUntraced(function* () {
+      const opus = yield* LanguageModel.generateText({ prompt: 'x' }).pipe(
+        Effect.provide(
+          scriptedLayer(
+            {
+              models: {
+                opus: { generate: [ScriptedAiService.text('from-opus')] },
+                sonnet: { generate: [ScriptedAiService.text('from-sonnet')] },
+              },
+              turns: [],
+            },
+            OPUS,
+          ),
+        ),
+      );
+      const sonnet = yield* LanguageModel.generateText({ prompt: 'x' }).pipe(
+        Effect.provide(
+          scriptedLayer(
+            {
+              models: {
+                opus: { generate: [ScriptedAiService.text('from-opus')] },
+                sonnet: { generate: [ScriptedAiService.text('from-sonnet')] },
+              },
+              turns: [],
+            },
+            SONNET,
+          ),
+        ),
+      );
+      expect(opus.text).toBe('from-opus');
+      expect(sonnet.text).toBe('from-sonnet');
+    }),
   );
 
   it.effect(

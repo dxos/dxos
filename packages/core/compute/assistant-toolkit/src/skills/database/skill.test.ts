@@ -6,9 +6,9 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ScriptedAiService } from '@dxos/ai/testing';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer, operationToolCall } from '@dxos/agent-runtime/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { Operation, Skill } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -261,7 +261,10 @@ describe('Database Skill', () => {
         },
         Effect.provide(
           testLayer([
-            ScriptedAiService.toolCall('update-object', () => ({ obj: ref.obj, properties: { name: 'New Name Corp' } })),
+            ScriptedAiService.toolCall('update-object', () => ({
+              obj: ref.obj,
+              properties: { name: 'New Name Corp' },
+            })),
             ScriptedAiService.text('Renamed the organization.'),
           ]),
         ),

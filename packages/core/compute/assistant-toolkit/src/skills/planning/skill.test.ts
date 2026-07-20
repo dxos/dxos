@@ -5,8 +5,8 @@
 import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { ScriptedAiService } from '@dxos/ai/testing';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { Operation, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession } from '@dxos/compute/AgentService';

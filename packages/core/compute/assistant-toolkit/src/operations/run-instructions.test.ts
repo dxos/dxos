@@ -6,8 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ScriptedAiService } from '@dxos/ai/testing';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import { Instructions, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';

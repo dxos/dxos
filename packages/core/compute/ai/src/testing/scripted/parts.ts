@@ -50,7 +50,13 @@ export interface SynthesizedMeta {
  */
 export const streamParts = (turn: SynthesizedTurn, meta: SynthesizedMeta): Response.StreamPartEncoded[] => {
   const parts: Response.StreamPartEncoded[] = [
-    { type: 'response-metadata', id: meta.responseId, modelId: meta.modelId, timestamp: EPOCH_TIMESTAMP, metadata: EMPTY_METADATA },
+    {
+      type: 'response-metadata',
+      id: meta.responseId,
+      modelId: meta.modelId,
+      timestamp: EPOCH_TIMESTAMP,
+      metadata: EMPTY_METADATA,
+    },
   ];
   if (turn.text !== undefined) {
     parts.push({ type: 'text-start', id: '0', metadata: EMPTY_METADATA });
@@ -58,10 +64,23 @@ export const streamParts = (turn: SynthesizedTurn, meta: SynthesizedMeta): Respo
     parts.push({ type: 'text-end', id: '0', metadata: EMPTY_METADATA });
   }
   for (const tool of turn.tools) {
-    parts.push({ type: 'tool-params-start', id: tool.id, name: tool.name, providerExecuted: false, metadata: EMPTY_METADATA });
+    parts.push({
+      type: 'tool-params-start',
+      id: tool.id,
+      name: tool.name,
+      providerExecuted: false,
+      metadata: EMPTY_METADATA,
+    });
     parts.push({ type: 'tool-params-delta', id: tool.id, delta: tool.inputJson, metadata: EMPTY_METADATA });
     parts.push({ type: 'tool-params-end', id: tool.id, metadata: EMPTY_METADATA });
-    parts.push({ type: 'tool-call', id: tool.id, name: tool.name, params: JSON.parse(tool.inputJson), providerExecuted: false, metadata: EMPTY_METADATA });
+    parts.push({
+      type: 'tool-call',
+      id: tool.id,
+      name: tool.name,
+      params: JSON.parse(tool.inputJson),
+      providerExecuted: false,
+      metadata: EMPTY_METADATA,
+    });
   }
   parts.push({ type: 'finish', reason: turn.reason, usage: ZERO_USAGE, metadata: EMPTY_METADATA });
   return parts;
@@ -74,13 +93,26 @@ export const streamParts = (turn: SynthesizedTurn, meta: SynthesizedMeta): Respo
  */
 export const generateParts = (turn: SynthesizedTurn, meta: SynthesizedMeta): Response.PartEncoded[] => {
   const parts: Response.PartEncoded[] = [
-    { type: 'response-metadata', id: meta.responseId, modelId: meta.modelId, timestamp: EPOCH_TIMESTAMP, metadata: EMPTY_METADATA },
+    {
+      type: 'response-metadata',
+      id: meta.responseId,
+      modelId: meta.modelId,
+      timestamp: EPOCH_TIMESTAMP,
+      metadata: EMPTY_METADATA,
+    },
   ];
   if (turn.text !== undefined) {
     parts.push({ type: 'text', text: turn.text, metadata: EMPTY_METADATA });
   }
   for (const tool of turn.tools) {
-    parts.push({ type: 'tool-call', id: tool.id, name: tool.name, params: JSON.parse(tool.inputJson), providerExecuted: false, metadata: EMPTY_METADATA });
+    parts.push({
+      type: 'tool-call',
+      id: tool.id,
+      name: tool.name,
+      params: JSON.parse(tool.inputJson),
+      providerExecuted: false,
+      metadata: EMPTY_METADATA,
+    });
   }
   parts.push({ type: 'finish', reason: turn.reason, usage: ZERO_USAGE, metadata: EMPTY_METADATA });
   return parts;

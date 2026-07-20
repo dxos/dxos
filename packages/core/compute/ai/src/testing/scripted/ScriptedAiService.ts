@@ -114,7 +114,8 @@ export const turn = (spec: ScriptedTurn): ScriptedTurn => spec;
 // Service.
 //
 
-const normalizeSpec = (script: Script): ScriptSpec => (Array.isArray(script) ? { turns: script } : (script as ScriptSpec));
+const normalizeSpec = (script: Script): ScriptSpec =>
+  Array.isArray(script) ? { turns: script } : (script as ScriptSpec);
 
 /** Per-build mutable state, allocated fresh each time the layer is constructed (i.e. per test). */
 interface ScriptState {
@@ -149,7 +150,9 @@ const lastMessageText = (prompt: Prompt.Prompt): string | undefined => {
   }
   if (Array.isArray(content)) {
     return content
-      .map((part) => (part && typeof part === 'object' && 'text' in part ? String((part as { text: unknown }).text) : ''))
+      .map((part) =>
+        part && typeof part === 'object' && 'text' in part ? String((part as { text: unknown }).text) : '',
+      )
       .join('');
   }
   return undefined;
