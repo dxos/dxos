@@ -134,6 +134,7 @@ const buildDynamicMatcher = (patterns: readonly RegExp[]): RegExp | undefined =>
   if (patterns.length === 0) {
     return undefined;
   }
+
   return new RegExp(patterns.map((pattern) => `(?:${pattern.source})`).join('|'), 'g');
 };
 
@@ -156,6 +157,7 @@ const collectDynamicValues = (prompt: unknown, matcher: RegExp): string[] => {
       ordered.push(token);
     }
   }
+
   return ordered;
 };
 
@@ -167,6 +169,7 @@ const replaceTokens = (prompt: unknown, mapping: ReadonlyMap<string, string>): u
   if (mapping.size === 0) {
     return prompt;
   }
+
   const matcher = new RegExp(
     [...mapping.keys()]
       .sort((a, b) => b.length - a.length)
@@ -174,6 +177,7 @@ const replaceTokens = (prompt: unknown, mapping: ReadonlyMap<string, string>): u
       .join('|'),
     'g',
   );
+
   return deepMapValues(prompt, (value, recurse) => {
     if (typeof value === 'string') {
       return value.replace(matcher, (token) => mapping.get(token) ?? token);
@@ -205,6 +209,7 @@ const remapStoredResponse = (
   if (!matcher) {
     return storedResponse;
   }
+
   const storedValues = collectDynamicValues(storedPrompt, matcher);
   const liveValues = collectDynamicValues(livePrompt, matcher);
   const mapping = new Map<string, string>();
@@ -220,6 +225,7 @@ const remapStoredResponse = (
       mapping.set(storedValues[index], live);
     }
   }
+
   return replaceTokens(storedResponse, mapping) as readonly unknown[];
 };
 
