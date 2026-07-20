@@ -128,4 +128,5 @@ const EventList = ({ events }: { events: readonly ReceivedEvent[] }) => {
 };
 
 const formatTime = (timestamp: number): string =>
-  new Date(timestamp).toLocaleTimeString(undefined, { hour12: false }) + `.${String(timestamp % 1000).padStart(3, '0')}`;
+  new Date(timestamp).toLocaleTimeString(undefined, { hour12: false }) +
+  `.${String(timestamp % 1000).padStart(3, '0')}`;
