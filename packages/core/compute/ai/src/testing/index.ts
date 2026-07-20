@@ -5,6 +5,7 @@
 export * from './calculator';
 export * from './defs';
 export * from './memoization';
+export * from './scripted';
 export * from './tap';
 export * from './test-data';
 export * from './test-layers';

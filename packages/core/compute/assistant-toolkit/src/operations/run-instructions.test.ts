@@ -6,12 +6,12 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import { Instructions, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -20,15 +20,17 @@ import * as Plan from '../types/Plan';
 import { RunInstructions } from './definitions';
 import defaultAgentPrompt from './run-instructions';
 
-EntityId.dangerouslyDisableRandomness();
-
 const operationHandlerSet = OperationHandlerSet.make(defaultAgentPrompt);
 
-const TestLayer = AssistantTestLayer({
-  operationHandlers: operationHandlerSet,
-  types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Plan.Plan],
-  aiServicePreset: 'edge-remote',
-});
+// The agent's model behaviour is scripted inline per test: it calls the inline `completeJob` tool
+// (defined in run-instructions.ts) with the output, then produces a final text turn so the agent
+// loop terminates. No recorded conversation, so editing prompts/tools no longer breaks these tests.
+const testLayer = (script: ScriptedAiService.Script) =>
+  AssistantTestLayer({
+    operationHandlers: operationHandlerSet,
+    types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Plan.Plan],
+    aiService: ScriptedAiService.layer(script),
+  });
 
 describe('Agent prompt', () => {
   it.effect(
@@ -66,7 +68,12 @@ describe('Agent prompt', () => {
         expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
         expect(result).toBe('ack');
       },
-      Effect.provide(TestLayer),
+      Effect.provide(
+        testLayer([
+          ScriptedAiService.turn({ text: 'ack', tools: [{ name: 'completeJob', input: { success: 'ack' } }] }),
+          ScriptedAiService.text('ack'),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -104,7 +111,15 @@ describe('Agent prompt', () => {
         expect(typeof decoded.name).toBe('string');
         expect(typeof decoded.age).toBe('number');
       },
-      Effect.provide(TestLayer),
+      Effect.provide(
+        testLayer([
+          ScriptedAiService.turn({
+            text: "I'll invent a fictional person.",
+            tools: [{ name: 'completeJob', input: { success: { name: 'Eleanor Whitfield', age: 34 } } }],
+          }),
+          ScriptedAiService.text('Done.'),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },

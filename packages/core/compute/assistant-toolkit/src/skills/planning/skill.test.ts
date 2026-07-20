@@ -5,6 +5,7 @@
 import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Operation, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
@@ -12,18 +13,19 @@ import { getSession } from '@dxos/compute/AgentService';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { EntityId } from '@dxos/keys';
 
 import { Agent, Chat, Plan } from '../../types';
 import { PlanningHandlers, PlanningOperations } from './operations';
 import PlanningSkill from './skill';
 
-EntityId.dangerouslyDisableRandomness();
-
+// The plan-reminder hook runs an ephemeral stop/continue check on a sonnet model (a non-streaming
+// side-call — see plan-reminder.ts). Script that model to reply "continue" so the reminder enqueues;
+// the no-op case never reaches the model. No recorded conversation to regenerate.
 const TestLayer = AssistantTestLayer({
   operationHandlers: PlanningHandlers,
   types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
+  aiService: ScriptedAiService.layer({ models: { sonnet: { generate: [ScriptedAiService.text('continue')] } } }),
 });
 
 describe('Planning skill', () => {

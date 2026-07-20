@@ -166,11 +166,18 @@ const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any => {
 /**
  * @returns Tool name produced from function name by escaping invalid characters.
  */
-const makeToolName = (name: string) => {
+export const makeToolName = (name: string) => {
   const toolName = name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-');
   invariant(toolName.match(/^[a-z_][a-z0-9-_]*$/));
   return toolName;
 };
+
+/**
+ * @returns The model-facing tool name for an operation — identical to the name the agent registers
+ * (see {@link projectFunctionToTool}). Use when scripting or asserting a tool call by operation.
+ */
+export const toolNameForOperation = (operation: Operation.Definition.Any): string =>
+  makeToolName(operation.meta.name ?? operation.meta.key);
 
 // TODO(dmaretskyi): Factor out.
 const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<string, Schema.Schema<any, any>> => {
