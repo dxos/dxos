@@ -6,8 +6,8 @@ import { type ViewUpdate } from '@codemirror/view';
 import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
-import { type AppCapabilities, NotFound } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { AppCapabilities, NotFound } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
@@ -92,7 +92,9 @@ export const useExtensions = ({
   onSelectObject,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
-  const { builder } = useAppGraph();
+  // Optional: the low-level MarkdownEditor renders outside a plugin manager (e.g. in storybook),
+  // where no app graph is available; internal-link resolution simply no-ops without it.
+  const builder = useOptionalCapability(AppCapabilities.AppGraph)?.builder;
   const space = getSpace(object);
 
   // Get the content reference from Document objects.
@@ -184,7 +186,7 @@ const createBaseExtensions = ({
   setWidgets,
   platform,
   builder,
-}: ExtensionsOptions & { space?: Space; builder: AppCapabilities.AppGraph['builder'] }): Extension[] => {
+}: ExtensionsOptions & { space?: Space; builder?: AppCapabilities.AppGraph['builder'] }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
@@ -273,7 +275,7 @@ const selectionChange = (viewState: ViewStateManager) => {
 const createRenderLink =
   (
     onSelectObject: (id: string, modifiers?: { shift: boolean }) => void,
-    builder: AppCapabilities.AppGraph['builder'],
+    builder: AppCapabilities.AppGraph['builder'] | undefined,
   ): RenderCallback<{ url: string }> =>
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
@@ -288,6 +290,10 @@ const createRenderLink =
       // Resolution walks the graph, so it's async; the click handler stays enabled throughout and
       // simply no-ops (with a warning) if the link doesn't resolve to a node.
       const handleSelect = async (modifiers?: { shift: boolean }) => {
+        // No app graph (e.g. the standalone editor in storybook): internal links can't be resolved.
+        if (!builder) {
+          return;
+        }
         const nodeId = await EffectEx.runPromise(NotFound.resolveInternalLink(builder, pathname));
         if (Option.isNone(nodeId)) {
           log.warn('internal link did not resolve to a node', { url });
