@@ -196,6 +196,9 @@ type DragDecoState = {
   // difference is empty space below the box, matching the collapsed separators.
   blockHeight: number;
   totalHeight: number;
+  // Horizontal pixel offset for the drop level (see `getDropIndent`), so the placeholder lands where the
+  // dragged content lands.
+  indentOffset: number;
 } | null;
 
 const setDragDeco = StateEffect.define<DragDecoState>();
@@ -209,12 +212,17 @@ class PlaceholderWidget extends WidgetType {
   constructor(
     readonly blockHeight: number,
     readonly totalHeight: number,
+    readonly indentOffset: number,
   ) {
     super();
   }
 
   override eq(other: PlaceholderWidget): boolean {
-    return other.blockHeight === this.blockHeight && other.totalHeight === this.totalHeight;
+    return (
+      other.blockHeight === this.blockHeight &&
+      other.totalHeight === this.totalHeight &&
+      other.indentOffset === this.indentOffset
+    );
   }
 
   override toDOM(): HTMLElement {
@@ -224,6 +232,11 @@ class PlaceholderWidget extends WidgetType {
     const box = element.appendChild(document.createElement('div'));
     box.className = 'cm-blockDropPlaceholderBox';
     box.style.height = `${this.blockHeight}px`;
+    // Shift the box to the drop level (plus the preview's own x nudge) so its left edge aligns exactly with
+    // the dragged content's left edge; the right edge stays at the content's right.
+    const shift = this.indentOffset + PREVIEW_OFFSET.x;
+    box.style.marginLeft = `${shift}px`;
+    box.style.width = `calc(100% - ${shift}px)`;
     return element;
   }
 }
@@ -237,14 +250,14 @@ const dragDecoField = StateField.define<DecorationSet>({
         if (effect.value == null) {
           next = Decoration.none;
         } else {
-          const { collapses, placeholderPos, blockHeight, totalHeight } = effect.value;
+          const { collapses, placeholderPos, blockHeight, totalHeight, indentOffset } = effect.value;
           next = Decoration.set(
             [
               // Collapse each dragged block (and its trailing blank line) out of the document flow.
               ...collapses.map((range) => Decoration.replace({ block: true }).range(range.from, range.to)),
               // Open the gap at the drop slot (before the target line, or after the last line).
               Decoration.widget({
-                widget: new PlaceholderWidget(blockHeight, totalHeight),
+                widget: new PlaceholderWidget(blockHeight, totalHeight, indentOffset),
                 block: true,
                 side: placeholderPos >= tr.state.doc.length ? 1 : -1,
               }).range(placeholderPos),
@@ -730,13 +743,17 @@ const createDragPlugin = (
         if (atCollapseEnd) {
           placeholderPos = atCollapseEnd.from;
         }
-        const key = `${placeholderPos}:${collapses.map((range) => range.from).join(',')}`;
+        // The drop level (quantized to indent units) shifts the placeholder so it aligns with the content.
+        const indentOffset = this.#dropIndent?.offset ?? 0;
+        const key = `${placeholderPos}:${indentOffset}:${collapses.map((range) => range.from).join(',')}`;
         if (key === this.#placeholderKey) {
           return;
         }
 
         this.#placeholderKey = key;
-        this.view.dispatch({ effects: setDragDeco.of({ collapses, placeholderPos, blockHeight, totalHeight }) });
+        this.view.dispatch({
+          effects: setDragDeco.of({ collapses, placeholderPos, blockHeight, totalHeight, indentOffset }),
+        });
       }
     },
   );
@@ -782,11 +799,10 @@ const dragTheme = EditorView.theme({
   '.cm-blockDropPlaceholder': {
     pointerEvents: 'none',
   },
+  // Left/width are set inline per drop (they track the drop level so the box aligns with the content).
   '.cm-blockDropPlaceholderBox': {
     boxSizing: 'border-box',
-    marginLeft: `-${BOX_INSET_X}px`,
-    width: `calc(100% + ${BOX_INSET_X}px)`,
-    backgroundColor: 'color-mix(in oklch, var(--color-accent-text, #3b82f6) 12%, transparent)',
+    backgroundColor: 'color-mix(in oklch, var(--color-accent-text, #3b82f6) 25%, transparent)',
   },
   '.cm-blockDragPreview': {
     position: 'absolute',
