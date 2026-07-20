@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Environment bootstrap for Claude Code cloud agents working in this repo.
 # Installs the toolchain pinned in .prototools (node, pnpm, moon, …) and workspace deps.
+#
+# To wire this up, set your Claude Code cloud agent environment's setup/install command to:
+#   if [ -f .config/claude-code-setup.sh ]; then bash .config/claude-code-setup.sh; fi
+# It runs from the repo root, executes this script (propagating its exit code so real
+# failures surface), and no-ops where the file is absent — one line works across all repos.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
