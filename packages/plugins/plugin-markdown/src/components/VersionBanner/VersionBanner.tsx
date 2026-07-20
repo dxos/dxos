@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/ui';
-import { Button, Icon, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -16,6 +16,7 @@ export type VersionBannerProps = {
    */
   mode: 'checkpoint' | 'branch' | 'fork';
   name: string;
+  /** Compact age shown as a tag (e.g. `2d`, `5h`, `30m`) — the banner has no room for a full date. */
   detail?: string;
   onRestore?: () => void;
   onBranchFrom?: (name: string) => void;
@@ -43,11 +44,17 @@ export const VersionBanner = ({
 
   return (
     <Toolbar.Root>
-      <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} size={4} />
-      <span className='truncate'>
-        {t(`version-banner-${mode}.label`)} <span className='font-medium'>{name}</span>
-        {detail && <span className='text-description'> · {detail}</span>}
-      </span>
+      <div className='flex items-center gap-0.5 px-1 truncate'>
+        {/* Visually hidden: the banner is compact (icon + name + age), but the mode label stays in
+            the DOM for screen readers and text-based tests. */}
+        <span className='sr-only'>{t(`version-banner-${mode}.label`)}</span>
+        <Tag classNames='flex gap-2'>
+          <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
+          {name}
+        </Tag>
+        {detail && <Tag hue='green'>{detail}</Tag>}
+      </div>
+      <Toolbar.Separator />
       <div className='flex items-center gap-1 ms-auto'>
         {mode === 'checkpoint' && onRestore && (
           <Button density='sm' variant='ghost' onClick={onRestore}>
