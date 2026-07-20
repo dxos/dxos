@@ -15,7 +15,7 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { RelatedItemsList } from '#components';

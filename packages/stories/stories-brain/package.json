@@ -12,6 +12,7 @@
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
+  "exports": {},
   "dependencies": {
     "@codemirror/state": "catalog:",
     "@dxos/ai": "workspace:*",
@@ -24,7 +25,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -72,6 +72,7 @@
     "usearch": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

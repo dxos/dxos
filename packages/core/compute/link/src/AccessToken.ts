@@ -6,9 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { Format } from '@dxos/echo/Format';
 
 export class AccessToken extends Type.makeObject<AccessToken>(DXN.make('org.dxos.type.accessToken', '0.1.0'))(
   Schema.Struct({
@@ -21,7 +20,7 @@ export class AccessToken extends Type.makeObject<AccessToken>(DXN.make('org.dxos
       title: 'Account',
       description: 'The account associated with the token.',
     }).pipe(Schema.optional),
-    token: Schema.String.annotations({
+    token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
       title: 'Token',
       description: 'The token provided by the service.',
     }),

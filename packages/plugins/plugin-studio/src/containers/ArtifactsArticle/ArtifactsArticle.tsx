@@ -7,7 +7,8 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Filter, type Obj } from '@dxos/echo';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { type Space } from '@dxos/react-client/echo';
 import { DropdownMenu, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 

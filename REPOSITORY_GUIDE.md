@@ -94,8 +94,38 @@ Examples of ways to run different test workloads:
 The following command generates storybooks across the individual packages:
 
 ```bash
-moon run storybook:serve
+moon run storybook-react:serve
 ```
+
+### Fast dev mode (`serve-fast`)
+
+Long React sessions can slow down and eventually wedge the browser tab. By
+default Storybook resolves every `@dxos/*` package to source (via the
+`importSource` plugin in `tools/storybook-react/.storybook/main.ts`), producing a
+huge live module graph that the renderer accumulates until it locks up. For a
+lighter session, use the fast variant:
+
+```bash
+moon run storybook-react:serve-fast
+```
+
+This sets `DX_FASTBUNDLE=1`, which skips `importSource` and pre-bundles heavy
+deps (react, effect, codemirror, radix, automerge, atlaskit). One-off use without
+the task: `DX_FASTBUNDLE=1 moon run storybook-react:serve`.
+
+**Tradeoff:** `serve-fast` reduces renderer memory and HMR churn, but you get
+less granular HMR on DXOS source (edits to `@dxos/*` internals no longer
+hot-reload from source). It's best when iterating on a single package's stories,
+not when editing deep DXOS internals — use plain `serve` for the latter.
+
+**Known accumulation sources** (present in either mode):
+
+- **WASM stories** (`@dxos/wa-sqlite`, `manifold-3d`) don't free their memory on
+  unmount.
+- **StrictMode** double-mounts effects, so per-story state accumulates faster.
+
+Either way, hard-reload the tab periodically during long sessions to reclaim
+memory.
 
 ### Playwright
 
@@ -243,7 +273,9 @@ New packages are created with `"private": true` in their `package.json` (see [Ne
 
 1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
 2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
-3. Run `npm login && pnpm publish-package @dxos/<PACKAGE>`
+3. Run `pnpm login`, then either:
+   - one package: `pnpm publish-package @dxos/<PACKAGE>`
+   - all packages failing the published-package gate: `pnpm publish-unpublished-packages --yes`
 4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
    - Repository: `dxos/dxos`
    - Workflow file: `publish-all.yml`

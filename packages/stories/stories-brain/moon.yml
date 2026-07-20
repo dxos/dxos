@@ -1,15 +1,12 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
   # Research workflow (all interactive + network + write git-ignored fixtures — never cached / in CI):
   #   env   → render .env.tpl → .env via 1Password (`op inject`); provides DX_ANTHROPIC_API_KEY etc.
   #   auth  → Google OAuth helper: `-- --token` prints a token, `-- --force` re-consents, `-- --revoke` cancels.

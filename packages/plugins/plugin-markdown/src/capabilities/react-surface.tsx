@@ -26,6 +26,7 @@ import {
   MarkdownArticle,
   type MarkdownArticleProps,
   MarkdownCard,
+  MarkdownProperties,
   MarkdownSettings,
 } from '#containers';
 import { meta } from '#meta';
@@ -74,6 +75,11 @@ export default Capability.makeModule(() =>
             />
           );
         },
+      }),
+      Surface.create({
+        id: 'surface.objectProperties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Markdown.Document),
+        component: ({ data, role }) => <MarkdownProperties role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'surface.pluginSettings',

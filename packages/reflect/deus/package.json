@@ -17,12 +17,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./extension": {
       "source": "./src/extension/index.ts",
       "types": "./dist/types/src/extension/index.d.ts",
-      "default": "./dist/lib/neutral/extension/index.mjs"
+      "import": "./dist/lib/extension.mjs"
     }
   },
   "files": [

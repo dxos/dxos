@@ -1,7 +1,6 @@
 {
   "name": "@dxos/halo-react",
   "version": "0.10.0",
-  "private": true,
   "description": "React hooks for the @dxos/halo services.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/halo/halo-react#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,8 +16,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

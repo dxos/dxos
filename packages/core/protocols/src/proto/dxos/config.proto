@@ -89,7 +89,7 @@ message Runtime {
       UNSPECIFIED_SERVICES_MODE = 0;
       /// Run services in the same thread as the client.
       HOST = 1;
-      /// Run services in a SharedWorker (single instance shared across tabs).
+      /// @deprecated Removed in favour of DEDICATED_WORKER. Value reserved for wire compatibility.
       SHARED_WORKER = 2;
       /// Run services in a dedicated Worker elected via a lock (leader/follower).
       DEDICATED_WORKER = 3;

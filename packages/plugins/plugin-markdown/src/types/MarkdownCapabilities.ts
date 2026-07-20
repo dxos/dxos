@@ -34,6 +34,8 @@ export type EditorViewRegistry = {
   register: (attendableId: string, view: EditorView, documentId: string) => void;
   unregister: (attendableId: string) => void;
   get: (attendableId: string) => EditorViewEntry | undefined;
+  /** Look up by document id (the object URI), independent of the attendable-id key used to register. */
+  getByDocumentId: (documentId: string) => EditorViewEntry | undefined;
 };
 
 export const Settings = Capability.make<Atom.Writable<Markdown.Settings>>(`${meta.profile.key}.capability.settings`);

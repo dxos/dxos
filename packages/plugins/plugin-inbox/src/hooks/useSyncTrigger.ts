@@ -7,8 +7,10 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { Cursor } from '@dxos/link';
+import { type ConnectorEntry } from '@dxos/plugin-connector';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
 // (which exports this file), so going through the barrel would create a module cycle.
@@ -19,13 +21,19 @@ import { createSyncRoutine, findBindingForTarget } from '../util';
  * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. Creation
  * wires the trigger to the bound connector's own `sync` operation (the same one
  * `ConnectorOperation.SyncConnection` invokes directly) via {@link createSyncRoutine}.
+ *
+ * `connectors` (the registered `Connector` capability list) is resolved by the calling container and
+ * threaded down to `useConnectorEntry` — components and the hooks they use must not resolve
+ * capabilities themselves.
  */
 export const useSyncTrigger = ({
   db,
   subject,
+  connectors = [],
 }: {
   db: Database.Database | undefined;
   subject: Obj.Unknown;
+  connectors?: readonly ConnectorEntry[][];
 }): {
   syncEnabled: boolean | undefined;
   syncTrigger: Trigger.Trigger | undefined;
@@ -33,24 +41,19 @@ export const useSyncTrigger = ({
   handleToggleSync: () => Promise<void>;
 } => {
   const [pending, setPending] = useState(false);
-  const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
-  const { connection } = useTargetConnection(subject);
-  const connector = useConnectorEntry(connection);
-
-  const subjectUri = Obj.getURI(subject);
-  const syncTrigger = useMemo(
-    () =>
-      triggers.find((trigger) => {
-        if (trigger.spec?.kind !== 'timer') {
-          return false;
-        }
-        const mailboxRef = trigger.input?.mailbox;
-        const calendarRef = trigger.input?.calendar;
-        const ref = mailboxRef ?? calendarRef;
-        return ref?.uri && ref.uri === subjectUri;
-      }),
-    [triggers, subjectUri],
+  // A sync trigger doesn't reference its target directly — its `binding` refs a Cursor whose `spec.target`
+  // is the target — so traverse the reverse-ref chain subject ← Cursor ← Trigger in a single query.
+  const triggers = useQuery(
+    db,
+    Query.select(Filter.id(subject.id))
+      .referencedBy(Cursor.Cursor)
+      .referencedBy(Trigger.Trigger)
+      .debugLabel('plugin-inbox.useSyncTrigger'),
   );
+  const { connection } = useTargetConnection(subject);
+  const connector = useConnectorEntry(connection, connectors);
+
+  const syncTrigger = useMemo(() => triggers.find((trigger) => trigger.spec?.kind === 'timer'), [triggers]);
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
 

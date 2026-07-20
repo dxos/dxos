@@ -2,17 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { type EchoHost, EchoHostService } from '@dxos/echo-host';
+import { EchoHostService } from '@dxos/echo-host';
 import { EdgeConnectionService } from '@dxos/edge-client';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
-import { type FeedService } from '@dxos/protocols/rpc';
+import {
+  ContactsService,
+  DataService,
+  DevicesService,
+  EdgeAgentService,
+  FeedService,
+  IdentityService,
+  InvitationsService,
+  NetworkService,
+  QueryService,
+  SpacesService,
+} from '@dxos/protocols/rpc';
 
 import { EdgeAgentServiceImpl } from '../agents';
 import { DevicesServiceImpl } from '../devices';
@@ -23,120 +33,76 @@ import { InvitationsManagerService, InvitationsServiceImpl } from '../invitation
 import { NetworkServiceImpl } from '../network';
 import { SpaceManagerService } from '../space';
 import { SpacesServiceImpl } from '../spaces';
-import { ServiceContextService } from './service-context';
+import { ClientServicesHostService } from './service-host';
 
 //
 // Each client RPC service handler is exposed as an individual Effect service tag. Handlers depend
 // directly on the lower-level component tags they consume (EchoHostService, IdentityManagerService,
 // …); only handlers that need lifecycle orchestration (identity creation, readiness gates)
-// additionally depend on {@link ServiceContextService}.
+// additionally depend on {@link ClientServicesHostService} (the host provides itself into the stack).
 //
-
-export class IdentityServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/IdentityService')<
-  IdentityServiceRpc,
-  IdentityServiceImpl
->() {}
-
-export class ContactsServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/ContactsService')<
-  ContactsServiceRpc,
-  ContactsServiceImpl
->() {}
-
-export class InvitationsServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/InvitationsService')<
-  InvitationsServiceRpc,
-  InvitationsServiceImpl
->() {}
-
-export class DevicesServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/DevicesService')<
-  DevicesServiceRpc,
-  DevicesServiceImpl
->() {}
-
-export class SpacesServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/SpacesService')<
-  SpacesServiceRpc,
-  SpacesServiceImpl
->() {}
-
-export class NetworkServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/NetworkService')<
-  NetworkServiceRpc,
-  NetworkServiceImpl
->() {}
-
-export class EdgeAgentServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/EdgeAgentService')<
-  EdgeAgentServiceRpc,
-  EdgeAgentServiceImpl
->() {}
-
-export class DataServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/DataService')<
-  DataServiceRpc,
-  EchoHost['dataService']
->() {}
-
-export class QueryServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/QueryService')<
-  QueryServiceRpc,
-  EchoHost['queryService']
->() {}
-
-export class FeedServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/FeedService')<
-  FeedServiceRpc,
-  FeedService.Handlers
->() {}
 
 /**
  * Union of every client RPC service tag resolved from the stack.
  */
 export type ClientServicesRpcContext =
-  | IdentityServiceRpc
-  | ContactsServiceRpc
-  | InvitationsServiceRpc
-  | DevicesServiceRpc
-  | SpacesServiceRpc
-  | NetworkServiceRpc
-  | EdgeAgentServiceRpc
-  | DataServiceRpc
-  | QueryServiceRpc
-  | FeedServiceRpc;
+  | IdentityService.Tag
+  | ContactsService.Tag
+  | InvitationsService.Tag
+  | DevicesService.Tag
+  | SpacesService.Tag
+  | NetworkService.Tag
+  | EdgeAgentService.Tag
+  | DataService.Tag
+  | QueryService.Tag
+  | FeedService.Tag;
 
 // Identity creation is a lifecycle sequence and profile broadcast iterates live spaces, so both
-// remain orchestrator responsibilities resolved from {@link ServiceContextService}.
-const identityServiceLayer = Layer.effect(
-  IdentityServiceRpc,
+// remain orchestrator responsibilities resolved from {@link ClientServicesHostService}.
+// The impl is a {@link Resource}; its open/close lifecycle is bound to the layer scope.
+const identityServiceLayer = Layer.scoped(
+  IdentityService.Tag,
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const keyring = yield* KeyringApiService;
-    const serviceContext = yield* ServiceContextService;
-    return new IdentityServiceImpl(
+    const host = yield* ClientServicesHostService;
+    const service = new IdentityServiceImpl(
       identityManager,
       recoveryManager,
       keyring,
       async (params, ctx) => {
-        const identity = await serviceContext.createIdentity(params, ctx);
-        await serviceContext.initialized.wait();
+        const identity = await host.createIdentity(params, ctx);
+        await host.initialized.wait();
         return identity;
       },
-      (profile) => serviceContext.broadcastProfileUpdate(profile),
+      (profile) => host.broadcastProfileUpdate(profile),
     );
+    yield* Effect.acquireRelease(
+      Effect.promise(() => service.open()),
+      () => Effect.promise(() => service.close()),
+    );
+    return service;
   }),
 );
 
 const contactsServiceLayer = Layer.effect(
-  ContactsServiceRpc,
+  ContactsService.Tag,
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
     const spaceManager = yield* SpaceManagerService;
-    const serviceContext = yield* ServiceContextService;
-    return new ContactsServiceImpl(identityManager, spaceManager, () => serviceContext.whenDataSpaceManagerReady());
+    const host = yield* ClientServicesHostService;
+    return new ContactsServiceImpl(identityManager, spaceManager, () => host.whenDataSpaceManagerReady());
   }),
 );
 
 const invitationsServiceLayer = Layer.effect(
-  InvitationsServiceRpc,
+  InvitationsService.Tag,
   Effect.map(InvitationsManagerService, (invitationsManager) => new InvitationsServiceImpl(invitationsManager)),
 );
 
 const devicesServiceLayer = Layer.effect(
-  DevicesServiceRpc,
+  DevicesService.Tag,
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
     // Edge connection is absent in the non-edge stack, so resolve it optionally.
@@ -146,20 +112,18 @@ const devicesServiceLayer = Layer.effect(
 );
 
 const spacesServiceLayer = Layer.effect(
-  SpacesServiceRpc,
+  SpacesService.Tag,
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
     const spaceManager = yield* SpaceManagerService;
     const echoHost = yield* EchoHostService;
-    const serviceContext = yield* ServiceContextService;
-    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () =>
-      serviceContext.whenDataSpaceManagerReady(),
-    );
+    const host = yield* ClientServicesHostService;
+    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () => host.whenDataSpaceManagerReady());
   }),
 );
 
 const networkServiceLayer = Layer.effect(
-  NetworkServiceRpc,
+  NetworkService.Tag,
   Effect.gen(function* () {
     const networkManager = yield* SwarmNetworkManagerService;
     const signalManager = yield* SignalManagerService;
@@ -169,26 +133,26 @@ const networkServiceLayer = Layer.effect(
 );
 
 const edgeAgentServiceLayer = Layer.effect(
-  EdgeAgentServiceRpc,
+  EdgeAgentService.Tag,
   Effect.gen(function* () {
     const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
-    const serviceContext = yield* ServiceContextService;
-    return new EdgeAgentServiceImpl(() => serviceContext.whenEdgeAgentManagerReady(), edgeConnection);
+    const host = yield* ClientServicesHostService;
+    return new EdgeAgentServiceImpl(() => host.whenEdgeAgentManagerReady(), edgeConnection);
   }),
 );
 
 const dataServiceLayer = Layer.effect(
-  DataServiceRpc,
+  DataService.Tag,
   Effect.map(EchoHostService, (echoHost) => echoHost.dataService),
 );
 
 const queryServiceLayer = Layer.effect(
-  QueryServiceRpc,
+  QueryService.Tag,
   Effect.map(EchoHostService, (echoHost) => echoHost.queryService),
 );
 
 const feedServiceLayer = Layer.effect(
-  FeedServiceRpc,
+  FeedService.Tag,
   Effect.map(EchoHostService, (echoHost) => echoHost.feedService),
 );
 
@@ -207,7 +171,7 @@ export const ClientServicesRpcLayer: Layer.Layer<
   | KeyringApiService
   | SwarmNetworkManagerService
   | SignalManagerService
-  | ServiceContextService
+  | ClientServicesHostService
 > = Layer.mergeAll(
   identityServiceLayer,
   contactsServiceLayer,

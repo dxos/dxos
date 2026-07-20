@@ -6,11 +6,11 @@ import { describe, it } from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import { Instructions, Skill } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Text } from '@dxos/schema';
 
 import { WebSearchSkill } from '../skills';
@@ -114,7 +114,7 @@ describe('Skill binding resolution (registry refs)', () => {
         // Model a spawned process reading the feed cold: drop the in-memory feed handle so the
         // reader re-decodes the binding freshly, without the writer's identity-preserved instance
         // (whose ref still carries the in-memory skill target).
-        yield* Effect.promise(() => db._evictFeedHandle(feed));
+        yield* Effect.promise(() => db.evictFeedHandle(feed));
 
         const reader = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => reader.open()).pipe(

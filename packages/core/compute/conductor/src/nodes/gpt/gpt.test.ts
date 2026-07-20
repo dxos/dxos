@@ -4,13 +4,15 @@
 
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
-import { Trace } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { AiService } from '@dxos/ai';
+import { type Credential, Operation, Trace } from '@dxos/compute';
+import { type Database, Feed, Filter, Obj, Ref, type Registry } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { type ServiceContainer } from '@dxos/functions-runtime';
-import { createTestServices } from '@dxos/functions-runtime/testing';
+import { registryLayerNoop } from '@dxos/echo/testing';
+import { createTestServices } from '@dxos/edge-compute/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -19,21 +21,35 @@ import { type GptInput, gptNode } from './gpt';
 
 const ENABLE_LOGGING = true;
 
+// `Operation.Service` stub — `gptNode` requires the tag in context but the tested paths do not
+// invoke other operations, so any invocation dies loudly rather than silently no-oping.
+const operationServiceLayer = Layer.succeed(Operation.Service, {
+  invoke: () => Effect.die('Operation.Service not available in test.'),
+  schedule: () => Effect.die('Operation.Service not available in test.'),
+  invokePromise: async () => ({ error: new Error('Operation.Service not available in test.') }),
+} satisfies Operation.OperationService);
+
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
   describe('common', () => {
-    let builder: EchoTestBuilder, services: ServiceContainer, db: EchoDatabase;
+    let builder: EchoTestBuilder,
+      db: EchoDatabase,
+      testLayer: Layer.Layer<
+        | AiService.AiService
+        | Credential.CredentialsService
+        | Database.Service
+        | Trace.TraceService
+        | Operation.Service
+        | Registry.Service
+      >;
     beforeEach(async (ctx) => {
       builder = await new EchoTestBuilder().open();
       ({ db } = await builder.createDatabase());
-      services = createTestServices({
-        ai: {
-          provider: 'edge',
-        },
-        db,
-        logging: {
-          enabled: ENABLE_LOGGING,
-        },
-      });
+      testLayer = Layer.mergeAll(
+        createTestServices({ db, logging: { enabled: ENABLE_LOGGING } }),
+        AiService.notAvailable,
+        operationServiceLayer,
+        registryLayerNoop,
+      );
     });
     afterEach(async () => {
       await builder.close();
@@ -48,7 +64,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           };
           const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
             Effect.flatMap(ValueBag.unwrap),
-            Effect.provide(services.createLayer()),
+            Effect.provide(testLayer),
             Effect.scoped,
           );
           log.info('output', { output });
@@ -72,7 +88,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
               sender: { role: 'user' },
               blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
             }),
-          ]).pipe(Effect.provide(services.createLayer()));
+          ]).pipe(Effect.provide(testLayer));
           const input: GptInput = {
             prompt: 'I have twice as many oranges as apples. How many oranges do I have?',
             conversation: Ref.make(conversation),
@@ -80,7 +96,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
 
           const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
             Effect.flatMap(ValueBag.unwrap),
-            Effect.provide(services.createLayer()),
+            Effect.provide(testLayer),
             Effect.scoped,
           );
           log.info('output', { output });
@@ -88,7 +104,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(output.text.length).toBeGreaterThan(10);
 
           const conversationMessages = yield* Feed.query(conversation, Filter.type(Message.Message)).run.pipe(
-            Effect.provide(services.createLayer()),
+            Effect.provide(testLayer),
           );
           log.info('conversationMessages', { conversationMessages });
           expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
@@ -99,40 +115,4 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
       60_000,
     );
   });
-
-  // it.skip(
-  //   'ollama image gen',
-  //   Effect.fn(function* (ctx) {
-  //     const _textToImageTool = defineTool('testing', {
-  //       name: 'text-to-image',
-  //       type: ToolTypes.TextToImage,
-  //       options: {
-  //         model: '@testing/kitten-in-bubble',
-  //       },
-  //     });
-
-  //     const input: GptInput = {
-  //       prompt: 'A beautiful sunset over a calm ocean',
-  //       tools: [ToolId.make('testing/text-to-image')],
-  //     };
-  //     const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
-  //       Effect.flatMap(ValueBag.unwrap),
-  //       Effect.provide(
-  //         createTestServices({
-  //           ai: {
-  //             provider: 'ollama',
-  //           },
-  //           logging: {
-  //             enabled: ENABLE_LOGGING,
-  //           },
-  //         }).createLayer(),
-  //       ),
-  //       Effect.scoped,
-  //     );
-  //     log.info('output', { output });
-  //     log.info('artifact', { artifact: output.artifact });
-  //     expect(output.artifact).toBeDefined();
-  //   }),
-  //   60_000,
-  // );
 });

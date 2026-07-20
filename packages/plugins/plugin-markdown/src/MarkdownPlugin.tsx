@@ -12,6 +12,7 @@ import {
   AnchorSort,
   CommentConfig,
   CreateObject,
+  HistoryProvider,
   MarkdownSettings,
   MarkdownState,
   OperationHandler,
@@ -25,6 +26,11 @@ import { Markdown, MarkdownEvents } from '#types';
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  // Opts documents into the generic history companion contributed by plugin-space.
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: HistoryProvider,
+  }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),

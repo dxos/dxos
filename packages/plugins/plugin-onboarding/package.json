@@ -17,24 +17,24 @@
     "#plugin": {
       "source": "./src/OnboardingPlugin.ts",
       "types": "./dist/types/src/OnboardingPlugin.d.ts",
-      "default": "./dist/lib/neutral/OnboardingPlugin.mjs"
+      "default": "./dist/lib/OnboardingPlugin.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -56,6 +56,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",

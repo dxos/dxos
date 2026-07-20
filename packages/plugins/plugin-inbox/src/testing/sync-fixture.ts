@@ -8,8 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { AppCapabilities, createProgressRegistry } from '@dxos/app-toolkit';
-import { Credential, Operation } from '@dxos/compute';
+import { Credential, Operation, Trace } from '@dxos/compute';
 import { Blob, Database, Ref, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -19,12 +18,29 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
+import { googleMailSyncProvider } from '../operations/mail/google/sync/sync-provider';
+import { jmapMailSyncProvider } from '../operations/mail/jmap/sync/sync-provider';
+import { type RunMailSyncOptions, runMailSync } from '../operations/mail/mail-sync';
 import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
 import { Mailbox } from '../types';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded
-// with a mailbox binding, plus the ambient services `runGmailSync`/`runJmapSync` require. Not exported
+// with a mailbox binding, plus the ambient services `runGoogleSync`/`runJmapSync` require. Not exported
 // from `@dxos/plugin-inbox/testing` — it pulls app-framework/compute, so it stays a local test helper.
+
+/**
+ * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API
+ * for the test to supply (mock, counting, fault, or Live). Production inlines this in the handler.
+ */
+export const runGoogleSync = (options: RunMailSyncOptions) =>
+  runMailSync(options).pipe(
+    Effect.provide(googleMailSyncProvider({ userId: 'me', label: 'all' })),
+    Effect.withSpan('google-sync'),
+  );
+
+/** Test entry point for the JMAP sync — peer of {@link runGoogleSync}. */
+export const runJmapSync = (options: RunMailSyncOptions) =>
+  runMailSync(options).pipe(Effect.provide(jmapMailSyncProvider()), Effect.withSpan('jmap-sync'));
 
 /** The ECHO types the sync writes: messages, contacts, tags, tag index, connection + cursor. */
 export const SYNC_TEST_TYPES = [
@@ -77,42 +93,34 @@ export const seedMailboxBinding = async (
  * The db + resolver + operation ambient services shared by both providers' mock-sync tests. The
  * seeded mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and
  * never touches `Operation` — it is provided (unavailable invoker) only to satisfy the requirement
- * channel. `Capability.Service` is a bare `CapabilityManager` (no `PluginManager`/plugin-activation
- * lifecycle needed) that always contributes a `ProgressRegistry` — `runGmailSync` resolves it as a
- * singleton via `Capability.get`, matching the always-loaded `plugin-progress` host in production. A
- * test may override the default with its own instance to observe the sync's live progress monitor.
+ * channel. `Trace.TraceService` defaults to a noop writer; pass a custom trace layer to observe
+ * `status.update` events from the sync.
  */
 export const ambientSyncServices = (
   db: Database.Database,
-  options: { progressRegistry?: AppCapabilities.ProgressRegistry } = {},
-) => {
-  const capabilities = CapabilityManager.make({ registry: Registry.make() });
-  capabilities.contribute({
-    module: 'test',
-    interface: AppCapabilities.ProgressRegistry,
-    implementation: options.progressRegistry ?? createProgressRegistry(Registry.make()),
-  });
-  return Layer.mergeAll(
+  options: { traceLayer?: Layer.Layer<Trace.TraceService> } = {},
+) =>
+  Layer.mergeAll(
     Database.layer(db),
     InboxResolver.Live.pipe(Layer.provide(Database.layer(db))),
-    Layer.succeed(Capability.Service, capabilities),
+    Layer.succeed(Capability.Service, CapabilityManager.make({ registry: Registry.make() })),
+    options.traceLayer ?? Trace.writerLayerNoop,
     Layer.succeed(Operation.Service, {
       invoke: () => Effect.die('Operation.Service unused: mailbox has no on-arrival extractors'),
       schedule: () => Effect.die('Operation.Service unused: mailbox has no on-arrival extractors'),
       invokePromise: async () => ({ error: new Error('Operation.Service unused') }),
     }),
   );
-};
 
-/** The ambient services `runGmailSync` requires, backed by a mock Gmail API + a real db. */
+/** The ambient services `runGoogleSync` requires, backed by a mock Gmail API + a real db. */
 export const inboxSyncTestServices = (
   db: Database.Database,
   dataset: GmailDataset,
-  options?: { progressRegistry?: AppCapabilities.ProgressRegistry },
+  options?: { traceLayer?: Layer.Layer<Trace.TraceService> },
 ) => Layer.mergeAll(GoogleMailApi.mock(dataset), ambientSyncServices(db, options));
 
 /**
- * The ambient services `runGmailSync` requires, backed by the REAL Gmail HTTP API authenticated from
+ * The ambient services `runGoogleSync` requires, backed by the REAL Gmail HTTP API authenticated from
  * the given connection's `AccessToken`. Used by the fixture-fetch tool to sync a real account in-process
  * (no EDGE / function deployment). The connection's access token must carry a valid Gmail OAuth token.
  */
@@ -134,5 +142,8 @@ export const inboxSyncLiveServices = (db: Database.Database, connectionRef: Ref.
 };
 
 /** The ambient services `runJmapSync` requires, backed by a mock JMAP API + a real db. */
-export const inboxJmapSyncTestServices = (db: Database.Database, dataset: JmapDataset) =>
-  Layer.mergeAll(JmapMailApi.mock(dataset), ambientSyncServices(db));
+export const inboxJmapSyncTestServices = (
+  db: Database.Database,
+  dataset: JmapDataset,
+  options?: { traceLayer?: Layer.Layer<Trace.TraceService> },
+) => Layer.mergeAll(JmapMailApi.mock(dataset), ambientSyncServices(db, options));

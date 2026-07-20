@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { ServiceContext } from '../services';
+import { ClientServicesHost, type ServiceContext } from '../services';
 
 /**
  * Strip secrets from invitation before giving it to the peer.
@@ -229,7 +229,7 @@ export const createInvitation = async (
     ...(options ?? {}),
   };
 
-  if (host instanceof ServiceContext) {
+  if (host instanceof ClientServicesHost) {
     return host.invitationsManager.createInvitation(new Context(), {
       kind: Invitation.Kind.SPACE,
       ...options,
@@ -246,7 +246,7 @@ export const acceptInvitation = (
 ): AuthenticatingInvitation => {
   invitation = sanitizeInvitation(invitation);
 
-  if (guest instanceof ServiceContext) {
+  if (guest instanceof ClientServicesHost) {
     return guest.invitationsManager.acceptInvitation(new Context(), {
       invitation,
       deviceProfile: guestDeviceProfile,

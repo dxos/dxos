@@ -12,6 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -21,7 +22,6 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
-import { useQuery } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 

@@ -40,7 +40,7 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/functions"
+      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/compute/link"
@@ -50,6 +50,9 @@
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/mesh/edge-client"

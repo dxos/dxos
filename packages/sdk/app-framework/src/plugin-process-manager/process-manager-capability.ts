@@ -8,8 +8,15 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { LayerSpec, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
-import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
+import {
+  LayerStack,
+  ProcessManager,
+  ProcessMonitor,
+  RemoteProcessManager,
+  RemoteTraceMonitor,
+} from '@dxos/compute-runtime';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
@@ -50,6 +57,10 @@ export default Capability.makeModule(
 
     const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
     const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
+    // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
+    const remoteTraceMonitors = yield* Capability.getAll(Capabilities.RemoteTraceMonitor);
+
+    log.info('setup process manager', { traceSinkFactories });
 
     // Forward reference to `ProcessManager.ProcessManagerService`. The runtime
     // that owns the manager depends transitively on `ServiceResolver` (which is
@@ -121,7 +132,19 @@ export default Capability.makeModule(
       Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer)),
     );
 
-    const runtimeLayer = Layer.mergeAll(baseLayer, processManagerLayer, operationInvokerLayer);
+    // App-framework has no EDGE runtime, so the remote process view is empty;
+    // the aggregate monitor therefore equals the local process tree.
+    const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
+    // Remote ephemeral trace (DX-1125): use the first contributed swarm-backed monitor, else no-op.
+    const remoteTraceMonitorLayer =
+      remoteTraceMonitors.length > 0
+        ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
+        : RemoteTraceMonitor.layerNoop;
+    const processMonitorLayer = ProcessMonitor.layer.pipe(
+      Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
+    );
+
+    const runtimeLayer = Layer.mergeAll(baseLayer, processManagerLayer, operationInvokerLayer, processMonitorLayer);
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 

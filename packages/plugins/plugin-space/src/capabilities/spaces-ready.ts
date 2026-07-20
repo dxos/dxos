@@ -45,6 +45,7 @@ export default Capability.makeModule(
     const stateAtom = yield* Capability.get(SpaceCapabilities.State);
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
 
     //
     // Personal space initialization — deferred until found.
@@ -211,7 +212,7 @@ export default Capability.makeModule(
 
       const send = () => {
         const spaces = client.spaces.get();
-        const identity = client.halo.identity.get();
+        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           // Group parts by space for efficient messaging.
           const idsBySpace = reduceGroupBy(active, (id: string) => {
@@ -248,7 +249,7 @@ export default Capability.makeModule(
 
             void space
               .postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
+                identityKey: identity.identityKey,
                 attended: current,
                 added,
                 removed,
@@ -287,10 +288,10 @@ export default Capability.makeModule(
             const { added, removed, attended } = message.payload;
 
             const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-            const currentIdentity = client.halo.identity.get();
+            const currentIdentity = Option.getOrUndefined(haloIdentity.getSnapshot());
             if (
               identityKey &&
-              !currentIdentity?.identityKey.equals(identityKey) &&
+              currentIdentity?.identityKey !== identityKey.toHex() &&
               Array.isArray(added) &&
               Array.isArray(removed)
             ) {

@@ -1,17 +1,8 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - pack
   - storybook
   - ts-test-storybook
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/MermaidPlugin.tsx'
-      - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/meta.ts'
-      - '--entryPoint=src/plugin.ts'
-      - '--platform=neutral'

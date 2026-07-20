@@ -5,7 +5,7 @@
 import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fns';
 
 import { Obj } from '@dxos/echo';
-import { type Message } from '@dxos/types';
+import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
 
 import { type Mailbox } from '#types';
@@ -104,6 +104,9 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
     // Top-level `threadId` (not just `properties.threadId`) is what the thread-grouping query and the
     // mailbox conversation aggregate key on; without it a reply draft never joins its thread.
     ...(message?.threadId && mode !== 'compose' ? { threadId: message.threadId } : {}),
+    // Record the specific message being answered so the thread can render the draft directly after it
+    // (see `orderThreadItems`) rather than always at the bottom.
+    ...(message && mode !== 'compose' ? { parentMessage: message.id } : {}),
     blocks: [{ _tag: 'text' as const, text: draftBody }],
     properties: {
       to,
@@ -112,6 +115,60 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
       ...properties,
     },
   };
+};
+
+/**
+ * Orders a conversation for display so a reply draft renders immediately after the message it answers
+ * (matched via the draft's `parentMessage`), while every other message keeps its chronological order.
+ * Drafts without a resolvable non-draft parent in the thread (e.g. a bare compose) stay where they are.
+ */
+export const orderThreadItems = (messages: Message.Message[]): Message.Message[] => {
+  const byId = new Map(messages.map((message) => [message.id, message]));
+  const childDrafts = new Map<string, Message.Message[]>();
+  const standalone: Message.Message[] = [];
+  for (const message of messages) {
+    const parentId = DraftMessage.instanceOf(message) ? message.parentMessage : undefined;
+    const parent = parentId ? byId.get(parentId) : undefined;
+    if (parentId && parent && !DraftMessage.instanceOf(parent)) {
+      const drafts = childDrafts.get(parentId) ?? [];
+      drafts.push(message);
+      childDrafts.set(parentId, drafts);
+    } else {
+      standalone.push(message);
+    }
+  }
+
+  if (childDrafts.size === 0) {
+    return messages;
+  }
+
+  return standalone.flatMap((message) => {
+    const drafts = childDrafts.get(message.id);
+    return drafts ? [message, ...drafts] : [message];
+  });
+};
+
+/**
+ * Drops a draft superseded by its already-synced sent copy (`properties.sentMessageId` matched against
+ * the synced messages' foreign-key ids). Synced messages and this mailbox's still-unsent drafts always
+ * pass; a draft from a different mailbox is dropped. Used by the `mailboxMessage` companion connector,
+ * which can briefly see both a draft and its just-synced copy in the same thread.
+ */
+export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
+  const syncedIds = new Set(
+    messages
+      .filter((message) => !DraftMessage.instanceOf(message))
+      .flatMap((message) => Obj.getMeta(message).keys.map((key) => key.id)),
+  );
+  return messages.filter((message) => {
+    if (!DraftMessage.instanceOf(message)) {
+      return true;
+    }
+    if (!DraftMessage.belongsTo(message, mailboxUri)) {
+      return false;
+    }
+    return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
+  });
 };
 
 /**
@@ -155,10 +212,48 @@ type MessageProps = {
   text: string;
   date: string;
   from?: string;
+  to?: string;
   email?: string;
   subject: string;
   snippet: string;
   hue: string;
+};
+
+/**
+ * The displayable/searchable body text of a message: prefers a `text/markdown` block, then
+ * `text/plain`, then any text block without a mimeType. Excludes `text/html` blocks so raw markup
+ * never leaks into display or search. Returns '' when there is no plain/markdown text.
+ */
+export const getMessageBodyText = (message: Message.Message): string => {
+  const textBlocks = (message.blocks ?? []).filter(
+    (block): block is ContentBlock.Text => block._tag === 'text' && block.mimeType !== 'text/html',
+  );
+  const markdownBlock = textBlocks.find((block) => block.mimeType === 'text/markdown');
+  const plainBlock = textBlocks.find((block) => block.mimeType === 'text/plain');
+  const untaggedBlock = textBlocks.find((block) => block.mimeType === undefined);
+  return (markdownBlock ?? plainBlock ?? untaggedBlock)?.text ?? '';
+};
+
+/**
+ * Whether `query` (case-insensitive) matches a message's subject, sender (from), recipients
+ * (to/cc), or plain/markdown body. Raw HTML blocks are never consulted (see `getMessageBodyText`).
+ */
+export const messageMatchesQuery = (message: Message.Message, query: string): boolean => {
+  const needle = query.trim().toLowerCase();
+  if (needle.length === 0) {
+    return true;
+  }
+  const fields = [
+    message.properties?.subject,
+    message.sender?.name,
+    message.sender?.email,
+    message.properties?.to,
+    message.properties?.cc,
+  ];
+  return (
+    fields.some((value) => typeof value === 'string' && value.toLowerCase().includes(needle)) ||
+    getMessageBodyText(message).toLowerCase().includes(needle)
+  );
 };
 
 export const getMessageProps = (
@@ -167,16 +262,18 @@ export const getMessageProps = (
   options?: FormatDateTimeOptions,
 ): MessageProps => {
   const id = message.id;
-  // Always use the first text block for display in the mailbox list.
-  const textBlocks = message.blocks.filter((block) => 'text' in block);
-  const text = textBlocks[0]?.text || '';
+  // Use the plain/markdown body for display in the mailbox list, never the raw HTML block. `blocks`
+  // may be absent on a partially-hydrated message (e.g. surfaced transiently by the full-text search
+  // query), and `getMessageBodyText` already guards that.
+  const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
+  const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;
-  const snippet = message.properties?.snippet ?? textBlocks[0]?.text;
+  const snippet = message.properties?.snippet ?? getMessageBodyText(message);
   const hue = toHue(hashString(from));
-  return { id, text, date, from, email, subject, snippet, hue };
+  return { id, text, date, from, to, email, subject, snippet, hue };
 };
 
 /**

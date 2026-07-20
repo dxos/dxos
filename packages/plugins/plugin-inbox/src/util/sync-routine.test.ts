@@ -81,12 +81,14 @@ describe('createSyncRoutine', () => {
     const trigger = triggerRef.target;
     expect(trigger?.spec).toEqual({ kind: 'timer', cron: '*/10 * * * *' });
     expect(trigger?.enabled).toBe(true);
-    expect(trigger?.input?.mailbox?.uri).toBe(db.makeRef(Obj.getURI(mailbox)).uri);
+    // `input` carries only `binding` (matching the sync operation's input schema); the target is reached
+    // through the binding cursor's `spec.target`, not smuggled in as an extra input key.
+    expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
     expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
     expect(created?.id).toBe(trigger?.id);
   });
 
-  test('creates a routine keyed by `calendar` for a calendar target', async ({ expect }) => {
+  test('creates a routine for a calendar target, discovered via the binding cursor', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
 
@@ -101,8 +103,8 @@ describe('createSyncRoutine', () => {
     await expect.poll(() => findSyncRoutine(db, calendar), { timeout: 5_000 }).toHaveLength(1);
     const [routine] = await findSyncRoutine(db, calendar);
     const trigger = routine.triggers[0].target;
-    expect(trigger?.input?.calendar?.uri).toBe(db.makeRef(Obj.getURI(calendar)).uri);
-    expect(trigger?.input?.mailbox).toBeUndefined();
+    expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
+    expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
   });
 
   test('is idempotent: a second call is a no-op once a sync routine is connected', async ({ expect }) => {

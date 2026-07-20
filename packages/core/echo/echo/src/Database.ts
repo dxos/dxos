@@ -103,6 +103,18 @@ export type FlushOptions = {
 };
 
 /**
+ * A caller-owned, writable **independent instance** of one object bound to one branch: a distinct
+ * object instance (not a UI surface), separate from the device-global canonical object.
+ * @see Database.branch
+ */
+export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
+  /** Live object bound to the branch document (`'main'` -> the canonical live object). */
+  readonly object: T;
+  /** Release the binding (drops the doc-handle listener; never deletes the branch document). */
+  dispose(): void;
+};
+
+/**
  * Identifier denoting an ECHO Database.
  */
 export const TypeId = Symbol.for('@dxos/echo/Database');
@@ -195,6 +207,57 @@ export interface Database extends Queryable {
    */
   flush(opts?: FlushOptions): Promise<void>;
 
+  //
+  // Branching. A branch is a writable alternate timeline of an object subtree (same object ids,
+  // shared automerge history, true CRDT merge-back). The registry is synced on the space root;
+  // the currently-viewed branch stays device-local.
+  //
+
+  /**
+   * The device-global current branch for an object id (`'main'` by default).
+   * @deprecated Prefer `Obj.getBranch(obj)` — it takes the object and reports the branch of that
+   * specific instance (including `db.branch()` independent instances), not just the device selection.
+   */
+  getCurrentBranch(objectId: string): string;
+
+  /**
+   * An immutable snapshot of the object at the given historical heads — a detached instance, not a
+   * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
+   */
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
+
+  /** All branch names available for an object, including the implicit `'main'` (always first). */
+  listBranches(objectId: string): string[];
+
+  /**
+   * Fork the object and its referenced subtree into a new branch (does not switch to it).
+   * @param opts.fromHeads Fork from a historical frontier instead of the tip (a bare heads array
+   *   applies to the root only; a map forks each member from its own frontier).
+   */
+  createBranch(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: readonly string[] | Record<string, readonly string[]> },
+  ): Promise<void>;
+
+  /** Switch the object's subtree to a branch (or back to `'main'`). Device-local; cascades to children. */
+  switchBranch(rootObjectId: string, name: string): Promise<void>;
+
+  /** Merge a branch back into main across the subtree, then switch back to main. */
+  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void>;
+
+  /** Delete a branch (its documents lose their sync reference). Cannot delete `'main'`. */
+  deleteBranch(rootObjectId: string, name: string): void;
+
+  /**
+   * Create a caller-owned, writable binding to one branch of one object — a live object whose reads
+   * resolve the branch document and whose writes land on the branch document only. Multiple bindings
+   * to different branches of the same object may coexist; the device-global current branch and other
+   * bindings are unaffected. Binding to `'main'` returns the canonical live object. Bindings are
+   * ephemeral and never persisted — the caller must `dispose()`.
+   */
+  branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>>;
+
   /**
    * Removes feed items by ID.
    */
@@ -211,11 +274,12 @@ export interface Database extends Queryable {
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
 
   /**
-   * @internal
    * Disposes and drops the in-memory handle (live working-set / core cache) for a feed, so the next
-   * access re-reads it cold. Used in tests to model a spawned process with an empty cache.
+   * access re-reads it cold. Advanced cache-control; primarily used by tests to model a spawned
+   * process reading the feed with an empty in-memory cache. Public (not `_`-prefixed) so it survives
+   * declaration stripping for cross-package test use.
    */
-  _evictFeedHandle(feed: Feed.Feed): Promise<void>;
+  evictFeedHandle(feed: Feed.Feed): Promise<void>;
 
   /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
@@ -366,11 +430,11 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
-export const add = <T extends Entity.Unknown>(
-  obj: T & RejectTypeEntity<T>,
-  opts?: AddOptions,
-): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add<T>(obj, opts))).pipe(Effect.withSpan('Database.add'));
+// The Effect wrapper intentionally omits the method's `opts` (e.g. `{ to: feed }`): it is applied
+// point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
+// iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
+export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
 
 /**
  * Persists a Type definition to the database.

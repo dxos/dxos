@@ -60,10 +60,10 @@
       "path": "../compute"
     },
     {
-      "path": "../functions"
+      "path": "../compute-runtime"
     },
     {
-      "path": "../functions-runtime"
+      "path": "../edge-compute"
     },
     {
       "path": "../operation"

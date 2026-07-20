@@ -49,7 +49,7 @@ export const makeActiveTopicsDeps = (policy?: ModelPolicy): ActiveTopicsDeps => 
         You are triaging a mailbox. Decide whether this is an ACTIVE topic that needs the owner's
         attention now (awaiting their reply, an open decision, an approaching deadline) rather than
         background noise. Consider recency, whether the owner still owes a reply, and open items.
-        Topic: ${context.draft.label}
+        Topic: ${context.draft.name}
         Summary: ${context.draft.summary}
         Threads:
         ${threadDigest(context)}
@@ -70,7 +70,7 @@ export const makeActiveTopicsDeps = (policy?: ModelPolicy): ActiveTopicsDeps => 
       const prompt = trim`
         Summarize the CURRENT STATUS of this email topic in 1-2 sentences: what has happened and what
         is still outstanding. No preamble, no "the email".
-        Topic: ${context.draft.label}
+        Topic: ${context.draft.name}
         Threads:
         ${threadDigest(context)}
       `;
@@ -81,7 +81,7 @@ export const makeActiveTopicsDeps = (policy?: ModelPolicy): ActiveTopicsDeps => 
       const prompt = trim`
         List the concrete ACTION ITEMS the owner should do for this topic — short imperative phrases.
         If there are none, return []. Respond with ONLY a JSON array of strings.
-        Topic: ${context.draft.label}
+        Topic: ${context.draft.name}
         Threads:
         ${threadDigest(context)}
       `;
