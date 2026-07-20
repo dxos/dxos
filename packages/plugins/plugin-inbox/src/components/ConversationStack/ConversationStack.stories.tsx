@@ -7,7 +7,7 @@ import { type Meta, type StoryContext, type StoryObj } from '@storybook/react-vi
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
-import { useQuery, useResolveRef } from '@dxos/react-client/echo';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';

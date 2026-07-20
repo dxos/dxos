@@ -14,7 +14,7 @@ import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
 import { useActionRunner } from '@dxos/plugin-graph';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { Editor, useEditorContext } from '@dxos/react-ui-editor';

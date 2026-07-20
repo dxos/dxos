@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 
 import { TradingViewChart } from '#components';
