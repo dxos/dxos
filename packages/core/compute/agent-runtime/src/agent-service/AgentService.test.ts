@@ -14,23 +14,21 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
 import { Operation, OperationHandlerSet, Process, ServiceResolver, Skill, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
 import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { DXN, EntityId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer, operationToolCall } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
 import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';
 import { type DelegationStrategy } from './delegation-strategy';
-
-EntityId.dangerouslyDisableRandomness();
 
 const Research = Operation.make({
   meta: {
@@ -87,15 +85,20 @@ const ResearchSkill = Skill.make({
 const assistantTestLayerOptions = {
   types: [Organization.Organization, Feed.Feed, Skill.Skill],
   tracing: 'pretty' as const,
-  aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
   skills: [ResearchSkill],
   extraServices: ResearchService.layer,
 };
 
-const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {}) =>
+// The agent's model behaviour is scripted inline per test via a mock model (no recorded conversation
+// to regenerate); real tools (the `research` operation) still execute against `ResearchService`.
+const TestLayer = (
+  script: ScriptedAiService.Script,
+  { enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {},
+) =>
   AssistantTestLayer({
     ...assistantTestLayerOptions,
+    aiService: ScriptedAiService.layer(script),
     agent: { enableToolBackgrounding },
   });
 
@@ -139,10 +142,12 @@ const StubDelegationStrategy: DelegationStrategy = {
     }),
 };
 
-const DelegationTestLayer = AssistantTestLayer({
-  ...assistantTestLayerOptions,
-  agent: { delegationStrategy: StubDelegationStrategy },
-});
+const DelegationTestLayer = (script: ScriptedAiService.Script) =>
+  AssistantTestLayer({
+    ...assistantTestLayerOptions,
+    aiService: ScriptedAiService.layer(script),
+    agent: { delegationStrategy: StubDelegationStrategy },
+  });
 
 describe('Agent Service', () => {
   it.effect(
@@ -157,10 +162,9 @@ describe('Agent Service', () => {
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
       },
-      Effect.provide(TestLayer()),
+      Effect.provide(TestLayer([ScriptedAiService.text('The capital of France is **Paris**.')])),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -177,10 +181,14 @@ describe('Agent Service', () => {
         yield* researchService.completeOneTask();
         yield* agent.waitForCompletion();
       },
-      Effect.provide(TestLayer()),
+      Effect.provide(
+        TestLayer([
+          operationToolCall(Research, { website: 'https://cyberdyne.com' }),
+          ScriptedAiService.text("Here's what I found about Cyberdyne Systems: they build AI agents."),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -197,7 +205,9 @@ describe('Agent Service', () => {
         yield* agent.terminate();
         expect(researchService.getTasks().map((task) => task.state)).toEqual(['interrupted']);
       },
-      Effect.provide(TestLayer()),
+      // The agent is terminated before the tool result comes back, so only the initial tool-call
+      // turn is ever consumed — no trailing text turn is needed.
+      Effect.provide(TestLayer([operationToolCall(Research, { website: 'https://cyberdyne.com' })])),
       TestHelpers.provideTestContext,
     ),
   );
@@ -227,10 +237,17 @@ describe('Agent Service', () => {
         agent = yield* getSession(agent.feed);
         yield* agent.waitForCompletion();
       },
-      Effect.provide(TestLayer()),
+      Effect.provide(
+        TestLayer([
+          // Redelivery re-issues the research tool on the fresh child spawned after restart, so the
+          // model is asked to call it a second time before it can produce the final answer.
+          operationToolCall(Research, { website: 'https://cyberdyne.com' }),
+          operationToolCall(Research, { website: 'https://cyberdyne.com' }),
+          ScriptedAiService.text("Here's what I found about Cyberdyne Systems: they build AI agents."),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -262,10 +279,16 @@ describe('Agent Service', () => {
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('cyberdyne');
       },
-      Effect.provide(TestLayer()),
+      Effect.provide(
+        TestLayer([
+          operationToolCall(Research, { website: 'https://cyberdyne.com' }),
+          // Redelivery may re-issue the tool from the interrupted turn on the fresh child.
+          operationToolCall(Research, { website: 'https://cyberdyne.com' }),
+          ScriptedAiService.text("Here's what I found about Cyberdyne Systems: they build AI agents."),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -293,10 +316,9 @@ describe('Agent Service', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
         expect(text.toLocaleLowerCase()).toContain('france');
       },
-      Effect.provide(TestLayer()),
+      Effect.provide(TestLayer([ScriptedAiService.text('Paris'), ScriptedAiService.text('France')])),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -310,7 +332,8 @@ describe('Agent Service', () => {
         yield* hydrate();
         yield* hydrate();
       },
-      Effect.provide(TestLayer()),
+      // No agent turn is exercised, so no scripted turns are consumed.
+      Effect.provide(TestLayer([])),
       TestHelpers.provideTestContext,
     ),
   );
@@ -355,10 +378,24 @@ describe('Agent Service', () => {
 
         expect(ephemeralEventCount).toBeGreaterThan(0);
       },
-      Effect.provide(TestLayer({ enableToolBackgrounding: true })),
+      Effect.provide(
+        TestLayer(
+          [
+            operationToolCall(Research, { website: 'https://cyberdyne.com' }),
+            ScriptedAiService.text("Here's what I found about Cyberdyne Systems: they build AI agents."),
+            operationToolCall(Research, { website: 'https://acmerobotics.example' }),
+            ScriptedAiService.text("Here's what I found about Acme Robotics: they design industrial robots."),
+            operationToolCall(Research, { website: 'https://globex.example' }),
+            ScriptedAiService.text("Here's what I found about Globex Research: applied R&D in materials science."),
+            ScriptedAiService.text(
+              '1. Cyberdyne Systems builds AI agents. 2. Acme Robotics designs industrial robots. 3. Globex Research does applied R&D in materials science.',
+            ),
+          ],
+          { enableToolBackgrounding: true },
+        ),
+      ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 120_000 : undefined },
   );
 
   describe('delegation (stub)', () => {
@@ -386,18 +423,15 @@ describe('Agent Service', () => {
             expect(completion.exit.value).toBe('done: forty-two');
           }
         },
-        Effect.provide(DelegationTestLayer),
+        Effect.provide(DelegationTestLayer([ScriptedAiService.text('The capital of France is **Paris**.')])),
         TestHelpers.provideTestContext,
       ),
-      { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
     );
   });
 
   // The agent's self-wake (set-alarm/get-current-date) flow lives with the alarm blueprint that now
   // provides those tools: `assistant-toolkit/src/skills/alarm/blueprint.test.ts`.
 
-  // Placed last so it does not perturb the shared deterministic ID stream of the tests above
-  // (memoized conversations are keyed per file and depend on prior execution order).
   it.scoped(
     'forks a conversation into a new feed and replays source history via a SessionLink',
     Effect.fnUntraced(
@@ -436,14 +470,11 @@ describe('Agent Service', () => {
           .join('\n');
         expect(forkText.toLocaleLowerCase()).toContain('france');
       },
-      Effect.provide(TestLayer()),
+      Effect.provide(TestLayer([ScriptedAiService.text('Paris'), ScriptedAiService.text('France')])),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
-  // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
-  // the memoized tests above.
   it.scoped(
     'agent process succeeds when idle and respawns for a follow-up turn',
     Effect.fnUntraced(
@@ -478,14 +509,11 @@ describe('Agent Service', () => {
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('france');
       },
-      Effect.provide(TestLayer()),
+      Effect.provide(TestLayer([ScriptedAiService.text('Paris'), ScriptedAiService.text('France')])),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
-  // Drives the process control plane directly (no LLM turn), so it is placed after the memoized
-  // tests above to avoid perturbing their shared deterministic ID stream.
   it.scoped(
     'setAlarm over the process control surface reaches the live agent and arms a self-wake',
     Effect.fnUntraced(
@@ -516,7 +544,8 @@ describe('Agent Service', () => {
 
         yield* handle.terminate();
       },
-      Effect.provide(TestLayer()),
+      // No agent turn is exercised, so no scripted turns are consumed.
+      Effect.provide(TestLayer([])),
       TestHelpers.provideTestContext,
     ),
   );

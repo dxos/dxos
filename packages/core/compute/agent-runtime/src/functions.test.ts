@@ -8,17 +8,15 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { DXN, EntityId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
 import { AssistantTestLayer } from './testing';
-
-EntityId.dangerouslyDisableRandomness();
 
 const ReadName = Operation.make({
   meta: {
@@ -49,39 +47,54 @@ const skill = Skill.make({
   tools: Skill.toolDefinitions({ operations: [ReadName] }),
 });
 
-const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(ToolExecutionServices),
-  Layer.provideMerge(
-    AssistantTestLayer({
-      aiServicePreset: 'edge-remote',
-      operationHandlers: Handlers,
-      types: [Organization.Organization],
-    }),
-  ),
-);
+// The agent's tool-calling behaviour is scripted inline via a mock model (no recorded conversation
+// to regenerate). The `read-name` tool's `org` parameter is a top-level ref, so it is resolved
+// lazily from a mutable holder the test fills before running the request.
+const testLayer = (script: ScriptedAiService.Script) =>
+  Layer.empty.pipe(
+    Layer.provideMerge(ToolExecutionServices),
+    Layer.provideMerge(
+      AssistantTestLayer({
+        operationHandlers: Handlers,
+        types: [Organization.Organization],
+        aiService: ScriptedAiService.layer(script),
+      }),
+    ),
+  );
 
 describe('Research', () => {
   it.effect(
     'call a function with a ref input',
-    Effect.fnUntraced(
-      function* (_) {
-        const org = yield* Database.add(
-          Obj.make(Organization.Organization, {
-            name: 'BlueYard',
-            website: 'https://blueyard.com',
-          }),
-        );
-        yield* Database.flush();
-        yield* new AiRequest.Request({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
-          prompt: `What is the name of the organization? ${org.id}`,
-          toolkit: yield* createToolkit({
-            skills: [skill],
-          }),
-        });
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+    (() => {
+      const ref: { org?: string } = {};
+      return Effect.fnUntraced(
+        function* (_) {
+          const org = yield* Database.add(
+            Obj.make(Organization.Organization, {
+              name: 'BlueYard',
+              website: 'https://blueyard.com',
+            }),
+          );
+          yield* Database.flush();
+          ref.org = Obj.getURI(org);
+          yield* new AiRequest.Request({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
+            prompt: `What is the name of the organization? ${org.id}`,
+            toolkit: yield* createToolkit({
+              skills: [skill],
+            }),
+          });
+        },
+        Effect.provide(
+          testLayer([
+            ScriptedAiService.turn({
+              text: "I'll look up the name of that organization for you.",
+              tools: [{ name: 'read-name', input: () => ({ org: ref.org }) }],
+            }),
+            ScriptedAiService.text('The name of the organization is **BlueYard**.'),
+          ]),
+        ),
+        TestHelpers.provideTestContext,
+      );
+    })(),
   );
 });

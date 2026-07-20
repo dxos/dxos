@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { DXN, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -60,16 +61,20 @@ const toolkitLayer = TestToolkit.toLayer({
     }),
 });
 
-const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(ToolExecutionServices),
-  Layer.provideMerge(
-    AssistantTestLayer({
-      types: [CalendarEvent],
-      tracing: 'pretty',
-    }),
-  ),
-  Layer.provideMerge(toolkitLayer),
-);
+// The model's turn-by-turn behaviour is scripted inline per test (no recorded conversation to
+// regenerate). Real tools still execute; assertions stay on the response/side-effects.
+const testLayer = (script: ScriptedAiService.Script) =>
+  Layer.empty.pipe(
+    Layer.provideMerge(ToolExecutionServices),
+    Layer.provideMerge(
+      AssistantTestLayer({
+        types: [CalendarEvent],
+        tracing: 'pretty',
+        aiService: ScriptedAiService.layer(script),
+      }),
+    ),
+    Layer.provideMerge(toolkitLayer),
+  );
 
 describe('AiRequest.Request', () => {
   it.effect(
@@ -83,7 +88,7 @@ describe('AiRequest.Request', () => {
         });
         log.info('response', { response });
       },
-      Effect.provide(TestLayer),
+      Effect.provide(testLayer([ScriptedAiService.text('Hello! How can I help you today?')])),
       TestHelpers.provideTestContext,
     ),
   );
@@ -101,7 +106,12 @@ describe('AiRequest.Request', () => {
         });
         log.info('response', { response });
       },
-      Effect.provide(TestLayer),
+      Effect.provide(
+        testLayer([
+          ScriptedAiService.toolCall('Calculator', { input: '10 + 30' }),
+          ScriptedAiService.text('10 + 30 = **40**'),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
   );
@@ -120,10 +130,19 @@ describe('AiRequest.Request', () => {
         });
         log.info('response', { response });
       },
-      Effect.provide(TestLayer),
+      Effect.provide(
+        testLayer([
+          // The model omits the required `input` parameter, intentionally diverging from the tool
+          // schema so the resulting decode failure is fed back as a tool error.
+          ScriptedAiService.turn({
+            text: "Sure! I'll call the Calculator tool while intentionally omitting the required `input` parameter.",
+            tools: [{ name: 'Calculator', input: {} }],
+          }),
+          ScriptedAiService.text('The Calculator tool call failed because the required `input` parameter was missing.'),
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 60_000 },
   );
 
   it.effect(
@@ -148,7 +167,26 @@ describe('AiRequest.Request', () => {
         });
         expect(response).toBeDefined();
       },
-      Effect.provide(TestLayer),
+      Effect.provide(
+        testLayer({
+          // The forced summarization runs as a non-streaming side-call on the same model before the
+          // streaming main-loop turn replies, so both buckets are scripted under `models`.
+          models: {
+            opus: {
+              generate: [
+                ScriptedAiService.text(
+                  'The user asked how many apples are in the basket. I answered that there are 10 apples in the basket.',
+                ),
+              ],
+              stream: [
+                ScriptedAiService.text(
+                  'We were talking about how many apples are in the basket — I mentioned there are 10.',
+                ),
+              ],
+            },
+          },
+        }),
+      ),
       TestHelpers.provideTestContext,
     ),
   );
