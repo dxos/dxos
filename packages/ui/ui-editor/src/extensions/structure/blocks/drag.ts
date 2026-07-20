@@ -283,6 +283,8 @@ const createDragPlugin = (
       #collapseHeights: number[] = [];
       #placeholderKey: string | null = null;
       #preview: HTMLElement | null = null;
+      // The cloned content inside the preview; indented (within the fixed container) to preview the drop level.
+      #previewContent: HTMLElement | null = null;
       #previewOrigin: { left: number; top: number } | null = null;
       // A grip that rides along with the preview so a drag handle stays visible while dragging (the static
       // overlay grip is hidden during a drag). `#gripOrigin` is its resting viewport position at grab time.
@@ -432,6 +434,7 @@ const createDragPlugin = (
         this.#collapseHeights = [];
         this.#preview?.remove();
         this.#preview = null;
+        this.#previewContent = null;
         this.#previewOrigin = null;
         this.#previewGrip?.remove();
         this.#previewGrip = null;
@@ -570,6 +573,8 @@ const createDragPlugin = (
         });
 
         preview.appendChild(content);
+        // Held so the drop-level preview indents the content within the (unmoved) container.
+        this.#previewContent = content;
         return this.view.dom.appendChild(preview);
       }
 
@@ -589,15 +594,18 @@ const createDragPlugin = (
       }
 
       #positionPreview(clientX: number, clientY: number) {
-        // Preview the target indent level (from `getDropIndent`) by shifting the preview horizontally,
-        // even when X is otherwise clamped — this is the live drop-level indicator.
-        const indentOffset = this.#dropIndent?.offset ?? 0;
-        const dx = (clampX ? 0 : clientX - this.#grabX) + indentOffset;
+        const dx = clampX ? 0 : clientX - this.#grabX;
         const dy = clientY - this.#grabY;
         if (this.#preview && this.#previewOrigin && this.#blockRect) {
           const left = this.#blockRect.left + dx - this.#previewOrigin.left;
           const top = this.#blockRect.top + dy - this.#previewOrigin.top;
           this.#preview.style.transform = `translate(${left}px, ${top}px)`;
+        }
+        // Preview the target indent level (from `getDropIndent`) by indenting the content WITHIN the
+        // container — the container and grip stay put, only the text shifts to show where it will land.
+        if (this.#previewContent) {
+          const indentOffset = this.#dropIndent?.offset ?? 0;
+          this.#previewContent.style.transform = `translate(${PREVIEW_OFFSET.x + indentOffset}px, ${PREVIEW_OFFSET.y}px)`;
         }
         if (this.#previewGrip && this.#gripOrigin) {
           this.#previewGrip.style.left = `${this.#gripOrigin.left + dx}px`;
