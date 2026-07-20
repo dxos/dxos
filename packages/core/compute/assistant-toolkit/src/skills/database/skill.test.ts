@@ -17,21 +17,7 @@ import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { DatabaseHandlers } from './operations';
-import {
-  ContextAdd,
-  ContextRemove,
-  Load,
-  ObjectCreate,
-  ObjectDelete,
-  ObjectUpdate,
-  Query as DatabaseQueryOperation,
-  RelationCreate,
-  RelationDelete,
-  SchemaAdd,
-  SchemaList,
-  TagAdd,
-  TagRemove,
-} from './operations/definitions';
+import { Query as DatabaseQueryOperation, ObjectCreate, SchemaAdd, SchemaList } from './operations/definitions';
 import DatabaseSkill from './skill';
 
 // The agent's tool-calling behaviour is scripted inline per test via a mock model (no recorded
@@ -48,9 +34,9 @@ const testLayer = (script: ScriptedAiService.Script) =>
     aiService: ScriptedAiService.layer(script),
   });
 
-const ORGANIZATION = Type.getTypename(Organization.Organization)!;
-const PERSON = Type.getTypename(Person.Person)!;
-const EMPLOYER = Type.getTypename(Employer.Employer)!;
+const ORGANIZATION = Type.getTypename(Organization.Organization);
+const PERSON = Type.getTypename(Person.Person);
+const EMPLOYER = Type.getTypename(Employer.Employer);
 
 // A representative draft-07 JSON Schema as a model would emit for the `add-schema` tool.
 const PROJECT_JSON_SCHEMA = {

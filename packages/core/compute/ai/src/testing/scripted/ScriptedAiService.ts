@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import * as AiService from '../../AiService';
-import { generateParts, streamParts, type SynthesizedToolCall, type SynthesizedTurn } from './parts';
+import { type SynthesizedToolCall, type SynthesizedTurn, generateParts, streamParts } from './parts';
 
 /**
  * A statically-scripted mock {@link AiService.AiService}.
@@ -114,8 +114,11 @@ export const turn = (spec: ScriptedTurn): ScriptedTurn => spec;
 // Service.
 //
 
-const normalizeSpec = (script: Script): ScriptSpec =>
-  Array.isArray(script) ? { turns: script } : (script as ScriptSpec);
+const normalizeSpec = (script: Script): ScriptSpec => (Array.isArray(script) ? { turns: script } : script);
+
+/** Narrows a tool-call input to the lazy resolver form (see {@link ScriptedToolCall.input}). */
+const isInputResolver = (input: ScriptedToolCall['input']): input is (ctx: TurnContext) => unknown =>
+  typeof input === 'function';
 
 /** Per-build mutable state, allocated fresh each time the layer is constructed (i.e. per test). */
 interface ScriptState {
@@ -210,7 +213,7 @@ const nextTurn = (
     state.cursors.set(bucket, cursor + 1);
 
     const tools: SynthesizedToolCall[] = (scripted.tools ?? []).map((tc) => {
-      const input = typeof tc.input === 'function' ? (tc.input as (ctx: TurnContext) => unknown)(ctx) : tc.input;
+      const input = isInputResolver(tc.input) ? tc.input(ctx) : tc.input;
       return {
         id: `scripted-tool-call-${state.toolCallCounter++}`,
         name: tc.name,

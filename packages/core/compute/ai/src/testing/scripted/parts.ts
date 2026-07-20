@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import type * as Response from '@effect/ai/Response';
 
 /**
