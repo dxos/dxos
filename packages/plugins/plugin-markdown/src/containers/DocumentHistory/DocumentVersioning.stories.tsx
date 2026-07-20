@@ -157,7 +157,7 @@ const selectTimelineNode = async (canvasElement: HTMLElement, label: string) => 
 /** Merge the active branch via the version banner ('Merge' also labels a panel icon button). */
 const mergeViaBanner = async (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
-  const banner = canvas.getByRole('status');
+  const banner = canvas.getByTestId('version-banner-branch');
   await userEvent.click(within(banner).getByText('Merge'));
 };
 
