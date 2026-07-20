@@ -13,18 +13,23 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { ScriptedAiService } from '@dxos/ai/testing';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 
 import { MagazineSkill } from '../skills';
 import { FeedOperation, Magazine, Subscription } from '../types';
 import { MagazineOperationHandlerSet } from './index';
 
-EntityId.dangerouslyDisableRandomness();
+/**
+ * Holds the ids of the two on-topic candidate Posts, filled by the test after it creates them (and
+ * before invoking the curation operation) since the curation agent's `completeJob` call must select
+ * those exact ids. Read lazily by the scripted tool call, at model-call time.
+ */
+const selectedIds: { artemis?: string; jwst?: string } = {};
 
 const TestLayer = AssistantTestLayer({
   // MagazineOperationHandlerSet provides CurateMagazine + SyncFeed + FetchArticleContent (the skill
@@ -41,6 +46,23 @@ const TestLayer = AssistantTestLayer({
     TagIndex.TagIndex,
   ],
   skills: [MagazineSkill.make()],
+  // The curation agent (RunInstructions, via the Magazine skill) is scripted to select the two
+  // on-topic candidates and stop: `completeJob` (RunInstructions' inline tool, not an
+  // operation-backed one — hence a raw `toolCall` rather than `operationToolCall`) carrying the
+  // selection, then a final text turn so the agent loop terminates.
+  aiService: ScriptedAiService.layer([
+    ScriptedAiService.toolCall('completeJob', () => ({
+      success: {
+        posts: [
+          { id: selectedIds.artemis, snippet: "Covers NASA's Artemis II crewed lunar flyby rehearsal." },
+          { id: selectedIds.jwst, snippet: 'Covers JWST confirming the most distant galaxy yet observed.' },
+        ],
+      },
+    })),
+    ScriptedAiService.text(
+      'Curated the two space and astronomy articles; skipped the unrelated business and tooling stories.',
+    ),
+  ]),
 });
 
 /**
@@ -82,8 +104,9 @@ const CANDIDATES = [
 const articleHtml = (title: string, body: string) =>
   `<!doctype html><html><head><title>${title}</title></head><body><article><h1>${title}</h1><p>${body}</p></article></body></html>`;
 
-// Preserve the real fetch so the stub can pass the agent's Anthropic call through (replay is
-// memoized, so no real call is made then; generation uses the live API key).
+// Preserve the real fetch so the stub can pass through any URL that isn't a scripted candidate
+// article (the agent's model calls are scripted in-process, not over the network — this only
+// guards the fetchArticleContent tool's own outbound fetches).
 // eslint-disable-next-line no-restricted-globals
 const realFetch = globalThis.fetch.bind(globalThis);
 
@@ -136,6 +159,11 @@ describe('CurateMagazine (LLM)', () => {
         yield* Feed.append(postFeed, posts);
         yield* Database.flush();
 
+        // Set before the operation invoke below: the scripted `completeJob` call reads these lazily
+        // when the model turn is consumed.
+        selectedIds.artemis = posts[0].id;
+        selectedIds.jwst = posts[1].id;
+
         const magazine = yield* Database.add(
           Magazine.make({
             name: 'The Cosmos',
@@ -162,6 +190,5 @@ describe('CurateMagazine (LLM)', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 240_000 },
   );
 });
