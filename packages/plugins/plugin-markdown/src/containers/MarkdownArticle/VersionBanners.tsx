@@ -15,33 +15,6 @@ export type VersionBannersProps = {
   versioning: UseVersioningResult;
 };
 
-/** Compact "time since" for the banner tag — `now`, `30m`, `5h`, `2d`, `3w`, `6mo`, `1y`. */
-const relativeTime = (iso: string): string => {
-  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 1) {
-    return 'now';
-  }
-  if (minutes < 60) {
-    return `${minutes}m`;
-  }
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `${hours}h`;
-  }
-  const days = Math.floor(hours / 24);
-  if (days < 7) {
-    return `${days}d`;
-  }
-  if (days < 30) {
-    return `${Math.floor(days / 7)}w`;
-  }
-  if (days < 365) {
-    return `${Math.floor(days / 30)}mo`;
-  }
-  return `${Math.floor(days / 365)}y`;
-};
-
 /**
  * The version-review banner row shown above the editor while off "main @ now" — a slim strip for the
  * active checkpoint / branch / fork (at most one is selected at a time). Owns the selection handlers
@@ -111,7 +84,7 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
         <VersionBanner
           mode='checkpoint'
           name={Version.label(activeVersion)}
-          detail={relativeTime(activeVersion.createdAt)}
+          timestamp={activeVersion.createdAt}
           onRestore={handleRestore}
           // Branching from a BRANCH revision would fork a sub-branch, which is unsupported
           // (flat core registry) — offer it only for main revisions. See DESIGN.md.
@@ -123,7 +96,7 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
         <VersionBanner
           mode='branch'
           name={Branch.label(activeBranch)}
-          detail={relativeTime(activeBranch.createdAt)}
+          timestamp={activeBranch.createdAt}
           onMerge={handleMerge}
           onCompare={handleCompare}
           onClose={handleCloseBanner}
@@ -133,7 +106,7 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
         <VersionBanner
           mode='fork'
           name={Branch.label(activeFork)}
-          detail={relativeTime(activeFork.createdAt)}
+          timestamp={activeFork.createdAt}
           // Leaving the fork point returns to the branch tip if it is still editable, else main.
           onClose={() =>
             setSelection(

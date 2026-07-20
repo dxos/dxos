@@ -5,9 +5,36 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/ui';
-import { Button, Icon, IconButton, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+
+/** Compact "time since" for the banner tag — `now`, `30m`, `5h`, `2d`, `3w`, `6mo`, `1y`. */
+const relativeTime = (iso: string): string => {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 1) {
+    return 'now';
+  }
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  if (days < 7) {
+    return `${days}d`;
+  }
+  if (days < 30) {
+    return `${Math.floor(days / 7)}w`;
+  }
+  if (days < 365) {
+    return `${Math.floor(days / 30)}mo`;
+  }
+  return `${Math.floor(days / 365)}y`;
+};
 
 export type VersionBannerProps = {
   /**
@@ -16,8 +43,8 @@ export type VersionBannerProps = {
    */
   mode: 'checkpoint' | 'branch' | 'fork';
   name: string;
-  /** Compact age shown as a tag (e.g. `2d`, `5h`, `30m`) — the banner has no room for a full date. */
-  detail?: string;
+  /** ISO timestamp — shown as a compact age tag (`2d`, `5h`, `30m`) with the full date in a tooltip. */
+  timestamp?: string;
   onRestore?: () => void;
   onBranchFrom?: (name: string) => void;
   onMerge?: () => void;
@@ -32,7 +59,7 @@ export type VersionBannerProps = {
 export const VersionBanner = ({
   mode,
   name,
-  detail,
+  timestamp,
   onRestore,
   onBranchFrom,
   onMerge,
@@ -43,58 +70,60 @@ export const VersionBanner = ({
   const [namingBranch, setNamingBranch] = useState(false);
 
   return (
-    <Toolbar.Root>
+    <Toolbar.Root data-testid={`version-banner-${mode}`}>
       <div className='flex items-center gap-0.5 px-1 truncate'>
-        {/* Visually hidden: the banner is compact (icon + name + age), but the mode label stays in
-            the DOM for screen readers and text-based tests. */}
-        <span className='sr-only'>{t(`version-banner-${mode}.label`)}</span>
         <Tag classNames='flex gap-2'>
           <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
           {name}
         </Tag>
-        {detail && <Tag hue='green'>{detail}</Tag>}
+        {timestamp && (
+          <TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
+            <Tag hue='indigo'>{relativeTime(timestamp)}</Tag>
+          </TextTooltip>
+        )}
       </div>
       <Toolbar.Separator />
       <div className='flex items-center gap-1 ms-auto'>
         {mode === 'checkpoint' && onRestore && (
-          <Button density='sm' variant='ghost' onClick={onRestore}>
+          <Toolbar.Button variant='ghost' onClick={onRestore}>
             {t('restore.label')}
-          </Button>
+          </Toolbar.Button>
         )}
         {mode === 'checkpoint' && onBranchFrom && (
           <NamePopover
             open={namingBranch}
             placeholder={t('branch-name.placeholder')}
             submitLabel={t('create.label')}
+            onCancel={() => setNamingBranch(false)}
             onSubmit={(name) => {
               setNamingBranch(false);
               onBranchFrom(name);
             }}
-            onCancel={() => setNamingBranch(false)}
           >
-            <Button density='sm' variant='ghost' onClick={() => setNamingBranch(true)}>
+            <Toolbar.Button density='sm' variant='ghost' onClick={() => setNamingBranch(true)}>
               {t('branch-from.label')}
-            </Button>
+            </Toolbar.Button>
           </NamePopover>
         )}
         {mode === 'branch' && onCompare && (
-          <Button density='sm' variant='ghost' onClick={onCompare}>
-            {t('compare.label')}
-          </Button>
+          <Toolbar.IconButton
+            variant='ghost'
+            icon='ph--git-diff--regular'
+            iconOnly
+            label={t('compare.label')}
+            onClick={onCompare}
+          />
         )}
         {mode === 'branch' && onMerge && (
-          <Button density='sm' variant='ghost' onClick={onMerge}>
-            {t('merge.label')}
-          </Button>
+          <Toolbar.IconButton
+            variant='ghost'
+            icon='ph--git-merge--regular'
+            label={t('merge.label')}
+            iconOnly
+            onClick={onMerge}
+          />
         )}
-        <IconButton
-          density='sm'
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('close.label')}
-          onClick={onClose}
-        />
+        <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
       </div>
     </Toolbar.Root>
   );
