@@ -157,12 +157,11 @@ const withEchoRefinements = (
       });
     } else if (inProgress.has(suspendedAst)) {
       // Reached via a *different* suspended type already being expanded (e.g. two mutually-recursive
-      // schemas, A embedding B and B embedding A) rather than via itself — `suspendCache` alone won't
-      // catch this, since each fresh expansion below starts from an empty one. Stop with a permissive
-      // "any" placeholder instead of expanding again. Needs a `type` key (unlike effect's own bare
-      // `{ $id: '/schemas/any' }` for `Schema.Any`) so effect's JSONSchema.fromAST treats this
-      // annotation as a full override rather than merging it onto a recomputed — and, for a bare
-      // Suspend, unsupported — structural schema.
+      // schemas, A embedding B and B embedding A) — `suspendCache` alone won't catch this, since each
+      // fresh expansion below starts from an empty one. Stop with a permissive "any" placeholder
+      // instead of expanding again. The `type` key is required: effect's JSONSchema.fromAST only
+      // treats this annotation as a full override (vs. merging it onto a recomputed, and for a bare
+      // Suspend unsupported, structural schema) when it sees type/oneOf/anyOf/$ref.
       recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
         [SchemaAST.JSONSchemaAnnotationId]: {
           $id: '/schemas/any',
