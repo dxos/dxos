@@ -28,17 +28,6 @@ projects:
     prs: [12174]
     resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
 
-  - name: app-framework-capability-activation
-    status: ended
-    user: jdw
-    host: jdw-mbp
-    created: 2026-07-16
-    summary: Replace activation-event ordering with capability-dependency activation; capabilities become typed, yieldable Effect services (full plugin migration).
-    tasks: .agents/projects/app-framework-capability-activation/TASKS.md
-    design: .agents/projects/app-framework-capability-activation/DESIGN.md
-    prs: []
-    resume: 'Phases 1-8 complete: full migration of all plugin packages + app-framework/app-toolkit core, legacy activatesOn/fires* API deleted. PR submitted from t3code/84a5cc44.'
-
   - name: composer-search
     status: active
     user: burdon
@@ -61,4 +50,14 @@ projects:
     prs: [12237]
     resume: 'PR #12237 in merge queue (auto-merge enabled; blockers cleared, exports-map fix pushed). After landing, in a fresh session: stage 1 of agents/superpowers/plans/2026-07-17-branching-convergence.md — revive PR 11829 commits 1-3 rebased on main, add coverage + writable per-surface BranchBinding API (spec in plan), wittjosiah reviews. Stages 2-4 in TASKS.md.'
 
-ended: []
+ended:
+  - name: app-framework-capability-activation
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-16
+    ended: 2026-07-19
+    summary: Replace activation-event ordering with capability-dependency activation; capabilities become typed, yieldable Effect services (full plugin migration); phase 9 API ergonomics (opaque module types, capability-level props/activatesOn, AppPlugin removed).
+    tasks: .agents/projects/app-framework-capability-activation/TASKS.md
+    design: .agents/projects/app-framework-capability-activation/DESIGN.md
+    prs: []
+    resume: 'All 9 phases complete and committed on t3code/84a5cc44 (nothing pushed, no PR — user held off per standing instruction). All gates green: full build, full test suite, boot gate 3/3, composer e2e (22 passed / 1 pre-existing flake, confirmed not a regression). Awaiting user go-ahead to run submit-pr.'
