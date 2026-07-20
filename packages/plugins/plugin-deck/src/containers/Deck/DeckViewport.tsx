@@ -12,7 +12,14 @@ import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useBreakpoints, useDeckPresentation, useDeckState } from '#hooks';
+import {
+  useBreakpoints,
+  useCompanions,
+  useDeckPresentation,
+  useDeckState,
+  useSelectedCompanion,
+  useSelectedCompanionVariant,
+} from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, Keyshortcuts } from '#types';
 
@@ -105,19 +112,38 @@ export const DeckContentEmpty = () => {
 const getPlankId = (id: string) => id;
 
 /**
+ * The planks the deck renders: the real active planks plus, when the companion is open, the derived
+ * trailing companion plank of the last plank (`<lastPlank>/~<variant>`). The companion is never stored
+ * in `deck.active` — it always follows the current last plank — so it is derived here and rendered as
+ * an ordinary plank. `companionId` is the trailing entry, or undefined when no companion is shown.
+ */
+const useRenderedPlanks = (): { rendered: string[]; companionId: string | undefined } => {
+  const { deck } = useDeckContext('useRenderedPlanks');
+  const lastPlank = deck.active[deck.active.length - 1];
+  const companions = useCompanions(lastPlank ?? '');
+  const selectedVariant = useSelectedCompanionVariant();
+  const { companionId } = useSelectedCompanion(companions, selectedVariant);
+  const companion = deck.companionOpen && lastPlank ? companionId : undefined;
+  return { rendered: companion ? [...deck.active, companion] : deck.active, companionId: companion };
+};
+
+/**
  * Tile wrapping a {@link DeckPlank}, parameterized by the derived presentation: fullbleed renders an
  * absolutely-positioned plank with no resize affordance (today's solo look); sliding renders a
  * resizable {@link Mosaic.Tile} whose committed width persists via `plankSizing`, full-viewport-width
  * and scroll-snapped below the `md` breakpoint. Reads the deck context directly since the Mosaic stack
- * renders tiles by id.
+ * renders tiles by id. Passes the real `deck.active` (not the rendered list) to {@link DeckPlank} so
+ * ordering and the "open companion" affordance key off real planks, and `soloLook` off the rendered count.
  */
 const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const id = props.data;
   const { deck } = useDeckContext('DeckPlankTile');
   const { invokePromise } = useOperationInvoker();
   const breakpoint = useBreakpoints();
-  const presentation = useDeckPresentation(deck.active.length);
+  const { rendered } = useRenderedPlanks();
+  const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
+  const soloLook = rendered.length === 1;
 
   const handleSizeChange = useCallback<NonNullable<MosaicTileProps['onSizeChange']>>(
     (size) => {
@@ -135,7 +161,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           id={id}
           part='main'
           active={deck.active}
-          companionShown={deck.companionOpen}
+          soloLook={soloLook}
           classNames={mx('absolute inset-0', mainIntrinsicSize)}
         />
       </Mosaic.Tile>
@@ -146,13 +172,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   if (isMobile) {
     return (
       <Mosaic.Tile {...props} classNames='relative h-full w-full snap-start'>
-        <DeckPlank
-          id={id}
-          part='main'
-          active={deck.active}
-          companionShown={deck.companionOpen}
-          classNames='size-full'
-        />
+        <DeckPlank id={id} part='main' active={deck.active} soloLook={soloLook} classNames='size-full' />
       </Mosaic.Tile>
     );
   }
@@ -166,7 +186,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       maxSize={MAX_PLANK_SIZE}
       onSizeChange={handleSizeChange}
     >
-      <DeckPlank id={id} part='main' active={deck.active} companionShown={deck.companionOpen} classNames='size-full' />
+      <DeckPlank id={id} part='main' active={deck.active} soloLook={soloLook} classNames='size-full' />
       <Mosaic.ResizeHandle />
     </Mosaic.Tile>
   );
@@ -184,11 +204,11 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
  * the fullscreen toggle), matching the existing `DeckOperation.Adjust({ type: 'fullscreen' })` wiring.
  */
 export const DeckPlanks = () => {
-  const { deck, state } = useDeckContext('DeckPlanks');
-  const { active } = deck;
+  const { state } = useDeckContext('DeckPlanks');
+  const { rendered } = useRenderedPlanks();
   const { invokePromise } = useOperationInvoker();
   const breakpoint = useBreakpoints();
-  const presentation = useDeckPresentation(active.length);
+  const presentation = useDeckPresentation(rendered.length);
   const fullscreenId = state.fullscreen;
   const fullscreen = !!fullscreenId;
   const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
@@ -270,15 +290,15 @@ export const DeckPlanks = () => {
           <ExitFullscreenButton onExit={toggleFullscreen} />
           <DeckPlank id={fullscreenId} part='main' fullscreen classNames={mx('absolute inset-0', mainIntrinsicSize)} />
         </>
-      ) : presentation === 'fullbleed' && active[0] ? (
+      ) : presentation === 'fullbleed' && rendered[0] ? (
         // A singleton deck renders the plank directly as an absolute-inset child of this filled
         // container (today's solo look). Routing it through the horizontal Mosaic.Stack/ScrollArea
         // collapses it — an `absolute inset-0` plank contributes no intrinsic size to a flex tile.
         <DeckPlank
-          id={active[0]}
+          id={rendered[0]}
           part='main'
-          active={active}
-          companionShown={deck.companionOpen}
+          active={rendered}
+          soloLook
           classNames={mx('absolute inset-0', mainIntrinsicSize)}
         />
       ) : (
@@ -294,7 +314,7 @@ export const DeckPlanks = () => {
                   isSliding && breakpoint !== 'mobile' ? 'h-full gap-(--main-spacing) px-(--main-spacing)' : 'h-full'
                 }
                 getId={getPlankId}
-                items={active}
+                items={rendered}
                 Tile={DeckPlankTile}
                 draggable={false}
               />

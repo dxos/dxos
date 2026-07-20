@@ -285,6 +285,17 @@ export const makeObject = ({
 // Companion helpers.
 //
 
+/**
+ * Prefix marking a "linked segment" companion node id (`<parent>/~<variant>`). Inlined here (rather
+ * than importing `linkedSegment`/`isLinkedSegment` from the UI-layer `@dxos/react-ui-attention`) so
+ * this module — reachable from the client dedicated worker — stays free of any DOM dependency. Mirrors
+ * the same convention duplicated in `@dxos/app-graph`'s `path-resolution.ts`.
+ */
+const LINKED_PREFIX = '~';
+
+/** Normalize a companion id to a linked segment (`~<variant>`), leaving an already-linked id as-is. */
+const toLinkedSegment = (id: string): string => (id.startsWith(LINKED_PREFIX) ? id : `${LINKED_PREFIX}${id}`);
+
 /** Build a plank-level companion panel node. */
 export const makeCompanion = <TData = string>({
   id,
@@ -299,7 +310,9 @@ export const makeCompanion = <TData = string>({
   data: TData;
   position?: Position.Position;
 }): Node.NodeArg<TData> => ({
-  id,
+  // Companion ids are always linked segments (`~<variant>`) so they share the plank's attention and are
+  // uniformly addressable as `companion/<variant>` in the URL; normalize callers that pass a bare id.
+  id: toLinkedSegment(id),
   type: PLANK_COMPANION_TYPE,
   data,
   properties: {

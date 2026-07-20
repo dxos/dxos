@@ -67,10 +67,11 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     }),
   );
 
+  // A companion of the doc plank. Companions need no `urlKey` — they are addressed generically as
+  // `companion/<variant>` (variant = the `~`-stripped segment), resolved against the preceding plank.
   const comments = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'comments',
-      urlKey: 'comments',
       match: NodeMatcher.whenNodeType(DOC_TYPE),
       connector: () => Effect.succeed([{ id: '~comments', type: COMMENTS_TYPE }]),
     }),
@@ -164,7 +165,7 @@ describe('path-resolution', () => {
           workspace: WORKSPACE_A,
           pairs: [
             { key: 'doc', id: 'docA', workspace: WORKSPACE_A },
-            { key: 'comments', workspace: WORKSPACE_A },
+            { key: 'companion', id: 'comments', workspace: WORKSPACE_A },
           ],
         }),
       );
@@ -265,21 +266,21 @@ describe('path-resolution', () => {
       expect(Option.getOrThrow(represented)).toEqual({ key: 'doc', id: 'docA', workspace: WORKSPACE_A });
     });
 
-    test('round-trips a resolved companion without an id', async ({ expect }) => {
+    test('round-trips a resolved companion as companion/<variant>', async ({ expect }) => {
       const builder = buildTestBuilder();
       const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
           pairs: [
             { key: 'doc', id: 'docA', workspace: WORKSPACE_A },
-            { key: 'comments', workspace: WORKSPACE_A },
+            { key: 'companion', id: 'comments', workspace: WORKSPACE_A },
           ],
         }),
       );
       const companion = results[1];
       invariant(companion, 'expected the companion to resolve');
       const represented = PathResolution.representNode(builder, companion.nodeId);
-      expect(Option.getOrThrow(represented)).toEqual({ key: 'comments', workspace: WORKSPACE_A });
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'companion', id: 'comments', workspace: WORKSPACE_A });
     });
 
     test('round-trips an inline child node back to its key/id', async ({ expect }) => {

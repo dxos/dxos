@@ -49,9 +49,13 @@ export type RepresentedNode = {
  * here (rather than imported) to keep app-graph free of a UI-layer dependency. */
 const LINKED_PREFIX = '~';
 
+/** The single well-known URL key for every plank companion: `companion/<variant>`, resolved against the
+ * preceding plank. Not registered by any extension; mirrored in `UrlPath`'s reserved-key set. */
+const COMPANION_KEY = 'companion';
+
 /** Reserved words that can never be registered as a `urlKey`, duplicated from `UrlPath.isReservedKey`
  * (rather than imported) to keep app-graph free of an app-toolkit dependency. */
-const RESERVED_URL_KEYS = new Set(['w', 'reset', 'redirect', 'not-found']);
+const RESERVED_URL_KEYS = new Set(['w', 'reset', 'redirect', 'not-found', COMPANION_KEY]);
 
 const isReservedUrlKey = (key: string): boolean =>
   RESERVED_URL_KEYS.has(key) || SpaceId.isValid(key) || EntityId.isValid(key);
@@ -120,6 +124,9 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean };
  */
 export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
   const table = new Map<string, UrlKeyTableEntry>();
+  // The companion key is not registered by any extension; seed it so `UrlPath.parse` tokenizes
+  // `companion/<variant>` as an id-bearing pair. Resolution attaches it to the preceding plank.
+  table.set(COMPANION_KEY, { key: COMPANION_KEY, hasId: true });
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.urlKey!;
     const hasId = extension.urlKeyHasId ?? true;
@@ -275,22 +282,23 @@ const resolveKeyId = async (
 };
 
 /**
- * Resolve a companion (id-less) pair against the node it attaches to: the child of `precedingNodeId`
- * produced by the key-owning extension. A single expand, no BFS — companions are always a direct
- * child of the plank they attach to.
+ * Resolve a `companion/<variant>` pair against the plank it attaches to: the linked-segment child
+ * (`<precedingNodeId>/~<variant>`) of `precedingNodeId`. A single expand, no BFS — a companion is
+ * always a direct child of the plank it attaches to. Matched by the variant (the `~`-stripped last
+ * segment), so it works for every companion regardless of which extension produced it.
  */
 const resolveCompanion = async (
   builder: GraphBuilder.GraphBuilder,
   precedingNodeId: string,
-  extensionIds: ReadonlySet<string>,
+  variant: string,
 ): Promise<string | null> => {
   Graph.expand(builder.graph, precedingNodeId, 'child');
   await GraphBuilder.flush(builder);
 
-  const match = Graph.getConnections(builder.graph, precedingNodeId, 'child').find((child) => {
-    const childExtensionId = builder.getNodeExtensionId(child.id);
-    return childExtensionId ? extensionIds.has(childExtensionId) : false;
-  });
+  const linkedSegment = `${LINKED_PREFIX}${variant}`;
+  const match = Graph.getConnections(builder.graph, precedingNodeId, 'child').find(
+    (child) => child.id.slice(child.id.lastIndexOf('/') + 1) === linkedSegment,
+  );
   return match?.id ?? null;
 };
 
@@ -306,6 +314,15 @@ const resolveUrlAsync = async (
 
   for (let pairIndex = 0; pairIndex < parsed.pairs.length; pairIndex++) {
     const pair = parsed.pairs[pairIndex];
+
+    if (pair.key === COMPANION_KEY) {
+      // Companion pair (`companion/<variant>`): attach to the preceding plank by variant. Not itself a
+      // plank, so it does not become the anchor for a following companion.
+      const nodeId = lastPlankNodeId && pair.id ? await resolveCompanion(builder, lastPlankNodeId, pair.id) : null;
+      results.push(nodeId ? { pairIndex, nodeId } : null);
+      continue;
+    }
+
     const extensionIdList = keyTable.get(pair.key);
 
     if (!extensionIdList || extensionIdList.length === 0) {
@@ -318,10 +335,11 @@ const resolveUrlAsync = async (
     }
 
     if (pair.id === undefined) {
-      // Companion pair: attach to the preceding plank, if any.
-      const extensionIds = new Set(extensionIdList);
-      const nodeId = lastPlankNodeId ? await resolveCompanion(builder, lastPlankNodeId, extensionIds) : null;
-      results.push(nodeId ? { pairIndex, nodeId } : null);
+      // Only the reserved `companion` key is id-less-by-attachment; every other key addresses a plank
+      // by id. An id-less non-companion pair is unresolvable.
+      log.warn('id-less non-companion URL pair', { key: pair.key });
+      results.push(null);
+      lastPlankNodeId = undefined;
       continue;
     }
 
@@ -356,22 +374,13 @@ export const resolveUrl = (
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of
- * `resolveUrl`: the builder already knows which extension's connector produced the node
- * (`getNodeExtensionId`), so the URL key is just that extension's `urlKey`. Returns `Option.none()`
- * for a node with no key-declaring producer (unmapped — serialization skips it with a dev-time warning
- * one layer up, per the design's "unmapped nodes" rule).
+ * `resolveUrl`. A companion node (a linked `~<variant>` segment) maps to the generic `companion` key
+ * with the variant as its id — independent of any extension declaration, so every companion is
+ * addressable. Any other node maps via its producing extension's `urlKey` (`getNodeExtensionId`);
+ * a node with no key-declaring producer returns `Option.none()` (unmapped — serialization skips it
+ * with a dev-time warning one layer up, per the design's "unmapped nodes" rule).
  */
 export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string): Option.Option<RepresentedNode> => {
-  const extensionId = builder.getNodeExtensionId(nodeId);
-  if (!extensionId) {
-    return Option.none();
-  }
-
-  const key = builder.getExtensions()[extensionId]?.urlKey;
-  if (!key) {
-    return Option.none();
-  }
-
   const segments = nodeId.split('/');
   // Canonical node ids are `root/<workspace>/...`; the workspace is always the second segment.
   const workspace = segments[1];
@@ -381,8 +390,18 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
 
   const lastSegment = segments[segments.length - 1];
   if (lastSegment.startsWith(LINKED_PREFIX)) {
-    // A linked (companion) segment carries no user-facing id.
-    return Option.some({ key, workspace });
+    // Companion node: keyed generically as `companion`, with the variant (the `~`-stripped segment) as
+    // its id — no per-extension `urlKey` required.
+    return Option.some({ key: COMPANION_KEY, id: lastSegment.slice(LINKED_PREFIX.length), workspace });
+  }
+
+  const extensionId = builder.getNodeExtensionId(nodeId);
+  if (!extensionId) {
+    return Option.none();
+  }
+  const key = builder.getExtensions()[extensionId]?.urlKey;
+  if (!key) {
+    return Option.none();
   }
 
   return Option.some({ key, id: lastSegment, workspace });

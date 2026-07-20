@@ -163,16 +163,18 @@ export default Capability.makeModule(
         resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
       }
 
-      // Planks resolve in chain order; a companion (id-less) pair attaches to the preceding plank but
-      // is not itself a plank, so it's tracked separately rather than added to `plankIds`.
+      // Planks resolve in chain order; a `companion/<variant>` pair is the deck's trailing companion,
+      // not a stored plank, so it drives companionOpen + variant rather than being added to `plankIds`.
       const plankIds: string[] = [];
       let companionNodeId: string | null = null;
       pairs.forEach((pair, index) => {
         const nodeId = resolved[index]?.nodeId;
-        if (pair.id !== undefined) {
+        if (pair.key === UrlPath.COMPANION_KEY) {
+          if (nodeId) {
+            companionNodeId = nodeId;
+          }
+        } else {
           plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
-        } else if (nodeId) {
-          companionNodeId = nodeId;
         }
       });
 
@@ -274,11 +276,11 @@ export default Capability.makeModule(
         }
       }
 
+      // The companion is the deck's trailing plank, always attached to the last plank (not the attended
+      // one), and serialized as `companion/<variant>` after it.
       let companion: { attendedId: string; node: PathResolution.RepresentedNode } | undefined;
       if (deck.companionOpen && deck.active.length > 0) {
-        const [attendedId] = attention.getCurrent();
-        const plankId =
-          attendedId && deck.active.includes(attendedId) ? attendedId : deck.active[deck.active.length - 1];
+        const plankId = deck.active[deck.active.length - 1];
         const selection = viewState.get(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${linkedSegment(selection.variant)}`;

@@ -37,8 +37,47 @@ plugin-id fallback key instead of `collection`; (2) reload/deep-link to an objec
       Fixes both reverse (representNode) and forward (BFS keys off getNodeExtensionId). Browser-verified
       on a Routine: select → `/w/<ws>/routine/<id>`; cold reload resolves + renders. app-graph 114 green.
 - [ ] **Re-verify nested-collection deep link** — root-collection + type-section (routine) + warm cases
-      done; still confirm a *nested*-collection object (BFS fallback) cold-load.
+      done; still confirm a _nested_-collection object (BFS fallback) cold-load.
 - [ ] **Fold Phase C into PR #12273** — committed locally (25ebc0842a + provenance fix); push when ready.
+
+## Phase D: Companions as ordinary planks
+
+Locked decisions (user): companion is a deck-wide on/off; when on it is the DERIVED trailing plank of
+the last real plank (its context = second-to-last plank); rendered as an ordinary plank (no nested
+Splitter) but with a custom header (variant switcher + close); URL key is `companion/<variant>` for
+ALL companions. Turning it on in solo → deck mode (counts as a plank). Contributing plugins unchanged.
+
+### Tasks
+
+- [x] **URL layer** — `companion` is a reserved, hardcoded key (`companion/<variant>`, resolved against
+      the preceding plank by variant). `path-resolution`: representNode maps any `~<variant>` node →
+      `{key:'companion', id:variant}` (no per-extension urlKey needed → every companion serializes);
+      resolveUrl handles the `companion` key via `resolveCompanion(precedingPlank, variant)`;
+      buildUrlKeyTable seeds `companion` (hasId). `UrlPath` reserves `companion`. app-graph 114 green.
+- [x] **Normalize makeCompanion** — always a linked segment (`~<variant>`), so plain-id companions
+      (execute, chat, help, debug, …) share attention and are addressable.
+- [ ] **Deck render** — DeckPlanks appends the derived companion plank (`${lastActive}/~${variant}`)
+      when `companionOpen`; presentation counts it (solo+companion → sliding). DeckPlank renders a
+      companion id via a custom companion-plank (tabs switcher + close), not the nested Splitter.
+- [ ] **Toggle** — "open companion" button only on the last real plank when off; companion plank close
+      sets `companionOpen:false`; variant switch updates companionVariantAspect + URL.
+- [ ] **URL handler** — syncUrl appends `companion/<variant>` after the last plank; handleNavigation
+      maps a `companion` pair → companionOpen + variant (not a Set plank).
+- [ ] **Cleanup** — remove useCompanionSplit / companionFrameSizing / nested Companion split pane /
+      companionShown plumbing.
+- [x] **Deck render / toggle / URL handler / (partial) cleanup** — DeckPlanks derives the trailing
+      companion plank (`useRenderedPlanks`), presentation counts it; DeckPlank delegates companion ids
+      to new CompanionPlank (Companion pane reused as a full plank, tabs switcher + close); nested
+      Splitter removed; useDeckPlank re-gates the open-companion button to the last real plank when off;
+      url-handler serializes/parses `companion/<variant>` after the last plank. Builds clean; app-graph
+      114 / app-toolkit 101 / plugin-deck 49 tests green.
+- [ ] **Browser verification BLOCKED (infra, not code)** — the dev env's DXOS worker connection times
+      out (30s startup timeout, `plugin.client.Client` module) after this session's dev-server churn.
+      Proven via `git stash`: HEAD (without Phase D) fails identically, so it is not the companion code.
+      Tried: clean restart, vite cache clear, full storage wipe (IndexedDB+OPFS), fresh tab. Needs a
+      fresh browser/dev-server environment to verify: solo→companion enters deck mode; companion URL is
+      `companion/<variant>`; cold reload restores it; variant switch + close work.
+- [ ] **Deferred cleanup** — delete now-dead useCompanionSplit + companionFrameSizing schema field.
 
 > **Execution policy** — of paramount importance for all execution: delegate the
 > bulk of the work to cheaper models. Sonnet subagents do the file-by-file

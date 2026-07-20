@@ -45,7 +45,13 @@ export type ParsedUrl = {
   pairs: Pair[];
 };
 
-const RESERVED_KEYS = new Set(['w', 'reset', 'redirect', 'not-found']);
+/**
+ * The single well-known key for every plank companion (`companion/<variant>`), resolved against the
+ * preceding plank rather than registered by any extension.
+ */
+export const COMPANION_KEY = 'companion';
+
+const RESERVED_KEYS = new Set(['w', 'reset', 'redirect', 'not-found', COMPANION_KEY]);
 
 /**
  * Whether a segment is reserved and therefore cannot be registered as a prefix key: the `w`
