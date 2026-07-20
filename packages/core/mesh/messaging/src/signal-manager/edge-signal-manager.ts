@@ -199,9 +199,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   async subscribeMessages(peerInfo: PeerInfo, tags?: string[]): Promise<void> {
-    // #region DEBUG
-    log.info('[DEBUG H4] subscribeMessages', { tags, before: Array.from(this._subscribedTags.keys()) });
-    // #endregion DEBUG
     // Point-to-point delivery needs no registration (the edge relays targeted messages to this peer's
     // socket). Only tag broadcasts require a subscription registered on the swarm (DX-1125).
     if (!tags?.length) {
@@ -223,13 +220,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   async unsubscribeMessages(peerInfo: PeerInfo, tags?: string[]): Promise<void> {
-    // #region DEBUG
-    log.info('[DEBUG H5] unsubscribeMessages', {
-      tags,
-      before: Array.from(this._subscribedTags.keys()),
-      stack: new Error('unsubscribe caller').stack,
-    });
-    // #endregion DEBUG
     if (this._subscribedTags.size === 0) {
       return;
     }
@@ -264,12 +254,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
    */
   private async _sendSubscription(ctx: Context): Promise<void> {
     const swarmKeys = Array.from(this._swarmPeers.keys()).map((topic) => topic.toHex());
-    // #region DEBUG
-    log.info('[DEBUG H4] _sendSubscription', {
-      tags: Array.from(this._subscribedTags.keys()),
-      swarmCount: swarmKeys.length,
-    });
-    // #endregion DEBUG
     if (swarmKeys.length === 0) {
       return;
     }
