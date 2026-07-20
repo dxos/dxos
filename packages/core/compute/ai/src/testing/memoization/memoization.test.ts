@@ -137,7 +137,7 @@ describe('memoization', () => {
             continue;
           } else {
             expect(response.finishReason).toBe('stop');
-            console.log(response.text);
+            // console.log(response.text);
             break;
           }
         }
@@ -162,7 +162,7 @@ describe('memoization', () => {
             continue;
           } else {
             expect(response.finishReason).toBe('stop');
-            console.log(response.text);
+            // console.log(response.text);
             break;
           }
         }
@@ -195,6 +195,18 @@ describe('dynamic value matching', () => {
   test('canonicalized prompts match across differing space keys', ({ expect }) => {
     const a = __testing.normalizeForMatching(promptWith(SPACE_A), [SPACE_ID_PATTERN]);
     const b = __testing.normalizeForMatching(promptWith(SPACE_B), [SPACE_ID_PATTERN]);
+    expect(a).toEqual(b);
+  });
+
+  test('canonicalization is stable under object key insertion order', ({ expect }) => {
+    // Logically identical prompts whose object keys were inserted in different orders must
+    // canonicalize equal. Placeholder indices are assigned over the sorted serialization (not the
+    // live insertion order); insertion-order numbering assigned SPACE_A/SPACE_B different indices in
+    // the two objects and produced false misses. See DESIGN.md.
+    const p1 = { b: `echo://${SPACE_A}`, a: `echo://${SPACE_B}` };
+    const p2 = { a: `echo://${SPACE_B}`, b: `echo://${SPACE_A}` };
+    const a = __testing.normalizeForMatching(p1, [SPACE_ID_PATTERN]);
+    const b = __testing.normalizeForMatching(p2, [SPACE_ID_PATTERN]);
     expect(a).toEqual(b);
   });
 
@@ -261,7 +273,7 @@ describe('dynamic value matching', () => {
             continue;
           } else {
             expect(response.finishReason).toBe('stop');
-            console.log(response.text);
+            // console.log(response.text);
             break;
           }
         }

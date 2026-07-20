@@ -143,19 +143,19 @@ const buildDynamicMatcher = (patterns: readonly RegExp[]): RegExp | undefined =>
 const collectDynamicValues = (prompt: unknown, matcher: RegExp): string[] => {
   const seen = new Set<string>();
   const ordered: string[] = [];
-  deepMapValues(prompt, (value, recurse) => {
-    if (typeof value === 'string') {
-      for (const match of value.matchAll(matcher)) {
-        const token = match[0];
-        if (!seen.has(token)) {
-          seen.add(token);
-          ordered.push(token);
-        }
-      }
-      return value;
+  // Collect over the canonical, key-sorted serialization so the first-appearance order — which fixes
+  // each token's positional placeholder — matches the order used for comparison (jsonStableStringify).
+  // Walking the live object graph in insertion order (deepMapValues, `for..in`) would number
+  // placeholders in an order that diverges from the sorted comparison, producing false misses when a
+  // snapshot and the live prompt differ only in object key order. See DESIGN.md.
+  const canonical = jsonStableStringify(prompt) ?? '';
+  for (const match of canonical.matchAll(matcher)) {
+    const token = match[0];
+    if (!seen.has(token)) {
+      seen.add(token);
+      ordered.push(token);
     }
-    return recurse(value);
-  });
+  }
   return ordered;
 };
 
