@@ -193,7 +193,11 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         // Editor is bound to the parent; the branch content is the proposal. Accept cherry-picks the
         // hunk into the parent (AcceptChange); reject reverts it on the author's branch (RejectChange).
         list.push(
-          suggestChanges({ proposal: branchText.content, onAccept: handleAcceptChange, onReject: handleRejectChange }),
+          suggestChanges({
+            proposal: branchText.content,
+            onAccept: handleAcceptChange,
+            onReject: handleRejectChange,
+          }),
         );
       }
       return list;
