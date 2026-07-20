@@ -365,6 +365,24 @@ describe('WorkingSetQueryExecutor', () => {
     expect(results.map((item) => item.objectId)).toEqual([...objects].reverse().map((obj) => obj.id));
   });
 
+  test('two items aggregates requesting different orders throw rather than silently sharing one order', async ({
+    expect,
+  }) => {
+    db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 0 }));
+    await db.flush();
+
+    expect(() =>
+      planAndExecute(
+        db,
+        Query.select(Filter.type(TestSchema.Expando)).aggregate({
+          category: Aggregate.group('category'),
+          ascending: Aggregate.items({ order: [Order.property('rank', 'asc')] }),
+          descending: Aggregate.items({ order: [Order.property('rank', 'desc')] }),
+        }),
+      ),
+    ).toThrow();
+  });
+
   test('limit after aggregate pages over whole groups (not flat items)', async ({ expect }) => {
     // Three groups by category, each with two members, ordered by rank so group order is a<b<c.
     for (const [category, rank] of [

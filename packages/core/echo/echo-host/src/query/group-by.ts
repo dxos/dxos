@@ -3,6 +3,7 @@
 //
 
 import { type QueryAST } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 
 /**
  * A (possibly composite) group key: one coerced scalar component per grouped property.
@@ -163,6 +164,11 @@ export const GroupBy = Object.freeze({
    * local to that aggregate's member selection, independent of whatever order the input stream
    * arrived in. `items` itself is not stamped: it is materialised (and capped to `limit`) at result
    * assembly, from the (possibly now re-sorted) member order this function returns.
+   *
+   * All members of a group share a single member order, so at most one distinct `order` may be
+   * requested across the group's `items`-kind aggregates — two `items` aggregates in the same
+   * `aggregate()` call requesting different orders is rejected rather than silently honoring only
+   * one of them.
    */
   withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
     items: readonly T[],
@@ -171,10 +177,14 @@ export const GroupBy = Object.freeze({
     getProperty: (item: T, property: string) => unknown,
     compareByOrder?: (a: T, b: T, order: QueryAST.Order) => number,
   ): T[] => {
-    const itemsOrder = aggregates.find(
-      (aggregate): aggregate is Extract<QueryAST.GroupAggregate, { kind: 'items' }> =>
-        aggregate.kind === 'items' && !!aggregate.order?.length,
-    )?.order;
+    const itemsOrders = aggregates.flatMap((aggregate) =>
+      aggregate.kind === 'items' && aggregate.order?.length ? [aggregate.order] : [],
+    );
+    if (itemsOrders.length > 1) {
+      const serialized = new Set(itemsOrders.map((order) => JSON.stringify(order)));
+      invariant(serialized.size === 1, 'Multiple `items` aggregates with different `order`s are not supported.');
+    }
+    const itemsOrder = itemsOrders[0];
     const needsStamping = aggregates.some((aggregate) => aggregate.kind !== 'items');
     // Only group/max/min/count are stamped for ordering; `items` collects members at result assembly.
     if (!needsStamping && !itemsOrder) {
