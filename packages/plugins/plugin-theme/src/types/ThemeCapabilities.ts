@@ -10,6 +10,8 @@ import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+import * as SettingsModule from './Settings';
+
+export const Settings = Capability.make<Atom.Writable<SettingsModule.Settings>>(
   `${meta.profile.key}.capability.settings`,
 );
