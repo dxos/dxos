@@ -211,6 +211,18 @@ Deferred from the CodeRabbit round (stage 3/4):
       (`SuggestionThread`, `Message/WithChange`, `VersionBanner`, integrated `CommentsArticle`), and
       an end-to-end narration for recording.
 
+## Ambient review model (Google-Docs-style) — in design (brainstorming 2026-07-21)
+
+Pivot: user does NOT actively manage branches. Default view = main + comments + all user
+suggestions overlaid. Decisions so far: (1) per-user mode toggle Editing/Suggesting/Viewing (local
+pref, persisted per doc); (2) GDocs-parity rendering as a **product-level `ReviewRenderPolicy`
+config**; (3) additive — keep the explicit branch switcher / Base-Diff-Branch selector / banner as
+an advanced/history path (reached via explicit selection); ambient overlay is the default
+`selection.kind==='current'` experience; (4) accept/reject by any editor, inline + companion.
+
+- [ ] **Maintain the precise ambient-review spec in `packages/plugins/plugin-markdown/DESIGN.md`**
+      (the plugin design file), not a separate superpowers spec. (tracked 2026-07-21)
+
 ## Landing the suggestions feature (current goal)
 
 Polish + fixes required before landing the suggestion-review flow.
