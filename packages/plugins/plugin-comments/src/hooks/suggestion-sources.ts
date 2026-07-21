@@ -24,8 +24,8 @@ export type ResolvedSuggestionBranch = {
  * author's avatar/tag colour), else a stable hue seeded from the author id. One of the shared
  * {@link idHue} palette entries, so it maps to the same `--color-<hue>-*` tokens used everywhere else.
  */
-export const suggestionHue = (author: string, hue?: string): string =>
-  hue && (idHue as readonly string[]).includes(hue) ? hue : stringToHue(author);
+export const suggestionHue = (author: string, hue?: string): (typeof idHue)[number] =>
+  idHue.find((entry) => entry === hue) ?? stringToHue(author);
 
 /**
  * CSS text colour for a suggestion author, from the shared hue palette — the same colour the author's

@@ -12,7 +12,7 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Filter, Obj, Query, Ref, Relation, Text as EchoText } from '@dxos/echo';
+import { Text as EchoText, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
@@ -42,10 +42,6 @@ import { AgentIdentity, CommentCapabilities } from '../../types';
 random.seed(1);
 
 const STORY_AGENT_NAME = 'Kai';
-// Fixed synthetic DID for the story agent so its authored suggestion is deterministic (no LLM).
-// The companion labels the suggestion by this DID until agent-author resolution lands (see the
-// document-revisions tasks); the point of the variant is that an agent-authored suggestion renders.
-const STORY_AGENT_DID = 'did:agent:kai';
 
 const SAMPLE_CONTENT = [
   '# Sample',
@@ -67,12 +63,26 @@ const SAMPLE_CONTENT = [
 // Phrases in LARGE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
 
-// The agent's proposed revision of the document — one reworded sentence, so it diffs against the
-// base as a single reviewable suggestion the companion renders.
-const AGENT_SUGGESTION_CONTENT = SAMPLE_CONTENT.replace(
+// Two story agents, each with a fixed synthetic DID so their authored suggestions are deterministic
+// (no LLM). Each proposes a different revision of the document; edits in distinct paragraphs diff as
+// separate reviewable cards. The companion labels each by its DID until agent-author resolution
+// lands (see the document-revisions tasks) but already tints each card's avatar with the author's
+// hue — the point of the variant is multiple agent-authored suggestions, colour-coded per author.
+const KAI_SUGGESTION = SAMPLE_CONTENT.replace(
+  'This document has comment threads attached to it.',
+  'This document has comment threads and inline suggestions attached to it.',
+).replace(
   'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
   'The companion renders each thread and suggestion on a shared virtual stack, mirroring the chat experience while keeping the editor in sync.',
 );
+const NOVA_SUGGESTION = SAMPLE_CONTENT.replace(
+  'Select text in the editor to add a new comment, or view existing threads in the companion.',
+  'Select text in the editor to add a comment, or open the companion to review threads and suggestions.',
+);
+const STORY_AGENTS = [
+  { did: 'did:agent:kai', name: STORY_AGENT_NAME, content: KAI_SUGGESTION },
+  { did: 'did:agent:nova', name: 'Nova', content: NOVA_SUGGESTION },
+];
 
 /**
  * Seed anchored comment threads over known phrases so the editor renders the
@@ -114,17 +124,20 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
 };
 
 /**
- * Seed a suggestion authored by an agent — deterministic, no LLM. Opens the agent's per-author
- * `kind:'suggestion'` branch (via {@link Branch.suggestion}) and edits its content to the proposed
- * revision, so the companion overlays it against the base as an agent-authored suggestion card.
+ * Seed suggestions authored by agents — deterministic, no LLM. For each agent, opens its per-author
+ * `kind:'suggestion'` branch (via {@link Branch.suggestion}) and edits the content to that agent's
+ * proposed revision, so the companion overlays them against the base as agent-authored suggestion
+ * cards (multiple authors, each colour-coded by its own hue).
  */
-const seedAgentSuggestion = async (doc: Markdown.Document, parent: Text.Text) => {
-  const branch = await Branch.suggestion(doc, parent, STORY_AGENT_DID);
-  const binding = await Branch.bind(doc, branch);
-  Obj.update(binding.object, () => {
-    EchoText.update(binding.object, 'content', AGENT_SUGGESTION_CONTENT);
-  });
-  binding.dispose();
+const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.Text) => {
+  for (const agent of STORY_AGENTS) {
+    const branch = await Branch.suggestion(doc, parent, agent.did);
+    const binding = await Branch.bind(doc, branch);
+    Obj.update(binding.object, () => {
+      EchoText.update(binding.object, 'content', agent.content);
+    });
+    binding.dispose();
+  }
 };
 
 /**
@@ -314,7 +327,7 @@ const meta = {
               if (args.seedAgentSuggestions) {
                 const text = yield* Effect.promise(() => doc.content.load());
                 invariant(text, 'document content not loaded');
-                yield* Effect.promise(() => seedAgentSuggestion(doc, text));
+                yield* Effect.promise(() => seedAgentSuggestions(doc, text));
                 yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
               }
             }),
@@ -372,9 +385,10 @@ export const WithComments: Story = {
 };
 
 /**
- * The companion showing a suggestion authored by an agent (the story agent "Kai"), seeded
- * deterministically — no LLM. The agent's per-author `kind:'suggestion'` branch proposes a reworded
- * sentence, which the companion overlays against the base as an accept/reject change-block card.
+ * The companion showing suggestions authored by two agents ("Kai" and "Nova"), seeded
+ * deterministically — no LLM. Each agent's per-author `kind:'suggestion'` branch proposes reworded
+ * sentences, overlaid against the base as accept/reject change-block cards — one card per grouped
+ * change, and each card's avatar tinted with its author's hue.
  */
 export const WithAgentSuggestions: Story = {
   args: {

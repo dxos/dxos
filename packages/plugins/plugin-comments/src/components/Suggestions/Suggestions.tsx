@@ -82,6 +82,7 @@ export const Suggestions = ({
         sources={buildSuggestionSources(resolved.map((value) => ({ ...value, hue: authorHues?.[value.author] })))}
         group={group ?? DEFAULT_GROUP}
         authorLabels={authorLabels}
+        authorHues={authorHues}
         onAccept={onAccept}
         onReject={onReject}
       />

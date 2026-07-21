@@ -9,7 +9,7 @@ import { Message as MessageComponent, Thread } from '@dxos/react-ui-thread';
 import { Message } from '@dxos/types';
 import { type GroupPolicy, type SuggestionSource } from '@dxos/ui-editor';
 
-import { type SuggestionGroup, suggestionGroupKey, suggestionGroups } from '../../hooks';
+import { type SuggestionGroup, suggestionGroupKey, suggestionGroups, suggestionHue } from '../../hooks';
 import { getMessageMetadata } from '../../util';
 
 export type SuggestionThreadProps = {
@@ -19,6 +19,8 @@ export type SuggestionThreadProps = {
   group?: GroupPolicy;
   /** Human-readable author labels keyed by DID; falls back to the raw author id. */
   authorLabels?: Record<string, string>;
+  /** Author palette hues keyed by DID; tints each suggestion's avatar to match its author colour. */
+  authorHues?: Record<string, string>;
   /** Group keys hidden this session (rejected) — a view-only dismissal that doesn't alter the base. */
   dismissed?: ReadonlySet<string>;
   onAccept?: (group: SuggestionGroup) => void;
@@ -36,6 +38,7 @@ export const SuggestionThread = ({
   sources,
   group,
   authorLabels,
+  authorHues,
   dismissed,
   onAccept,
   onReject,
@@ -60,8 +63,21 @@ export const SuggestionThread = ({
   }, [base, sources, group, dismissed, authorLabels]);
 
   const getMetadata = useCallback(
-    (message: Message.Message) => getMessageMetadata(Obj.getURI(message), undefined, message.sender),
-    [],
+    (message: Message.Message) => {
+      const metadata = getMessageMetadata(Obj.getURI(message), undefined, message.sender);
+      // Tint the avatar with the author's palette hue — the same hue the suggestion is coloured with
+      // (identity hue when known, else a stable hue seeded from the author id) — so a suggestion card
+      // reads with its author's consistent colour rather than a name-hash fallback.
+      const author = message.sender.identityDid;
+      if (author && metadata.authorAvatarProps) {
+        metadata.authorAvatarProps = {
+          ...metadata.authorAvatarProps,
+          hue: suggestionHue(author, authorHues?.[author]),
+        };
+      }
+      return metadata;
+    },
+    [authorHues],
   );
   const handleAcceptChange = useCallback(
     (messageId: string) => {
