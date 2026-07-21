@@ -1,20 +1,52 @@
 # plugin-inbox — Tasks
 
 \_Resume: task #7 (JMAP e2e) is done and green; next is #6 (unskip agent-e2e) or #8-#11 (bench/
-traceability/live runbook), whichever the user prioritizes next. Uncommitted: none. Last: relocated
-the HTTP mock (`createInboxHttpMock`) out of `plugin-inbox` entirely, into
-`composer-app/src/playwright/plugins/inbox-http-mock.ts` — it has exactly one consumer and belongs
+traceability/live runbook), whichever the user prioritizes next. Uncommitted: none — PLUGIN.mdl fixes
+below still need a commit+push. Last two rounds:
+
+**Round 1 — HTTP mock relocation.** Moved `createInboxHttpMock` out of `plugin-inbox` entirely into
+`composer-app/src/playwright/plugins/inbox-http-mock.ts` — it has exactly one consumer, so it belongs
 next to it, not in the plugin. `plugin-inbox`'s `./testing` export is now conditional (`node`/
-`default`, mirroring the existing `#plugin`/`#capabilities` internal-import pattern): the `default`
-(storybook/vite-dev) branch stays `InboxPlugin` + fixtures; the `node` branch exports only
-`gmail-fixtures`/`jmap-fixtures` + the `Jmap`/`GmailDataset`/`JmapDataset` type contracts the
-relocated mock needs — deliberately NOT `InboxPlugin` (breaks under Playwright's Node loader, no
-`.pcss` support) NOR `builder`/`data` (pull in `Mailbox` → `@dxos/compute`'s `Instructions` →
-the AI parser's `parsimmon` dep, which Playwright's esbuild loader mishandles differently than
-Vite). Also: dropped the reply-test's `EmailSubmission/set` poll timeout override (measured ~350-865ms
-actual latency against the 15s override — pure historical over-caution) and added a success-toast
-assertion (`getByTestId(/^notify-success-/)`, the process-invocation framework's toast id
-convention).
+`default`, mirroring the existing `#plugin`/`#capabilities` internal-import pattern): `default`
+(storybook/vite-dev) stays `InboxPlugin` + fixtures + type-only `Jmap`/`GmailDataset`/`JmapDataset`
+(the last three added so `types` can point at `index.d.ts` as the superset — see below); `node`
+exports only `gmail-fixtures`/`jmap-fixtures` + those same type contracts — deliberately NOT
+`InboxPlugin` nor `builder`/`data`. Two false starts, both empirically disproven then reverted:
+(a) tried `export * from '#plugin'` instead of `../InboxPlugin` directly, reasoning the plugin's own
+node/workerd/default conditional resolution would let `./testing` go back to non-conditional — broke
+again with the same crash, because `InboxPlugin.node.ts` _also_ imports `#types`'s `Mailbox`, which
+imports `@dxos/compute`'s `Instructions`, and `@dxos/compute` depends on `@dxos/ai` (parsimmon) — the
+UI/`.pcss` angle was a red herring, the real culprit is `@dxos/ai`'s parser under Playwright's esbuild
+loader; (b) first cut of the `node`/`default` split pointed `types` at `node.d.ts`, which broke
+`stories-inbox`'s build (`InboxPlugin` not exported) — fixed by making `index.ts` the type-only
+superset and pointing `types` there, matching how `#plugin`/`#capabilities` always point `types` at
+their superset variant. Also: dropped the reply-test's `EmailSubmission/set` poll timeout override
+(measured ~350-865ms actual latency against the 15s override) and added a success-toast assertion
+(`getByTestId(/^notify-success-/)`, the process-invocation framework's toast id convention).
+
+**Round 2 — PLUGIN.mdl re-validation.** Full audit (op-by-op against `InboxOperation.ts` + handlers,
+types against schemas, services against implementations) found and fixed ~15 categories of spec
+drift: `enrichMailbox` renamed to `analyzeMailbox` throughout (the real op name); ~13 ops' output
+types corrected from a bare primitive to their actual wrapped struct (e.g. `googleMailSync: number` →
+`{ newMessages: number }`); several ops' input fields corrected (`extractContact` needs `db`,
+`renameFilter` has `caller?`, `materializeTarget` has `remoteTarget?`, `googleCalendarSync` has
+`googleCalendarId?`/`pageSize?`, `gmailSend` has `userId?`); `Mailbox` type fixed (removed
+non-existent `viewedAt`, added real `instructions?`/`messageFilters?` fields, introduced
+`MessageFilter` to name the real `Filter`/`Filter` collision between the saved-query type and
+Mailbox's own exclusion-rule type); `Starred`'s foreign key corrected to `{source: 'org.dxos.tag', id:
+'starred'}`; `FactStore`'s op list completed (`select`/`cursor`/`setCursor`/`clear`); `FeedCursors`
+rewritten to describe the real mechanism (a persisted ECHO `Cursor` object, not an in-memory
+`get`/`advance(feedId, key)` service). **Two real behavior gaps surfaced, documented as KNOWN GAP in
+the spec, need a product decision (not yet fixed in code):** (1) `classifyEmail` has zero
+`extractors.threshold` gating — always applies whatever tag the LLM names, contradicting F-6.2; (2)
+the fact-store/cursor skew F-9.4 said couldn't happen actually can — `FeedCursors`' cursor is durable
+but `FactStore`'s facts are in-memory, so a reload can strand an advanced cursor over an empty store.
+**Also noted, not yet addressed:** `googleMailSync`/`jmapSync`'s spec'd `after`/`before`/`direction`
+override params (and F-3.5's "can be overridden to backfill older ranges") don't exist in the actual
+schema or handler; `googleMailSync`'s `label` field's own schema annotation says "defaults to inbox"
+but the handler's real default is `'all'`; 5 real ops have no spec block at all
+(`getGoogleCalendars`, `getGoogleContactGroups`, `syncContacts`, `createTopicFromMessage`,
+`unsubscribeSender`).
 
 ## Test suite — PLUGIN.mdl enforcement
 

@@ -42,9 +42,21 @@ type MessageState
 
 ```mdl
 type Filter
+  desc: A saved, named query filter (as in MailboxArticle.activeFilter), NOT a MessageFilter below.
   fields:
     name: string
     filter: string              # query expression
+```
+
+```mdl
+type MessageFilter
+  desc: |
+    An exclusion rule applied across the mailbox UI, sync, and analysis — a matching message is
+    hidden and never committed/enriched. Kept intentionally small (currently sender-only); expected
+    to grow. Actual code name is also `Filter` (`Mailbox.ts`) — a real naming collision with the
+    saved-query `Filter` above, disambiguated here as `MessageFilter`.
+  fields:
+    from?: string                # case-insensitive regex matched against the sender email
 ```
 
 ```mdl
@@ -55,12 +67,14 @@ type Mailbox
     Mailbox in a child TagIndex and the `extracted` map.
   fields:
     name?: string
-    viewedAt?: string           # ISO timestamp of last view; messages created later count as "new"
     feed: Ref<Feed>             # append-only Message stream
     tags: Ref<TagIndex>         # inverse index: tag uri → message ids (labels/hues live on Tag objects)
     extractors?:
       enabled: string[]
       threshold: number         # 0..1 — AI confidence cutoff
+    messageFilters?: MessageFilter[]
+    instructions?: Ref<Instructions>  # per-mailbox reply guidance; shared or mailbox-specific; the
+                                      # reply generator merges its text + skills into the session prompt
     extracted?: Map<string, string[]>  # messageId → ids of objects extracted from it (provenance)
     filters: Filter[]
   note: |
@@ -99,8 +113,11 @@ type DraftEvent = Event       # an Event with no google.com foreign key, parente
 ```mdl
 type Starred
   desc: |
-    A well-known "starred" Tag (foreign key `org.dxos.org/starred`) applied to feed Messages or Events
-    via the container's TagIndex. Deduped by identity so every starring site resolves the same Tag.
+    A well-known "starred" Tag (foreign key `{ source: 'org.dxos.tag', id: 'starred' }`, from the
+    canonical SystemTag registry — see `SystemTags.ts`) applied to feed Messages or Events via the
+    container's TagIndex. Deduped by identity so every starring site resolves the same Tag.
+    NOTE: `starred` is one of ~10 canonical system tags in that registry (inbox, important, sent,
+    draft, personal, social, promotions, updates, forums); this spec documents only the starring one.
 ```
 
 ```mdl
@@ -159,7 +176,7 @@ component MessageArticle
 ```mdl
 component MailboxFactsCompanion
   desc: |
-    Companion surface off a Mailbox article that renders the RDF facts extracted by op:enrichMailbox.
+    Companion surface off a Mailbox article that renders the RDF facts extracted by op:analyzeMailbox.
     Reads the shared per-space FactStore and passes the mailbox's facts to a FactViewer. Phase 1 reads
     once; live streaming into the viewer as enrichment runs is a follow-up.
   props:
@@ -235,26 +252,40 @@ Injected, per-space singletons shared between operations (writers) and companion
 ```mdl
 service FactStore
   desc: |
-    Per-space RDF fact store written by op:enrichMailbox and read by MailboxFactsCompanion. Phase 1
-    is in-memory (browser-safe, non-durable) — facts reset on reload. Durable OPFS/SQLite in a worker
-    is the planned follow-up.
+    Per-space RDF fact store written by op:analyzeMailbox and read by MailboxFactsCompanion.
+    In-memory (browser-safe, non-durable) — facts reset on reload. Durable OPFS/SQLite in a worker is
+    the planned follow-up.
+    KNOWN GAP: the store's own `cursor`/`setCursor` (an ingest cursor keyed by source DXN) is NOT what
+    op:analyzeMailbox uses for its high-water progress — see FeedCursors below. The store's cursor and
+    the actual mailbox-analysis cursor are two different, currently-unreconciled mechanisms.
   loading: lazy
   ops:
     putFacts(facts: Fact[])
     query(constraints) → Fact[]
+    select(sparql: string) → Fact[]
+    cursor(source: string) → string | undefined
+    setCursor(source: string, hash: string)
+    clear()
 ```
 
 ```mdl
 service FeedCursors
   desc: |
-    Per-space, per-feed processing high-water cursor. A derived processor (op:enrichMailbox) records
-    how far it has consumed a feed so re-runs skip already-processed messages. Keyed by feed id.
-    Phase 1 in-memory, sharing the FactStore session lifetime so cursor and facts reset together
-    (no persisted-cursor-over-empty-store skew).
+    Persisted per-mailbox processing high-water cursor: a real `Cursor` ECHO object (`@dxos/link`,
+    `spec.kind: 'feed'`) whose `source` is the mailbox's feed and `target` is the mailbox itself (there
+    is no dedicated "fact consumer" object, so the mailbox stands in as the association anchor).
+    op:analyzeMailbox finds-or-creates it and advances it as it processes the feed, so re-runs skip
+    already-processed messages. NOT modeled as a named service/tag in code — this block documents the
+    `findOrCreateFeedCursor` convention in `operations/analyze/analyze-mailbox.ts`, not an injected
+    dependency.
+    KNOWN GAP: the cursor is durable (survives reload) but FactStore's facts are in-memory (reset on
+    reload) — a persisted-cursor-over-empty-store skew across a reload. F-9.4 below currently claims
+    this can't happen; it can. Needs a product decision: make facts durable too, or reset the cursor
+    alongside a cleared store, or revise F-9.4.
   loading: lazy
   ops:
-    get(feedId: string) → number
-    advance(feedId: string, key: number)
+    findOrCreate(mailbox: Mailbox) → Cursor
+    advance(cursor: Cursor, max?: string)
 ```
 
 ## Operations
@@ -269,7 +300,7 @@ op addMailbox
   input:
     object: Mailbox
     target: Database | Collection
-  output: string                # DXN of created Mailbox
+  output: { id: string, subject: string[], object: Mailbox }
   effects: [echo:write]
 ```
 
@@ -282,7 +313,7 @@ op draftEmail
     body: string
     mailbox: Ref<Mailbox>
     replyTo?: Ref<Message>
-  output: string                # DXN of new draft Message
+  output: { newMessageDXN: string }
   effects: [echo:write]
 ```
 
@@ -320,55 +351,61 @@ op readEmail
     mailbox: Ref<Mailbox>
     skip?: number
     limit?: number
-  output: string                # rendered message content
+  output: { content: string }
   effects: [echo:read, feed:read]
 ```
 
 ```mdl
 op renameFilter
-  desc: Renames a saved filter on a mailbox.
+  desc: |
+    Opens the rename popover for a saved filter (prefilled with its current name); the actual rename
+    is applied by the popover's own callback, not synchronously by this op.
   input:
     mailbox: Mailbox
-    name: string
+    name: string                # current filter name — both the lookup key and the popover's prefill
+    caller?: string              # anchor id for the popover
   effects: [echo:write]
 ```
 
 ```mdl
 op classifyEmail
-  desc: Picks an appropriate tag for a message from the database's tag set.
+  desc: |
+    Picks a tag for a message from the database's tag set (LLM chooses by label match) and applies
+    it via a feed relation.
+    KNOWN GAP: does not gate on `extractors.threshold` — contradicts req F-6.2 below; always applies
+    whatever tag the LLM names, or fails if none matches. Needs a product decision: add the gate back,
+    or revise F-6.2 to match current behavior.
   input:
     message: Message
-  output: string                # selected tag DXN, or void if none matched
-  effects: [echo:read]
+  output: { tagId: string, tagLabel: string } | void
+  effects: [echo:read, echo:write, feed:write]
   requires: [AiService]
 ```
 
 ```mdl
 op googleMailSync
   desc: |
-    Pulls messages from Gmail into the mailbox feed via the binding's cursor. Walk direction is
-    inferred from the cursor (no cursor → backward/newest-first initial pull; cursor → forward
-    incremental) and can be overridden to backfill older gaps.
+    Pulls messages from Gmail into the mailbox feed via the binding's cursor.
+    KNOWN GAP: no after/before/direction override exists — this and F-3.5's "can be overridden to
+    backfill older ranges" describe an unimplemented capability. Walk direction is inferred from the
+    cursor (no cursor → backward/newest-first initial pull; cursor → forward incremental) but cannot
+    currently be overridden.
   input:
     binding: Ref<SyncBinding>   # connection owns credentials; target is the Mailbox
-    label?: string              # Gmail label (default: inbox)
-    after?: number | string     # oldest bound (unix or yyyy-MM-dd)
-    before?: number | string    # newest bound (default: today)
-    direction?: forward | backward
-  output: number                # newMessages count
+    userId?: string
+    label?: string              # Gmail label; schema annotation says "defaults to inbox" but the
+                                 # handler's actual default is 'all' — the two disagree
+  output: { newMessages: number }
   effects: [echo:write, feed:write, http]
 ```
 
 ```mdl
 op jmapSync
   desc: |
-    Pulls messages from a JMAP server (e.g. Fastmail) into the mailbox feed. Same cursor / range /
-    direction model as googleMailSync. JMAP mailbox folders map to provider Tag objects.
+    Pulls messages from a JMAP server (e.g. Fastmail) into the mailbox feed. JMAP mailbox folders map
+    to provider Tag objects. Same no-override cursor model as googleMailSync (see its KNOWN GAP note).
   input:
     binding: Ref<SyncBinding>
-    after?: number | string
-    before?: number | string
-    direction?: forward | backward
   output: { newMessages: number }
   effects: [echo:write, feed:write, http]
 ```
@@ -382,7 +419,8 @@ op materializeTarget
     seeding its name from the connection's account.
   input:
     connection: Ref<Connection>
-  output: string                # DXN of the materialized target
+    remoteTarget?: string        # remote id for a multi-target connector's user-selected target
+  output: { target: Ref<Mailbox | Calendar> }
   effects: [echo:write]
 ```
 
@@ -391,9 +429,11 @@ op googleCalendarSync
   desc: Pulls events from Google Calendar into the calendar feed (stamps a google.com foreign key on each).
   input:
     binding: Ref<SyncBinding>
+    googleCalendarId?: string
+    pageSize?: number
     syncBackDays?: number
     syncForwardDays?: number
-  output: number                # newEvents count
+  output: { newEvents: number }
   effects: [echo:write, feed:write, http]
 ```
 
@@ -404,7 +444,7 @@ op createGoogleCalendarEvent
     event: Event
     googleCalendarId: string
     connection: Ref<Connection>
-  output: string                # remote Google event id
+  output: { id: string }        # remote Google event id
   effects: [http]
 ```
 
@@ -419,7 +459,7 @@ op syncDraftEvents
   input:
     calendar: Calendar
     event?: Event               # when omitted, syncs all draft events on the Calendar
-  output: number                # synced count
+  output: { synced: number }
   effects: [echo:write, feed:write, http]
 ```
 
@@ -431,19 +471,20 @@ op deleteEvent
   input:
     calendar: Calendar
     event: Event
-  output: boolean
+  output: { deleted: boolean }
   effects: [echo:write, feed:write, http]
 ```
 
 ```mdl
 op deleteEmail
   desc: |
-    Deletes an email. A draft (local) message is removed from the db; a synced message is moved to the
-    Gmail trash by its foreign key (requires gmail.modify scope) and removed from the mailbox feed.
+    Deletes an email. A draft (local) message is removed from the db. A synced message is removed by
+    foreign key and dropped from the mailbox feed — Gmail-sourced via the Gmail trash (requires
+    gmail.modify scope), JMAP-sourced via trashJmapMessage.
   input:
     mailbox: Mailbox
     message: Message
-  output: boolean
+  output: { deleted: boolean }
   effects: [echo:write, feed:write, http]
 ```
 
@@ -453,7 +494,7 @@ op googleContactsSync
   input:
     binding: Ref<SyncBinding>   # connection owns credentials; remoteId is the contact group
     pageSize?: number
-  output: number                # upserted count
+  output: { upserted: number }
   effects: [echo:write, http]
 ```
 
@@ -463,7 +504,8 @@ op gmailSend
   input:
     message: Message
     connection: Ref<Connection>
-  output: string                # remote Gmail thread id
+    userId?: string
+  output: { id: string, threadId: string, sentTag: { source: string, id: string, label: string } }
   effects: [http]
 ```
 
@@ -473,7 +515,7 @@ op jmapSend
   input:
     message: Message
     connection: Ref<Connection>
-  output: string                # remote JMAP message id
+  output: { id: string, threadId: string, sentTag: { source: string, id: string, label: string } }
   effects: [http]
 ```
 
@@ -515,7 +557,7 @@ op extractMailbox
 ```
 
 ```mdl
-op enrichMailbox
+op analyzeMailbox
   desc: |
     Iterates the mailbox feed and extracts RDF facts from each message into the shared per-space
     FactStore, tracking its own FeedCursors high-water key so re-runs skip processed messages. Facts
@@ -537,6 +579,7 @@ op enrichMailbox
 op extractContact
   desc: Extracts a Person object from an Actor referenced in a message.
   input:
+    db: Database
     actor: Actor
   effects: [echo:write]
 ```
@@ -682,16 +725,19 @@ feat F-7: Related Content
 feat F-9: Fact Enrichment
 
   req F-9.1:
-    when: op:enrichMailbox runs over a mailbox feed
+    when: op:analyzeMailbox runs over a mailbox feed
     then: RDF facts are extracted per message into the shared per-space FactStore
 
-  req F-9.2: op:enrichMailbox advances a FeedCursors high-water key so re-runs skip already-processed messages.
+  req F-9.2: op:analyzeMailbox advances a FeedCursors high-water key so re-runs skip already-processed messages.
 
   req F-9.3:
     when: a Mailbox is open
     then: MailboxFactsCompanion renders the mailbox's extracted facts via FactViewer
 
-  req F-9.4: Phase-1 FactStore/FeedCursors are in-memory (facts reset on reload); durable worker-hosted storage is a planned follow-up.
+  req F-9.4: |
+    FactStore facts are in-memory (reset on reload); FeedCursors' cursor is durable (survives reload)
+    — see FeedCursors' KNOWN GAP note for the resulting skew and the open product decision. Durable
+    worker-hosted fact storage is a planned follow-up.
 ```
 
 ```mdl
@@ -835,7 +881,7 @@ test T-8: Sync JMAP into mailbox
 ```mdl
 test T-9: Enrich mailbox into fact store
   given: a Mailbox feed with N messages and an available AiService
-  when: op:enrichMailbox runs, then runs a second time in the same session
+  when: op:analyzeMailbox runs, then runs a second time in the same session
   then:
     - first run: facts > 0 in the FactStore; processed === N
     - second run: processed === 0 (FeedCursors high-water skip); fact count unchanged
