@@ -96,7 +96,7 @@
         "node": "./src/testing/node.ts",
         "default": "./src/testing/index.ts"
       },
-      "types": "./dist/types/src/testing/node.d.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "node": "./dist/lib/testing/node.mjs",
       "default": "./dist/lib/testing.mjs"
     },
