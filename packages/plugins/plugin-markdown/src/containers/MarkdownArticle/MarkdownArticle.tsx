@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
@@ -37,7 +37,7 @@ import {
 } from '#components';
 import { useLinkQuery, useVersioning } from '#hooks';
 import { meta } from '#meta';
-import { Markdown, MarkdownCapabilities, MarkdownOperation, type MarkdownPluginState } from '#types';
+import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { mergeConflicts, versionDiff } from '../../extensions';
 import { VersionBanners } from './VersionBanners';
@@ -227,18 +227,19 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const identity = useIdentity();
 
     // Enter suggesting: find-or-create the caller's suggestion branch and switch to editing it, so
-    // typed edits accrue on that branch for review rather than mutating main.
+    // typed edits accrue on that branch for review rather than mutating main. Called directly (not via
+    // an operation) like the checkpoint "Branch from" action — the UI invoker has no Database.Service,
+    // and `Branch.suggestion` operates on the document's own database.
     const handleSuggest = useCallback(async () => {
       const creator = identity?.did;
-      if (!document || !creator || !invokePromise) {
+      const parent = document?.content.target;
+      if (!document || !parent || !creator) {
         return;
       }
-      const result = await invokePromise(MarkdownOperation.SuggestEdit, { doc: Ref.make(document), creator });
-      if (result.data?.branchId) {
-        setSelection({ kind: 'branch', branchId: result.data.branchId });
-        setView('branch');
-      }
-    }, [document, identity, invokePromise, setSelection, setView]);
+      const branch = await Branch.suggestion(document, parent, creator);
+      setSelection({ kind: 'branch', branchId: branch.id });
+      setView('branch');
+    }, [document, identity, setSelection, setView]);
 
     // Toolbar actions from app graph, plus the branch switcher dropdown.
     const { graph } = useAppGraph();
