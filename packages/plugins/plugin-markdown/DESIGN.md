@@ -366,6 +366,86 @@ Out of scope here; suggestion branches stay space-visible until the echo-core br
 (see `@dxos/echo-client` VERSIONING.md). Then: model private drafts as author-only, and re-express
 Reject (a non-author writing the author's branch) as a permitted op under that ACL.
 
+### Ambient review model (spec — brainstormed 2026-07-21)
+
+The 2026-07-19 plan built the review **substrate** (per-user `kind:'suggestion'` branches,
+durable/undoable `AcceptChange`/`RejectChange`, the multi-source `suggestions({ sources })`
+overlay, and the comment-style card review layer in plugin-comments). That substrate is reached
+today only by **explicitly selecting a branch** and viewing its diff — the user actively manages
+branches. This subsection specs the **ambient** surface that makes multi-user review the default,
+Google-Docs-style: _the user does not manage branches; by default they see main + comments + all
+users' suggestions at once._
+
+This **supersedes decision 6** of the 2026-07-19 plan ("collapse `suggest` / remove the branch
+switcher"): the explicit version UI is **retained as an advanced/history path**, and the ambient
+overlay is layered as the new default. Nothing is removed.
+
+#### Interaction model
+
+- **Three per-user modes**, a local UI preference persisted per document alongside the existing
+  `VersioningState.selection`/`view` (each collaborator has their own; not stored on the object):
+  - **Editing** — typing edits **main**; all suggestions overlaid read-only; comments visible.
+  - **Suggesting** — typing accrues to the current user's `kind:'suggestion'` branch (find-or-create
+    via `Branch.suggestion`); all suggestions overlaid with the user's own highlighted; comments
+    visible.
+  - **Viewing** — read-only; suggestions hidden (clean read); comments still visible.
+- **Default mode**: Editing for users with write access to main; Viewing for read-only users. Mode
+  _availability_ hardens under Keyhive ACLs later (see Phase 5); open for all today.
+- **Rendering is a product-level policy**, not hardwired. A `ReviewRenderPolicy` config object maps
+  `mode → { showSuggestions, showComments, editable }`; the shipped default is the GDocs-parity
+  mapping above. A deployment can retune it (e.g. always-show suggestions, or decouple comment
+  visibility from mode).
+- **Accept/reject**: any editor may accept/reject **any** author's suggestion (authors may withdraw
+  their own), surfaced **both inline** on the hovered/selected change **and** on the companion card.
+  Routes to the existing `AcceptChange`/`RejectChange` ops (decision 4). Authority is open now,
+  hardens under ACLs later.
+
+#### Architecture
+
+- **Mode state.** Extend `SpaceCapabilities.VersioningState` with per-doc
+  `mode: 'editing' | 'suggesting' | 'viewing'`; `useVersioning` exposes `mode`/`setMode`. A toolbar
+  control sets it (sits with the advanced version affordances).
+- **`useSuggestionSources(doc)`.** Extract the active-`kind:'suggestion'`-branch enumeration +
+  per-branch bind/probe/read that currently lives inside the plugin-comments `Suggestions`
+  companion into a shared hook, so the editor overlay and the companion consume **one** enumeration
+  and **one** set of bindings (no duplicate probes). Returns `ResolvedSuggestionBranch[]`, fed to the
+  existing `buildSuggestionSources` → `suggestions({ sources })`.
+- **`ReviewRenderPolicy`.** A capability (product config) with a GDocs-parity default export;
+  MarkdownArticle reads it to gate overlay/comment visibility and editability by mode.
+- **MarkdownArticle coexistence rule.** When `selection.kind === 'current'` (no explicit version
+  selected) → the **ambient path**: editor bound to main (Editing/Viewing) or the user's suggestion
+  branch (Suggesting), with the multi-source overlay + comment layer gated by the policy. Any
+  explicit `selection` (branch / checkpoint / fork) → **today's advanced path, unchanged.** The
+  ambient overlay _is_ the default `current` experience; the branch switcher, Base/Diff/Branch
+  selector, and `VersionBanner` remain the advanced surface.
+- **Reuse.** No new diff/merge/overlay primitives — Phase 3's `suggestions({ sources })`, Phase 1's
+  ops, and the Phase 4 cards are the building blocks; this layer is composition + the mode control.
+
+#### Implementation risk (spike first)
+
+**Suggesting mode** needs the editor bound to the user's own suggestion branch (so typing accrues)
+**while** rendering the user's edits as tracked changes vs main **and** overlaying other authors'
+suggestions on the same buffer. Composing live editing + self-diff overlay + foreign-source overlays
+on one CodeMirror buffer is the one genuinely hard part; spike it before committing the rest of the
+plan (options: self-source injection into `suggestions({ sources })` vs a dedicated own-changes
+compartment).
+
+#### Testing
+
+- **Unit**: `ReviewRenderPolicy` default mapping (mode → visibility/editable); `useSuggestionSources`
+  (N authors, binding disposal, dedup); `VersioningState.mode` set/persist round-trip.
+- **Storybook play** (extend `DocumentVersioning` / `CommentsArticle` — the primary integration
+  coverage, since the full-stack `CommentsArticle` boot times out in-pane): Editing overlays all
+  suggestions + comments; Viewing hides suggestions but keeps comments; Suggesting routes typing to
+  the user's branch and renders it as a tracked change; inline accept removes a change and updates
+  main; multi-author colours.
+- **Focused ui-editor test** for the Suggesting-mode composition (the risk above).
+
+#### Scope
+
+One cohesive plan — mode toggle + render policy + ambient default overlay — layered on the untouched
+advanced path, with the Suggesting-mode composition as a spike-first sub-milestone.
+
 ## Risks / notes
 
 - Anchors depend on parent history retention; automerge retains full history today, but
