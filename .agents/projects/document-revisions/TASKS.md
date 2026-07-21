@@ -152,8 +152,10 @@ Deferred from the CodeRabbit round (stage 3/4):
       multi-agent later.** Design:
       [`agents/superpowers/specs/2026-07-21-agent-identity.md`](../../../agents/superpowers/specs/2026-07-21-agent-identity.md).
       Implementation (this branch):
-  - [ ] `AgentIdentityService` in assistant-toolkit; agent worker provides it synthetically
-        (`did:agent:<agentObjectId>`, `name = agent.name`).
+  - [x] `Agent.did` field (`IdentityDid`, seeded via `IdentityDid.random()` in `makeInitialized`;
+        optional for back-compat) — persisted, import-stable, `did:halo:` format.
+  - [ ] `AgentIdentityService` in assistant-toolkit; agent worker provides it from `agent.did` /
+        `agent.name`.
   - [ ] `SuggestEdit`: `creator` optional, defaults from `AgentIdentityService`; add to the Markdown
         skill `operations` + update instructions (suggest-edit over create-branch for review).
   - [ ] `resolveAuthor(did, members, agents)` so agent authors show name + hue in banner + companion

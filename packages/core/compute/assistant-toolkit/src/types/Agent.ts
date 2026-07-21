@@ -14,7 +14,7 @@ import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { EID, type EntityId } from '@dxos/keys';
+import { EID, type EntityId, IdentityDid } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import { HarnessContextError } from '../errors';
@@ -26,6 +26,17 @@ import * as Chat from './Chat';
 export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
+
+    /**
+     * Stable identity DID for the agent, used to attribute content it authors (e.g. suggestion
+     * branches) as its own author — distinct from any human or other agent. Seeded at creation
+     * (currently synthetic, via {@link IdentityDid.random}); the slot a real HALO identity DID
+     * takes once agents get first-class identities. Optional so pre-existing agents still load.
+     */
+    did: Schema.optional(IdentityDid).annotations({
+      title: 'DID',
+      description: "The agent's identity DID; attributes content the agent authors.",
+    }),
 
     /**
      * When false, agent triggers are disabled after sync-triggers runs.
@@ -123,6 +134,10 @@ export const makeInitialized = (
     const agent = yield* Database.add(
       Obj.make(Agent, {
         ...agentProps,
+        // Mint a stable identity DID once, so content the agent authors is attributable to it.
+        // Synthetic today (random bytes, no keypair); becomes a real HALO DID when agents get
+        // first-class identities.
+        did: props.did ?? IdentityDid.random(),
         instructions: Ref.make(Text.make({ content: props.instructions })),
         artifacts: props.artifacts ?? [],
         subscriptions: props.subscriptions ?? [],

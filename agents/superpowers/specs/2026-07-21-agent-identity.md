@@ -16,24 +16,25 @@ When an agent authors reviewable content — today a `kind:'suggestion'` branch 
 Today there is no agent→DID binding. `SuggestEdit` takes `creator` as an explicit input and is not
 wired into the Markdown skill, so agents fall back to plain named `CreateBranch` drafts (no author).
 
-## Anchor: the `Agent` object
+## Anchor: the `Agent.did` field (added 2026-07-21)
 
-An agent is already an ECHO object (`assistant-toolkit` `Agent`, with `name`, its own `Feed`, and a
-`Chat.CompanionTo` relation). **The `Agent` schema has NO identity key / DID field** (verified,
-`Agent.ts`) — its only stable handle is the ECHO object id (`Obj.getURI(agent)`), which is an object
-identifier, not key material. Multiple agents ⇒ multiple `Agent` objects ⇒ distinct ids already.
+An agent is an ECHO object (`assistant-toolkit` `Agent`, with `name`, its own `Feed`, and a
+`Chat.CompanionTo` relation). The `Agent` schema originally had **no** identity key / DID — only an
+ECHO object id, which is (i) not key material and (ii) remapped on space import/copy
+(`DatabaseRoot.mapLinks`), so not a durable author key.
 
-Caveat: ECHO object ids are **remapped on space import/copy** (see `DatabaseRoot.mapLinks`), so an
-object id is not a durably stable author key across copy/import. Two ways to key the synthetic DID:
-- **(a) Object id as the handle** — `did:agent:<agent.id>`; simplest, but a copied space re-keys the
-  author (acceptable if we don't need cross-space author stability yet).
-- **(b) A persisted author field on `Agent`** — add e.g. `authorDid: Schema.optional(Schema.String)`
-  seeded once at creation; stable across import and the natural slot to hold a real HALO DID later.
-  Preferred if author stability matters. **Open decision.**
+Resolved: **`Agent` now carries a persisted `did` field** (`Agent.ts`), typed as
+`IdentityDid` and seeded once at creation via `IdentityDid.random()` (in `makeInitialized`; optional
+so pre-existing agents still load). This is a persisted field value — stable across import/copy —
+and uses the **`did:halo:` format**, so it is format-uniform with a human `identity.did` (author
+resolution can treat agents and humans through one path). Synthetic today (random bytes, no
+keypair); the same field later holds a real HALO DID.
+
+Multiple agents ⇒ multiple `Agent` objects, each with its own `did` ⇒ distinct authors already.
 
 ## Design: an `AgentIdentity` service
 
-Introduce a small service the op layer reads, decoupling *what* authors from *how* the DID is
+Introduce a small service the op layer reads, decoupling _what_ authors from _how_ the DID is
 derived:
 
 ```ts
@@ -53,8 +54,8 @@ class AgentIdentityService extends Context.Tag(...)<AgentIdentityService, AgentI
 
 Worker derives the identity from the current `Agent` object:
 
-- `did = 'did:agent:' + <key>` where `<key>` is the object id (option a) or a persisted author field
-  (option b) — distinct per agent; NOT key material, just a synthetic author label.
+- `did = agent.did` (seeded at creation via `IdentityDid.random()` — a `did:halo:` string, distinct
+  per agent, no keypair behind it yet).
 - `name = agent.name` (e.g. "Research assistant").
 - `hue` = omitted → `stringToHue(did)` fallback (stable palette colour).
 
@@ -66,17 +67,18 @@ Banner/companion resolve label + hue by looking the `creator` DID up in **space 
 synthetic agent is not a member, so it would show the raw DID + fallback hue. Fix cheaply:
 
 - Seed `authorLabels`/`authorHues` (CommentsArticle) and the banner label/hue resolver with agent
-  authors: query `Agent` objects in the space, map `did:agent:<id>` → `{ name, hue }`.
+  authors: query `Agent` objects in the space, map `agent.did` → `{ name: agent.name, hue }`.
 - Encapsulate as `resolveAuthor(did, members, agents)` so humans (members) and agents (Agent
   objects) resolve through one path.
 
 ## Future — real identities
 
-- Agents get real HALO identities (DID + space membership + chosen hue/emoji). Then label/hue
-  resolve via `members` exactly like humans; the synthetic `did:agent:` scheme and the agent-author
-  seeding are removed. `AgentIdentityService` stays — only its provider changes (real DID).
-- Migration: `did:agent:<id>` → real DID is a re-key of the suggestion branch `creator`; do it when
-  real identities land (few/no persisted agent suggestions before then).
+- Agents get real HALO identities (a keypair-backed `did:halo:` DID + space membership + chosen
+  hue/emoji), stored in the same `Agent.did` field. Then label/hue resolve via `members` exactly
+  like humans and the agent-author seeding above is removed. `AgentIdentityService` stays — only its
+  provider changes (real DID instead of the random one).
+- No scheme migration: `Agent.did` is already `IdentityDid` format, so existing `creator` values on
+  suggestion branches stay valid; only the generation (random → real keypair) changes.
 
 ## Multiple agents (holds for both phases)
 
@@ -88,9 +90,11 @@ synthetic agent is not a member, so it would show the raw DID + fallback hue. Fi
 
 ## Scope of the "today" change
 
-1. `AgentIdentityService` (define in assistant-toolkit) + provide it, synthetic, in the agent worker
-   op layer.
+0. **DONE** — `Agent.did` field (`IdentityDid`, seeded via `IdentityDid.random()` in
+   `makeInitialized`; optional for back-compat).
+1. `AgentIdentityService` (define in assistant-toolkit) + provide it in the agent worker op layer,
+   reading `agent.did` / `agent.name`.
 2. `SuggestEdit`: `creator` optional, default from `AgentIdentityService`; add the service.
 3. Add `SuggestEdit` to the Markdown skill + update instructions.
 4. `resolveAuthor` seeding so agent authors show `name` + hue in banner + companion.
-5. Tests: agent suggestion attributed to `did:agent:<id>`; two agents ⇒ two authors; label/hue seeded.
+5. Tests: agent suggestion attributed to `agent.did`; two agents ⇒ two authors; label/hue seeded.
