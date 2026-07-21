@@ -46,9 +46,16 @@ projects:
 ended: []
 ```
 
-- The registry records the **location** of each doc, so an existing effort points
-  at its package files and a brand-new project defaults to
-  `.agents/projects/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
+- **Where the docs live (decide once, in this order):** (1) the package root of
+  the unit of work being changed (e.g. `docs/TASKS.md`,
+  `packages/plugins/plugin-magazine/TASKS.md`) — this is the default whenever the
+  work has a single package home, **new project or not**; (2) only when there is
+  no such home (cross-cutting work, or a package that does not exist yet) fall
+  back to `.agents/projects/<name>/{TASKS.md,DESIGN.md}`. "Brand-new project" does
+  **not** by itself select the fallback — new work usually still has a package
+  home. The same package-root-first rule appears under "Location & Format" for
+  `TASKS.md`. The registry records wherever they land; keep it committed and
+  current.
 
 ### The `$project` sentinel
 
@@ -61,9 +68,10 @@ ended: []
   means "resume the project at that row"** — run the "Project handoff" → resume
   steps for that entry (equivalent to `$resume <that name>`).
 - `$project new <name> [summary]` — add an `active` entry (`user` = `whoami`,
-  `host` = `hostname -s`); scaffold `.agents/projects/<name>/{TASKS.md,DESIGN.md}`
-  unless the docs already live somewhere (record that path instead). Confirm in
-  one line.
+  `host` = `hostname -s`); scaffold `TASKS.md` + `DESIGN.md` at the package root of
+  the work (see "Where the docs live" above), falling back to
+  `.agents/projects/<name>/{TASKS.md,DESIGN.md}` only when the work has no package
+  home. Record the chosen path in the entry. Confirm in one line.
 - `$project end <name>` — move the entry to `ended`, recording the final PR/status.
 
 `$resume` / `$hydrate` (see "Project handoff") key off this registry: **which
@@ -122,7 +130,10 @@ below for what each does):
 One file per unit of work: `<root>/TASKS.md`, where `<root>` is the package root
 when there is one (e.g. `packages/plugins/plugin-magazine/TASKS.md`), or
 otherwise the directory you're working in (e.g.
-`.agents/skills/task-planning/TASKS.md`). Match the existing convention:
+`.agents/skills/task-planning/TASKS.md`). This is the same package-root-first
+rule as "Where the docs live" under Projects; `DESIGN.md` sits beside `TASKS.md`,
+and `.agents/projects/<name>/` is only for work with no package home. Match the
+existing convention:
 
 ```markdown
 # <Package> — Tasks
