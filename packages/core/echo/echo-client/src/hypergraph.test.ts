@@ -206,7 +206,7 @@ describe('Hypergraph.scoped', () => {
     const feedB = dbB.add(Feed.make());
     await dbB.appendToFeed(feedB, [Obj.make(TestSchema.Expando, { title: 'feed item in B' })]);
     await dbB.flush();
-    const query = Feed.runQuery(feedB, Filter.everything());
+    const query = Feed.query(feedB, Filter.everything()).run;
 
     // Unconfined: the home db resolves the foreign feed by URI (today's behavior).
     const unconfined = await EffectEx.runPromise(query.pipe(Effect.provide(Database.layer(dbA))));

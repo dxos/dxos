@@ -928,6 +928,15 @@ export class ScopedHypergraph implements Hypergraph.Hypergraph {
     }
     return new ScopedHypergraph(this.#root, next);
   }
+
+  // Blob storage is graph-global (not space-scoped), so a scoped view shares the root's backends.
+  registerBlobBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn {
+    return this.#root.registerBlobBackend(name, backend, options);
+  }
+
+  get defaultBlobStorage(): string {
+    return this.#root.defaultBlobStorage;
+  }
 }
 
 export interface QuerySourceProvider {

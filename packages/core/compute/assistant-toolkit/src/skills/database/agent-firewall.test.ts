@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import { Skill } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
+import { AgentService } from '@dxos/agent-runtime';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { EntityId, PublicKey } from '@dxos/keys';
 import { Message, Organization } from '@dxos/types';
 
@@ -59,7 +59,7 @@ const TestLayer = AssistantTestLayer(baseOptions);
 const MultiSpaceTestLayer = AssistantTestLayer({ ...baseOptions, agent: { readScope: 'membership' } });
 
 const conversationText = Effect.fn(function* (feed: Feed.Feed) {
-  const messages = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
   return messages.map(Message.extractText).join('\n');
 });
 
