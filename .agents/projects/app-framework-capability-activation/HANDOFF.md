@@ -135,6 +135,7 @@ State: committed `e93156f8`, pushed to `claude/app-framework-capability-activati
 assets 403'd by egress). First job on resume: build + test, then fix any fallout.
 
 Two changes in the commit (full detail in TASKS.md "Reopened addendum"):
+
 1. `Plugin.addLazyModule` dissolved into `Plugin.addModule` (overloads in
    `core/plugin.ts`; 167 call sites swept; 0 `addLazyModule` remain).
 2. plugin-assistant gained a `workerd`-conditioned `#capabilities` →
@@ -146,6 +147,17 @@ Validate: `moon run app-framework:build` + `:test`; `moon run plugin-assistant:b
 `moon exec --on-failure continue --quiet :build`; then `:lint` + `pnpm format`.
 The novel risk is `addModule` overload resolution — watch for a call site the old
 `addLazyModule` accepted but the merged overloads now resolve differently.
+
+**Validated (2026-07-21), all green — no regressions found:**
+- `app-framework:build` ✓; `app-framework:test` ✓ (201/201, 16 files)
+- `plugin-assistant:build` ✓ (workerd `#capabilities` resolves to `workerd.ts`, module-structure
+  gate passed)
+- Full-repo `moon exec --on-failure continue --quiet :build` ✓ (exit 0)
+- `app-framework:lint` + `plugin-assistant:lint` ✓
+- `pnpm format` reformatted 5 files (line-width shifts from the rename, no semantic change);
+  committed alongside
+
+No PR requested — work stays committed on this branch pending user direction.
 
 Env: fresh clone (`pnpm i` first). `moonrepo.dev`/`ghcr.io` reachable; GitHub
 release-asset downloads (proto self-install) were 403 — verify that's fixed before

@@ -28,6 +28,8 @@ export const OperationHandler = Capability.lazyModule(
   () => import('./operation-handler'),
 );
 
-export const Toolkit = Capability.lazyModule('toolkit', { provides: [AppCapabilities.Toolkit] }, () =>
-  import('./toolkit'),
+export const Toolkit = Capability.lazyModule(
+  'toolkit',
+  { provides: [AppCapabilities.Toolkit] },
+  () => import('./toolkit'),
 );

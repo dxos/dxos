@@ -243,12 +243,16 @@ agent's first job.
       dist condition. `AssistantPlugin.workerd.ts` imports the three from `#capabilities`
       instead of hand-written `inlineModule` wrappers. Node/browser unchanged (→ `default`).
       Mirrors plugin-connector/plugin-routine.
-- [ ] VALIDATE: `moon run app-framework:build` + `:test` (overload resolution is the novel
-      bit); `moon run plugin-assistant:build` (workerd resolves `#capabilities`→`workerd.ts`,
-      check-module-structure gate); `moon exec --on-failure continue --quiet :build` to catch
-      any swept call site the overload doesn't accept identically; then `:lint` + `pnpm format`.
-- [ ] Watch for overload-resolution regressions (a call site the old `addLazyModule` accepted
-      but the merged `addModule` now resolves differently).
+- [x] VALIDATE (2026-07-21): `moon run app-framework:build` green; `moon run app-framework:test`
+      green (201/201, 16 files — overload resolution had no fallout); `moon run
+      plugin-assistant:build` green (workerd `#capabilities`→`workerd.ts` resolution +
+      check-module-structure gate passed); `moon exec --on-failure continue --quiet :build`
+      full-repo green (exit 0, no failures); `moon run app-framework:lint
+      plugin-assistant:lint` clean; `pnpm format` reformatted 5 files whose line widths shifted
+      after the `addLazyModule`→`addModule` rename (pure whitespace, no semantic change) —
+      committed alongside.
+- [x] No overload-resolution regressions found — all 167 swept call sites compiled and passed
+      identically under the merged `addModule` overloads.
 
 Remaining pre-existing follow-ups (from before, still open): startup-deferral opportunities
 in composer-app/AUDIT.md §12; one `Plugin.addModule<void>` (was `addLazyModule<void>`) anchor
