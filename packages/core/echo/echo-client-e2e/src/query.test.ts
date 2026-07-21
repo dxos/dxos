@@ -6,7 +6,7 @@ import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import {
   Aggregate,
   Collection,
@@ -968,9 +968,18 @@ describe('Query', () => {
       );
 
       const updates: number[] = [];
+      const initialEvent = new Trigger();
+      const qualifiesEvent = new Trigger();
       const unsub = db.query(source).subscribe(
         (query) => {
-          updates.push(query.results.length);
+          const count = query.results.length;
+          updates.push(count);
+          if (updates.length === 1) {
+            initialEvent.wake();
+          }
+          if (count === 2) {
+            qualifiesEvent.wake();
+          }
         },
         { fire: true },
       );
@@ -978,13 +987,14 @@ describe('Query', () => {
 
       // This is a feed-scoped, host-routed query (the nested in-query forces isSimple=false), so
       // the initial event is deferred until the async round trip arrives — db.flush({ updates: true })
-      // does not await it (see the equivalent note in echo-client/src/feed/feed.test.ts). Poll instead.
-      await waitForCondition({ condition: () => updates.length > 0, timeout: 2000 });
+      // does not await it (see the equivalent note in echo-client/src/feed/feed.test.ts). Wait on the
+      // subscription's own event instead of polling.
+      await asyncTimeout(initialEvent.wait(), 2000);
       expect(updates.at(-1)).toEqual(0);
 
       // A new completed "t1" task now makes the whole thread qualify.
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 't1', completed: true })]);
-      await waitForCondition({ condition: () => updates.at(-1) === 2, timeout: 2000 });
+      await asyncTimeout(qualifiesEvent.wait(), 2000);
 
       expect(updates.at(-1)).toEqual(2);
     });
