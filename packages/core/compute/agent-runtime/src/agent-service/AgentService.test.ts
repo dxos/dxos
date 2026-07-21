@@ -450,11 +450,11 @@ describe('Agent Service', () => {
       function* (_) {
         const processManager = yield* ProcessManager.ProcessManagerService;
 
-        const agent = yield* AgentService.createSession();
-        const target = Obj.getURI(agent.feed);
+        const session = yield* AgentService.createSession();
+        const target = Obj.getURI(session.feed);
 
-        yield* agent.submitPrompt('What is the capital of France? Reply with just the city name.');
-        yield* agent.waitForCompletion();
+        yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* session.waitForCompletion();
 
         // With no queued work, alarms, delegations, or undelivered tool results, the process calls
         // `ctx.succeed()` (see `maybeComplete` / `isAgentWorkPending`) and reaches a terminal state
@@ -467,14 +467,14 @@ describe('Agent Service', () => {
 
         // A follow-up turn does not reuse the succeeded process: `getSession` skips terminal handles
         // and spawns a fresh one, which replays conversation history from the feed.
-        const followUp = yield* getSession(agent.feed);
+        const followUp = yield* getSession(session.feed);
         yield* followUp.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* followUp.waitForCompletion();
 
         const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
         expect(processes.some((process) => String(process.pid) !== firstPid)).toBe(true);
 
-        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('france');
       },
