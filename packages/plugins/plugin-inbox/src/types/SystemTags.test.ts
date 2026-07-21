@@ -87,9 +87,7 @@ describe('SystemTags', () => {
     expect(SystemTags.getTaggedIds(mailbox, starredUri).has(message.id)).toBe(false);
   });
 
-  test('a whole thread can be starred/unstarred as a unit, even when only one member is tagged', async ({
-    expect,
-  }) => {
+  test('a whole thread can be starred/unstarred as a unit, even when only one member is tagged', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Feed.Feed, Tag.Tag, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
     });

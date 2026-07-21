@@ -270,16 +270,13 @@ export const MailboxArticle = ({
 
         case 'star-conversation': {
           // The tile's own `messages` is only the capped preview (see `MAILBOX_THREAD_PREVIEW_COUNT`),
-          // so a real thread's star must resolve every member itself, the same feed+space,
-          // threadId-correlated query the message companion uses — not just what's currently rendered.
+          // so the whole thread is re-resolved by `threadId` (same feed+space query as the companion).
           if (db && scopes) {
             void Effect.runFork(
               Effect.gen(function* () {
                 const byThread = yield* Effect.promise(() =>
                   db
-                    .query(
-                      Query.select(Filter.type(Message.Message, { threadId: action.conversationId })).from(scopes),
-                    )
+                    .query(Query.select(Filter.type(Message.Message, { threadId: action.conversationId })).from(scopes))
                     .run(),
                 );
                 // A singleton conversation's id is the message's own id, not a real `threadId` — falls

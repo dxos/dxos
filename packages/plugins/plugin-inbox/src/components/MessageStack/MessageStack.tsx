@@ -26,8 +26,9 @@ export type MessageStackAction =
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
   | { type: 'star'; messageId: string }
-  // Conversation ids may name a real `threadId` shared by messages beyond this tile's capped preview
-  // (see `total`), so the handler must resolve every member itself rather than trust `messageIds`.
+  // Carries the conversation's own id (a `threadId`, or the message id for a singleton) rather than
+  // a resolved message list — a real thread can extend beyond this tile's capped preview (see
+  // `total`), so the handler must resolve every member itself.
   | { type: 'star-conversation'; conversationId: string }
   | { type: 'ignore-sender'; messageId: string }
   | { type: 'create-topic'; messageId: string }
@@ -70,10 +71,8 @@ const EMPTY_TAGS_ATOM = Atom.make((): MessageStackTag[] => []);
 const NOT_STARRED_ATOM = Atom.make(() => false);
 
 /**
- * OR-combines a family of per-member starred atoms — true if ANY of the given ids carries the tag.
- * Drives a conversation tile's star: the thread should show (and toggling should set) one state
- * across every message, not just the latest. Limited to the ids actually loaded in the tile's
- * (possibly capped) preview — a thread member outside that window isn't reflected here.
+ * OR-combines per-member starred atoms — true if any id carries the tag. Limited to the ids in the
+ * tile's loaded (possibly capped) preview; a thread member outside that window isn't reflected here.
  */
 const anyStarredAtom = (family: StarredFamily, ids: readonly string[]): Atom.Atom<boolean> =>
   Atom.make((get) => ids.some((id) => get(family(id))));
@@ -142,7 +141,12 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   conversationId: item.id,
                   messages: item.messages,
                   total: item.total,
-                  starredAtom: starredAtom && anyStarredAtom(starredAtom, item.messages.map((message) => message.id)),
+                  starredAtom:
+                    starredAtom &&
+                    anyStarredAtom(
+                      starredAtom,
+                      item.messages.map((message) => message.id),
+                    ),
                   enableIgnoreSender,
                   enableCreateTopic,
                   searchQuery,
