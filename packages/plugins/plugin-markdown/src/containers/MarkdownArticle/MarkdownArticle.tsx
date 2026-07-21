@@ -14,6 +14,7 @@ import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -274,7 +275,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           selectCardinality: 'single',
         } satisfies ToolbarMenuActionGroupProperties);
         const actions = [
-          createMenuAction('versions--suggest', () => void handleSuggest(), {
+          createMenuAction('versions--suggest', () => void handleSuggest().catch((error) => log.catch(error)), {
             label: ['suggest-edits.label', { ns: meta.profile.key }],
             icon: 'ph--pencil-simple--regular',
           }),
