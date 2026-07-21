@@ -38,4 +38,4 @@ export type LayoutStateProps = {
   workspace: string;
 };
 
-export const LayoutState = Capability.makeSingleton<Atom.Writable<LayoutStateProps>>(`${meta.profile.key}.state`);
+export const LayoutState = Capability.makeSingleton<Atom.Writable<LayoutStateProps>>()(`${meta.profile.key}.state`);

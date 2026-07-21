@@ -14,7 +14,7 @@ type Example = { example: string };
 
 describe('Capability tags', () => {
   it('singleton tags are yieldable Effect services', () => {
-    const tag = Capability.makeSingleton<Example>('@dxos/app-framework/test/example');
+    const tag = Capability.makeSingleton<Example>()('org.dxos.test.example');
     expect(tag.key).toEqual(tag.identifier);
     expect(tag.arity).toEqual('single');
 
@@ -31,7 +31,7 @@ describe('Capability tags', () => {
     Effect.gen(function* () {
       const registry = Registry.make();
       const manager = CapabilityManager.make({ registry });
-      const multi = Capability.make<Example>('@dxos/app-framework/test/example');
+      const multi = Capability.make<Example>()('org.dxos.test.example');
       expect(multi.arity).toEqual('multi');
 
       const program = Effect.gen(function* () {
@@ -48,8 +48,8 @@ describe('Capability tags', () => {
   );
 
   it('tags remain assignable to the legacy InterfaceDef', () => {
-    const single = Capability.makeSingleton<Example>('@dxos/app-framework/test/single');
-    const multi = Capability.make<Example>('@dxos/app-framework/test/multi');
+    const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
+    const multi = Capability.make<Example>()('org.dxos.test.multi');
     const defs: Capability.InterfaceDef<Example>[] = [single, multi];
     expect(defs.map((def) => def.identifier)).toEqual([single.identifier, multi.identifier]);
 
@@ -60,7 +60,7 @@ describe('Capability tags', () => {
 
   describe('provide', () => {
     it('creates branded contributions', () => {
-      const single = Capability.makeSingleton<Example>('@dxos/app-framework/test/single');
+      const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
       const contribution = Capability.provide(single, { example: 'value' });
       expect(Capability.isContribution(contribution)).toBe(true);
       expect(Capability.isContribution(Capability.contributes(single, { example: 'value' }))).toBe(false);
@@ -69,14 +69,14 @@ describe('Capability tags', () => {
     });
 
     it('provideAll carries multiple values for a multi capability', () => {
-      const multi = Capability.make<Example>('@dxos/app-framework/test/multi');
+      const multi = Capability.make<Example>()('org.dxos.test.multi');
       const contribution = Capability.provideAll(multi, [{ example: 'one' }, { example: 'two' }]);
       expect(contribution.values).toHaveLength(2);
     });
 
     it('rejects arity crossing at the type level', () => {
-      const single = Capability.makeSingleton<Example>('@dxos/app-framework/test/single');
-      const multi = Capability.make<Example>('@dxos/app-framework/test/multi');
+      const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
+      const multi = Capability.make<Example>()('org.dxos.test.multi');
 
       // @ts-expect-error provideAll only accepts multi capabilities.
       Capability.provideAll(single, [{ example: 'value' }]);
@@ -91,8 +91,8 @@ describe('Capability tags', () => {
 
   describe('type-level enforcement', () => {
     it('EnsureProvides accepts complete returns and rejects missing capabilities', () => {
-      const a = Capability.makeSingleton<Example>('@dxos/app-framework/test/a');
-      const b = Capability.make<Example>('@dxos/app-framework/test/b');
+      const a = Capability.makeSingleton<Example>()('org.dxos.test.a');
+      const b = Capability.make<Example>()('org.dxos.test.b');
 
       type Provides = readonly [typeof a, typeof b];
       type CompleteReturn = Array<Capability.Contribution<typeof a> | Capability.Contribution<typeof b>>;
@@ -106,7 +106,7 @@ describe('Capability tags', () => {
     });
 
     it('Requirements exposes the identifiers of the declared requires', () => {
-      const a = Capability.makeSingleton<Example>('@dxos/app-framework/test/a');
+      const a = Capability.makeSingleton<Example>()('org.dxos.test.a');
 
       // A program yielding the declared tag typechecks against Requirements.
       const program: Effect.Effect<Example, never, Capability.Requirements<readonly [typeof a]>> = Effect.gen(
@@ -115,7 +115,7 @@ describe('Capability tags', () => {
         },
       );
 
-      const undeclared = Capability.makeSingleton<Example>('@dxos/app-framework/test/undeclared');
+      const undeclared = Capability.makeSingleton<Example>()('org.dxos.test.undeclared');
       // @ts-expect-error yielding an undeclared capability is rejected by the R channel.
       const invalid: Effect.Effect<Example, never, Capability.Requirements<readonly []>> = Effect.gen(function* () {
         return yield* undeclared;

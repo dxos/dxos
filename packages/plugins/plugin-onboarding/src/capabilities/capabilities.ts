@@ -12,5 +12,5 @@ export type OnboardingOptions = {
 };
 
 export namespace OnboardingCapabilities {
-  export const Onboarding = Capability.makeSingleton<OnboardingManager>(`${meta.profile.key}.capability.onboarding`);
+  export const Onboarding = Capability.makeSingleton<OnboardingManager>()(`${meta.profile.key}.capability.onboarding`);
 }

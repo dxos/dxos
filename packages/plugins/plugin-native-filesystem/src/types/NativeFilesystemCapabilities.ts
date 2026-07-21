@@ -13,7 +13,7 @@ import { meta } from '#meta';
 
 import type { NativeFilesystemState } from './types';
 
-export const State = Capability.makeSingleton<Atom.Writable<NativeFilesystemState>>(`${meta.profile.key}.state`);
-export const FilesystemManager = Capability.makeSingleton<FilesystemManagerNs.FilesystemManager>(
-  `${meta.profile.key}.filesystem-manager`,
+export const State = Capability.makeSingleton<Atom.Writable<NativeFilesystemState>>()(`${meta.profile.key}.state`);
+export const FilesystemManager = Capability.makeSingleton<FilesystemManagerNs.FilesystemManager>()(
+  `${meta.profile.key}.filesystemManager`,
 );

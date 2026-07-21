@@ -7,10 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, NativePasskey } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
-// Explicit import so the emitted `.d.ts` references the package via its public alias instead of a
-// relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
 import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities } from '#types';

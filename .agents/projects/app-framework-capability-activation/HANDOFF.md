@@ -149,6 +149,7 @@ The novel risk is `addModule` overload resolution — watch for a call site the 
 `addLazyModule` accepted but the merged overloads now resolve differently.
 
 **Validated (2026-07-21), all green — no regressions found:**
+
 - `app-framework:build` ✓; `app-framework:test` ✓ (201/201, 16 files)
 - `plugin-assistant:build` ✓ (workerd `#capabilities` resolves to `workerd.ts`, module-structure
   gate passed)
@@ -162,3 +163,44 @@ No PR requested — work stays committed on this branch pending user direction.
 Env: fresh clone (`pnpm i` first). `moonrepo.dev`/`ghcr.io` reachable; GitHub
 release-asset downloads (proto self-install) were 403 — verify that's fixed before
 fighting the toolchain.
+
+---
+
+## RESUME (2026-07-21, later same day) — NSID-branded identifier (Option B) for TS2883
+
+User asked why the ~150 phantom-import workarounds existed given `lazyModule` was already
+opaque; traced it to `CapabilityIdentifier<T,A>` branding the requirement channel by the
+capability's structural **service type** `T`, not just `makeModule`'s non-opacity. Explored and
+rejected `@internal`+`stripInternal` (per-body tax); compared to Effect's own `Context.Tag`/
+`Effect.Service` (nominal identity, curried factories, `MissingSelfGeneric` guard) and landed on
+re-branding the identifier by the capability's **NSID literal** instead of `T` — full detail and
+rationale in TASKS.md "Second reopened addendum".
+
+**Two separate leaks discovered mid-implementation that the identifier fix does NOT cover** —
+both left as open, unsolved follow-ups (see TASKS.md for the mechanism):
+
+1. `Capability.provide(tag, value)` → `Contribution<C>`'s `capability: C` field embeds the tag's
+   full type (service type included) regardless of identifier branding — affects any body that
+   `provide()`s a tag whose service type is namespace-exported (`OperationHandlerSet`, `Skill`, …).
+2. A tag's own **definition-site** exported type (`Tag<T,S>`) names `T` directly — affects
+   definitions whose service type is itself structurally non-portable (e.g. `IdentityService`/
+   `SpaceService` in plugin-client, embedding HALO's `Invitation.Flow`/`ShareOptions`).
+
+Both required restoring phantom imports my first sweep pass incorrectly removed (~120 restored /
+~150 removed net) — confirmed via repeated full-repo builds (TS2883 is a hard error, so any
+still-needed import resurfaces immediately; masking meant each fix could unmask the next
+dependency-layer's issue, ~6 build iterations to converge).
+
+Also found and fixed, orthogonal to all of the above: ~37 pre-existing capability NSIDs
+violating `DXN.Name`'s camelCase-only rule, silently unchecked before because the non-curried
+form always widened the identifier to `string` before validating (making the compile-time NSID
+check vacuous). User chose (option 2 of 2 offered) to rename them now rather than leave on the
+legacy shim.
+
+**State**: all changes applied and validated (build/test/lint/format all green, see TASKS.md gate
+line for exact commands and the 2 confirmed-flaky unrelated test timeouts). Not yet committed as
+of this note — commit + push is the immediate next step, no PR requested.
+
+Hard-rule reminders that bit this session: **never pipe a gate command through `tail`/`head`**
+(masks exit code) — used `grep -c "error TS"` + a separate `echo "EXIT=$?"` capture instead, since
+TS2883/TS2345 are compile errors that must not be missed in a huge build log.

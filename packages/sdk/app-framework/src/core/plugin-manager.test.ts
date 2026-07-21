@@ -27,13 +27,13 @@ import { DependencyCycleError, DuplicateProviderError, MissingProviderError, Pro
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
 
-const String = Capability.makeSingleton<{ string: string }>('org.dxos.test.string');
-const Number = Capability.makeSingleton<{ number: number }>('org.dxos.test.number');
-const Total = Capability.makeSingleton<{ total: number }>('org.dxos.test.total');
+const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
+const Number = Capability.makeSingleton<{ number: number }>()('org.dxos.test.number');
+const Total = Capability.makeSingleton<{ total: number }>()('org.dxos.test.total');
 // Multi-arity variants for scenarios exercising several concurrent providers of the same
 // conceptual capability (event latching / reactivity plumbing tests, not capability typing).
-const MultiString = Capability.make<{ string: string }>('org.dxos.test.multiString');
-const MultiNumber = Capability.make<{ number: number }>('org.dxos.test.multiNumber');
+const MultiString = Capability.make<{ string: string }>()('org.dxos.test.multiString');
+const MultiNumber = Capability.make<{ number: number }>()('org.dxos.test.multiNumber');
 
 const CountEvent = ActivationEvent.make('org.dxos.test.count');
 const FailEvent = ActivationEvent.make('org.dxos.test.fail');
@@ -2026,7 +2026,7 @@ describe('PluginManager', () => {
   });
 
   describe('capability dependency activation', () => {
-    const Widget = Capability.make<{ widget: string }>('org.dxos.test.widget');
+    const Widget = Capability.make<{ widget: string }>()('org.dxos.test.widget');
 
     const startupKey = ActivationEvent.eventKey(ActivationEvent.Startup);
 

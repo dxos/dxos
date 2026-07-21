@@ -38,21 +38,21 @@ export type EditorViewRegistry = {
   getByDocumentId: (documentId: string) => EditorViewEntry | undefined;
 };
 
-export const Settings = Capability.makeSingleton<Atom.Writable<Markdown.Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<Markdown.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
 /** Persisted state atom for view mode per document. */
-export const State = Capability.makeSingleton<Atom.Writable<MarkdownState>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<MarkdownState>>()(`${meta.profile.key}.capability.state`);
 
 /** Editor state store for cursor positions, scroll state, etc. */
-export const EditorState = Capability.makeSingleton<EditorStateStore>(`${meta.profile.key}.capability.editor-state`);
+export const EditorState = Capability.makeSingleton<EditorStateStore>()(`${meta.profile.key}.capability.editorState`);
 
 /** Registry of active EditorView instances keyed by attendable ID. */
-export const EditorViews = Capability.makeSingleton<EditorViewRegistry>(`${meta.profile.key}.capability.editor-views`);
+export const EditorViews = Capability.makeSingleton<EditorViewRegistry>()(`${meta.profile.key}.capability.editorViews`);
 
 // TODO(burdon): Move to ./types (external API)?
 // Multi capability: each contributing plugin provides one batch (array) of extension providers.
-export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(
+export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>()(
   `${meta.profile.key}.capability.extensions`,
 );

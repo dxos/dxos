@@ -38,7 +38,7 @@ const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>
 export type CrawlerStoresRuntime = ManagedRuntime.ManagedRuntime<CrawlerStoreServices, never>;
 
 /** Capability exposing the shared crawler-stores runtime to Facts-story modules. */
-export const CrawlerStores = Capability.makeSingleton<CrawlerStoresRuntime>('org.dxos.stories.brain.crawlerStores');
+export const CrawlerStores = Capability.makeSingleton<CrawlerStoresRuntime>()('org.dxos.stories.brain.crawlerStores');
 
 const CrawlerStoresModule = Capability.makeModule(
   Effect.fnUntraced(function* () {

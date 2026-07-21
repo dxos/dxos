@@ -6,14 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-// Explicit imports so the emitted `.d.ts` references the packages via their public
-// aliases instead of relative `node_modules` paths (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { GraphBuilder } from '@dxos/app-graph';
 import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 

@@ -78,7 +78,7 @@ export const waitFor = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, neve
  * @returns The live, reactive {@link Contributions} collection.
  */
 export const contributions = <T>(
-  capability: MultiTag<T> | InterfaceDef<T>,
+  capability: MultiTag<T, any> | InterfaceDef<T>,
 ): Effect.Effect<Contributions<T>, never, Service> =>
   Effect.map(Service, (manager) => manager.contributions(capability));
 
@@ -158,10 +158,14 @@ declare const CapabilityBrand: unique symbol;
 
 /**
  * Phantom identifier of a capability in the Effect context.
- * Branded by service type and arity so singleton and multi capabilities cannot cross APIs.
+ * Branded by the capability's NSID (a string literal) and arity — never by the service type —
+ * so the requirement channel names only local string literals, keeping module bodies'
+ * declaration emit portable without per-file annotations. This mirrors Effect's own tags, whose
+ * requirement identity is a nominal token (the `Self` class of `Context.Tag`/`Effect.Service`),
+ * never the structural service shape. Arity keeps singleton and multi capabilities from crossing APIs.
  */
-export interface CapabilityIdentifier<T, A extends Arity> {
-  readonly [CapabilityBrand]: { readonly type: T; readonly arity: A };
+export interface CapabilityIdentifier<Id extends string, A extends Arity> {
+  readonly [CapabilityBrand]: { readonly id: Id; readonly arity: A };
 }
 
 /**
@@ -192,47 +196,85 @@ export interface Contributions<T> {
  * that is also a legacy {@link InterfaceDef}, so string-keyed helpers and hooks accept it
  * unchanged. The tag's runtime `key` equals the capability `identifier`.
  */
-export interface Tag<T> extends Context.Tag<CapabilityIdentifier<T, 'single'>, T>, InterfaceDef<T> {
+// `S` defaults to `any` (not `string`): `Context.Tag` is invariant in its identifier, so a bare
+// annotation like `Tag<Example>` — meaning "a singleton tag of this service type, any NSID" —
+// must be assignable from every concrete `Tag<Example, "the.actual.nsid">`; defaulting to `string`
+// would reject all of them since neither is a subtype of the other under invariance.
+export interface Tag<T, S extends string = any>
+  extends Context.Tag<CapabilityIdentifier<S, 'single'>, T>, InterfaceDef<T> {
   readonly arity: 'single';
 }
 
 /**
  * A multi (registry) capability: `yield* tag` yields the live {@link Contributions} view.
  */
-export interface MultiTag<T> extends Context.Tag<CapabilityIdentifier<T, 'multi'>, Contributions<T>>, InterfaceDef<T> {
+export interface MultiTag<T, S extends string = any>
+  extends Context.Tag<CapabilityIdentifier<S, 'multi'>, Contributions<T>>, InterfaceDef<T> {
   readonly arity: 'multi';
 }
 
-export type AnyTag = Tag<any> | MultiTag<any>;
+export type AnyTag = Tag<any, any> | MultiTag<any, any>;
+
+/**
+ * Compile-time error surfaced when the service type is omitted from the curried factory form.
+ * Mirrors Effect's `MissingSelfGeneric` guard on `Effect.Service`/`Context.Tag`: the service type
+ * cannot be inferred (it is unrelated to the identifier string), so omitting it would silently
+ * widen the identifier to `string` and make the requirement check vacuous — this turns that
+ * footgun into a message instead.
+ */
+type MissingServiceType = 'Missing service type — write make<T>()(nsid) / makeSingleton<T>()(nsid)';
+
+/** Identifier-string parameter, validated as a well-formed NSID at compile time via {@link DXN.Name}. */
+type NsidParam<S extends string> = [DXN.Name<S>] extends [never]
+  ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)`
+  : S;
+
+// Runtime tag construction — the phantom brand (`CapabilityIdentifier`) and `InterfaceDef` member
+// are type-only, so assembling the concrete tag object requires a controlled cast at this boundary
+// (as Effect's own tag constructors do internally). Isolated here so call sites stay cast-free.
+const buildTag = <T, S extends string, A extends Arity>(identifier: S, arity: A) =>
+  Object.assign(Context.GenericTag<CapabilityIdentifier<S, A>, T>(identifier), {
+    identifier,
+    arity,
+  }) as unknown as A extends 'multi' ? MultiTag<T, S> : Tag<T, S>;
 
 /**
  * Defines a multi (registry) capability — the default: an open registry contributed to by
  * many modules, yielding a live {@link Contributions} collection.
- * Static NSID strings are validated at compile time via {@link DXN.Name}.
+ *
+ * Preferred (curried) form captures the NSID string literal, so the requirement channel stays
+ * precise and portable — the same shape Effect uses for `Context.Tag`/`Effect.Service`:
+ * `make<T>()('org.dxos…capability')`. The service type `T` is explicit (it cannot be inferred);
+ * the NSID `S` is inferred as a literal in the second call.
+ *
+ * The single-call form `make<T>(nsid)` is a transitional shim that widens `S` to `string`
+ * (identifier stays portable but the requirement check for that capability is coarse); migrate
+ * to the curried form to restore a precise check. Static NSID strings are validated via {@link DXN.Name}.
  */
 export const make: {
-  <T, S extends string = string>(
-    identifier: [DXN.Name<S>] extends [never] ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)` : S,
-  ): MultiTag<T>;
-} = <T>(identifier: string): MultiTag<T> => {
-  const tag = Context.GenericTag<CapabilityIdentifier<T, 'multi'>, Contributions<T>>(identifier);
-  // Controlled brand cast: the InterfaceDef phantom member is type-only.
-  return Object.assign(tag, { identifier, arity: 'multi' as const }) as MultiTag<T>;
-};
+  <T = never>(): [T] extends [never]
+    ? MissingServiceType
+    : <const S extends string>(identifier: NsidParam<S>) => MultiTag<T, S>;
+  <T, S extends string = string>(identifier: NsidParam<S>): MultiTag<T, string>;
+} = ((identifier?: string) =>
+  identifier === undefined
+    ? <const S extends string>(id: S) => buildTag<unknown, S, 'multi'>(id, 'multi')
+    : buildTag<unknown, string, 'multi'>(identifier, 'multi')) as any;
 
 /**
  * Defines a singleton capability: exactly one provider, `yield*` yields the implementation.
- * Static NSID strings are validated at compile time via {@link DXN.Name}.
+ * Curried like {@link make} (and Effect's `Context.Tag`/`Effect.Service`): `makeSingleton<T>()(nsid)`;
+ * the single-call `makeSingleton<T>(nsid)` is the same transitional shim. Validated via {@link DXN.Name}.
  */
 export const makeSingleton: {
-  <T, S extends string = string>(
-    identifier: [DXN.Name<S>] extends [never] ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)` : S,
-  ): Tag<T>;
-} = <T>(identifier: string): Tag<T> => {
-  const tag = Context.GenericTag<CapabilityIdentifier<T, 'single'>, T>(identifier);
-  // Controlled brand cast: the InterfaceDef phantom member is type-only.
-  return Object.assign(tag, { identifier, arity: 'single' as const }) as Tag<T>;
-};
+  <T = never>(): [T] extends [never]
+    ? MissingServiceType
+    : <const S extends string>(identifier: NsidParam<S>) => Tag<T, S>;
+  <T, S extends string = string>(identifier: NsidParam<S>): Tag<T, string>;
+} = ((identifier?: string) =>
+  identifier === undefined
+    ? <const S extends string>(id: S) => buildTag<unknown, S, 'single'>(id, 'single')
+    : buildTag<unknown, string, 'single'>(identifier, 'single')) as any;
 
 /**
  * A unique string identifier with a Typescript type associated with it.
@@ -348,14 +390,14 @@ export const expandContributions = (items: ReadonlyArray<Any | AnyContribution>)
  * is rejected by the value parameter type.
  */
 export const provide: {
-  <C extends Tag<any>>(
+  <C extends Tag<any, any>>(
     capability: C,
-    implementation: C extends Tag<infer T> ? T : never,
+    implementation: C extends Tag<infer T, any> ? T : never,
     deactivate?: () => Effect.Effect<void, Error>,
   ): Contribution<C>;
-  <C extends MultiTag<any>>(
+  <C extends MultiTag<any, any>>(
     capability: C,
-    implementation: C extends MultiTag<infer T> ? T : never,
+    implementation: C extends MultiTag<infer T, any> ? T : never,
     deactivate?: () => Effect.Effect<void, Error>,
   ): Contribution<C>;
 } = <C extends AnyTag>(
@@ -372,9 +414,9 @@ export const provide: {
 /**
  * Provides multiple entries for a multi capability from a single module.
  */
-export const provideAll = <C extends MultiTag<any>>(
+export const provideAll = <C extends MultiTag<any, any>>(
   capability: C,
-  implementations: C extends MultiTag<infer T> ? readonly T[] : never,
+  implementations: C extends MultiTag<infer T, any> ? readonly T[] : never,
   deactivate?: () => Effect.Effect<void, Error>,
 ): Contribution<C> => ({
   [ContributionTypeId]: capability,

@@ -34,10 +34,10 @@ export type State = {
   zoom?: number;
 };
 
-export const State = Capability.makeSingleton<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${meta.profile.key}.capability.state`);
 
 /** Writable settings atom (also surfaced as a settings form via `AppCapabilities.Settings`). */
-export const Settings = Capability.makeSingleton<Atom.Writable<SettingsType>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<SettingsType>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -74,4 +74,4 @@ export type MarkerProvider = {
 
 // Multi capability: every plugin that can plot a subject on the map (map's own view provider,
 // plugin-trip, ...) contributes one entry.
-export const MarkerProvider = Capability.make<MarkerProvider>(`${meta.profile.key}.capability.marker-provider`);
+export const MarkerProvider = Capability.make<MarkerProvider>()(`${meta.profile.key}.capability.markerProvider`);

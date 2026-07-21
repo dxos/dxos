@@ -42,11 +42,11 @@ export type TranscriptionManagerProviderProps = {
 
 export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManager;
 
-export const TranscriptionManagerProvider = Capability.makeSingleton<TranscriptionManagerProvider>(
-  `${meta.profile.key}.capability.transcription-manager`,
+export const TranscriptionManagerProvider = Capability.makeSingleton<TranscriptionManagerProvider>()(
+  `${meta.profile.key}.capability.transcriptionManager`,
 );
 
-export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -57,8 +57,8 @@ export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Se
  */
 export type RecordingSession = { id: string; recording: boolean };
 
-export const RecordingSession = Capability.makeSingleton<Atom.Writable<RecordingSession | null>>(
-  `${meta.profile.key}.capability.recording-session`,
+export const RecordingSession = Capability.makeSingleton<Atom.Writable<RecordingSession | null>>()(
+  `${meta.profile.key}.capability.recordingSession`,
 );
 
 /**
@@ -67,7 +67,7 @@ export const RecordingSession = Capability.makeSingleton<Atom.Writable<Recording
  */
 export type EntityLookup = EntityLookupFn;
 
-export const EntityLookup = Capability.makeSingleton<EntityLookupFn>(`${meta.profile.key}.capability.entity-lookup`);
+export const EntityLookup = Capability.makeSingleton<EntityLookupFn>()(`${meta.profile.key}.capability.entityLookup`);
 
 /**
  * Live transcription lifecycle, published by the driver for observers (toolbar spinner, testbench):
@@ -75,6 +75,6 @@ export const EntityLookup = Capability.makeSingleton<EntityLookupFn>(`${meta.pro
  */
 export type PipelinePhase = 'idle' | 'recording' | 'draining';
 
-export const PipelineStatus = Capability.makeSingleton<Atom.Writable<{ phase: PipelinePhase }>>(
-  `${meta.profile.key}.capability.pipeline-status`,
+export const PipelineStatus = Capability.makeSingleton<Atom.Writable<{ phase: PipelinePhase }>>()(
+  `${meta.profile.key}.capability.pipelineStatus`,
 );

@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
 
-export const Manager = Capability.makeSingleton<CallManagerImpl>(`${meta.profile.key}.capability.call-manager`);
+export const Manager = Capability.makeSingleton<CallManagerImpl>()(`${meta.profile.key}.capability.callManager`);
 
 // TODO(wittjosiah): These callbacks could be intents once we support broadcast.
 export type CallProperties = {
@@ -21,7 +21,7 @@ export type CallProperties = {
   onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
 };
 
-export const EventHandler = Capability.makeSingleton<CallProperties>(`${meta.profile.key}.capability.call-extension`);
+export const EventHandler = Capability.makeSingleton<CallProperties>()(`${meta.profile.key}.capability.callExtension`);
 
 /**
  * Pluggable live-transport for a call, keyed by `kind`. A call is identified by
@@ -41,8 +41,8 @@ export type CallTransportProvider = {
 
 // Multi: consumers (`plugin-thread`, `plugin-meeting`) read the full registry via
 // `useCapabilities`/`getAll` to check availability and pick a provider.
-export const CallTransportProvider = Capability.make<CallTransportProvider>(
-  `${meta.profile.key}.capability.call-transport-provider`,
+export const CallTransportProvider = Capability.make<CallTransportProvider>()(
+  `${meta.profile.key}.capability.callTransportProvider`,
 );
 
 export type Call = { roomId: string };

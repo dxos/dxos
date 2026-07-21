@@ -245,10 +245,10 @@ agent's first job.
       Mirrors plugin-connector/plugin-routine.
 - [x] VALIDATE (2026-07-21): `moon run app-framework:build` green; `moon run app-framework:test`
       green (201/201, 16 files — overload resolution had no fallout); `moon run
-      plugin-assistant:build` green (workerd `#capabilities`→`workerd.ts` resolution +
+    plugin-assistant:build` green (workerd `#capabilities`→`workerd.ts` resolution +
       check-module-structure gate passed); `moon exec --on-failure continue --quiet :build`
       full-repo green (exit 0, no failures); `moon run app-framework:lint
-      plugin-assistant:lint` clean; `pnpm format` reformatted 5 files whose line widths shifted
+    plugin-assistant:lint` clean; `pnpm format` reformatted 5 files whose line widths shifted
       after the `addLazyModule`→`addModule` rename (pure whitespace, no semantic change) —
       committed alongside.
 - [x] No overload-resolution regressions found — all 167 swept call sites compiled and passed
@@ -258,3 +258,73 @@ Remaining pre-existing follow-ups (from before, still open): startup-deferral op
 in composer-app/AUDIT.md §12; one `Plugin.addModule<void>` (was `addLazyModule<void>`) anchor
 in a plugin-magazine story; the `plugin-assistant` "can run memoized instructions" failure
 (compute-runtime LayerStack, unrelated to this refactor).
+
+### Second reopened addendum — NSID-branded capability identifier (Option B) (2026-07-21)
+
+User flagged TS2883 phantom-import workarounds (`unused-imports/no-unused-imports` +
+explanatory comment) scattered across ~150 module bodies, tracing back to `CapabilityIdentifier<T,
+A>` branding the Effect requirement channel by the capability's **service type** `T` — a
+namespace-exported, non-portable service type (e.g. `@dxos/compute`'s `OperationHandlerSet`,
+`Skill`) forces every consuming body's emitted `.d.ts` to name it. Considered and rejected
+`@internal` + `stripInternal` per-body annotation (153 files, ongoing authoring tax); landed on
+re-branding the identifier by the capability's **NSID string literal** instead — mirrors Effect's
+own `Context.Tag`/`Effect.Service`, whose requirement identity is a nominal token (the `Self`
+class), never the structural service shape.
+
+- [x] `capability.ts`: `CapabilityIdentifier<Id extends string, A>` (was `<T, A>`); `Tag<T, S =
+      any>`/`MultiTag<T, S = any>` (default `any` — `Context.Tag` is invariant in its identifier, so
+      a bare `Tag<Example>` annotation must accept every concrete `Tag<Example, "the.actual.nsid">`,
+      which `S = string` would reject under invariance). `make`/`makeSingleton` are dual-form:
+      curried `make<T>()(nsid)` captures the NSID as a literal (precise, portable — the
+      Effect-idiomatic shape); legacy `make<T>(nsid)` is a transitional shim that widens `S` to
+      `string` (still portable, coarser check). `MissingServiceType` template-literal guard mirrors
+      Effect's `MissingSelfGeneric` (omitting `<T>` in the curried form is a compile error, not a
+      silent vacuous check). `provide`/`provideAll`/`contributions` widened to `Tag<any, any>` /
+      `MultiTag<any, any>` at their generic-constraint positions (the invariance fallout).
+- [x] Curried ~188 `make`/`makeSingleton` call sites across 63 tag-definition files (mechanical
+      bracket-matching sweep, handles nested generics/multi-line calls).
+- [x] Renamed ~37 pre-existing capability NSIDs whose final segment violated `DXN.Name`'s
+      camelCase-only rule (kebab-case or too few segments, e.g. `capability.view-state` →
+      `capability.viewState`, `story-state` → `org.dxos.test.storyState`) — previously silently
+      unchecked because the non-curried form always widened `S` to `string` before validating,
+      making `DXN.Name`'s compile-time check vacuous. Curry-checking every tag surfaced them for
+      real; user chose to fix the names now rather than leave them on the legacy shim.
+- [x] Removed the now-provably-dead TS2883 phantom-import workaround from ~120 body files whose
+      leak was purely on the **requires** side (`yield*` accumulating the identifier into `R`) —
+      confirmed dead via full-repo build (TS2883 is a hard error, so anything still needed
+      resurfaced immediately).
+- [x] **Discovered and preserved a second, separate leak the identifier fix does NOT address**:
+      `Capability.provide(tag, value)` returns `Contribution<typeof tag>`, and `Contribution<C>`'s
+      `capability: C` field embeds the tag's full type — including its service type `T` — regardless
+      of how the identifier is branded. Any body that `provide()`s a tag whose service type is
+      itself non-portable (namespace-exported, e.g. `OperationHandlerSet`, `Skill`) still needs its
+      phantom import. ~30 files restored for this reason (the ~88 `operation-handler.ts`/
+      `skill-definition.ts` bodies providing `Capabilities.OperationHandler`/
+      `AppCapabilities.SkillDefinition`, plus a handful of `provide()`-ing barrels). Also applies at
+      **tag *definition* sites** whose own service type is structurally non-portable (e.g.
+      `plugin-client/types/capabilities.ts`'s `IdentityService`/`SpaceService` embedding
+      `Identity.Service`/`Space.Service` → `@dxos/halo`'s `Invitation.Flow`/`ShareOptions`) — the
+      definition's own exported `Tag<T, S>` still names `T` directly, identifier branding aside.
+      Left as an open, unsolved problem — no attempt made to make `Contribution<C>`/tag-definition
+      emit opaque to `T` (would need its own design pass, likely trading off the
+      `EnsureProvides`/`CoveredBy` completeness-check machinery, similar tension to the identifier
+      fix).
+- [x] Also restored ~10 files whose phantom import was for a **root cause unrelated to
+      capabilities entirely** (Effect Schema classes via `Type.makeObject`, `Operation.withHandler`
+      definitions, a React context type) — same workaround pattern, different underlying
+      TS2883 trigger; the identifier fix was never going to touch these.
+- [x] Gate: full-repo build (`moon exec --on-failure continue --quiet :build`) green across ~6
+      iterations (each iteration's fix unmasked the next hidden failure — a failed package blocks
+      moon from even attempting downstream consumers, so fixes surfaced one dependency-layer at a
+      time); full-repo test suite green modulo 2 confirmed load-induced timeout flakes unrelated to
+      this change (`echo-react:usePagination`, `client:dedicated-worker-client-services` /
+      `client-service` — both pass cleanly standalone, both timeout only under
+      `MOON_CONCURRENCY=4 :test` full-suite CPU contention); full-repo lint clean; `pnpm format`
+      reformatted 5 files.
+
+Net: portability is unconditional now (identifier branding never names the service type, curried
+or legacy) — every body's `.d.ts` is portable regardless of curry status. The **sharper
+per-capability requires-check** only applies where the tag is curried (~all 63 definition files,
+after this pass). The **provides-side leak** (`Contribution<C>` embedding `T`) and the
+**definition-site leak** (a tag's own `Tag<T,S>` naming `T`) are real, separate, still-open
+problems — flagged above, not fixed this pass.

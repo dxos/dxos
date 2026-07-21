@@ -101,6 +101,6 @@ export type ConnectorCoordinator = {
   }) => Effect.Effect<{ added: number; removed: number }, Error>;
 };
 
-export const ConnectorCoordinator = Capability.makeSingleton<ConnectorCoordinator>(
-  `${meta.profile.key}.capability.connector-coordinator`,
+export const ConnectorCoordinator = Capability.makeSingleton<ConnectorCoordinator>()(
+  `${meta.profile.key}.capability.connectorCoordinator`,
 );

@@ -12,10 +12,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { ServiceResolver } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Progress } from '@dxos/progress';
 
 import { ClientCapabilities } from '#types';
 

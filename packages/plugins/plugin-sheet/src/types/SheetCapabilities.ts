@@ -18,9 +18,9 @@ export type GridRegistry = {
   get: (attendableId: string) => GridEntry | undefined;
 };
 
-export const ComputeGraphRegistry = Capability.makeSingleton<ComputeGraphRegistryType>(
-  `${meta.profile.key}.capability.compute-graph-registry`,
+export const ComputeGraphRegistry = Capability.makeSingleton<ComputeGraphRegistryType>()(
+  `${meta.profile.key}.capability.computeGraphRegistry`,
 );
 
 /** Registry of active grid instances keyed by attendable ID. */
-export const GridInstances = Capability.makeSingleton<GridRegistry>(`${meta.profile.key}.capability.grid-instances`);
+export const GridInstances = Capability.makeSingleton<GridRegistry>()(`${meta.profile.key}.capability.gridInstances`);

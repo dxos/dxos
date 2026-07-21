@@ -22,7 +22,7 @@ import * as Settings from './Settings';
 import { type CreateObject, type ObjectViewerProps } from './types';
 
 export namespace SpaceCapabilities {
-  export const Settings = Capability.makeSingleton<Atom.Writable<Settings.Settings>>(
+  export const Settings = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
     `${meta.profile.key}.capability.settings`,
   );
 
@@ -37,7 +37,7 @@ export namespace SpaceCapabilities {
   export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
 
   /** Persisted state (stored in KVS/localStorage). */
-  export const State = Capability.makeSingleton<Atom.Writable<SpaceState>>(`${meta.profile.key}.capability.state`);
+  export const State = Capability.makeSingleton<Atom.Writable<SpaceState>>()(`${meta.profile.key}.capability.state`);
 
   /** Ephemeral space plugin state (not persisted). */
   export type SpaceEphemeralState = {
@@ -49,12 +49,12 @@ export namespace SpaceCapabilities {
   };
 
   /** Transient/ephemeral state (not persisted). */
-  export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEphemeralState>>(
-    `${meta.profile.key}.capability.ephemeral-state`,
+  export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEphemeralState>>()(
+    `${meta.profile.key}.capability.ephemeralState`,
   );
 
   /** The personal space, contributed once the `IdentityCreated` module has created it. */
-  export const PersonalSpace = Capability.makeSingleton<Space>(`${meta.profile.key}.capability.personal-space`);
+  export const PersonalSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.personalSpace`);
 
   /** Which version of an object the local user is viewing. Never replicated. */
   export type VersionSelection =
@@ -79,8 +79,8 @@ export namespace SpaceCapabilities {
   };
 
   /** In-memory (per-session) version selection state. */
-  export const VersioningState = Capability.makeSingleton<Atom.Writable<VersioningState>>(
-    `${meta.profile.key}.capability.versioning-state`,
+  export const VersioningState = Capability.makeSingleton<Atom.Writable<VersioningState>>()(
+    `${meta.profile.key}.capability.versioningState`,
   );
 
   /**
@@ -91,11 +91,11 @@ export namespace SpaceCapabilities {
     id: string;
     getTarget: (object: Obj.Unknown) => Text.Text | undefined;
   }>;
-  export const HistoryProvider = Capability.make<HistoryProvider>(`${meta.profile.key}.capability.history-provider`);
+  export const HistoryProvider = Capability.make<HistoryProvider>()(`${meta.profile.key}.capability.historyProvider`);
 
   export type SettingsSection = { id: string; label: Label; position?: Position.Position };
-  export const SettingsSection = Capability.makeSingleton<SettingsSection>(
-    `${meta.profile.key}.capability.settings-section`,
+  export const SettingsSection = Capability.makeSingleton<SettingsSection>()(
+    `${meta.profile.key}.capability.settingsSection`,
   );
 
   export type OnCreateSpace = (params: {
@@ -103,7 +103,7 @@ export namespace SpaceCapabilities {
     isDefault: boolean;
     rootCollection: Collection.Collection;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.profile.key}.capability.on-space-created`);
+  export const OnCreateSpace = Capability.make<OnCreateSpace>()(`${meta.profile.key}.capability.onSpaceCreated`);
 
   export type OnTypeAdded = (params: {
     db: Database.Database;
@@ -111,11 +111,11 @@ export namespace SpaceCapabilities {
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnTypeAdded = Capability.make<OnTypeAdded>(`${meta.profile.key}.capability.on-type-added`);
+  export const OnTypeAdded = Capability.make<OnTypeAdded>()(`${meta.profile.key}.capability.onTypeAdded`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
-  export const Repair = Capability.makeSingleton<HandleRepair>(`${meta.profile.key}.capability.repair`);
+  export const Repair = Capability.makeSingleton<HandleRepair>()(`${meta.profile.key}.capability.repair`);
 
   /** Typed creation entry contributed per typename by plugins that support creating objects. */
   export type CreateObjectEntry = Readonly<{
@@ -133,7 +133,7 @@ export namespace SpaceCapabilities {
      */
     customPanel?: ComponentType<CreateObjectCustomPanelProps>;
   }>;
-  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.profile.key}.capability.create-object`);
+  export const CreateObjectEntry = Capability.make<CreateObjectEntry>()(`${meta.profile.key}.capability.createObject`);
 
   /** Props passed to a `CreateObjectEntry.customPanel`. */
   export type CreateObjectCustomPanelProps = {

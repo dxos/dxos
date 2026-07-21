@@ -31,8 +31,8 @@ export type Backend = {
 };
 
 // Multi capability: inline-backend and edge-backend each contribute one entry.
-export const Backend = Capability.make<Backend>(`${meta.profile.key}.capability.backend`);
+export const Backend = Capability.make<Backend>()(`${meta.profile.key}.capability.backend`);
 
-export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>(
+export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );

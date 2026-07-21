@@ -28,7 +28,7 @@ import { NavTreePlugin } from '../../NavTreePlugin';
 
 random.seed(1234);
 
-const StoryState = Capability.makeSingleton<Atom.Atom<{ tab: string }>>('story-state');
+const StoryState = Capability.makeSingleton<Atom.Atom<{ tab: string }>>()('org.dxos.test.storyState');
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 

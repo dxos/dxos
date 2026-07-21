@@ -7,22 +7,12 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { GraphBuilder } from '@dxos/app-graph';
 import { AppAnnotation, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
-// Explicit import so the emitted `.d.ts` references the package via its public alias
-// instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Identity, Invitation } from '@dxos/halo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
 import { AttentionCapabilities } from '@dxos/plugin-attention';

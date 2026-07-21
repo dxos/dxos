@@ -13,7 +13,7 @@ import { meta } from '#meta';
 
 import { Meeting, type Settings as SettingsType } from './index';
 
-export const Settings = Capability.makeSingleton<Atom.Writable<SettingsType.Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<SettingsType.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -28,4 +28,4 @@ export type MeetingStateStore = {
   updateState: (updater: (current: MeetingState) => MeetingState) => void;
 };
 
-export const State = Capability.makeSingleton<MeetingStateStore>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<MeetingStateStore>()(`${meta.profile.key}.capability.state`);

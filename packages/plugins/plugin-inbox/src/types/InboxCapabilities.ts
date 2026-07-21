@@ -12,7 +12,7 @@ import { meta } from '#meta';
 
 // Inline import to avoid `Settings` namespace alias colliding with the
 // `Settings` capability export below.
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -20,7 +20,7 @@ export const Settings = Capability.makeSingleton<Atom.Writable<import('./Setting
  * Plugins contribute object extractors via this capability.
  * Multiple plugins may register; the ExtractMessage operation selects one based on match() confidence.
  */
-export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>(
+export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>()(
   `${meta.profile.key}.capability.objectExtractor`,
 );
 
@@ -51,4 +51,4 @@ export type MailboxAction = {
 // Multi: `useCapabilities`/`getAll` readers render one menu item per contributed action, and more
 // than one plugin may contribute (currently plugin-brain).
 /** Plugins contribute mailbox toolbar-menu actions via this capability (see {@link MailboxAction}). */
-export const MailboxAction = Capability.make<MailboxAction>(`${meta.profile.key}.capability.mailboxAction`);
+export const MailboxAction = Capability.make<MailboxAction>()(`${meta.profile.key}.capability.mailboxAction`);

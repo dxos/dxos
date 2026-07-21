@@ -16,7 +16,7 @@ import * as Routine from './Routine';
  * to sub-agents and folds their results back into the conversation. Consumed by the AgentService
  * LayerSpec; absent by default (a plain conversational agent).
  */
-export const AgentDelegationStrategy = Capability.makeSingleton<DelegationStrategy>(
+export const AgentDelegationStrategy = Capability.makeSingleton<DelegationStrategy>()(
   'org.dxos.plugin.routine.capability.agentDelegationStrategy',
 );
 
@@ -48,4 +48,4 @@ export type Template = {
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };
 
-export const Template = Capability.make<Template>('org.dxos.plugin.routine.capability.template');
+export const Template = Capability.make<Template>()('org.dxos.plugin.routine.capability.template');

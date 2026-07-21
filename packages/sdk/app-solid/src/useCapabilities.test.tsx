@@ -11,7 +11,7 @@ import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
 import { useCapabilities, useCapability } from './useCapabilities';
 
-const TestCapability = Capability.makeSingleton<{ value: string }>('test.capability');
+const TestCapability = Capability.makeSingleton<{ value: string }>()('org.dxos.test.capability');
 
 const mockAtom = Atom.make([{ value: 'hello' }]);
 

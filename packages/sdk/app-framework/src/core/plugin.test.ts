@@ -13,10 +13,10 @@ import * as Capability from './capability';
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
 
-const String = Capability.makeSingleton<{ string: string }>('org.dxos.test.string');
-const Number = Capability.makeSingleton<{ number: number }>('org.dxos.test.number');
-const Total = Capability.makeSingleton<{ total: number }>('org.dxos.test.total');
-const Multi = Capability.make<{ entry: string }>('org.dxos.test.multi');
+const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
+const Number = Capability.makeSingleton<{ number: number }>()('org.dxos.test.number');
+const Total = Capability.makeSingleton<{ total: number }>()('org.dxos.test.total');
+const Multi = Capability.make<{ entry: string }>()('org.dxos.test.multi');
 
 const CountEvent = ActivationEvent.make('org.dxos.test.count');
 
