@@ -61,4 +61,15 @@ projects:
     prs: [12287]
     resume: 'Design doc PR #12287 (draft): packages/core/compute/ai/TESTING.md — dimensions A-H, current-approach gaps, tiered target, prioritized plan + consumer inventory (G1/G2/G3) and removal blast-radius. No implementation started. Next code step: extract the scripted LanguageModel primitive from MemoizedLanguageModel (substrate for D tests + G1 boot-smoke), then delete G1 (assistant-e2e). Quick relief available first: de-gate G2/G3 memoized replay from PR CI.'
 
+  - name: blog-atproto-publishing
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-21
+    summary: Automate the docs/ Astro blog standard.site / AT Protocol publish+announce flow end-to-end; keep @bryanguffey/astro-standard-site.
+    tasks: docs/TASKS.md
+    design: docs/DESIGN.md
+    prs: []
+    resume: 'Project scaffolded from t3code thread 2c0a4e9d (Review blog publishing integration); no code yet. Next: Phase 1 — introduce sidecar docs/src/data/atproto.json + migrate URIs out of frontmatter, then split sync-to-atproto.ts into sync + announce-blog.ts. Package verdict settled (keep astro-standard-site). Open: CI secret names for Bluesky, auto-announce vs manual.'
+
 ended: []
