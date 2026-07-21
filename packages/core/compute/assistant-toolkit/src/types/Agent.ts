@@ -133,11 +133,11 @@ export const makeInitialized = (
     const { skills: propsSkills, contextObjects, ...agentProps } = props;
     const agent = yield* Database.add(
       Obj.make(Agent, {
+        // `did` (if provided) flows through via agentProps. Not auto-minted here: `IdentityDid.random()`
+        // uses uncontrolled `randomBytes`, which would make agent creation non-deterministic and break
+        // memoized-LLM tests. Minting is deferred to the runtime-identity provision (see agent-identity
+        // spec), where it can be deterministic or a real HALO DID.
         ...agentProps,
-        // Mint a stable identity DID once, so content the agent authors is attributable to it.
-        // Synthetic today (random bytes, no keypair); becomes a real HALO DID when agents get
-        // first-class identities.
-        did: props.did ?? IdentityDid.random(),
         instructions: Ref.make(Text.make({ content: props.instructions })),
         artifacts: props.artifacts ?? [],
         subscriptions: props.subscriptions ?? [],
