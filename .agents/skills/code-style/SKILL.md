@@ -3,7 +3,8 @@ name: dxos-code-style
 description: >-
   DXOS TypeScript authoring conventions. Use when writing or refactoring code —
   namespace-export packages, internal module imports, class member ordering,
-  options-bag types, function overloads, the no-cast rule, and test structure.
+  options-bag types, function overloads, the no-cast rule, the comment rule
+  (say why, once), and test structure.
 ---
 
 # DXOS Code Style
@@ -32,6 +33,36 @@ Do NOT cast to silence a build error; fix the type where it originates.
 - Casts accumulate fastest during large codemods — treat each as a deliberate
   decision, never an autopilot stopgap.
 - Use @dxos/util `trim` to create multi-line strings (e.g., prompts).
+
+## Comments — say why, once
+
+A comment earns its place by stating the _why_ the code can't — the constraint,
+the non-obvious consequence, the reason a reader would otherwise "fix" it wrong.
+The code already says _what_ it does; a comment that restates that is noise.
+
+- **One load-bearing clause.** Not a multi-sentence essay. If you're explaining a
+  mechanism, state the constraint in a sentence and stop — resist narrating each
+  step, the alternatives you rejected, or how it used to work. This applies
+  hardest to JSDoc on a new abstraction, where the instinct to over-explain peaks.
+- Never narrate history or the conversation ("previously X, now Y", "as
+  requested", "changed to…"). State the current invariant as if it always was.
+- Delete a comment that a competent reader gets from the code itself. Prefer a
+  clearer name or signature over a comment that compensates for an unclear one.
+- End with a period. JSDoc public functions.
+- **Before every commit/PR**, audit the comments in your diff:
+  `git diff origin/main | grep -nE '^\+\s*(//|\*|/\*)'`. Re-read each added line
+  and cut it to its load-bearing clause — or delete it. A verbose comment is the
+  autopilot default; conciseness is the deliberate pass. Do not defer to review.
+
+```ts
+// ✅ why the code can't be the obvious thing, in one clause:
+// Seeded across an identity change so the view refreshes in place, not to empty.
+
+// ❌ restates the code / multi-sentence narration / history:
+// Set displayItems to initialItems if it has items, otherwise the empty array.
+// We used to reset here but that flashed empty, so now we hold the previous page
+// and only replace it once the new query delivers its own results, which means…
+```
 
 ## Namespace-export packages
 
