@@ -14,7 +14,9 @@ as primary coverage.
 ## Consumer groups (see TESTING.md "Consumer inventory")
 
 - **G1** — pure agent e2e (`@dxos/assistant-e2e`): database, crm-mailbox, web-search, planning,
-  markdown, smoke. Leaf package, redundant C/D signal, ~7.5 MB fixtures. **Delete + boot-smoke.**
+  markdown, smoke. Leaf package, redundant C/D signal, ~7.5 MB fixtures. **Revised: keep, gate
+  behind `runMemoizedTests()` like G2/G3 (see Phase 1 below) — not deleted.** These stay available
+  as opt-in live/eval-style tests and as design inspiration for later tiers.
 - **G2** — per-operation / skill: plugin-markdown create/update, plugin-magazine, plugin-assistant,
   assistant-toolkit run-instructions + database/memory/planning/agent skills, AiSummarizer.
   **Convert to mocked C unit tests before deleting.**
@@ -42,6 +44,22 @@ as primary coverage.
       markdown create/update, magazine, AssistantPlugin ×3 tests, AiSummarizer; G3: functions,
       AgentService, request, xml-response). Left running: `memoization.test.ts` (tests the machinery
       itself), G1 `assistant-e2e` (own harness — deleted in a later step, not de-gated here).
+- [x] **Revised plan (superseded "delete G1" below):** rather than deleting `assistant-e2e`,
+      extended the same `runMemoizedTests()` gate to it — cheaper, reversible, and keeps the
+      suites runnable locally as live/eval tests + design inspiration, per direct guidance. Gated
+      all 6 behavioral files (crm-mailbox, database, markdown, planning, smoke, web-search) with
+      `describeMemoized`. Also swept `ai/testing/memoization/memoization.test.ts`: the 5 tests that
+      call through to a real model (generate a poem, tools, tools with encoding, provider-defined
+      tool, works with tool calsl) are now gated per-test (`itMemoized`); the `dynamic value
+      matching` describe block (pure canonicalization/matching logic, no model call) stays ungated
+      — it was the one legitimate "tests the machinery, not behavior" exception. Removed all 21
+      committed `.conversations.json` fixtures repo-wide (the loader falls back to an empty store
+      when the file is missing, so this only affects tests actually run under the flag — they
+      re-record fresh, uncommitted, when run locally with `ALLOW_LLM_GENERATION=1`). Verified: build
+      green (`assistant-e2e`, `ai`, `plugin-assistant` + deps, 187 tasks), tests green (assistant-e2e
+      13/13 skipped as expected; ai 82 passed/29 skipped incl. memoization.test.ts 9 passed/5
+      skipped; plugin-assistant 127 passed/10 skipped once run under the pinned Node 24.11.1 — a
+      stray system-Node/better-sqlite3 ABI mismatch in this sandbox, not a real regression).
 - [x] Extract a scripted `LanguageModel` primitive from `MemoizedLanguageModel`:
       `ai/src/testing/ScriptedLanguageModel.ts` (`@import-as-namespace`, PascalCase like
       `MemoizedLanguageModel.ts`), re-exported from `@dxos/ai/testing` as `ScriptedLanguageModel`.
@@ -54,8 +72,8 @@ as primary coverage.
       (no tool calls), tool-call→result→continue→stop, multi-iteration (result fed back each turn +
       `toolCalls` count). NOTE: `AiRequest.run` has **no max-iterations cap** in code — not tested
       (would be testing a nonexistent feature). Tool-error / malformed-output branches deferred.
-- [ ] Delete G1 (`@dxos/assistant-e2e`) + fixtures; replace with one scripted-model boot-smoke
-      (full plugin composition boots, trivial 1-tool task completes).
+- [x] ~~Delete G1 (`@dxos/assistant-e2e`) + fixtures; replace with one scripted-model boot-smoke~~
+      **Superseded** — see the revised-plan entry above; G1 is gated in place, not deleted.
 - [ ] Convert G2 → deterministic mocked C unit tests; golden-args fixture convention; delete each
       G2 fixture once its unit test lands.
 - [ ] Context-assembly (E) + schema round-trip (F) tests. E: snapshot the assembled prompt
