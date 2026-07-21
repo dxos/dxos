@@ -10,8 +10,9 @@ import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
-import { useObject, useRegistry } from '@dxos/react-client/echo';
+import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
@@ -85,6 +86,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content>
             <ChatComponent.Content>
               <div className='dx-container relative'>
+                {viewType !== 'summary' && (
+                  <ChatComponent.Minimap classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
+                )}
                 <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
                 {viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>

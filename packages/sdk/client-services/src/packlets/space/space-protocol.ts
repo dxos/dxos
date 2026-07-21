@@ -4,9 +4,9 @@
 
 import { type Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { discoveryKey, subtleCrypto } from '@dxos/crypto';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type FeedWrapper } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import {
   MMSTTopology,
@@ -114,11 +114,11 @@ export class SpaceProtocol {
     this._onAuthFailure = onAuthFailure;
     this.blobSync = new BlobSync({ blobStore });
 
-    // TODO(burdon): Async race condition? Move to start?
-    this._topic = subtleCrypto
-      .digest('SHA-256', topic.asBuffer() as ArrayBufferView<ArrayBuffer>)
-      .then(discoveryKey)
-      .then(PublicKey.from);
+    // Space swarm topic contract (DX-1125): the SpaceId bytes (first 20 bytes of SHA-256(spaceKey)).
+    // Both peers and the edge must derive the identical swarm key; SpaceId is the only derivation
+    // computable on workerd (pure subtle-crypto — the previous hypercore `discoveryKey` needs keyed
+    // BLAKE2b, unavailable there). Edge counterpart: `TraceFeedWriter.getSpaceSwarmKey`.
+    this._topic = createIdFromSpaceKey(topic).then((spaceId) => PublicKey.from(SpaceId.decode(spaceId)));
 
     this._disableP2pReplication = disableP2pReplication ?? false;
   }

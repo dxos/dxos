@@ -654,7 +654,6 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         <div className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
           <List
             ref={listRef}
-            role='none'
             className='scrollbar-none outline-hidden'
             width={width}
             height={maxHeight ?? height}

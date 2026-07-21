@@ -48,12 +48,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
 const THEME_CSS_PATH = path.resolve(__dirname, '../src/main.css');
 const STYLES_DIR = path.resolve(__dirname, '../src/config');
-const TWIGNORE_PATH = path.join(ROOT, '.twignore');
+const TWIGNORE_PATH = path.join(ROOT, '.config', 'twignore');
 
-// Load ignore patterns from `.twignore` in the project root.
+// Load ignore patterns from `.config/twignore` in the project root.
 // Each non-empty, non-comment line is treated as a glob pattern matched against file paths relative to the project root.
 //
-// Example .twignore:
+// Example twignore:
 //   # Ignore test data
 //   packages/**/testing/**
 //   **/*.test.tsx
@@ -68,7 +68,7 @@ function loadIgnorePatterns(): string[] {
     .filter((line) => line.length > 0 && !line.startsWith('#'));
 }
 
-/** Returns true if the relative file path matches any pattern in `.twignore`. */
+/** Returns true if the relative file path matches any pattern in `.config/twignore`. */
 function isIgnored(relPath: string, patterns: string[]): boolean {
   // Normalise to forward slashes for cross-platform glob matching.
   const fwd = relPath.replace(/\\/g, '/');
@@ -579,10 +579,12 @@ async function main(): Promise<void> {
     return;
   }
 
-  // Load .twignore patterns
+  // Load .config/twignore patterns
   const ignorePatterns = loadIgnorePatterns();
   if (ignorePatterns.length > 0) {
-    console.log(`Loaded ${ignorePatterns.length} ignore pattern${ignorePatterns.length > 1 ? 's' : ''} from .twignore`);
+    console.log(
+      `Loaded ${ignorePatterns.length} ignore pattern${ignorePatterns.length > 1 ? 's' : ''} from .config/twignore`,
+    );
   }
 
   // Extract custom CSS classes
@@ -773,7 +775,7 @@ async function main(): Promise<void> {
   const uniqueUnknown = new Set(unknown.map((f) => f.candidate)).size;
   const uniqueMalformed = new Set(malformed.map((f) => f.candidate)).size;
   console.log(hr);
-  const ignoredMsg = ignoredCount > 0 ? `, ${ignoredCount} ignored (.twignore)` : '';
+  const ignoredMsg = ignoredCount > 0 ? `, ${ignoredCount} ignored (.config/twignore)` : '';
   console.log(
     `\nSummary: ${uniqueMalformed} malformed classes (${malformed.length} occurrences), ` +
       `${uniqueUnknown} unknown classes (${unknown.length} occurrences)` +

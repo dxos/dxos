@@ -14,8 +14,7 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { type OperationHandlerSet, Skill } from '@dxos/compute';
-import { FunctionImplementationResolver } from '@dxos/compute-runtime';
+import { OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -69,7 +68,7 @@ export class ChatProcessor {
       Effect.provide(
         Layer.mergeAll(AiService.model(DXN.getName(model)), ToolExecutionServices).pipe(
           Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
+          Layer.provideMerge(OperationHandlerSet.provide(this._functions)),
         ),
       ),
       Effect.asVoid,

@@ -8,10 +8,10 @@ import { useCallback } from 'react';
 import { type Capabilities } from '@dxos/app-framework';
 import { Operation, ServiceResolver } from '@dxos/compute';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
-import { useQuery } from '@dxos/react-client/echo';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 

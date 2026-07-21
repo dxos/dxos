@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';

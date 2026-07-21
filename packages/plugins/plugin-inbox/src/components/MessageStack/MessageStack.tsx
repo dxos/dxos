@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Atom from '@effect-atom/atom/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
+import type { PaginationResult } from '@dxos/echo-react';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';

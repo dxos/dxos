@@ -10,10 +10,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useResolveRef, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 

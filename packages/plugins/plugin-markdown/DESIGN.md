@@ -84,7 +84,8 @@ history: Schema.optional(Schema.Struct({
 
 - `Document.content` remains the canonical root ("main").
 - The branch **tree** is formed by `Branch.parent` references; branch-of-branch works
-  without extra machinery.
+  without extra machinery. (Superseded by the ECHO-core model below, whose flat registry does
+  **not** yet support true nested branch-of-branch — see the "landed" section's Remaining.)
 - Branch Texts are children of the Document (`Obj.setParent`) so they load and delete
   with it.
 - **Selection is local state.** Which branch/checkpoint a user is viewing is per-user UI
@@ -132,14 +133,20 @@ Validated via brainstorm mocks (`.superpowers/brainstorm/`, session 2026-07-15).
    "main @ now". Checkpoint mode = read-only banner with Restore / Branch-from-here /
    close; branch mode = editable banner with Merge / Compare / close. The editor toolbar
    gains a branch-switcher menu.
-4. **Diff view** — all three variants, selected by a new plugin setting
-   `diffView: 'inline' | 'sideBySide' | 'gutter'` (default `inline`):
+4. **Diff view** — variants selected by a plugin setting
+   `diffView: 'inline' | 'sideBySide' | 'gutter' | 'suggest'` (default `inline`):
    - `inline` — unified suggestion-style decorations (green insert, red strikethrough
      delete) over the branch text.
    - `sideBySide` — `@codemirror/merge` MergeView (new catalog dependency).
    - `gutter` — colored change bars with popovers showing base text.
-     All variants consume the shared diff-span format. The same view doubles as the
-     merge-review step (banner with Merge action).
+   - `suggest` — the editor binds to the **parent** and overlays the branch's changes as
+     Google-Docs-style suggestions with inline per-change Accept/Reject controls
+     (`suggestChanges` in `@dxos/ui-editor`, `AcceptChange` cherry-pick). Transitional: the N=1
+     precursor to the multi-user model below, slated to fold into the plugin-comments suggestion
+     layer and be removed from `diffView` (see Decisions).
+     All decoration variants consume the shared diff-span format. The compare overlay is
+     reconfigured on a CodeMirror `Compartment` so toggling it does not remount the editor
+     (rebinding automerge / losing selection); binding changes still remount via the editor key.
 
 Every new component ships with a storybook story.
 
@@ -159,21 +166,205 @@ Operations (see `operations` skill) so agents can draft and propose changes:
 - Storybook stories rendered + console-checked for all new components.
 - `moon run plugin-markdown:build` / `:test` / `:lint` + `pnpm format` gates.
 
-## Phase 2: upstreaming
+## Convergence with ECHO-core branching (landed)
 
-See [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md)
-for the staged convergence with PR #11829's ECHO-core branching (true CRDT forks).
+The staged convergence with PR #11829's ECHO-core branching
+([`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md))
+has landed. The content-copy fork described above is superseded; the current model:
 
-Not built now; the phase-1 shapes are chosen to make this a lift, not a migration:
+- **True CRDT forks.** `Branch.create` forks the parent Text as an ECHO-core branch (same object
+  id, shared automerge history) via `db.createBranch`; the `Branch` record is product metadata
+  keyed into the space-root branch registry by `Branch.key`. `mergeBranch` is a conflict-free CRDT
+  merge (`db.mergeBranch`) — no marker conflicts between core branches.
+- **Per-surface bindings.** `db.branch(obj, name)` returns a caller-owned writable binding, so an
+  agent (or a second plank) edits a branch while the user stays on main; the editor and the
+  branch-scoped `Update`/`AcceptChange` operations write through it.
+- **Checkpoints** view via `setTimeTravel` pinning (not snapshot-swap); a checkpoint taken on a
+  branch carries `Version.branch` (its heads live in the branch doc) and resolves against it.
+- **Generic history companion.** The git-graph companion lives in plugin-space, gated per-type by
+  `SpaceCapabilities.HistoryProvider`; markdown contributes the provider. Each lane ends in a
+  synthetic tip node — `Now` on main, `Tip` on each active branch — that reselects the editable
+  present of that lane; selecting a branch checkpoint pins the branch-bound Text and closing the
+  banner returns to the branch tip (not main).
+- **Review workflow.** Branch-aware comments (`AnchoredTo.branch`, scoped to the review branch) +
+  per-hunk `AcceptChange` cherry-pick; the editable unified merge overlay backs the sideBySide
+  compare. Instant CRDT merge is the default.
 
-- DONE: `Version`/`Branch` and the model now live in `@dxos/versioning`. Remaining: generalize
-  record refs over `Ref(Obj.Any)` targets so non-Text objects (sketches, sheets) can be versioned.
-- True CRDT forks: core ECHO API to fork a leaf doc with shared history (object-id
-  rewrite or fragment surgery) enabling `A.merge`-quality merge-back; replaces the
-  textual 3-way merge behind the same `mergeBranch` signature.
-- Alignment with subduction fragments (`FragmentMeta.checkpoints`) for history
-  compaction; branch-level access control (draft visible only to its author).
-- Generic history companion usable by any plugin.
+`merge3` and the conflict-marker editor are retained for **external/imported** content (and any
+legacy content-copy `Branch` record — `key` unset, `content` set — which stays mergeable via
+`merge3` until it drains); they are no longer the branch-merge path.
+
+Remaining: generalize record refs over `Ref(Obj.Any)` so non-Text objects (sketches, sheets) can be
+versioned; branch-level access control (draft visible only to its author); alignment with subduction
+fragments (`FragmentMeta.checkpoints`) for history compaction. **True nested branch-of-branch** (a
+branch forked off another branch's tip, kept live, merged child→parent→main) is not yet supported:
+the core registry (`DatabaseDirectory.branches`) is flat, keyed by the root object id, and forks
+always derive from the root doc, so forking at a sub-branch's frontier hits an unreachable frontier.
+Chained fork→merge→fork→merge sequences work today (`ChainedBranches` story); true nesting needs a
+nested/parent-aware registry key.
+
+## Multi-user suggestions (Google-Docs model) — planned
+
+Today's review is **one draft, one reviewer**: a single branch (agent- or user-authored) is
+diffed against main and its hunks accepted/rejected via `suggestChanges` + `AcceptChange`. The
+next step generalizes this to a **multi-user suggestion mode** modelled on Google Docs
+"Suggesting".
+
+### Target behaviour (Google Docs)
+
+- Editing in _suggesting_ mode records each change as an attributed **suggestion** instead of
+  mutating the document; the base document is the "accepted" state.
+- **Every** collaborator's suggestions are visible at once, inline, attributed per author
+  (insertions in the author's colour, deletions struck through).
+- Each suggestion has a **margin card** (comment-style) showing author, the proposed change, and
+  **Accept / Reject** — and **any** editor may accept or reject **any** author's suggestion, not
+  only their own. Accept applies it to the document; Reject drops it.
+- Suggestions are anchored to text and survive concurrent edits; overlapping suggestions from
+  different authors coexist.
+
+### Mapping onto the branch model
+
+The per-user suggestion buffer is naturally a **per-user branch** off main, so the existing
+ECHO-core branch/registry/merge machinery carries most of the weight:
+
+- **One suggestion branch per user per document.** Auto-created lazily on the first suggested
+  edit and keyed by author identity (`Branch.creator` = identity DID), distinct from explicit
+  named "draft" branches. Add a `Branch.kind: 'suggestion' | 'draft'` discriminator (suggestion
+  branches are unnamed — labelled by author — and **space-visible** by default, unlike private
+  drafts). The flat root-keyed registry already allows many branches per object, so N users → N
+  sibling branches with no new registry work.
+- **Aggregated overlay.** The editor binds to **main** and overlays the union of every active
+  suggestion branch's diff against main: `diffHunks(main, branchContent)` per branch, each hunk an
+  independently-acceptable suggestion tagged with its branch's author. This generalizes the
+  single-branch `suggestChanges` overlay (see `diffView: 'suggest'`) to N branches with per-hunk
+  attribution (author colour + name). The new primitive is an **overlay compositor** that renders
+  several base-aligned author-diffs together and interleaves overlapping hunks.
+- **Accept / reject anyone's.** Accept a hunk = cherry-pick it from _that author's_ branch into
+  main (`AcceptChange`, `subject = main`, `branch = authorBranchKey`); Reject = splice the base back
+  into the author's branch at that hunk. Both are single edits that make the hunk vanish from the
+  re-diff, both are open to any writer (no author restriction), and both are Operations with
+  registered `UndoMapping` inverses so they undo cleanly. See decision 4.
+- **Comment-style bubbles.** Each suggestion renders as an **anchored card** (author, the change,
+  Accept/Reject, optional reply thread) in the margin/companion, reusing the comment anchoring +
+  thread UI rather than a parallel one.
+
+### Move the review layer to plugin-comments
+
+Suggestions and comments are the same shape — **anchored, attributed annotations over text with a
+margin card** — so the review surface belongs with comments, not markdown:
+
+- **plugin-comments already owns** `Cursor`-based anchoring (`AnchoredTo`), `Thread`/`Message`
+  cards, author attribution, editor decorations, and the `CommentsArticle` companion; it is already
+  branch-aware (`CommentOperation … branch` / `AnchoredTo.branch`). A suggestion is a specialized
+  anchored annotation whose card carries a diff + Accept/Reject instead of a message body.
+- **Move** the review orchestration there: the aggregated overlay wiring, the suggestion cards, and
+  the accept/reject actions. The diff/merge **primitives stay put** — `diffHunks` /
+  `versionDiff` / `suggestChanges` / `cherryPickHunk` in `@dxos/ui-editor`, branch/merge in
+  `@dxos/versioning`. plugin-comments composes them into a "suggestions" layer over any text
+  object, keyed by the space branch registry.
+- **plugin-markdown** keeps only the document-specific glue (contributing the extension provider +
+  `diffView` setting), matching how the history companion already lives in plugin-space gated per
+  type by `SpaceCapabilities.HistoryProvider`. This makes suggestions reusable for any text-bearing
+  object, not just markdown.
+
+### Decisions (resolved 2026-07-19)
+
+1. **Overlay compositor — stack + re-diff.** Overlapping suggestions from different authors render
+   as independent stacked cards (not a merged conflict block). Accepting one cherry-picks it into
+   main and re-diffs every branch, so the others re-express against the new main (may shrink or
+   vanish). Colour per author from the identity/awareness palette (matches their cursor colour);
+   hunks ordered by main offset then author, with same-offset inserts/deletes stacked in a
+   deterministic author order.
+2. **Lifecycle — lazy create, auto-archive when empty.** A user's suggestion branch is created on
+   their first suggested edit and auto-archived (`status='archived'`, Text retained) as soon as its
+   diff vs main is empty (every hunk accepted or rejected). A cheap re-diff after each accept/reject
+   drives the emptiness check; a later edit re-forks a fresh branch.
+3. **Access control — decoupled.** Suggestion branches are space-visible/writable by kind
+   (`Branch.kind='suggestion'`); the feature ships **without** branch-level ACL. Private drafts
+   remain the separate ACL follow-up (see Remaining).
+4. **Accept / reject — durable + undoable.** Accept splices the author's hunk into main; Reject
+   splices the base back into the author's branch. Both are single edits that make the hunk vanish
+   from the re-diff (no rejected-marker or stable-hunk-id machinery). Both are Operations
+   (`AcceptChange`, new `RejectChange`) that register `UndoMapping` inverses
+   (`app-framework/.../plugin-process-manager/history`), so the standard undo reverses them — the
+   suggested text is recoverable (recorded by the op / present in the branch's automerge history),
+   so durable ≠ lost.
+5. **Card granularity — grouped, adjustable.** An author's hunks are coalesced into cards by a
+   configurable `groupHunks(hunks, policy)` — defaults: coalesce across short unchanged gaps
+   (word-closeness), do not cross paragraph/block boundaries. A card offers accept/reject-all with
+   optional per-hunk controls. Attribution is `Branch.creator`, resolved to name/avatar via the same
+   `Actor`/`Person` mechanism comment threads use. Co-authoring a single suggestion is out of scope
+   (overlapping edits become separate stacked suggestions per decision 1).
+6. **`suggest` collapses into the multi-user layer.** The single-user `suggest` overlay is the N=1
+   case of the compositor; it moves into the plugin-comments suggestion layer as one code path, and
+   `diffView` reverts to the three branch-vs-parent compare variants
+   (`inline`/`sideBySide`/`gutter`).
+
+### Implementation plan
+
+Each phase is independently shippable and leaves the tree green. File paths are the intended homes;
+"→ test/story" names the coverage each step must add.
+
+#### Phase 1 — durable, undoable Accept/Reject (no new UI)
+
+Foundation: make the existing single-branch accept flow durable-symmetric and undoable.
+
+- **`RejectChange` operation.** Add the definition next to `AcceptChange` in
+  `packages/sdk/app-toolkit/src/operations/CollaborationOperation.ts` — same input shape
+  `{ subject, anchor, branch }`. Handler `packages/plugins/plugin-markdown/src/operations/reject-change.ts`
+  (mirror `accept-change.ts`): resolve the subject's content, `getRangeFromCursor(anchor)`, read the
+  compare `branch`'s text (`getObjectOnBranch`), and `cherryPickHunk(branchContent, base, range)` to
+  splice the **base** back into the **branch** at that hunk (revert). Register in
+  `operations/index.ts` (`MarkdownOperationHandlerSet`). → `reject-change.test.ts`.
+- **Undo mappings.** Register `AppCapabilities.UndoMapping` for both ops (mirror plugin-comments'
+  registration in `capabilities/`): each `UndoMapping` supplies an `inverse` op + `deriveContext`
+  that reconstructs the inverse input from the forward input/output (the op returns the replaced
+  text so the inverse can restore it). Accept's inverse re-splices the original into main; Reject's
+  inverse re-applies the suggested text. → extend `versioning.test.ts` round-trip with accept→undo,
+  reject→undo.
+
+#### Phase 2 — per-user suggestion branches (`Branch.kind` + lifecycle)
+
+- **Schema.** Add `kind: Schema.optional(Schema.Literal('suggestion', 'draft'))` to `Branch`
+  (`packages/sdk/versioning/src/internal/types.ts`); existing/explicit branches read as `draft`.
+- **Helpers** in `@dxos/versioning` `Branch.ts`: `suggestionBranch(doc, creator)` — find-or-create
+  the caller's `kind:'suggestion'` branch keyed by `creator` (identity DID), idempotent;
+  `archiveIfEmpty(doc, branch)` — re-diff the branch vs its parent-at-anchor and `discard` (archive)
+  when zero hunks. `Branch.label` resolves a suggestion branch to its author (DID → `Person`).
+- **Wiring.** Lazy-create on the first suggested edit; call `archiveIfEmpty` after each accept/reject
+  (Phase 1). → `branch.test.ts`: find-or-create idempotency, archive-when-empty.
+
+#### Phase 3 — multi-source overlay compositor + grouping (`@dxos/ui-editor/review`)
+
+- **`suggestions({ base, sources })` extension** generalizing `suggestChanges`: `sources:
+Array<{ author, colour, content }>`. Per source compute `diffHunks(base, content)`, tag each hunk
+  with author/colour, and compose one decoration set — overlapping hunks stack deterministically
+  (offset, then author). `suggestChanges` becomes the `sources.length === 1` wrapper.
+- **`groupHunks(hunks, policy)`** pure fn (`review/diff.ts`): coalesce an author's adjacent hunks;
+  `policy` = `{ maxGap, respectBlockBoundaries }` with defaults. → `diff.test.ts` (grouping cases).
+- **Author colour** from the editor's collaboration awareness palette
+  (`ui-editor/src/extensions/collab/awareness`) so a suggestion matches the author's cursor colour.
+- → `Suggestions.stories.tsx` (react-ui-editor): 2–3 authors incl. an overlap; accept re-diffs.
+
+#### Phase 4 — comment-style cards; move the review layer to plugin-comments
+
+- **Suggestions review layer in plugin-comments.** A companion/overlay that, for a document + its
+  `kind:'suggestion'` branches, mounts the `suggestions` overlay (Phase 3) and renders one **anchored
+  card per group** (author, before/after, Accept/Reject → the Phase-1 ops with the author's branch
+  key), reusing `AnchoredTo` anchoring + the `Thread`/`Message` card UI and the `CommentsArticle`
+  companion. Cards carry an optional reply thread.
+- **Collapse `suggest`.** Remove `'suggest'` from `Markdown.Settings.DiffViewMode`
+  (`types/Settings.ts`) and the `suggestActive`/parent-binding branch + its compartment handling in
+  `MarkdownArticle`; `diffView` reverts to `inline | sideBySide | gutter`. plugin-markdown keeps only
+  the extension-provider + settings contribution.
+- **Deps.** plugin-comments → `@dxos/ui-editor` (suggestions) + `@dxos/versioning` (branch/merge) —
+  both are lower layers, no cycle. → plugin-comments multi-author suggestions story + accept/reject.
+
+#### Phase 5 — branch-level ACL (separate track)
+
+Out of scope here; suggestion branches stay space-visible until the echo-core branch ACL lands
+(see `@dxos/echo-client` VERSIONING.md). Then: model private drafts as author-only, and re-express
+Reject (a non-author writing the author's branch) as a permitted op under that ACL.
 
 ## Risks / notes
 
@@ -184,3 +375,27 @@ Not built now; the phase-1 shapes are chosen to make this a lift, not a migratio
   same limit.
 - Restore/merge are plain edits, so they interleave safely with concurrent collaborator
   edits under normal CRDT semantics.
+
+## Status
+
+Current risk in the product/UI layer (plugin-markdown, plugin-space, plugin-comments, ui-editor).
+Echo-core-layer risk is tracked separately in
+[`@dxos/echo-client` VERSIONING.md § Status](../../core/echo/echo-client/docs/VERSIONING.md#status).
+
+- **Shared `Timeline` component change.** The `currentBranch`-effect guard (keep the highlight on an
+  explicitly selected commit) also affects plugin-assistant's `TracePanel`. Reasoned safe — it only
+  skips a redundant jump — and the Timeline's own stories pass, but `TracePanel` was not re-verified
+  end to end.
+- **Nested branch-of-branch is guarded, not solved.** "New branch" is disabled on a branch / branch
+  revision and the checkpoint banner's "Branch from" is hidden for branch revisions, so a fork can
+  never silently derive from main; true sub-branching is unavailable (see the ECHO-core
+  [nested-branches design](../../core/echo/echo-client/docs/VERSIONING.md#nested-branches-planned)).
+- **Merged-branch revision viewing** reads read-only against the root document after merge, relying
+  on the echo-core head-reachability guarantee; the UI never binds the deleted branch.
+- **Memoized LLM fixtures** regenerated for this change (assistant-toolkit, assistant-e2e,
+  crm-mailbox) are brittle and a plausible CI-failure source.
+- **Verification.** Only affected-package build/lint/tests were run locally; the full CI "Check" was
+  still pending at authoring time.
+- **`Branch` record type** does not yet enforce the core/legacy invariant (exactly one of
+  `key`/`content`); only the runtime `Branch.isCore` guard distinguishes them, pending the stage-4
+  legacy drain.

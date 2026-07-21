@@ -3,3 +3,4 @@
 //
 
 export * from './ChatThread';
+export type { MessageRange } from './sync';

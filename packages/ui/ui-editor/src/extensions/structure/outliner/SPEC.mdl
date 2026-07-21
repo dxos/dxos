@@ -1,0 +1,305 @@
+---
+id: org.dxos.ui-editor.outliner
+name: Outliner
+version: 0.1.0
+---
+
+The outliner is a CodeMirror extension (`outliner()`) that turns a plain markdown
+task/bullet list into a structured, hierarchical outline editor. The document is
+always valid markdown — nesting is leading-whitespace indentation, items are
+`- [ ] ` tasks or `- ` bullets — so the same text round-trips through any markdown
+tool and syncs as ordinary text.
+
+It is built **on top of `../blocks`**, which owns whole-block selection, the gutter
+drag grip, the selection highlight, and the clipboard. The outliner contributes only
+what is hierarchy/markdown-specific: tree parsing, edit constraints, structural
+commands, the drag re-indent rule, and the item menu. See `DESIGN.md` for the
+rebuild rationale and the drag-reindent derivation; this spec is the normative
+behavior.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term     | URI                       |
+| -------- | ------------------------- |
+| `module` | `org.dxos.mdl.module@1.0` |
+| `feat`   | `org.dxos.mdl.feat@1.0`   |
+| `test`   | `org.dxos.mdl.test@1.0`   |
+
+## Modules
+
+`outliner()` composes these modules (source files under `src/extensions/structure/outliner/`);
+selection, drag, highlight, and clipboard come from `../blocks`.
+
+```mdl
+module tree
+  desc: |
+    Parses the markdown list into an item Tree, recomputed as a facet on doc change. Items expose
+    lineRange (own lines), contentRange (text after the marker), level, type, and child/sibling links.
+  api:
+    Item: interface                         # { type: 'task'|'bullet'; level; lineRange; contentRange; children; ... }.
+    Tree: interface                         # find(pos) | traverse(item?, cb) | prev/next | siblings | lastDescendant.
+    treeFacet: Facet<Tree>                  # the current parse, read by every other module.
+    getRange: (tree, item) => [from, to]    # the item's whole subtree span (item + descendants).
+    outlinerTree: () => Extension           # installs the parser + facet.
+```
+
+```mdl
+module editor
+  desc: |
+    A transactionFilter constraining edits to a valid outline: snaps the caret out of the marker into
+    the content range, allows whole-line deletes, and guards marker/continuation edits. Seeds an empty
+    document with a first item.
+  api:
+    editor: () => Extension
+```
+
+```mdl
+module commands
+  desc: |
+    Keymap + exported structural commands. Indent/outdent and move operate on the whole subtree;
+    delete/toggle operate on the action scope (see feat F-6).
+  api:
+    indentItemMore / indentItemLess: Command   # Tab / Shift-Tab — re-indent the caret item + descendants.
+    moveItemUp / moveItemDown: Command         # swap the item (with its subtree) past a sibling.
+    deleteItem: Command                        # delete the action scope's subtree(s); clears selection.
+    toggleTask: Command                        # toggle the action scope between task and bullet.
+    getActionScope: (state) => Item[]          # the block selection (subtrees), else the caret item.
+    commands: () => Extension                  # the outliner keymap.
+```
+
+```mdl
+module dnd
+  desc: |
+    Adapts `../blocks` drag/selection to the outline: per-item grips, subtree extent, subtree move with
+    re-indent, and the drop-level rule. Also the selection commands over blockSelectionField.
+  api:
+    getBlocks: (state) => Block[]              # per-item own-lines (non-overlapping) for grips/ordering.
+    getExtent: (state, block) => Block         # the block's whole subtree (selection/collapse/preview).
+    moveBlocks: (view, sources, dropIndex, indent?) => void   # subtree move + re-indent to indent.
+    replaceBlocks: (view, indices, text|null) => void         # clipboard cut/paste over item lines.
+    getDropIndent: (view, sources, dropIndex, pointerY) => { indent, offset } | null  # feat F-5 rule.
+    selectAllItems / selectNoneItems / selectUp / selectDown: Command  # over blockSelectionField.
+    outlinerDnd: () => Extension
+```
+
+```mdl
+module menu
+  desc: |
+    A floating per-item trigger (⋮) pinned in the right margin, hidden while dragging. Activating it
+    opens the host popover; its actions run over the action scope (feat F-6).
+  api:
+    menu: (options?) => Extension
+```
+
+## Features
+
+```mdl
+feat F-1: Document model
+
+  req F-1.1:
+    when: text is a markdown list of `- [ ] ` tasks and `- ` bullets, nested by 2-space indentation
+    then: it parses to a Tree of items, each with a level, type, own line range, and subtree
+
+  req F-1.2:
+    when: the document changes
+    then: the Tree is recomputed and exposed via treeFacet; the document stays valid markdown text
+
+  req F-1.3:
+    when: the document is empty
+    then: a first item (`- [ ] `) is seeded and the caret placed in its content
+```
+
+```mdl
+feat F-2: Editing constraints
+
+  req F-2.1:
+    when: the caret is moved into an item's marker (before its content start)
+    then: it snaps to a valid position — content start when moving down/into, content end when moving
+          up, the previous line end when moving left across the marker
+
+  req F-2.2:
+    when: a whole item line is deleted
+    then: the edit is allowed; marker-internal edits that would break the item are constrained
+
+  req F-2.3:
+    when: task-marker atomicity is required (backspace removing a whole marker, continuation indent)
+    then: it is enforced by the markdown keymap that shapes the change, not by raw edits
+```
+
+```mdl
+feat F-3: Selection (single model, subtree unit)
+
+  req F-3.1:
+    when: an item is selected via grip click / shift-click / keyboard
+    then: the sole selection state is blockSelectionField (anchors); there is no second model
+
+  req F-3.2:
+    when: an item is selected or dragged
+    then: its visual/operational extent is its whole subtree (getExtent = getRange), so a parent
+          covers its descendants
+
+  req F-3.3:
+    when: the caret sits in an item and nothing is selected
+    then: a subtle current-item border marks that item's subtree, distinct from the selection accent
+```
+
+```mdl
+feat F-4: Structural commands
+
+  req F-4.1:
+    when: Tab / Shift-Tab is pressed on an item
+    then: the item AND all its descendants re-indent together (the subtree moves with its parent); Tab
+          is a no-op with no shallower-or-equal previous item to nest under
+
+  req F-4.2:
+    when: an item is moved up/down
+    then: it swaps with the adjacent sibling as whole subtrees
+
+  req F-4.3:
+    when: toggleTask runs
+    then: every item in the action scope flips uniformly between task and bullet, preserving indent
+```
+
+```mdl
+feat F-5: Drag and drop re-indent
+
+  req F-5.1:
+    when: an item is dragged
+    then: its whole subtree lifts (collapsed out) and a floating preview follows the pointer; the
+          static grip is hidden and the preview carries its own grip; the menu is hidden
+
+  req F-5.2:
+    when: the pointer hovers a drop slot (before target T, with A the item above the slot)
+    then: the target level defaults to the dragged item's own level, clamped to
+          [sibling-of-T, child-of-A] — it stays in its branch (i)
+
+  req F-5.3:
+    when: the slot is a branch boundary (T shallower than the default) AND the pointer is over T's row
+    then: the level drops to a sibling of T — it outdents to leave the branch (ii)
+
+  req F-5.4:
+    when: the target level differs from the source level
+    then: the preview shifts horizontally to preview it, and on drop the subtree re-roots to exactly
+          that level (preview and result agree)
+```
+
+```mdl
+feat F-6: Menu / action scope
+
+  req F-6.1:
+    when: a menu command runs with a block selection
+    then: it acts over every selected item's whole subtree (the action scope)
+
+  req F-6.2:
+    when: a menu command runs with no selection
+    then: it acts over the caret item's subtree
+
+  req F-6.3:
+    when: delete runs
+    then: each scope subtree (with its trailing separator) is removed, overlapping ranges merged, and
+          the selection cleared — generalizing to any scope-based command
+```
+
+## Acceptance
+
+```mdl
+test T-indent-subtree
+  given: |
+    - [ ] A
+      - [ ] B
+    - [ ] C
+      - [ ] D
+  when: Tab on "C"
+  then: |
+    - [ ] A
+      - [ ] B
+      - [ ] C
+        - [ ] D
+  tags: [F-4.1]
+```
+
+```mdl
+test T-drop-stays-in-branch
+  given: |
+    - A
+      - B
+      - C
+    - D
+  when: B is dragged into the slot before D with the pointer above D's row
+  then: |
+    - A
+      - C
+      - B
+    - D
+  tags: [F-5.2]
+```
+
+```mdl
+test T-drop-outdents-over-target
+  given: |
+    - A
+      - B
+      - C
+    - D
+  when: B is dragged into the slot before D with the pointer over D's row
+  then: |
+    - A
+      - C
+    - B
+    - D
+  tags: [F-5.3]
+```
+
+```mdl
+test T-delete-subtree
+  given: |
+    - [ ] 1
+    - [ ] 2
+      - [ ] 2.1
+      - [ ] 2.2
+    - [ ] 3
+  when: deleteItem with "2" selected (or the caret in it)
+  then: |
+    - [ ] 1
+    - [ ] 3
+  tags: [F-6.1, F-6.3]
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext module
+  uri: org.dxos.mdl.module@1.0
+  desc: |
+    A source module of the outliner extension (a file under src/extensions/structure/outliner/). The
+    file path is inferred from the block name (`commands` -> `commands.ts`). Members are the module's
+    public exports.
+  fields:
+    desc?: Prose
+    api: ApiMap         # public exports (name: TypeExpr # comment)
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
