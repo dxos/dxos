@@ -54,4 +54,74 @@ describe('SystemTags', () => {
     await toggleStar();
     expect(registry.get(starred(message.id))).toBe(false);
   });
+
+  test('setTagged applies an explicit state and is idempotent', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Feed.Feed, Tag.Tag, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
+    });
+    const mailbox = db.add(Mailbox.make());
+    await db.flush();
+    const feed = mailbox.feed!.target!;
+
+    const { messages } = new Builder().createMessages(1).build();
+    const [message] = messages;
+    await EffectEx.runAndForwardErrors(Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db))));
+
+    const setStarred = (value: boolean) =>
+      EffectEx.runAndForwardErrors(
+        SystemTags.setTagged(mailbox, message, 'starred', value).pipe(Effect.provide(Database.layer(db))),
+      );
+
+    const starredTag = await SystemTags.findOrCreateSystemTag(db, 'starred');
+    const starredUri = Obj.getURI(starredTag).toString();
+
+    await setStarred(true);
+    expect(SystemTags.getTaggedIds(mailbox, starredUri).has(message.id)).toBe(true);
+    // Setting the same state again must not toggle it back off.
+    await setStarred(true);
+    expect(SystemTags.getTaggedIds(mailbox, starredUri).has(message.id)).toBe(true);
+
+    await setStarred(false);
+    expect(SystemTags.getTaggedIds(mailbox, starredUri).has(message.id)).toBe(false);
+    await setStarred(false);
+    expect(SystemTags.getTaggedIds(mailbox, starredUri).has(message.id)).toBe(false);
+  });
+
+  test('a whole thread can be starred/unstarred as a unit, even when only one member is tagged', async ({
+    expect,
+  }) => {
+    const { db } = await builder.createDatabase({
+      types: [Feed.Feed, Tag.Tag, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
+    });
+    const mailbox = db.add(Mailbox.make());
+    await db.flush();
+    const feed = mailbox.feed!.target!;
+
+    const { messages: thread } = new Builder().createMessages(3, { threadId: 'thread-1' }).build();
+    await EffectEx.runAndForwardErrors(Feed.append(feed, thread).pipe(Effect.provide(Database.layer(db))));
+
+    const starredTag = await SystemTags.findOrCreateSystemTag(db, 'starred');
+    const starredUri = Obj.getURI(starredTag).toString();
+
+    // Only the oldest message is starred — mirrors a conversation tile whose displayed star must
+    // reflect ANY member, not just the one it happens to anchor on (the latest message).
+    const oldest = thread.reduce((a, b) => (a.created < b.created ? a : b));
+    await EffectEx.runAndForwardErrors(
+      SystemTags.setTagged(mailbox, oldest, 'starred', true).pipe(Effect.provide(Database.layer(db))),
+    );
+    const anyStarredBefore = thread.some((message) => SystemTags.getTaggedIds(mailbox, starredUri).has(message.id));
+    expect(anyStarredBefore).toBe(true);
+
+    // Toggling the thread (this mirrors `MailboxArticle`'s `star-conversation` handler) must apply the
+    // SAME target state to every member, not just the one that happened to be tagged.
+    const target = !anyStarredBefore;
+    await EffectEx.runAndForwardErrors(
+      Effect.forEach(thread, (message) => SystemTags.setTagged(mailbox, message, 'starred', target), {
+        discard: true,
+      }).pipe(Effect.provide(Database.layer(db))),
+    );
+    for (const message of thread) {
+      expect(SystemTags.getTaggedIds(mailbox, starredUri).has(message.id)).toBe(target);
+    }
+  });
 });

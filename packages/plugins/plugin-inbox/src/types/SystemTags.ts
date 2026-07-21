@@ -83,20 +83,13 @@ export const tagAtom = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string 
   return (memberId: EntityId) => TagIndex.atom(tagIndex, memberId, tagUri);
 };
 
-/**
- * Toggles a canonical system tag on a member object, provisioning the container's tag index on first
- * use. Depends on `Database.Service` for `db` — run within a layer that provides it, or
- * `.pipe(Effect.provide(Database.layer(db)))` from a plain `Database.Database`.
- */
-export const toggleTag = Effect.fn('SystemTags.toggleTag')(function* (
+/** Provisions the container's tag index on first use and resolves the tag's uri. Shared by the writers below. */
+const resolveTagIndexAndUri = Effect.fn('SystemTags.resolveTagIndexAndUri')(function* (
   container: Obj.Any & TagContainer,
-  // Member is tagged via the container's index (keyed by id), so an immutable snapshot works too.
-  object: Obj.Any | Obj.Snapshot<Obj.Any>,
   tagId: SystemTagId,
 ) {
   const { db } = yield* Database.Service;
 
-  // Lazily provision the tag index for containers created before the `tags` field existed.
   let index = container.tags?.target;
   if (!index) {
     index = db.add(TagIndex.make());
@@ -107,8 +100,44 @@ export const toggleTag = Effect.fn('SystemTags.toggleTag')(function* (
   }
 
   const tag = yield* Effect.promise(() => findOrCreateSystemTag(db, tagId));
-  const uri = Obj.getURI(tag).toString();
-  if (Tagging.get(object, { index }).includes(uri)) {
+  return { index, uri: Obj.getURI(tag).toString() };
+});
+
+/**
+ * Sets a canonical system tag on a member object to an explicit boolean state (no-op if already
+ * there), provisioning the container's tag index on first use. Depends on `Database.Service` for
+ * `db` — run within a layer that provides it, or `.pipe(Effect.provide(Database.layer(db)))` from a
+ * plain `Database.Database`.
+ */
+export const setTagged = Effect.fn('SystemTags.setTagged')(function* (
+  container: Obj.Any & TagContainer,
+  // Member is tagged via the container's index (keyed by id), so an immutable snapshot works too.
+  object: Obj.Any | Obj.Snapshot<Obj.Any>,
+  tagId: SystemTagId,
+  value: boolean,
+) {
+  const { index, uri } = yield* resolveTagIndexAndUri(container, tagId);
+  const has = Tagging.get(object, { index }).includes(uri);
+  if (value && !has) {
+    Tagging.set(object, uri, { index });
+  } else if (!value && has) {
+    Tagging.unset(object, uri, { index });
+  }
+});
+
+/**
+ * Toggles a canonical system tag on a member object, provisioning the container's tag index on first
+ * use. Depends on `Database.Service` for `db` — run within a layer that provides it, or
+ * `.pipe(Effect.provide(Database.layer(db)))` from a plain `Database.Database`.
+ */
+export const toggleTag = Effect.fn('SystemTags.toggleTag')(function* (
+  container: Obj.Any & TagContainer,
+  object: Obj.Any | Obj.Snapshot<Obj.Any>,
+  tagId: SystemTagId,
+) {
+  const { index, uri } = yield* resolveTagIndexAndUri(container, tagId);
+  const has = Tagging.get(object, { index }).includes(uri);
+  if (has) {
     Tagging.unset(object, uri, { index });
   } else {
     Tagging.set(object, uri, { index });

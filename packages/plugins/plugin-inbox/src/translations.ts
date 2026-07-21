@@ -144,6 +144,7 @@ export const translations = [
         'mailboxes-section.label': 'Mailboxes',
         'all-mail.label': 'All Mail',
         'sent.label': 'Sent',
+        'starred.label': 'Starred',
         'drafts.label': 'Drafts',
         'subscriptions.label': 'Subscriptions',
         'subscriptions.toolbar.title': 'Subscriptions toolbar',

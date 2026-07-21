@@ -34,6 +34,7 @@ import {
   getMailboxesPath,
   getMailboxesSectionId,
   getSentId,
+  getStarredId,
   getSubscriptionsId,
 } from '../paths';
 import { dedupeSupersededDrafts, syncTarget } from '../util';
@@ -219,6 +220,18 @@ export default Capability.makeModule(
                       iconHue: 'rose',
                       filter: '#sent',
                       systemTag: 'sent' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
+                  Node.make({
+                    id: getStarredId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['starred.label', { ns: meta.profile.key }],
+                      icon: 'ph--star--regular',
+                      iconHue: 'rose',
+                      filter: '#starred',
+                      systemTag: 'starred' satisfies SystemTags.SystemTagId,
                     },
                   }),
                   Node.make({

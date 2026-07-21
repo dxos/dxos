@@ -53,7 +53,7 @@ import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
-import { messageMatchesQuery } from '../../util';
+import { dedupeSupersededDrafts, messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
@@ -268,6 +268,37 @@ export const MailboxArticle = ({
           break;
         }
 
+        case 'star-conversation': {
+          // The tile's own `messages` is only the capped preview (see `MAILBOX_THREAD_PREVIEW_COUNT`),
+          // so a real thread's star must resolve every member itself, the same feed+space,
+          // threadId-correlated query the message companion uses — not just what's currently rendered.
+          if (db && scopes) {
+            void Effect.runFork(
+              Effect.gen(function* () {
+                const byThread = yield* Effect.promise(() =>
+                  db
+                    .query(
+                      Query.select(Filter.type(Message.Message, { threadId: action.conversationId })).from(scopes),
+                    )
+                    .run(),
+                );
+                // A singleton conversation's id is the message's own id, not a real `threadId` — falls
+                // back to the one already-loaded message in that case.
+                const thread =
+                  byThread.length > 0
+                    ? dedupeSupersededDrafts(byThread, Obj.getURI(mailbox))
+                    : messages.filter((message) => message.id === action.conversationId);
+                const starredIds = SystemTags.getTaggedIds(mailbox, starredUri);
+                const target = !thread.some((message) => starredIds.has(message.id));
+                yield* Effect.forEach(thread, (message) => SystemTags.setTagged(mailbox, message, 'starred', target), {
+                  discard: true,
+                });
+              }).pipe(Effect.provide(Database.layer(db))),
+            );
+          }
+          break;
+        }
+
         case 'ignore-sender': {
           const message = messages.find((message) => message.id === action.messageId);
           const email = message?.sender?.email;
@@ -324,7 +355,7 @@ export const MailboxArticle = ({
         }
       }
     },
-    [db, id, mailbox, messages, invokePromise, showItem],
+    [db, id, mailbox, messages, invokePromise, showItem, scopes, starredUri],
   );
 
   const handleSaveFilter = useCallback(() => {
