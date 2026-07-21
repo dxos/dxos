@@ -15,11 +15,12 @@ import { BitField, safeAwaitAll } from '@dxos/util';
 import { SignalClient } from '../signal-client';
 import {
   type Message,
-  type PeerInfo,
   type SignalClientMethods,
   type SignalMethods,
   type SignalStatus,
+  type SubscribeMessagesParams,
   type SwarmEvent,
+  type UnsubscribeCallback,
 } from '../signal-methods';
 import { type SignalManager } from './signal-manager';
 import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
@@ -45,8 +46,6 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly swarmEvent = new Event<SwarmEvent>();
 
-  readonly onMessage = new Event<Message>();
-
   constructor(
     private readonly _hosts: Runtime.Services.Signal[],
     private readonly _getMetadata?: () => any,
@@ -61,7 +60,6 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
       // TODO(burdon): Create factory to support different variants.
       const server = new SignalClient(host.server, this._getMetadata);
       server.swarmEvent.on((data) => this.swarmEvent.emit(data));
-      server.onMessage.on((data) => this.onMessage.emit(data));
 
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
@@ -115,13 +113,15 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
     throw new Error('Not implemented');
   }
 
-  async sendMessage(_ctx: Context, { author, recipient, payload }: Message): Promise<void> {
-    log('signal', { recipient });
+  async sendMessage(_ctx: Context, message: Message): Promise<void> {
+    log('signal', { recipient: message.recipient });
     invariant(this._lifecycleState === LifecycleState.OPEN);
+    // KUBE signaling is point-to-point only; tag broadcasts (DX-1125) are supported by edge only.
+    invariant(message.recipient, 'WebsocketSignalManager does not support broadcast messages');
 
     void this._forEachServer(async (server, serverName, index) => {
       void server
-        .sendMessage(_ctx, { author, recipient, payload })
+        .sendMessage(_ctx, message)
         .then(() => this._clearServerFailedFlag(serverName, index))
         .catch((err) => {
           if (err instanceof RateLimitExceededError) {
@@ -164,18 +164,16 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
     }
   }
 
-  async subscribeMessages(peer: PeerInfo): Promise<void> {
-    log('subscribed for message stream', { peer });
+  async subscribeMessages(params: SubscribeMessagesParams): Promise<UnsubscribeCallback> {
+    log('subscribed for message stream', { peer: params.peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    await this._forEachServer(async (server) => server.subscribeMessages(peer));
-  }
-
-  async unsubscribeMessages(peer: PeerInfo): Promise<void> {
-    log('subscribed for message stream', { peer });
-    invariant(this._lifecycleState === LifecycleState.OPEN);
-
-    await this._forEachServer(async (server) => server.unsubscribeMessages(peer));
+    // Subscribe on every server (redundant delivery is deduped downstream by message id); the returned
+    // teardown releases all of them.
+    const unsubscribes = await this._forEachServer((server) => server.subscribeMessages(params));
+    return async () => {
+      await Promise.all(unsubscribes.map((unsubscribe) => unsubscribe()));
+    };
   }
 
   private async _forEachServer<ReturnType>(

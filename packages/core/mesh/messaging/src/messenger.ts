@@ -15,7 +15,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { MessengerMonitor } from './messenger-monitor';
 import { type SignalManager } from './signal-manager';
-import { type Message, type PeerInfo } from './signal-methods';
+import { type Message, type PeerInfo, type UnsubscribeCallback } from './signal-methods';
 import { MESSAGE_TIMEOUT } from './timeouts';
 
 export type OnMessage = (params: Message) => Promise<void>;
@@ -43,6 +43,13 @@ export class Messenger {
 
   // peerId => listeners set
   private readonly _defaultListeners = new Map<string, Set<OnMessage>>();
+
+  /**
+   * peerKey => the shared transport subscription for that peer plus a refcount across the listeners
+   * registered against it. The subscription's callback drives {@link _handleMessage}; it is created
+   * lazily on the first `listen` for a peer and torn down when the last listener unsubscribes.
+   */
+  private readonly _peerSubscriptions = new Map<string, { unsubscribe: UnsubscribeCallback; count: number }>();
 
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(PublicKey.hash);
 
@@ -72,12 +79,6 @@ export class Messenger {
     this._ctx = new Context({
       onError: (err) => log.catch(err),
     });
-    this._ctx.onDispose(
-      this._signalManager.onMessage.on(async (message) => {
-        log('received message', { from: message.author });
-        await this._handleMessage(message);
-      }),
-    );
 
     // Clear the map periodically.
     scheduleTaskInterval(
@@ -97,11 +98,18 @@ export class Messenger {
       return;
     }
     this._closed = true;
+    // NOTE: Transport subscriptions are intentionally NOT torn down here. `close`/`open` model a
+    // transient transport cycle (e.g. going offline/online), across which the logical listeners — and
+    // thus their transport subscriptions — must survive; the swarm does not re-`listen` on reconnect.
+    // Real teardown is owned by each {@link ListeningHandle} (Swarm.destroy → unsubscribe).
     await this._ctx.dispose();
   }
 
-  async sendMessage(ctx: Context, { author, recipient, payload }: Message): Promise<void> {
+  async sendMessage(ctx: Context, message: Message): Promise<void> {
     invariant(!this._closed, 'Closed');
+    const { author, recipient, payload } = message;
+    // Messenger provides reliable point-to-point delivery; broadcasts are not routed here.
+    invariant(recipient, 'Recipient is required');
     const messageContext = this._ctx.derive();
 
     const reliablePayload: ReliablePayload = {
@@ -175,22 +183,23 @@ export class Messenger {
     onMessage: OnMessage;
   }): Promise<ListeningHandle> {
     invariant(!this._closed, 'Closed');
-
-    await this._signalManager.subscribeMessages(peer);
-    let listeners: Set<OnMessage> | undefined;
     invariant(peer.peerKey, 'Peer key is required');
+    const peerKey = peer.peerKey;
 
+    await this._ensurePeerSubscription(peer);
+
+    let listeners: Set<OnMessage> | undefined;
     if (!payloadType) {
-      listeners = this._defaultListeners.get(peer.peerKey);
+      listeners = this._defaultListeners.get(peerKey);
       if (!listeners) {
         listeners = new Set();
-        this._defaultListeners.set(peer.peerKey, listeners);
+        this._defaultListeners.set(peerKey, listeners);
       }
     } else {
-      listeners = this._listeners.get({ peerId: peer.peerKey, payloadType });
+      listeners = this._listeners.get({ peerId: peerKey, payloadType });
       if (!listeners) {
         listeners = new Set();
-        this._listeners.set({ peerId: peer.peerKey, payloadType }, listeners);
+        this._listeners.set({ peerId: peerKey, payloadType }, listeners);
       }
     }
 
@@ -199,8 +208,47 @@ export class Messenger {
     return {
       unsubscribe: async () => {
         listeners!.delete(onMessage);
+        await this._releasePeerSubscription(peerKey);
       },
     };
+  }
+
+  /**
+   * Ensure a shared transport subscription exists for `peer`, creating it on first use and bumping a
+   * refcount otherwise. Its callback drives reliable-message handling for every listener on this peer.
+   */
+  private async _ensurePeerSubscription(peer: PeerInfo): Promise<void> {
+    invariant(peer.peerKey, 'Peer key is required');
+    const existing = this._peerSubscriptions.get(peer.peerKey);
+    if (existing) {
+      existing.count++;
+      return;
+    }
+
+    // Register synchronously so concurrent `listen` calls for the same peer share one subscription.
+    const entry: { unsubscribe: UnsubscribeCallback; count: number } = { unsubscribe: async () => {}, count: 1 };
+    this._peerSubscriptions.set(peer.peerKey, entry);
+    try {
+      entry.unsubscribe = await this._signalManager.subscribeMessages({
+        peer,
+        onMessage: (message) => {
+          log('received message', { from: message.author });
+          void this._handleMessage(message);
+        },
+      });
+    } catch (err) {
+      this._peerSubscriptions.delete(peer.peerKey);
+      throw err;
+    }
+  }
+
+  private async _releasePeerSubscription(peerKey: string): Promise<void> {
+    const entry = this._peerSubscriptions.get(peerKey);
+    if (!entry || --entry.count > 0) {
+      return;
+    }
+    this._peerSubscriptions.delete(peerKey);
+    await entry.unsubscribe();
   }
 
   private async _encodeAndSend(
@@ -238,8 +286,10 @@ export class Messenger {
     }
   }
 
-  private async _handleReliablePayload({ author, recipient, payload }: Message): Promise<void> {
+  private async _handleReliablePayload(message: Message): Promise<void> {
+    const { author, recipient, payload } = message;
     invariant(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
+    invariant(recipient, 'Recipient is required');
     const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
 
     log('handling message', { messageId: reliablePayload.messageId });
@@ -299,9 +349,11 @@ export class Messenger {
   }
 
   private async _callListeners(message: Message): Promise<void> {
+    const { recipient } = message;
+    invariant(recipient?.peerKey, 'Peer key is required');
+    const peerKey = recipient.peerKey;
     {
-      invariant(message.recipient.peerKey, 'Peer key is required');
-      const defaultListenerMap = this._defaultListeners.get(message.recipient.peerKey);
+      const defaultListenerMap = this._defaultListeners.get(peerKey);
       if (defaultListenerMap) {
         for (const listener of defaultListenerMap) {
           await listener(message);
@@ -311,7 +363,7 @@ export class Messenger {
 
     {
       const listenerMap = this._listeners.get({
-        peerId: message.recipient.peerKey,
+        peerId: peerKey,
         payloadType: message.payload.type_url,
       });
       if (listenerMap) {

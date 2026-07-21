@@ -13,14 +13,25 @@ import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 import {
   type Message,
-  type PeerInfo,
   type SignalClientMethods,
   type SignalStatus,
+  type SubscribeMessagesParams,
   type SwarmEvent,
+  type UnsubscribeCallback,
 } from '../signal-methods';
 import { SignalClientMonitor } from './signal-client-monitor';
 import { SignalLocalState } from './signal-local-state';
 import { SignalRPCClient } from './signal-rpc-client';
+
+/**
+ * A single point-to-point message subscription registered on a {@link SignalClient}. KUBE signaling
+ * delivers no broadcasts, so `tags` are inert and only recipient `peerKey` matching applies.
+ */
+type MessageSubscription = {
+  peerKey: string;
+  tags: Set<string>;
+  onMessage: (message: Message) => void;
+};
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5_000;
@@ -62,8 +73,13 @@ export class SignalClient extends Resource implements SignalClientMethods {
 
   readonly statusChanged = new Event<SignalStatus>();
 
-  public readonly onMessage = new Event<Message>();
   public readonly swarmEvent = new Event<SwarmEvent>();
+
+  /**
+   * Active point-to-point message subscriptions. Routing is encapsulated here: each received message
+   * is dispatched to every matching subscription, and each subscription owns its own teardown.
+   */
+  private readonly _subscriptions = new Set<MessageSubscription>();
 
   /**
    * @param _host Signal server websocket URL.
@@ -83,7 +99,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this.localState = new SignalLocalState(
       async (message) => {
         this._monitor.recordMessageReceived(message);
-        this.onMessage.emit(message);
+        this._deliver(message);
       },
       async (event) => this.swarmEvent.emit(event),
     );
@@ -190,27 +206,45 @@ export class SignalClient extends Resource implements SignalClientMethods {
     return this._monitor.recordMessageSending(msg, async () => {
       await this._clientReady.wait();
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
-      invariant(msg.author.peerKey, 'Author key required');
-      invariant(msg.recipient.peerKey, 'Recipient key required');
+      const { author, recipient, payload } = msg;
+      invariant(author.peerKey, 'Author key required');
+      // KUBE signaling is point-to-point only; broadcasts (DX-1125) are edge-only.
+      invariant(recipient?.peerKey, 'Recipient key required');
       await this._client!.sendMessage({
-        author: PublicKey.from(msg.author.peerKey),
-        recipient: PublicKey.from(msg.recipient.peerKey),
-        payload: msg.payload,
+        author: PublicKey.from(author.peerKey),
+        recipient: PublicKey.from(recipient.peerKey),
+        payload,
       });
     });
   }
 
-  async subscribeMessages(peer: PeerInfo): Promise<void> {
+  async subscribeMessages({ peer, tags = [], onMessage }: SubscribeMessagesParams): Promise<UnsubscribeCallback> {
     invariant(peer.peerKey, 'Peer key required');
     log('subscribing to messages', { peer });
+    const subscription: MessageSubscription = { peerKey: peer.peerKey, tags: new Set(tags), onMessage };
+    this._subscriptions.add(subscription);
     this.localState.subscribeMessages(PublicKey.from(peer.peerKey));
     this._reconcileTask?.schedule();
+
+    return async () => {
+      log('unsubscribing from messages', { peer });
+      this._subscriptions.delete(subscription);
+      // Close the receive stream only once no subscription for this peer remains.
+      if (![...this._subscriptions].some((sub) => sub.peerKey === peer.peerKey)) {
+        this.localState.unsubscribeMessages(PublicKey.from(peer.peerKey));
+      }
+    };
   }
 
-  async unsubscribeMessages(peer: PeerInfo): Promise<void> {
-    invariant(peer.peerKey, 'Peer key required');
-    log('unsubscribing from messages', { peer });
-    this.localState.unsubscribeMessages(PublicKey.from(peer.peerKey));
+  /**
+   * Route a received message to matching point-to-point subscriptions.
+   */
+  private _deliver(message: Message): void {
+    for (const subscription of this._subscriptions) {
+      if (message.recipient != null && subscription.peerKey === message.recipient.peerKey) {
+        subscription.onMessage(message);
+      }
+    }
   }
 
   private _scheduleReconcileAfterError(): void {

@@ -1161,9 +1161,6 @@ catalogs:
     fetch-mock:
       specifier: ^11.0.0
       version: 11.1.0
-    find-process:
-      specifier: ^1.4.7
-      version: 1.4.7
     flame-chart-js:
       specifier: ^3.3.0
       version: 3.3.0
@@ -2042,9 +2039,6 @@ importers:
       '@dxos/protobuf-compiler':
         specifier: workspace:*
         version: link:packages/common/protobuf-compiler
-      '@dxos/signal':
-        specifier: workspace:*
-        version: link:packages/core/mesh/signal
       '@dxos/toolbox':
         specifier: workspace:*
         version: link:tools/toolbox
@@ -6979,9 +6973,6 @@ importers:
       '@dxos/keyring':
         specifier: workspace:*
         version: link:../../halo/keyring
-      '@dxos/signal':
-        specifier: workspace:*
-        version: link:../signal
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
@@ -7043,9 +7034,6 @@ importers:
       '@dxos/keyring':
         specifier: workspace:*
         version: link:../../halo/keyring
-      '@dxos/signal':
-        specifier: workspace:*
-        version: link:../signal
       fetch-mock:
         specifier: 'catalog:'
         version: 11.1.0(node-fetch@2.7.0)
@@ -7108,34 +7096,6 @@ importers:
       '@types/ua-parser-js':
         specifier: 'catalog:'
         version: 0.7.39
-
-  packages/core/mesh/signal:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      find-process:
-        specifier: 'catalog:'
-        version: 1.4.7
-      node-fetch:
-        specifier: 'catalog:'
-        version: 2.7.0
-      pkg-up:
-        specifier: 'catalog:'
-        version: 3.1.0
-    devDependencies:
-      '@types/node-fetch':
-        specifier: 'catalog:'
-        version: 2.6.9
 
   packages/core/mesh/teleport:
     dependencies:
@@ -8259,9 +8219,6 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
-      '@dxos/signal':
-        specifier: workspace:*
-        version: link:../../core/mesh/signal
       '@dxos/teleport-extension-replicator':
         specifier: workspace:*
         version: link:../../core/mesh/teleport-extension-replicator
@@ -19187,9 +19144,6 @@ importers:
         specifier: 'catalog:'
         version: 1.3.6
     devDependencies:
-      '@dxos/signal':
-        specifier: workspace:*
-        version: link:../../core/mesh/signal
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils

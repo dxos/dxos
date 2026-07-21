@@ -8,13 +8,12 @@ import { Context } from '@dxos/context';
 import { checkType, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Message, WebsocketSignalManager } from '@dxos/messaging';
+import { type Message, type UnsubscribeCallback, WebsocketSignalManager } from '@dxos/messaging';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type SignalServerRunner } from '@dxos/signal';
 import { ComplexMap } from '@dxos/util';
 
 import { type TraceEvent } from './analysys';
-import { runSignal } from './run-test-signal';
+import { type SignalServerRunner, runSignal } from './run-test-signal';
 
 export class TestBuilder {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
@@ -42,9 +41,12 @@ export class TestBuilder {
     onError?: (err: any) => void,
   ): Promise<void> {
     const server = await runSignal(num, outFolder, signalArguments, onError);
+    // `runSignal` is a stub since the KUBE signal server was removed; nothing to register.
+    if (!server) {
+      return;
+    }
     await server.waitUntilStarted();
     this._servers.set(server.url(), server);
-    return server;
   }
 
   async destroy(): Promise<void> {
@@ -63,6 +65,7 @@ export class TestPeer {
   public peerId: PublicKey;
   public readonly signalServers: Runtime.Services.Signal[];
   private readonly _ctx = new Context();
+  private _messageSubscription?: UnsubscribeCallback;
   constructor({ signals, peerId = PublicKey.random() }: TestAgentProps) {
     this.signalServers = signals;
     this.signalManager = new WebsocketSignalManager(signals);
@@ -101,20 +104,22 @@ export class TestPeer {
       );
     });
 
-    this.signalManager.onMessage.on(this._ctx, (message) => {
-      log.trace(
-        'dxos.test.signal',
-        checkType<TraceEvent>({
-          type: 'RECEIVE_MESSAGE',
-          sender: message.author.toHex(),
-          receiver: message.recipient.toHex(),
-          message: Buffer.from(message.payload.value).toString('hex'),
-        }),
-      );
-    });
-
     await this.signalManager.open();
-    await this.signalManager.subscribeMessages(this.peerId);
+    // Routing/teardown is owned by the subscription (DX-1125); it delivers this peer's messages.
+    this._messageSubscription = await this.signalManager.subscribeMessages({
+      peer: { peerKey: this.peerId.toHex() },
+      onMessage: (message) => {
+        log.trace(
+          'dxos.test.signal',
+          checkType<TraceEvent>({
+            type: 'RECEIVE_MESSAGE',
+            sender: message.author.peerKey,
+            receiver: message.recipient?.peerKey ?? '',
+            message: Buffer.from(message.payload.value).toString('hex'),
+          }),
+        );
+      },
+    });
   }
 
   async destroy(): Promise<void> {
@@ -125,6 +130,7 @@ export class TestPeer {
         peerId: this.peerId.toHex(),
       }),
     );
+    await this._messageSubscription?.();
     await this._ctx.dispose();
     await this.signalManager.close();
   }

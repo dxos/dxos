@@ -138,6 +138,10 @@ export class SwarmNetworkManager {
     this._peerInfo = peerInfo;
   }
 
+  getPeerInfo(): PeerInfo | undefined {
+    return this._peerInfo;
+  }
+
   async open(): Promise<void> {
     log('opening network manager');
     await this._messenger.open();
