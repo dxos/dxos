@@ -5,7 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -55,4 +57,35 @@ export const NonEditable: Story = {
   args: {
     editable: false,
   },
+};
+
+/**
+ * A message carrying a `change` content-block — the reusable tile for a document suggestion (struck
+ * original → proposed text) with Accept/Reject controls, driven by `onAcceptChange`/`onRejectChange`.
+ */
+const ChangeStory = (_args: StoryArgs) => {
+  const message = useMemo(
+    () =>
+      Obj.make(MessageType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user', identityDid: 'did:key:alice', name: 'Alice' },
+        blocks: [{ _tag: 'change', before: 'quick brown fox', after: 'nimble auburn fox' }],
+      }),
+    [],
+  );
+  return (
+    <Thread.Root
+      getMetadata={getStoryMetadata}
+      identityDid='did:key:alice'
+      onAcceptChange={() => {}}
+      onRejectChange={() => {}}
+    >
+      <Message.Tile message={message} />
+    </Thread.Root>
+  );
+};
+
+export const WithChange: Story = {
+  args: { editable: false },
+  render: ChangeStory,
 };

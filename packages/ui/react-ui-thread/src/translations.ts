@@ -25,6 +25,8 @@ export const translations = [
         'save-message.label': 'Save',
         'delete-message.label': 'Delete',
         'accept-proposal.label': 'Accept proposal',
+        'accept-change.label': 'Accept change',
+        'reject-change.label': 'Reject change',
       },
     },
   },

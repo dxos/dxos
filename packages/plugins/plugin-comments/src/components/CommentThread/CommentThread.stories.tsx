@@ -93,7 +93,7 @@ const Render = () => {
 const meta = {
   title: 'plugins/plugin-comments/components/CommentThread',
   render: Render,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -105,5 +105,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A single anchored comment thread with two messages, rendered on the react-ui-thread primitives. */
 export const Default: Story = {};
