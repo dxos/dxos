@@ -353,6 +353,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       location={location}
       current={current}
       onCurrentChange={handleCurrentChange}
+      data-testid='inbox.message.row'
     >
       <Tile.Header
         menu
@@ -464,6 +465,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
         current={current}
         onCurrentChange={handleCurrentChange}
         onClick={handleConversationClick}
+        data-testid='inbox.conversation.row'
       >
         <Tile.Header
           menu
