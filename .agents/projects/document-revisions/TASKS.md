@@ -121,8 +121,40 @@ Deferred from the CodeRabbit round (stage 3/4):
       (fork→merge×2), case 4 ConflictAutoResolve (CRDT no-markers) & ConflictResolution (markers).
       Every action driven through the real UI. 7 play tests green in chromium.
 
-## Phase 4 follow-ups
+## Phase 4 (this branch, PR #12290) — Google-Docs-style suggestion review
 
+- [x] `ui-editor`: `suggestChanges` inline per-change accept/reject overlay over a proposal;
+      multi-author `suggestions({ sources })` overlay; word-level `diffHunks` + `groupHunks`;
+      word-level `computeWordHunks` so `cherryPickHunk`/`revertHunk` resolve one word, not the
+      whole line; review extensions grouped under `review/`.
+- [x] `types`: `ContentBlock.Change` (`before`/`after`) so a suggestion renders through a message
+      tile. `react-ui-thread`: `Message.Tile` renders the change block with Accept/Reject
+      (`onAcceptChange`/`onRejectChange`); `CommentThread` decoupled from `@dxos/react-client`.
+- [x] `plugin-markdown`: "Suggest edits" authoring action + `SuggestEdit` op (find-or-create the
+      caller's per-author `kind:'suggestion'` branch via `Branch.suggestion`); VersionBanner
+      `[Base | Diff | Branch]` selector (Merge button removed — merge from the panel).
+- [x] `plugin-comments`: unified review companion — comment threads + suggestion cards in one
+      surface; `Suggestions` reactively tracks active suggestion branches (one bound probe each)
+      and routes Accept/Reject to the durable `AcceptChange`/`RejectChange` ops (services: []).
+- [x] Per-author colours: banner name tag + inline suggestion markers + cards tinted with the
+      author's palette hue (shared `authorHue`/`suggestionColour`, `@dxos/util` `stringToHue`);
+      `initializeIdentity({ displayName })` so stories show a name, not a DID.
+- [x] Empty state unified: `SuggestionThread` renders nothing when empty (dropped the "No open
+      suggestions" text); the companion's single Message prompt (comment + Suggest edits) covers it.
+- [x] Play/unit coverage: `Suggest` (accept/reject, multi-author, colour), `SuggestionThread`,
+      `Message/WithChange`, `VersionBanner/SuggestionBranch` (hue + view selector), diff word-level
+      unit tests, `suggestion-sources` colour tests; `DocumentVersioning` merge helper fixed for
+      the panel button.
+
+## Phase 4 — open decisions / follow-ups
+
+- [ ] **DECISION: agent suggestion identity.** Agents don't create suggestion branches today —
+      the Markdown skill exposes `CreateBranch` (plain named draft, no `creator`), not `SuggestEdit`
+      (which needs an explicit `creator` DID and has no agent→DID binding). Options: (1) wire
+      `SuggestEdit` into the skill + give the agent its own identity/DID; (2) attribute to the
+      requesting user's DID; (3) keep agents on named branches. See `markdown-skill.ts`.
+- [ ] Full-stack `CommentsArticle` verification could not run in-pane (30s boot timeout) — verify
+      the suggestion companion + empty state manually (see morning test plan).
 - [ ] Create test plan + usage script for demo video — the suggestion-review flow (Suggest edits →
       edit on the suggestion branch → accept/reject in the companion), which stories to exercise
       (`SuggestionThread`, `Message/WithChange`, `VersionBanner`, integrated `CommentsArticle`), and
