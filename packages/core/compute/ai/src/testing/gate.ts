@@ -10,7 +10,8 @@ import { MemoizedAiService } from './memoization';
  * `packages/core/compute/ai/TESTING.md`). They no longer gate PR CI: they run only when explicitly
  * opted in via `DX_RUN_LLM_TESTS=1`, or while regenerating fixtures via `ALLOW_LLM_GENERATION=1`.
  *
- * Usage: `const describeMemoized = runMemoizedTests() ? describe : describe.skip;`
+ * Usage: `describe.skipIf(!runMemoizedTests())(...)` (or `it.effect.skipIf(!runMemoizedTests())(...)`
+ * for gating individual tests within an otherwise-ungated suite).
  */
 export const runMemoizedTests = (): boolean =>
   MemoizedAiService.isGenerationEnabled() || ['1', 'true'].includes(process.env.DX_RUN_LLM_TESTS ?? '0');

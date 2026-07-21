@@ -36,9 +36,7 @@ const TestLayerWithWebSearch = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('Memory Skill', () => {
+describe.skipIf(!runMemoizedTests())('Memory Skill', () => {
   it.effect(
     'save: saves a memory',
     Effect.fnUntraced(

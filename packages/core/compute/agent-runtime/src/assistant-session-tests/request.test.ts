@@ -71,9 +71,7 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(toolkitLayer),
 );
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('AiRequest.Request', () => {
+describe.skipIf(!runMemoizedTests())('AiRequest.Request', () => {
   it.effect(
     'no tools',
     Effect.fnUntraced(

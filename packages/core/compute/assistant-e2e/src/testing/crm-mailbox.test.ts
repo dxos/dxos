@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 
+import { runMemoizedTests } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { ProfileOf } from '@dxos/plugin-crm/types';
@@ -44,7 +45,9 @@ const SEED_EMAIL_INPUT = {
   created: '2026-06-26T12:00:00.000Z',
 };
 
-describe('CRM Mailbox', () => {
+// Frozen-conversation replay (A/B); off by default (`DX_RUN_LLM_TESTS=1` / `ALLOW_LLM_GENERATION=1`
+// to run) — see `packages/core/compute/ai/TESTING.md`.
+describe.skipIf(!runMemoizedTests())('CRM Mailbox', () => {
   it.effect(
     'processes a mailbox email into CRM profiles and employer relation',
     agentTest({

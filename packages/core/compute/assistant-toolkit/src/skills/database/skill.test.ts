@@ -42,9 +42,7 @@ const PROJECT_JSON_SCHEMA = {
   required: ['name'],
 };
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('Database Skill', () => {
+describe.skipIf(!runMemoizedTests())('Database Skill', () => {
   //
   // Schema
   //
