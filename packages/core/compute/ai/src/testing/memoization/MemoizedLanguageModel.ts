@@ -148,7 +148,7 @@ const collectDynamicValues = (prompt: unknown, matcher: RegExp): string[] => {
   // each token's positional placeholder — matches the order used for comparison (jsonStableStringify).
   // Walking the live object graph in insertion order (deepMapValues, `for..in`) would number
   // placeholders in an order that diverges from the sorted comparison, producing false misses when a
-  // snapshot and the live prompt differ only in object key order. See DESIGN.md.
+  // snapshot and the live prompt differ only in object key order.
   const canonical = jsonStableStringify(prompt) ?? '';
   for (const match of canonical.matchAll(matcher)) {
     const token = match[0];

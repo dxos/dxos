@@ -135,46 +135,100 @@ deterministic code through a frozen LLM recording.
   frozen and ignored.
 - The oracle is explicit and trustworthy instead of self-certifying.
 
+## Consumer inventory & blast radius
+
+Removing the memoized tests is not one action — the ~20 consumers have very different value, and
+the analysis below drives the sequencing. Blast-radius facts:
+
+- **Nothing imports `@dxos/assistant-e2e`** — it is a leaf test package, so deleting it has zero
+  compile/coverage impact anywhere else.
+- The machinery (`MemoizedAiService` / `MemoizedLanguageModel`) is imported only by
+  `assistant-e2e/harness.ts` and `ai/src/testing/test-layers.ts` (`TestAiService`). **`TestAiService`
+  is the single seam** every other consumer goes through; keep it compiling and consumers are
+  unaffected.
+
+The consumers fall into three groups:
+
+- **G1 — pure agent e2e (`@dxos/assistant-e2e`):** `database`, `crm-mailbox`, `web-search`,
+  `planning`, `markdown`, `smoke`. Highest cost (~7.5 MB of fixtures; `crm-mailbox` alone 5.4 MB),
+  lowest signal, most redundant — the operations and the `AiSession` loop they touch are also
+  exercised by G2/G3. The **only** unique thing G1 covers is that the **full plugin composition**
+  boots (`ClientPlugin` + `AssistantPlugin` + `InboxPlugin` in `harness.ts`).
+- **G2 — per-operation / skill (behavioral through the LLM):** `plugin-markdown` create/update,
+  `plugin-magazine`, `plugin-assistant`, `assistant-toolkit` `run-instructions` + the `database`/
+  `memory`/`planning`/`agent` skills, `AiSummarizer`. Carry **unique operation-level deterministic
+  signal**; convert to mocked unit tests before deleting.
+- **G3 — agent-runtime session:** `functions`, `AgentService`, `request`, `xml-response`. Closest
+  to harness/loop (D) behavior; convert to scripted-model tests before deleting.
+
+### Impact of removing each group
+
+- **A/B/H/G signal:** none lost for any group — already frozen / self-certifying.
+- **G1:** its deterministic C/D signal is almost entirely redundant, so deletion drops no unique
+  coverage. The one genuine loss is the full-plugin **boot/wiring** path, recovered cheaply by a
+  single scripted-model boot-smoke (no fixture). Net: low impact, high relief.
+- **G2/G3:** deleting early **would** open real per-operation / per-loop gaps, because that
+  deterministic signal is unique. De-gate them from PR CI now to stop the flakiness, then convert
+  before deleting.
+
 ## Prioritized plan
 
-Ordered by ROI and by the dependency that **coverage must never drop to zero** — deterministic
-tiers and evals must exist before the memoized e2e suite is retired.
+Ordered by ROI. The guardrail is narrower than "never drop coverage": **behavioral (A/B/H)
+coverage is already ~zero and safe to drop immediately; only the deterministic (C/D) signal must be
+preserved — and it is cheap to recover (D is one scripted test; C is ordinary unit testing), so
+recover it in the same change that removes the corresponding memoized tests rather than treating it
+as a long migration.**
 
-### Phase 1 — deterministic tiers (highest ROI, cheapest, fully in CI)
+### Phase 1 — stop the bleeding + recover deterministic coverage (highest ROI, fully in CI)
 
-1. **Extract a scripted `LanguageModel` primitive** from `MemoizedLanguageModel` — "given this
+This phase both removes the worst offender (G1) and de-gates the rest, while standing up the cheap
+deterministic tiers that make it safe.
+
+1. **De-gate G2/G3 from PR CI immediately** — move the memoized replay tests off the default
+   `:test` path (env flag / separate tag / `describe.skip`). No deletion, reversible; instantly
+   removes the flakiness and slowdown while conversion proceeds.
+2. **Extract a scripted `LanguageModel` primitive** from `MemoizedLanguageModel` — "given this
    call, return these scripted parts/tool-calls" — decoupled from prompt-matching and file I/O.
-   This is the substrate for D.
-2. **Harness (D) unit tests** on the scripted model: all loop branches listed above.
-3. **Operation (C) unit tests**: extend to full coverage; introduce the golden-args fixture
-   convention.
-4. **Context-assembly (E) and schema round-trip (F) tests.**
-5. **Code-side oracle (G):** add DB-state / tool-invocation assertion helpers to the test harness.
+   This is the substrate for D and for the G1 boot-smoke.
+3. **Harness (D) unit tests** on the scripted model: all loop branches listed above.
+4. **Delete G1 (`@dxos/assistant-e2e`) and its fixtures** (~7.5 MB), and replace it with a **single
+   scripted-model boot-smoke** that boots the full plugin composition and asserts a trivial 1-tool
+   task completes — preserving the one unique thing G1 covered (composition/wiring) without any
+   memoized fixture. Safe to do here because nothing imports the package and its C/D signal is
+   redundant with G2/G3.
+5. **Operation (C) unit tests**: begin converting G2 to deterministic mocked unit tests; introduce
+   the golden-args fixture convention. Delete each G2 fixture only once its unit test lands.
+6. **Context-assembly (E) and schema round-trip (F) tests.**
+7. **Code-side oracle (G):** add DB-state / tool-invocation assertion helpers to the test harness.
 
 ### Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-6. Add scorers (tool-match, schema-validity, DB-effect, LLM-judge) and datasets covering the
-   comprehension / tool-selection scenarios currently implicit in the e2e suite.
-7. Pin model versions; define pass-rate thresholds; wire a scheduled (nightly / on-demand) run
+8. Add scorers (tool-match, schema-validity, DB-effect, LLM-judge) and datasets covering the
+   comprehension / tool-selection scenarios previously implicit in the G1 suite.
+9. Pin model versions; define pass-rate thresholds; wire a scheduled (nightly / on-demand) run
    distinct from PR CI.
-8. Port the highest-value e2e scenarios into evals as **H** integration cases (real model, real
-   operations), non-gating.
+10. Port the highest-value former-G1 scenarios into evals as **H** integration cases (real model,
+    real operations), non-gating.
 
-### Phase 3 — retire the memoized e2e framework
+### Phase 3 — finish migration & reduce the machinery
 
-9. Once Phases 1–2 cover the paths, delete the `@dxos/assistant-e2e` memoized suite and its
-   `*.conversations.json` fixtures (the bulk of the multi-MB weight).
-10. **Scope the retirement carefully.** `MemoizedLanguageModel` and `*.conversations.json` are
-    used by ~21 fixtures across many packages (`plugin-markdown`, `assistant-toolkit` skills,
-    `agent-runtime`, …), not just `assistant-e2e`. Migrate those to the appropriate tier
-    (deterministic → Phase 1 primitive; behavioral → evals) package by package. The memoization
-    layer may survive in **reduced** form as the scripted-model primitive; the *strategy* of
-    frozen full-conversation replay as primary coverage is what we retire.
+11. Convert the remaining **G3** (agent-runtime session) fixtures to scripted-model (D) tests and
+    delete them.
+12. Once no consumer depends on frozen-conversation replay, **reduce the memoization layer to the
+    scripted-model primitive** and drop the prompt-matching / canonicalization / closest-match code
+    and `memoization.test.ts`'s dynamic-value suite. `TestAiService` remains the seam. The
+    *strategy* of frozen full-conversation replay as primary coverage is what we retire.
 
 ### Non-goals / risks
 
-- **Do not delete memoization before its consumers are migrated** — coverage would drop to zero.
-- **Isolated tiers miss emergent bugs** across seams; the thin H integration eval (step 8) is the
+- **Behavioral coverage is already ~zero** (A/B frozen, G self-certifying), so removing memoized
+  tests loses no behavioral signal — the earlier "coverage would drop to zero" framing was too
+  conservative. What must not drop is the **deterministic (C/D)** signal, recovered per group in
+  the same change that removes its tests (G1 → boot-smoke + D tests; G2 → C unit tests; G3 → D
+  tests).
+- **G2/G3 must be converted before their fixtures are deleted** — unlike G1, their deterministic
+  signal is unique.
+- **Isolated tiers miss emergent bugs** across seams; the thin H integration eval (step 10) is the
   mitigation and must not be skipped.
 - Evals still hit real models — cost and variance are relocated and graded, not eliminated; budget
   and schedule them accordingly.

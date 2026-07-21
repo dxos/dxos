@@ -202,7 +202,7 @@ describe('dynamic value matching', () => {
     // Logically identical prompts whose object keys were inserted in different orders must
     // canonicalize equal. Placeholder indices are assigned over the sorted serialization (not the
     // live insertion order); insertion-order numbering assigned SPACE_A/SPACE_B different indices in
-    // the two objects and produced false misses. See DESIGN.md.
+    // the two objects and produced false misses.
     const p1 = { b: `echo://${SPACE_A}`, a: `echo://${SPACE_B}` };
     const p2 = { a: `echo://${SPACE_B}`, b: `echo://${SPACE_A}` };
     const a = __testing.normalizeForMatching(p1, [SPACE_ID_PATTERN]);
