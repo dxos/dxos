@@ -129,6 +129,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     () => getMessageMetadata(subjectId, identity ?? undefined),
     [subjectId, identity],
   );
+  // Author display names for suggestion tiles, keyed by DID; absent ⇒ the tile falls back to the DID.
+  const authorLabels = useMemo(
+    () =>
+      Object.fromEntries(members.flatMap((member) => (member.displayName ? [[member.did, member.displayName]] : []))),
+    [members],
+  );
 
   const stateAtom = useCapability(CommentCapabilities.State);
   const viewStoreAtom = useCapability(CommentCapabilities.ViewState);
@@ -427,6 +433,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               <Suggestions
                 document={markdownDoc}
                 base={base}
+                authorLabels={authorLabels}
                 onAccept={handleAcceptSuggestion}
                 onReject={handleRejectSuggestion}
               />

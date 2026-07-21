@@ -4,8 +4,10 @@
 
 import React, { useCallback } from 'react';
 
+import { useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { type SpaceCapabilities } from '@dxos/plugin-space';
+import { getSpace } from '@dxos/react-client/echo';
 import { Branch, Version } from '@dxos/versioning';
 
 import { VersionBanner } from '#components';
@@ -22,6 +24,20 @@ export type VersionBannersProps = {
  */
 export const VersionBanners = ({ versioning }: VersionBannersProps) => {
   const { document, activeVersion, activeBranch, activeFork, checkpointText, view, setSelection, setView } = versioning;
+
+  // Resolve a branch's display label. Suggestion branches are named by author DID (`suggestion: <did>`);
+  // show the author's display name if set (resolved against space members), otherwise the raw DID.
+  const members = useMembers(getSpace(document)?.id);
+  const label = useCallback(
+    (branch: Branch.Branch) => {
+      if (branch.kind === 'suggestion' && branch.creator) {
+        const member = members.find((candidate) => candidate.did === branch.creator);
+        return member?.displayName ?? branch.creator;
+      }
+      return Branch.label(branch);
+    },
+    [members],
+  );
 
   // Leaving a checkpoint view returns to the tip it belongs to: the branch the checkpoint was
   // taken on (so the reviewer lands back on the editable branch tip), else main's present.
@@ -92,7 +108,7 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
       {activeBranch && (
         <VersionBanner
           mode='branch'
-          name={Branch.label(activeBranch)}
+          name={label(activeBranch)}
           timestamp={activeBranch.createdAt}
           onMerge={handleMerge}
           view={view}
@@ -103,7 +119,7 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
       {activeFork && (
         <VersionBanner
           mode='fork'
-          name={Branch.label(activeFork)}
+          name={label(activeFork)}
           timestamp={activeFork.createdAt}
           // Leaving the fork point returns to the branch tip if it is still editable, else main.
           onClose={() =>

@@ -15,6 +15,11 @@ import { SuggestionThread } from './SuggestionThread';
 type VersionedObject = Parameters<typeof Branch.bind>[0];
 type BranchRecord = Parameters<typeof Branch.bind>[1];
 
+// Coalesce an author's contiguous / close edits into one card, but keep edits in different blocks
+// separate. `maxGap` bridges short unchanged runs (whitespace, a word or two) so a rewritten phrase
+// reads as a single suggestion; widen it (via the `group` prop) to also group same-sentence edits.
+const DEFAULT_GROUP: GroupPolicy = { maxGap: 24, respectBlockBoundaries: true };
+
 export type SuggestionsProps = {
   /** The versioned document whose `kind:'suggestion'` branches are reviewed. */
   document?: VersionedObject;
@@ -65,7 +70,7 @@ export const Suggestions = ({ document, base, group, authorLabels, onAccept, onR
       <SuggestionThread
         base={base}
         sources={buildSuggestionSources(resolved)}
-        group={group}
+        group={group ?? DEFAULT_GROUP}
         authorLabels={authorLabels}
         onAccept={onAccept}
         onReject={onReject}
