@@ -50,6 +50,8 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.${filter.operator}(${JSON.stringify(filter.value)})`;
     case 'in':
       return `Filter.in([${filter.values.map((v) => JSON.stringify(v)).join(', ')}])`;
+    case 'in-query':
+      return `Filter.in(${prettyQuery(filter.subquery)}.project(${JSON.stringify(filter.property)}))`;
     case 'contains':
       return `Filter.contains(${JSON.stringify(filter.value)})`;
     case 'tag':

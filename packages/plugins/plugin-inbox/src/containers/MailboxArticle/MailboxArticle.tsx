@@ -53,9 +53,9 @@ import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
-import { messageMatchesQuery, sortByCreated } from '../../util';
+import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
-import { buildMailboxSelection, buildSystemTagSelection, getSearchText } from './mailbox-search';
+import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -115,9 +115,6 @@ export const MailboxArticle = ({
   // This view's canonical system tag, resolved by id (`undefined` until sync/first draft creates it).
   const systemTagUri = useSystemTagUri(db, systemTag);
   const systemTagIds = useTaggedIds(tagIndex, systemTagUri);
-  // This mailbox's space-resident messages (drafts + not-yet-synced sent), by thread — attached to an
-  // already-shown thread regardless of view or tag (see `useSpaceMessagesByThreadId`).
-  const spaceMessagesByThreadId = useSpaceMessagesByThreadId(db, mailbox);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -160,27 +157,39 @@ export const MailboxArticle = ({
     [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
-  // Inbox/Sent/Drafts union the feed with the space (where drafts live); each view's ids only ever
-  // resolve on one side, so the other half is just empty. Free text stays feed-only (too complex to
-  // scope by mailbox over the whole space — see `hideFilterEditor`).
-  // TODO: unify with `spaceMessagesByThreadId`'s separate query below into one query once the query
-  // engine can express "thread contains a matching member" directly (semi-join).
-  const source = isUnmodifiedSystemTagView
-    ? Query.all(Query.select(selection).from(Scope.space()), ...(feed ? [Query.select(selection).from(feed)] : []))
-    : feed
-      ? Query.select(selection).from(feed)
+
+  // A thread qualifies if any of its messages match `selection`, and `buildThreadSemiJoin` then
+  // selects every message sharing that thread's `threadId` — across the feed and this space
+  // (drafts) — so `count`/`items` reflect the whole thread rather than only its filter-matching
+  // members. Inbox/Sent/Drafts ids may resolve on either side, so that view's own matches scope is
+  // the same feed+space scope as the outer query; free text stays feed-only for matching (too
+  // complex to scope across the whole space — see `hideFilterEditor`), even though the outer,
+  // thread-pulling scope still spans both. The space side can surface another mailbox's draft that
+  // happens to share a `threadId` (thread ids are effectively globally unique, so this is rare) —
+  // `reconcileDrafts` below re-scopes drafts to this mailbox and drops ones already superseded by
+  // their synced copy. Either view degrades to space-only while `feed` is still resolving; free
+  // text has nothing to match yet without a feed.
+  const feedUri = feed && Obj.getURI(feed, { prefer: 'absolute' });
+  const scopes = feedUri
+    ? [Scope.feed(feedUri), Scope.space()]
+    : isUnmodifiedSystemTagView
+      ? [Scope.space()]
       : undefined;
+  const matchesScope = isUnmodifiedSystemTagView ? scopes : feedUri ? [Scope.feed(feedUri)] : undefined;
+  const source = scopes && matchesScope ? buildThreadSemiJoin(selection, matchesScope).from(scopes) : undefined;
   const pagination = usePagination(
     db,
     source
       ? conversations
         ? source
-            .orderBy(Order.property('created', 'desc'))
             .aggregate({
               threadId: Aggregate.group('threadId'),
               lastMessageAt: Aggregate.max('created'),
               count: Aggregate.count(),
-              items: Aggregate.items({ limit: MAILBOX_THREAD_PREVIEW_COUNT }),
+              items: Aggregate.items({
+                limit: MAILBOX_THREAD_PREVIEW_COUNT,
+                order: [Order.property('created', 'desc')],
+              }),
             })
             .orderBy(Order.property('lastMessageAt', direction))
             .limit(MAILBOX_PAGE_SIZE)
@@ -194,43 +203,17 @@ export const MailboxArticle = ({
   // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
   const items = useMemo<MessageStackItem[]>(() => {
     const result: MessageStackItem[] = [];
-    const selectedSystemTagIds = new Set(systemTagIds);
     for (const entry of pagination.items) {
       if (!isThreadGroup(entry)) {
         result.push(entry);
       } else if (entry.threadId == null) {
         result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        // Attach this mailbox's space-resident messages for the thread, skipping any already
-        // matched by `source` — whether present in the (capped) preview or only in `count`.
-        const presentIds = new Set(entry.items.map((message) => message.id));
-        const spaceMessagesForThread = (spaceMessagesByThreadId.get(entry.threadId) ?? []).filter(
-          (message) =>
-            !presentIds.has(message.id) && !(isUnmodifiedSystemTagView && selectedSystemTagIds.has(message.id)),
-        );
-        const messages =
-          spaceMessagesForThread.length > 0
-            ? [...entry.items, ...spaceMessagesForThread].sort(sortByCreated('created', true))
-            : entry.items;
-        result.push({ id: entry.threadId, messages, total: entry.count + spaceMessagesForThread.length });
+        result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
       }
     }
-    // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
-    // During an active search, also drop messages that don't match in their plain/markdown body or
-    // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
-    // message can match the index yet have no matching (or any) plain/markdown text to display.
     return applyPostFilters(result, mailbox, searchQuery);
-    // systemTagIds is a fresh array each render; key on its membership (systemTagIdsKey) instead.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    pagination.items,
-    spaceMessagesByThreadId,
-    mailbox,
-    mailbox.messageFilters,
-    searchQuery,
-    isUnmodifiedSystemTagView,
-    systemTagIdsKey,
-  ]);
+  }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
@@ -437,7 +420,32 @@ const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGro
   !Obj.instanceOf(Message.Message, entry);
 
 /**
- * Drops individually-filtered messages (e.g. "Ignore sender") and, during an active search, messages
+ * Synced messages (no `properties.mailbox`) always pass; drafts pass only when they belong to this
+ * mailbox and aren't yet superseded by their sent copy (matched on the provider id set at send
+ * time). Mirrors the reconciliation in `app-graph-builder.ts`'s `mailboxMessage` connector — the
+ * whole-thread semi-join's space scope can pull in another mailbox's draft sharing a `threadId`, or
+ * a draft whose sent copy has already synced into the feed.
+ */
+const reconcileDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
+  const syncedIds = new Set(
+    messages
+      .filter((message) => !DraftMessage.instanceOf(message))
+      .flatMap((message) => Obj.getMeta(message).keys.map((key) => key.id)),
+  );
+  return messages.filter((message) => {
+    if (!DraftMessage.instanceOf(message)) {
+      return true;
+    }
+    if (!DraftMessage.belongsTo(message, mailboxUri)) {
+      return false;
+    }
+    return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
+  });
+};
+
+/**
+ * For each thread group, first reconciles its drafts (see {@link reconcileDrafts}), then drops
+ * individually-filtered messages (e.g. "Ignore sender") and, during an active search, messages
  * whose visible body/subject don't match; collapses a group to nothing if every message is dropped.
  */
 const applyPostFilters = (
@@ -445,11 +453,12 @@ const applyPostFilters = (
   mailbox: Mailbox.Mailbox,
   searchQuery: string | undefined,
 ): MessageStackItem[] => {
+  const mailboxUri = Obj.getURI(mailbox).toString();
   const matches = (message: Message.Message) =>
     !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
   return items.flatMap((item): MessageStackItem[] => {
     if (isMessageGroup(item)) {
-      const messages = item.messages.filter(matches);
+      const messages = reconcileDrafts(item.messages, mailboxUri).filter(matches);
       return messages.length > 0 ? [{ ...item, messages }] : [];
     }
     return matches(item) ? [item] : [];
@@ -503,37 +512,6 @@ const useTaggedIds = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string | 
     [tagIndex, tagUri],
   );
   return useAtomValue(atom);
-};
-
-/**
- * This mailbox's space-resident messages (drafts + not-yet-synced sent), by `threadId`. Scoped by
- * `DraftMessage.belongsTo` (`properties.mailbox`), not the 'draft' tag — a just-sent message is untagged
- * 'draft' immediately but should still attach to its thread until sync replaces it with the synced copy.
- * A threadless message (a fresh compose) is only ever shown on the Drafts view.
- */
-const useSpaceMessagesByThreadId = (
-  db: Database.Database | undefined,
-  mailbox: Mailbox.Mailbox,
-): Map<string, Message.Message[]> => {
-  const mailboxUri = Obj.getURI(mailbox).toString();
-  const messages = useQuery(db, Filter.type(Message.Message)).filter((message) =>
-    DraftMessage.belongsTo(message, mailboxUri),
-  );
-  return useMemo(() => {
-    const map = new Map<string, Message.Message[]>();
-    for (const message of messages) {
-      if (message.threadId == null) {
-        continue;
-      }
-      const list = map.get(message.threadId);
-      if (list) {
-        list.push(message);
-      } else {
-        map.set(message.threadId, [message]);
-      }
-    }
-    return map;
-  }, [messages]);
 };
 
 type MailboxActionsOptions = {

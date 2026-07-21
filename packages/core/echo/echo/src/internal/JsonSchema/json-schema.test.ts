@@ -266,6 +266,33 @@ describe('effect-to-json', () => {
     log('schema', { jsonSchema });
   });
 
+  test('serialize a pair of mutually-recursive schemas (A embeds B, B embeds A)', () => {
+    // Unlike a schema that's self-referential (caught by suspendCache within one expansion), a
+    // *mutual* cycle across two distinct schemas isn't: each side starts a fresh suspendCache with
+    // no memory of the other already being in flight, so without the `inProgress` guard this
+    // recurses forever (A -> B -> A -> B -> ...).
+    interface A {
+      readonly kind: 'a';
+      readonly b?: B;
+    }
+    interface B {
+      readonly kind: 'b';
+      readonly a?: A;
+    }
+    const A: Schema.Schema<A> = Schema.Struct({
+      kind: Schema.Literal('a'),
+      b: Schema.optional(Schema.suspend((): Schema.Schema<B> => B)),
+    });
+    const B: Schema.Schema<B> = Schema.Struct({
+      kind: Schema.Literal('b'),
+      a: Schema.optional(Schema.suspend((): Schema.Schema<A> => A)),
+    });
+
+    const jsonSchema = toJsonSchema(A);
+    expect(jsonSchema.properties?.kind).toEqual({ type: 'string', enum: ['a'] });
+    expect(jsonSchema.properties?.b).toBeDefined();
+  });
+
   test('tuple schema with description', () => {
     const schema = Schema.Struct({
       args: Schema.Tuple(
