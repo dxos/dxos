@@ -148,11 +148,18 @@ Deferred from the CodeRabbit round (stage 3/4):
 
 ## Phase 4 — open decisions / follow-ups
 
-- [ ] **DECISION: agent suggestion identity.** Agents don't create suggestion branches today —
-      the Markdown skill exposes `CreateBranch` (plain named draft, no `creator`), not `SuggestEdit`
-      (which needs an explicit `creator` DID and has no agent→DID binding). Options: (1) wire
-      `SuggestEdit` into the skill + give the agent its own identity/DID; (2) attribute to the
-      requesting user's DID; (3) keep agents on named branches. See `markdown-skill.ts`.
+- [ ] **Agent suggestion identity — DECIDED (2026-07-21): synthetic DIDs now, real identities +
+      multi-agent later.** Design:
+      [`agents/superpowers/specs/2026-07-21-agent-identity.md`](../../../agents/superpowers/specs/2026-07-21-agent-identity.md).
+      Implementation (this branch):
+  - [ ] `AgentIdentityService` in assistant-toolkit; agent worker provides it synthetically
+        (`did:agent:<agentObjectId>`, `name = agent.name`).
+  - [ ] `SuggestEdit`: `creator` optional, defaults from `AgentIdentityService`; add to the Markdown
+        skill `operations` + update instructions (suggest-edit over create-branch for review).
+  - [ ] `resolveAuthor(did, members, agents)` so agent authors show name + hue in banner + companion
+        (query space `Agent` objects; seed `authorLabels`/`authorHues`).
+  - [ ] Tests: agent suggestion attributed to `did:agent:<id>`; two agents ⇒ two authors.
+  - [ ] Future: swap synthetic provider for real HALO identity; re-key `creator`; drop seeding.
 - [ ] Full-stack `CommentsArticle` verification could not run in-pane (30s boot timeout) — verify
       the suggestion companion + empty state manually (see morning test plan).
 - [ ] Create test plan + usage script for demo video — the suggestion-review flow (Suggest edits →
