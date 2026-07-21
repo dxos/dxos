@@ -13,7 +13,7 @@ import { Operation } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
 import { Database, Obj } from '@dxos/echo';
 
-import { GooglePeople } from '../../../../apis';
+import { GoogleContacts } from '../../../../apis';
 import { AccessTokenNotPopulatedError } from '../../../../errors';
 import { InboxOperation } from '../../../../types';
 
@@ -24,7 +24,7 @@ const listAllContactGroups = (token: string) =>
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const client = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
-    const groups: GooglePeople.ContactGroup[] = [];
+    const groups: GoogleContacts.ContactGroup[] = [];
     let pageToken: string | undefined;
     do {
       const url = new URL(CONTACT_GROUPS_BASE_URL);
@@ -34,7 +34,7 @@ const listAllContactGroups = (token: string) =>
       }
       const body = yield* HttpClientRequest.get(url.toString()).pipe(
         client.execute,
-        Effect.flatMap(HttpClientResponse.schemaBodyJson(GooglePeople.ListContactGroupsResponse)),
+        Effect.flatMap(HttpClientResponse.schemaBodyJson(GoogleContacts.ListContactGroupsResponse)),
         Effect.scoped,
       );
       groups.push(...(body.contactGroups ?? []));

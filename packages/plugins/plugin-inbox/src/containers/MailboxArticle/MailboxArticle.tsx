@@ -38,15 +38,13 @@ import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
 import {
-  MessageStack,
-  type MessageStackActionHandler,
-  type MessageStackItem,
+  InboxStack,
+  type InboxStackActionHandler,
+  type InboxStackItem,
   type MessageTagsFamily,
   isMessageGroup,
-  useInjectedMailboxActions,
-  useMailboxExtractorActions,
 } from '#components';
-import { useDebouncedValue } from '#hooks';
+import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, SystemTags } from '#types';
@@ -201,8 +199,8 @@ export const MailboxArticle = ({
   // so entries map straight to stack items. Messages without a `threadId` share the aggregate's
   // single `null`-key group; split them back into singleton conversations at that group's position.
   // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
-  const items = useMemo<MessageStackItem[]>(() => {
-    const result: MessageStackItem[] = [];
+  const items = useMemo<InboxStackItem[]>(() => {
+    const result: InboxStackItem[] = [];
     for (const entry of pagination.items) {
       if (!isThreadGroup(entry)) {
         result.push(entry);
@@ -243,7 +241,7 @@ export const MailboxArticle = ({
 
   useArticleKeyboardNavigation({ articleId: id, items: messages, currentId, onSelect: handleNavigate });
 
-  const handleAction = useCallback<MessageStackActionHandler>(
+  const handleAction = useCallback<InboxStackActionHandler>(
     (action) => {
       switch (action.type) {
         // A message click ('current') and a conversation click ('current-conversation') both open the
@@ -375,7 +373,7 @@ export const MailboxArticle = ({
           // Always keep the list mounted (even with no items yet); `loading` renders an in-flow
           // spinner at the end of the list rather than replacing the whole panel — so a page fetch
           // or a mid-sync refresh never blanks what's already shown.
-          <MessageStack
+          <InboxStack
             id={id}
             items={items}
             currentId={currentId}
@@ -449,14 +447,14 @@ const reconcileDrafts = (messages: Message.Message[], mailboxUri: string): Messa
  * whose visible body/subject don't match; collapses a group to nothing if every message is dropped.
  */
 const applyPostFilters = (
-  items: MessageStackItem[],
+  items: InboxStackItem[],
   mailbox: Mailbox.Mailbox,
   searchQuery: string | undefined,
-): MessageStackItem[] => {
+): InboxStackItem[] => {
   const mailboxUri = Obj.getURI(mailbox).toString();
   const matches = (message: Message.Message) =>
     !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
-  return items.flatMap((item): MessageStackItem[] => {
+  return items.flatMap((item): InboxStackItem[] => {
     if (isMessageGroup(item)) {
       const messages = reconcileDrafts(item.messages, mailboxUri).filter(matches);
       return messages.length > 0 ? [{ ...item, messages }] : [];

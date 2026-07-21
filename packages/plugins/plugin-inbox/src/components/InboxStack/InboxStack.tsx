@@ -17,10 +17,10 @@ import { type Message } from '@dxos/types';
 import { useGmailTags } from '#hooks';
 
 import { getMessageBodyText, getMessageProps } from '../../util';
+import { CardTile } from '../CardTile';
 import { Row } from '../Row';
-import { Tile } from '../Tile';
 
-export type MessageStackAction =
+export type InboxStackAction =
   | { type: 'current'; messageId: string }
   | { type: 'current-conversation'; conversationId: string; messageId: string }
   | { type: 'select'; messageId: string }
@@ -30,17 +30,17 @@ export type MessageStackAction =
   | { type: 'create-topic'; messageId: string }
   | { type: 'save'; filter: string };
 
-export type MessageStackActionHandler = (action: MessageStackAction) => void;
+export type InboxStackActionHandler = (action: InboxStackAction) => void;
 
 //
-// MessageStack
+// InboxStack
 //
 
 /**
  * One entry per tag applied to a message. The shape mirrors the value side of
  * `Mailbox.tags` (label + hue) plus a stable `id` so the UI can dedupe / key chips.
  */
-export type MessageStackTag = { id: string; label: string; hue?: string };
+export type InboxStackTag = { id: string; label: string; hue?: string };
 
 /** A conversation (email thread) rendered as one stack entry. */
 export type MessageGroup = {
@@ -53,23 +53,23 @@ export type MessageGroup = {
 };
 
 /** A stack entry: an individual message or a conversation group. Entries of both kinds may be mixed. */
-export type MessageStackItem = Message.Message | MessageGroup;
+export type InboxStackItem = Message.Message | MessageGroup;
 
-export const isMessageGroup = (item: MessageStackItem): item is MessageGroup => 'messages' in item;
+export const isMessageGroup = (item: InboxStackItem): item is MessageGroup => 'messages' in item;
 
 /** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
-export type MessageTagsFamily = (messageId: string) => Atom.Atom<MessageStackTag[]>;
+export type MessageTagsFamily = (messageId: string) => Atom.Atom<InboxStackTag[]>;
 
 /** Per-message starred atom family; each tile subscribes to just its own star state. */
 export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
 
-const EMPTY_TAGS_ATOM = Atom.make((): MessageStackTag[] => []);
+const EMPTY_TAGS_ATOM = Atom.make((): InboxStackTag[] => []);
 const NOT_STARRED_ATOM = Atom.make(() => false);
 
-export type MessageStackProps = {
+export type InboxStackProps = {
   id: string;
   /** Stack entries in display order: individual messages, conversation groups, or a mix. */
-  items?: MessageStackItem[];
+  items?: InboxStackItem[];
   /** Per-message tag chip atom family; each tile subscribes to only its own message's tags. */
   tagsAtom?: MessageTagsFamily;
   currentId?: string;
@@ -95,13 +95,13 @@ export type MessageStackProps = {
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, tiles render a highlighted best-match snippet instead of the default preview. */
   searchQuery?: string;
-  onAction?: MessageStackActionHandler;
+  onAction?: InboxStackActionHandler;
 };
 
 /**
  * Card-based message stack component using mosaic layout.
  */
-export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
+export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
   (
     {
       items,
@@ -249,7 +249,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
   },
 );
 
-MessageStack.displayName = 'MessageStack';
+InboxStack.displayName = 'InboxStack';
 
 //
 // StackTile
@@ -276,13 +276,13 @@ StackTile.displayName = 'StackTile';
 
 type MessageTileData = {
   message: Message.Message;
-  tagsAtom?: Atom.Atom<MessageStackTag[]>;
+  tagsAtom?: Atom.Atom<InboxStackTag[]>;
   starredAtom?: Atom.Atom<boolean>;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, the tile renders a highlighted best-match snippet. */
   searchQuery?: string;
-  onAction?: MessageStackActionHandler;
+  onAction?: InboxStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
@@ -346,7 +346,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   }, [enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id]);
 
   return (
-    <Tile.Root
+    <CardTile.Root
       ref={forwardedRef}
       id={message.id}
       data={data}
@@ -354,7 +354,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       current={current}
       onCurrentChange={handleCurrentChange}
     >
-      <Tile.Header
+      <CardTile.Header
         menu
         menuItems={menuItems}
         starred={starred}
@@ -380,7 +380,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
         <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
       </Card.Body>
-    </Tile.Root>
+    </CardTile.Root>
   );
 });
 
@@ -400,7 +400,7 @@ type ConversationTileData = {
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, each message's snippet renders a highlighted best-match. */
   searchQuery?: string;
-  onAction?: MessageStackActionHandler;
+  onAction?: InboxStackActionHandler;
 };
 
 type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' | 'location' | 'current'>;
@@ -427,7 +427,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     // Click / Enter commit current + selection using the LATEST message's ID, not
     // the conversationId. The parent's action handler resolves `messageId` against the
     // flat message list, so passing a conversationId would cause an `invariant` to
-    // fire. MessageStack maps the message ID back up to the enclosing conversation
+    // fire. InboxStack maps the message ID back up to the enclosing conversation
     // when computing `effectiveCurrentId` so the tile still lights up.
     const handleCurrentChange = useCallback(() => {
       setCurrentId(latest.id);
@@ -456,7 +456,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     );
 
     return (
-      <Tile.Root
+      <CardTile.Root
         ref={forwardedRef}
         id={conversationId}
         data={data}
@@ -465,7 +465,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
         onCurrentChange={handleCurrentChange}
         onClick={handleConversationClick}
       >
-        <Tile.Header
+        <CardTile.Header
           menu
           menuItems={
             onAction
@@ -510,7 +510,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
             </Card.Row>
           )}
         </Card.Body>
-      </Tile.Root>
+      </CardTile.Root>
     );
   },
 );

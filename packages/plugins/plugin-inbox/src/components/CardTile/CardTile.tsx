@@ -10,13 +10,13 @@ import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Row } from '../Row';
 
 // Single source for the mosaic tile chrome shared by event/message/conversation tiles.
-const TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator';
+const CARD_TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator';
 
 //
 // Root
 //
 
-type TileRootProps = ThemedClassName<
+type CardTileRootProps = ThemedClassName<
   Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
     id: string;
     onCurrentChange: () => void;
@@ -27,12 +27,12 @@ type TileRootProps = ThemedClassName<
 
 /**
  * Shared mosaic tile shell: `Mosaic.Tile` → `Focus.Item` → `Card.Root`. Callers supply the inner
- * `Card.Header`/`Card.Body` (typically via {@link TileHeader} + rows). Activation is committed by the
+ * `Card.Header`/`Card.Body` (typically via {@link CardTileHeader} + rows). Activation is committed by the
  * caller's `onCurrentChange` (Mosaic `current`/selection), so click/Enter light the tile up.
  */
-const TileRoot = forwardRef<HTMLDivElement, TileRootProps>(
+const CardTileRoot = forwardRef<HTMLDivElement, CardTileRootProps>(
   ({ id, data, location, current, onCurrentChange, onClick, classNames, children }, forwardedRef) => (
-    <Mosaic.Tile asChild classNames={classNames ?? TILE_CLASSNAMES} id={id} data={data} location={location}>
+    <Mosaic.Tile asChild classNames={classNames ?? CARD_TILE_CLASSNAMES} id={id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
         <Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef}>
           {children}
@@ -42,16 +42,20 @@ const TileRoot = forwardRef<HTMLDivElement, TileRootProps>(
   ),
 );
 
-TileRoot.displayName = 'Tile.Root';
+CardTileRoot.displayName = 'CardTile.Root';
 
 //
 // Header
 //
 
 /** A single `Card.Menu` dropdown item. */
-export type TileMenuItem = { label: string; icon?: string; onClick: () => void };
+export type CardTileMenuItem = {
+  label: string;
+  icon?: string;
+  onClick: () => void;
+};
 
-type TileHeaderProps = {
+type CardTileHeaderProps = {
   /** Header title content (rendered in a flex row). */
   title: ReactNode;
   /** Whether the tile is starred. `Row.Star` renders the button only when `onToggleStar` is set. */
@@ -60,14 +64,14 @@ type TileHeaderProps = {
   /** Render the trailing `Card.Menu` action slot. */
   menu?: boolean;
   /** Items for the `Card.Menu` dropdown (the trigger is disabled when empty). */
-  menuItems?: TileMenuItem[];
+  menuItems?: CardTileMenuItem[];
 };
 
 /**
  * Tile header row: leading `Row.Star` · title · optional `Card.Menu`. Shared by message/conversation
  * tiles (with menu) and event tiles (star + title only).
  */
-const TileHeader = ({ title, starred, onToggleStar, menu = false, menuItems }: TileHeaderProps) => (
+const CardTileHeader = ({ title, starred, onToggleStar, menu = false, menuItems }: CardTileHeaderProps) => (
   <Card.Header>
     <Card.Block>
       <Row.Star starred={starred} onToggle={onToggleStar} />
@@ -77,15 +81,15 @@ const TileHeader = ({ title, starred, onToggleStar, menu = false, menuItems }: T
   </Card.Header>
 );
 
-TileHeader.displayName = 'Tile.Header';
+CardTileHeader.displayName = 'CardTile.Header';
 
 //
 // Tile
 //
 
-export const Tile = {
-  Root: TileRoot,
-  Header: TileHeader,
+export const CardTile = {
+  Root: CardTileRoot,
+  Header: CardTileHeader,
 };
 
-export type { TileHeaderProps, TileRootProps };
+export type { CardTileHeaderProps, CardTileRootProps };

@@ -5,7 +5,7 @@
 import { Obj } from '@dxos/echo';
 import { Person } from '@dxos/types';
 
-import { GooglePeople } from '../../../apis';
+import { GoogleContacts } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 
 /**
@@ -13,7 +13,7 @@ import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
  * keyed by the Google resource name so subsequent syncs can find-or-update.
  */
 export const mapGooglePerson = (
-  remote: GooglePeople.Person,
+  remote: GoogleContacts.Person,
 ): Obj.MakeProps<typeof Person.Person> & { [Obj.Meta]: { keys: { source: string; id: string }[] } } => {
   const primaryName = remote.names?.[0];
   const fullName = primaryName?.displayName ?? undefined;

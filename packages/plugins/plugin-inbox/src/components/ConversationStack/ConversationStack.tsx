@@ -86,12 +86,12 @@ type ConversationMessageActions = {
 // Context
 //
 
-const MESSAGE_THREAD_NAME = 'MessageThread';
+const CONVERSATION_STACK_NAME = 'ConversationStack';
 
 // State shared by every part and tile in the conversation. `options`/`expanded` and their setters are
 // owned by the article (via `Root`) so the thread toolbar can drive them across all bodies at once; the
 // per-tile handlers read the same context so reply/forward/delete act on the individual message.
-type MessageThreadContextValue = {
+type ConversationStackContextValue = {
   /** Single attendable id shared by every tile so the whole conversation is attended together. */
   attendableId?: string;
   mailbox?: Mailbox.Mailbox;
@@ -118,17 +118,18 @@ type MessageThreadContextValue = {
   runtime?: Capabilities.ProcessManagerRuntime;
 } & ConversationMessageActions;
 
-const [MessageThreadProvider, useMessageThreadContext] = createContext<MessageThreadContextValue>(MESSAGE_THREAD_NAME);
+const [ConversationStackProvider, useConversationStackContext] =
+  createContext<ConversationStackContextValue>(CONVERSATION_STACK_NAME);
 
 //
 // Root
 //
 
-const MESSAGE_THREAD_ROOT_NAME = 'MessageThread.Root';
+const CONVERSATION_STACK_ROOT_NAME = 'ConversationStack.Root';
 
-export type MessageThreadRootProps = PropsWithChildren<
+export type ConversationStackRootProps = PropsWithChildren<
   Pick<
-    MessageThreadContextValue,
+    ConversationStackContextValue,
     | 'attendableId'
     | 'mailbox'
     | 'items'
@@ -149,11 +150,11 @@ export type MessageThreadRootProps = PropsWithChildren<
 >;
 
 /**
- * Provides the shared conversation state to {@link MessageThreadToolbar} and {@link MessageThreadContent}
+ * Provides the shared conversation state to {@link ConversationStackToolbar} and {@link ConversationStackContent}
  * (and every message tile). Renders no DOM of its own, so it wraps the article's `Panel` — the toolbar
  * and content slot into `Panel.Toolbar` / `Panel.Content`.
  */
-const MessageThreadRoot = ({
+const ConversationStackRoot = ({
   children,
   attendableId,
   items,
@@ -171,8 +172,8 @@ const MessageThreadRoot = ({
   graph,
   getExtractActions,
   runtime,
-}: MessageThreadRootProps) => (
-  <MessageThreadProvider
+}: ConversationStackRootProps) => (
+  <ConversationStackProvider
     attendableId={attendableId}
     items={items}
     mailbox={mailbox}
@@ -191,28 +192,28 @@ const MessageThreadRoot = ({
     runtime={runtime}
   >
     {children}
-  </MessageThreadProvider>
+  </ConversationStackProvider>
 );
 
-MessageThreadRoot.displayName = MESSAGE_THREAD_ROOT_NAME;
+ConversationStackRoot.displayName = CONVERSATION_STACK_ROOT_NAME;
 
 //
 // Content
 //
 
-const MESSAGE_THREAD_CONTENT_NAME = 'MessageThread.Content';
+const CONVERSATION_STACK_CONTENT_NAME = 'ConversationStack.Content';
 
-export type MessageThreadContentProps = ThemedClassName<{ testId?: string }>;
+export type ConversationStackContentProps = ThemedClassName<{ testId?: string }>;
 
 /**
  * Renders the opened conversation (email thread) as a vertical Mosaic stack: one tile per message, each
  * with its own toolbar so reply/forward/delete act on that specific message. Reordering is disabled
  * (conversation order is chronological); view controls apply to the whole thread from the
- * {@link MessageThreadToolbar}. This is the thread-detail counterpart to the mailbox list `MessageStack`.
+ * {@link ConversationStackToolbar}. This is the thread-detail counterpart to the mailbox list `InboxStack`.
  */
-const MessageThreadContent = composable<HTMLDivElement, MessageThreadContentProps>(
+const ConversationStackContent = composable<HTMLDivElement, ConversationStackContentProps>(
   ({ testId, ...props }, forwardedRef) => {
-    const { items } = useMessageThreadContext(MESSAGE_THREAD_CONTENT_NAME);
+    const { items } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
     const viewportRef = useRef<HTMLDivElement>(null);
 
     const tileItems = useMemo<ConversationTileData[]>(
@@ -276,13 +277,13 @@ const MessageThreadContent = composable<HTMLDivElement, MessageThreadContentProp
   },
 );
 
-MessageThreadContent.displayName = MESSAGE_THREAD_CONTENT_NAME;
+ConversationStackContent.displayName = CONVERSATION_STACK_CONTENT_NAME;
 
 //
 // Message Tile
 //
 
-const MESSAGE_TILE_NAME = 'MessageThread.MessageTile';
+const MESSAGE_TILE_NAME = 'ConversationStack.MessageTile';
 
 /** Mosaic tile chrome; dispatches to the draft composer or the read-message body. */
 const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<ConversationTileData>) => {
@@ -319,7 +320,7 @@ ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 // detail/body row share the exact same columns (avatar in column 1, date/menu pinned right).
 //
 
-const MESSAGE_TILE_COLUMNS_NAME = 'MessageThread.MessageTile.Columns';
+const MESSAGE_TILE_COLUMNS_NAME = 'ConversationStack.MessageTile.Columns';
 
 /** Column template established by the tile; message parts subgrid into it. */
 const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
@@ -347,7 +348,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     onOpen,
     onExpandedChange,
     onContactCreate,
-  } = useMessageThreadContext(MESSAGE_TILE_NAME);
+  } = useConversationStackContext(MESSAGE_TILE_NAME);
   // The snapshot drives reactive body/header rendering; the live object (already the item, or the ref's
   // resolved target) drives handlers and the menu, which need a real `Message` for the operations.
   const [message] = useObject(messageOrRef);
@@ -430,7 +431,7 @@ MessageTile.displayName = MESSAGE_TILE_NAME;
 // Message parts (internal)
 //
 
-const MESSAGE_STAR_NAME = 'MessageThread.MessageStar';
+const MESSAGE_STAR_NAME = 'ConversationStack.MessageStar';
 
 // Stable fallback so `useAtomValue` always receives an atom when the message isn't starrable.
 const NOT_STARRED = Atom.make(false);
@@ -466,7 +467,7 @@ MessageStar.displayName = MESSAGE_STAR_NAME;
 // Message Details
 //
 
-const MESSAGE_DETAILS_NAME = 'MessageThread.MessageDetails';
+const MESSAGE_DETAILS_NAME = 'ConversationStack.MessageDetails';
 
 type MessageDetailsProps = {
   message: Mailbox.MessageLike;
@@ -524,7 +525,7 @@ MessageDetails.displayName = MESSAGE_DETAILS_NAME;
 // Message Body
 //
 
-const MESSAGE_BODY_NAME = 'MessageThread.MessageBody';
+const MESSAGE_BODY_NAME = 'ConversationStack.MessageBody';
 
 type MessageBodyProps = {
   message: Mailbox.MessageLike;
@@ -581,7 +582,7 @@ MessageBody.displayName = MESSAGE_BODY_NAME;
 // Message Menu
 //
 
-const MESSAGE_MENU_NAME = 'MessageThread.MessageMenu';
+const MESSAGE_MENU_NAME = 'ConversationStack.MessageMenu';
 
 type MessageMenuProps = {
   attendableId?: string;
@@ -646,7 +647,7 @@ const useMessageHandlers = (
 // Draft
 //
 
-const MESSAGE_DRAFT_NAME = 'MessageThread.Draft';
+const MESSAGE_DRAFT_NAME = 'ConversationStack.Draft';
 
 // Stable fallback while the mailbox tag index is unresolved, so the tag-uris atom is unconditional.
 const EMPTY_TAG_URIS_ATOM = Atom.make<string[]>(() => []);
@@ -669,7 +670,7 @@ type DraftTileProps = {
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { mailbox, runtime, onDelete } = useMessageThreadContext(MESSAGE_DRAFT_NAME);
+  const { mailbox, runtime, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
   const draft = live ?? message;
@@ -791,12 +792,14 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
 // Message Thread Toolbar
 //
 
-const MESSAGE_THREAD_TOOLBAR_NAME = 'MessageThread.Toolbar';
+const CONVERSATION_STACK_TOOLBAR_NAME = 'ConversationStack.Toolbar';
 
-export type MessageThreadToolbarProps = ThemedClassName;
+export type ConversationStackToolbarProps = ThemedClassName;
 
-const MessageThreadToolbar = composable<HTMLDivElement, MessageThreadToolbarProps>((props, forwardedRef) => {
-  const { attendableId, options, onCollapseAll, onExpandAll } = useMessageThreadContext(MESSAGE_THREAD_TOOLBAR_NAME);
+const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToolbarProps>((props, forwardedRef) => {
+  const { attendableId, options, onCollapseAll, onExpandAll } = useConversationStackContext(
+    CONVERSATION_STACK_TOOLBAR_NAME,
+  );
   const menuActions = useThreadViewActions({ options, onCollapseAll, onExpandAll });
 
   return (
@@ -806,16 +809,16 @@ const MessageThreadToolbar = composable<HTMLDivElement, MessageThreadToolbarProp
   );
 });
 
-MessageThreadToolbar.displayName = MESSAGE_THREAD_TOOLBAR_NAME;
+ConversationStackToolbar.displayName = CONVERSATION_STACK_TOOLBAR_NAME;
 
 //
-// MessageThread
+// ConversationStack
 //
 
-export const MessageThread = {
-  Root: MessageThreadRoot,
-  Toolbar: MessageThreadToolbar,
-  Content: MessageThreadContent,
+export const ConversationStack = {
+  Root: ConversationStackRoot,
+  Toolbar: ConversationStackToolbar,
+  Content: ConversationStackContent,
   Message: MessageTile,
   Draft: DraftTile,
 };

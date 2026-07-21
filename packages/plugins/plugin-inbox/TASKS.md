@@ -40,3 +40,26 @@ can be recorded there without a schema change. The Gmail sync mapper
 
 - Draft-reply benchmark + illocution (speech-act) classification: `packages/stories/stories-brain` (`pipelines/draft.ts`, `pipelines/questions.ts`).
 - Sync stats + body-part coverage: `operations/google/gmail/sync.ts`.
+
+## Refactoring
+
+See [`AUDIT.md`](AUDIT.md) for the full decomposition plan (mail stays as plugin-inbox;
+calendar + contacts move out; provider + apis split; shared card-focused `@dxos/react-ui-card`).
+
+- [x] Rename `GooglePeople` => `GoogleContacts` (namespace/dir alias only; internal `Person` /
+      `batchGetPeople` kept — they mirror Google's real People API). Aligns with `contacts/` ops +
+      `GOOGLE_CONTACTS_CONNECTOR_ID`.
+- [x] Rename the two Stack forms to match the conceptual model (`src/components/AUDIT.md`):
+      `MessageStack` => `InboxStack`, `MessageThread` (API in the `ConversationStack/` dir) =>
+      `ConversationStack`. Both are Stack forms with different (Card vs ad-hoc) grid Tiles.
+- [x] Move `useInjectedMailboxActions` + `useMailboxExtractorActions` from
+      `components/Mailbox/` to `hooks/` (they're capability-fed hooks, not components).
+- [ ] Unify the avatar: one shared `Avatar` primitive (actor/name → single hue derivation),
+      route all four summary sites through it (3 currently hand-roll `DxAvatar`). **No
+      `MessageSummary` composite** — the four layouts are deliberately distinct
+      (`src/components/AUDIT.md`).
+- [ ] Extract `@dxos/react-ui-card` — the shared low-level card vocabulary (`Row`, `CardTile`,
+      `Avatar`). Blockers: `Row` couples to `#hooks` (`useActorContact`), `#meta` (i18n),
+      `../../util` (`hashString`) — relocate those into the package. Reuse react-ui's
+      `Card.Menu` / `Avatar` / `SystemIconButton.Star` and react-ui-menu; don't re-extract.
+- [ ] Different form layout for `EditMessage` (`components/EditMessage/`).

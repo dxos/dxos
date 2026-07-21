@@ -29,7 +29,7 @@ import { hashString } from '../../util';
 
 /**
  * Shared Card-row primitives rendered inside a `Card.Body`. These are the single source for the
- * person/date/tags/ref/star rows used across the inbox tiles (`EventStack`/`MessageStack`), the preview
+ * person/date/tags/ref/star rows used across the inbox tiles (`EventStack`/`InboxStack`), the preview
  * cards (`EventCard`/`MessageCard`), and the article headers — so a row of each kind is defined exactly
  * once and every surface composes from it.
  */
