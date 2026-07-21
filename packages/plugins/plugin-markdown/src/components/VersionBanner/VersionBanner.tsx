@@ -55,7 +55,6 @@ export type VersionBannerProps = {
   timestamp?: string;
   onRestore?: () => void;
   onBranchFrom?: (name: string) => void;
-  onMerge?: () => void;
   /** Active branch view; renders the `[Base | Diff | Branch]` selector when paired with `onViewChange`. */
   view?: BranchView;
   onViewChange?: (view: BranchView) => void;
@@ -72,7 +71,6 @@ export const VersionBanner = ({
   timestamp,
   onRestore,
   onBranchFrom,
-  onMerge,
   view,
   onViewChange,
   onClose,
@@ -128,9 +126,6 @@ export const VersionBanner = ({
             </Toolbar.ToggleGroupItem>
           ))}
         </Toolbar.ToggleGroup>
-      )}
-      {mode === 'branch' && onMerge && (
-        <Toolbar.IconButton variant='ghost' icon='ph--git-merge--regular' label={t('merge.label')} onClick={onMerge} />
       )}
       <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
     </Toolbar.Root>

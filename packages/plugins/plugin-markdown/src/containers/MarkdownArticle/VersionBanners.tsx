@@ -77,14 +77,6 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
     [document, activeVersion, setSelection],
   );
 
-  const handleMerge = useCallback(() => {
-    if (document && activeBranch) {
-      Branch.merge(document, activeBranch)
-        .then(() => setSelection({ kind: 'current' }))
-        .catch((error) => log.catch(error));
-    }
-  }, [document, activeBranch, setSelection]);
-
   const handleCloseBanner = useCallback(() => {
     // Closing a branch-checkpoint banner returns to the branch tip, not main.
     setSelection(tipSelection());
@@ -110,7 +102,6 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
           mode='branch'
           name={label(activeBranch)}
           timestamp={activeBranch.createdAt}
-          onMerge={handleMerge}
           view={view}
           onViewChange={setView}
           onClose={handleCloseBanner}

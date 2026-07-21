@@ -360,26 +360,13 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return thread && thread.status !== 'resolved';
       });
 
+  // Hide the empty-state prompt once there is either a comment thread or a suggestion to review.
+  const hasSuggestions = !!markdownDoc?.history?.branches.some(
+    (branch) => branch.status === 'active' && branch.kind === 'suggestion',
+  );
+
   const comments =
-    filteredAnchors.length === 0 ? (
-      <div className='p-form-padding'>
-        <Message.Root>
-          <Message.Content>
-            <span>
-              <Trans
-                {...{
-                  t,
-                  i18nKey: 'no-comments.message',
-                  components: {
-                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                  },
-                }}
-              />
-            </span>
-          </Message.Content>
-        </Message.Root>
-      </div>
-    ) : (
+    filteredAnchors.length > 0 ? (
       <div>
         {filteredAnchors.map((anchor) => {
           const thread = Relation.getSource(anchor) as Thread.Thread;
@@ -405,6 +392,25 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             />
           );
         })}
+      </div>
+    ) : hasSuggestions ? null : (
+      <div className='p-form-padding'>
+        <Message.Root>
+          <Message.Content>
+            <span>
+              <Trans
+                {...{
+                  t,
+                  i18nKey: 'no-comments.message',
+                  components: {
+                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
+                    versionsIcon: <Icon icon='ph--git-branch--regular' size={4} classNames='dx-icon-inline' />,
+                  },
+                }}
+              />
+            </span>
+          </Message.Content>
+        </Message.Root>
       </div>
     );
 

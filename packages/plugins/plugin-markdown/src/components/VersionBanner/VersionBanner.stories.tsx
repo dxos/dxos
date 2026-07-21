@@ -41,7 +41,6 @@ export const Branch: Story = {
     mode: 'branch',
     name: 'agent-draft',
     timestamp: '2026-07-19T09:00:00.000Z',
-    onMerge: fn(),
     view: 'branch',
     onViewChange: fn(),
     onClose: fn(),

@@ -44,7 +44,6 @@ export const translations = [
         'restore.label': 'Restore',
         'branch-from.label': 'Branch from here',
         'suggest-edits.label': 'Suggest edits',
-        'merge.label': 'Merge',
         'branch-view-base.label': 'Base',
         'branch-view-diff.label': 'Diff',
         'branch-view-branch.label': 'Branch',
