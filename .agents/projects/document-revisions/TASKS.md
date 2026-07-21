@@ -1,6 +1,6 @@
 # Document Revisions & Branches — Tasks
 
-Design: [`packages/plugins/plugin-markdown/DESIGN.md`](../../../packages/plugins/plugin-markdown/DESIGN.md).
+Design: [`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md).
 Convergence plan (+ resolved decisions):
 [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md).
 PRs: [#12237](https://github.com/dxos/dxos/pull/12237) (landed 2026-07-16); stage 1 on branch
@@ -220,7 +220,7 @@ config**; (3) additive — keep the explicit branch switcher / Base-Diff-Branch 
 an advanced/history path (reached via explicit selection); ambient overlay is the default
 `selection.kind==='current'` experience; (4) accept/reject by any editor, inline + companion.
 
-- [ ] **Maintain the precise ambient-review spec in `packages/plugins/plugin-markdown/DESIGN.md`**
+- [ ] **Maintain the precise ambient-review spec in `packages/plugins/plugin-comments/DESIGN.md`**
       (the plugin design file), not a separate superpowers spec. (tracked 2026-07-21)
 
 ## Landing the suggestions feature (current goal)
