@@ -3,6 +3,7 @@
 //
 
 import { type DiffHunk, type GroupPolicy, type SuggestionSource, diffHunks, groupHunks } from '@dxos/ui-editor';
+import { idHue, stringToHue } from '@dxos/util';
 
 /**
  * A resolved suggestion branch: its author (identity DID) and current content. The review layer
@@ -11,24 +12,28 @@ import { type DiffHunk, type GroupPolicy, type SuggestionSource, diffHunks, grou
 export type ResolvedSuggestionBranch = {
   author: string;
   content: string;
+  /**
+   * The author's palette hue (from their identity), when known. Aligns the suggestion's colour with
+   * the author's avatar/tag colour; absent ⇒ a stable hue is derived from the author id.
+   */
+  hue?: string;
 };
 
 /**
- * Deterministic colour for a suggestion author, keyed by identity DID. Stable across sessions and
- * peers (same DID → same hue) so a suggestion reads with a consistent colour; intended to align with
- * the collaboration awareness cursor palette, which is also DID-seeded.
+ * Resolve a suggestion author's palette hue: their identity-derived hue when known (so it matches the
+ * author's avatar/tag colour), else a stable hue seeded from the author id. One of the shared
+ * {@link idHue} palette entries, so it maps to the same `--color-<hue>-*` tokens used everywhere else.
  */
-export const suggestionColour = (author: string): string => {
-  // FNV-1a over the DID → hue. Fixed saturation/lightness keeps every author's colour legible as
-  // both text and underline on light and dark surfaces.
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < author.length; index++) {
-    hash ^= author.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue} 65% 50%)`;
-};
+export const suggestionHue = (author: string, hue?: string): string =>
+  hue && (idHue as readonly string[]).includes(hue) ? hue : stringToHue(author);
+
+/**
+ * CSS text colour for a suggestion author, from the shared hue palette — the same colour the author's
+ * avatar/tag uses. Drives both the inline editor markers and the review cards so a suggestion reads
+ * with its author's consistent colour across surfaces.
+ */
+export const suggestionColour = (author: string, hue?: string): string =>
+  `var(--color-${suggestionHue(author, hue)}-text)`;
 
 /**
  * Build the {@link SuggestionSource}s the multi-author overlay renders from a document's resolved
@@ -37,7 +42,7 @@ export const suggestionColour = (author: string): string => {
  */
 export const buildSuggestionSources = (branches: ResolvedSuggestionBranch[]): SuggestionSource[] =>
   branches
-    .map(({ author, content }) => ({ author, colour: suggestionColour(author), content }))
+    .map(({ author, content, hue }) => ({ author, colour: suggestionColour(author, hue), content }))
     .sort((a, b) => (a.author < b.author ? -1 : a.author > b.author ? 1 : 0));
 
 /** One reviewable suggestion card: a grouped change from a single author, anchored in the base text. */

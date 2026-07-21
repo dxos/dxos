@@ -19,7 +19,6 @@ export const translations = [
         'accept-change.label': 'Accept change',
         'reject-change.label': 'Reject change',
         'suggestions.label': 'Suggestions',
-        'no-suggestions.message': 'No open suggestions on this document.',
         'thread-deleted.label': 'Thread deleted',
         'message-deleted.label': 'Message deleted',
         'draft.button': 'DRAFT',

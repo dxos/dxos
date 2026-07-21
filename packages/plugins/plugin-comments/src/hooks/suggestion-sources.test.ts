@@ -17,8 +17,14 @@ describe('suggestionColour', () => {
     expect(suggestionColour('did:alice')).not.toBe(suggestionColour('did:bob'));
   });
 
-  test('is a valid hsl string', () => {
-    expect(suggestionColour('did:alice')).toMatch(/^hsl\(\d{1,3} 65% 50%\)$/);
+  test('is a palette text-colour token', () => {
+    expect(suggestionColour('did:alice')).toMatch(/^var\(--color-[a-z]+-text\)$/);
+  });
+
+  test('uses the identity hue when supplied (matches the author avatar/tag colour)', () => {
+    expect(suggestionColour('did:alice', 'violet')).toBe('var(--color-violet-text)');
+    // An unknown hue falls back to the id-seeded palette hue.
+    expect(suggestionColour('did:alice', 'not-a-hue')).toBe(suggestionColour('did:alice'));
   });
 });
 

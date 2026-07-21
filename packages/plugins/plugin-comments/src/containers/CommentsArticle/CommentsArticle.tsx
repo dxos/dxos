@@ -28,7 +28,8 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
-import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
+import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { meta } from '#meta';
@@ -133,6 +134,22 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const authorLabels = useMemo(
     () =>
       Object.fromEntries(members.flatMap((member) => (member.displayName ? [[member.did, member.displayName]] : []))),
+    [members],
+  );
+  // Author palette hues keyed by DID: the identity's chosen hue, else derived from the (hex) identity
+  // key so a suggestion's colour matches the author's avatar/tag and the inline markers.
+  const authorHues = useMemo(
+    () =>
+      Object.fromEntries(
+        members.flatMap((member) => {
+          if (!member.did) {
+            return [];
+          }
+          const chosen = typeof member.data?.hue === 'string' ? toHue(member.data.hue) : 'neutral';
+          const hue = chosen !== 'neutral' ? chosen : member.identityKey ? hexToHue(member.identityKey) : undefined;
+          return hue ? [[member.did, hue]] : [];
+        }),
+      ),
     [members],
   );
 
@@ -440,6 +457,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 document={markdownDoc}
                 base={base}
                 authorLabels={authorLabels}
+                authorHues={authorHues}
                 onAccept={handleAcceptSuggestion}
                 onReject={handleRejectSuggestion}
               />

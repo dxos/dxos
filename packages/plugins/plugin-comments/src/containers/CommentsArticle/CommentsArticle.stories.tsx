@@ -271,7 +271,7 @@ const meta = {
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
               const doc = Markdown.make({ name: 'Sample', content: SAMPLE_CONTENT });
               personalSpace.db.add(doc);
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));

@@ -13,6 +13,8 @@ import { Branch, Version } from '@dxos/versioning';
 import { VersionBanner } from '#components';
 import { type UseVersioningResult } from '#hooks';
 
+import { authorHue } from './author-hue';
+
 export type VersionBannersProps = {
   versioning: UseVersioningResult;
 };
@@ -38,6 +40,10 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
     },
     [members],
   );
+
+  // A suggestion branch's tag colour is its author's palette hue — the same colour used for the
+  // author's avatar/tag and the inline suggestion markers, so a suggestion reads consistently.
+  const hue = useCallback((branch: Branch.Branch) => authorHue(branch, members), [members]);
 
   // Leaving a checkpoint view returns to the tip it belongs to: the branch the checkpoint was
   // taken on (so the reviewer lands back on the editable branch tip), else main's present.
@@ -101,6 +107,7 @@ export const VersionBanners = ({ versioning }: VersionBannersProps) => {
         <VersionBanner
           mode='branch'
           name={label(activeBranch)}
+          hue={hue(activeBranch)}
           timestamp={activeBranch.createdAt}
           view={view}
           onViewChange={setView}

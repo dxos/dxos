@@ -13,8 +13,9 @@ import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { useIdentity } from '@dxos/halo-react';
+import { useIdentity, useMembers } from '@dxos/halo-react';
 import { useActionRunner } from '@dxos/plugin-graph';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { Editor, useEditorContext } from '@dxos/react-ui-editor';
@@ -40,6 +41,7 @@ import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { mergeConflicts, versionDiff } from '../../extensions';
+import { authorHue, hueColour } from './author-hue';
 import { VersionBanners } from './VersionBanners';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
@@ -190,6 +192,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       [object, reviewBranch, invokePromise],
     );
 
+    // The suggestion author's palette colour — the same colour as their banner tag and avatar — so
+    // the inline markers attribute the change by colour. Resolved against the space members.
+    const members = useMembers(getSpace(object)?.id);
+    const suggestColour = useMemo(
+      () => (activeBranch ? hueColour(authorHue(activeBranch, members)) : undefined),
+      [activeBranch, members],
+    );
+
     // The compare overlay lives in a compartment (reconfigured live, see `compareCompartment`), so it
     // is intentionally absent here — its config changing must not alter this array, which would make
     // `useTextEditor` recreate the view. The suggest overlay stays baked in: it rebinds the editor to
@@ -202,13 +212,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         list.push(
           suggestChanges({
             proposal: branchText.content,
+            colour: suggestColour,
             onAccept: handleAcceptChange,
             onReject: handleRejectChange,
           }),
         );
       }
       return list;
-    }, [extensions, suggestActive, branchText, handleAcceptChange, handleRejectChange]);
+    }, [extensions, suggestActive, branchText, suggestColour, handleAcceptChange, handleRejectChange]);
 
     // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants use
     // the custom versionDiff decorations; sideBySide uses the richer editable unified merge overlay

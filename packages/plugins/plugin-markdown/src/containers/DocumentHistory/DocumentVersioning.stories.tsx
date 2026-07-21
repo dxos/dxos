@@ -155,11 +155,10 @@ const selectTimelineNode = async (canvasElement: HTMLElement, label: string) => 
   await userEvent.click(await canvas.findByText(label, undefined, { timeout: 15_000 }));
 };
 
-/** Merge the active branch via the version banner ('Merge' also labels a panel icon button). */
-const mergeViaBanner = async (canvasElement: HTMLElement) => {
+/** Merge the active branch via the history panel's Merge button (the banner no longer merges). */
+const mergeViaPanel = async (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
-  const banner = canvas.getByTestId('version-banner-branch');
-  await userEvent.click(within(banner).getByText('Merge'));
+  await userEvent.click(await canvas.findByRole('button', { name: 'Merge' }));
 };
 
 const meta = {
@@ -177,7 +176,7 @@ const meta = {
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
               currentDoc = personalSpace.db.add(
                 Markdown.make({ name: 'Versioning', content: context.args.content ?? '' }),
               );
@@ -365,7 +364,7 @@ export const BranchMerge: Story = {
 
     // Merge via the banner; the concurrent parent edit AND every branch edit land on main, and the
     // editor returns to it.
-    await mergeViaBanner(canvasElement);
+    await mergeViaPanel(canvasElement);
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha edited'), { timeout: 10_000 });
     await waitFor(() =>
       ['charlie', 'delta', 'epsilon'].forEach((line) => expect(editorContent(canvasElement)).toContain(line)),
@@ -408,7 +407,7 @@ export const ChainedBranches: Story = {
     await canvas.findByTestId('version-banner-branch');
     await setBranchContent('first', 'a\nb\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('b'));
-    await mergeViaBanner(canvasElement);
+    await mergeViaPanel(canvasElement);
     await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
     await waitFor(() => expect(editorContent(canvasElement)).toContain('b'), { timeout: 10_000 });
     await canvas.findByText('merge: first');
@@ -418,7 +417,7 @@ export const ChainedBranches: Story = {
     await canvas.findByTestId('version-banner-branch');
     await setBranchContent('second', 'a\nb\nc\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('c'));
-    await mergeViaBanner(canvasElement);
+    await mergeViaPanel(canvasElement);
     await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
 
     // Main accumulates both branches' edits; both merges are recorded in the timeline.
@@ -452,7 +451,7 @@ export const ConflictAutoResolve: Story = {
     setRootContent('alpha ours\nbravo\n');
 
     // Merge: both edits interleave via the CRDT — no markers, both words present.
-    await mergeViaBanner(canvasElement);
+    await mergeViaPanel(canvasElement);
     await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
     await waitFor(() => expect(editorContent(canvasElement)).toContain('ours'), { timeout: 10_000 });
     await waitFor(() => expect(editorContent(canvasElement)).toContain('theirs'));

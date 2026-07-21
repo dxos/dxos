@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { NamePopover } from '@dxos/app-framework/ui';
 import { type SpaceCapabilities } from '@dxos/plugin-space';
 import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -51,6 +52,12 @@ export type VersionBannerProps = {
    */
   mode: 'checkpoint' | 'branch' | 'fork';
   name: string;
+  /**
+   * Palette hue for the name tag — pass the branch author's identity hue so a suggestion banner reads
+   * with the author's colour (matching their avatar/tag and the inline suggestion markers). Defaults
+   * to neutral.
+   */
+  hue?: Hue;
   /** ISO timestamp — shown as a compact age tag (`2d`, `5h`, `30m`) with the full date in a tooltip. */
   timestamp?: string;
   onRestore?: () => void;
@@ -68,6 +75,7 @@ export type VersionBannerProps = {
 export const VersionBanner = ({
   mode,
   name,
+  hue = 'neutral',
   timestamp,
   onRestore,
   onBranchFrom,
@@ -82,7 +90,7 @@ export const VersionBanner = ({
     <Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
       <div className='flex items-center gap-1 px-2 truncate'>
         <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
-        <Tag hue='neutral' classNames='flex gap-2'>
+        <Tag hue={hue} classNames='flex gap-2'>
           {name}
         </Tag>
         {timestamp && (

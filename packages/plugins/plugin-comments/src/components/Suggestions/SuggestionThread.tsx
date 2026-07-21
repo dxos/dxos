@@ -5,12 +5,9 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
 import { Message as MessageComponent, Thread } from '@dxos/react-ui-thread';
 import { Message } from '@dxos/types';
 import { type GroupPolicy, type SuggestionSource } from '@dxos/ui-editor';
-
-import { meta } from '#meta';
 
 import { type SuggestionGroup, suggestionGroupKey, suggestionGroups } from '../../hooks';
 import { getMessageMetadata } from '../../util';
@@ -43,8 +40,6 @@ export const SuggestionThread = ({
   onAccept,
   onReject,
 }: SuggestionThreadProps) => {
-  const { t } = useTranslation(meta.profile.key);
-
   // Each visible group becomes an in-memory message with a `change` block; `byId` maps the tile's
   // message id back to its group so the Accept/Reject callbacks resolve to the durable operation.
   const { messages, byId } = useMemo(() => {
@@ -87,8 +82,10 @@ export const SuggestionThread = ({
     [byId, onReject],
   );
 
+  // No visible suggestions ⇒ render nothing; the companion's shared empty-state prompt (shown by
+  // the container when there are neither comments nor suggestions) covers the empty case.
   if (messages.length === 0) {
-    return <p className='pli-3 plb-2 text-sm text-subdued'>{t('no-suggestions.message')}</p>;
+    return null;
   }
 
   return (

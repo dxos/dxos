@@ -27,6 +27,8 @@ export type SuggestionsProps = {
   base: string;
   group?: GroupPolicy;
   authorLabels?: Record<string, string>;
+  /** Author palette hues keyed by DID; aligns each suggestion's colour with its author's avatar/tag. */
+  authorHues?: Record<string, string>;
   onAccept?: (group: SuggestionGroup) => void;
   onReject?: (group: SuggestionGroup) => void;
 };
@@ -37,7 +39,15 @@ export type SuggestionsProps = {
  * content is tracked reactively (via {@link BranchContent}) so a suggestion appears/updates as its
  * author edits, and disappears when accepted/rejected leaves it empty.
  */
-export const Suggestions = ({ document, base, group, authorLabels, onAccept, onReject }: SuggestionsProps) => {
+export const Suggestions = ({
+  document,
+  base,
+  group,
+  authorLabels,
+  authorHues,
+  onAccept,
+  onReject,
+}: SuggestionsProps) => {
   // Re-run when branches are added/removed/archived.
   useObject(document, 'history');
   const branches = (document?.history?.branches ?? []).filter(
@@ -69,7 +79,7 @@ export const Suggestions = ({ document, base, group, authorLabels, onAccept, onR
       ))}
       <SuggestionThread
         base={base}
-        sources={buildSuggestionSources(resolved)}
+        sources={buildSuggestionSources(resolved.map((value) => ({ ...value, hue: authorHues?.[value.author] })))}
         group={group ?? DEFAULT_GROUP}
         authorLabels={authorLabels}
         onAccept={onAccept}
