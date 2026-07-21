@@ -204,6 +204,28 @@ const evictedPrefixHeight = (virtualizer: Virtualizer<any, any>, oldIndexOfNewFi
 };
 
 /**
+ * True when `items` is exactly `prevItems` sliced from `oldIndexOfNewFirst`, optionally with new
+ * items appended after it -- the shape a genuine slide/eviction/append actually produces. False for
+ * anything that reorders retained items (e.g. a conversation bumped to the head by a new reply
+ * arriving mid-sync): the bumped item's old mid-list offset would otherwise be misread as "evicted"
+ * height, growing the leading spacer by a bogus amount that's never reversed.
+ */
+const isContiguousSlide = <TItem>(
+  prevItems: readonly TItem[],
+  items: readonly TItem[],
+  oldIndexOfNewFirst: number,
+  getId: GetId<TItem>,
+): boolean => {
+  const overlap = Math.min(items.length, prevItems.length - oldIndexOfNewFirst);
+  for (let index = 0; index < overlap; index++) {
+    if (getId(items[index]) !== getId(prevItems[oldIndexOfNewFirst + index])) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
  * Finds an item retained across a prepend, anchored on its pre-change offset. Scans from the tail
  * (the common case -- a prepend leaves the rest of the window untouched) and doesn't require the
  * item to be currently rendered, since `measurementsCache` covers the whole array.
@@ -233,8 +255,11 @@ type FrontEdgeChange =
  * Classifies how `items` changed at the front, relative to `prevItems`, using only the outgoing
  * window's own measurements (no need to wait for the incoming render). `'evicted'` covers both a
  * prefix eviction (the window slid forward) and a pure append (the window grew) -- either way the
- * item now at the front was already loaded, so its height is already known. `'prepended'` covers
- * everything else (a `getPrevious` prepend, or a reset to a disjoint range).
+ * item now at the front was already loaded, so its height is already known, *and* the retained
+ * items keep their old relative order (`isContiguousSlide`). `'prepended'` covers everything else:
+ * a `getPrevious` prepend, a reset to a disjoint range, or an existing item reordered to the head
+ * (e.g. conversation grouping bumping a thread on a new reply) -- despite the new head having been
+ * loaded before, nothing was actually evicted.
  */
 const classifyFrontEdgeChange = <TItem>(
   prevItems: readonly TItem[] | TItem[] | undefined,
@@ -247,7 +272,7 @@ const classifyFrontEdgeChange = <TItem>(
   }
   const firstNewId = items?.[0] != null ? getId(items[0]) : undefined;
   const oldIndexOfNewFirst = firstNewId != null ? prevItems.findIndex((item) => getId(item) === firstNewId) : -1;
-  if (oldIndexOfNewFirst >= 0) {
+  if (oldIndexOfNewFirst >= 0 && items && isContiguousSlide(prevItems, items, oldIndexOfNewFirst, getId)) {
     return { kind: 'evicted', evictedHeight: evictedPrefixHeight(virtualizer, oldIndexOfNewFirst) };
   }
   const newIds = new Set(items?.map((item) => getId(item)));
@@ -318,10 +343,12 @@ const computePrependCorrection = <TItem>(
  * render measures them; that lag is safe because prepending only ever grows content before the
  * spacer shrinks to match.
  *
- * The layout effect also re-runs `evaluateTriggers`, because `@tanstack/react-virtual` only calls
- * `onChange` when the visible range changes, not merely when `items` does -- while the viewport
- * sits in blank spacer space the range never changes, so relying on `onChange` alone would stall a
- * catch-up chain after one page.
+ * The layout effect also re-runs `evaluateTriggers` on every `items` change, evicted/appended or
+ * prepended alike -- `@tanstack/react-virtual` only calls `onChange` when the visible range (or
+ * `isScrolling`) changes, not merely when `items` does. Once the loaded window's tail is already
+ * fully rendered and the scrollbar sits at its physical max, further scrolling can't move that
+ * range at all, so `onChange` stops firing -- relying on it alone would permanently stall a
+ * `getNext` chain right after its own page lands, before the user scrolls again.
  *
  * Assumes the stack renders with `draggable={false}` (virtual indices map 1:1 onto `items`).
  */
@@ -385,8 +412,9 @@ export const useVirtualizerPagination = <TItem = any>({
       } else if (change.kind === 'prepended') {
         anchorRef.current = change.anchor;
         if (!change.anchor) {
-          // No retained item to anchor on (a disjoint reset): the layout effect below never runs
-          // its own reset for this case, since it bails out early on a null anchor.
+          // No retained item to anchor on (a disjoint reset): the layout effect below still
+          // re-arms triggers for this case, but its own correction/reset is anchor-driven, so
+          // clear the spacer here instead of waiting on it.
           setSpacer(0);
         }
       }
@@ -410,7 +438,14 @@ export const useVirtualizerPagination = <TItem = any>({
     const virtualizer = virtualizerRef.current;
     const anchor = anchorRef.current;
     anchorRef.current = null;
-    if (!virtualizer || !anchor || !items) {
+    if (!virtualizer || !items) {
+      return;
+    }
+    if (!anchor) {
+      // Evicted/appended (a `getNext` page, or eviction sliding the window), or a caller-driven
+      // `items` change with no front-edge classification (pagination unset) -- no prepend to
+      // correct, but still re-arm: see the hook's own doc comment for why this can't be skipped.
+      rearmTriggers(virtualizer);
       return;
     }
     const atHead = triggerState.paginationRef.current?.atHead === true;
