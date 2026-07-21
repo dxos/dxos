@@ -8,12 +8,12 @@ import { sleep } from '@dxos/async';
 import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Operation, Trigger } from '@dxos/compute';
+import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Scope } from '@dxos/echo';
-import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { bundleFunction } from '@dxos/functions-runtime/native';
-import type { BundleResult } from '@dxos/functions-runtime/native';
+import { FunctionsServiceClient } from '@dxos/edge-compute';
+import { bundleFunction } from '@dxos/edge-compute/native';
+import type { BundleResult } from '@dxos/edge-compute/native';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
@@ -53,6 +53,7 @@ export const deployFunction = async (
   functionsServiceClient: FunctionsServiceClient,
   entryPoint: string,
   runtime: FunctionRuntimeKind,
+  ownerUri: string,
 ): Promise<Operation.PersistentOperation> => {
   const artifact = await bundleFunction({
     entryPoint,
@@ -60,7 +61,7 @@ export const deployFunction = async (
   });
   const func = await functionsServiceClient.deploy(Context.default(), {
     version: '0.0.1',
-    ownerPublicKey: space.key,
+    ownerUri,
     entryPoint: artifact.entryPoint,
     assets: artifact.assets,
     runtime,
@@ -84,7 +85,7 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   while (true) {
     try {
       const traceFeed = space.properties.invocationTraceFeed?.target;
-      const traceFeedDXN = traceFeed ? Feed.getQueueUri(traceFeed) : undefined;
+      const traceFeedDXN = traceFeed ? Feed.getFeedUri(traceFeed) : undefined;
       const invocations = traceFeedDXN
         ? await space.db.query(Query.select(Filter.everything()).from(Scope.feed(traceFeedDXN))).run()
         : [];

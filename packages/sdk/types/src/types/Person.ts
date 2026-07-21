@@ -6,10 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 import { PropertyMeta } from '@dxos/echo/internal';
+import { CardAnnotation } from '@dxos/schema';
 
 import * as Geo from './Geo';
 import * as Organization from './Organization';
@@ -118,6 +119,7 @@ const _PersonSchema = PersonSchema.pipe(
   Schema.annotations({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'neutral' }),
+  CardAnnotation.set(true),
 );
 
 export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.person', '0.1.0'))(_PersonSchema) {}

@@ -75,3 +75,5 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
     </Menu.Root>
   );
 };
+
+RelatedArticle.displayName = 'RelatedArticle';

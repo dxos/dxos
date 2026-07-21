@@ -27,6 +27,7 @@ import {
   Operation,
   OperationHandlerSet,
   Process,
+  RunAgainError,
   ServiceNotAvailableError,
   ServiceResolver,
   Trace,
@@ -39,6 +40,10 @@ import { Organization } from '@dxos/types';
 
 import { ProcessStore } from './process-store';
 import * as ProcessManager from './ProcessManager';
+import * as ProcessMonitor from './ProcessMonitor';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker';
+import * as RemoteProcessManager from './RemoteProcessManager';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor';
 import { TestDatabaseLayer } from './testing';
 
 //
@@ -57,6 +62,12 @@ const Double = Operation.make({
 
 const Failing = Operation.make({
   meta: { key: DXN.make('org.dxos.test.failing'), name: 'Failing' },
+  input: Schema.Void,
+  output: Schema.Void,
+});
+
+const RunAgain = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.runAgain'), name: 'RunAgain' },
   input: Schema.Void,
   output: Schema.Void,
 });
@@ -117,6 +128,13 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* () {
         return yield* Effect.die('Test Error');
+      }),
+    ),
+  ),
+  RunAgain.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        yield* Operation.runAgain();
       }),
     ),
   ),
@@ -271,8 +289,10 @@ const ProcessWithRpcs = Process.make(
     }),
 );
 
-const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provideMerge(RemoteProcessManager.layerNoop),
+  Layer.provideMerge(RemoteTraceMonitor.layerNoop),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
   Layer.provide(
     TestDatabaseLayer({
@@ -541,8 +561,35 @@ describe('ManagerImpl', () => {
       const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
-      expect(exit).toEqual(Exit.die('Error: Test Error'));
+      expect(exit).toEqual(Exit.die('Test Error'));
       expect(handle.status.state).toEqual(Process.State.FAILED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAndExit propagates the process failure cause without stringifying or nesting',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(Process.fromOperation(RunAgain, handlers));
+      const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(handle.status.state).toEqual(Process.State.FAILED);
+
+      if (!Exit.isFailure(exit)) {
+        return;
+      }
+
+      const cause = exit.cause;
+      expect(cause._tag).toBe('Die');
+
+      const defect = Cause.squash(cause);
+      expect(typeof defect).not.toBe('string');
+      expect(Cause.isCause(defect)).toBe(false);
+      expect(RunAgainError.is(defect)).toBe(true);
+
+      const processCause = handle.status.exit.pipe(Option.flatMap(Exit.causeOption), Option.getOrUndefined);
+      expect(processCause).toEqual(cause);
     }, Effect.provide(TestLayer)),
   );
 
@@ -619,6 +666,101 @@ describe('ProcessOperationInvoker', () => {
       const output = yield* fiber.await;
       expect(output).toEqual(Exit.die('Test Error'));
     }, Effect.provide(TestLayer)),
+  );
+});
+
+//
+// Edge dispatch: `InvokeOptions.on === 'edge'` routes through RemoteOperationInvoker instead of
+// spawning a local process. Keyed by the operation's `meta.deployedId`.
+//
+
+describe('ProcessOperationInvoker edge dispatch', () => {
+  const DeployedDouble = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.deployedDouble'), name: 'DeployedDouble', deployedId: 'fn-double' },
+    input: Schema.Struct({ value: Schema.Number }),
+    output: Schema.Number,
+  });
+
+  const NotDeployed = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.notDeployed'), name: 'NotDeployed' },
+    input: Schema.Struct({ value: Schema.Number }),
+    output: Schema.Number,
+  });
+
+  const makeEdgeLayer = (invoke: RemoteOperationInvoker.Invoker['invoke']) =>
+    Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
+      Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+      Layer.provideMerge(RemoteProcessManager.layerNoop),
+      Layer.provideMerge(RemoteTraceMonitor.layerNoop),
+      Layer.provideMerge(Layer.succeed(RemoteOperationInvoker.Service, { invoke })),
+      Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
+      Layer.provide(TestDatabaseLayer({ types: [Organization.Organization] })),
+      Layer.provide(KeyValueStore.layerMemory),
+      Layer.provide(OperationHandlerSet.provide(handlers)),
+      Layer.provideMerge(Registry.layer),
+      Layer.provide(Trace.layerNoop),
+    );
+
+  it.effect(
+    'routes on:edge invocations to the remote invoker keyed by deployedId',
+    Effect.fn(function* ({ expect }) {
+      const calls: Array<{ deployedId: string; input: unknown }> = [];
+      const layer = makeEdgeLayer((_ctx, deployedId, input) => {
+        calls.push({ deployedId, input });
+        return Effect.succeed((input as { value: number }).value * 2) as Effect.Effect<never>;
+      });
+
+      const result = yield* Effect.gen(function* () {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        return yield* invoker.invoke(DeployedDouble, { value: 21 }, { on: 'edge' });
+      }).pipe(Effect.provide(layer));
+
+      expect(result).toEqual(42);
+      expect(calls).toEqual([{ deployedId: 'fn-double', input: { value: 21 } }]);
+    }),
+  );
+
+  it.effect(
+    'does not spawn a local process for on:edge invocations',
+    Effect.fn(function* ({ expect }) {
+      const layer = makeEdgeLayer((_ctx, _deployedId, input) => Effect.succeed(input) as Effect.Effect<never>);
+
+      const treeSize = yield* Effect.gen(function* () {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        yield* invoker.invoke(DeployedDouble, { value: 1 }, { on: 'edge' });
+        const monitor = yield* Process.ProcessMonitorService;
+        const tree = yield* monitor.processTree;
+        return tree.length;
+      }).pipe(Effect.provide(layer));
+
+      expect(treeSize).toEqual(0);
+    }),
+  );
+
+  it.effect(
+    'dies on an edge invocation when the operation has no deployedId',
+    Effect.fn(function* ({ expect }) {
+      const layer = makeEdgeLayer((_ctx, _deployedId, input) => Effect.succeed(input) as Effect.Effect<never>);
+
+      const exit = yield* Effect.gen(function* () {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        return yield* invoker.invoke(NotDeployed, { value: 1 }, { on: 'edge' });
+      }).pipe(Effect.provide(layer), Effect.exit);
+
+      expect(Exit.isFailure(exit)).toEqual(true);
+    }),
+  );
+
+  it.effect(
+    'dies on an edge invocation when no remote invoker is configured',
+    Effect.fn(function* ({ expect }) {
+      const exit = yield* Effect.gen(function* () {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        return yield* invoker.invoke(DeployedDouble, { value: 1 }, { on: 'edge' });
+      }).pipe(Effect.provide(TestLayer), Effect.exit);
+
+      expect(Exit.isFailure(exit)).toEqual(true);
+    }),
   );
 });
 
@@ -707,8 +849,10 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     }),
   );
 
-  const InheritanceTestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+  const InheritanceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(RemoteProcessManager.layerNoop),
+    Layer.provideMerge(RemoteTraceMonitor.layerNoop),
     Layer.provideMerge(SpaceAwareResolverLayer),
     Layer.provideMerge(
       TestDatabaseLayer({

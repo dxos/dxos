@@ -1,6 +1,5 @@
 {
   "name": "@dxos/storybook-react",
-  "version": "0.9.0",
   "private": true,
   "description": "Storybook config package for the DXOS monorepo.",
   "homepage": "https://dxos.org",
@@ -16,6 +15,10 @@
   "scripts": {
     "chromatic": "chromatic --project-token=\"chpt_8565ce3985dc41b\" --storybook-build-dir ./out/storybook",
     "test": "test-storybook --url http://127.0.0.1:9009"
+  },
+  "dependencies": {
+    "@babel/parser": "catalog:",
+    "vite-plugin-top-level-await": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",

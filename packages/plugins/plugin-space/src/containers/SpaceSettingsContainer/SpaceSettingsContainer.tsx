@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSpace, Paths, LayoutOperation } from '@dxos/app-toolkit';
+import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -153,6 +153,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     await Promise.all(repairs.map((repair) => repair({ space, isDefault: AppSpace.isPersonalSpace(space) })));
   }, [space, repairs]);
 
+  const handleResetHome = useCallback(() => AppSpace.resetHomeVisibility(space), [space]);
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
   const handleDelete = useCallback(async () => {
@@ -193,17 +195,17 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           </Form.Section>
 
           <Form.Section title={t('space-controls.title')} description={t('space-controls.description')}>
-            <Form.Row label={t('space-key.title')} description={t('space-key.description')}>
+            <Form.Row label={t('space-id.title')} description={t('space-id.description')}>
               <div className='flex items-center gap-2'>
                 <Input.Root>
-                  <Input.TextInput value={space.key.toHex()} disabled classNames='flex-1 font-mono text-xs' />
+                  <Input.TextInput value={space.id} disabled classNames='flex-1 font-mono text-xs' />
                 </Input.Root>
                 <IconButton
                   icon='ph--copy--regular'
                   iconOnly
-                  label={t('copy-space-key.label')}
+                  label={t('copy-space-id.label')}
                   onClick={() => {
-                    void navigator.clipboard.writeText(space.key.toHex());
+                    void navigator.clipboard.writeText(space.id);
                   }}
                 />
               </div>
@@ -229,10 +231,13 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             <Form.Row label={t('repair-space.title')} description={t('repair-space.description')}>
               <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
             </Form.Row>
+            <Form.Row label={t('reset-home.title')} description={t('reset-home.description')}>
+              <Button onClick={handleResetHome}>{t('reset-home.label')}</Button>
+            </Form.Row>
           </Form.Section>
 
-          <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
-            {!personal && (
+          {!personal && (
+            <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
               <Form.Row label={t('delete-space.title')} description={t('delete-space.description')}>
                 <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
                   <Dialog.Trigger asChild>
@@ -266,8 +271,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                   </Dialog.Portal>
                 </Dialog.Root>
               </Form.Row>
-            )}
-          </Form.Section>
+            </Form.Section>
+          )}
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

@@ -32,8 +32,14 @@ export const latestReport = Effect.gen(function* () {
   if (!feed) {
     return undefined;
   }
-  const reports = yield* Feed.runQuery(feed, Filter.type(Ibkr.Report));
-  // ISO timestamps sort lexicographically; take the newest.
-  const [latest] = [...reports].sort((left, right) => right.fetchedAt.localeCompare(left.fetchedAt));
-  return latest;
+  return yield* latestReportFromFeed(feed);
 });
+
+/** The most recent stored report in a feed, or undefined when the feed is empty. */
+export const latestReportFromFeed = (feed: Feed.Feed) =>
+  Effect.gen(function* () {
+    const reports = yield* Feed.query(feed, Filter.type(Ibkr.Report)).run;
+    // ISO timestamps sort lexicographically; take the newest.
+    const [latest] = [...reports].sort((left, right) => right.fetchedAt.localeCompare(left.fetchedAt));
+    return latest;
+  });

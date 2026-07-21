@@ -3,17 +3,19 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import { render as rtlRender, type RenderOptions, type RenderResult } from '@testing-library/react';
-import React, { type FC, Fragment, type PropsWithChildren, type ReactNode } from 'react';
+import { type RenderOptions, type RenderResult, render as rtlRender } from '@testing-library/react';
+import React, { type FC, Fragment, type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { Capabilities } from '../common';
+import * as Role from '../common/Role';
 import { PluginManagerContext } from '../context';
 import { topologicalSort } from '../helpers';
 import { PluginManagerProvider } from '../ui/components/PluginManager/PluginManagerProvider';
 import { SurfaceComponent } from '../ui/components/Surface/SurfaceComponent';
-import { type RoleToken } from '../ui/components/Surface/types';
+import { SurfaceManager } from '../ui/components/Surface/SurfaceManager';
+import { SurfaceManagerProvider } from '../ui/components/Surface/SurfaceManagerContext';
 import { type TestHarness } from './harness';
 
 export type HarnessRenderOptions = Omit<RenderOptions, 'wrapper'> & {
@@ -35,9 +37,9 @@ export const render = (harness: TestHarness, ui: ReactNode, options?: HarnessRen
   return rtlRender(<>{ui}</>, { ...rest, wrapper: Wrapper });
 };
 
-export type RenderSurfaceProps<TToken extends RoleToken<any>> = {
+export type RenderSurfaceProps<TToken extends Role.Role<any>> = {
   type: TToken;
-  data?: TToken extends RoleToken<infer D> ? D : never;
+  data?: TToken extends Role.Role<infer D> ? D : never;
   limit?: number;
   fallback?: FC<{ error: Error; data?: any }>;
   placeholder?: ReactNode;
@@ -46,7 +48,7 @@ export type RenderSurfaceProps<TToken extends RoleToken<any>> = {
 /**
  * Renders a `Surface` with the given role token/data inside the harness provider tree.
  */
-export const renderSurface = <TToken extends RoleToken<any>>(
+export const renderSurface = <TToken extends Role.Role<any>>(
   harness: TestHarness,
   props: RenderSurfaceProps<TToken>,
   options?: HarnessRenderOptions,
@@ -68,13 +70,17 @@ const HarnessProviders = ({ harness, extra, children }: HarnessProvidersProps) =
   const contributed = harness.getAll(Capabilities.ReactContext);
   const ContributedContext = composeContexts(contributed);
   const ExtraContext = composeExtra(extra);
+  // Mirror useApp's provider stack (see SurfaceManager) so the unit-test render path matches the app.
+  const surfaces = useMemo(() => new SurfaceManager(harness.manager.capabilities), [harness]);
   return (
     <PluginManagerProvider value={harness.manager}>
       <ContextProtocolProvider value={harness.manager} context={PluginManagerContext}>
         <RegistryContext.Provider value={harness.registry}>
-          <ContributedContext>
-            <ExtraContext>{children}</ExtraContext>
-          </ContributedContext>
+          <SurfaceManagerProvider value={surfaces}>
+            <ContributedContext>
+              <ExtraContext>{children}</ExtraContext>
+            </ContributedContext>
+          </SurfaceManagerProvider>
         </RegistryContext.Provider>
       </ContextProtocolProvider>
     </PluginManagerProvider>

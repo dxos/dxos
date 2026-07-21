@@ -4,17 +4,19 @@
 
 import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 
+import { Provider } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
-import { useObject, useRegistry } from '@dxos/react-client/echo';
+import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
 
 export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
@@ -31,8 +33,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const space = getSpace(chat) ?? getSpace(companionTo);
     const runtime = useChatServices({ id: space?.id });
 
-    const [online, setOnline] = useOnline();
-    const { preset, ...chatProps } = usePresets(online);
+    const { preset, ...chatProps } = usePresets(settings);
+    // The provider is configured in settings; the chat surfaces it as a read-only online indicator.
+    const online = preset?.provider === Provider.edge.id;
     const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
@@ -83,6 +86,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content>
             <ChatComponent.Content>
               <div className='dx-container relative'>
+                {viewType !== 'summary' && (
+                  <ChatComponent.Minimap classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
+                )}
                 <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
                 {viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
@@ -96,13 +102,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <div className='flex flex-col items-center py-2 overflow-hidden'>
                   <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
                 </div>
-                <ChatComponent.Prompt
-                  {...chatProps}
-                  outline
-                  preset={preset?.id}
-                  online={online}
-                  onOnlineChange={setOnline}
-                />
+                <ChatComponent.Prompt {...chatProps} outline preset={preset?.id} online={online} />
               </div>
             </ChatComponent.Content>
           </Panel.Content>
@@ -111,3 +111,5 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     );
   },
 );
+
+ChatArticle.displayName = 'ChatArticle';

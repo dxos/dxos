@@ -305,6 +305,9 @@ export type File = Schema.Schema.Type<typeof File>;
  * Reference
  *
  * Non-text content embedded in the message (e.g., files, polls, etc.).
+ *
+ * @deprecated Use `Message.Attachment` (the message's `attachments` field) to link a message to a
+ * stored object instead of embedding a reference block in `blocks`.
  */
 export const Reference = Schema.TaggedStruct('reference', {
   reference: Ref.Ref(Obj.Unknown),
@@ -312,6 +315,7 @@ export const Reference = Schema.TaggedStruct('reference', {
   ...Base.fields,
 });
 
+/** @deprecated Use `Message.Attachment` instead. */
 export type Reference = Schema.Schema.Type<typeof Reference>;
 /**
  * A noun / proper noun surfaced by the extraction stage that is not (yet) linked to an object.
@@ -430,6 +434,23 @@ export const Toolkit = Schema.TaggedStruct('toolkit', {
 
 export type Toolkit = Schema.Schema.Type<typeof Toolkit>;
 /**
+ * Request to render a registered UI surface inline in the conversation.
+ * Emitted by the model (via the `<surface>` tag) so an agent can render an interactive
+ * affordance — e.g. a connector prompt to authenticate a service it needs — instead of
+ * failing silently. The `role` selects which surface renders; `data` is passed to it.
+ */
+export const Surface = Schema.TaggedStruct('surface', {
+  /** Logical surface role, e.g. `integration-prompt`. */
+  role: Schema.String,
+
+  /** JSON-serializable payload passed to the surface, e.g. `{ service: 'gmail.com' }`. */
+  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+
+  ...Base.fields,
+});
+
+export type Surface = Schema.Schema.Type<typeof Surface>;
+/**
  * JSON
  * @deprecated Use {@link Text} with mime type of `application/json`.
  */
@@ -453,6 +474,7 @@ export const Any = Schema.Union(
   Status,
   Suggestion,
   Stats,
+  Surface,
   Text,
   Summary,
   Toolkit,

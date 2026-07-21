@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '#components';
@@ -66,3 +66,5 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
     </Panel.Root>
   );
 };
+
+FeedArticle.displayName = 'FeedArticle';

@@ -20,10 +20,15 @@ const __dirname = dirname(__filename);
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
+// Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
+// transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
+
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
+const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
 // tldraw self-hosts its fonts/icons; plugin-sketch points tldraw at `/assets/plugin-sketch` and the
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
@@ -54,6 +59,102 @@ export const content = [
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ stories, content }, null, 2));
 }
+
+// Minimal structural view of a Babel AST node for a dependency-free traversal.
+type AstNode = { type: string } & Record<string, unknown>;
+
+const isAstNode = (value: unknown): value is AstNode =>
+  typeof value === 'object' && value !== null && 'type' in value && typeof value.type === 'string';
+
+const FUNCTION_NODES = new Set([
+  'FunctionDeclaration',
+  'FunctionExpression',
+  'ArrowFunctionExpression',
+  'ObjectMethod',
+  'ClassMethod',
+]);
+
+// True when `fn` contains an `await` in its own body rather than inside a nested function.
+const ownsAwait = (fn: AstNode): boolean => {
+  let found = false;
+  const scan = (node: AstNode, isRoot: boolean) => {
+    if (found || (!isRoot && FUNCTION_NODES.has(node.type))) {
+      return;
+    }
+    if (node.type === 'AwaitExpression') {
+      found = true;
+      return;
+    }
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (isAstNode(item)) {
+            scan(item, false);
+          }
+        }
+      } else if (isAstNode(value)) {
+        scan(value, false);
+      }
+    }
+  };
+  scan(fn, true);
+  return found;
+};
+
+/**
+ * Repairs a known rolldown codegen bug: when it wraps a module that uses top-level await
+ * (e.g. `@automerge/automerge`'s WASM init) in its lazy `__esm` init factory, it emits the
+ * `await` but forgets to mark the factory `async`, leaving `await` inside a non-async
+ * function. That is invalid JavaScript, so the published bundle throws
+ * `SyntaxError: Unexpected reserved word` and every story renders blank. A non-async
+ * function that owns an `await` is always malformed, so re-adding the missing `async`
+ * only ever touches genuinely broken output. Remove once rolldown ships the upstream fix.
+ */
+const repairTopLevelAwait = async (code: string): Promise<string | null> => {
+  if (!code.includes('await')) {
+    return null;
+  }
+  const { parse } = await import('@babel/parser');
+  // `errorRecovery` still throws on unrecoverable syntax; a single such chunk must not
+  // fail the whole build, so leave it unmodified rather than propagating out of renderChunk.
+  let program: unknown;
+  try {
+    program = parse(code, { sourceType: 'module', errorRecovery: true }).program;
+  } catch (error) {
+    console.warn('[dxos:repair-top-level-await] Skipping unparseable chunk.', error);
+    return null;
+  }
+  const positions: number[] = [];
+  const walk = (node: AstNode) => {
+    if (FUNCTION_NODES.has(node.type) && node.async === false && typeof node.start === 'number' && ownsAwait(node)) {
+      positions.push(node.start);
+    }
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (isAstNode(item)) {
+            walk(item);
+          }
+        }
+      } else if (isAstNode(value)) {
+        walk(value);
+      }
+    }
+  };
+  if (isAstNode(program)) {
+    walk(program);
+  }
+  if (positions.length === 0) {
+    return null;
+  }
+  // Insert right-to-left so earlier offsets stay valid.
+  positions.sort((left, right) => right - left);
+  let repaired = code;
+  for (const position of positions) {
+    repaired = repaired.slice(0, position) + 'async ' + repaired.slice(position);
+  }
+  return repaired;
+};
 
 /**
  * Storybook and Vite configuration.
@@ -100,7 +201,7 @@ export const createConfig = ({
     }
 
     // NOTE: Dynamic imports seem to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
-    const { default: react } = await import('@vitejs/plugin-react-swc');
+    const { default: react } = await import('@vitejs/plugin-react');
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
@@ -108,10 +209,10 @@ export const createConfig = ({
     const finalConfig = mergeConfig(
       {
         ...config,
-        // Prevent duplicate react-swc plugin.
+        // Prevent duplicate react plugin.
         plugins: config.plugins?.filter((plugin) =>
           Array.isArray(plugin)
-            ? plugin.findIndex((p) => p && 'name' in p && p?.name === 'vite:react-swc') === -1
+            ? plugin.findIndex((p) => p && 'name' in p && p?.name === 'vite:react-babel') === -1
             : true,
         ),
       },
@@ -122,17 +223,23 @@ export const createConfig = ({
             'node-fetch': 'isomorphic-fetch',
             'tiktoken/lite': resolve(__dirname, './stub.mjs'),
             'node:util': '@dxos/node-std/util',
-            util: '@dxos/node-std/util',
+            'util': '@dxos/node-std/util',
             'node:crypto': '@dxos/node-std/crypto',
-            crypto: '@dxos/node-std/crypto',
+            'crypto': '@dxos/node-std/crypto',
             // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
             '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
           },
         },
+        // `build.target` only lowers syntax for `storybook build`; the e2e tests run against
+        // `storybook dev`, which otherwise serves source syntax untransformed straight to the
+        // browser. Setting `oxc.target` applies the same downleveling during dev.
+        oxc: {
+          target: browserTargets,
+        },
         build: {
           assetsInlineLimit: 0,
           // Target modern browsers that support top-level await natively.
-          target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
+          target: browserTargets,
           rolldownOptions: {
             output: {
               assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
@@ -260,33 +367,45 @@ export const createConfig = ({
             },
           },
 
-          !isFastBundle &&
-            importSource({
-              // Include `#*` so Node subpath imports (e.g. `#translations`, `#meta`)
-              // resolve to the `source` condition (`./src/...`) instead of falling
-              // through to `default` (`./dist/lib/neutral/...`). Without this, a
-              // package's own `test-storybook` task fails when its `compile` task
-              // hasn't been triggered as an upstream dep — manifests as
-              // `[vite] Failed to resolve import "#translations"`.
-              include: ['@dxos/**', '#*'],
-              exclude: [
-                '@dxos/random-access-storage',
-                '@dxos/lock-file',
-                '@dxos/network-manager',
-                '@dxos/teleport',
-                '@dxos/config',
-                '@dxos/client-services',
-                '@dxos/observability',
-                // TODO(dmaretskyi): Decorators break in lit.
-                '@dxos/lit-*',
-              ],
-            }),
+          importSource({
+            // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,
+            // `#meta`) to the `source` condition (`./src/...`); otherwise they fall through
+            // to `default` (`./dist/lib/neutral/...`) and fail when a package's `compile` has
+            // not run. Fast mode (`DX_FASTBUNDLE`) still needs this — it only wants to skip
+            // forcing `@dxos/**` to source (so those resolve from dist and get pre-bundled),
+            // NOT the `#*` resolution, which every plugin relies on.
+            include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
+            exclude: [
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '@dxos/lit-*',
+            ],
+          }),
 
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),
 
-          // https://www.npmjs.com/package/@vitejs/plugin-react-swc
-          react({ tsDecorators: true }),
+          // Repair rolldown's top-level-await codegen only for the production `storybook build`;
+          // `storybook dev` serves native ESM where top-level await is legal. See `repairTopLevelAwait`.
+          options.configType === 'PRODUCTION' && {
+            name: 'dxos:repair-top-level-await',
+            renderChunk: async (code: string) => {
+              const repaired = await repairTopLevelAwait(code);
+              return repaired ? { code: repaired } : null;
+            },
+          },
+
+          // https://www.npmjs.com/package/@vitejs/plugin-react
+          // The oxc-based plugin (not SWC) keeps the React/JSX transform within rolldown's
+          // pipeline, aligning with composer-app and composer-crx; this drops storybook-react as a
+          // consumer of `@vitejs/plugin-react-swc`.
+          react(),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({
@@ -304,11 +423,20 @@ export const createConfig = ({
           DxosLogPlugin(),
 
           IconsPlugin({
-            assetPath: (name, variant) =>
-              `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+            // The leading negative lookahead restricts the `dx` set to the `regular` weight only
+            // (custom brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+            symbolPattern:
+              '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+            assetPath: (iconSet, name, variant) => {
+              switch (iconSet) {
+                case 'dx':
+                  return `${dxosIconsDir}/${name}.svg`;
+                default:
+                  return `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+              }
+            },
             contentPaths: content,
             spriteFile: 'icons.svg',
-            symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           }),
 
           ThemePlugin({}),

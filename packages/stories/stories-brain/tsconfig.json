@@ -1,0 +1,167 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/markdown"
+    },
+    {
+      "path": "../../common/sql-sqlite"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant-toolkit"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/crawler"
+    },
+    {
+      "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/nlp"
+    },
+    {
+      "path": "../../core/compute/pipeline"
+    },
+    {
+      "path": "../../core/compute/pipeline-discord"
+    },
+    {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
+    },
+    {
+      "path": "../../core/compute/pipeline-transcription"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
+      "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-discord"
+    },
+    {
+      "path": "../../plugins/plugin-graph"
+    },
+    {
+      "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-outliner"
+    },
+    {
+      "path": "../../plugins/plugin-progress"
+    },
+    {
+      "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-testing"
+    },
+    {
+      "path": "../../plugins/plugin-transcription"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-rdf"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../story-modules"
+    }
+  ]
+}

@@ -5,20 +5,21 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Annotation, Filter, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Tooltip } from '@dxos/react-ui';
+import { Toolbar, Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '../../annotations';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../../annotations';
 import { Organization, Person, TestLayout } from '../../testing';
 import { type ExcludeId, omitId } from '../../util';
 import { Form, type FormRootProps } from './Form';
@@ -393,4 +394,95 @@ export const DiscriminatedUnion: Story<Schema.Schema.Type<typeof CreateFeedSchem
     json: true,
     schema: CreateFeedSchema,
   },
+};
+
+// Reactive-source + local-buffer pattern: `values` is a live source, and a parent that gates persistence on
+// validity (like the selected-objects `ObjectForm`). `counter` ticks once a second from outside the form to
+// stand in for an external mutation.
+const ReactiveSchema = Schema.mutable(
+  Schema.Struct({
+    name: Schema.NonEmptyString.annotations({
+      title: 'Name',
+      description: 'Required — clear it and the form holds the invalid draft instead of snapping back.',
+    }),
+    counter: Schema.Number.annotations({
+      title: 'Counter',
+      description: 'Ticks every second from an external source; updates live even while you edit Name.',
+    }),
+  }),
+);
+type ReactiveValues = Schema.Schema.Type<typeof ReactiveSchema>;
+
+const ReactiveBufferedStory = () => {
+  const [source, setSource] = useState<Partial<ReactiveValues>>({ name: 'Alice', counter: 0 });
+  const [running, setRunning] = useState(true);
+
+  const tick = useCallback(() => setSource((prev) => ({ ...prev, counter: (prev.counter ?? 0) + 1 })), []);
+
+  // External source of truth: tick the counter outside the form while running. Stop it to edit the counter by hand.
+  useEffect(() => {
+    if (!running) {
+      return;
+    }
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [running, tick]);
+
+  // Persist only valid changes (mirrors ObjectForm): invalid intermediate edits stay buffered in the form.
+  const handleValuesChanged = useCallback<NonNullable<FormRootProps<ReactiveValues>['onValuesChanged']>>(
+    (values, { isValid }) => {
+      if (!isValid) {
+        return;
+      }
+      setSource((prev) => ({ ...prev, ...values }));
+    },
+    [],
+  );
+
+  return (
+    <Tooltip.Provider>
+      <TestLayout json={{ source }}>
+        <div className='flex flex-col bs-full'>
+          <Toolbar.Root>
+            <Toolbar.IconButton
+              icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+              label={running ? 'Stop external ticks' : 'Start external ticks'}
+              onClick={() => setRunning((value) => !value)}
+            />
+            <Toolbar.IconButton
+              icon='ph--plus--regular'
+              label='Tick counter once (external)'
+              disabled={running}
+              onClick={tick}
+            />
+          </Toolbar.Root>
+          <Form.Root schema={ReactiveSchema} values={source} onValuesChanged={handleValuesChanged}>
+            <Form.Viewport>
+              <Form.Content>
+                <Form.FieldSet />
+              </Form.Content>
+            </Form.Viewport>
+          </Form.Root>
+        </div>
+      </TestLayout>
+    </Tooltip.Provider>
+  );
+};
+
+/**
+ * Demonstrates the reactive-source + local-buffer pattern used by the selected-objects companion. Pass a live
+ * object as `values` and gate persistence on validity in `onValuesChanged`. Watch the `Counter` field update
+ * live from the external tick while you clear `Name`: the form holds the invalid draft (shows the error) without
+ * snapping back, and the external counter keeps flowing in. Fixing `Name` commits it and reconciles.
+ *
+ * Use the toolbar to stop the external ticks (then edit `Counter` by hand, or step it once with the `+` button)
+ * to see manual edits and external updates reconcile through the same path.
+ *
+ * @idiom org.dxos.react-ui-form.reactiveBufferedForm
+ *   applies: Editing a live/remote object where fields can change externally mid-edit (object/article editors, companions)
+ *   instead-of: Uncontrolled `defaultValues` (ignores external changes) or naive controlled `values` (snaps invalid input back)
+ *   uses: {@link Form.Root}
+ */
+export const ReactiveBuffered: Story<ReactiveValues> = {
+  render: () => <ReactiveBufferedStory />,
 };

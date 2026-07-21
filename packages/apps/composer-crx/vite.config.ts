@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import { type Plugin, defineConfig, searchForWorkspaceRoot } from 'vite';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import wasm from 'vite-plugin-wasm';
 
@@ -27,7 +27,38 @@ const { prepareCanonicalDist } = await import(pathToFileURL(path.join(dirname, '
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 const outDir = prepareCanonicalDist(dirname);
+
+/**
+ * Remove the inline dark-mode `<script>` that ThemePlugin injects into every
+ * page's `<head>`. The MV3 extension CSP (`script-src 'self'`) forbids inline
+ * scripts, and `extension_pages` — unlike a web build — cannot whitelist a hash
+ * or nonce to permit one. The extension is dark-only (Container forces
+ * `themeMode='dark'`), so `class="dark"` on each page covers first paint. The
+ * injected `<style>` tags are left intact (inline styles are allowed).
+ */
+const stripInlineThemeScript = (): Plugin => ({
+  name: 'dxos-crx-strip-inline-theme-script',
+  transformIndexHtml: {
+    order: 'post',
+    handler: (html) => {
+      // Match by the `data-dxos-theme` marker attribute regardless of attribute
+      // order or any additional attributes, so a change to ThemePlugin's markup
+      // does not silently stop stripping (which would reintroduce the CSP
+      // violation). Warn at build time if nothing matched so the regression is
+      // visible rather than shipped.
+      const stripped = html.replace(/\s*<script\b[^>]*\bdata-dxos-theme\b[^>]*>[\s\S]*?<\/script>/g, '');
+      if (stripped === html) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          '[composer-crx] stripInlineThemeScript: no inline theme script found — ThemePlugin output may have changed; verify extension pages stay CSP-clean.',
+        );
+      }
+      return stripped;
+    },
+  },
+});
 
 /**
  * https://vitejs.dev/config
@@ -39,11 +70,8 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       // https://crxjs.dev/vite-plugin/concepts/pages
-      input: {
-        // Everything mentioned in manifest.json will be bundled.
-        // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
-        panel: path.resolve(dirname, 'panel.html'),
-      },
+      // The side panel (panel.html) is referenced by the manifest `side_panel`
+      // key below, so crxjs discovers and bundles it automatically.
       output: {
         sourcemap: true,
       },
@@ -52,8 +80,6 @@ export default defineConfig({
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
-      // Stub out codec-protobuf to disable eval, which contradicts the MV3 CSP.
-      // '@dxos/codec-protobuf': path.resolve(dirname, 'src/codec-protobuf.stub.ts'),
     },
   },
   worker: {
@@ -70,9 +96,18 @@ export default defineConfig({
     }),
     ThemePlugin({}),
     IconsPlugin({
-      symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
-      assetPath: (name, variant) =>
-        `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
+      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+      symbolPattern:
+        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      assetPath: (iconSet, name, variant) => {
+        switch (iconSet) {
+          case 'dx':
+            return `${dxosIcons}/${name}.svg`;
+          default:
+            return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+        }
+      },
       spriteFile: 'icons.svg',
       contentPaths: [
         path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
@@ -107,12 +142,17 @@ export default defineConfig({
           '128': 'assets/img/icon-128.png',
         },
         // NOTE: Rename file to break cache.
+        // No `default_popup`: clicking the toolbar icon opens the side panel
+        // (see `openPanelOnActionClick` in background.ts). A popup and an
+        // action-click side panel are mutually exclusive.
         action: {
           default_icon: 'assets/img/icon-48.png',
           default_title: 'Composer',
-          default_popup: 'popup.html',
         },
-        permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications'],
+        side_panel: {
+          default_path: 'side_panel.html',
+        },
+        permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications', 'sidePanel'],
         // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
         // Broad host access is required so the popup and background can fetch cross-origin
         // (chat-agent, image-service) without CORS — extensions bypass CORS for hosts they
@@ -167,6 +207,10 @@ export default defineConfig({
         writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
+
+    // Must come last: its post `transformIndexHtml` runs after ThemePlugin has
+    // injected the inline dark-mode script.
+    stripInlineThemeScript(),
   ],
 
   // TODO(wittjosiah): Tests failing.

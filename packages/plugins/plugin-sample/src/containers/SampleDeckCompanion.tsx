@@ -30,3 +30,5 @@ export const SampleDeckCompanion = ({ space }: SampleDeckCompanionProps) => {
 };
 
 export default SampleDeckCompanion;
+
+SampleDeckCompanion.displayName = 'SampleDeckCompanion';

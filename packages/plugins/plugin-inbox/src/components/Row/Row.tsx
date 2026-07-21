@@ -5,7 +5,7 @@
 import { format, intervalToDuration } from 'date-fns';
 import React, { type MouseEvent, useCallback, useRef } from 'react';
 
-import { Obj, type Database } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import {
@@ -18,7 +18,7 @@ import {
   Tag,
   useTranslation,
 } from '@dxos/react-ui';
-import { type Actor } from '@dxos/types';
+import { type Actor, type Message } from '@dxos/types';
 import { toHue } from '@dxos/ui-theme';
 import { toHue as hashToHue } from '@dxos/util';
 
@@ -146,12 +146,15 @@ const RowRef = ({ object }: RowRefProps) => {
   const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
+  // TODO(burdon): Nav?
   return (
     <Card.Row>
       <Card.Block>
         <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
       </Card.Block>
-      <h3 className='truncate text-primary-text'>{label}</h3>
+      <div className='flex items-center'>
+        <span className='truncate text-primary-text'>{label}</span>
+      </div>
     </Card.Row>
   );
 };
@@ -284,7 +287,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
         {tags.map((tag) => (
           <Tag
             key={tag.id}
-            palette={toHue(tag.hue)}
+            hue={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
             onClick={
               onTagClick
@@ -304,6 +307,43 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
 };
 
 RowTags.displayName = 'Row.Tags';
+
+//
+// Attachments
+//
+
+type RowAttachmentsProps = {
+  /** Optional — callers may pass an undefined/empty list (e.g. a message with no attachments). */
+  attachments?: readonly Message.Attachment[];
+};
+
+/**
+ * A Card.Row listing a message's attachments by name with a generic file icon. Not yet clickable —
+ * resolving the attachment's ref to open/preview it is a follow-up.
+ */
+const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
+  if (!attachments?.length) {
+    return null;
+  }
+
+  return (
+    <Card.Row>
+      <Card.Block>
+        <Icon icon='ph--paperclip--regular' />
+      </Card.Block>
+      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='message-attachments'>
+        {attachments.map((attachment) => (
+          <Tag key={attachment.ref.uri} hue='neutral' classNames='inline-flex items-center gap-1'>
+            <Icon icon='ph--file--regular' size={3} />
+            {attachment.name ?? attachment.ref.uri}
+          </Tag>
+        ))}
+      </div>
+    </Card.Row>
+  );
+};
+
+RowAttachments.displayName = 'Row.Attachments';
 
 //
 // Star
@@ -346,7 +386,8 @@ export const Row = {
   Ref: RowRef,
   Person: RowPerson,
   Tags: RowTags,
+  Attachments: RowAttachments,
   Star: RowStar,
 };
 
-export type { RowDateProps, RowRefProps, RowPersonProps, RowTagsProps, RowStarProps };
+export type { RowAttachmentsProps, RowDateProps, RowPersonProps, RowRefProps, RowStarProps, RowTagsProps };

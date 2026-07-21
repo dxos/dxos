@@ -1,0 +1,257 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { useAtomValue } from '@effect-atom/atom-react';
+import React, { useCallback, useEffect, useState } from 'react';
+
+import { Model, Provider } from '@dxos/ai';
+import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { EffectEx } from '@dxos/effect';
+import { List, ListItem } from '@dxos/react-list';
+import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
+import { Combobox } from '@dxos/react-ui-list';
+
+import { meta } from '#meta';
+import { AssistantCapabilities, type Ollama } from '#types';
+
+/** Quick-pick model names (Ollama pull tags) sourced from the curated catalog. */
+const QUICK_PICKS = Model.forProvider(Provider.ollama.id).map((model) => model.backend);
+
+/** Poll interval for the loaded-into-memory set while the settings panel is open. */
+const LOADED_POLL_INTERVAL = 3_000;
+
+/**
+ * Manage locally-installed Ollama models. The {@link AssistantCapabilities.OllamaManager}
+ * capability is only contributed by the native (desktop) runtime, so this renders nothing in the
+ * browser/mobile. Split from the section body so hooks are never called conditionally.
+ */
+export const OllamaModels = () => {
+  const manager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  if (!manager) {
+    return null;
+  }
+
+  return <OllamaModelsSection manager={manager} />;
+};
+
+export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) => {
+  const { t } = useTranslation(meta.profile.key);
+  // Explicit subscription: the list and badges must re-render as pulls/installs/loads land.
+  const state = useAtomValue(manager.state);
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  // UI-level gate keyed by model name, guaranteeing a visible busy state across the click handler.
+  const [pending, setPending] = useState<Record<string, boolean>>({});
+
+  // Ensure the sidecar is up and list installed models on mount.
+  useEffect(() => {
+    void EffectEx.runPromise(manager.refresh);
+  }, [manager]);
+
+  // Poll the loaded-into-memory set so the panel reflects which model is resident in real time.
+  useEffect(() => {
+    const interval = setInterval(() => void EffectEx.runPromise(manager.refreshLoaded), LOADED_POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [manager]);
+
+  const installed = new Set(state.models.map((model) => model.name));
+  const loaded = new Map(state.loaded.map((model) => [model.name, model]));
+  const pulling = Object.keys(state.pulls).filter((name) => !installed.has(name));
+
+  const withPending = useCallback(
+    (key: string, action: () => Promise<void>) => async () => {
+      setPending((prev) => ({ ...prev, [key]: true }));
+      try {
+        await action();
+      } finally {
+        setPending((prev) => ({ ...prev, [key]: false }));
+      }
+    },
+    [],
+  );
+
+  const handlePull = useCallback(
+    (target: string) => {
+      const trimmed = target.trim();
+      if (trimmed.length === 0) {
+        return;
+      }
+      setQuery('');
+      setOpen(false);
+      void withPending(trimmed, () => EffectEx.runPromise(manager.pull(trimmed)))();
+    },
+    [manager, withPending],
+  );
+
+  // Caller-driven filtering: curated picks not yet installed, matching the typed query.
+  const filter = query.trim();
+  const suggestions = QUICK_PICKS.filter((pick) => !installed.has(pick) && (filter === '' || pick.includes(filter)));
+  const offerCustom = filter.length > 0 && !installed.has(filter) && !suggestions.includes(filter);
+  const empty = state.models.length === 0 && pulling.length === 0;
+
+  return (
+    <Form.Section title={t('settings.ollama.title')}>
+      <Form.Row label={t('settings.ollama.installed.label')}>
+        {state.kind === 'failed' && state.error ? (
+          // Connection-level failure has no associated model, so it shows inline as the row content.
+          <p className='text-sm text-error-text'>{t('settings.ollama.failed.message', { error: state.error })}</p>
+        ) : empty ? (
+          <p className='text-sm text-description'>{t('settings.ollama.empty.message')}</p>
+        ) : (
+          // Plain `List`/`ListItem` (non-select), with the trigger editor's "fatter" two-line row
+          // treatment: a name line plus a secondary meta line, on a surface-styled row. Rows are
+          // actioned via their trailing buttons (no selection semantics).
+          <List variant='unordered' className='flex flex-col gap-1 grow is-full text-left'>
+            {state.models.map((model) => {
+              const running = loaded.get(model.name);
+              const error = state.errors[model.name];
+              const size = model.size != null ? formatBytes(model.size) : undefined;
+              const loadedLabel = running
+                ? running.sizeVram
+                  ? t('settings.ollama.loaded.vram', { size: formatBytes(running.sizeVram) })
+                  : t('settings.ollama.loaded.label')
+                : undefined;
+              return (
+                <ListItem
+                  key={model.name}
+                  className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 is-full'
+                >
+                  <div className='flex items-center gap-2'>
+                    <span className='grow truncate font-medium'>{model.name}</span>
+                    <IconButton
+                      icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
+                      iconOnly
+                      label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
+                      disabled={pending[model.name]}
+                      onClick={() =>
+                        void withPending(model.name, () =>
+                          EffectEx.runPromise(running ? manager.unload(model.name) : manager.load(model.name)),
+                        )()
+                      }
+                    />
+                    <IconButton
+                      icon='ph--trash--regular'
+                      iconOnly
+                      label={t('settings.ollama.remove.label')}
+                      disabled={pending[model.name]}
+                      onClick={() =>
+                        void withPending(model.name, () => EffectEx.runPromise(manager.remove(model.name)))()
+                      }
+                    />
+                  </div>
+                  {(size || loadedLabel || error) && (
+                    <div className='flex items-center gap-2 text-sm'>
+                      {size && <span className='text-description'>{size}</span>}
+                      {loadedLabel && <span className='text-success-text'>{loadedLabel}</span>}
+                      {error && <span className='truncate text-error-text'>{shortError(error)}</span>}
+                    </div>
+                  )}
+                </ListItem>
+              );
+            })}
+            {pulling.map((name) => {
+              const progress = state.pulls[name];
+              const status = progress?.total
+                ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
+                : (progress?.status ?? t('settings.ollama.pulling.label'));
+              return (
+                <ListItem key={name} className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 is-full'>
+                  <div className='flex items-center gap-2'>
+                    <span className='grow truncate font-medium text-description'>{name}</span>
+                    <IconButton
+                      icon='ph--x--regular'
+                      iconOnly
+                      label={t('settings.ollama.cancel.label')}
+                      onClick={() => void EffectEx.runPromise(manager.cancel(name))}
+                    />
+                  </div>
+                  <span className='text-sm text-description'>{status}</span>
+                </ListItem>
+              );
+            })}
+          </List>
+        )}
+      </Form.Row>
+
+      <Form.Row label={t('settings.ollama.pull.label')}>
+        {/* Pull failures for not-yet-installed models surface here (no model row to attach to). */}
+        {Object.entries(state.errors)
+          .filter(([name]) => !installed.has(name))
+          .map(([name, error]) => (
+            <p key={name} className='text-xs text-error-text'>
+              {name}: {shortError(error)}
+            </p>
+          ))}
+        {/* Root value is held empty so the trigger always shows the placeholder; the live text is
+            the separate `query` driving the input and suggestion filter. */}
+        <Combobox.Root
+          open={open}
+          onOpenChange={setOpen}
+          value=''
+          onValueChange={() => {}}
+          placeholder={t('settings.ollama.pull.placeholder')}
+        >
+          <Combobox.Trigger classNames='is-full' />
+          <Combobox.Portal>
+            <Combobox.Content>
+              <Combobox.Input
+                value={query}
+                onValueChange={setQuery}
+                placeholder={t('settings.ollama.pull.placeholder')}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && filter.length > 0) {
+                    handlePull(filter);
+                  }
+                }}
+              />
+              <Combobox.List>
+                {offerCustom && (
+                  <Combobox.Item
+                    value={filter}
+                    label={t('settings.ollama.pull-custom.label', { name: filter })}
+                    icon='ph--download-simple--regular'
+                    onSelect={() => handlePull(filter)}
+                  />
+                )}
+                {suggestions.map((pick) => (
+                  <Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
+                ))}
+              </Combobox.List>
+              <Combobox.Arrow />
+            </Combobox.Content>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </Form.Row>
+    </Form.Section>
+  );
+};
+
+/**
+ * Condense a verbose service error for inline display: drop Ollama's "(checked: <paths>)" path dump
+ * and cap the length. The full message is still logged to the console.
+ */
+const shortError = (error: string): string => {
+  const head = error.split(/\s*\(checked:/)[0].trim();
+  return head.length > 160 ? `${head.slice(0, 160)}…` : head;
+};
+
+/** Percent complete for an in-flight pull, or 0 when totals are not yet known. */
+const percentOf = (progress: Ollama.ModelsState['pulls'][string] | undefined): number =>
+  progress && progress.total && progress.total > 0 ? Math.round(((progress.completed ?? 0) / progress.total) * 100) : 0;
+
+const UNITS = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+/** Human-readable byte size (binary units). */
+const formatBytes = (bytes: number): string => {
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < UNITS.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(unit === 0 ? 0 : 1)} ${UNITS[unit]}`;
+};
+
+OllamaModels.displayName = 'OllamaModels';

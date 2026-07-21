@@ -12,7 +12,8 @@
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
     {
@@ -67,10 +68,7 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
@@ -116,6 +114,9 @@
     },
     {
       "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-crm"
     },
     {
       "path": "../../plugins/plugin-deck"
@@ -257,6 +258,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../story-modules"
     }
   ]
 }

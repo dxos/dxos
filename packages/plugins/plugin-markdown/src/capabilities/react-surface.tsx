@@ -22,11 +22,12 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Position } from '@dxos/util';
 
 import {
-  MarkdownCard,
   EditableMarkdownCard,
   MarkdownArticle,
-  MarkdownSettings,
   type MarkdownArticleProps,
+  MarkdownCard,
+  MarkdownProperties,
+  MarkdownSettings,
 } from '#containers';
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
@@ -74,6 +75,11 @@ export default Capability.makeModule(() =>
             />
           );
         },
+      }),
+      Surface.create({
+        id: 'surface.objectProperties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Markdown.Document),
+        component: ({ data, role }) => <MarkdownProperties role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'surface.pluginSettings',

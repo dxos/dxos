@@ -1,0 +1,12 @@
+layer: library
+language: typescript
+tags:
+  - ts-vite-build
+  - ts-test
+  - pack
+tasks:
+  demo:
+    command: 'pnpm exec vitest run src/Demo.test.ts'
+    options:
+      runInCI: false
+      cache: false

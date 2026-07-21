@@ -4,11 +4,11 @@
 
 import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { type Space } from '@dxos/echo-host';
 import { type KeyringApi } from '@dxos/keyring';
 import { AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
+import { type Space } from '../space';
 import { type SigningContext } from './data-space-manager';
 
 export const spaceGenesis = async (
@@ -27,9 +27,9 @@ export const spaceGenesis = async (
       subject: space.key,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceGenesis',
-        spaceKey: space.key,
-        tags: tags ?? [],
-        membershipPolicy: membershipPolicy ?? MembershipPolicy.INVITE,
+        'spaceKey': space.key,
+        'tags': tags ?? [],
+        'membershipPolicy': membershipPolicy ?? MembershipPolicy.INVITE,
       },
     }),
 
@@ -39,11 +39,11 @@ export const spaceGenesis = async (
       subject: signingContext.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
-        spaceKey: space.key,
-        role: SpaceMember.Role.OWNER,
-        profile: signingContext.getProfile(),
-        genesisFeedKey: space.controlFeedKey ?? failUndefined(),
-        tags: tags ?? [],
+        'spaceKey': space.key,
+        'role': SpaceMember.Role.OWNER,
+        'profile': signingContext.getProfile(),
+        'genesisFeedKey': space.controlFeedKey ?? failUndefined(),
+        'tags': tags ?? [],
       },
     }),
 
@@ -51,10 +51,10 @@ export const spaceGenesis = async (
       subject: space.controlFeedKey ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey: space.key,
-        identityKey: signingContext.identityKey,
-        deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        'spaceKey': space.key,
+        'identityKey': signingContext.identityKey,
+        'deviceKey': signingContext.deviceKey,
+        'designation': AdmittedFeed.Designation.CONTROL,
       },
     }),
 
@@ -62,10 +62,10 @@ export const spaceGenesis = async (
       subject: space.dataFeedKey ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey: space.key,
-        identityKey: signingContext.identityKey,
-        deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.DATA,
+        'spaceKey': space.key,
+        'identityKey': signingContext.identityKey,
+        'deviceKey': signingContext.deviceKey,
+        'designation': AdmittedFeed.Designation.DATA,
       },
     }),
 
@@ -73,10 +73,10 @@ export const spaceGenesis = async (
       subject: space.key ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.Epoch',
-        number: 0,
-        previousId: undefined,
-        timeframe: new Timeframe(),
-        snapshotCid: undefined,
+        'number': 0,
+        'previousId': undefined,
+        'timeframe': new Timeframe(),
+        'snapshotCid': undefined,
         automergeRoot,
       },
     }),

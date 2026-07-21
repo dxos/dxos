@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Umbrella package for AI-aware DXOS compute primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,22 +16,22 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./AgentService": {
       "source": "./src/AgentService.ts",
       "types": "./dist/types/src/AgentService.d.ts",
-      "default": "./dist/lib/neutral/AgentService.mjs"
+      "import": "./dist/lib/AgentService.mjs"
     },
     "./StorageService": {
       "source": "./src/StorageService.ts",
       "types": "./dist/types/src/StorageService.d.ts",
-      "default": "./dist/lib/neutral/StorageService.mjs"
+      "import": "./dist/lib/StorageService.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

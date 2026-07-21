@@ -22,3 +22,5 @@ export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
     </div>
   );
 };
+
+StatusBar.displayName = 'StatusBar';

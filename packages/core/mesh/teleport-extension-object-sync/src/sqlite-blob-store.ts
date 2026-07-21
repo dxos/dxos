@@ -5,6 +5,7 @@
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
@@ -17,7 +18,7 @@ import { type BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsyn
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { BitField, arrayToBuffer } from '@dxos/util';
 
-import { DEFAULT_CHUNK_SIZE, type BlobStoreApi, type GetOptions } from './blob-store';
+import { type BlobStoreApi, BlobStoreApiService, DEFAULT_CHUNK_SIZE, type GetOptions } from './blob-store';
 
 const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
 
@@ -226,3 +227,19 @@ export class SqliteBlobStore implements BlobStoreApi {
     return rows[0].data;
   }
 }
+
+/**
+ * Effect Layer constructing a {@link SqliteBlobStore} from the ambient SQL runtime.
+ */
+export const SqliteBlobStoreLayer = (): Layer.Layer<
+  BlobStoreApiService,
+  never,
+  SqlClient.SqlClient | SqlTransactionTag
+> =>
+  Layer.effect(
+    BlobStoreApiService,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      return new SqliteBlobStore({ runtime });
+    }),
+  );

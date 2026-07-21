@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Type, View, DXN } from '@dxos/echo';
+import { Database, DXN, Format, Type, View } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';
 
@@ -60,4 +60,33 @@ export const AddRow = Operation.make({
     data: Schema.Any,
   }),
   output: Schema.Void,
+});
+
+export const ExportColumnSchema = Schema.Struct({
+  path: Schema.Any,
+  title: Schema.String,
+  // `Format.TypeEnum`/`Format.TypeFormat` are string enums; encoding them as plain Number/String
+  // would diverge from the `ExportColumn` consumer type and reject the values the table projection emits.
+  type: Schema.optional(Schema.Enums(Format.TypeEnum)),
+  format: Schema.optional(Schema.Enums(Format.TypeFormat)),
+  referencePath: Schema.optional(Schema.Any),
+});
+
+export const ExportRows = Operation.make({
+  meta: {
+    key: makeKey('exportRows'),
+    name: 'Export Rows',
+    description: 'Exports table rows as CSV, JSON (.dx.json), or XML.',
+    icon: 'ph--export--regular',
+  },
+  input: Schema.Struct({
+    format: Schema.Literal('csv', 'json', 'xml'),
+    rows: Schema.Array(Schema.Any),
+    columns: Schema.Array(ExportColumnSchema),
+  }),
+  output: Schema.Struct({
+    content: Schema.String,
+    mimeType: Schema.String,
+    filename: Schema.String,
+  }),
 });

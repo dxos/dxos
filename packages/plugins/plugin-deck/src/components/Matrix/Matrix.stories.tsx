@@ -17,7 +17,8 @@ import { random } from '@dxos/random';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
+import { Dnd } from '@dxos/react-ui-dnd';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -150,7 +151,7 @@ const DefaultStory = ({ Tile }: StoryArgs) => {
   const currentIndex = items.findIndex((item) => item.id === current);
 
   return (
-    <Mosaic.Root>
+    <Dnd.Root>
       <Matrix.Root Tile={Tile} items={items} current={current} onCurrentChange={handleCurrentChange} ref={controller}>
         <Panel.Root>
           <Panel.Toolbar asChild>
@@ -169,7 +170,7 @@ const DefaultStory = ({ Tile }: StoryArgs) => {
           </Panel.Content>
         </Panel.Root>
       </Matrix.Root>
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
 

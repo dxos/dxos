@@ -4,18 +4,20 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Blob } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import {
-  SkillDefinition,
   CreateObject,
+  EdgeBackend,
   FileUploader,
   InlineBackend,
   Markdown,
   OperationHandler,
   ReactSurface,
   Settings,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -28,7 +30,7 @@ export const FilePlugin = Plugin.define(meta).pipe(
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [File.File] }),
+  AppPlugin.addSchemaModule({ schema: [File.File, Blob.Blob] }),
   AppPlugin.addSettingsModule({ activate: Settings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
@@ -41,6 +43,11 @@ export const FilePlugin = Plugin.define(meta).pipe(
     id: 'file-uploader',
     activatesOn: ClientEvents.ClientReady,
     activate: FileUploader,
+  }),
+  Plugin.addModule({
+    id: 'edge-backend',
+    activatesOn: ClientEvents.ClientReady,
+    activate: EdgeBackend,
   }),
   Plugin.addModule({
     id: 'markdown',

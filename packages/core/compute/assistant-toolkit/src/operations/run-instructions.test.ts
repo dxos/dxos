@@ -6,11 +6,11 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import { Instructions, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -29,12 +29,6 @@ const TestLayer = AssistantTestLayer({
   types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Plan.Plan],
   aiServicePreset: 'edge-remote',
 });
-
-const countFeedMessages = (feed: Feed.Feed) =>
-  Effect.gen(function* () {
-    const items = yield* Feed.runQuery(feed, Filter.everything());
-    return items.filter(Obj.instanceOf(Message.Message)).length;
-  });
 
 describe('Agent prompt', () => {
   it.effect(
@@ -116,3 +110,9 @@ describe('Agent prompt', () => {
     { timeout: 60_000 },
   );
 });
+
+const countFeedMessages = (feed: Feed.Feed) =>
+  Effect.gen(function* () {
+    const items = yield* Feed.query(feed, Filter.everything()).run;
+    return items.filter(Obj.instanceOf(Message.Message)).length;
+  });

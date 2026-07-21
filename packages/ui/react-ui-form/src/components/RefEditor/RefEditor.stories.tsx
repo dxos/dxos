@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { Fragment, useState } from 'react';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
-import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

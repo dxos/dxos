@@ -5,12 +5,12 @@
 import { EntityStructure, type QueryAST } from '@dxos/echo-protocol';
 import {
   ATTR_META,
+  type ObjectJSON,
   compareTypenameStrings,
   filterMatchEntity,
   filterMatchValue,
-  matchMetaKey,
   matchesTag,
-  type ObjectJSON,
+  matchMetaKey,
 } from '@dxos/echo/internal';
 import { EntityId, SpaceId } from '@dxos/keys';
 

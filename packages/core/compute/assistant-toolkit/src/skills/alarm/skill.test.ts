@@ -6,11 +6,11 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
-import { Skill, Operation } from '@dxos/compute';
+import { AgentService } from '@dxos/agent-runtime';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { Operation, Skill } from '@dxos/compute';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 

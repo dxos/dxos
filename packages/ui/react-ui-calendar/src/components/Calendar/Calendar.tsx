@@ -4,9 +4,9 @@
 
 import { addDays, format, startOfDay } from 'date-fns';
 import React, {
+  type PropsWithChildren,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
-  type PropsWithChildren,
   forwardRef,
   useCallback,
   useEffect,
@@ -26,15 +26,15 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import {
+  CalendarContextProvider,
   type CalendarContextValue,
   type CalendarController,
-  CalendarContextProvider,
   type CalendarScrollEvent,
   type Range,
   useCalendarContext,
 } from './context';
 import { getDate, getRowIndex, gridEpoch, isSameDay } from './util';
-import { CalendarWeek, type CalendarEvent, type CalendarWeekProps } from './Week';
+import { type CalendarEvent, CalendarWeek, type CalendarWeekProps } from './Week';
 import { Weekdays } from './Weekdays';
 
 const maxRows = 50 * 100;
@@ -654,7 +654,6 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         <div className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
           <List
             ref={listRef}
-            role='none'
             className='scrollbar-none outline-hidden'
             width={width}
             height={maxHeight ?? height}

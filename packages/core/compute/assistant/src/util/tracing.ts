@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Trace } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { ContentBlock, Actor } from '@dxos/types';
+import { Actor, ContentBlock } from '@dxos/types';
 
 /**
  * Partial content block emitted.

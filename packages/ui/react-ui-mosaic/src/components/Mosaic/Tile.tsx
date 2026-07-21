@@ -25,10 +25,16 @@ import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { composableProps, slottable } from '@dxos/react-ui';
-import { type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import {
+  type DndLocation,
+  type DndTileData,
+  type Size,
+  getSourceData,
+  resizeAttributes,
+  sizeStyle,
+} from '@dxos/react-ui-dnd';
 
 import { useMosaicContainerContext } from './Container';
-import { type LocationType, type MosaicTileData, getSourceData } from './types';
 
 //
 // Tile
@@ -60,7 +66,7 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
+type MosaicTileProps<TData = any, TLocation = DndLocation> = ThemedClassName<
   PropsWithChildren<{
     className?: string;
     dragHandle?: HTMLElement | null;
@@ -147,7 +153,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       [allowedEdgesProp, orientation],
     );
 
-    const data = useMemo<MosaicTileData>(
+    const data = useMemo<DndTileData>(
       () =>
         ({
           type: 'tile',
@@ -155,7 +161,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
           containerId,
           data: dataProp,
           location,
-        }) satisfies MosaicTileData,
+        }) satisfies DndTileData,
       [containerId, location, dataProp],
     );
 

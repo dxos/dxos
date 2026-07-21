@@ -8,8 +8,8 @@ import { Trigger, latch } from '@dxos/async';
 import { DXN, Type } from '@dxos/echo';
 import {
   EdgeClient,
-  SwarmRequestSchema,
   SwarmRequest_Action,
+  SwarmRequestSchema,
   createEphemeralEdgeIdentity,
   protocol,
 } from '@dxos/edge-client';
@@ -27,7 +27,6 @@ export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.bladeRun
   }),
 ) {}
 
-@trace.resource()
 export class WsReplicant {
   private _edgeConnection?: EdgeClient = undefined;
   private _peerInfo?: PeerInfo = undefined;
@@ -41,7 +40,7 @@ export class WsReplicant {
     await this._edgeConnection.open();
 
     this._peerInfo = {
-      identityKey: this._edgeConnection.identityKey,
+      identityDid: this._edgeConnection.identityDid,
       peerKey: this._edgeConnection.peerKey,
     };
 

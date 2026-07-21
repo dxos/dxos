@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { EID, EntityId, DXN } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 
 import * as Type from '../../Type';
 import { EchoObjectSchema, getObjectEchoUri } from '../Entity';
@@ -45,16 +45,16 @@ describe('Ref', () => {
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
-      id: contact.id,
+      'id': contact.id,
       '@type': `dxn:${Type.getTypename(Contact)}:${Type.getVersion(Contact)}`,
       '@meta': {
         keys: [],
       },
-      name: 'John Doe',
-      tasks: [
+      'name': 'John Doe',
+      'tasks': [
         {
           '/': getObjectEchoUri(task)!.toString(),
-          target: JSON.parse(JSON.stringify(task)),
+          'target': JSON.parse(JSON.stringify(task)),
         },
       ],
     });
@@ -66,13 +66,13 @@ describe('Ref', () => {
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
-      id: contact.id,
+      'id': contact.id,
       '@type': `dxn:${Type.getTypename(Contact)}:${Type.getVersion(Contact)}`,
       '@meta': {
         keys: [],
       },
-      name: 'John Doe',
-      tasks: [{ '/': getObjectEchoUri(task)!.toString() }],
+      'name': 'John Doe',
+      'tasks': [{ '/': getObjectEchoUri(task)!.toString() }],
     });
   });
 

@@ -15,10 +15,11 @@ import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Skill, Credential, Operation } from '@dxos/compute';
+import type { Credential, Operation, Skill } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
-import { EID } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
+import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -102,6 +103,37 @@ export const translatorLayer: Layer$.Layer<TranslatorService, never, Capability$
   Translator,
   TranslatorService,
 );
+
+/** A writer scoped to a single plugin's compartment — the only way to mutate the stats store. */
+export type StatsCompartment = Readonly<{
+  /** Replace this compartment's value. */
+  set: (stats: unknown) => void;
+  /** Remove this compartment. */
+  clear: () => void;
+}>;
+
+/**
+ * A generic, reactive store for stats/telemetry, partitioned into one compartment per plugin. Every
+ * consumer can READ the entire store (all compartments) reactively, but can only WRITE its own
+ * compartment — obtained via `compartment(pluginKey)` with the plugin's own key (`meta.profile.key`).
+ * Currently in-memory (discarded on reload); persistence may be layered on later, so the name is not
+ * tied to transience. Contributed by a host plugin (plugin-debug) — writers resolve it with
+ * `Capability.getAll` so writing is a no-op when no host is loaded (e.g. production without devtools).
+ * @category Capability
+ */
+export type StatsPanelStore = Readonly<{
+  /** Reactive map of all compartments keyed by plugin key (full read access). */
+  statsAtom: Atom.Writable<Record<string, unknown>>;
+  /** Read one plugin's compartment. */
+  get: (pluginKey: string) => unknown;
+  /** A writer scoped to one plugin's compartment — the only write path. */
+  compartment: (pluginKey: string) => StatsCompartment;
+}>;
+
+/**
+ * @category Capability
+ */
+export const StatsPanel = Capability$.make<StatsPanelStore>('org.dxos.app-toolkit.capability.statsPanel');
 
 export type AppGraph = Readonly<{
   graph: Graph.ExpandableGraph;
@@ -248,7 +280,7 @@ export type NavigationTarget = {
 };
 
 export type NavigationQuery = {
-  dxn?: string;
+  uri?: URI.URI;
 };
 
 /**
@@ -287,3 +319,34 @@ export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<O
 export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
   'org.dxos.app-framework.capability.navigationPathResolver',
 );
+
+/** A transient progress monitor handle — the update side of one registry entry. */
+export type ProgressMonitor = Progress.TaskHandle;
+
+/**
+ * A registry of live progress providers, exposed as reactive atoms. Producers `register` a monitor
+ * (keyed by a stable `name`, with a display `label`), advance/complete it, and `remove()` it when
+ * done. Consumers read the aggregate `snapshotAtom` (e.g. the R0 rail popover) or a single provider's
+ * `monitorAtom(name)` (e.g. an article's inline meter). Contributed by an always-loaded host
+ * (`plugin-progress`); backed by the shared `@dxos/progress` core.
+ */
+export type ProgressRegistry = Readonly<{
+  /** Aggregate snapshot of all active providers. */
+  snapshotAtom: Atom.Atom<Progress.ProgressSnapshot>;
+  /** One provider's reactive state, by name (stable/memoized per name). */
+  monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
+  /**
+   * Register (or resume) a provider and mark it running. Pass `onCancel` to make it cancellable — the
+   * meter then shows a cancel control that invokes {@link ProgressRegistry.cancel}.
+   */
+  register: (name: string, options?: { label?: string; total?: number; onCancel?: () => void }) => ProgressMonitor;
+  /** Invoke a provider's registered `onCancel` handler (no-op if it is not cancellable). */
+  cancel: (name: string) => void;
+  /** Non-reactive read of the current snapshot. */
+  snapshot: () => Progress.ProgressSnapshot;
+}>;
+
+/**
+ * @category Capability
+ */
+export const ProgressRegistry = Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');

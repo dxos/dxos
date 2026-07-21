@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database } from '@dxos/echo';
@@ -13,14 +14,14 @@ import { type Space } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type CreateObjectOption, type Metadata, CreateObjectPanel } from '#components';
+import { type CreateObjectOption, CreateObjectPanel, type Metadata } from '#components';
 import { translations } from '#translations';
 
 const mockOptions: CreateObjectOption[] = [
-  { id: 'org.dxos.type.document', label: 'Document', icon: 'ph--file-text--regular' },
-  { id: 'org.dxos.type.table', label: 'Table', icon: 'ph--table--regular' },
-  { id: 'org.dxos.type.canvas', label: 'Canvas', icon: 'ph--paint-brush--regular' },
-  { id: 'org.dxos.type.thread', label: 'Thread', icon: 'ph--chat-circle-text--regular' },
+  { id: 'org.dxos.type.document', label: 'Document', plugin: 'Markdown', icon: 'ph--file-text--regular' },
+  { id: 'org.dxos.type.table', label: 'Table', plugin: 'Kanban', icon: 'ph--table--regular' },
+  { id: 'org.dxos.type.canvas', label: 'Canvas', plugin: 'Sketch', icon: 'ph--paint-brush--regular' },
+  { id: 'org.dxos.type.thread', label: 'Thread', plugin: 'Threads', icon: 'ph--chat-circle-text--regular' },
 ];
 
 const mockSpaces = [
@@ -78,4 +79,17 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: DefaultStory,
+};
+
+// Verifies the type filter matches the contributing plugin name, not just the type label:
+// typing "Kanban" surfaces "Table" (contributed by the Kanban plugin) even though the label
+// "Table" contains no match for the query — impossible before plugin/description were searchable.
+export const FilterByPlugin: Story = {
+  render: DefaultStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = await canvas.findByTestId('create-object-form.schema-input', undefined, { timeout: 10_000 });
+    await userEvent.type(input, 'Kanban');
+    void expect(await canvas.findByText('Table', undefined, { timeout: 10_000 })).toBeVisible();
+  },
 };

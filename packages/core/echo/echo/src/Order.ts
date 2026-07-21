@@ -6,9 +6,11 @@
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
+export const OrderTypeId = '~@dxos/echo/Order' as const;
+export type OrderTypeId = typeof OrderTypeId;
+
 export interface Order<T> {
-  // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Order': { value: T };
+  readonly [OrderTypeId]: { value: T };
 
   ast: QueryAST.Order;
 }
@@ -16,18 +18,23 @@ export interface Order<T> {
 export type Any = Order<any>;
 
 class OrderClass implements Order<any> {
-  private static 'variance': Order<any>['~Order'] = {} as Order<any>['~Order'];
+  private static 'variance': Order<any>[OrderTypeId] = {} as Order<any>[OrderTypeId];
 
-  static is(value: unknown): value is Order<any> {
-    return typeof value === 'object' && value !== null && '~Order' in value;
+  static is(value: unknown): value is Any {
+    return typeof value === 'object' && value !== null && OrderTypeId in value;
   }
 
   constructor(public readonly ast: QueryAST.Order) {}
 
-  '~Order' = OrderClass.variance;
+  [OrderTypeId] = OrderClass.variance;
 }
 
-export const natural: Order<any> = new OrderClass({ kind: 'natural' });
+/**
+ * Order by the database's default order. For non-feed sources this is by id; for feed sources
+ * this is insertion order, so `desc` reads newest-first. Defaults to `asc`.
+ */
+export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order<any> =>
+  new OrderClass({ kind: 'natural', direction });
 export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order<T> =>
   new OrderClass({
     kind: 'property',

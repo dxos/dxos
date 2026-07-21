@@ -5,10 +5,11 @@
 import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { createContext, type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, createContext, useCallback, useContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type AddMenuItemsProps,
@@ -19,6 +20,7 @@ import {
   type MenuItems,
   type MenuItemsAccessor,
   type MenuItemsMap,
+  isSeparator,
 } from '../types';
 import { executeMenuAction } from '../util';
 import { ActionLabel } from './ActionLabel';
@@ -256,7 +258,13 @@ const MenuContentItem = ({
       disabled={action.properties?.disabled}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
-      {action.properties?.icon && <Icon icon={action.properties!.icon} size={iconSize} />}
+      {action.properties?.icon && (
+        <Icon
+          icon={action.properties.icon}
+          size={iconSize}
+          classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)}
+        />
+      )}
       <ActionLabel action={action} />
     </NaturalDropdownMenu.Item>
   );
@@ -299,9 +307,13 @@ const MenuContent = ({
     <NaturalDropdownMenu.Portal>
       <NaturalDropdownMenu.Content>
         <NaturalDropdownMenu.Viewport>
-          {resolvedItems?.map((item) => (
-            <MenuContentItem key={item.id} item={item} onClick={handleActionClick} />
-          ))}
+          {resolvedItems?.map((item) =>
+            isSeparator(item) ? (
+              <NaturalDropdownMenu.Separator key={item.id} />
+            ) : (
+              <MenuContentItem key={item.id} item={item} onClick={handleActionClick} />
+            ),
+          )}
         </NaturalDropdownMenu.Viewport>
         <NaturalDropdownMenu.Arrow />
       </NaturalDropdownMenu.Content>
@@ -334,10 +346,10 @@ export { Menu, menuContextDefaults, useMenu, useMenuItems, useMenuScoped };
 export type { MenuContentProps, MenuRootProps, MenuScopedProps };
 
 export type {
-  ToolbarMenuProps,
   ToolbarMenuActionGroupProperties,
   ToolbarMenuActionGroupProps,
   ToolbarMenuActionProps,
   ToolbarMenuDropdownMenuActionGroup,
+  ToolbarMenuProps,
   ToolbarMenuToggleGroupActionGroup,
 } from './ToolbarMenu';

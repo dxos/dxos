@@ -39,6 +39,14 @@ describe('Routine', () => {
     expect(isRunInstructions(trigger.runnable)).toBe(true);
     const bound = trigger.input?.instructions;
     expect(Ref.isRef(bound) ? bound.target?.id : undefined).toBe(instructions.id);
+    // A trigger with no explicit `remote` flag runs locally.
+    expect(trigger.remote).toBeUndefined();
+  });
+
+  test('make preserves an explicit trigger remote override', ({ expect }) => {
+    const trigger = Trigger.make({ remote: true });
+    const routine = Routine.make({ name: 'R', trigger });
+    expect(routine.triggers[0]?.target?.remote).toBe(true);
   });
 
   describe('blank template', () => {

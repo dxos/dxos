@@ -7,13 +7,14 @@ import React, { useCallback } from 'react';
 import {
   Input,
   Toolbar as NaturalToolbar,
-  Tooltip,
   type ToolbarRootProps,
+  Tooltip,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { mx } from '@dxos/ui-theme';
 import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProperties } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -56,9 +57,8 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
   const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
 
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames } = action.properties;
-  const buttonVariant =
-    (action.properties as { variant?: string }).variant === 'primary' ? ('primary' as const) : ('ghost' as const);
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames, spin } = action.properties;
+  const buttonVariant = action.properties.variant === 'primary' ? ('primary' as const) : ('ghost' as const);
 
   const handleClick = useCallback(() => {
     if (onAction) {
@@ -87,7 +87,7 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
       icon={icon}
       size={iconSize}
       iconOnly={iconOnly}
-      iconClassNames={iconClassNames}
+      iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
       label={actionLabel(action, t)}
     />
   ) : (
@@ -155,6 +155,7 @@ const DropdownMenuToolbarItem = ({
     caretDown = true,
     icon: groupIcon,
     iconClassNames: groupIconClassNames,
+    spin: groupSpin,
   } = group.properties;
   const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked) as MenuAction | undefined;
   const icon =
@@ -164,6 +165,7 @@ const DropdownMenuToolbarItem = ({
     groupIcon;
   // Follow the same `applyActive` rule for `iconClassNames` so a per-item accent (e.g. tag colour) tracks the displayed icon.
   const iconClassNames = (applyActive && activeItem?.properties.iconClassNames) || groupIconClassNames;
+  const spin = (applyActive && activeItem?.properties.spin) || groupSpin;
   const labelAction = applyActive && activeItem ? activeItem : group;
 
   return (
@@ -176,7 +178,7 @@ const DropdownMenuToolbarItem = ({
             icon={icon}
             size={iconSize}
             iconOnly={iconOnly}
-            iconClassNames={iconClassNames}
+            iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
             label={actionLabel(labelAction, t)}
             caretDown={caretDown}
             {...(testId && { 'data-testid': testId })}
@@ -199,7 +201,7 @@ const DropdownMenuToolbarItem = ({
 const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<ToolbarMenuActionProps>) => {
   const { iconSize, onAction } = useMenuScoped('ToggleGroupItem', __menuScope);
   const { t } = useTranslation(translationKey);
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames } = action.properties;
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames, spin } = action.properties;
 
   const handleClick = useCallback(() => {
     if (onAction) {
@@ -224,7 +226,7 @@ const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<Toolbar
       icon={icon}
       size={iconSize}
       iconOnly={iconOnly}
-      iconClassNames={iconClassNames}
+      iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
       label={actionLabel(action, t)}
     />
   ) : (
@@ -309,6 +311,11 @@ const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem
   const action = item as MenuAction;
   if (action.properties?.variant === 'switch') {
     return <SwitchToolbarItem __menuScope={__menuScope} action={action} />;
+  }
+
+  // The contributor owns the rendered element (interactions the action model cannot express).
+  if (action.properties?.variant === 'custom' && action.properties.render) {
+    return <>{action.properties.render()}</>;
   }
 
   return <ActionToolbarItem __menuScope={__menuScope} action={action} />;

@@ -40,3 +40,5 @@ export const CallSidebar = () => {
     </Call.Root>
   );
 };
+
+CallSidebar.displayName = 'CallSidebar';

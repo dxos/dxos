@@ -21,6 +21,21 @@ describe('Database', () => {
         Query the database to confirm that the organization is created and the query tool is working.
       `,
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
+  );
+
+  it.effect(
+    'create Person',
+    agentTest({
+      instructions: trim`
+        Create a new person object for Bernie Sanders".
+      `,
+      completionCriteria: ['Person object created with correct data.'],
+    }),
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 });

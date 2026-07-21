@@ -9,14 +9,14 @@ import { Operation } from '@dxos/compute';
 import { type Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import {
   type ExtractInput,
-  type ExtractResult,
   type ExtractionTemplate,
+  type ExtractResult,
   type MatchResult,
   type ObjectExtractor,
   fromResolvers,
   makeTemplateExtractor,
 } from '@dxos/extractor';
-import { log } from '@dxos/log';
+import { matchesDomain } from '@dxos/extractor-lib';
 import { type ContentBlock, Message, Organization, type Provider } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -422,20 +422,6 @@ const airlineCodeOf = (flightNumber: string | undefined): string | undefined =>
 const domainToName = (domain: string): string => {
   const label = domain.split('.')[0] ?? domain;
   return label.charAt(0).toUpperCase() + label.slice(1);
-};
-
-/** Whether an Organization website matches the sender domain (host equality or sub-domain either way). */
-const matchesDomain = (website: string | undefined, domain: string): boolean => {
-  if (!website) {
-    return false;
-  }
-  try {
-    const host = new URL(website.startsWith('http') ? website : `https://${website}`).hostname.toLowerCase();
-    return host === domain || host.endsWith(`.${domain}`) || domain.endsWith(`.${host}`);
-  } catch (err) {
-    log.warn('parsing organization website', { website, err });
-    return false;
-  }
 };
 
 /**

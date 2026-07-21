@@ -28,8 +28,8 @@ runs:
     - uses: moonrepo/setup-toolchain@v0
       with:
         # IMPORTANT: Keep in-sync with .prototools
-        moon-version: '2.2.6'
-        proto-version: '0.57.3'
+        moon-version: '2.4.5'
+        proto-version: '0.58.2'
 
     - name: Log out debug info
       run: |

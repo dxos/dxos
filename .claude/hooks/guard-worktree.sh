@@ -2,61 +2,62 @@
 #
 # Copyright 2026 DXOS.org
 #
-# PreToolUse guard: refuse Edit/Write/MultiEdit/NotebookEdit that target the
-# MAIN checkout while the session is running inside a worktree. Catches the
-# failure mode where an absolute path is built from the repo root instead of
-# the assigned worktree, silently landing edits on `main`.
+# PreToolUse guard for Edit/Write/MultiEdit/NotebookEdit. The hazard is editing
+# while HEAD is on `main` — that pollutes the shared branch irreversibly. The
+# decisive signal is the BRANCH, not the directory: the harness sometimes checks
+# the assigned `claude/…` branch out at the primary checkout and leaves the
+# worktree path an empty stub. Editing there is safe because HEAD is the assigned
+# branch, so the old path-based "primary checkout == main" rule produced false
+# halts. This guard instead asks git for the branch of the target's working tree.
 #
-# Allows: edits inside the worktree, and anything outside the repo (e.g. the
-# auto-memory directory under ~/.claude). Enforces only in worktree sessions.
+# Denies: an edit whose target lives in a working tree whose HEAD is `main`.
+# Allows: edits on any feature branch (including the mis-instantiated case where
+# the feature branch sits at the primary checkout), detached HEAD, and anything
+# outside a git repo (e.g. the auto-memory dir under ~/.claude). Needs no
+# CLAUDE_PROJECT_DIR — the old dependency on it was the hole that once let a full
+# feature land on `main`.
 
 set -euo pipefail
 
 input=$(cat)
-project_dir="${CLAUDE_PROJECT_DIR:-}"
-
-# Only enforce inside a worktree session (path contains /.claude/worktrees/).
-case "$project_dir" in
-  */.claude/worktrees/*) ;;
-  *) exit 0 ;;
-esac
-
-# Derive the main checkout root (everything before /.claude/worktrees/).
-main_root="${project_dir%%/.claude/worktrees/*}"
 
 # Target path: file_path for Edit/Write/MultiEdit, notebook_path for NotebookEdit.
 path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
 [ -z "$path" ] && exit 0
 
-# Resolve relative paths against the worktree (the session cwd).
+# Resolve a directory to query git from — the file may not exist yet (Write), so
+# walk up to the nearest existing ancestor.
+case "$path" in
+  /*) probe=$(dirname "$path") ;;
+  *)  probe="$(pwd)" ;;
+esac
+while [ ! -d "$probe" ] && [ "$probe" != "/" ]; do
+  probe=$(dirname "$probe")
+done
+
+branch=$(git -C "$probe" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+[ "$branch" = "main" ] || exit 0
+
+# On `main`: fence edits that land inside this repo's working tree. Edits outside
+# the repo (e.g. ~/.claude memory) are allowed even though HEAD reads `main`.
+repo_root=$(git -C "$probe" rev-parse --show-toplevel 2>/dev/null || true)
+[ -z "$repo_root" ] && exit 0
+
 case "$path" in
   /*) abs="$path" ;;
-  *) abs="$project_dir/$path" ;;
+  *)  abs="$(pwd)/$path" ;;
 esac
 
-# Canonicalize to collapse `..`/`.` segments before the string boundary checks, so a path like
-# "$project_dir/../foo" can't textually match the worktree prefix and escape it. Uses purely
-# lexical normalization (no filesystem/symlink resolution needed): python3 `normpath` is portable
-# across macOS/Linux; `realpath -m` (GNU) is a fallback; raw value as a last resort.
-canonicalize() {
-  python3 -c 'import os,sys; print(os.path.normpath(sys.argv[1]))' "$1" 2>/dev/null ||
-    realpath -m "$1" 2>/dev/null ||
-    printf '%s' "$1"
-}
-abs=$(canonicalize "$abs")
-project_dir=$(canonicalize "$project_dir")
-main_root=$(canonicalize "$main_root")
+# Lexically collapse `..`/`.` before the boundary check so a path cannot escape
+# the repo prefix textually. python3 normpath is portable; realpath -m is a GNU
+# fallback; raw value as last resort.
+abs=$(python3 -c 'import os,sys; print(os.path.normpath(sys.argv[1]))' "$abs" 2>/dev/null ||
+  realpath -m "$abs" 2>/dev/null ||
+  printf '%s' "$abs")
 
-# Allow anything inside the worktree.
 case "$abs" in
-  "$project_dir"/* | "$project_dir") exit 0 ;;
-esac
-
-# Deny edits that land inside the main checkout but outside the worktree.
-case "$abs" in
-  "$main_root"/*)
-    suffix="${abs#"$main_root"/}"
-    reason="Refusing to edit the MAIN checkout: '$abs'. This session's worktree is '$project_dir'. Re-issue the edit against the worktree path: '$project_dir/$suffix'."
+  "$repo_root"/* | "$repo_root")
+    reason="Refusing to edit '$abs': HEAD is on 'main', so this edit would pollute the shared main branch. This session's work belongs on its assigned 'claude/…' branch. If you are on main because the worktree was mis-instantiated, STOP and ask the user — do not create a worktree or branch to escape."
     jq -n --arg r "$reason" \
       '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
     exit 0

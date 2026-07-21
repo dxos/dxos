@@ -40,6 +40,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -53,6 +56,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-dnd"
     },
     {
       "path": "../../ui/react-ui-form"

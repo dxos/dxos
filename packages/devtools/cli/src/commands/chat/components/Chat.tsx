@@ -6,11 +6,11 @@ import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
 import { For, Match, Switch, createEffect, createMemo, createSignal, useContext } from 'solid-js';
 
-import { type ModelName } from '@dxos/ai';
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
 import { Skill } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { isTruthy } from '@dxos/util';
@@ -33,7 +33,7 @@ export type ChatProps = {
   db: Database.Database;
   processor: ChatProcessor;
   conversation: AiSession.Session;
-  model: ModelName;
+  model: DXN.DXN;
   verbose?: boolean;
   onChatSelect?: (chat: Assistant.Chat) => void;
   onChatCreate?: ({ skills }: { skills: string[] }) => void;

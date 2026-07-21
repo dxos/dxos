@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Trigger, Operation } from '@dxos/compute';
+import { Operation, Trigger } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -86,7 +86,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           : undefined;
       }
 
-      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueUri(feedObj)) {
+      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getFeedUri(feedObj)) {
         continue;
       }
 
@@ -118,7 +118,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         Effect.map(Option.some),
         Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
       );
-      if (Option.isSome(agentFeedOption) && Feed.getQueueUri(agentFeedOption.value)) {
+      if (Option.isSome(agentFeedOption) && Feed.getFeedUri(agentFeedOption.value)) {
         yield* Database.add(
           Trigger.make({
             [Obj.Parent]: agent,

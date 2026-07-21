@@ -9,8 +9,8 @@ import { Client, type Config } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { bundleFunction } from '@dxos/functions-runtime/bundler';
-import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
+import { FunctionsServiceClient } from '@dxos/edge-compute';
+import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -44,8 +44,12 @@ describe.skip('Functions deployment', { tags: ['functions-e2e'] }, () => {
     }
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
+    const identity = client.halo.identity.get();
+    if (!identity) {
+      throw new Error('Identity not available.');
+    }
     const func = await functionsServiceClient.deploy(Context.default(), {
-      ownerPublicKey: space.key,
+      ownerUri: identity.did,
       version: '0.0.1',
       entryPoint: buildResult.entryPoint,
       assets: buildResult.assets,

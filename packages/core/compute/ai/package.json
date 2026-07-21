@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ai",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "AI utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,17 +19,17 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./resolvers": {
       "source": "./src/resolvers/index.ts",
       "types": "./dist/types/src/resolvers/index.d.ts",
-      "default": "./dist/lib/neutral/resolvers/index.mjs"
+      "import": "./dist/lib/resolvers.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

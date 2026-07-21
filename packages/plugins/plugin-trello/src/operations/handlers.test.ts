@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { AccessToken, Cursor } from '@dxos/link';
+import { Connection } from '@dxos/plugin-connector';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
-import { AccessToken } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';
@@ -143,7 +143,8 @@ const stubOperationService = Effect.provideService(Operation.Service, {
  * Light end-to-end stitching:
  *  - `GetTrelloBoards` returns descriptors only — read-only, no local Kanbans.
  *  - Selecting a board materializes an empty local Kanban (`materializeTarget`)
- *    and creates a `SyncBinding` from the connection to that Kanban.
+ *    and creates an external-sync `Cursor` from the connection's access token
+ *    to that Kanban.
  *  - `SyncTrelloBoard` reconciles the bound board's cards. Unselected boards
  *    leave no trace.
  */
@@ -160,13 +161,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([
-      AccessToken.AccessToken,
-      Connection.Connection,
-      SyncBinding.SyncBinding,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -190,14 +185,18 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
         remoteTarget,
       });
       const kanban = yield* Database.load(target);
-      return yield* Database.add(
-        SyncBinding.make({
-          [Relation.Source]: connection,
-          [Relation.Target]: kanban,
-          remoteId: remoteTarget.id,
-          name: remoteTarget.name,
+      const binding = yield* Database.add(
+        Cursor.makeExternal({
+          source: connection.accessToken,
+          target: Ref.make(kanban),
+          externalId: remoteTarget.id,
+          label: remoteTarget.name,
         }),
       );
+      if (!Cursor.isExternal(binding)) {
+        throw new Error('expected external cursor');
+      }
+      return binding;
     }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FetchHttpClient.layer));
 
   test('full flow: GetTrelloBoards (discovery) → bind selection → SyncTrelloBoard syncs only chosen boards', async ({
@@ -218,7 +217,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     expect(kanbansAfterDiscovery).toHaveLength(0);
 
     // 2. Selection: materialize board A's Kanban + create the binding. The
-    // coordinator's `setSyncBindings` does this in production; here we exercise
+    // coordinator's `setCursors` does this in production; here we exercise
     // the connector's `materializeTarget` directly.
     const binding = await bindTarget(db, connection, { id: boardA.id, name: boardA.name }).pipe(
       EffectEx.runAndForwardErrors,
@@ -227,7 +226,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // Materialization created exactly board A's (empty) Kanban; board B was never selected.
     const kanbansAfterBind = await db.query(Filter.type(Kanban.Kanban)).run();
     expect(kanbansAfterBind).toHaveLength(1);
-    expect(binding.snapshots).toBeUndefined();
+    expect(binding.spec.snapshots).toBeUndefined();
 
     // 3. Sync: reconciles the bound board's cards.
     const result = await syncTrelloBoardHandler
@@ -236,7 +235,10 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     expect(result.pulled.added).toBe(1);
 
     // Board A's Kanban now carries its single card.
-    const boardAKanban = Relation.getTarget(binding);
+    const boardAKanban = await Database.load(binding.spec.target).pipe(
+      Effect.provide(layer),
+      EffectEx.runAndForwardErrors,
+    );
     expect(Obj.instanceOf(Kanban.Kanban, boardAKanban)).toBe(true);
     expect(Obj.getMeta(boardAKanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id).toBe('board-a');
     if (Obj.instanceOf(Kanban.Kanban, boardAKanban)) {
@@ -244,7 +246,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     }
 
     // Sync stamped success on the binding.
-    expect(binding.lastSyncAt).toBeDefined();
+    expect(binding.lastTick).toBeDefined();
     expect(binding.lastError).toBeUndefined();
   });
 
@@ -280,13 +282,13 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       .handler({ binding: Ref.make(bindingA) })
       .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
     expect(bindingA.lastError).toBeUndefined();
-    expect(bindingA.lastSyncAt).toBeDefined();
+    expect(bindingA.lastTick).toBeDefined();
 
     // Board B fails — the sync handler fails and stamps the error on the binding.
     await syncTrelloBoardHandler
       .handler({ binding: Ref.make(bindingB) })
       .pipe(stubOperationService, Effect.provide(layer), Effect.either, EffectEx.runAndForwardErrors);
     expect(bindingB.lastError).toContain('boom');
-    expect(bindingB.lastSyncAt).toBeUndefined();
+    expect(bindingB.lastTick).toBeUndefined();
   });
 });

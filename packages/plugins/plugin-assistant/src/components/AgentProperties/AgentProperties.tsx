@@ -9,7 +9,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Agent } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { FeedAnnotation } from '@dxos/schema';

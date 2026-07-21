@@ -8,11 +8,11 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { FormFieldHeader, Form, ViewEditor } from '@dxos/react-ui-form';
+import { Form, FormFieldHeader, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
@@ -208,3 +208,5 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
     </Form.Section>
   );
 };
+
+PipelineProperties.displayName = 'PipelineProperties';

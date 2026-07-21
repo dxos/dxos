@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
 import { Script } from './Script';

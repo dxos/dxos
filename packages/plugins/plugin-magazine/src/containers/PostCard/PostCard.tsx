@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 
 import { Subscription } from '#types';
@@ -68,3 +68,5 @@ export const PostCard = ({ subject }: PostCardProps) => {
     </Card.Body>
   );
 };
+
+PostCard.displayName = 'PostCard';

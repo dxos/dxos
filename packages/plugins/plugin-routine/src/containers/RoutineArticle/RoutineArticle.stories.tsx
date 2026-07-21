@@ -7,13 +7,16 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Skill, Instructions, Trigger } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Instructions, Skill, Trigger } from '@dxos/compute';
+import { Feed, Filter, Json, Obj, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -27,21 +30,21 @@ const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed
 const seedSkills = (space: Space) => {
   space.db.add(
     Skill.make({
-      key: 'example.com/skill/research',
+      key: 'com.example.skill.research',
       name: 'Research',
       description: 'Research an organization.',
     }),
   );
   space.db.add(
     Skill.make({
-      key: 'example.com/skill/summarize',
+      key: 'com.example.skill.summarize',
       name: 'Summarize',
       description: 'Summarize the selected content.',
     }),
   );
   space.db.add(
     Skill.make({
-      key: 'example.com/skill/translate',
+      key: 'com.example.skill.translate',
       name: 'Translate',
       description: 'Translate text to another language.',
     }),
@@ -94,23 +97,72 @@ const DefaultStory = () => {
   if (!automation) {
     return <Loading />;
   }
+
   return <RoutineArticle role='article' subject={automation} attendableId='story' />;
 };
 
-/** Two-column layout: the composite RoutineArticle on the left, raw object properties on the right. */
-const TwoColumnStory = () => {
+/** Editable object form. `ObjectProperties` is uncontrolled, so the caller keys it by the object's
+ * snapshot to remount (re-read `defaultValues`) when the object changes externally; `object` stays
+ * the live object so its own edits persist. */
+const EditableObject = ({ title, object }: { title: string; object: Obj.Unknown }) => (
+  <Panel.Root>
+    <Panel.Content classNames='overflow-auto'>
+      <h2 className='mbe-1 px-2 pt-2 text-sm font-medium text-description'>{title}</h2>
+      <ObjectProperties object={object} />
+    </Panel.Content>
+  </Panel.Root>
+);
+
+/**
+ * Reactive syntax-highlighted JSON with a ref-resolution depth control (mirrors `DebugObjectPanel`):
+ * `Syntax.Depth` drives `getReplacer`, which builds `Json.createRefReplacer({ db, depth })` to inline
+ * referenced objects (e.g. the trigger) up to the chosen depth. `JsonHighlighter` re-stringifies on
+ * every render, so the view stays live as the objects change.
+ */
+const JsonView = ({ data, db }: { data: unknown; db?: ReturnType<typeof Obj.getDatabase> }) => (
+  <Syntax.Root
+    data={data}
+    defaultDepth={1}
+    getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
+  >
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+          <Syntax.Filter />
+          <Syntax.Depth />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Syntax.Viewport>
+          <Syntax.Code />
+        </Syntax.Viewport>
+      </Panel.Content>
+    </Panel.Root>
+  </Syntax.Root>
+);
+
+const ThreeColumnStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const [automation] = useQuery(space?.db, Filter.type(Routine.Routine));
-  if (!automation) {
+  const [routine] = useQuery(space?.db, Filter.type(Routine.Routine));
+  const triggerRef = routine?.triggers.find((ref) => Obj.instanceOf(Trigger.Trigger, ref.target));
+  // Subscribe to both objects so left-side edits re-render (and re-key) the other columns; the trigger
+  // subscription keeps the ref-expanded JSON view live when the trigger (a separate entity) changes.
+  const [routineSnapshot] = useObject(routine);
+  const [triggerSnapshot] = useObject(triggerRef);
+  const trigger = triggerRef?.target;
+  if (!routine) {
     return <Loading />;
   }
+
   return (
-    <div role='none' className='w-full grid grid-cols-2 gap-px'>
-      <RoutineArticle role='article' subject={automation} attendableId='story' />
-      <div role='none' className='overflow-y-auto p-2 bg-baseSurface'>
-        <ObjectProperties object={automation} />
+    <div className='w-full grid grid-cols-3 gap-2'>
+      <RoutineArticle role='article' subject={routine} attendableId='story' />
+      <div className='grid grid-rows-2 gap-2 min-h-0'>
+        <EditableObject key={JSON.stringify(routineSnapshot)} title='Routine' object={routine} />
+        {trigger && <EditableObject key={JSON.stringify(triggerSnapshot)} title='Trigger' object={trigger} />}
       </div>
+      <JsonView data={routineSnapshot} db={Obj.getDatabase(routine)} />
     </div>
   );
 };
@@ -134,10 +186,14 @@ export const Empty: Story = {
   decorators: [withAutomation(seedDefault)],
 };
 
-/** Side-by-side: the composite editor alongside the underlying object's raw properties. */
-export const TwoColumn: Story = {
-  render: TwoColumnStory,
-  decorators: [withAutomation(seedDefault)],
+/**
+ * Side-by-side: the composite editor, an editable properties form, and a live raw view of the
+ * underlying objects (routine + primary trigger). Seeded with a trigger so trigger-spec edits are
+ * immediately observable across all three columns.
+ */
+export const ThreeColumn: Story = {
+  render: ThreeColumnStory,
+  decorators: [withAutomation(seedWithTimerTrigger)],
 };
 
 /** Automation with a timer trigger pre-configured for a daily 9 AM schedule. */

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';
@@ -23,7 +23,8 @@ import { meta } from '#meta';
 
 export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
 export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
-export const STATIC_SCHEMA_TYPE = `${meta.profile.key}.static-schema`;
+/** Tags every type node under the Database section — both static (compile-time) and database (dynamic) schemas. */
+export const SCHEMA_NODE_TYPE = `${meta.profile.key}.static-schema`;
 
 //
 // Constants

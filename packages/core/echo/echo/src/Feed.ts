@@ -6,21 +6,23 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
+import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import * as Database from './Database';
 import type * as Entity from './Entity';
-import * as Filter from './Filter';
-import * as Hypergraph from './Hypergraph';
+import type * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
-import type * as Query from './Query';
+import * as Query from './Query';
 import type * as QueryResult from './QueryResult';
+import * as Scope from './Scope';
 import * as Type from './Type';
 
 /**
@@ -110,50 +112,6 @@ export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeed
 }
 
 //
-// Service
-//
-
-/**
- * Effect service for feed operations.
- * @deprecated Use `Database.Service` instead — feed operations now run directly on the database.
- */
-export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
-  FeedService,
-  {
-    append(feed: Feed, items: Entity.Unknown[]): Promise<void>;
-    remove(feed: Feed, ids: string[]): Promise<void>;
-    query: {
-      <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
-      <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
-    };
-    sync(feed: Feed, options?: SyncOptions): Promise<void>;
-    getSyncState(feed: Feed): Promise<SyncState>;
-  }
->() {}
-
-/**
- * Layer that provides a `FeedService` that throws when accessed.
- * @deprecated Use `Database.layer(db)` instead.
- */
-export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService, {
-  append: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-  remove: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-  query: () => {
-    throw new Error('Feed.FeedService not available') as never;
-  },
-  sync: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-  getSyncState: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-} as Context.Tag.Service<FeedService>);
-
-//
 // Factory
 //
 
@@ -173,7 +131,7 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  *
  * Used internally by the feed service layer.
  */
-export const getQueueUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
+export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
 
 //
 // Operations
@@ -219,55 +177,42 @@ export const remove = (
 /**
  * Creates a reactive query over items in a feed.
  *
+ * Returns a {@link QueryResult.QueryResultEffect}: yielding it produces a subscribable
+ * `QueryResult`, while its `.run` / `.first` shorthands execute the query once. This mirrors
+ * `Database.query` so feed and database queries chain identically.
+ *
+ * Supports both data-first and data-last (curried) forms; the latter composes with `pipe`.
+ *
  * In non-Effect code, query a feed directly through the database with a feed scope:
- * `db.query(Query.select(filter).from(Scope.feed(Feed.getQueueUri(feed))))`.
+ * `db.query(Query.select(filter).from(Scope.feed(Feed.getFeedUri(feed))))`.
  *
  * @example
  * ```ts
  * const result = yield* Feed.query(feed, Filter.type(Person));
- * ```
- */
-// TODO(dmaretskyi): Suport chained queries:
-//                   const result = yield* feed.pipe(Feed.query(Filter.type(Person))); result.subscribe(...)
-//                   const objects = yield* feed.pipe(Feed.query(Filter.type(Person))).run;
-//                   const object = yield* feed.pipe(Feed.query(Filter.type(Person))).first;
-// ... unify for Database and schema queries.
-export const query: {
-  <Q extends Query.Any>(
-    feed: Feed,
-    query: Q,
-  ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Database.Service>;
-  <F extends Filter.Any>(
-    feed: Feed,
-    filter: F,
-  ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Database.Service>;
-} = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  Effect.gen(function* () {
-    const { db } = yield* Database.Service;
-    const scope = yield* Effect.serviceOption(Hypergraph.Service);
-    // Confinement (agent firewall): a confined session may read only feeds whose owning space is on
-    // its allowlist. `db.queryFeed` resolves a feed by URI across spaces, so a foreign feed is
-    // queried with a never-matching filter — it yields nothing rather than the feed's contents.
-    // Unconfined callers (no Hypergraph.Service) are unaffected.
-    const eid = EID.tryParse(Obj.getURI(feed));
-    const feedSpace = eid != null ? EID.getSpaceId(eid) : undefined;
-    const denied = Option.isSome(scope) && feedSpace != null && !scope.value.allowlist.includes(feedSpace);
-    return db.queryFeed(feed, denied ? Filter.nothing() : (queryOrFilter as any)) as QueryResult.QueryResult<any>;
-  });
-
-/**
- * Executes a feed query once and returns the results.
+ * result.subscribe(...);
  *
- * @example
- * ```ts
- * const items = yield* Feed.runQuery(feed, Filter.type(Person));
+ * const objects = yield* Feed.query(feed, Filter.type(Person)).run;
+ * const object = yield* Feed.query(feed, Filter.type(Person)).first;
+ *
+ * // Data-last (curried) form composes with `pipe`:
+ * const objects = yield* pipe(feed, Feed.query(Filter.type(Person))).run;
  * ```
  */
-export const runQuery: {
-  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, Database.Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, Database.Service>;
-} = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  query(feed, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
+export const query: {
+  <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+  <Q extends Query.Any>(
+    query: Q,
+  ): (feed: Feed) => QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(
+    filter: F,
+  ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) => {
+  const feedUri = getFeedUri(feed);
+  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+  const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
+  return Database.query(query.from(Scope.feed(feedUri.toString())));
+});
 
 /**
  * Syncs the feed with the server.
@@ -284,7 +229,7 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
   );
 
 /**
- * Returns queue replication backlog for the feed's namespace.
+ * Returns the feed's replication backlog for its namespace.
  *
  * @example
  * ```ts

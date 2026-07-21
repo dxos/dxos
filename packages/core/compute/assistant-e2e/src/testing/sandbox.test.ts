@@ -8,7 +8,7 @@ import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { Sandbox } from '@dxos/plugin-sandbox/types';
 import { trim } from '@dxos/util';
 
-import { agentTest, agentTestTimeout, DEFAULT_TEST_TIMEOUT } from '../harness';
+import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness';
 
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).
@@ -27,13 +27,9 @@ describe('Sandbox', { tags: ['manual'] }, () => {
       clientTypes: [Sandbox.Sandbox],
       instructions: trim`
         The database starts empty. The sandbox service is available at http://localhost:8792.
-
         Enable the sandbox skill (key: org.dxos.skill.sandbox) using the skill manager.
-
         Use CreateSandbox (org.dxos.function.sandbox.create) to create a sandbox named "assistant-e2e-test".
-
         Use Exec (org.dxos.function.sandbox.exec) on that sandbox to run: echo hello world
-
         Report the exec result in your completion output.
       `,
       completionCriteria: [
@@ -43,7 +39,9 @@ describe('Sandbox', { tags: ['manual'] }, () => {
         'Exec completes with exit code 0 and stdout containing "hello world".',
       ],
     }),
-    { timeout: agentTestTimeout() ?? DEFAULT_TEST_TIMEOUT },
+    {
+      timeout: agentTestTimeout() ?? DEFAULT_TEST_TIMEOUT,
+    },
   );
 
   it.effect(
@@ -61,6 +59,8 @@ describe('Sandbox', { tags: ['manual'] }, () => {
         'Contributors include at least: wittjosiah, richburdon, dmaretskyi, mykola-vrmchk',
       ],
     }),
-    { timeout: agentTestTimeout() ?? DEFAULT_TEST_TIMEOUT },
+    {
+      timeout: agentTestTimeout() ?? DEFAULT_TEST_TIMEOUT,
+    },
   );
 });

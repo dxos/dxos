@@ -18,8 +18,7 @@
     "withGlobalTauri": true
   },
   "build": {
-    "beforeBuildCommand": "moon run composer-app:bundle",
-    "beforeDevCommand": "vite dev",
+    "beforeDevCommand": "node scripts/fetch-ollama.mjs && vite dev",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../out/composer"
   },
@@ -34,10 +33,12 @@
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "macOS": {
       "entitlements": "./Entitlements.plist",
+      "frameworks": ["sidecar/ollama-metal.framework"],
       "hardenedRuntime": true,
       "minimumSystemVersion": "15.0",
       "files": {
-        "embedded.provisionprofile": "./embedded.provisionprofile"
+        "embedded.provisionprofile": "./embedded.provisionprofile",
+        "MacOS/lib/ollama": "sidecar/ollama-runtime"
       }
     },
     "targets": "all"
@@ -55,5 +56,5 @@
     }
   },
   "productName": "Composer",
-  "version": "0.9.0"
+  "version": "0.10.0"
 }

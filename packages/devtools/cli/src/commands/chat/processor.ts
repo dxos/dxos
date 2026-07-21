@@ -10,14 +10,14 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
-import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { type OperationHandlerSet, Skill } from '@dxos/compute';
+import { OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { FunctionImplementationResolver } from '@dxos/functions-runtime';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
@@ -62,13 +62,13 @@ export class ChatProcessor {
 
   async execute(
     request: Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>,
-    model: ModelName,
+    model: DXN.DXN,
   ) {
     const fiber = request.pipe(
       Effect.provide(
-        Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
+        Layer.mergeAll(AiService.model(DXN.getName(model)), ToolExecutionServices).pipe(
           Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
+          Layer.provideMerge(OperationHandlerSet.provide(this._functions)),
         ),
       ),
       Effect.asVoid,

@@ -3,13 +3,12 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
-import { VirtuosoMasonry as NaturalVirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
 import React, {
   type ComponentType,
   type CSSProperties,
   type JSX,
+  type MouseEvent,
   type PropsWithChildren,
   type Ref,
   useMemo,
@@ -18,16 +17,19 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { composable, composableProps, scrollbar } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
+
+import { useFlip } from './useFlip';
+import { useMasonryLayout } from './useMasonryLayout';
 
 //
 // Context
 //
 
 type MasonryContextValue = {
-  /** Render component for each masonry item. */
-  Tile: ComponentType<{ data: any; index: number }>;
+  /** Render component for each masonry item. Receives `selected` when the grid is selectable. */
+  Tile: ComponentType<{ data: any; index: number; selected?: boolean }>;
   /** Override auto-calculated column count. */
   columns: number | undefined;
   /** Upper bound on number of columns. */
@@ -36,20 +38,13 @@ type MasonryContextValue = {
   minColumnWidth: number;
   /** Maximum column width in rem. */
   maxColumnWidth: number;
-  /** Space between columns and rows in rem. */
-  gutter: number;
+  /** Space applied uniformly between tiles and around the grid perimeter, in rem. */
+  gap: number;
 };
 
 const MASONRY_NAME = 'Masonry';
 
 const [MasonryProvider, useMasonryContext] = createContext<MasonryContextValue>(MASONRY_NAME);
-
-/** Content-scoped context: measured width of the ScrollArea.Root, shared with Viewport. */
-type MasonryContentContextValue = {
-  width: number;
-};
-
-const [MasonryContentProvider, useMasonryContentContext] = createContext<MasonryContentContextValue>('Masonry.Content');
 
 //
 // Root
@@ -64,7 +59,7 @@ const MasonryRoot = ({
   maxColumns = undefined,
   minColumnWidth = cardMinInlineSize,
   maxColumnWidth = cardMaxInlineSize,
-  gutter = 0.75,
+  gap = 0.75,
 }: MasonryRootProps) => (
   <MasonryProvider
     Tile={Tile!}
@@ -72,7 +67,7 @@ const MasonryRoot = ({
     maxColumns={maxColumns}
     minColumnWidth={minColumnWidth}
     maxColumnWidth={maxColumnWidth}
-    gutter={gutter}
+    gap={gap}
   >
     {children}
   </MasonryProvider>
@@ -83,9 +78,10 @@ MasonryRoot.displayName = 'Masonry.Root';
 //
 // Content
 //
-// The outer wrapper: renders the ScrollArea.Root, measures available width,
-// and publishes that width via context for Masonry.Viewport to consume.
-// Style this layer (centered/thin/padding) to control the scroll container.
+// The outer wrapper: renders the ScrollArea.Root. Style this layer
+// (centered/thin/padding) to control the scroll container; the Viewport measures
+// its own content box, so scrollbar width and padding are accounted for whatever
+// density is configured here.
 //
 
 type MasonryContentProps = ThemedClassName<
@@ -93,21 +89,23 @@ type MasonryContentProps = ThemedClassName<
 >;
 
 const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
-  ({ children, scrollbars, centered, thin = true, padding = true, ...props }, forwardedRef) => {
-    const rootRef = useRef<HTMLDivElement | null>(null);
-    const composedRef = useComposedRefs(rootRef, forwardedRef);
-    const { width = 0 } = useResizeDetector({ targetRef: rootRef });
-
+  ({ children, scrollbars, centered = true, thin = true, padding = true, ...props }, forwardedRef) => {
+    const { gap } = useMasonryContext('Masonry.Content');
     return (
       <ScrollArea.Root
-        {...composableProps(props, { classNames: 'pt-trim-md' })}
+        // Drive the ScrollArea gutter to the grid gap so the left/right perimeter
+        // matches the inter-column gap: the centered+padding theme resolves this to
+        // pl = gap and pr = gap - scrollbar, keeping both sides symmetric with the
+        // scrollbar accounted for at any density. Cast: CSSProperties has no index
+        // signature for CSS custom properties, so `--gutter` cannot be typed directly.
+        {...composableProps(props, { style: { '--gutter': `${gap}rem` } as CSSProperties })}
         scrollbars={scrollbars}
         centered={centered}
         thin={thin}
         padding={padding}
-        ref={composedRef}
+        ref={forwardedRef}
       >
-        <MasonryContentProvider width={width}>{children}</MasonryContentProvider>
+        {children}
       </ScrollArea.Root>
     );
   },
@@ -124,9 +122,10 @@ const MasonryContent = MasonryContentInner as (
 //
 // Viewport
 //
-// The inner render layer: renders the ScrollArea.Viewport wrapped around
-// VirtuosoMasonry. Style this layer separately from Content to control
-// the tile grid (e.g. inner padding, alignment).
+// The inner render layer: renders the ScrollArea.Viewport wrapped around the
+// absolute layout engine. Each tile is positioned with translate(x, y) into a
+// balanced (shortest-column-first) grid; reflow is animated with FLIP. Style
+// this layer separately from Content to control the tile grid.
 //
 
 type MasonryViewportProps<Item> = ThemedClassName<{
@@ -134,80 +133,116 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   items: readonly Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
   getId?: (data: Item) => string;
+  /**
+   * Ids of the currently-selected tiles. When `onSelect` is also provided the grid becomes
+   * selectable: selected tiles render an outline + `aria-selected`, and clicking a tile emits
+   * {@link onSelect}. Selection STATE (single/multi semantics) is owned by the consumer — pair this
+   * with `useListSelection` from `@dxos/react-ui-list`.
+   */
+  selectedIds?: ReadonlySet<string>;
+  /** Emitted when a tile is clicked while selectable. The consumer toggles its own selection state. */
+  onSelect?: (id: string, event: MouseEvent) => void;
 }>;
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
-  ({ items, getId, ...props }, forwardedRef) => {
-    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Viewport');
-    const { width } = useMasonryContentContext('Masonry.Viewport');
-    const columnCount = useColumnCount(
-      width - (scrollbar.md.size + scrollbar.md.padding),
-      columns,
-      maxColumns,
-      minColumnWidth,
-      maxColumnWidth,
-      gutter,
-    );
+  ({ items, getId, selectedIds, onSelect, ...props }, forwardedRef) => {
+    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap } = useMasonryContext('Masonry.Viewport');
+    const remInPx = usePx(1);
+    // Measure the viewport's own content box (net of padding and scrollbar) rather
+    // than deriving it from the root width, so the grid tracks the actual available
+    // width for any ScrollArea density (thin/scrollbars/padding) without duplicating
+    // the theme's gutter math.
+    const viewportRef = useRef<HTMLDivElement | null>(null);
+    // Throttle width changes: each update recomputes the column count and the full tile layout,
+    // so coalesce rapid resizes (drag, ScrollArea reflow) into at most one relayout per interval.
+    const { width: contentWidth = 0 } = useResizeDetector({
+      targetRef: viewportRef,
+      refreshMode: 'throttle',
+      refreshRate: 200,
+    });
+    const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gap);
 
-    // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all
-    // four arrows move focus through the items. True 2D (grid) axis doesn't
-    // work inside a masonry because VirtuosoMasonry lays items out column-
-    // first in the DOM — tabster's Grid direction requires the next DOM
-    // element to be to the right of the current for ArrowRight, which is
-    // never the case between columns here. `both` treats the keys as flat
-    // next/previous-focusable, which gives predictable wrap-around in DOM
-    // order for all four directions.
+    // The grid fills the measured content box; the layout caps columns at
+    // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
+    const gapPx = gap * remInPx;
+    const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
+    const { rects, columnWidth, height, getTileRef, nodes } = useMasonryLayout({
+      ids,
+      columnCount,
+      containerWidth: contentWidth,
+      gapPx,
+      maxColumnWidthPx: maxColumnWidth * remInPx,
+    });
+    useFlip({ nodes, ids, rects, enabled: true });
+
+    // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
+    // arrows move focus through the items as flat next/previous-focusable, giving
+    // predictable wrap-around in DOM order.
     const arrowNavigationAttrs = useArrowNavigationGroup({
       axis: 'both',
       memorizeCurrent: true,
       tabbable: true,
     });
 
-    const TileAdapter = useMemo(() => {
-      const Adapter = ({ data, index }: { data: any; index: number }) => (
-        <div role='listitem' style={{ paddingBottom: `${gutter}rem` }}>
-          <Tile index={index} data={data} />
-        </div>
-      );
-      Adapter.displayName = 'Masonry.TileAdapter';
-      return Adapter;
-    }, [Tile, gutter]);
-
-    if (width <= 0) {
-      return null;
-    }
-
-    // VirtuosoMasonry renders the scroller as a full-width flex row whose column children carry an
-    // inline `flexGrow: 1`. Capping each column at `maxColumnWidth` lets the columns grow to fill the
-    // row but stop at the natural card width; `justify-center` then distributes the remaining space as
-    // symmetric margins so the grid stays centered without the scroll container leaving the far edge.
+    // The viewport is the full-width scroll container; its centered+padded theme
+    // (with `--gutter` set to the gap) balances the scrollbar into symmetric inline
+    // gutters. The grid fills the content box and the layout centres capped columns,
+    // so nothing overflows and left/right spacing matches the gap. The viewport always
+    // renders so it can be measured; tiles render once a width is known.
     return (
-      <ScrollArea.Viewport asChild>
-        <VirtuosoMasonry
-          {...composableProps(props, {
-            classNames: ['justify-center', '[&>div]:max-w-[var(--dx-masonry-column-max)]'],
-            style: { gap: `${gutter}rem`, '--dx-masonry-column-max': `${maxColumnWidth}rem` } as CSSProperties,
-          })}
-          {...arrowNavigationAttrs}
-          ItemContent={TileAdapter}
-          columnCount={columnCount}
-          data={items as any[]}
-          // ref={forwardedRef}
-        />
+      <ScrollArea.Viewport ref={viewportRef}>
+        {contentWidth > 0 && (
+          <div
+            {...composableProps(props, {
+              classNames: 'relative',
+              style: { width: `${contentWidth}px`, height: `${height}px` },
+            })}
+            {...arrowNavigationAttrs}
+            role='list'
+            ref={forwardedRef}
+          >
+            {items.map((item, index) => {
+              const id = ids[index];
+              const rect = rects[index];
+              const selectable = !!onSelect;
+              const selected = selectedIds?.has(id) ?? false;
+              return (
+                <div
+                  key={id}
+                  // Let the tile clamp its card: a card's own min-width must not exceed
+                  // the column, or a narrow (single-column, mobile) container overflows
+                  // and shows a horizontal scrollbar.
+                  className={[
+                    '[&>*]:min-w-0!',
+                    selectable && 'cursor-pointer',
+                    selected && 'rounded-md ring-2 ring-inset ring-primary-500',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  ref={getTileRef(id)}
+                  role='listitem'
+                  aria-selected={selectable ? selected : undefined}
+                  onClick={onSelect ? (event) => onSelect(id, event) : undefined}
+                  style={{
+                    position: 'absolute',
+                    insetBlockStart: 0,
+                    insetInlineStart: 0,
+                    width: `${columnWidth}px`,
+                    transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
+                  }}
+                >
+                  <Tile index={index} data={item} selected={selected} />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </ScrollArea.Viewport>
     );
   },
 );
 
 MasonryViewportInner.displayName = 'Masonry.Viewport';
-
-/**
- * NOTE: Required in order for our Viewport to take over the scroll area.
- * https://github.com/petyosi/react-virtuoso/issues/1305
- */
-const VirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(({ ...props }, _forwardedRef) => {
-  return <NaturalVirtuosoMasonry {...props} />;
-});
 
 const MasonryViewport = MasonryViewportInner as <Item>(
   props: MasonryViewportProps<Item> & {
@@ -222,7 +257,7 @@ const useColumnCount = (
   maxColumns: number | undefined,
   minColumnWidth: number,
   maxColumnWidth: number,
-  gutter: number,
+  gap: number,
 ) => {
   const remInPx = usePx(1);
   return useMemo(() => {
@@ -232,20 +267,21 @@ const useColumnCount = (
 
     const minColumnWidthPx = minColumnWidth * remInPx;
     const maxColumnWidthPx = maxColumnWidth * remInPx;
-    const gutterPx = gutter * remInPx;
+    const gapPx = gap * remInPx;
     if (width <= 0 || minColumnWidthPx <= 0) {
       return 1;
     }
 
-    // Each tile has paddingRight: gutter, so every slot (including the last) occupies
-    // (colWidth + gutterPx). The container therefore fits floor(containerWidth / (colWidth + gutterPx)) columns.
-    let cols = Math.floor(width / (minColumnWidthPx + gutterPx));
+    // `width` is the content box; the outer perimeter is owned by the scroll
+    // container, so only interior gaps count: N columns fit when
+    // N * colWidth + (N - 1) * gap <= width, i.e. N <= (width + gap) / (colWidth + gap).
+    let cols = Math.max(1, Math.floor((width + gapPx) / (minColumnWidthPx + gapPx)));
     if (maxColumnWidthPx > 0) {
-      const effectiveColWidth = width / cols - gutterPx;
+      const effectiveColWidth = (width - (cols - 1) * gapPx) / cols;
       if (effectiveColWidth > maxColumnWidthPx) {
         // Try to add columns to keep cards below maxColumnWidth, but never violate minColumnWidth.
-        const maxCols = Math.ceil(width / (maxColumnWidthPx + gutterPx));
-        if (width / maxCols - gutterPx >= minColumnWidthPx) {
+        const maxCols = Math.ceil((width + gapPx) / (maxColumnWidthPx + gapPx));
+        if ((width - (maxCols - 1) * gapPx) / maxCols >= minColumnWidthPx) {
           cols = maxCols;
         }
       }
@@ -253,7 +289,7 @@ const useColumnCount = (
 
     const clamped = maxColumns != null ? Math.min(cols, maxColumns) : cols;
     return Math.max(1, clamped);
-  }, [remInPx, width, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter]);
+  }, [remInPx, width, columns, maxColumns, minColumnWidth, maxColumnWidth, gap]);
 };
 
 //
@@ -266,4 +302,4 @@ export const Masonry = {
   Viewport: MasonryViewport,
 };
 
-export type { MasonryRootProps, MasonryContentProps, MasonryViewportProps };
+export type { MasonryContentProps, MasonryRootProps, MasonryViewportProps };

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Instructions, Trigger, Operation } from '@dxos/compute';
+import { Instructions, Operation, Trigger } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -121,8 +121,8 @@ export const generator = () => ({
         invariant(mailbox, 'Mailbox not found');
         const mailboxFeed = await mailbox.feed?.tryLoad();
         invariant(mailboxFeed, 'Mailbox missing feed reference');
-        const queueDxn = Feed.getQueueUri(mailboxFeed);
-        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
+        const feedUri = Feed.getFeedUri(mailboxFeed);
+        invariant(feedUri, 'Mailbox feed missing feed URI');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagUri = Obj.getURI(tag);
 

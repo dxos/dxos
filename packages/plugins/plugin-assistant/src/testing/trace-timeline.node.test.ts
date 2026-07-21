@@ -5,22 +5,22 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AgentService } from '@dxos/agent-runtime';
+import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import {
   AgentHandlers,
-  RunInstructions,
-  DatabaseSkill,
   DatabaseHandlers,
-  WebSearchSkill,
+  DatabaseSkill,
+  RunInstructions,
   WebSearchHandlers,
+  WebSearchSkill,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { Skill, Instructions, Trace, Trigger, Operation } from '@dxos/compute';
+import { Instructions, Operation, Skill, Trace, Trigger } from '@dxos/compute';
+import { FeedTraceSink, TriggerDispatcher } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
-import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
-import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 import { renderTimelineAscii } from '@dxos/react-ui-components';

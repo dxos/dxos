@@ -279,7 +279,7 @@ export const translations = [
   {
     'en-US': {
       'org.dxos.type.tictactoe': {
-        label: 'Game',
+        'label': 'Game',
         'label--plural': 'Games',
       },
       'org.dxos.plugin.tictactoe': {
@@ -288,7 +288,7 @@ export const translations = [
         'o-turn': "O's turn",
         'x-wins': 'X wins!',
         'o-wins': 'O wins!',
-        draw: "It's a draw!",
+        'draw': "It's a draw!",
         'ai-thinking': 'AI is thinking...',
         'difficulty-easy': 'Easy',
         'difficulty-medium': 'Medium',

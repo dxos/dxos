@@ -237,19 +237,3 @@ export const runInRuntime: {
     })();
   }
 };
-
-/**
- * Like `Effect.promise` but also caputes spans for defects.
- * Workaround for: https://github.com/Effect-TS/effect/issues/5436
- */
-export const promiseWithCauseCapture: <A>(evaluate: (signal: AbortSignal) => PromiseLike<A>) => Effect.Effect<A> = (
-  evaluate,
-) =>
-  Effect.promise(async (signal) => {
-    try {
-      const result = await evaluate(signal);
-      return Effect.succeed(result);
-    } catch (err) {
-      return Effect.die(err);
-    }
-  }).pipe(Effect.flatten);

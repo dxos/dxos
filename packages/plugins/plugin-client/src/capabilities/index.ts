@@ -18,5 +18,11 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
+export const RemoteTraceMonitor = Capability.lazy('RemoteTraceMonitor', () => import('./remote-trace-monitor'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const SchemaDefs = Capability.lazy('SchemaDefs', () => import('./schema-defs'));
+export const SpaceReplicationProgress = Capability.lazy(
+  'SpaceReplicationProgress',
+  () => import('./space-replication-progress'),
+);
+export const TraceProgress = Capability.lazy('TraceProgress', () => import('./trace-progress'));

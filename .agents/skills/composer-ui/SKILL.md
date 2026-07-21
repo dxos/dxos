@@ -15,9 +15,14 @@ to [[composer-plugins]] (which owns plugin _structure_: capabilities, surfaces, 
 and [[composite-components]] (which owns _authoring_ new `@dxos/react-ui` primitives). When you're
 laying out a container, picking a color class, wiring a toolbar, or writing a story, the rules live here.
 
-**Golden rule:** the design system already has a primitive, a token, or a layout for what you need.
+**Golden rule:** If the design system already has a primitive, a token, or a layout for what you need you must use it.
 Reaching for a raw `<div>` with custom classes, a native `<input>`, or a guessed color token is almost
 always a sign you missed an existing piece. Find it (grep an existing themed component) before inventing.
+
+Low-level components (plugin/_/src/components, react-ui-_). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit` capabilitiess.
+Instead aspects that may be derived from capabilites must be passed as properties.
+Each component lives in its own subdirectory with an `index.ts` barrel.
+Use named exports; no default exports.
 
 ## Package family
 
@@ -277,6 +282,23 @@ or wrap it in one element occupying slot 2:
   </div>
   <Card.IconBlock /> {/* slot 3 (action) */}
 </Card.Header>
+```
+
+**Content parts must live inside a subgrid part, never directly under `Card.Root`.** `Card.Title`,
+`Card.Text`, and `Card.Block` carry no column placement of their own — the center-track placement comes
+from `Card.Header` / `Card.Row` / `Card.Section`. A `Card.Text` (or `Card.Title`) dropped straight into
+`Card.Root` — or into `Card.Body`, which is `display:contents` and so doesn't place either — CSS-grid
+auto-places into a **gutter** track and renders squeezed/clamped. Wrap free body text in a `Card.Row`:
+
+```tsx
+<Card.Root>
+  <Card.Header>
+    <Card.Title>…</Card.Title>
+  </Card.Header>
+  <Card.Row>
+    <Card.Text variant='description'>…</Card.Text> {/* NOT a direct Card.Root/Card.Body child */}
+  </Card.Row>
+</Card.Root>
 ```
 
 A card used as the child of `Focus.Item asChild` (or any Radix `Slot`/`asChild`) must be composable — a

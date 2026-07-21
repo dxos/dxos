@@ -7,16 +7,16 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { useResizeDetector } from 'react-resize-detector';
 
 import {
-  CellGrid,
   type Cell,
   type CellCoord,
+  CellGrid,
   type RenderCell,
   type Row,
   type ToggleMode,
   type Tool,
+  cellKey,
   createCellGridAtoms,
   toggleCell,
-  cellKey,
 } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 

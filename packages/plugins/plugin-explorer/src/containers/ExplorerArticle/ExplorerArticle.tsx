@@ -7,12 +7,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import { type TreeNode } from '@dxos/react-ui-graph';
 import '@dxos/react-ui-graph/styles/graph.css';
 
-import { type ExplorerArticleVariant, type TreeNode, VARIANTS, Visualization, isVariant } from '#components';
+import { type ExplorerArticleVariant, VARIANTS, Visualization, isVariant } from '#components';
 import { useGraphModel } from '#hooks';
 
 export type { ExplorerArticleVariant } from '#components';
@@ -116,3 +117,5 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     </Panel.Root>
   );
 };
+
+ExplorerArticle.displayName = 'ExplorerArticle';

@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 
 import { ConnectorSync, LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 
-const { mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } = ConnectorSync;
+const { mergeDeep, mergeField, snapshotField } = ConnectorSync;
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 
@@ -56,14 +56,15 @@ type BoardSnapshot = {
    *
    * Fields are required (not `?`) because the snapshot is always written in
    * one shot at the end of a pull; the "no snapshot yet" state is modeled
-   * by `readSnapshot` returning `undefined`.
+   * by `Cursor.readSnapshot` returning `undefined`.
    */
   order: string[];
   columns: Record<string, { ids: string[] }>;
 };
 
-// Per-field three-way merge primitives are shared with other integration plugins
-// (Linear, GitHub) and live in `@dxos/app-toolkit`.
+// Per-field three-way merge primitives are shared with other integration plugins (Linear, GitHub)
+// and live in `@dxos/app-toolkit`. The snapshot storage accessors (`Cursor.readSnapshot`/
+// `Cursor.writeSnapshot`) live in `@dxos/link` instead, alongside `Cursor`'s other field helpers.
 
 /**
  * Pull reconciler with snapshot-driven three-way merge.
@@ -72,7 +73,7 @@ type BoardSnapshot = {
  *  - Per-field three-way merge over `(local, remote, snapshot)`. Local edits to
  *    fields the remote hasn't changed are preserved; remote edits to fields the
  *    user hasn't touched flow through; on both-changed the policy is remote-wins.
- *  - After the merge, refresh `binding.snapshots[card.id]` to the values
+ *  - After the merge, refresh `binding.spec.snapshots[card.id]` to the values
  *    currently on the remote — so the next sync's three-way merge starts from
  *    Trello's current state.
  *
@@ -89,7 +90,7 @@ type BoardSnapshot = {
  * (board-level push is currently TODO; see notes below).
  */
 export const reconcileBoardCards: (
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   kanban: Kanban.Kanban,
   remoteBoard: TrelloBoard,
   remoteCards: ReadonlyArray<TrelloCard>,
@@ -152,7 +153,7 @@ export const reconcileBoardCards: (
           log.warn('trello pull: foreign-keyed local object is not an Expando; skipping', { cardId: card.id });
           continue;
         }
-        const snapshot = readSnapshot<CardSnapshot>(binding, card.id);
+        const snapshot = Cursor.readSnapshot<CardSnapshot>(binding, card.id);
 
         const merged: Record<MappedField, unknown> = { ...remoteFields };
         const writes: Partial<Record<MappedField, unknown>> = {};
@@ -176,7 +177,7 @@ export const reconcileBoardCards: (
         // Refresh the snapshot to remote-current. Even if no writes happened
         // (no-op or local-wins), the next sync should compare against what
         // Trello currently says.
-        writeSnapshot(binding, card.id, remoteFields);
+        Cursor.writeSnapshot(binding, card.id, remoteFields);
       } else {
         // First time we've seen this card: create + attach. Snapshot seeded from remote.
         const obj = Obj.make(Expando.Expando, {
@@ -186,7 +187,7 @@ export const reconcileBoardCards: (
         const persisted = yield* Database.add(obj);
         newRefs.push(Ref.make(persisted) as Ref.Ref<Obj.Unknown>);
         localByForeignId.set(card.id, persisted);
-        writeSnapshot(binding, card.id, remoteFields);
+        Cursor.writeSnapshot(binding, card.id, remoteFields);
         added++;
       }
     }
@@ -245,7 +246,7 @@ export const reconcileBoardCards: (
     // Board-level three-way merge: name + arrangement.order + arrangement.columns.
     // Local-wins outputs are left in place but currently NOT pushed back to
     // Trello — board rename and arrangement reorder push aren't implemented yet.
-    const boardSnapshot = readSnapshot<BoardSnapshot>(binding, remoteBoard.id);
+    const boardSnapshot = Cursor.readSnapshot<BoardSnapshot>(binding, remoteBoard.id);
     const nameMerge = mergeField<string | undefined>(
       kanban.name,
       remoteBoard.name,
@@ -296,7 +297,7 @@ export const reconcileBoardCards: (
     }
 
     // Refresh the board snapshot to what's currently on Trello (post-merge).
-    writeSnapshot(binding, remoteBoard.id, {
+    Cursor.writeSnapshot(binding, remoteBoard.id, {
       name: remoteBoard.name,
       order: orderedListNames,
       columns: remoteColumns,
@@ -319,7 +320,7 @@ export type PushResult = {
  * What gets pushed:
  *  - Cards WITHOUT a Trello foreign key — locally created, never seen by Trello. POST.
  *  - Cards WITH a foreign key whose local field values differ from
- *    `binding.snapshots[foreignId]` — i.e. the user edited a field that wasn't
+ *    `binding.spec.snapshots[foreignId]` — i.e. the user edited a field that wasn't
  *    written by the most recent pull. PUT only the diverged fields.
  *
  * Tombstones (`Obj.isDeleted(target)`) are NEVER pushed: pull soft-deletes the
@@ -328,7 +329,7 @@ export type PushResult = {
  * pushed values so subsequent passes see no divergence.
  */
 export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   kanban: Kanban.Kanban,
   lists: ReadonlyArray<TrelloList>,
   push: {
@@ -398,7 +399,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
         });
         // Seed the snapshot with the values we just sent so the very next pull
         // (which will return this same card) is a no-op for these fields.
-        writeSnapshot(binding, result.id, {
+        Cursor.writeSnapshot(binding, result.id, {
           name,
           description: desc,
           listName: localListName ?? '',
@@ -415,7 +416,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
     // If the snapshot is missing a field (e.g. brand-new MAPPED_FIELDS entry,
     // or a corrupt snapshot), treat that as "no signal" and skip pushing the
     // field — we can't tell whether local was edited.
-    const snapshot = (readSnapshot<CardSnapshot>(binding, foreignId) ?? {}) as CardSnapshot;
+    const snapshot = (Cursor.readSnapshot<CardSnapshot>(binding, foreignId) ?? {}) as CardSnapshot;
     const updatePayload: { name?: string; desc?: string; listId?: string } = {};
     let diverged = false;
 
@@ -438,7 +439,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
 
     yield* push.update(foreignId, updatePayload);
     // Refresh the snapshot with the values just pushed.
-    writeSnapshot(binding, foreignId, {
+    Cursor.writeSnapshot(binding, foreignId, {
       ...snapshot,
       name,
       description: desc,
@@ -512,11 +513,14 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
 
       const toastIdSuffix = EID.getEntityId(EID.tryParse(binding.uri)!) ?? 'unknown';
 
-      // Resolve the binding and its connection up-front so credentials can be
-      // provided from the connection ref. `Database.load` is requirement-free
-      // (the ref carries its own db), so this runs outside the layered body.
+      // Resolve the binding up-front so credentials can be provided from its access
+      // token directly. `Database.load` is requirement-free (the ref carries its own
+      // db), so this runs outside the layered body.
       const bound = yield* Database.load(binding);
-      const connection = Relation.getSource(bound);
+      if (!Cursor.isExternal(bound)) {
+        // The integration mechanism only ever creates external-sync cursors for Trello.
+        return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
+      }
 
       // Wrap the body in `Effect.either` so we can emit a toast on either path
       // before returning. The toast distinguishes "the sync ran" from "the sync
@@ -524,16 +528,17 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
       // `lastError` on the binding carries the diagnostic detail.
       const outcome = yield* Effect.either(
         Effect.gen(function* () {
-          const kanban = Relation.getTarget(bound);
+          const kanban = yield* Database.load(bound.spec.target);
 
           if (!Obj.instanceOf(Kanban.Kanban, kanban) || !Kanban.isKanbanItems(kanban)) {
             // The integration mechanism only ever binds items-variant Kanbans for Trello.
             return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
           }
 
-          // Resolve the remote board id: prefer the binding's `remoteId`, fall
+          // Resolve the remote board id: prefer the binding's `externalId`, fall
           // back to the Kanban's foreign-key meta (set by `materializeTarget`).
-          const boardId = bound.remoteId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
+          const boardId =
+            bound.spec.externalId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
           if (boardId === undefined) {
             return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
           }
@@ -548,8 +553,8 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
           // The trello-api functions return `Effect<T, HttpClientError | ParseError, HttpClient>`
           // with retry+timeout baked in. The HttpClient layer is provided at the
           // operation boundary below. Trello's cards endpoint doesn't support a
-          // delta cursor, so we full-fetch every sync and don't read/write
-          // `binding.cursor` here.
+          // delta cursor, so we full-fetch every sync and never advance the
+          // cursor's `value` (only its run status, below).
           const lists = yield* TrelloApi.fetchLists(boardId);
           const cards = yield* TrelloApi.fetchCards(boardId);
           const reconcileResult = yield* reconcileBoardCards(bound, kanban, remoteBoard, cards, lists);
@@ -566,10 +571,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
           });
 
           // Stamp success on the binding.
-          Relation.update(bound, (bound) => {
-            bound.lastSyncAt = new Date().toISOString();
-            bound.lastError = undefined;
-          });
+          Cursor.advance(bound);
 
           return {
             pulled: reconcileResult,
@@ -580,13 +582,11 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
           // so the toast path still surfaces the crash.
           Effect.tapError((error) =>
             Effect.sync(() => {
-              Relation.update(bound, (bound) => {
-                bound.lastError = formatTrelloSyncFailure(error);
-              });
+              Cursor.recordError(bound, formatTrelloSyncFailure(error));
             }),
           ),
           Effect.provide(Database.layer(db)),
-          Effect.provide(TrelloApi.TrelloCredentials.fromConnection(Ref.make(connection))),
+          Effect.provide(TrelloApi.TrelloCredentials.fromAccessToken(bound.spec.source)),
         ),
       );
 

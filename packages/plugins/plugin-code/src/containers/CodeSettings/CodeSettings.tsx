@@ -5,10 +5,11 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { AccessToken } from '@dxos/link';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Settings as SettingsType } from '#types';
@@ -90,3 +91,5 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
 };
 
 export default CodeSettings;
+
+CodeSettings.displayName = 'CodeSettings';

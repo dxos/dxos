@@ -2,24 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
-  type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  STATUS_TIMEOUT,
+  type Rpc,
   SpaceProperties,
-  clientServiceBundle,
+  STATUS_TIMEOUT,
+  makeHandlersFromRpc,
+  serveClientServicesOverIFrame,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { raise } from '@dxos/debug';
-import { type Hypergraph, Type } from '@dxos/echo';
+import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -31,14 +30,14 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
+  runServiceCall,
+  subscribeStream,
 } from '@dxos/protocols';
-import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
-import { createIFramePort } from '@dxos/rpc-tunnel';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
+import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeBlobBackend, createEdgeIdentity } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -55,6 +54,9 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
 
+  /** Effect runtime used by client components to run service-rpc effects. Defaults to the default runtime. */
+  runtime?: Runtime.Runtime<never>;
+
   /** ECHO schema. */
   types?: Type.AnyEntity[];
 
@@ -64,9 +66,6 @@ export type ClientOptions = {
   /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
   sqlitePath?: string;
 
-  /** Create client worker. */
-  createWorker?: () => SharedWorker;
-
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
 };
@@ -74,7 +73,6 @@ export type ClientOptions = {
 /**
  * The Client class encapsulates the core client-side API of DXOS.
  */
-@trace.resource()
 export class Client {
   /**
    * Emitted after the client is reset and the services have finished restarting.
@@ -89,38 +87,38 @@ export class Client {
 
   private readonly _options: ClientOptions;
 
+  /** Effect runtime threaded to client components for running service-rpc effects. */
+  private readonly _effectRuntime: Runtime.Runtime<never>;
+
   /**
    * Unique id of the Client, local to the current peer.
    */
-  @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
 
   /**
    * The version of this client API.
    */
-  @trace.info()
   readonly version = DXOS_VERSION;
 
-  @trace.info()
   private _services?: ClientServicesProvider;
 
-  @trace.info()
   private _initialized = false;
 
-  @trace.info()
   private _resetting = false;
 
   private _runtime?: ClientRuntime;
 
   private _ctx = new Context();
   private _config?: Config;
-  private _statusStream?: Stream<QueryStatusResponse>;
+  private _statusStreamCleanup?: () => void;
   private _statusTimeout?: NodeJS.Timeout;
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
-  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
+  private _shellClientServer?: Rpc.GroupServer;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
+  private _edgeIdentitySubscription?: { unsubscribe: () => void };
+  private _edgeBlobBackendCleanup?: CleanupFn;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -137,6 +135,7 @@ export class Client {
     }
 
     this._options = options;
+    this._effectRuntime = options.runtime ?? Runtime.defaultRuntime;
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = options.config?.get('runtime.client.log.filter');
@@ -162,7 +161,6 @@ export class Client {
     return `Client(${this._instanceId})`;
   }
 
-  @trace.info({ depth: null })
   toJSON() {
     return {
       initialized: this.initialized,
@@ -340,7 +338,11 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000, ctx: this._ctx });
+      invariant(this._services, 'Client not initialized.');
+      await runServiceCall(this._effectRuntime, this._services.rpc.QueryService.reindex(undefined), {
+        timeout: 30_000,
+        label: 'QueryService.reindex',
+      });
     }
 
     log.info('Repair succeeded', { repairSummary });
@@ -367,13 +369,11 @@ export class Client {
     this._config = this._options.config ?? new Config();
 
     if (!this._options.services) {
-      // Default services mode when not explicitly set in config. The Client entrypoint only exposes
-      // the SharedWorker and OPFS worker options (dedicated worker is a composer-app-level choice).
+      // Default services mode when not explicitly set in config. The Client entrypoint only runs
+      // services in-thread (HOST); the dedicated worker is a composer-app-level choice.
       const clientCfg = this._config.values.runtime?.client;
       if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
-        const servicesMode = this._options.createWorker
-          ? Runtime.Client.ServicesMode.SHARED_WORKER
-          : Runtime.Client.ServicesMode.HOST;
+        const servicesMode = Runtime.Client.ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
         // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
@@ -395,13 +395,11 @@ export class Client {
     // NOTE: Must currently match the host.
     log('client.initialize: creating services provider', {
       providedServices: !!this._options.services,
-      hasCreateWorker: !!this._options.createWorker,
       hasCreateOpfsWorker: !!this._options.createOpfsWorker,
       sqlitePath: this._options.sqlitePath,
     });
     this._services = await (this._options.services ??
       createClientServices(this._config, {
-        createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
@@ -473,18 +471,21 @@ export class Client {
     }
 
     log('client._open: connecting echo client to service...');
+    // The effect-rpc client nests every service under its key, so the same `rpc` surface satisfies
+    // each per-service Client (DataService.Client, etc.).
     this._echoClient.connectToService({
-      dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
-      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
-      queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
+      dataService: this._services.rpc,
+      queryService: this._services.rpc,
+      feedService: this._services.rpc,
+      runtime: this._effectRuntime,
     });
     log('client._open: opening echo client...');
     await this._echoClient.open(ctx);
     log('client._open: echo client opened');
 
-    const mesh = new MeshProxy(this._services);
-    const halo = new HaloProxy(this._services);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient);
+    const mesh = new MeshProxy(this._services, this._effectRuntime);
+    const halo = new HaloProxy(this._services, this._effectRuntime);
+    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._effectRuntime);
 
     const shell = this._shellManager
       ? new Shell({
@@ -496,26 +497,64 @@ export class Client {
       : undefined;
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
-    log('client._open: subscribing to system status...');
-    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 }, { ctx });
-    this._statusStream.subscribe(
-      async ({ status }) => {
-        log('client._open: status received', { status });
-        this._statusTimeout && clearTimeout(this._statusTimeout);
-        trigger.wake(undefined);
-
-        this._statusUpdate.emit(status);
-        this._statusTimeout = setTimeout(() => {
-          this._statusUpdate.emit(null);
-        }, STATUS_TIMEOUT);
-      },
-      (err) => {
-        log('client._open: status error', { err });
-        trigger.wake(err);
-        if (err) {
-          this._statusUpdate.emit(null);
+    if (this._edgeHttpClient) {
+      const edgeHttpClient = this._edgeHttpClient;
+      const updateIdentity = () => {
+        if (!halo.identity.get()) {
+          return;
         }
+        try {
+          edgeHttpClient.setIdentity(createEdgeIdentity(this));
+        } catch (error) {
+          // Identity and device become ready asynchronously and independently — createEdgeIdentity
+          // throws 'Identity not available' if device isn't ready yet, retried by the next
+          // identity or device update once both are available. Anything else is unexpected and
+          // shouldn't fail silently.
+          if (!(error instanceof Error) || error.message !== 'Identity not available') {
+            log.error('failed to update edge identity', { error });
+          }
+        }
+      };
+      updateIdentity();
+      const identitySubscription = halo.identity.subscribe(updateIdentity);
+      const deviceSubscription = halo.devices.subscribe(updateIdentity);
+      this._edgeIdentitySubscription = {
+        unsubscribe: () => {
+          identitySubscription.unsubscribe();
+          deviceSubscription.unsubscribe();
+        },
+      };
+
+      this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
+        Blob.Storage.edge,
+        createEdgeBlobBackend({ edgeClient: edgeHttpClient }),
+        { default: true },
+      );
+    }
+
+    log('client._open: subscribing to system status...');
+    this._statusStreamCleanup = subscribeStream(
+      this._effectRuntime,
+      this._services.rpc.SystemService.queryStatus({ interval: 3_000 }),
+      {
+        onData: ({ status }) => {
+          log('client._open: status received', { status });
+          this._statusTimeout && clearTimeout(this._statusTimeout);
+          trigger.wake(undefined);
+
+          this._statusUpdate.emit(status);
+          this._statusTimeout = setTimeout(() => {
+            this._statusUpdate.emit(null);
+          }, STATUS_TIMEOUT);
+        },
+        onError: (err) => {
+          log('client._open: status error', { err });
+          trigger.wake(err);
+          this._statusUpdate.emit(null);
+        },
+        onClose: () => {
+          trigger.wake(undefined);
+        },
       },
     );
 
@@ -541,28 +580,27 @@ export class Client {
       await this._shellManager.open();
       log('client._open: shell manager opened');
     }
-    if (this._iframeManager?.iframe) {
+    const iframeManager = this._iframeManager;
+    const shellIframe = iframeManager?.iframe;
+    if (iframeManager && shellIframe) {
       // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
       //   https://github.com/socketsupply/socket/issues/893
       const origin =
-        this._iframeManager.source.origin === 'null'
-          ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
-          : this._iframeManager.source.origin;
+        iframeManager.source.origin === 'null'
+          ? iframeManager.source.toString().split('/').slice(0, 3).join('/')
+          : iframeManager.source.origin;
 
-      this._shellClientProxy = createProtoRpcPeer({
-        exposed: clientServiceBundle,
-        handlers: this._services.services as ClientServices,
-        port: createIFramePort({
-          channel: DEFAULT_CLIENT_CHANNEL,
-          iframe: this._iframeManager.iframe,
-          origin,
-        }),
-        handlerRpcOptions: {
-          timeout: 60_000, // Timeout is specifically very high because shell will be managing its own timeouts on RPCs.
-        },
+      // Re-serve the client services to the shell iframe over effect-rpc, matching the shell's
+      // `ClientServicesProxy` consumer. Handlers are derived from the already-open effect-native
+      // `rpc` surface so calls forward straight to the underlying provider (worker or host). The
+      // server (and its byte `RpcPort` binding) is constructed inside `@dxos/client-protocol`, which
+      // resolves the iframe transport types in one consistent universe.
+      const shellServicesHandlers = makeHandlersFromRpc(this._services.rpc);
+      this._shellClientServer = await serveClientServicesOverIFrame({
+        iframe: shellIframe,
+        origin,
+        services: () => shellServicesHandlers,
       });
-
-      await this._shellClientProxy.open();
     }
 
     log('opened');
@@ -594,11 +632,18 @@ export class Client {
   private async _close(): Promise<void> {
     log.verbose('client._close: closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
-    await this._statusStream?.close();
+    this._statusStreamCleanup?.();
+    this._statusStreamCleanup = undefined;
     await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
+    await this._shellClientServer?.close();
+    this._shellClientServer = undefined;
     log.verbose('client._close: closing services...');
     await this._services?.close();
+    this._edgeIdentitySubscription?.unsubscribe();
+    this._edgeIdentitySubscription = undefined;
+    this._edgeBlobBackendCleanup?.();
+    this._edgeBlobBackendCleanup = undefined;
     this._edgeHttpClient = undefined;
     this._edgeApi = undefined;
     log('closed');
@@ -610,8 +655,13 @@ export class Client {
    * (e.g., HALO when SharedWorker is unavailable).
    */
   async resumeHostServices(): Promise<void> {
-    invariant(this.services.services.SystemService, 'SystemService is not available.');
-    await this.services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE }, { ctx: this._ctx });
+    await runServiceCall(
+      this._effectRuntime,
+      this.services.rpc.SystemService.updateStatus({ status: SystemStatus.ACTIVE }),
+      {
+        label: 'SystemService.updateStatus',
+      },
+    );
   }
 
   /**
@@ -627,8 +677,10 @@ export class Client {
 
     log('resetting...');
     this._resetting = true;
-    invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    await this._services?.services.SystemService.reset(undefined, { ctx: this._ctx });
+    invariant(this._services, 'Client not initialized.');
+    await runServiceCall(this._effectRuntime, this._services.rpc.SystemService.reset(undefined), {
+      label: 'SystemService.reset',
+    });
     await this._close();
 
     // TODO(wittjosiah): Re-open after reset.

@@ -15,7 +15,10 @@ const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Pat
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
   mailboxes: 'mailboxes',
+  allMail: 'all-mail',
+  sent: 'sent',
   drafts: 'drafts',
+  subscriptions: 'subscriptions',
 } as const;
 
 /** Canonical segment ID for the mailboxes section node. */
@@ -29,8 +32,17 @@ export const getMailboxesPath = (spaceId: string): string =>
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxesPath(spaceId)}/${mailboxId}`;
 
+/** Canonical segment ID for the "All Mail" (unfiltered) child node. */
+export const getAllMailId = (): string => Segments.allMail;
+
+/** Canonical segment ID for the "Sent" child node. */
+export const getSentId = (): string => Segments.sent;
+
 /** Canonical segment ID for the drafts child node. */
 export const getDraftsId = (): string => Segments.drafts;
+
+/** Canonical segment ID for the subscriptions child node. */
+export const getSubscriptionsId = (): string => Segments.subscriptions;
 
 /** Canonical qualified path to a mailbox's drafts view. */
 export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string =>
@@ -64,4 +76,4 @@ export const getCalendarRangeSelectionId = (contextId: string): string => `${con
  */
 export const getEventNodeId = (attendableId: string, eventSegment: string): string => `${attendableId}/${eventSegment}`;
 
-export { getCalendarsPath, getCalendarPath };
+export { getCalendarPath, getCalendarsPath };

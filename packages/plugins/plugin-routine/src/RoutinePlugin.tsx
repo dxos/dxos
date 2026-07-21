@@ -3,8 +3,8 @@
 //
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
-import { Operation, Instructions, Trace, Trigger } from '@dxos/compute';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
 import {
@@ -39,6 +39,7 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
+    // TODO(dmaretskyi): Seems to be contributing too late.
     activatesOn: ClientEvents.ClientReady,
     firesBeforeActivation: [ActivationEvents.SetupProcessManager],
     activate: LayerSpecs,

@@ -15,14 +15,14 @@ import type { TestProjectConfiguration } from 'vitest/config';
  */
 export const TEST_TAGS: NonNullable<TestProjectConfiguration['test']>['tags'] = [
   { name: 'flaky', description: 'Tests that may be flaky (Trunk pass-on-rerun integration).' },
-  { name: 'llm', description: 'Tests that hit external LLM APIs (Anthropic, OpenAI, Ollama).' },
   { name: 'sync', description: 'Tests that hit external sync APIs (Discord, Linear, browser-based).' },
   { name: 'sync-e2e', description: 'End-to-end tests against the real EDGE worker.' },
   { name: 'functions-e2e', description: 'End-to-end tests that deploy and invoke real Cloudflare functions.' },
-  { name: 'manual', description: 'Opt-in tests run only when explicitly selected (local services, manual setup).' },
-  { name: 'tracing-e2e', description: 'End-to-end tracing/observability tests against SigNoz.' },
   {
-    name: 'compiler',
-    description: 'Tests that depend on external CDN resources (e.g. TypeScript playground lib.d.ts).',
+    name: 'manual',
+    description: 'Opt-in tests run only when explicitly selected (local services, manual setup).',
+    // Skipped by DEFAULT; DX_RUN_MANUAL_TESTS=1 opts in (these tests need local services
+    // like Ollama/LM Studio that a plain `moon run :test` machine does not have).
+    skip: !['1', 'true'].includes(process.env.DX_RUN_MANUAL_TESTS ?? ''),
   },
 ];

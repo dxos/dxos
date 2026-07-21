@@ -9,13 +9,13 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { RoutineForm, MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '#components';
+import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon, RoutineForm } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineCapabilities } from '#types';
 
@@ -340,3 +340,5 @@ const useCompanionMenuActions = ({ t, templates, draft, handleCreateFromTemplate
         .build(),
     [t, templates, draft, handleCreateFromTemplate],
   );
+
+RoutineCompanion.displayName = 'RoutineCompanion';

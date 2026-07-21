@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Connection } from '@dxos/plugin-connector';
 import { Event } from '@dxos/types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { findShadowObject, reanchorShadowObject } from '../hooks/shadow';
-import { Calendar, InboxOperation, DraftEvent } from '../types';
+import { Calendar, DraftEvent, InboxOperation } from '../types';
 import { findBindingForTarget } from '../util';
 
 export default InboxOperation.SyncDraftEvents.pipe(
@@ -30,7 +31,15 @@ export default InboxOperation.SyncDraftEvents.pipe(
       if (!binding) {
         return { synced: 0 };
       }
-      const connectionRef = Ref.make(Relation.getSource(binding));
+      // Finds the Connection whose access token is the binding's `spec.source` — fuzzy if an access
+      // token is ever shared across connections.
+      const [connection] = yield* Database.query(
+        Filter.type(Connection.Connection, { accessToken: binding.spec.source }),
+      ).run.pipe(Effect.provide(Database.layer(db)));
+      if (!connection) {
+        return { synced: 0 };
+      }
+      const connectionRef = Ref.make(connection);
       const bindingRef = Ref.make(binding);
 
       const candidates = yield* Effect.promise(() => db.query(Filter.type(Event.Event)).run());

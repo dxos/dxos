@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import { InvocationTraceEndEvent, InvocationTraceStartEvent, createInvocationSpans } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { InvocationTraceEndEvent, InvocationTraceStartEvent, createInvocationSpans } from '@dxos/functions-runtime';
 
 import { InspectInvocations } from './definitions';
 
@@ -24,8 +24,8 @@ export default InspectInvocations.pipe(
       }
 
       const feed = yield* Database.load(properties.invocationTraceFeed);
-      const startEvents = yield* Feed.runQuery(feed, Filter.type(InvocationTraceStartEvent));
-      const endEvents = yield* Feed.runQuery(feed, Filter.type(InvocationTraceEndEvent));
+      const startEvents = yield* Feed.query(feed, Filter.type(InvocationTraceStartEvent)).run;
+      const endEvents = yield* Feed.query(feed, Filter.type(InvocationTraceEndEvent)).run;
       const allSpans = createInvocationSpans([...startEvents, ...endEvents]);
 
       const functionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));

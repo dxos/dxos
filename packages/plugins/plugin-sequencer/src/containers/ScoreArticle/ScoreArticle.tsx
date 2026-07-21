@@ -6,19 +6,19 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
-import { Menu, MenuBuilder, useMenuBuilder, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
-import type { Sequence, Score, Track } from '#types';
+import type { Score, Sequence, Track } from '#types';
 
 import { ScorePlayer } from '../../audio';
-import { formatLeadSheet, parseLeadSheet, type LeadSheetDocument } from '../../util/lead-sheet';
-import { applyLeadSheetToScore, scoreToLeadSheet, type MutableScore } from '../../util/score-leadsheet';
+import { type LeadSheetDocument, formatLeadSheet, parseLeadSheet } from '../../util/lead-sheet';
+import { type MutableScore, applyLeadSheetToScore, scoreToLeadSheet } from '../../util/score-leadsheet';
 
 export type ScoreArticleProps = AppSurface.ObjectArticleProps<Score.Score>;
 
@@ -530,3 +530,5 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
 };
 
 export default ScoreArticle;
+
+ScoreArticle.displayName = 'ScoreArticle';

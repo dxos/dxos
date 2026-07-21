@@ -1,0 +1,36 @@
+{
+  "name": "@dxos/halo-adapter-client",
+  "version": "0.10.0",
+  "description": "Implements the @dxos/halo services over a @dxos/client instance.",
+  "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/halo/halo-adapter-client#readme",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/halo": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

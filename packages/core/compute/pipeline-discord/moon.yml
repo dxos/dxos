@@ -1,0 +1,13 @@
+layer: library
+language: typescript
+tags:
+  - ts-vite-build
+  - ts-test
+tasks:
+  # Replay the captured SQLite fixture (src/testing/fixtures/discord-crawl.db) through the
+  # question-extraction pipeline. Non-CI: skips when the fixture is absent or CI is set.
+  replay-fixture:
+    command: 'pnpm exec vitest run src/testing/replay-fixture.test.ts'
+    options:
+      runInCI: false
+      cache: false

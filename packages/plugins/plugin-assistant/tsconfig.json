@@ -43,6 +43,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -61,13 +64,22 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -98,6 +110,9 @@
     },
     {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-list"
     },
     {
       "path": "../../ui/react-ui"
@@ -146,6 +161,9 @@
     },
     {
       "path": "../../ui/react-ui-tabs"
+    },
+    {
+      "path": "../../ui/react-ui-transcription"
     },
     {
       "path": "../../ui/ui"

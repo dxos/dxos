@@ -49,3 +49,5 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
     </Tooltip.Trigger>
   );
 };
+
+InlineSyncStatus.displayName = 'InlineSyncStatus';

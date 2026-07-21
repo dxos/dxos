@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
+
 import { type EdgeIdentity } from '@dxos/edge-client';
+import { runServiceCall } from '@dxos/protocols';
 
 import { type Client } from '../client';
 import { RPC_TIMEOUT } from '../common';
@@ -14,18 +17,22 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
     throw new Error('Identity not available');
   }
   return {
-    identityKey: identity.identityKey.toHex(),
     identityDid: identity.did,
     peerKey: device.deviceKey.toHex(),
     presentCredentials: async ({ challenge }) => {
-      const identityService = client.services.services.IdentityService!;
-      const authCredential = await identityService.createAuthCredential();
-      return identityService.signPresentation(
-        {
+      const identityService = client.services.rpc.IdentityService;
+      const authCredential = await runServiceCall(
+        Runtime.defaultRuntime,
+        identityService.createAuthCredential(undefined),
+        { label: 'IdentityService.createAuthCredential' },
+      );
+      return runServiceCall(
+        Runtime.defaultRuntime,
+        identityService.signPresentation({
           presentation: { credentials: [authCredential] },
           nonce: challenge,
-        },
-        { timeout: RPC_TIMEOUT },
+        }),
+        { timeout: RPC_TIMEOUT, label: 'IdentityService.signPresentation' },
       );
     },
   };

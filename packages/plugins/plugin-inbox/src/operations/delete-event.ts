@@ -6,13 +6,13 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { GoogleCalendar } from '../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { GoogleCredentials } from '../services/google-credentials';
-import { Calendar, InboxOperation, DraftEvent } from '../types';
+import { Calendar, DraftEvent, InboxOperation } from '../types';
 import { findBindingForTarget } from '../util';
 
 export default InboxOperation.DeleteEvent.pipe(
@@ -38,10 +38,9 @@ export default InboxOperation.DeleteEvent.pipe(
       if (googleEventId && googleCalendarId) {
         const binding = yield* findBindingForTarget(calendar).pipe(Effect.provide(Database.layer(db)));
         if (binding) {
-          const connectionRef = Ref.make(Relation.getSource(binding));
           yield* GoogleCalendar.deleteEvent(googleCalendarId, googleEventId).pipe(
             Effect.provide(FetchHttpClient.layer),
-            Effect.provide(GoogleCredentials.fromConnection(connectionRef)),
+            Effect.provide(GoogleCredentials.fromAccessToken(binding.spec.source)),
             Effect.catchAll((error) => {
               log.catch(error);
               return Effect.void;

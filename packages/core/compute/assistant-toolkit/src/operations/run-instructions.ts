@@ -10,17 +10,18 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AiSession,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Template, Trace, Operation } from '@dxos/compute';
+import { Operation, Template, Trace } from '@dxos/compute';
 import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
@@ -28,7 +29,7 @@ import { PromptError } from '../errors';
 import * as Chat from '../types/Chat';
 import { RunInstructions } from './definitions';
 
-const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-8';
+const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
 
 const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All => {
   // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.
@@ -93,7 +94,7 @@ export default RunInstructions.pipe(
           systemText += `\n${data.systemInstructions}`;
         }
 
-        const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);
+        const modelLayer = AiService.model(DXN.getName(data.model ?? DEFAULT_MODEL));
 
         let feed: Feed.Feed;
         if (data.chat) {

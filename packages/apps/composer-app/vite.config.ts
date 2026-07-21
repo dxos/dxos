@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type PluginOption } from 'vite';
+import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -53,23 +53,24 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   //   * `?url` static-asset imports (e.g. plugin-zen's m4a samples,
   //     plugin-script's `esbuild.wasm`) get real bundled URLs instead of
   //     the `""` empty-url stub that `dx-compile` writes into `dist`.
-  // Disabled under `DX_FASTBUNDLE` for the smoke-test/preview build where
-  // build speed wins over correctness for unchanged source.
-  !isFastBundle &&
-    importSource({
-      include: ['@dxos/**', '#*'],
-      exclude: [
-        '@dxos/random-access-storage',
-        '@dxos/lock-file',
-        '@dxos/network-manager',
-        '@dxos/teleport',
-        '@dxos/config',
-        '@dxos/client-services',
-        '@dxos/observability',
-        // TODO(dmaretskyi): Decorators break in lit.
-        '@dxos/lit-*',
-      ],
-    }),
+  // Under `DX_FASTBUNDLE` (smoke-test/preview build) only the `@dxos/**`-to-source
+  // forcing is skipped, where build speed wins over correctness for unchanged source.
+  // Package-internal `#*` subpath imports must still resolve to source, or they fall
+  // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
+  importSource({
+    include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
+    exclude: [
+      '@dxos/random-access-storage',
+      '@dxos/lock-file',
+      '@dxos/network-manager',
+      '@dxos/teleport',
+      '@dxos/config',
+      '@dxos/client-services',
+      '@dxos/observability',
+      // TODO(dmaretskyi): Decorators break in lit.
+      '@dxos/lit-*',
+    ],
+  }),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -119,7 +120,6 @@ export default defineConfig((env) => ({
       clientFiles: [
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
-        './src/workers/shared-worker.ts',
         './src/workers/coordinator-worker.ts',
         './src/plugin-defs.tsx',
       ],
@@ -296,6 +296,8 @@ export default defineConfig((env) => ({
       { find: /^path$/, replacement: '@dxos/node-std/path' },
       { find: /^node:crypto$/, replacement: '@dxos/node-std/crypto' },
       { find: /^crypto$/, replacement: '@dxos/node-std/crypto' },
+      { find: /^node:stream$/, replacement: '@dxos/node-std/stream' },
+      { find: /^stream$/, replacement: '@dxos/node-std/stream' },
       { find: /^tiktoken\/lite$/, replacement: path.resolve(dirname, 'stub.mjs') },
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.
@@ -493,10 +495,6 @@ export default defineConfig((env) => ({
       },
     }),
 
-    // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // Open: http://localhost:5173/__inspect
-    isTrue(process.env.DX_INSPECT) && inspect(),
-
     isTrue(process.env.DX_STATS) && [
       visualizer({
         emitFile: true,
@@ -537,7 +535,10 @@ export default defineConfig((env) => ({
     }),
 
     IconsPlugin({
-      symbolPattern: '(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
+      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+      symbolPattern:
+        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':

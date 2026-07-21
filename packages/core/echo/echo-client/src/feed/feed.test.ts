@@ -3,14 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import * as Exit from 'effect/Exit';
+import { pipe } from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Scope from 'effect/Scope';
+import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID, PublicKey } from '@dxos/keys';
-import { FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
+import { FeedService } from '@dxos/protocols/rpc';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -73,9 +78,64 @@ describe('Feed', () => {
       const bob = Obj.make(TestSchema.Person, { name: 'bob' });
       yield* Feed.append(feed, [alice, bob]);
 
-      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(2);
       expect(results.map((item: any) => item.name).sort()).toEqual(['alice', 'bob']);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  test('query.run returns all results', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'runnable' }));
+
+      yield* Feed.append(feed, [
+        Obj.make(TestSchema.Person, { name: 'alice' }),
+        Obj.make(TestSchema.Person, { name: 'bob' }),
+      ]);
+
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
+      expect(results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  test('query.first returns the first result as an Option', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'first' }));
+
+      const empty = yield* Feed.query(feed, Filter.type(TestSchema.Person)).first;
+      expect(Option.isNone(empty)).toBe(true);
+
+      yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'alice' })]);
+
+      const first = yield* Feed.query(feed, Filter.type(TestSchema.Person)).first;
+      expect(Option.isSome(first)).toBe(true);
+      expect(Option.getOrThrow(first).name).toBe('alice');
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  test('query composes data-last with pipe', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'curried' }));
+
+      yield* Feed.append(feed, [
+        Obj.make(TestSchema.Person, { name: 'alice' }),
+        Obj.make(TestSchema.Person, { name: 'bob' }),
+      ]);
+
+      const results = yield* pipe(feed, Feed.query(Filter.type(TestSchema.Person))).run;
+      expect(results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
@@ -90,7 +150,7 @@ describe('Feed', () => {
       const alice = Obj.make(TestSchema.Person, { name: 'alice' });
       yield* Feed.append(feed, [alice]);
 
-      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(1);
 
       const feedObject = results[0];
@@ -129,7 +189,7 @@ describe('Feed', () => {
       const bob = Obj.make(TestSchema.Person, { name: 'bob' });
       yield* Feed.append(feed, [alice, bob]);
 
-      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(2);
       for (const item of results) {
         const parent = Obj.getParent(item);
@@ -156,6 +216,7 @@ describe('Feed', () => {
       const calledOnce = called.waitForCount(1);
       const unsubscribe = queryResult.subscribe(() => called.emit(), { fire: true });
 
+      // The initial event is deferred until the async index results arrive (no empty snapshot).
       yield* Effect.promise(() => calledOnce);
       expect(queryResult.results).toHaveLength(2);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
@@ -203,7 +264,7 @@ describe('Feed', () => {
       yield* Feed.sync(feed, { shouldPush: false });
       yield* Feed.sync(feed, { shouldPull: false });
 
-      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(1);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
@@ -225,7 +286,7 @@ describe('Feed', () => {
       yield* Feed.append(feed, [post]);
 
       // Re-query to obtain a queue-decoded proxy (cross-db ref resolution path).
-      const items = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const items = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(items).toHaveLength(1);
       const queuePost = items[0];
 
@@ -301,6 +362,28 @@ describe('Feed', () => {
     expect((traversed[0] as TestSchema.Person).name).toBe('alice');
   });
 
+  test('query unions items across multiple feeds', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    // Duplicate same-kind feeds occur in production: writers race on feed creation (e.g. the
+    // edge's indexer-backed lookup missing a not-yet-indexed feed), so readers must be able to
+    // union items across all of a space's feeds in one query.
+    let feedA!: Feed.Feed;
+    let feedB!: Feed.Feed;
+    await Effect.gen(function* () {
+      feedA = yield* Database.add(Feed.make({ name: 'trace-a', namespace: 'trace' }));
+      feedB = yield* Database.add(Feed.make({ name: 'trace-b', namespace: 'trace' }));
+
+      yield* Feed.append(feedA, [Obj.make(TestSchema.Person, { name: 'alice' })]);
+      yield* Feed.append(feedB, [Obj.make(TestSchema.Person, { name: 'bob' })]);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+
+    const results = await db.query(Query.type(TestSchema.Person).from([feedA, feedB])).run();
+    expect(results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+  });
+
   describe('feed namespaces', () => {
     test('Feed.append assigns data and trace namespaces in feed store', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
@@ -345,7 +428,7 @@ describe('Feed', () => {
       await Effect.gen(function* () {
         traceFeed = yield* Database.add(Feed.make({ name: 'trace-feed', namespace: 'trace' }));
         yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
-        const results = yield* Feed.runQuery(traceFeed, Filter.type(TestSchema.Person));
+        const results = yield* Feed.query(traceFeed, Filter.type(TestSchema.Person)).run;
         expect(results).toHaveLength(1);
         expect((results[0] as TestSchema.Person).name).toBe('trace-item');
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
@@ -374,23 +457,41 @@ describe('Feed', () => {
         yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
-      const traceResult = await peer.host.queuesService.queryQueue({
-        query: {
-          spaceId: db.spaceId,
-          queueIds: [traceFeed.id],
-          queuesNamespace: FeedProtocol.WellKnownNamespaces.trace,
-        },
-      });
+      const feedService = await makeFeedClient(peer.host.feedService);
+
+      const traceResult = await EffectEx.runPromise(
+        feedService.FeedService.queryFeed({
+          query: {
+            spaceId: db.spaceId,
+            feedIds: [traceFeed.id],
+            feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          },
+        }),
+      );
       expect(traceResult.objects?.length).toBe(1);
 
-      const dataResult = await peer.host.queuesService.queryQueue({
-        query: {
-          spaceId: db.spaceId,
-          queueIds: [traceFeed.id],
-          queuesNamespace: FeedProtocol.WellKnownNamespaces.data,
-        },
-      });
+      const dataResult = await EffectEx.runPromise(
+        feedService.FeedService.queryFeed({
+          query: {
+            spaceId: db.spaceId,
+            feedIds: [traceFeed.id],
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          },
+        }),
+      );
       expect(dataResult.objects?.length).toBe(0);
     });
   });
 });
+
+/**
+ * Bridges the host's {@link FeedService.Handlers} to an in-process effect-rpc client (no wire hop),
+ * exposing the same client surface consumers use. The bridge scope is closed on test teardown.
+ */
+const makeFeedClient = async (handlers: FeedService.Handlers): Promise<FeedService.Client> => {
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  return EffectEx.runPromise(
+    makeInProcessClient(FeedService.Rpcs, handlers).pipe(Effect.provideService(Scope.Scope, scope)),
+  );
+};

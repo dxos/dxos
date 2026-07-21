@@ -27,6 +27,7 @@ import {
   type ToggleGroupItemProps,
   type ToggleProps,
 } from '../Button';
+import { Icon } from '../Icon';
 import { Link, type LinkProps } from '../Link';
 import { DropdownMenu } from '../Menu';
 import { Separator, type SeparatorProps } from '../Separator';
@@ -303,6 +304,8 @@ ToolbarActionIconButton.displayName = 'Toolbar.ActionIconButton';
 
 type ToolbarMenuItem<T extends any | void = void> = {
   label: string;
+  /** Optional leading icon (e.g. `ph--trash--regular`). */
+  icon?: string;
   onClick: (context: T) => void;
 };
 
@@ -329,8 +332,9 @@ function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMen
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
             <DropdownMenu.Viewport>
-              {items?.map(({ label, onClick: onSelect }, index) => (
+              {items?.map(({ label, icon, onClick: onSelect }, index) => (
                 <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                  {icon && <Icon icon={icon} />}
                   {label}
                 </DropdownMenu.Item>
               ))}
@@ -366,19 +370,19 @@ export const Toolbar = {
 };
 
 export type {
-  ToolbarRootProps,
-  ToolbarTextProps,
-  ToolbarButtonProps,
-  ToolbarIconButtonProps,
-  ToolbarLinkProps,
-  ToolbarToggleProps,
-  ToolbarToggleGroupProps,
-  ToolbarToggleGroupItemProps,
-  ToolbarToggleGroupIconItemProps,
-  ToolbarSeparatorProps,
-  ToolbarDragHandleProps,
   ToolbarActionIconButtonAction,
   ToolbarActionIconButtonProps,
+  ToolbarButtonProps,
+  ToolbarDragHandleProps,
+  ToolbarIconButtonProps,
+  ToolbarLinkProps,
   ToolbarMenuItem,
   ToolbarMenuProps,
+  ToolbarRootProps,
+  ToolbarSeparatorProps,
+  ToolbarTextProps,
+  ToolbarToggleGroupIconItemProps,
+  ToolbarToggleGroupItemProps,
+  ToolbarToggleGroupProps,
+  ToolbarToggleProps,
 };

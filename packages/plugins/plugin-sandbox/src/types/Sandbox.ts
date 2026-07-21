@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { AccessToken } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
 
 export const SKILL_KEY = 'org.dxos.skill.sandbox';
 
@@ -29,7 +29,9 @@ export class Sandbox extends Type.makeObject<Sandbox>(DXN.make('org.dxos.type.sa
         }),
       ),
     ),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' })),
+  })
+    .pipe(Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' }))
+    .pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
 
 /**

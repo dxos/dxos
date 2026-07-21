@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { trim } from '@dxos/util';
@@ -49,7 +49,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = Tra
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-sonnet-4-6'),
+          AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

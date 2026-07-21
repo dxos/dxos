@@ -7,9 +7,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Credential, Operation } from '@dxos/compute';
-import { Database, DXN } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 
 import * as Ibkr from './Ibkr';
+
+const ForeignKey = Schema.Struct({
+  source: Schema.String,
+  id: Schema.String,
+});
 
 const makeKey = (name: string) => DXN.make(`org.dxos.function.ibkr.${name}`);
 
@@ -29,6 +34,27 @@ export const SyncPortfolioReport = Operation.make({
     cash: Schema.Number,
   }),
   services: [Credential.CredentialsService, Database.Service],
+});
+
+/** Appends a manually supplied raw Flex report XML to the feed, bypassing the rate-limited IBKR fetch. */
+export const ImportPortfolioReport = Operation.make({
+  meta: {
+    key: makeKey('importPortfolioReport'),
+    name: 'Import IBKR report',
+    description: 'Store a raw Interactive Brokers Flex report XML for offline reads, without calling IBKR.',
+    icon: 'ph--upload-simple--regular',
+  },
+  input: Schema.Struct({
+    /** Raw Flex Web Service `<FlexQueryResponse>` document. */
+    xml: Schema.String,
+  }),
+  output: Schema.Struct({
+    fetchedAt: Schema.String,
+    positions: Schema.Number,
+    trades: Schema.Number,
+    cash: Schema.Number,
+  }),
+  services: [Database.Service],
 });
 
 /** Returns the open positions and cash balances from the most recent stored report. */
@@ -62,4 +88,66 @@ export const GetTrades = Operation.make({
     trades: Schema.Array(Ibkr.Trade),
   }),
   services: [Database.Service],
+});
+
+/** Find-or-create an Instrument keyed by a foreign id. */
+export const MaterializeInstrument = Operation.make({
+  meta: {
+    key: makeKey('materializeInstrument'),
+    name: 'Materialize instrument',
+    description: 'Find or create a tradable Instrument keyed by ticker/exchange foreign id (idempotent).',
+    icon: 'ph--chart-line-up--regular',
+  },
+  input: Schema.Struct({
+    key: ForeignKey,
+    name: Schema.optional(Schema.String),
+    symbol: Schema.String,
+    exchange: Schema.optional(Schema.String),
+    assetClass: Schema.optional(Ibkr.AssetClass),
+    extraKeys: Schema.optional(Schema.Array(ForeignKey)),
+  }),
+  output: Schema.Struct({
+    instrument: Ref.Ref(Ibkr.Instrument),
+    created: Schema.Boolean,
+  }),
+  services: [Database.Service],
+});
+
+/** Fetches a compact fundamentals snapshot for an Instrument from SEC EDGAR. */
+export const GetInstrumentFundamentals = Operation.make({
+  meta: {
+    key: makeKey('getInstrumentFundamentals'),
+    name: 'Get instrument fundamentals',
+    description: 'Fetch filing-based fundamentals for a tradable Instrument from SEC EDGAR company facts.',
+    icon: 'ph--chart-bar--regular',
+  },
+  input: Schema.Struct({
+    instrument: Ref.Ref(Ibkr.Instrument),
+  }),
+  output: Ibkr.FundamentalsSnapshot,
+  services: [Database.Service],
+});
+
+/** Syncs tax lots from the portfolio's latest stored Flex report into persisted Lot objects. */
+export const SyncLots = Operation.make({
+  meta: {
+    key: makeKey('syncLots'),
+    name: 'Sync IBKR lots',
+    description: 'Materialize tax lots from the latest stored Flex report as child Lot objects on the portfolio.',
+    icon: 'ph--stack--regular',
+  },
+  input: Schema.Struct({
+    account: Ref.Ref(Ibkr.Portfolio),
+    report: Schema.optional(Ref.Ref(Ibkr.Report)).annotations({
+      description: 'When set, sync lots from this report instead of the latest feed snapshot.',
+    }),
+  }),
+  output: Schema.Struct({
+    synced: Schema.Number,
+    created: Schema.Number,
+    updated: Schema.Number,
+    removed: Schema.Number,
+  }),
+  types: [Ibkr.Lot, Ibkr.Instrument, Ibkr.Portfolio, Ibkr.Report],
+  services: [Database.Service, Operation.Service],
 });

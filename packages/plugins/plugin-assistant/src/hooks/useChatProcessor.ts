@@ -15,9 +15,10 @@ import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { AgentService, Credential, ServiceResolver } from '@dxos/compute';
 import { Database, Hypergraph, Obj, Ref, Registry } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { useObject, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type Assistant } from '#types';
@@ -104,6 +105,7 @@ export const useChatProcessor = ({
       observableRegistry,
       registry,
       model: preset?.model,
+      provider: preset?.provider,
       // A personal-space chat reads across the user's spaces (tier-1); others stay in their space.
       readScope: AppSpace.isPersonalSpace(space) ? 'membership' : 'home',
     });

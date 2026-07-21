@@ -19,12 +19,12 @@ import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from 
 
 import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 import {
+  type FileMapEntry,
   getFileXattrDXN,
   readFileMap,
   setFileXattrDXN,
   watchMarkdownFile,
   writeFileMap,
-  type FileMapEntry,
 } from './disk-io';
 import { collectMarkdownFileIds, collectMarkdownFiles, relativePath } from './file-helpers';
 

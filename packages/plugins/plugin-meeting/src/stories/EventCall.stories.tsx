@@ -12,6 +12,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -23,7 +24,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { Config } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
@@ -165,7 +166,7 @@ const meta = {
               // Re-read via the feed query so the event objects have their full echo URI set (via
               // hydrateObject → SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
               // space-qualified ref that findMeetingForEvent can match.
-              const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
+              const synced = yield* Feed.query(feed, Filter.type(Event.Event)).run.pipe(
                 Effect.provide(Database.layer(space.db)),
               );
               const event = synced[0];

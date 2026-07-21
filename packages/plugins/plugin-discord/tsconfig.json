@@ -34,10 +34,31 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/crawler"
+    },
+    {
+      "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/pipeline"
+    },
+    {
+      "path": "../../core/compute/pipeline-discord"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
     },
     {
       "path": "../../core/echo/echo"

@@ -92,7 +92,7 @@ export class TestPeer {
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
-    this._networkManager.setPeerInfo({ identityKey: peerId.toHex(), peerKey: peerId.toHex() });
+    this._networkManager.setPeerInfo({ identityDid: `did:halo:${peerId.toHex()}`, peerKey: peerId.toHex() });
   }
 
   // TODO(burdon): Move to TestBuilder.
@@ -220,7 +220,7 @@ export class TestSwarmConnection {
   async join(topology = new FullyConnectedTopology()): Promise<this> {
     await this.peer._networkManager.joinSwarm(Context.default(), {
       topic: this.topic,
-      peerInfo: { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() },
+      peerInfo: { peerKey: this.peer.peerId.toHex(), identityDid: `did:halo:${this.peer.peerId.toHex()}` },
       protocolProvider: this.protocol.factory,
       topology,
     });

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-query",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "ECHO queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,7 +19,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
+    },
+    "./sandbox": {
+      "source": "./src/sandbox/index.ts",
+      "types": "./dist/types/src/sandbox/index.d.ts",
+      "import": "./dist/lib/sandbox.mjs"
     },
     "./api.d.ts": "./dist/query-lite/index.d.ts"
   },

@@ -14,13 +14,13 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
-import { Game, GameRef, loadGame } from '@dxos/plugin-game';
+import { Game, loadGame } from '@dxos/plugin-game';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
@@ -33,7 +33,7 @@ const Commentary = Operation.make({
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   },
   input: Schema.Struct({
-    game: GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotations({
       description: 'The chess game to comment on.',
     }),
   }),
@@ -50,7 +50,7 @@ const Commentary = Operation.make({
       description: 'Function did not find anything to comment on.',
     }),
   ),
-  types: [Game, Chess.State, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
+  types: [Game.Game, Chess.State, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
   services: [AiService.AiService, Database.Service],
 });
 
@@ -213,7 +213,7 @@ export default Commentary.pipe(
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-haiku-4-5'),
+          AiService.model('com.anthropic.model.claude-haiku-4-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

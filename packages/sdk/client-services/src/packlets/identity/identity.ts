@@ -13,7 +13,6 @@ import {
   createCredentialSignerWithKey,
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
-import { type Space } from '@dxos/echo-host';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -32,6 +31,7 @@ import { type Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
+import { type Space } from '../space';
 import { EdgeFeedReplicator } from '../spaces';
 import { TrustedKeySetAuthVerifier } from './authenticator';
 
@@ -50,7 +50,6 @@ export type IdentityProps = {
 /**
  * Agent identity manager, which includes the agent's Halo space.
  */
-@trace.resource()
 export class Identity {
   public readonly space: Space;
   private readonly _signer: Signer;
@@ -210,7 +209,7 @@ export class Identity {
       subject: deviceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        identityKey: this.identityKey,
+        'identityKey': this.identityKey,
         deviceKey,
       },
     });
@@ -222,20 +221,20 @@ export class Identity {
           subject: controlFeedKey,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey: this.haloSpaceKey,
+            'spaceKey': this.haloSpaceKey,
             deviceKey,
-            identityKey: this.identityKey,
-            designation: AdmittedFeed.Designation.CONTROL,
+            'identityKey': this.identityKey,
+            'designation': AdmittedFeed.Designation.CONTROL,
           },
         }),
         await signer.createCredential({
           subject: dataFeedKey,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey: this.haloSpaceKey,
+            'spaceKey': this.haloSpaceKey,
             deviceKey,
-            identityKey: this.identityKey,
-            designation: AdmittedFeed.Designation.DATA,
+            'identityKey': this.identityKey,
+            'designation': AdmittedFeed.Designation.DATA,
           },
         }),
       ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),

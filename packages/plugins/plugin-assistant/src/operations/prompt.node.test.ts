@@ -6,8 +6,8 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { RunInstructions, Chat } from '@dxos/assistant-toolkit';
-import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
+import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
+import { Instructions, Operation, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
@@ -27,7 +27,7 @@ describe('Agent prompt (composer plugin harness)', () => {
   // Requires reachable edge AI (see repo DX_EDGE_AI_SERVICE_URL); not memoized like AssistantTestLayer tests.
   test(
     'chat mode appends assistant messages to the chat queue',
-    { tags: ['llm'], timeout: 60_000 },
+    { tags: ['manual'], timeout: 60_000 },
     async ({ expect }) => {
       await using harness = await createComposerTestApp({
         plugins: [ClientPlugin({}), AssistantPlugin(), RoutinePlugin()],
@@ -41,7 +41,7 @@ describe('Agent prompt (composer plugin harness)', () => {
         Effect.gen(function* () {
           const feed = yield* Database.add(Feed.make());
 
-          const messageCountBefore = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
+          const messageCountBefore = yield* Feed.query(feed, Filter.type(Message.Message)).run.pipe(
             Effect.map(Array.length),
           );
 
@@ -65,7 +65,7 @@ describe('Agent prompt (composer plugin harness)', () => {
             { spaceId: personalSpace.id },
           );
 
-          const messageCountAfter = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
+          const messageCountAfter = yield* Feed.query(feed, Filter.type(Message.Message)).run.pipe(
             Effect.map(Array.length),
           );
 

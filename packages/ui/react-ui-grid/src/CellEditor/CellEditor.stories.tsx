@@ -57,7 +57,7 @@ const DefaultStory = (props: CellEditorProps) => {
             insetInlineStart: 10,
             insetBlockStart: 10,
             inlineSize: 280,
-            blockSize: 30,
+            blockSize: 32,
           }}
           gridId='demo-grid'
         />

@@ -31,6 +31,7 @@ import {
   InlineRefField,
   MarkdownField,
   NumberField,
+  PasswordField,
   RefField,
   SelectField,
   TextAreaField,
@@ -86,6 +87,7 @@ export const FormField = (props: FormFieldProps) => {
     fieldMap,
     fieldProvider,
     readonly,
+    hideEmpty = true,
     layout,
 
     // RefFieldProps
@@ -143,7 +145,7 @@ export const FormField = (props: FormFieldProps) => {
   // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
   // empty-value checks, but those branches only apply when the value is
   // actually a non-null array/object, so this check doesn't interfere.
-  if (readonly && fieldState.getValue() == null) {
+  if (readonly && hideEmpty && fieldState.getValue() == null) {
     return null;
   }
 
@@ -335,6 +337,7 @@ const getFormField = ({
     Match.when(Format.TypeFormat.DateTime, () => DateField),
     Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
     Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
+    Match.when(Format.TypeFormat.Password, () => PasswordField),
     Match.when(Format.TypeFormat.Text, () => TextAreaField),
     Match.when(Format.TypeFormat.Time, () => DateField),
     Match.orElse(() => undefined),
@@ -357,6 +360,8 @@ const getFormField = ({
     case 'BooleanKeyword':
       return BooleanField;
   }
+
+  return undefined;
 };
 
 const getSelectOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {

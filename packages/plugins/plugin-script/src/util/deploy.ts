@@ -3,12 +3,12 @@
 //
 
 import { type Client } from '@dxos/client';
-import { Script, Operation } from '@dxos/compute';
+import { Operation, Script } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { bundleFunction } from '@dxos/functions-runtime/bundler';
-import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
+import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';
+import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { log } from '@dxos/log';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
@@ -43,6 +43,11 @@ export const deployScript = async ({
     return { success: false, error: validationError };
   }
 
+  const identity = client.halo.identity.get();
+  if (!identity) {
+    return { success: false, error: new Error('Identity not available.') };
+  }
+
   try {
     const buildResult = await bundleFunction({
       source: script.source!.target!.content,
@@ -53,8 +58,7 @@ export const deployScript = async ({
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
     const newFunction = await functionsServiceClient.deploy(Context.default(), {
-      // TODO(dmaretskyi): Space key or identity key.
-      ownerPublicKey: space.key,
+      ownerUri: identity.did,
       version: fn ? incrementSemverPatch(Obj.getMeta(fn).version ?? '0.0.0') : '0.0.1',
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,

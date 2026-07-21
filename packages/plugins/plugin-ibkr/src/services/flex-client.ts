@@ -116,7 +116,7 @@ export const parseCash = (xml: string): Ibkr.Cash[] =>
     .map((row) => ({ currency: row.currency, endingCash: num(row.endingCash) ?? 0 }));
 
 /** Open tax lots from the per-lot Open Positions rows (present only when the query emits lot detail). */
-export const parseOpenLots = (xml: string): Ibkr.Lot[] =>
+export const parseOpenLots = (xml: string): Ibkr.LotSnapshot[] =>
   parseElements(xml, 'OpenPosition')
     .filter(isLotRow)
     .map((row) => ({
@@ -131,7 +131,7 @@ export const parseOpenLots = (xml: string): Ibkr.Lot[] =>
     }));
 
 /** Closed tax lots (realized disposals) from `<Lot>` rows in the Trades section, for capital-gains reporting. */
-export const parseClosedLots = (xml: string): Ibkr.Lot[] =>
+export const parseClosedLots = (xml: string): Ibkr.LotSnapshot[] =>
   parseElements(xml, 'Lot').map((row) => ({
     symbol: row.symbol,
     acquired: row.openDateTime,

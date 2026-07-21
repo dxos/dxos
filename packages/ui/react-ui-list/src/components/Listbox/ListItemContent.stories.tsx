@@ -23,6 +23,9 @@ const meta = {
         description='Failed · 2.6s'
         classNames='p-2'
       />
+      {/* No icon: content occupies a single full-width column (not indented past an empty icon slot). */}
+      <ListItemContent title='No icon — title flush to the edge' classNames='p-2' />
+      <ListItemContent title='No icon, with description' description='Aligned under the title' classNames='p-2' />
     </div>
   ),
   decorators: [withTheme(), withLayout({ layout: 'column' })],

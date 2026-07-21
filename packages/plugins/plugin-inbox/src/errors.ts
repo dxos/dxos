@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type BaseErrorOptions, BaseError } from '@dxos/errors';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 /** OAuth finished but `AccessToken.token` is still empty (race or incomplete persist). */
 export class AccessTokenNotPopulatedError extends BaseError.extend(
@@ -74,6 +74,9 @@ export class JmapApiError extends BaseError.extend('JmapApiError', 'JMAP API req
     super({ ...options, context: { ...(options?.context ?? {}), status, detail, type } });
   }
 }
+
+/** A mail-sync run failed. The provider-agnostic harness wraps each provider's error into this one type (as `cause`). */
+export class MailSyncError extends BaseError.extend('MailSyncError', 'Mail sync failed.') {}
 
 /** JMAP send payload missing required fields (`to` or body text). */
 export class JmapSendMessageInvalidError extends BaseError.extend(

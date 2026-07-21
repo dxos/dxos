@@ -5,10 +5,18 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { useObject } from '@dxos/echo-react';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
-import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import {
+  type ActionExecutor,
+  type ActionGraphProps,
+  Menu,
+  MenuBuilder,
+  graphActions,
+  isToolbarAction,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
 import { Provider } from '../../types';
@@ -86,8 +94,8 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
 //
 
 /**
- * Builds toolbar menu actions from the app graph for the Provider node, filtering to
- * `disposition: 'toolbar'` actions and executing them via the graph action runner.
+ * Builds toolbar menu actions from the app graph for the Provider node, via `graphActions`
+ * (actions opted into the toolbar with `disposition: 'toolbar'`) executed via the graph action runner.
  */
 const useMenuActions = (
   attendableId: string | undefined,
@@ -96,16 +104,10 @@ const useMenuActions = (
   const runAction = useActionRunner();
 
   const menuActions = useMenuBuilder(
-    (get): ActionGraphProps => {
-      const actions = attendableId ? get(graph.actions(attendableId)) : [];
-      const toolbarActions = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return MenuBuilder.make()
-        .subgraph({
-          nodes: toolbarActions as ActionGraphProps['nodes'],
-          edges: toolbarActions.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
-        })
-        .build();
-    },
+    (get): ActionGraphProps =>
+      MenuBuilder.make()
+        .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        .build(),
     [graph, attendableId],
   );
 
@@ -121,3 +123,5 @@ const useMenuActions = (
 
   return { actions: menuActions, onAction };
 };
+
+ProviderArticle.displayName = 'ProviderArticle';

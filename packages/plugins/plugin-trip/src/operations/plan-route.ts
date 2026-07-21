@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Place, Routing, RoutingOperation, Segment, TripCapabilities, Trip } from '#types';
+import { type Place, Routing, RoutingOperation, Segment, Trip, TripCapabilities } from '#types';
 
 const EMPTY = { legs: 0, distanceMeters: 0, durationSeconds: 0 } as const;
 
@@ -93,7 +93,7 @@ const writeRoute = (
   segment: Segment.Segment,
   waypoints: readonly Place.Place[],
   routes: readonly Routing.Route[],
-): void =>
+): void => {
   Obj.update(segment, (segment) => {
     if (segment.details._tag !== 'road') {
       return;
@@ -111,6 +111,7 @@ const writeRoute = (
     // Deep-copy to plain mutable arrays (the live segment's GeoPoint fields are mutable number[][]).
     segment.details.routes = routes.map(cloneRoute);
   });
+};
 
 // Return type is inferred (plain mutable arrays) so it assigns to the live segment's GeoPoint fields.
 // Distance (meters) and duration (seconds) are floored to whole units; sub-unit precision is noise.

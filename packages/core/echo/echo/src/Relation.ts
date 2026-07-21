@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, type EntityId, type URI, DXN } from '@dxos/keys';
+import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -228,6 +228,20 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
     return false;
   }
   return (value as any)[Entity.SnapshotKindId] === internal.EntityKind.Relation;
+};
+
+/**
+ * Sets a relation as the parent of an object: the object cascade-deletes with the relation and is
+ * persisted transitively when the relation is added. The delete-cascade resolves the parent by id
+ * regardless of kind. The object-parent counterpart is {@link Obj.setParent}.
+ */
+export const setParent = (entity: Obj.Unknown, parent: Unknown): Obj.Unknown => {
+  assertArgument(Obj.isObject(entity), 'Expected an object');
+  assertArgument(isRelation(parent), 'Expected a relation');
+  assumeType<internal.InternalObjectProps>(entity);
+  assumeType<internal.InternalObjectProps>(parent);
+  entity[internal.ParentId] = parent;
+  return entity;
 };
 
 /**

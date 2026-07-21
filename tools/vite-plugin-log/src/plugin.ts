@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RolldownMagicString, type Plugin as RolldownPlugin } from 'rolldown';
-import { parseSync, type ConfigEnv, type IndexHtmlTransformContext, type Plugin, type UserConfig } from 'vite';
+import { type ConfigEnv, type IndexHtmlTransformContext, type Plugin, type UserConfig, parseSync } from 'vite';
 
 import { VITE_PLUGIN_LOG_SINK_PATH } from './constants.ts';
 import {
@@ -269,7 +269,15 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
         if (doWorkerInject) {
           ms.prepend(`import ${JSON.stringify(VITE_PLUGIN_LOG_RUNTIME_ID)};\n`);
         }
-        return { code: ms.toString() };
+        // Return a string + explicit source map (not the `RolldownMagicString` object): under the
+        // Vite pipeline the transform result's `code` must be a string, so returning the object leaks
+        // downstream as `[object Object]`. The map keeps dev breakpoints / stack traces aligned past
+        // the injected preamble `var __dxlog_file=…` line. (Returning the object only works in pure
+        // Rolldown / with `experimental.nativeMagicString`.)
+        return {
+          code: ms.toString(),
+          map: ms.generateMap({ hires: true, source: id, includeContent: false }).toString(),
+        };
       },
     } satisfies RolldownPlugin['transform'] as any;
   }

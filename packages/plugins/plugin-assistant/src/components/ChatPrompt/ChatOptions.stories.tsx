@@ -10,20 +10,21 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Feed, Filter, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ChessPlugin } from '@dxos/plugin-chess/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map/testing';
 import { TablePlugin } from '@dxos/plugin-table/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
+import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { useContextBinder } from '#hooks';
 import { translations } from '#translations';
 
-import { ChatOptions, ObjectsPanel, type ChatOptionsProps } from './ChatOptions';
+import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions';
 
 const presets = [
   {

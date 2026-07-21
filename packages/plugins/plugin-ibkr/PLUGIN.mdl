@@ -5,8 +5,12 @@ version: 0.1.0
 ---
 
 An Interactive Brokers plugin for `DXOS` Composer: a once-a-day background sync
-captures a Flex Web Service report into a per-space feed, and the assistant
-answers portfolio, cash, and trade questions from the latest stored snapshot.
+captures a Flex Web Service report into a per-space feed (or the user imports a
+Flex XML file manually from the toolbar), the assistant
+answers portfolio, cash, and trade questions from the latest stored snapshot,
+and `Instrument` objects provide navigable, deduplicated references to
+tradable securities with static identity metadata plus research surfaces
+(TradingView chart embed, SEC EDGAR fundamentals fetched at view time via operations).
 
 ## Extensions
 
@@ -21,6 +25,38 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
+
+## Architecture
+
+```mdl
+feat A-1: External access via operations
+
+  req A-1.1:
+    desc: |
+      Components and surfaces never call external services (IBKR Flex, SEC
+      EDGAR, or any other HTTP/API client) directly. All network I/O and
+      service access flows through operations; operation handlers call
+      `service:*` implementations.
+
+  req A-1.2:
+    when: a surface needs dynamic data from an external provider
+    then: |
+      it invokes the appropriate op via `OperationInvoker` (e.g.
+      `useOperationInvoker` in React) and renders the operation output
+
+  req A-1.3:
+    desc: |
+      Components may read static fields from their ECHO subject (`useObject`)
+      and render presentation-only third-party embeds (TradingView chart
+      widgets) that fetch their own market data client-side. The plugin does
+      not implement parallel fetch paths in UI code.
+
+  req A-1.4:
+    desc: |
+      `service:*` blocks are implementation details consumed only by operation
+      handlers — never imported or invoked from `src/containers/` or
+      `src/components/`.
+```
 
 ## Types
 
@@ -113,6 +149,48 @@ type Lot
     currency?: string
 ```
 
+```mdl
+type AssetClass
+  desc: Kind of tradable security represented by an Instrument.
+  literals: stock | etf | mutual_fund | adr | reit | warrant | other
+```
+
+```mdl
+type Instrument
+  desc: |
+    DXN typename: org.dxos.type.ibkr.Instrument@0.1.0.
+    A first-class reference to a tradable security (stock, ETF, ADR, …).
+    Holds static identity and descriptive metadata only — no prices,
+    financial statements, insider rows, or other large or frequently-changing
+    data. Dynamic market data (TradingView embed) and fundamentals (SEC EDGAR
+    company facts) are fetched at view time and never persisted on the object.
+
+    Deduplication uses `Obj.Meta.keys` (foreign keys). Each key is
+    `{ source, id }`; an Instrument may carry several keys for the same
+    security under different identifiers:
+
+      - `isin` — ISIN (e.g. `US0378331005`)
+      - `cusip` — CUSIP (e.g. `037833100`)
+      - `ibkr.com` — IBKR contract id (`conid`) when known from Flex rows
+      - `tradingview.com` — TradingView symbol (e.g. `NASDAQ:AAPL`)
+      - `ticker/{exchange}` — exchange-qualified ticker (e.g. `ticker/NASDAQ`
+        → `AAPL`; primary `symbol` + `exchange` fields remain the display
+        default)
+
+    Portfolio `Position.symbol` strings are not Instruments; materialization
+    ops may create or resolve an Instrument from a position symbol.
+  fields:
+    name: string                 # display name, e.g. "Apple Inc."
+    symbol: string               # primary ticker, e.g. "AAPL"
+    exchange?: string             # listing exchange, e.g. "NASDAQ"
+    assetClass?: AssetClass
+    currency?: string             # trading currency, ISO 4217
+    sector?: string
+    industry?: string
+    country?: string              # country of listing or domicile
+    description?: string          # short business blurb; not filing bodies
+```
+
 ## Components
 
 ```mdl
@@ -120,15 +198,16 @@ component PortfolioArticle
   desc: |
     Article view for a Portfolio: lists the stored daily PortfolioReport
     snapshots (newest first) from the Portfolio's backing feed. The toolbar
-    carries the connect/sync action; clicking a report opens it in the
-    complementary plank.
+    carries the connect/sync action and a manual "import report XML" action
+    (uploads a Flex XML file, appended via op:ImportPortfolioReport); clicking a
+    report opens it in the complementary plank.
   props:
     subject: Portfolio
   state:
     reports: PortfolioReport[]   # snapshots from the Portfolio's feed, newest first
     selected?: PortfolioReport
   slots:
-    toolbar?: ReactNode          # hosts PortfolioSyncAction
+    toolbar?: ReactNode          # hosts PortfolioSyncAction and PortfolioImportAction
   actions:
     selectReport(report: PortfolioReport)
   emits:
@@ -232,6 +311,55 @@ component PortfolioReportDetail
     └─────────────────────────────────────┘
 ```
 
+```mdl
+component InstrumentArticle
+  desc: |
+    Article surface for an Instrument: static header (name, symbol, sector)
+    from the ECHO object, a TradingView Advanced Chart embed (presentation
+    widget only — no plugin HTTP from this component), and a fundamentals panel
+    fed exclusively by op:GetInstrumentFundamentals (SEC EDGAR) via OperationInvoker.
+    No fetched data is written back to the Instrument object.
+  props:
+    subject: Instrument
+  state:
+    tradingViewSymbol: string    # derived locally from Instrument fields/keys
+    fundamentals?: FundamentalsSnapshot   # from op:GetInstrumentFundamentals only
+    loading: boolean
+  slots:
+    toolbar?: ReactNode
+  actions:
+    refreshFundamentals()        # re-invokes op:GetInstrumentFundamentals
+  layout: |
+    ┌──────────────────────────────────────────────────┐
+    │ AAPL · Apple Inc.     NASDAQ · Technology       │
+    ├────────────────────────────┬─────────────────────┤
+    │                            │  SEC EDGAR facts    │
+    │  TradingView chart         │  (revenue, EPS, …)  │
+    │  (embed, client-side)      │                     │
+    └────────────────────────────┴─────────────────────┘
+```
+
+```mdl
+component InstrumentCard
+  desc: |
+    Card surface (`AppSurface.CardContent`) for an Instrument: compact identity
+    (symbol, name, exchange, assetClass) suitable for masonry, search results,
+    and popovers. Optionally embeds the TradingView Mini Chart widget using
+    `tradingViewSymbol` derived locally from the Instrument — no operations and
+    no external service calls (fundamentals omitted to keep the card lightweight).
+  props:
+    subject: Instrument
+  state:
+    tradingViewSymbol: string    # derived locally from Instrument fields/keys
+  layout: |
+    ┌─────────────────────────┐
+    │ AAPL                    │
+    │ Apple Inc.              │
+    │ NASDAQ · stock          │
+    │ [mini chart embed]      │
+    └─────────────────────────┘
+```
+
 ## Services
 
 ```mdl
@@ -262,11 +390,33 @@ service FlexWebService
     (1018/1025) stop the flow; anything else fails fast.
 ```
 
+```mdl
+service SecEdgar
+  desc: |
+    Client for the SEC EDGAR public data API (`data.sec.gov`, `www.sec.gov`).
+    No API key required; requests identify the app via a fair-access User-Agent.
+    Invoked only from operation handlers (never from UI). Results are never stored
+    on Instrument objects. Calls route through the EDGE CORS proxy.
+  loading: lazy
+  ops:
+    resolveCik(ticker: string) → string
+    fetchCompanyFacts(cik: string) → FundamentalsSnapshot
+  errors:
+    TickerNotFound: unknown or non-US ticker
+    FetchFailed: SEC request failed
+  effects: [http]
+  note: |
+    Resolves tickers via `company_tickers.json`, then reads XBRL company facts.
+    Parses headline filing metrics (revenue, net income, EPS, ROE, debt/equity).
+    Respects SEC fair-access pacing (~10 requests/sec).
+```
+
 ## Operations
 
-All operations take an empty input (`{}`). The two read operations parse the
-latest stored report and never call IBKR; only `SyncPortfolioReport` reaches the
-network, via `service:FlexWebService`.
+Portfolio read operations parse stored XML and never call IBKR. Network I/O
+reaches external services only through operation handlers (`SyncPortfolioReport`
+→ `FlexWebService`; instrument research → `SecEdgar`). Components invoke
+ops via `OperationInvoker`; they never import `service:*` clients.
 
 ```mdl
 op SyncPortfolioReport
@@ -290,6 +440,30 @@ op SyncPortfolioReport
     Resolves the credential (token from AccessToken.token, query id from
     AccessToken.account), fetches the raw XML, then finds-or-creates the
     per-space feed (keyed by IBKR_FEED_KIND) and appends one PortfolioReport.
+```
+
+```mdl
+op ImportPortfolioReport
+  desc: |
+    Appends a manually supplied raw Flex report XML to the Portfolio feed as a
+    PortfolioReport. Invoked from the toolbar's import action (file upload).
+    Never calls IBKR, so it works without a connection — useful for backfilling
+    reports downloaded from the Flex web UI.
+  input:
+    xml: string                 # raw <FlexQueryResponse> document
+  output:
+    fetchedAt: string
+    positions: number           # count in the imported report
+    trades: number
+    cash: number
+  errors:
+    InvalidReport: the uploaded file is not a recognizable <FlexQueryResponse> document
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note: |
+    Validates the payload contains a <FlexQueryResponse> root before persisting,
+    then finds-or-creates the per-space feed (keyed by IBKR_FEED_KIND) and
+    appends one PortfolioReport stamped with the import time.
 ```
 
 ```mdl
@@ -325,6 +499,88 @@ op GetTrades
     Same latest-report selection as GetPortfolio, then filters parsed trades to
     those on or after the cutoff (now − 7 days, as YYYYMMDD; IBKR trade dates
     sort lexicographically).
+```
+
+```mdl
+type FundamentalsValuation
+  desc: Valuation metrics (market data, price multiples).
+  fields:
+    marketCap?: number
+    pe?: number            # price-to-earnings
+    pb?: number            # price-to-book
+
+type FundamentalsPerformance
+  desc: Income-statement metrics from SEC EDGAR XBRL.
+  fields:
+    revenue?: number
+    netIncome?: number
+    eps?: number           # basic EPS
+
+type FundamentalsRatios
+  desc: Balance-sheet and profitability ratios.
+  fields:
+    roe?: number           # return on equity (decimal)
+    debtToEquity?: number  # plain ratio, not a percent
+
+type FundamentalsAdditional
+  desc: Remaining us-gaap concepts from SEC EDGAR, keyed by XBRL concept name.
+  fields:
+    additionalFacts?: Record<string, number>
+
+type FundamentalsSnapshot
+  desc: |
+    Transient output of op:GetInstrumentFundamentals. Parsed from SEC EDGAR
+    XBRL company facts; not an ECHO type.
+  fields:
+    asOf?: string                  # SEC filing date
+    valuation?: FundamentalsValuation
+    performance?: FundamentalsPerformance
+    ratios?: FundamentalsRatios
+    additional?: FundamentalsAdditional
+```
+
+```mdl
+op MaterializeInstrument
+  desc: |
+    Find-or-create an Instrument in the space, keyed by foreign id. Idempotent:
+    returns the existing Instrument when `Obj.Meta.keys` already contains the
+    given `{ source, id }`. On create, stamps the foreign key and seeds static
+    fields from the input descriptor (name, symbol, exchange, assetClass).
+    Does not fetch SEC EDGAR or IBKR — callers enrich via separate ops.
+  input:
+    key: ForeignKey              # e.g. { source: "ticker/NASDAQ", id: "AAPL" }
+    name?: string
+    symbol: string
+    exchange?: string
+    assetClass?: AssetClass
+    extraKeys?: ForeignKey[]     # additional ids (isin, cusip, …) merged on create
+  output:
+    instrument: Ref<Instrument>
+    created: boolean
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note: |
+    Primary entry for resolving portfolio position symbols into Instruments and
+    for assistant-driven "open AAPL" flows. When `name` is omitted on create,
+    a later op or manual edit may fill it in.
+```
+
+```mdl
+op GetInstrumentFundamentals
+  desc: |
+    Fetches a compact fundamentals snapshot for an Instrument's primary
+    `symbol` via service:SecEdgar. The sole entry point for SEC EDGAR data in
+    the plugin — surfaces call this op; they never call the service directly.
+    Returns transient filing-based data; never writes to the Instrument.
+  input:
+    instrument: Ref<Instrument>
+  output: FundamentalsSnapshot
+  errors:
+    MissingSymbol: Instrument has no symbol
+    TickerNotFound: ticker not found in SEC directory
+    FetchFailed: SEC EDGAR request failed
+  effects: [echo:read, http]
+  requires: [SecEdgar, Database]
 ```
 
 ## Features
@@ -376,6 +632,20 @@ feat F-2: Daily Sync
       The local timer fires only while the app is open; gaps are covered by the
       manual Sync action and by the assistant invoking SyncPortfolioReport.
     tags: [limitation]
+
+  req F-2.6:
+    when: the daily timer trigger is created on first enable
+    then: |
+      the trigger and its serialized SyncPortfolioReport operation are parented
+      to the owning Portfolio (Obj.setParent), so they cascade-delete with it
+      and stay grouped under the visible object rather than at space root
+
+  req F-2.7:
+    when: the user uploads a Flex XML file via the toolbar's import action
+    then: |
+      op:ImportPortfolioReport validates and appends it to the per-space feed as
+      a PortfolioReport without calling IBKR; the report list updates. Gaps in
+      the daily timer (feat:F-2.5) can also be backfilled this way.
 ```
 
 ```mdl
@@ -443,6 +713,52 @@ feat F-5: Report Browsing
 
   req F-5.3:
     desc: Report rows and the detail view parse PortfolioReport.xml on read; no IBKR call is made.
+```
+
+```mdl
+feat F-6: Instrument Research
+
+  req F-6.1:
+    desc: |
+      `Instrument` is the canonical ECHO type for tradable securities. Static
+      fields only; foreign keys in `Obj.Meta.keys` register ticker, ISIN,
+      CUSIP, IBKR conid, and TradingView symbol for deduplication.
+
+  req F-6.2:
+    when: component:InstrumentArticle is shown for an Instrument
+    then: |
+      the TradingView Advanced Chart embed loads client-side using the
+      resolved TradingView symbol; a fundamentals panel loads via
+      op:GetInstrumentFundamentals (SEC EDGAR)
+
+  req F-6.3:
+    when: an Instrument appears in a card context (masonry, search, popover)
+    then: component:InstrumentCard renders static identity and may show the
+    TradingView Mini Chart embed
+
+  req F-6.4:
+    when: op:MaterializeInstrument is invoked with a foreign key that already
+    exists in the space
+    then: the existing Instrument is returned and no duplicate is created
+
+  req F-6.5:
+    desc: |
+      SEC EDGAR data stays ephemeral — op:GetInstrumentFundamentals fetches
+      at view time; Instrument objects are not updated with filing payloads.
+      TradingView embeds are presentation-only.
+
+  req F-6.6:
+    desc: |
+      feat:A-1 applies to instrument research: component:InstrumentArticle
+      invokes op:GetInstrumentFundamentals via OperationInvoker; no container
+      imports service:SecEdgar or performs HTTP directly.
+
+  req F-6.7:
+    when: the user selects a position symbol in component:PortfolioReportDetail
+    then: |
+      the app may invoke op:MaterializeInstrument and open the resulting
+      Instrument in an Article surface (future; not required for initial ship)
+    tags: [future]
 ```
 
 ## Acceptance
@@ -546,6 +862,48 @@ test T-10: Assistant answers from the snapshot
     - the assistant calls op:GetPortfolio (not the network)
     - positions and cash are reported in each instrument's own currency
     - the answer relays fetchedAt as the as-of time
+```
+
+```mdl
+test T-11: MaterializeInstrument is idempotent
+  given: an Instrument with Meta.keys containing { source: "ticker/NASDAQ", id: "AAPL" }
+  when: op:MaterializeInstrument runs with the same key and symbol AAPL
+  then:
+    - the existing Instrument is returned
+    - created === false
+    - no second Instrument exists in the space
+    - a later materialization via a different alias folds the new key onto the same Instrument
+  covered_by: operations.test.ts (idempotency + newly-learned-key fold)
+```
+
+```mdl
+test T-12: InstrumentArticle loads chart and fundamentals
+  given: an Instrument for AAPL with a tradingview.com foreign key NASDAQ:AAPL
+  when: component:InstrumentArticle is rendered with a stubbed op:GetInstrumentFundamentals
+  then:
+    - the TradingView embed receives symbol NASDAQ:AAPL (derived locally)
+    - op:GetInstrumentFundamentals is invoked via OperationInvoker, not service:SecEdgar from UI
+    - the Instrument object is unchanged after render
+  covered_by: |
+    instrument.test.ts pins the local symbol derivation (resolveTradingViewSymbol); the
+    InstrumentArticle story renders the surface. The "via OperationInvoker, not service" and
+    "object unchanged" invariants are structural — the container imports no service:SecEdgar and
+    only calls invokePromise (no writes). Asserted at render + logic level; no RTL harness exists
+    for plugin components (behavior is covered by stories + test-storybook).
+```
+
+```mdl
+test T-13: InstrumentCard shows static identity only
+  given: an Instrument with symbol, name, exchange, and assetClass
+  when: component:InstrumentCard is rendered
+  then:
+    - symbol, name, exchange, and assetClass are visible
+    - no SEC EDGAR call is made
+    - no fields are written to the Instrument
+  covered_by: |
+    InstrumentCard story renders the surface. "No SEC call / no writes" is structural — the card
+    imports no service and invokes no operation (chart only, from static fields). Render-level
+    coverage via test-storybook.
 ```
 
 ---

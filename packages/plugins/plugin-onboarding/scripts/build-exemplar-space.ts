@@ -25,10 +25,10 @@ import {
   DocumentRecordType,
   PageRecordType,
   TLDOCUMENT_ID,
+  type TLRecord,
   createTLSchema,
   geoShapeMigrations,
   geoShapeProps,
-  type TLRecord,
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
 import * as Option from 'effect/Option';
@@ -49,7 +49,6 @@ import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Map as MapView } from '@dxos/plugin-map';
 import { Markdown } from '@dxos/plugin-markdown';
-import { Masonry } from '@dxos/plugin-masonry';
 import { Sheet } from '@dxos/plugin-sheet';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -64,7 +63,7 @@ const OUTPUT_PATH = resolve(__dirname, '../src/content/exemplar-space.dx.json');
 const ABOUT_MD_PATH = resolve(__dirname, '../src/content/about-bramble.md');
 const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 
-// -----------------------------------------------------------------------------
+//
 // RoastLog — exemplar-specific schema defined entirely in this build script.
 //
 // This is intentionally NOT a registered plugin type — it demonstrates that
@@ -73,7 +72,7 @@ const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 //
 // The jsonSchema is baked into each View.View so Table/Kanban can render these
 // objects at runtime without the schema being registered in the app.
-// -----------------------------------------------------------------------------
+//
 const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
   S.Struct({
     title: S.String.pipe(S.annotations({ title: 'Batch' })),
@@ -130,7 +129,6 @@ const SCHEMAS: Type.AnyEntity[] = [
   Table.Table,
   Kanban.Kanban,
   MapView.Map,
-  Masonry.Masonry,
   View.View,
   RoastLog,
 ];
@@ -151,9 +149,9 @@ const textBlock = (text: string): ContentBlock.Text => ({ _tag: 'text', text }) 
 
 const actor = (name: string, email: string): Actor.Actor => ({ role: 'user', name, email });
 
-// -----------------------------------------------------------------------------
+//
 // Space population
-// -----------------------------------------------------------------------------
+//
 
 const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
@@ -171,7 +169,7 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
     throw new Error('Failed to initialize root collection on space.properties');
   }
 
-  // Top-level docs ---------------------------------------------------------
+  // Welcome docs -------------------------------------------------------------
   const welcomeDoc = Markdown.make({ name: 'Space Tour', content: content.welcomeMd });
   space.db.add(welcomeDoc);
   const aboutDoc = Markdown.make({ name: 'About Bramble Coffee Roasters', content: content.aboutMd });
@@ -191,41 +189,48 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   const { calendar, events } = makeCalendar(people, organizations);
   space.db.add(calendar);
 
-  // Spring Blend Launch project --------------------------------------------
+  // Spring Blend Launch project — Project/Task aren't collection-item types,
+  // so they live directly in the space DB, same as contacts.
   const { project, tasks } = makeProject(people);
   space.db.add(project);
   tasks.forEach((task) => space.db.add(task));
-  const projectCollection = makeCollection(space, 'Spring Blend Launch', [
-    Ref.make(project),
-    ...tasks.map((task) => Ref.make(task)),
-  ]);
 
-  // Notes & Documents — notes reference people/orgs/project via DXN links/embeds.
+  // Notes, sketches & sheets — notes reference people/orgs/project via DXN links/embeds.
   const notes = makeNotes(people, organizations, project);
-  notes.forEach((note) => space.db.add(note));
+  Object.values(notes).forEach((note) => space.db.add(note));
   const sketches = makeSketches();
-  sketches.forEach((sketch) => space.db.add(sketch));
+  Object.values(sketches).forEach((sketch) => space.db.add(sketch));
   const sheets = makeSheets();
-  sheets.forEach((sheet) => space.db.add(sheet));
+  Object.values(sheets).forEach((sheet) => space.db.add(sheet));
 
-  const notesCollection = makeCollection(space, 'Notes & Documents', [
-    ...notes.map((n) => Ref.make(n)),
-    ...sketches.map((s) => Ref.make(s)),
-    ...sheets.map((s) => Ref.make(s)),
+  // Root only ever holds collections — group every collection-item object (docs,
+  // sketches, sheets) into a themed collection rather than leaving loose items on root.
+  const welcomeCollection = makeCollection(space, 'Welcome', [Ref.make(welcomeDoc), Ref.make(aboutDoc)]);
+
+  const springBlendCollection = makeCollection(space, 'Spring Blend Launch', [
+    Ref.make(notes.tastingProtocol),
+    Ref.make(sketches.flavorWheel),
   ]);
 
-  // Roast Log — custom schema entries with Table + Kanban views.
-  const roastLogCollection = await addRoastLogCollection(space, people);
+  const roasteryNotesCollection = makeCollection(space, 'Roastery Notes', [
+    Ref.make(notes.cuppingNotes),
+    Ref.make(notes.itinerary),
+    Ref.make(sketches.floorPlan),
+    Ref.make(sheets.greenInventory),
+    Ref.make(sheets.priceList),
+  ]);
 
-  // Wire up the root collection in a stable order.
+  // Roast Log — custom schema entries with Table + Kanban views. Table/Kanban
+  // aren't collection-item types, so the views live directly in the space DB.
+  await addRoastLogViews(space, people);
+
+  // Wire up the root collection in a stable order. Mailbox/Calendar/Project/Task/
+  // Table/Kanban aren't collection-item types, so they aren't referenced here —
+  // they live directly in the space DB and surface via the database viewer.
   Obj.update(rootCollection, (rootCollection) => {
-    rootCollection.objects.push(Ref.make(welcomeDoc));
-    rootCollection.objects.push(Ref.make(aboutDoc));
-    rootCollection.objects.push(Ref.make(mailbox));
-    rootCollection.objects.push(Ref.make(calendar));
-    rootCollection.objects.push(Ref.make(projectCollection));
-    rootCollection.objects.push(Ref.make(notesCollection));
-    rootCollection.objects.push(Ref.make(roastLogCollection));
+    rootCollection.objects.push(Ref.make(welcomeCollection));
+    rootCollection.objects.push(Ref.make(springBlendCollection));
+    rootCollection.objects.push(Ref.make(roasteryNotesCollection));
   });
 
   // Append feed messages AFTER db.flush so the feed objects have DXNs.
@@ -241,9 +246,9 @@ const appendToFeed = async (space: Space, feed: Feed.Feed, items: Obj.Unknown[])
   await space.db.appendToFeed(feed, items);
 };
 
-// -----------------------------------------------------------------------------
+//
 // Organizations
-// -----------------------------------------------------------------------------
+//
 
 type OrganizationsBundle = {
   organizations: Record<OrgKey, Organization.Organization>;
@@ -325,9 +330,9 @@ const addOrganizations = (space: Space): OrganizationsBundle => {
   return { organizations };
 };
 
-// -----------------------------------------------------------------------------
+//
 // People
-// -----------------------------------------------------------------------------
+//
 
 type PeopleBundle = {
   people: Record<PersonKey, Person.Person>;
@@ -433,9 +438,9 @@ const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Orga
   return { people };
 };
 
-// -----------------------------------------------------------------------------
-// Organization views (Table / Kanban / Map / Masonry)
-// -----------------------------------------------------------------------------
+//
+// Organization views (Table / Kanban / Map)
+//
 
 const addOrganizationViews = (space: Space): void => {
   const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
@@ -456,14 +461,11 @@ const addOrganizationViews = (space: Space): void => {
 
   const mapView = makeView(['name', 'location', 'description']);
   space.db.add(MapView.make({ name: 'Map', view: mapView, center: [-100, 30], zoom: 2 }));
-
-  const masonryView = makeView(['name', 'description', 'image']);
-  space.db.add(Masonry.make({ name: 'Masonry', view: masonryView }));
 };
 
-// -----------------------------------------------------------------------------
+//
 // Mailbox
-// -----------------------------------------------------------------------------
+//
 
 const makeMailbox = (
   people: Record<PersonKey, Person.Person>,
@@ -641,9 +643,9 @@ const makeMailbox = (
   return { mailbox, messages };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Calendar
-// -----------------------------------------------------------------------------
+//
 
 const makeCalendar = (
   people: Record<PersonKey, Person.Person>,
@@ -749,9 +751,9 @@ const makeCalendar = (
   return { calendar, events };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Project + tasks
-// -----------------------------------------------------------------------------
+//
 
 const makeProject = (people: Record<PersonKey, Person.Person>): { project: Project.Project; tasks: Task.Task[] } => {
   const project = Project.make({
@@ -814,119 +816,128 @@ const makeProject = (people: Record<PersonKey, Person.Person>): { project: Proje
   return { project, tasks };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Markdown notes (with inline DXN links and block embeds)
-// -----------------------------------------------------------------------------
+//
+
+type NotesBundle = {
+  cuppingNotes: Markdown.Document;
+  itinerary: Markdown.Document;
+  tastingProtocol: Markdown.Document;
+};
 
 const makeNotes = (
   people: Record<PersonKey, Person.Person>,
   organizations: Record<OrgKey, Organization.Organization>,
   project: Project.Project,
-): Markdown.Document[] => {
+): NotesBundle => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
   const localDxn = (obj: Obj.Unknown) => EID.make({ entityId: obj.id });
   const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
   const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
 
-  return [
-    Markdown.make({
-      name: 'Cupping notes — Finca Esperanza Lot #42',
-      content: [
-        '# Cupping notes — Finca Esperanza Lot #42',
-        '',
-        `**Farm:** ${lnk('Finca Esperanza', organizations.fincaEsperanza)} · **Contact:** ${lnk('Carmen Restrepo', people.carmen)}`,
-        '',
-        `**Date:** ${daysAgo(20, 10).slice(0, 10)} · **Cuppers:** ${lnk('Kai', people.kai)}, ${lnk('Diego', people.diego)}, ${lnk('Sam', people.sam)}`,
-        '',
-        '## Profile',
-        '',
-        '- **Fragrance/Aroma:** Stone fruit, jasmine, light cocoa.',
-        '- **Acidity:** Bright, malic, well-structured.',
-        '- **Body:** Medium, silky.',
-        '- **Flavor:** Red apple, raspberry, milk chocolate, almond finish.',
-        '- **Aftertaste:** Long, clean, slightly floral.',
-        '',
-        '## Scores',
-        '',
-        '| Cupper | Score |',
-        '| --- | --- |',
-        '| Kai | 87.5 |',
-        '| Diego | 88.0 |',
-        '| Sam | 87.0 |',
-        '',
-        '## Notes',
-        '',
-        'Best lot Carmen has sent us in three years. Worth pushing into the Spring Blend at a higher ratio than we initially planned.',
-      ].join('\n'),
-    }),
-    Markdown.make({
-      name: 'Q2 sourcing trip — itinerary',
-      content: [
-        '# Q2 sourcing trip — itinerary',
-        '',
-        `**Traveler:** ${lnk('Diego Alvarez', people.diego)}`,
-        `**Dates:** ${daysFromNow(21).slice(0, 10)} → ${daysFromNow(35).slice(0, 10)}`,
-        '',
-        '## Colombia (Huila)',
-        '',
-        `**Host:** ${lnk('Carmen Restrepo', people.carmen)} · ${lnk('Finca Esperanza', organizations.fincaEsperanza)}`,
-        '',
-        '- Land in Bogotá; drive to Neiva.',
-        '- Two days at Finca Esperanza with Carmen.',
-        '- Visit two new lots recommended by our importer.',
-        '- Return to Bogotá; fly out.',
-        '',
-        '## Ethiopia (Sidamo)',
-        '',
-        `**Host:** ${lnk('Abel Tadesse', people.abel)} · ${lnk('Sidamo Cooperative', organizations.sidamoCoop)}`,
-        '',
-        '- Arrive Addis Ababa; meet Abel.',
-        '- Three days in Sidamo (cooperative + two member washing stations).',
-        '- Cup the new harvest in Addis before flying home.',
-        '',
-        '## Buying targets',
-        '',
-        '- Colombia: lock 18 bags (Esperanza) + 6 bags (new lot if it cups above 87).',
-        '- Ethiopia: confirm the full container of lot 42; optionally add a smaller naturals lot.',
-      ].join('\n'),
-    }),
-    Markdown.make({
-      name: 'Spring blend tasting protocol',
-      content: [
-        '# Spring blend — tasting protocol',
-        '',
-        `Project: ${emb('Spring Blend Launch', project)}`,
-        '',
-        '## Setup',
-        '',
-        '- Prepare 4 samples per session: v1, v2, v3, and the control (current Linden blend).',
-        '- Grind 10 g per sample, 200 ml at 94 °C.',
-        '- Evaluate dry fragrance, wet aroma, and taste at 4-min, 8-min, 12-min intervals.',
-        '',
-        '## Brew parameters',
-        '',
-        '1. **Espresso:** 18 g in / 36 g out / 27–30 s.',
-        '2. **Filter:** 1:16 ratio, 4:00 total time.',
-        '',
-        '## Scoring dimensions',
-        '',
-        'Fragrance/Aroma · Flavour · Aftertaste · Acidity · Body · Balance · Uniformity · Cleanliness · Sweetness',
-        '',
-        '## Key targets',
-        '',
-        '- Espresso-forward: good body at 1:2.5 ratio.',
-        '- Profile: fruit-forward (berry, stone fruit), chocolate mid, clean finish.',
-        '- Score on the SCA form, then add a short qualitative note.',
-        '- Re-cup after 7 days to check for stale notes.',
-      ].join('\n'),
-    }),
-  ];
+  const cuppingNotes = Markdown.make({
+    name: 'Cupping notes — Finca Esperanza Lot #42',
+    content: [
+      '# Cupping notes — Finca Esperanza Lot #42',
+      '',
+      `**Farm:** ${lnk('Finca Esperanza', organizations.fincaEsperanza)} · **Contact:** ${lnk('Carmen Restrepo', people.carmen)}`,
+      '',
+      `**Date:** ${daysAgo(20, 10).slice(0, 10)} · **Cuppers:** ${lnk('Kai', people.kai)}, ${lnk('Diego', people.diego)}, ${lnk('Sam', people.sam)}`,
+      '',
+      '## Profile',
+      '',
+      '- **Fragrance/Aroma:** Stone fruit, jasmine, light cocoa.',
+      '- **Acidity:** Bright, malic, well-structured.',
+      '- **Body:** Medium, silky.',
+      '- **Flavor:** Red apple, raspberry, milk chocolate, almond finish.',
+      '- **Aftertaste:** Long, clean, slightly floral.',
+      '',
+      '## Scores',
+      '',
+      '| Cupper | Score |',
+      '| --- | --- |',
+      '| Kai | 87.5 |',
+      '| Diego | 88.0 |',
+      '| Sam | 87.0 |',
+      '',
+      '## Notes',
+      '',
+      'Best lot Carmen has sent us in three years. Worth pushing into the Spring Blend at a higher ratio than we initially planned.',
+    ].join('\n'),
+  });
+
+  const itinerary = Markdown.make({
+    name: 'Q2 sourcing trip — itinerary',
+    content: [
+      '# Q2 sourcing trip — itinerary',
+      '',
+      `**Traveler:** ${lnk('Diego Alvarez', people.diego)}`,
+      '',
+      `**Dates:** ${daysFromNow(21).slice(0, 10)} → ${daysFromNow(35).slice(0, 10)}`,
+      '',
+      '## Colombia (Huila)',
+      '',
+      `**Host:** ${lnk('Carmen Restrepo', people.carmen)} · ${lnk('Finca Esperanza', organizations.fincaEsperanza)}`,
+      '',
+      '- Land in Bogotá; drive to Neiva.',
+      '- Two days at Finca Esperanza with Carmen.',
+      '- Visit two new lots recommended by our importer.',
+      '- Return to Bogotá; fly out.',
+      '',
+      '## Ethiopia (Sidamo)',
+      '',
+      `**Host:** ${lnk('Abel Tadesse', people.abel)} · ${lnk('Sidamo Cooperative', organizations.sidamoCoop)}`,
+      '',
+      '- Arrive Addis Ababa; meet Abel.',
+      '- Three days in Sidamo (cooperative + two member washing stations).',
+      '- Cup the new harvest in Addis before flying home.',
+      '',
+      '## Buying targets',
+      '',
+      '- Colombia: lock 18 bags (Esperanza) + 6 bags (new lot if it cups above 87).',
+      '- Ethiopia: confirm the full container of lot 42; optionally add a smaller naturals lot.',
+    ].join('\n'),
+  });
+
+  const tastingProtocol = Markdown.make({
+    name: 'Spring blend tasting protocol',
+    content: [
+      '# Spring blend — tasting protocol',
+      '',
+      `Project: ${emb('Spring Blend Launch', project)}`,
+      '',
+      '## Setup',
+      '',
+      '- Prepare 4 samples per session: v1, v2, v3, and the control (current Linden blend).',
+      '- Grind 10 g per sample, 200 ml at 94 °C.',
+      '- Evaluate dry fragrance, wet aroma, and taste at 4-min, 8-min, 12-min intervals.',
+      '',
+      '## Brew parameters',
+      '',
+      '1. **Espresso:** 18 g in / 36 g out / 27–30 s.',
+      '2. **Filter:** 1:16 ratio, 4:00 total time.',
+      '',
+      '## Scoring dimensions',
+      '',
+      'Fragrance/Aroma · Flavour · Aftertaste · Acidity · Body · Balance · Uniformity · Cleanliness · Sweetness',
+      '',
+      '## Key targets',
+      '',
+      '- Espresso-forward: good body at 1:2.5 ratio.',
+      '- Profile: fruit-forward (berry, stone fruit), chocolate mid, clean finish.',
+      '- Score on the SCA form, then add a short qualitative note.',
+      '- Re-cup after 7 days to check for stale notes.',
+    ].join('\n'),
+  });
+
+  return { cuppingNotes, itinerary, tastingProtocol };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Roast Log — custom exemplar schema entries + Table / Kanban views
-// -----------------------------------------------------------------------------
+//
 
 const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Person>): Obj.Any[] => {
   // Stamp objects with the persisted type entity so their `@type` is the space-relative EID,
@@ -1060,17 +1071,14 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
 };
 
 /**
- * Add a "Roast Log" top-level collection with Table and Kanban views over the custom RoastLog schema,
- * then return the collection for wiring into the root.
+ * Add Table and Kanban views over the custom RoastLog schema directly to the space DB —
+ * Table/Kanban aren't collection-item types, so they aren't wrapped in a Collection.
  *
  * We persist the schema via space.db.addType() so that a TypeSchema ECHO object
  * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
-const addRoastLogCollection = async (
-  space: Space,
-  people: Record<PersonKey, Person.Person>,
-): Promise<Collection.Collection> => {
+const addRoastLogViews = async (space: Space, people: Record<PersonKey, Person.Person>): Promise<void> => {
   const typename = 'example.type.roastLog';
 
   // db.addType creates the TypeSchema ECHO object in the space so the runtime can
@@ -1099,7 +1107,7 @@ const addRoastLogCollection = async (
       'dropTemp',
     ],
   });
-  const tableObj = space.db.add(Table.make({ name: 'Table', view: tableView }));
+  space.db.add(Table.make({ name: 'Table', view: tableView }));
 
   const { view: kanbanView } = await ViewModel.makeFromDatabase({
     db: space.db,
@@ -1107,12 +1115,10 @@ const addRoastLogCollection = async (
     fields: ['title', 'origin', 'date', 'roaster', 'notes'],
     pivotFieldName: 'status',
   });
-  const kanbanObj = space.db.add(Kanban.make({ name: 'Kanban', view: kanbanView }));
-
-  return makeCollection(space, 'Roast Log', [Ref.make(tableObj), Ref.make(kanbanObj)]);
+  space.db.add(Kanban.make({ name: 'Kanban', view: kanbanView }));
 };
 
-// -----------------------------------------------------------------------------
+//
 // Sketches — tldraw v3 store format
 //
 // Records are created via the @tldraw/tlschema + @tldraw/store API so the
@@ -1133,7 +1139,7 @@ const addRoastLogCollection = async (
 //   - The error is silently swallowed by plugin-sketch's useAsyncEffect, so a
 //     bad index key results in an empty canvas with no console error in the UI.
 //   - Upstream reference: packages/plugins/plugin-sketch/src/hooks/useStoreAdapter.ts
-// -----------------------------------------------------------------------------
+//
 
 // Minimal tldraw v3 schema with geo shapes only.
 const tlSchema = createTLSchema({
@@ -1294,16 +1300,16 @@ const makeFlavorWheelContent = (): Record<string, unknown> => {
   ]);
 };
 
-const makeSketches = (): Sketch.Sketch[] => [
-  Sketch.make({ name: 'Roastery floor plan', canvas: { content: makeFloorPlanContent() } }),
-  Sketch.make({ name: 'Spring blend flavor wheel', canvas: { content: makeFlavorWheelContent() } }),
-];
+const makeSketches = (): { floorPlan: Sketch.Sketch; flavorWheel: Sketch.Sketch } => ({
+  floorPlan: Sketch.make({ name: 'Roastery floor plan', canvas: { content: makeFloorPlanContent() } }),
+  flavorWheel: Sketch.make({ name: 'Spring blend flavor wheel', canvas: { content: makeFlavorWheelContent() } }),
+});
 
-// -----------------------------------------------------------------------------
+//
 // Sheets
-// -----------------------------------------------------------------------------
+//
 
-const makeSheets = (): Sheet.Sheet[] => {
+const makeSheets = (): { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet } => {
   const greenInventory = Sheet.make({
     name: 'Green coffee inventory',
     rows: 12,
@@ -1385,12 +1391,12 @@ const makeSheets = (): Sheet.Sheet[] => {
     },
   });
 
-  return [greenInventory, priceList];
+  return { greenInventory, priceList };
 };
 
-// -----------------------------------------------------------------------------
+//
 // Entry point
-// -----------------------------------------------------------------------------
+//
 
 const aboutMd = await readFile(ABOUT_MD_PATH, 'utf8');
 const welcomeMd = await readFile(WELCOME_MD_PATH, 'utf8');

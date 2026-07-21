@@ -1,0 +1,70 @@
+{
+  "name": "@dxos/agent-runtime",
+  "version": "0.10.0",
+  "description": "Local agent process runtime (agent-service) and assistant-coupled test helpers.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist/lib",
+    "dist/types",
+    "src"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect/ai": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/assistant": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/assistant": "workspace:^",
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -11,7 +11,7 @@ import { Surface, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Card, Icon, IconButton, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -34,7 +34,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   // TODO(burdon): Clear input feed also.
   const resetHistory = useSpaceCallback(
     spaceId,
-    [Database.Service] as const,
+    [Database.Service],
     Effect.fnUntraced(function* () {
       yield* Agent.resetChatHistory(agent);
       if (!agent.feed) {
@@ -190,3 +190,5 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
 );
 
 StackTile.displayName = 'StackTile';
+
+AgentArticle.displayName = 'AgentArticle';

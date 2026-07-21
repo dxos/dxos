@@ -24,10 +24,19 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/test-utils"
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../compute/compute"
     },
     {
       "path": "../../mesh/teleport"
@@ -43,6 +52,9 @@
     },
     {
       "path": "../echo-host"
+    },
+    {
+      "path": "../echo-protocol"
     }
   ]
 }

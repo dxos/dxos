@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+export { type BranchStore } from './branching';
 export * from './entity-manager';
 export * from './object-core';
 
 // TODO(wittjosiah): Vitest fails without explicit exports here.
 export {
-  TargetKey,
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type DecodedAutomergePrimaryValue,
@@ -18,4 +18,5 @@ export {
   type LoadObjectDocumentOptions,
   type LoadObjectOptions,
   type SpaceDocumentHeads,
+  TargetKey,
 } from './types';

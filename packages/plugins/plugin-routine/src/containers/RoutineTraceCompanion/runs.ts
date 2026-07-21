@@ -3,7 +3,7 @@
 //
 
 import { Trace } from '@dxos/compute';
-import { type Ref, type Obj } from '@dxos/echo';
+import { type Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
 export type RunStatus = 'success' | 'failure' | 'pending';

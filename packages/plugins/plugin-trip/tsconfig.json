@@ -52,10 +52,16 @@
       "path": "../../core/compute/extractor"
     },
     {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -77,6 +83,9 @@
     },
     {
       "path": "../../ui/react-ui-calendar"
+    },
+    {
+      "path": "../../ui/react-ui-dnd"
     },
     {
       "path": "../../ui/react-ui-form"

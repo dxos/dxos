@@ -27,7 +27,7 @@ const root: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutM
 };
 
 const text: ComponentFunction<ToolbarStyleProps> = (_, ...etc) => {
-  return mx('px-2 grow truncate items-center', ...etc);
+  return mx('px-2 truncate items-center', ...etc);
 };
 
 export const toolbarTheme: Theme<ToolbarStyleProps> = {

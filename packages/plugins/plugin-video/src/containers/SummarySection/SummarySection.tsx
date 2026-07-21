@@ -6,7 +6,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 
 import { Pending, Summary } from '#components';
@@ -69,3 +69,5 @@ export const SummarySection = ({ subject }: SummarySectionProps) => {
 
   return <Summary id={`${uri}/summary`} source={subject.summary} />;
 };
+
+SummarySection.displayName = 'SummarySection';

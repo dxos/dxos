@@ -7,15 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
-import {
-  MOCK_AUTH_PROVIDER,
-  MOCK_AUTH_VERIFIER,
-  MetadataStore,
-  Space,
-  SpaceProtocol,
-  createIdFromSpaceKey,
-  valueEncoding,
-} from '@dxos/echo-host';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { type FeedWrapper } from '@dxos/feed-store';
@@ -29,6 +21,9 @@ import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
+import { MetadataStore } from '../metadata';
+import { valueEncoding } from '../pipeline';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from '../space';
 import { Identity } from './identity';
 
 const createStores = () => {
@@ -56,7 +51,7 @@ describe('identity/identity', () => {
       subject: setup.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
-        profile: {
+        'profile': {
           displayName: 'Alice',
         },
       },
@@ -93,8 +88,8 @@ describe('identity/identity', () => {
             subject: secondDevice.deviceKey,
             assertion: {
               '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              identityKey: owner.identityKey,
-              deviceKey: secondDevice.deviceKey,
+              'identityKey': owner.identityKey,
+              'deviceKey': secondDevice.deviceKey,
             },
           }),
         },

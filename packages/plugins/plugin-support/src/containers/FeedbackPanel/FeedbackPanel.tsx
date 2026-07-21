@@ -13,7 +13,7 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { type FeedbackPluginOption, FeedbackForm } from '#components';
+import { FeedbackForm, type FeedbackPluginOption } from '#components';
 import { SupportCapabilities } from '#types';
 
 import { DiscordAction } from './DiscordAction';
@@ -78,3 +78,5 @@ export const FeedbackPanel = () => {
     </Panel.Root>
   );
 };
+
+FeedbackPanel.displayName = 'FeedbackPanel';

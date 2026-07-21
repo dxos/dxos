@@ -17,7 +17,7 @@ import type * as Relation from '../../Relation';
 import { getLabel } from '../Annotation';
 import { snapshotForComparison } from '../common/atom-snapshot';
 import { subscribe } from '../common/proxy/reactive';
-import { isEntity, getDatabase } from '../Entity';
+import { getDatabase, isEntity } from '../Entity';
 import { RefTypeId } from '../Ref/ref';
 import { loadRefTarget } from '../Ref/utils';
 import { isDeleted } from './deleted';
@@ -62,14 +62,16 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
   return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
     let unsubscribeTarget: (() => void) | undefined;
 
-    const setupTargetSubscription = (target: T): Obj.Snapshot<T> => {
+    const setupTargetSubscription = (target: T): Obj.Snapshot<T> | undefined => {
       unsubscribeTarget?.();
       unsubscribeTarget = subscribe(target, () => {
         // Deleted objects resolve to undefined so callers don't need to inspect isDeleted.
         // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
         get.setSelf(isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>));
       });
-      return getSnapshot(target) as unknown as Obj.Snapshot<T>;
+      // Guard the initial value too: an already-deleted target must resolve to undefined, not leak a
+      // snapshot until the next update.
+      return isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>);
     };
 
     get.addFinalizer(() => {

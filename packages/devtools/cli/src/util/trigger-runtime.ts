@@ -21,8 +21,8 @@ import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import { TriggerDispatcher, TriggerStateStore } from '@dxos/compute-runtime';
 import { Database, type Key } from '@dxos/echo';
-import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
 import { type AiChatServices, chatLayer } from './runtime';
 import { operationHandlers as skillOperationHandlers, toolkits } from './skills';
@@ -89,7 +89,6 @@ export const triggerRuntimeLayer = ({
         Layer.provideMerge(Trace.layerNoop),
         Layer.provideMerge(ToolExecutionServices),
         Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
-        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: skillOperationHandlers })),
         Layer.provideMerge(baseChatLayer),
         Layer.provideMerge(OperationHandlerSet.provide(skillOperationHandlers)),
         Layer.provide(KeyValueStore.layerMemory),

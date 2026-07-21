@@ -11,16 +11,21 @@ import { Operation } from '@dxos/compute';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
+// Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
+import README_CONTENT from '../content/readme.md?raw';
 import { OnboardingOperation } from '../operations';
 import { type OnboardingOptions } from './capabilities';
 
 const PERSONAL_SPACE_ICON = 'house-line';
 const PERSONAL_SPACE_ICON_HUE = 'violet';
 
+export const README_DOCUMENT_NAME = 'README';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ generateExemplarSpace }: OnboardingOptions) {
-    const { Annotation, Obj } = yield* Effect.tryPromise(() => import('@dxos/echo'));
+    const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
+    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
     const {
       AppAnnotation: { RootCollectionAnnotation },
       AppSpace: { getPersonalSpace },
@@ -55,6 +60,13 @@ export default Capability.makeModule(
           ),
         ),
       );
+
+      // Add a welcome document to the personal space root collection.
+      const welcomeDoc = Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT });
+      personalSpace.db.add(welcomeDoc);
+      Obj.update(personalRootCollection, (personalRootCollection) => {
+        personalRootCollection.objects.push(Ref.make(welcomeDoc));
+      });
     }
 
     if (generateExemplarSpace) {

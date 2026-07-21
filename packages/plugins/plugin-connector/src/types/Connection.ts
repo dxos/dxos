@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
-import { AccessToken } from '@dxos/types';
+import { AccessToken } from '@dxos/link';
 
 /**
  * A reusable authenticated connection to an external service: a stored
@@ -16,9 +16,11 @@ import { AccessToken } from '@dxos/types';
  *
  * The connection is the durable, user-facing handle; the credential it holds is
  * an internal primitive (shared across subsystems), and the things it syncs are
- * `SyncBinding` relations whose source is this connection. One connector backs
- * many connections (e.g. several Gmail accounts); one connection backs many
- * bindings (e.g. several mailboxes). Routed by `connectorId` (not
+ * external-sync `Cursor` objects (`@dxos/link`) whose `spec.source` is this
+ * connection's access token — matched by token, not by a direct relation, since
+ * `Cursor` is an infrastructure type with no dependency on `Connection`. One
+ * connector backs many connections (e.g. several Gmail accounts); one connection
+ * backs many cursors (e.g. several mailboxes). Routed by `connectorId` (not
  * `accessToken.source` alone — multiple connectors may share a source).
  */
 export class Connection extends Type.makeObject<Connection>(DXN.make('org.dxos.type.connection', '0.1.0'))(

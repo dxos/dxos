@@ -4,11 +4,12 @@
 
 export { Message } from './Message';
 export type {
-  MessageRootProps,
-  MessageHeadingProps,
   MessageAuthorNameProps,
-  MessageTimeProps,
   MessageBodyProps,
+  MessageGroupProps,
+  MessageHeadingProps,
+  MessageRootProps,
   MessageTextboxProps,
   MessageTileProps,
+  MessageTimeProps,
 } from './Message';

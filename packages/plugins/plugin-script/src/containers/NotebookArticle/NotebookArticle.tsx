@@ -12,7 +12,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Skill, Instructions } from '@dxos/compute';
+import { Instructions, Skill } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -231,3 +231,5 @@ const runPrompt = Effect.fn(function* ({
     },
   });
 });
+
+NotebookArticle.displayName = 'NotebookArticle';

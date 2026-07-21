@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AccessToken from './AccessToken';
 import * as Account from './Account';
 import * as Actor from './Actor';
 import * as AnchoredTo from './AnchoredTo';
 import * as Channel from './Channel';
 import * as ContentBlock from './ContentBlock';
+import * as DraftMessage from './DraftMessage';
 import * as Employer from './Employer';
 import * as Event from './Event';
 import * as File from './File';
@@ -35,38 +35,36 @@ import * as Transcript from './Transcript';
 
 export {
   //
+  // Common object types
+  //
+  Account,
+  //
   // Common structs
   //
   Actor,
-  ContentBlock,
-  Geo,
-  Provider,
-
   //
-  // Common object types
+  // Common relation types
   //
-  AccessToken,
-  Account,
+  AnchoredTo,
   Channel,
+  ContentBlock,
+  DraftMessage,
+  Employer,
   Event,
   File,
+  Geo,
+  HasConnection,
+  HasRelationship,
+  HasSubject,
   Message,
   Organization,
   Person,
   Pipeline,
   Project,
+  Provider,
   Task,
   Thread,
   Transcript,
-
-  //
-  // Common relation types
-  //
-  AnchoredTo,
-  Employer,
-  HasConnection,
-  HasRelationship,
-  HasSubject,
 };
 
 //

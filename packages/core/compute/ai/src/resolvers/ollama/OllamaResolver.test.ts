@@ -14,14 +14,17 @@ import { log } from '@dxos/log';
 
 import * as AiModelResolver from '../../AiModelResolver';
 import * as AiService from '../../AiService';
+import * as Provider from '../../Provider';
 import { CalculatorLayer, CalculatorToolkit } from '../../testing/calculator';
 import * as OllamaResolver from './OllamaResolver';
 
-const MODEL = 'ai.ollama.model.gpt-oss:20b';
+const MODEL = 'com.openai.model.gpt-oss-20b.default';
 
 const ResolverLayer = OllamaResolver.make().pipe(Layer.provide(FetchHttpClient.layer));
 
-const ModelLayer = AiService.model(MODEL).pipe(
+// The catalog's shared model ids are served by several providers, so the provider must accompany the
+// request — `(provider, id)` is the resolver key.
+const ModelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(
   Layer.provide(AiModelResolver.AiModelResolver.buildAiService),
   Layer.provide(ResolverLayer),
 );
@@ -37,7 +40,7 @@ describe('OllamaResolver', () => {
 
         log.info('response', { text: response.text, usage: response.usage });
       }, Effect.provide(ModelLayer)),
-      { timeout: 120_000, tags: ['llm'] },
+      { timeout: 120_000, tags: ['manual'] },
     );
 
     it.effect(
@@ -51,7 +54,7 @@ describe('OllamaResolver', () => {
         const fullText = textDeltas.map((p) => (p as { delta: string }).delta).join('');
         log.info('streamText', { partCount: parts.length, deltaCount: textDeltas.length, fullText });
       }, Effect.provide(ModelLayer)),
-      { timeout: 120_000, tags: ['llm'] },
+      { timeout: 120_000, tags: ['manual'] },
     );
 
     it.effect(
@@ -74,7 +77,7 @@ describe('OllamaResolver', () => {
         Effect.provide(CalculatorLayer),
         Effect.provide(ModelLayer),
       ),
-      { timeout: 120_000, tags: ['llm'] },
+      { timeout: 120_000, tags: ['manual'] },
     );
 
     it.effect(
@@ -97,7 +100,7 @@ describe('OllamaResolver', () => {
         Effect.provide(CalculatorLayer),
         Effect.provide(ModelLayer),
       ),
-      { timeout: 120_000, tags: ['llm'] },
+      { timeout: 120_000, tags: ['manual'] },
     );
   });
 });

@@ -238,7 +238,8 @@ export type RecoverIdentityResponseBody = {
 };
 
 export type CreateAgentRequestBody = {
-  identityKey: string;
+  /** Owner identity DID (`did:halo:…`). */
+  identityDid: string;
   haloSpaceId: SpaceId;
   haloSpaceKey: string;
 };
@@ -258,7 +259,8 @@ export type GetAgentStatusResponseBody = {
 export type UploadFunctionRequest = {
   name?: string;
   version: string;
-  ownerPublicKey: string;
+  /** Owner identity DID (`did:halo:…`). The Edge requires it to equal the authenticated presenter DID. */
+  ownerUri: string;
   entryPoint: string;
   assets: Record<string, Uint8Array>;
   /**
@@ -564,7 +566,7 @@ export type ListSpacesResponse = {
 export type ListActiveIdentitiesRequest = { cursor?: string; limit?: number };
 export type ListActiveIdentitiesResponse = {
   identities: {
-    identityKey: string;
+    identityDid: string;
     haloSpaceId: string | null;
     createdAt: string | null;
     agentKey: string | null;
@@ -578,10 +580,10 @@ export type ListActiveIdentitiesResponse = {
 export type InspectSpaceRequest = { spaceId: string };
 export type InspectSpaceResponse = {
   spaceId: string;
-  metadata: { createdAt: string; identityKey?: string; status?: 'active' | 'deleting' } | null;
+  metadata: { createdAt: string; identityDid?: string; status?: 'active' | 'deleting' } | null;
   members: {
     count: number;
-    list: { identityKey: string; role?: string; agentKey?: string }[];
+    list: { identityDid: string; role?: string; agentKey?: string }[];
   };
   controlFeeds: {
     replicationProgress: { [feedKey: string]: { replicated: number; processed: number } };
@@ -612,9 +614,9 @@ export type InspectSpaceResponse = {
   durableObjects: { type: string; doId: string }[];
 };
 
-export type InspectIdentityRequest = { identityKey: string };
+export type InspectIdentityRequest = { identityDid: string };
 export type InspectIdentityResponse = {
-  identityKey: string;
+  identityDid: string;
   agentKey: string | null;
   haloSpaceId: string | null;
   hasRecovery: boolean;
@@ -636,7 +638,7 @@ export type SpaceActivityEntry = {
   spaceId: string;
   lastActivity: string;
   totalEvents: number;
-  metadata: { createdAt: string; identityKey?: string; status?: 'active' | 'deleting' } | null;
+  metadata: { createdAt: string; identityDid?: string; status?: 'active' | 'deleting' } | null;
 };
 
 export type SpaceExportResult = {
@@ -653,8 +655,8 @@ export type ExportSpaceRequest = { spaceId: string; origin: string };
 export type DeleteSpaceRequest = { spaceId: string };
 export type DeleteSpaceResponse = { status: string; spaceId: string };
 
-export type DeleteIdentityRequest = { identityKey: string };
-export type DeleteIdentityResponse = { status: string; identityKey: string };
+export type DeleteIdentityRequest = { identityDid: string };
+export type DeleteIdentityResponse = { status: string; identityDid: string };
 
 //
 // Account / Invitation

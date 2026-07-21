@@ -8,15 +8,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { getSpace } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
-import { TranscriptOperation, TranscriptionCapabilities } from '#types';
-
-import { useAudioTrack } from './useAudioTrack';
-import { useTranscriber } from './useTranscriber';
+import { TranscriptionCapabilities, TranscriptOperation } from '#types';
 
 export type TranscriptionRecording = {
   recording: boolean;
@@ -29,7 +26,7 @@ export type TranscriptionRecording = {
  * recording flag and a toggle callback for the caller to wire to UI.
  */
 export const useTranscriptionRecording = (transcript: Transcript.Transcript): TranscriptionRecording => {
-  const space = getSpace(transcript);
+  const db = Obj.getDatabase(transcript);
   const identity = useIdentity();
   const feed = transcript.feed.target;
 
@@ -42,10 +39,10 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   // extraction is enabled) with references to known entities mentioned in the transcript.
   const handleSegments = useCallback(
     async (blocks: Message.Message['blocks']) => {
-      if (!space || !feed || blocks.length === 0) {
+      if (!db || !feed || blocks.length === 0) {
         return;
       }
-      const sender = identity ? { identityDid: identity.did, name: identity.profile?.displayName } : {};
+      const sender = identity ? { identityDid: identity.did, name: identity.displayName } : {};
       let message = Obj.make(Message.Message, {
         sender,
         created: new Date().toISOString(),
@@ -58,7 +55,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
         const { data, error } = await invokePromise(
           TranscriptOperation.EnrichMessage,
           { message },
-          { spaceId: space.id },
+          { spaceId: db.spaceId },
         );
         if (error) {
           log.warn('entity extraction failed; using raw transcript', { error });
@@ -67,9 +64,9 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
         }
       }
 
-      await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(space.db)), EffectEx.runAndForwardErrors);
+      await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     },
-    [space, feed, identity, invokePromise, settings],
+    [db, feed, identity, invokePromise, settings],
   );
 
   // Drive the transcriber lifecycle off the recording flag + audio track.

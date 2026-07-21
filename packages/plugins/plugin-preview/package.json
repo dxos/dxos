@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-preview",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Preview plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,12 +16,12 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
       "source": {
@@ -30,36 +30,36 @@
         "default": "./src/PreviewPlugin.tsx"
       },
       "types": "./dist/types/src/PreviewPlugin.d.ts",
-      "workerd": "./dist/lib/neutral/PreviewPlugin.workerd.mjs",
-      "node": "./dist/lib/neutral/PreviewPlugin.node.mjs",
-      "default": "./dist/lib/neutral/PreviewPlugin.mjs"
+      "workerd": "./dist/lib/PreviewPlugin.workerd.mjs",
+      "node": "./dist/lib/PreviewPlugin.node.mjs",
+      "default": "./dist/lib/PreviewPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
-      "default": "./dist/lib/neutral/testing.mjs"
+      "import": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -86,6 +86,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

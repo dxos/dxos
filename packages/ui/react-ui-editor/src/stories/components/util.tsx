@@ -13,17 +13,55 @@ import {
   folding,
   formattingKeymap,
   image,
+  join,
   linkTooltip,
   table,
 } from '@dxos/ui-editor';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 import { safeUrl } from '@dxos/util';
 
+random.seed(1);
+
 import { str } from '../../util';
 
 export const num = () => random.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 export const img = '![dxos](https://dxos.network/dxos-logotype-blue.png)';
+
+export type GenerateListOptions = {
+  /** Maximum nesting depth. */
+  depth?: number;
+  /** Children per node — a fixed count or an inclusive `[min, max]` range. */
+  children?: number | [number, number];
+  /** Emit task markers (`- [ ]`) rather than plain bullets (`- `). */
+  task?: boolean;
+  /** Spaces of indentation per level. */
+  indent?: number;
+  /** Content generator for each item (default: a lorem sentence). */
+  content?: () => string;
+};
+
+/**
+ * Generates a hierarchical markdown list for the outliner stories. Deterministic under `random.seed`.
+ */
+export const generateList = ({
+  depth = 3,
+  children = [1, 3],
+  task = true,
+  indent = 2,
+  content = () => random.lorem.sentence(),
+}: GenerateListOptions = {}): string => {
+  const count = (value: number | [number, number]): number =>
+    Array.isArray(value) ? random.number.int({ min: value[0], max: value[1] }) : value;
+
+  const build = (level: number): string[] =>
+    Array.from({ length: count(children) }).flatMap(() => {
+      const line = ' '.repeat(indent * level) + (task ? '- [ ] ' : '- ') + content();
+      return level + 1 < depth ? [line, ...build(level + 1)] : [line];
+    });
+
+  return join(...build(0));
+};
 
 export const code = str(
   // prettier-ignore
@@ -211,7 +249,7 @@ const hover =
 export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
     Domino.of('a')
-      .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
+      .attributes({ 'href': url, 'target': '_blank', 'rel': 'noreferrer', 'aria-label': 'Open link' })
       .classNames(hover, 'flex items-center gap-2')
       .text(safeUrl(url)?.toString() ?? url)
       .append(Domino.svg('ph--arrow-square-out--regular')).root,
@@ -231,13 +269,13 @@ export const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) =
 export const defaultExtensions: Extension[] = [
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
-  linkTooltip(renderLinkTooltip),
+  linkTooltip({ render: renderLinkTooltip }),
 ];
 
 export const allExtensions: Extension[] = [
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, numberedHeadings: { from: 2, to: 4 } }),
   formattingKeymap(),
-  linkTooltip(renderLinkTooltip),
+  linkTooltip({ render: renderLinkTooltip }),
   image(),
   table(),
   folding(),

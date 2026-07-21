@@ -7,11 +7,11 @@ import React, { type ComponentProps, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
-import { ConnectorAuthButton } from '#components';
 import {
   ConnectionArticle,
   ConnectionSettingsArticle,
@@ -19,7 +19,7 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection, Connector, ConnectorAnnotationId, ConnectorAuth, SyncBinding } from '#types';
+import { Connection, Connector, ConnectorAnnotationId } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
@@ -41,23 +41,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'connectorCompanion',
         filter: AppSurface.allOf(
-          AppSurface.object(AppSurface.Article, SyncBinding.SyncBinding),
+          AppSurface.object(AppSurface.Article, Cursor.Cursor),
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data, role }) => <ConnectorCompanion {...data} role={role} />,
-      }),
-      Surface.create({
-        id: 'connectorAuth',
-        filter: Surface.makeFilter(ConnectorAuth, (data) => Array.isArray(data.connectorIds)),
-        component: ({ data }) => {
-          const space = useActiveSpace();
-          if (!space || data.connectorIds.length === 0) {
-            return null;
-          }
-          return (
-            <ConnectorAuthButton connectorIds={data.connectorIds} db={space.db} existingTarget={data.existingTarget} />
-          );
-        },
       }),
       Surface.create({
         id: 'syncTargetsDialog',

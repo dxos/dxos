@@ -367,7 +367,7 @@ describe('SpaceArchive', () => {
           id,
           '@type': 'dxn:example.Thing',
           '@meta': { keys: [] },
-          title: 'hello',
+          'title': 'hello',
         },
       ];
       const directory = buildDatabaseDirectoryFromObjects(objects as any);
@@ -413,8 +413,8 @@ describe('SpaceArchive', () => {
     test('orderObjJsonFields reorders feed queue messages with id/@type/@meta first', () => {
       const id = EntityId.random();
       const message = {
-        payload: { value: 'x' },
-        timestamp: 1000,
+        'payload': { value: 'x' },
+        'timestamp': 1000,
         id,
         '@meta': { keys: [] },
         '@type': 'dxn:example.Message',
@@ -428,7 +428,7 @@ describe('SpaceArchive', () => {
     test('orderObjJsonFields preserves unknown @-prefixed fields between system and data', () => {
       const id = EntityId.random();
       const obj = {
-        data: 1,
+        'data': 1,
         '@custom': 'extension',
         '@type': 'dxn:example.Thing',
         id,
@@ -436,6 +436,36 @@ describe('SpaceArchive', () => {
 
       const ordered = orderObjJsonFields(obj);
       expect(Object.keys(ordered)).toEqual(['id', '@type', '@custom', 'data']);
+    });
+
+    test('objectStructureToObjJson preserves meta.annotations', () => {
+      const id = EntityId.random();
+      const obj = objectStructureToObjJson(id, {
+        data: { name: 'Bramble Coffee Roasters' },
+        meta: { keys: [], annotations: { 'org.dxos.space.rootCollection': { '/': 'dxn:echo:@:example' } } },
+        system: { type: { '/': URI.make('dxn:org.dxos.type.spaceProperties') }, kind: 'object' },
+      });
+
+      expect((obj['@meta'] as any).annotations).toEqual({
+        'org.dxos.space.rootCollection': { '/': 'dxn:echo:@:example' },
+      });
+    });
+
+    test('buildDatabaseDirectoryFromObjects round-trips meta.annotations', () => {
+      const id = EntityId.random();
+      const objects = [
+        {
+          id,
+          '@type': 'dxn:org.dxos.type.spaceProperties',
+          '@meta': { keys: [], annotations: { 'org.dxos.space.rootCollection': { '/': 'dxn:echo:@:example' } } },
+          'name': 'Bramble Coffee Roasters',
+        },
+      ];
+      const directory = buildDatabaseDirectoryFromObjects(objects as any);
+      const structure = directory.objects![id];
+      expect(structure.meta?.annotations).toEqual({
+        'org.dxos.space.rootCollection': { '/': 'dxn:echo:@:example' },
+      });
     });
 
     test('buildDatabaseDirectoryFromObjects flags relations', () => {
@@ -465,10 +495,10 @@ describe('SpaceArchive', () => {
           id,
           '@type': 'dxn:org.dxos.type.schema:0.1.0',
           '@meta': { keys: [] },
-          name: 'Custom Type',
-          typename: 'example.type.custom',
-          version: '0.1.0',
-          jsonSchema: { $id: `echo:/${id}`, type: 'object', properties: {} },
+          'name': 'Custom Type',
+          'typename': 'example.type.custom',
+          'version': '0.1.0',
+          'jsonSchema': { $id: `echo:/${id}`, type: 'object', properties: {} },
         },
       ];
       const directory = buildDatabaseDirectoryFromObjects(objects as any);

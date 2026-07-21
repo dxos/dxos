@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { McpServer as McpServerSpec } from '@dxos/compute';
-import { DXN, Annotation, Type } from '@dxos/echo';
+import { Annotation, DXN, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**

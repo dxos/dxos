@@ -5,15 +5,15 @@
 import React, { useMemo } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { type Space, useMembers } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { useIdentity, useMembers } from '@dxos/halo-react';
+import { type Space } from '@dxos/react-client/echo';
+import { Panel, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
-import { Chat } from '#components';
+import { MessageThread } from '#components';
 import { useStatus } from '#hooks';
 
 export type ThreadArticleProps = ThemedClassName<
@@ -58,18 +58,25 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     };
 
     return (
-      <Chat
-        {...composableProps(props)}
-        id={id}
-        identity={identity}
-        members={members}
-        messages={messages}
-        activity={activity}
-        onSend={handleSend}
-        autoFocus={autoFocus}
-        current={current}
-        ref={forwardedRef}
-      />
+      <Panel.Root>
+        <Panel.Toolbar></Panel.Toolbar>
+        <Panel.Content asChild>
+          <MessageThread
+            {...composableProps(props)}
+            id={id}
+            identity={identity}
+            members={members}
+            messages={messages}
+            activity={activity}
+            onSend={handleSend}
+            autoFocus={autoFocus}
+            current={current}
+            ref={forwardedRef}
+          />
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 );
+
+ThreadArticle.displayName = 'ThreadArticle';

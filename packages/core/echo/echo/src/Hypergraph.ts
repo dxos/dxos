@@ -5,11 +5,12 @@
 import * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 
+import { type CleanupFn } from '@dxos/async';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
-import type * as internal from './internal';
 import type * as Key from './Key';
 import type * as Ref from './Ref';
 import type * as Registry from './Registry';
@@ -37,12 +38,6 @@ export interface RefResolverOptions {
    * Affects how non-absolute DXNs are resolved.
    */
   context?: RefResolutionContext;
-
-  /**
-   * Middleware to change the resolved object before returning it.
-   * @deprecated On track to be removed.
-   */
-  middleware?: (obj: internal.AnyProperties) => internal.AnyProperties;
 }
 
 /**
@@ -72,11 +67,9 @@ export interface Hypergraph extends Database.Queryable {
   makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T>;
 
   /**
-   * @param hostDb Host database for reference resolution.
-   * @param middleware Called with the loaded object. The caller may change the object.
-   * @returns Result of `onLoad`.
+   * Create a resolver that dereferences `Ref`s against this graph. Persisted schema objects are
+   * surfaced as their registered `Type.Type` entity.
    */
-  // TODO(dmaretskyi): Restructure API: Remove middleware.
   createRefResolver(options: RefResolverOptions): Ref.Resolver;
 
   /**
@@ -103,6 +96,22 @@ export interface Hypergraph extends Database.Queryable {
    * Used to confine an AI agent session to an allowlist of spaces (see `docs/design/agent-firewall.md`).
    */
   scoped(allowlist: readonly Key.SpaceId[]): Hypergraph;
+
+  /**
+   * Registers a pluggable blob storage backend under `name`, claiming its declared URI schemes.
+   * Registering a scheme already claimed by another backend is an error.
+   *
+   * @param options.default - When true, `name` becomes the storage used when
+   *   `Blob.fromBytes`'s `storage` option is omitted.
+   * @returns A cleanup function that unregisters the backend.
+   */
+  registerBlobBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn;
+
+  /**
+   * Storage name `Blob.fromBytes` uses when its `storage` option is omitted. Starts as `'inline'`;
+   * reflects the most recent `registerBlobBackend(name, backend, { default: true })` call.
+   */
+  get defaultBlobStorage(): string;
 }
 
 /**

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-iroh-beacon",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "Iroh beacon plugin for peer-to-peer presence over iroh-gossip",
   "homepage": "https://dxos.org",
@@ -17,54 +17,54 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
       "source": "./src/IrohBeaconPlugin.ts",
       "types": "./dist/types/src/IrohBeaconPlugin.d.ts",
-      "default": "./dist/lib/neutral/IrohBeaconPlugin.mjs"
+      "default": "./dist/lib/IrohBeaconPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "#transport": {
       "source": "./src/transport/index.ts",
       "types": "./dist/types/src/transport/index.d.ts",
-      "default": "./dist/lib/neutral/transport/index.mjs"
+      "default": "./dist/lib/transport.mjs"
     },
     "#types": {
       "source": "./src/types.ts",
       "types": "./dist/types/src/types.d.ts",
-      "default": "./dist/lib/neutral/types.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -78,6 +78,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -96,8 +97,8 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
   }

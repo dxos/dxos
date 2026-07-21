@@ -7,14 +7,16 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
-import { getSnapshot, type Mutable } from '@dxos/echo/Obj';
+import { type Mutable, getSnapshot } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { type Label } from '@dxos/react-ui';
+import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
+  type DxGridPlane,
   type DxGridPlanePosition,
   type DxGridPlaneRange,
   type DxGridPosition,
@@ -25,16 +27,8 @@ import { type Table } from '../types';
 import { extractOrder } from '../util';
 import { compareValues } from '../util/sort';
 import { extractTagIds } from '../util/tag';
-
-/**
- * Field sort configuration.
- */
-export type FieldSortType = {
-  fieldId: string;
-  direction: QueryAST.OrderDirection;
-};
-
 import { type SelectionMode, SelectionModel } from './selection-model';
+import { type FieldSortType, tableSortAspect } from './table-view-state';
 
 /**
  * Callback type for wrapping mutations in Obj.update().
@@ -95,12 +89,18 @@ export type TableFeatures = {
   selection: { enabled: boolean; mode?: SelectionMode };
   dataEditable: boolean;
   schemaEditable: boolean;
+  /**
+   * Number of leading data columns to pin (freeze) so they remain visible while the remaining
+   * columns scroll horizontally. Pinned columns are rendered in the grid's frozen-column planes.
+   */
+  pinColumns: number;
 };
 
 const defaultFeatures: TableFeatures = {
   selection: { enabled: true, mode: 'multiple' },
   dataEditable: false,
   schemaEditable: false,
+  pinColumns: 0,
 };
 
 export type InsertRowResult = 'draft' | 'final';
@@ -110,6 +110,12 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   object: Table.Table;
   projection: ProjectionModel;
   db?: Database.Database;
+  /**
+   * Per-context UI state manager (from `@dxos/react-ui-attention`). When provided, the column sort is
+   * stored in the `tableSortAspect` view state keyed by the table URI; otherwise it falls back to an
+   * ephemeral atom (e.g. isolated stories/tests with no `ViewStateProvider`).
+   */
+  viewState?: ViewStateManager;
   /**
    * Callbacks to wrap mutations in Obj.update().
    * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
@@ -148,7 +154,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   private readonly _rows: Atom.Writable<T[]>;
   private readonly _draftRows: Atom.Writable<DraftRow<T>[]>;
-  // In-memory sort state - changes are local until saved.
+  // Optional per-context UI state manager; when present the column sort is view-state-backed.
+  private readonly _viewState?: ViewStateManager;
+  // Per-user sort state - backed by the `tableSortAspect` view state (keyed by table URI) when a
+  // ViewStateManager is provided, else an ephemeral atom. Changes are local until saved to the view.
   private readonly _inMemorySort: Atom.Writable<FieldSortType | undefined>;
   // Derived atom for persisted sort from view.query.ast.
   private readonly _persistedSort: Atom.Atom<FieldSortType | undefined>;
@@ -170,6 +179,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     object,
     projection,
     db,
+    viewState,
     change,
     features = {},
     initialSelection = [],
@@ -185,6 +195,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     super();
     this._registry = registry;
     this._object = object;
+    this._viewState = viewState;
     this._projection = projection;
     this._projection.normalizeView();
     this._db = db;
@@ -205,7 +216,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     });
     this._rows = Atom.make<T[]>([]);
     this._draftRows = Atom.make<DraftRow<T>[]>([]);
-    this._inMemorySort = Atom.make<FieldSortType | undefined>(undefined);
+    // View-state-backed atom survives remount/reload (local backend, keyed by table URI); the
+    // ephemeral fallback preserves prior behaviour when no ViewStateManager is supplied.
+    this._inMemorySort = this._viewState
+      ? this._viewState.atom(tableSortAspect, this.id)
+      : Atom.make<FieldSortType | undefined>(undefined);
     this._cellUpdateCounter = Atom.make<number>(0);
 
     // Create derived atom for persisted sort from view.query.ast.
@@ -346,6 +361,24 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   /**
+   * Reports the grid's currently-visible cell range (called by the presentation from `getCells`). Drives the
+   * per-row subscriptions that keep cells reactive to external mutations, so it must be wired for the grid to
+   * reflect edits made outside it. Guarded so identical ranges don't churn the subscriptions.
+   */
+  public setVisibleRange(range: DxGridPlaneRange): void {
+    const current = this._registry.get(this._visibleRange);
+    if (
+      current.start.row === range.start.row &&
+      current.end.row === range.end.row &&
+      current.start.col === range.start.col &&
+      current.end.col === range.end.col
+    ) {
+      return;
+    }
+    this._registry.set(this._visibleRange, range);
+  }
+
+  /**
    * Change a row using the configured change callback.
    * Use this instead of directly mutating to ensure consistent mutation handling.
    */
@@ -355,6 +388,57 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public get features(): TableFeatures {
     return this._features;
+  }
+
+  /**
+   * Number of leading data columns pinned (frozen), clamped to the available field count.
+   */
+  public get pinColumns(): number {
+    const fieldCount = this.getColumnCount();
+    return Math.max(0, Math.min(this._features.pinColumns, fieldCount));
+  }
+
+  /**
+   * Number of frozen-start columns preceding the pinned data columns (the selection column, if enabled).
+   */
+  public get selectionColumns(): number {
+    return this._features.selection.enabled ? 1 : 0;
+  }
+
+  /**
+   * Total number of columns rendered in the `frozenColsStart` plane: the selection column (if enabled)
+   * plus the pinned data columns. Single source of truth for the frozen-start boundary.
+   */
+  public get frozenColsStart(): number {
+    return this.selectionColumns + this.pinColumns;
+  }
+
+  /**
+   * Maps a plane-local column index to a field index for the data-bearing planes.
+   * Returns undefined for non-data columns (e.g. the selection or action columns).
+   *
+   * Column layout across planes:
+   * - `frozenColsStart`: [selection?] then the first `pinColumns` data fields.
+   * - `grid` / `frozenRowsStart` / `frozenRowsEnd`: data fields starting at index `pinColumns`.
+   */
+  public getFieldIndex(plane: DxGridPlane, planeCol: number): number | undefined {
+    switch (plane) {
+      case 'frozenColsStart':
+      case 'fixedStartStart':
+      case 'fixedEndStart': {
+        const dataCol = planeCol - this.selectionColumns;
+        if (dataCol < 0 || dataCol >= this.pinColumns) {
+          return undefined;
+        }
+        return dataCol;
+      }
+      case 'grid':
+      case 'frozenRowsStart':
+      case 'frozenRowsEnd':
+        return this.pinColumns + planeCol;
+      default:
+        return undefined;
+    }
   }
 
   /**
@@ -412,14 +496,38 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     // The projection.fields atom handles subscriptions to view changes internally.
     this._columnMeta = Atom.make((get) => {
       const fields = get(this._projection.fields);
-      const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: this.table.sizes[field.path] ?? 256, resizeable: true }]),
-      );
+      const pin = this.pinColumns;
+      const selectionColumns = this.selectionColumns;
+
+      const fieldSize = (field: (typeof fields)[number]) => ({
+        size: this.table.sizes[field.path] ?? 256,
+        resizeable: true,
+      });
+
+      // The scrolling `grid` plane holds the un-pinned fields, re-keyed to plane-local indices.
+      const grid = Object.fromEntries(fields.slice(pin).map((field, index: number) => [index, fieldSize(field)]));
+
+      // The `frozenColsStart` plane holds the selection column (if enabled) followed by the pinned fields.
+      const frozenColsStart: Record<number, { size: number; resizeable: boolean }> = {};
+      if (selectionColumns > 0) {
+        frozenColsStart[0] = {
+          size: 32,
+          resizeable: false,
+        };
+      }
+      fields.slice(0, pin).forEach((field, index: number) => {
+        frozenColsStart[selectionColumns + index] = fieldSize(field);
+      });
 
       return {
-        grid: meta,
-        frozenColsStart: { 0: { size: 30, resizeable: false } },
-        frozenColsEnd: { 0: { size: 32, resizeable: false } },
+        grid,
+        frozenColsStart,
+        frozenColsEnd: {
+          0: {
+            size: 32,
+            resizeable: false,
+          },
+        },
       };
     });
   }
@@ -434,9 +542,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     // Track row subscriptions for cleanup.
     const rowSubscriptions = new Map<string, () => void>();
 
-    // Subscribe to visible range changes to set up row subscriptions.
-    const visibleRangeUnsubscribe = this._registry.subscribe(this._visibleRange, () => {
-      // Unsubscribe from old row subscriptions.
+    // (Re)subscribe to each visible row's mutations so external edits (e.g. from a companion form) bump the
+    // cell-update counter and repaint the affected cells. Must re-run when either the visible range changes (scroll)
+    // or the row set changes (data load / sort), since rows arrive asynchronously after the range is first reported.
+    const subscribeVisibleRows = () => {
       for (const [id, unsub] of rowSubscriptions) {
         unsub();
         rowSubscriptions.delete(id);
@@ -445,21 +554,25 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const { start, end } = this._registry.get(this._visibleRange);
       const sortedRows = this._registry.get(this._sortedRows);
 
-      // Subscribe to each visible row's changes.
       for (let row = start.row; row <= end.row && row < sortedRows.length; row++) {
         const obj = sortedRows[row];
         if (Obj.isObject(obj) && !rowSubscriptions.has(obj.id)) {
+          const cell = { row, col: start.col, plane: 'grid' as const };
           const unsub = Obj.subscribe(obj, () => {
             // Increment cell update counter to notify UI of changes.
             this._registry.set(this._cellUpdateCounter, this._registry.get(this._cellUpdateCounter) + 1);
-            this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
+            this._onCellUpdate?.(cell);
           });
           rowSubscriptions.set(obj.id, unsub);
         }
       }
-    });
+    };
+
+    const visibleRangeUnsubscribe = this._registry.subscribe(this._visibleRange, subscribeVisibleRows);
+    const sortedRowsUnsubscribe = this._registry.subscribe(this._sortedRows, subscribeVisibleRows);
     this._ctx.onDispose(() => {
       visibleRangeUnsubscribe();
+      sortedRowsUnsubscribe();
       for (const unsub of rowSubscriptions.values()) {
         unsub();
       }
@@ -617,11 +730,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   public getCellData = (cell: DxGridPosition): any => {
     const { col, row, plane } = cell;
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return undefined;
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     let value: any;
 
     if (plane === 'frozenRowsEnd') {
@@ -663,11 +777,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public validateCellData = async ({ col, row, plane }: DxGridPosition, value: any): Promise<ValidationResult> => {
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return { valid: false, error: 'Invalid column index' };
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
@@ -719,11 +834,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   public setCellData = (cell: DxGridPosition, value: any): void => {
     const { col, row, plane } = cell;
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return;
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
@@ -754,9 +870,16 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * @param {DxGridPlanePosition} position - The position of the cell to update.
    * @param {(value: any) => any} update - A function that takes the current value and returns the updated value.
    */
-  public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
+  public updateCellData(
+    { col, row, plane = 'grid' }: DxGridPlanePosition & { plane?: DxGridPlane },
+    update: (value: any) => any,
+  ): void {
     const fields = this._projection?.getFields() ?? [];
-    const field = fields[col];
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
+      return;
+    }
+    const field = fields[fieldIndex];
     const sortedRows = this._registry.get(this._sortedRows);
     const rowData = sortedRows[row];
 
@@ -813,11 +936,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   // Resize
   //
 
-  public setColumnWidth(columnIndex: number, width: number): void {
+  public setColumnWidth(columnIndex: number, width: number, plane: DxGridPlane = 'grid'): void {
     const fields = this._projection?.getFields() ?? [];
-    if (columnIndex < fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, columnIndex);
+    if (fieldIndex !== undefined && fieldIndex < fields.length) {
       const newWidth = Math.max(0, width);
-      const field = fields[columnIndex];
+      const field = fields[fieldIndex];
       if (field) {
         this._change.table((mutableTable) => {
           mutableTable.sizes[field.path] = newWidth;
@@ -854,11 +978,19 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return;
     }
 
-    // Update in-memory sort (local changes).
-    this._registry.set(this._inMemorySort, {
-      fieldId,
-      direction,
-    });
+    this._writeSort({ fieldId, direction });
+  }
+
+  /**
+   * Writes the per-user sort, routing through the ViewStateManager (so the `local` backend persists)
+   * when one is configured, otherwise updating the ephemeral atom directly.
+   */
+  private _writeSort(value: FieldSortType | undefined): void {
+    if (this._viewState) {
+      this._viewState.set(tableSortAspect, this.id, value);
+    } else {
+      this._registry.set(this._inMemorySort, value);
+    }
   }
 
   /**
@@ -879,7 +1011,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * Clears the in-memory sort order.
    */
   public clearSort(): void {
-    this._registry.set(this._inMemorySort, undefined);
+    this._writeSort(undefined);
   }
 
   /**
@@ -912,8 +1044,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       });
     }
 
-    // Clear in-memory sort since it's now persisted.
-    this._registry.set(this._inMemorySort, undefined);
+    // Clear per-user sort since it's now persisted to the view.
+    this._writeSort(undefined);
   }
 
   /**

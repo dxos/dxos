@@ -17,12 +17,12 @@ export const DiscordTargetOptions = Schema.Struct({
    * (newest message id seen) regardless of this value, so changing it
    * after the first sync has no effect.
    *
-   * Unset → uses the plugin default (see `DEFAULT_DAYS_OF_HISTORY` in
+   * Unset → uses the plugin default (see `DEFAULT_DAYS` in
    * `constants.ts`). `0` is treated the same as unset. Bound at sync time
    * to a sane range so an absurd value can't trip Discord rate limits
    * indefinitely.
    */
-  daysOfHistory: Schema.Number.pipe(
+  maxDays: Schema.Number.pipe(
     Schema.annotations({
       title: 'Days of history to sync',
       description:

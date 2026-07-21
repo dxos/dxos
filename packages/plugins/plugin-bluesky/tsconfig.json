@@ -40,10 +40,16 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/protocols"

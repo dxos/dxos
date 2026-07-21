@@ -12,7 +12,7 @@ import { Doc } from '@dxos/echo-doc';
 import { OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown';
 import { AnchoredTo, Thread } from '@dxos/types';
-import { comments, createExternalCommentSync } from '@dxos/ui-editor';
+import { comments } from '@dxos/ui-editor';
 
 import { CommentOperation } from '#types';
 import { type CommentState } from '#types';
@@ -37,34 +37,34 @@ export const threads = (
   store: ThreadStore,
   doc?: Markdown.Document,
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
+  // The active review branch (the core branch the editor is showing); undefined = main. Threaded from
+  // the markdown editor (which resolves it from the per-object version selection) rather than read
+  // from core `getCurrentBranch`, which stays 'main' under this branch's per-surface binding model.
+  reviewBranch?: string,
 ): Extension => {
   const db = doc && Obj.getDatabase(doc);
   if (!doc || !db || !invokePromise) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
     // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
-    return [comments()];
+    return [comments({ id: 'noop' })];
   }
 
   const { registry, stateAtom } = store;
   const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
 
-  // Get current anchors by combining query results with store drafts.
+  // Get current anchors by combining query results with store drafts, scoped to the review branch so
+  // inline marks show only the comments for the branch currently in view (undefined tag = main).
   const getAnchors = () =>
     query.results
       .filter((anchor) => {
         const thread = Relation.getSource(anchor);
         return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
       })
-      .concat(registry.get(stateAtom).drafts[objectId] ?? []);
+      .concat(registry.get(stateAtom).drafts[objectId] ?? [])
+      .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'));
 
   return [
-    EditorView.domEventHandlers({
-      destroy: () => {
-        // Note: cleanup functions for subscriptions are handled by createExternalCommentSync.
-      },
-    }),
-
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         getAnchors().forEach((anchor) => {
@@ -83,9 +83,20 @@ export const threads = (
       }
     }),
 
-    createExternalCommentSync(
-      objectId,
-      (sink) => {
+    comments({
+      id: objectId,
+      // Tag new comments with the review branch so they scope to the branch under review; main stays untagged.
+      reviewBranch,
+      // `getAnchors()` is already branch-scoped, so selection-style highlights show only the review
+      // branch's comments.
+      getComments: () =>
+        getAnchors()
+          .filter((anchor) => anchor.anchor)
+          .map((anchor) => ({
+            id: Obj.getURI(Relation.getSource(anchor)),
+            cursor: anchor.anchor,
+          })),
+      subscribe: (sink) => {
         // Subscribe to both query changes and store state changes.
         const unsubQuery = query.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);
@@ -94,23 +105,13 @@ export const threads = (
           unsubStore();
         };
       },
-      () =>
-        getAnchors()
-          .filter((anchor) => anchor.anchor)
-          .map((anchor) => ({
-            id: Obj.getURI(Relation.getSource(anchor)),
-            cursor: anchor.anchor,
-          })),
-    ),
-
-    comments({
-      id: objectId,
-      onCreate: ({ cursor }) => {
+      onCreate: ({ cursor, branch }) => {
         const name = getName(doc, cursor);
         void invokePromise(CommentOperation.Create, {
           anchor: cursor,
           name,
           subject: doc,
+          branch,
         });
       },
       onDelete: ({ id }) => {

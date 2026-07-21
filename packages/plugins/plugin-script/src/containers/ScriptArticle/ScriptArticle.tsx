@@ -8,10 +8,10 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
-import { createDataExtensions, listener, editorClassNames } from '@dxos/ui-editor';
+import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-editor';
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
 import { useDeployState, useToolbarState } from '#hooks';
@@ -83,3 +83,5 @@ export const ScriptArticle = ({
     </Panel.Root>
   );
 };
+
+ScriptArticle.displayName = 'ScriptArticle';

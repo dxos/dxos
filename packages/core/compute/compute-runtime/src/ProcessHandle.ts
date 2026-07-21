@@ -15,6 +15,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
@@ -69,6 +70,30 @@ const toPersistedChildEvent = (event: Process.ChildEvent<unknown>) =>
         error: Exit.isFailure(event.result) ? Cause.pretty(event.result.cause) : undefined,
       };
 
+/**
+ * Serialize a failed process's cause into a {@link Process.Info}'s `error`. `message` falls back to the
+ * pretty-printed cause; `context` is carried through so structured detail (e.g. a notify override) on a
+ * `BaseError` survives. Every operation handler is wrapped in `Effect.orDie` before running as a
+ * process, so a typed error thrown in a nested invoke arrives as a defect, not a `Fail` — check both
+ * channels for the failing value.
+ */
+const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info['error']> => {
+  const message = Cause.pretty(cause);
+  const value = Cause.failureOption(cause).pipe(
+    Option.orElse(() => Cause.dieOption(cause)),
+    Option.getOrNull,
+  );
+  if (!Predicate.isRecord(value)) {
+    return { message };
+  }
+  return {
+    name: typeof value.name === 'string' ? value.name : undefined,
+    message: typeof value.message === 'string' ? value.message : message,
+    stack: typeof value.stack === 'string' ? value.stack : undefined,
+    context: Predicate.isRecord(value.context) ? value.context : undefined,
+  };
+};
+
 const fromPersistedChildEvent = (event: {
   pid: Process.ID;
   exited: boolean;
@@ -118,6 +143,11 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   // a `TestClock` under tests and use real time in production. `null` when no alarm is pending or
   // once the sleep has elapsed and the handler is running.
   #alarmFiber: Fiber.RuntimeFiber<void> | null = null;
+  // True from the moment a fired alarm clears #alarmFiber until its handler starts running. A 0ms
+  // alarm fires on the next microtask, which can precede the completion of the handler that
+  // scheduled it; without this flag #handlerCompleted would see no pending alarm and settle to IDLE,
+  // letting runUntilSettled resolve during the persistence→dispatch hand-off before the turn runs.
+  #alarmDispatching = false;
   #services: Context.Context<R | Process.BaseServices>;
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   readonly #callbacks: Process.Callbacks<I, O, R, any>;
@@ -196,7 +226,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     const error = Option.getOrNull(
       Option.flatMap(status.exit, (ex) =>
         Exit.match(ex, {
-          onFailure: (cause) => Option.some(Cause.pretty(cause)),
+          onFailure: (cause) => Option.some(serializeFailure(cause)),
           onSuccess: () => Option.none(),
         }),
       ),
@@ -391,13 +421,18 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           switch (state.state) {
             case Process.State.SUCCEEDED:
             case Process.State.TERMINATED:
-            case Process.State.IDLE:
               return Effect.runSync(Deferred.succeed(deferred, undefined));
+            case Process.State.IDLE:
+              // A fired alarm clears #alarmFiber before its handler runs; do not treat the transient
+              // IDLE during that hand-off as settled, or we resolve before the turn has started.
+              return this.#alarmDispatching ? Effect.void : Effect.runSync(Deferred.succeed(deferred, undefined));
             // The foreground turn is done once no handler is active and no further turn work is
-            // queued (no pending alarm); remaining hybernation is only background children, which we
-            // intentionally do not wait for.
+            // queued (no pending alarm, none mid-dispatch); remaining hybernation is only background
+            // children, which we intentionally do not wait for.
             case Process.State.HYBERNATING:
-              return this.#alarmFiber === null ? Effect.runSync(Deferred.succeed(deferred, undefined)) : Effect.void;
+              return this.#alarmFiber === null && !this.#alarmDispatching
+                ? Effect.runSync(Deferred.succeed(deferred, undefined))
+                : Effect.void;
             case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),
@@ -457,10 +492,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
             case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),
-                Option.map(Cause.pretty),
-                Option.getOrElse(() => 'Process failed with unknown error'),
+                Option.getOrElse(() => Cause.die('Process failed with unknown error')),
               );
-              return Effect.runSync(Deferred.die(deferred, error));
+              return Effect.runSync(Deferred.failCause(deferred, error));
             }
             case Process.State.TERMINATED:
               return Effect.runSync(Deferred.die(deferred, 'Process was terminated'));
@@ -512,17 +546,30 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       } else {
         yield* Effect.yieldNow();
       }
+      // The alarm has fired and is committed to dispatching its handler. Mark the process busy
+      // before clearing #alarmFiber so it is not reported settled across the persistence writes and
+      // handler hand-off below (#dispatchAlarm clears the flag once the handler is RUNNING).
+      this.#alarmDispatching = true;
       this.#alarmFiber = null;
       this.#alarmDueAt = null;
       yield* this.#persistence.setAlarm(null);
       if (!this.#finished) {
         yield* this.#persistence.appendEvent({ _tag: 'alarm' }).pipe(Effect.flatMap((seq) => this.#dispatchAlarm(seq)));
+      } else {
+        this.#alarmDispatching = false;
       }
     });
   }
 
   #dispatchAlarm(seq: number): Effect.Effect<void> {
     return this.#runHandler('alarm', () => this.#callbacks.onAlarm(), seq).pipe(
+      // The handler has set its status (RUNNING) by the time #runHandler yields the fiber; the
+      // dispatch hand-off window is over, so the pending-alarm flag can be released.
+      Effect.tap(() =>
+        Effect.sync(() => {
+          this.#alarmDispatching = false;
+        }),
+      ),
       Effect.flatMap(Fiber.join),
       this.#alarmSemaphore.withPermits(1),
     );
@@ -641,7 +688,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
         );
       } else if (this.#activeHandlers === 0) {
-        const hybernating = this.#alarmFiber !== null || this.#hasRunningChildren();
+        const hybernating = this.#alarmFiber !== null || this.#alarmDispatching || this.#hasRunningChildren();
         this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);
       }
     });

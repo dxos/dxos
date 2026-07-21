@@ -4,29 +4,30 @@
 
 export { Thread } from './Thread';
 export type {
-  ThreadRootProps,
   ThreadContentProps,
   ThreadHeaderProps,
   ThreadMessagesProps,
-  ThreadTextboxProps,
+  ThreadRootProps,
   ThreadStatusProps,
+  ThreadTextboxProps,
 } from './Thread';
 export { Message } from './Message';
 export type {
-  MessageRootProps,
-  MessageHeadingProps,
   MessageAuthorNameProps,
-  MessageTimeProps,
   MessageBodyProps,
+  MessageGroupProps,
+  MessageHeadingProps,
+  MessageRootProps,
   MessageTextboxProps,
   MessageTileProps,
+  MessageTimeProps,
 } from './Message';
 export { command } from './command';
 export { useThreadContext } from './context';
 export type {
+  MessageCallbacks,
   MessageMetadata,
   ObjectTileComponent,
   ThreadComponents,
-  MessageCallbacks,
   ThreadContextValue,
 } from './types';

@@ -42,7 +42,13 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/halo/credentials"
@@ -96,6 +102,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-assistant"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -115,9 +124,6 @@
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-masonry"
     },
     {
       "path": "../plugin-sheet"

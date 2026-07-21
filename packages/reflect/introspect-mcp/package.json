@@ -1,6 +1,6 @@
 {
   "name": "@dxos/introspect-mcp",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "MCP server exposing DXOS monorepo introspection.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,12 +15,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/node/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./tools": {
       "source": "./src/tools/index.ts",
       "types": "./dist/types/src/tools/index.d.ts",
-      "default": "./dist/lib/node/tools/index.mjs"
+      "import": "./dist/lib/tools.mjs"
     }
   },
   "bin": {

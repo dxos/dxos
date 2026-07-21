@@ -12,12 +12,13 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Feed, Filter, Ref } from '@dxos/echo';
-import { initializeIdentity, ClientPlugin } from '@dxos/plugin-client/testing';
+import { useQuery } from '@dxos/echo-react';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

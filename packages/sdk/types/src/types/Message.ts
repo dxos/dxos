@@ -6,12 +6,28 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
 import * as ContentBlock from './ContentBlock';
+
+/**
+ * A file or object attached to a message, separate from its (textual/streamed) `blocks`. The
+ * preferred way to link a message to a stored object (e.g. a `Blob`) — see
+ * {@link ContentBlock.Reference} for the deprecated block-based alternative.
+ */
+export const Attachment = Schema.Struct({
+  /** Display name (e.g. the original filename). */
+  name: Schema.optional(Schema.String),
+  /** Reference to the attached object (e.g. a `Blob` or `File`). */
+  ref: Ref.Ref(Obj.Unknown),
+  /** The source message's `Content-ID` for this attachment, if any — matches a `cid:` reference in an HTML body. */
+  contentId: Schema.optional(Schema.String),
+});
+
+export interface Attachment extends Schema.Schema.Type<typeof Attachment> {}
 
 /**
  * Message object.
@@ -35,6 +51,13 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
       description: 'Contents of the message.',
       default: [],
     }),
+    attachments: Schema.optional(
+      Schema.Array(Attachment).annotations({
+        description: 'Files or objects attached to the message (e.g. email attachments).',
+      }),
+    ),
+
+    /** Custom properties for specific message types (e.g. attention context, email subject, etc.). */
     // TODO(dmaretskyi): Add tool call ID here.
     properties: Schema.optional(
       Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({

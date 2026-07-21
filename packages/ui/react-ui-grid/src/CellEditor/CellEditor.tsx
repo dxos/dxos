@@ -155,7 +155,7 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
           slots: {
             editor: {
               className: mx(
-                'min-w-full! w-min! !max-w-(--dx-grid-cell-editor-max-w-size) min-h-full! !max-h-(--dx-grid-cell-editor-max-h-size)',
+                'min-w-full! w-min! !max-w-(--dx-grid-cell-editor-max-inline-size) min-h-full! !max-h-(--dx-grid-cell-editor-max-block-size)',
                 slots?.editor?.className,
               ),
             },
@@ -183,7 +183,7 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
         insetInlineStart: box?.insetInlineStart ?? '0px',
         insetBlockStart: box?.insetBlockStart ?? '0px',
         minInlineSize: box?.inlineSize ?? '180px',
-        minBlockSize: box?.blockSize ?? '30px',
+        minBlockSize: box?.blockSize ?? '32px',
         ...{ '--dx-grid-cell-width': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}

@@ -5,10 +5,11 @@
 import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSpace } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
-import { type Space, useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
+import { type Space } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -37,9 +38,9 @@ export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
   }
 
   return (
-    <div className={dismissed ? 'hidden' : undefined}>
+    <HomeSection.Root classNames={dismissed ? 'hidden' : undefined}>
       <WelcomePanel />
-    </div>
+    </HomeSection.Root>
   );
 };
 
@@ -120,3 +121,5 @@ const WelcomePanel = memo(() => {
 });
 
 WelcomePanel.displayName = 'WelcomePanel';
+
+SpaceHomeWelcome.displayName = 'SpaceHomeWelcome';

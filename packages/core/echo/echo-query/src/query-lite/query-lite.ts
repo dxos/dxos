@@ -4,7 +4,15 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
+import type {
+  Ref,
+  Aggregate as Aggregate$,
+  Filter as Filter$,
+  Obj as Obj$,
+  Order as Order$,
+  Query as Query$,
+  Type as Type$,
+} from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
@@ -17,20 +25,29 @@ import type { DXN, EID, EntityId, URI } from '@dxos/keys';
 
 // TODO(wittjosiah): The `export * as ...` syntax causes tsdown to genereate multiple files which breaks the sandbox.
 
+// The TypeId brand keys mirror the constants in `@dxos/echo`. They are declared locally (typed by the
+// type-only imports) rather than imported as runtime values to keep this sandbox bundle free of the
+// `@dxos/echo` runtime graph.
+const OrderTypeId: Order$.OrderTypeId = '~@dxos/echo/Order';
+const FilterTypeId: Filter$.FilterTypeId = '~@dxos/echo/Filter';
+const QueryTypeId: Query$.QueryTypeId = '~@dxos/echo/Query';
+
 class OrderClass implements Order$.Any {
-  private static 'variance': Order$.Any['~Order'] = {} as Order$.Any['~Order'];
+  private static 'variance': Order$.Any[typeof OrderTypeId] = {} as Order$.Any[typeof OrderTypeId];
 
   static is(value: unknown): value is Order$.Any {
-    return typeof value === 'object' && value !== null && '~Order' in value;
+    return typeof value === 'object' && value !== null && OrderTypeId in value;
   }
 
   constructor(public readonly ast: QueryAST.Order) {}
 
-  '~Order' = OrderClass.variance;
+  [OrderTypeId] = OrderClass.variance;
 }
 
 namespace Order1 {
-  export const natural: Order$.Any = new OrderClass({ kind: 'natural' });
+  export const OrderTypeId: Order$.OrderTypeId = '~@dxos/echo/Order';
+  export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order$.Order<any> =>
+    new OrderClass({ kind: 'natural', direction });
   export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order$.Order<T> =>
     new OrderClass({
       kind: 'property',
@@ -145,10 +162,12 @@ const _filterMatchEntityLocal = (filter: QueryAST.Filter, entity: any): boolean 
 };
 
 class FilterClass implements Filter$.Any {
-  private static 'variance': Filter$.Any['~Filter'] = {} as Filter$.Any['~Filter'];
+  static 'FilterTypeId': Filter$.FilterTypeId = FilterTypeId;
+
+  private static 'variance': Filter$.Any[typeof FilterTypeId] = {} as Filter$.Any[typeof FilterTypeId];
 
   static is(value: unknown): value is Filter$.Any {
-    return typeof value === 'object' && value !== null && '~Filter' in value;
+    return typeof value === 'object' && value !== null && FilterTypeId in value;
   }
 
   static fromAst(ast: QueryAST.Filter): Filter$.Any {
@@ -407,7 +426,7 @@ class FilterClass implements Filter$.Any {
   ): Filter$.Filter<Filter$.Type<Filters[number]>> {
     return new FilterClass({
       type: 'and',
-      filters: filters.map((f) => f.ast),
+      filters: filters.map((filter) => filter.ast),
     });
   }
 
@@ -416,7 +435,7 @@ class FilterClass implements Filter$.Any {
   ): Filter$.Filter<Filter$.Type<Filters[number]>> {
     return new FilterClass({
       type: 'or',
-      filters: filters.map((f) => f.ast),
+      filters: filters.map((filter) => filter.ast),
     });
   }
 
@@ -428,7 +447,7 @@ class FilterClass implements Filter$.Any {
   /** Create a predicate from a filter. */
   // Cast required: TypeScript cannot verify a plain overloaded function satisfies a type-predicate
   // overload signature without the cast; Effect's dual() has the same limitation here.
-  static toPredicate = ((entityOrFilter: any, filter?: any): any => {
+  static 'toPredicate' = ((entityOrFilter: any, filter?: any): any => {
     if (filter === undefined) {
       return (entity: any) => _filterMatchEntityLocal(entityOrFilter.ast, entity);
     }
@@ -437,7 +456,7 @@ class FilterClass implements Filter$.Any {
 
   private constructor(public readonly ast: QueryAST.Filter) {}
 
-  '~Filter' = FilterClass.variance;
+  [FilterTypeId] = FilterClass.variance;
 }
 
 export const Filter1: typeof Filter$ = FilterClass;
@@ -495,10 +514,12 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
 };
 
 class QueryClass implements Query$.Any {
-  private static 'variance': Query$.Any['~Query'] = {} as Query$.Any['~Query'];
+  static 'QueryTypeId': Query$.QueryTypeId = QueryTypeId;
+
+  private static 'variance': Query$.Any[typeof QueryTypeId] = {} as Query$.Any[typeof QueryTypeId];
 
   static is(value: unknown): value is Query$.Any {
-    return typeof value === 'object' && value !== null && '~Query' in value;
+    return typeof value === 'object' && value !== null && QueryTypeId in value;
   }
 
   static fromAst(ast: QueryAST.Query): Query$.Any {
@@ -610,7 +631,7 @@ class QueryClass implements Query$.Any {
 
   constructor(public readonly ast: QueryAST.Query) {}
 
-  '~Query' = QueryClass.variance;
+  [QueryTypeId] = QueryClass.variance;
 
   reference(key: string): Query$.Any {
     return new QueryClass({
@@ -703,7 +724,7 @@ class QueryClass implements Query$.Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
-      order: order.map((o) => o.ast),
+      order: order.map((orderItem) => orderItem.ast),
     });
   }
 
@@ -712,6 +733,22 @@ class QueryClass implements Query$.Any {
       type: 'limit',
       query: this.ast,
       limit,
+    });
+  }
+
+  skip(skip: number): Query$.Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
+    });
+  }
+
+  aggregate(aggregates: Record<string, Aggregate$.Any>): Query$.Any {
+    return new QueryClass({
+      type: 'aggregate',
+      query: this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
     });
   }
 
@@ -879,7 +916,7 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return 'Order.natural';
+          return `Order.natural(${JSON.stringify(o.direction)})`;
         }
         if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
@@ -924,5 +961,21 @@ const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
+    case 'skip':
+      return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'aggregate': {
+      const aggregates = query.aggregates.map((aggregate) => {
+        const arg =
+          aggregate.kind === 'items'
+            ? aggregate.limit !== undefined
+              ? `{ limit: ${aggregate.limit} }`
+              : ''
+            : aggregate.kind === 'count'
+              ? ''
+              : JSON.stringify(aggregate.property);
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+      });
+      return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
+    }
   }
 };

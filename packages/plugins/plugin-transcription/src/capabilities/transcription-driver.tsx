@@ -8,12 +8,12 @@ import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } fr
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
+import { linkEntities } from '@dxos/pipeline-transcription';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { linkEntities } from '@dxos/transcription-pipeline';
+import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
-import { useAudioTrack, useTranscriber } from '#hooks';
 import { meta } from '#meta';
 import { TranscriptionCapabilities } from '#types';
 
@@ -39,6 +39,11 @@ const TranscriptionDriver = () => {
   const recording = session?.recording ?? false;
   const liveSessionId = session?.id;
 
+  // Only this driver's editor-backed sessions are captured here: if no editor view is registered for
+  // the session there is nowhere to stream transcription, so the driver stays idle and leaves the
+  // mic to whoever owns that session (e.g. a non-editor consumer running its own transcriber).
+  const hasEditorForSession = !!(liveSessionId && editorViews?.get(liveSessionId));
+
   // Lifecycle phase. Driven from `recording` via an effect (not derived synchronously) so that when
   // the mic switches off the phase is still 'recording' for that commit — nothing tears down until
   // the drain finishes and sets 'idle'. This lets the final transcription + enrichment complete.
@@ -50,14 +55,16 @@ const TranscriptionDriver = () => {
   // editor stays open). Cleared once the phase returns to idle.
   const [sessionId, setSessionId] = useState<string>();
   useEffect(() => {
-    if (recording && liveSessionId) {
+    if (recording && liveSessionId && hasEditorForSession) {
       setSessionId(liveSessionId);
     }
-  }, [recording, liveSessionId]);
+  }, [recording, liveSessionId, hasEditorForSession]);
 
   useEffect(() => {
-    setPhase((current) => (recording ? 'recording' : current === 'recording' ? 'draining' : current));
-  }, [recording]);
+    setPhase((current) =>
+      recording && hasEditorForSession ? 'recording' : current === 'recording' ? 'draining' : current,
+    );
+  }, [recording, hasEditorForSession]);
 
   useEffect(() => {
     if (phase === 'idle') {
@@ -70,10 +77,16 @@ const TranscriptionDriver = () => {
     setStatus(() => ({ phase }));
   }, [phase, setStatus]);
 
+  // `ideal` (not `exact`) so an unavailable device falls back to the default rather than failing.
+  const audioConstraints = useMemo<MediaTrackConstraints | undefined>(
+    () => (settings?.audioDeviceId ? { deviceId: { ideal: settings.audioDeviceId } } : undefined),
+    [settings?.audioDeviceId],
+  );
+
   // Keep the track (and thus the transcriber) alive across the whole active session — including the
   // drain — so the transcriber can flush its buffered audio before teardown. Released at idle. The
   // mic indicator therefore lingers for the brief drain after stop.
-  const track = useAudioTrack(active);
+  const track = useAudioTrack(active, audioConstraints);
 
   // Refs so `handleSegments` stays stable (changing it would recreate the transcriber).
   const sessionIdRef = useRef(sessionId);

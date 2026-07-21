@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -43,6 +43,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     if (!invokePromise || !db) {
       return;
     }
+
     // Thread the routine's first trigger as trace attribution so the run appears in history.
     // Manual runs bypass the trigger dispatcher (which normally stamps meta.trigger), so we
     // do it here — history filters on trigger entity id, and without this the run is invisible.
@@ -107,3 +108,5 @@ const useArticleMenuActions = ({ canRun, runningAtom, handleRun }: ArticleMenuAc
         .build(),
     [canRun, handleRun, runningAtom],
   );
+
+RoutineArticle.displayName = 'RoutineArticle';

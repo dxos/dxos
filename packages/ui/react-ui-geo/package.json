@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-geo",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Geo components.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
@@ -19,20 +19,17 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./data": {
       "source": "./src/data.ts",
       "types": "./dist/types/src/data.d.ts",
-      "browser": "./dist/lib/browser/data.mjs",
-      "node": "./dist/lib/node-esm/data.mjs"
+      "import": "./dist/lib/data.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -84,8 +81,8 @@
     "three": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

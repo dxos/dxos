@@ -5,15 +5,17 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
-import { useClient } from '@dxos/react-client';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { type Identity } from '@dxos/halo';
+import { useIdentity } from '@dxos/halo-react';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '#meta';
+import { ClientOperation } from '#operations';
 
 // TOOD(burdon): Factor out?
 // TODO(wittjosiah): Integrate annotations with translations.
@@ -27,33 +29,35 @@ const UserProfile = Schema.Struct({
 type UserProfile = Schema.Schema.Type<typeof UserProfile>;
 
 // TODO(thure): Factor out?
-const getDefaultHueValue = (identity: Identity | null) => hexToHue(identity?.identityKey.toHex() ?? '0');
-const getHueValue = (identity: Identity | null) => identity?.profile?.data?.hue || getDefaultHueValue(identity);
-const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
+const getDefaultHueValue = (identity?: Identity.Info): string => hexToHue(identity?.identityKey ?? '0');
+const getHueValue = (identity?: Identity.Info): string => identity?.data?.hue || getDefaultHueValue(identity);
+const getDefaultEmojiValue = (identity?: Identity.Info): string => hexToEmoji(identity?.identityKey ?? '0');
+const getEmojiValue = (identity?: Identity.Info): string => identity?.data?.emoji || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
   const { t } = useTranslation(meta.profile.key);
-  const client = useClient();
+  const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
-  const [displayName, setDisplayNameDirectly] = useState(identity?.profile?.displayName ?? '');
+  const [displayName, setDisplayNameDirectly] = useState(identity?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
 
   const updateProfile = useMemo(
     () =>
       debounce(
-        (profile: Partial<UserProfile>) =>
-          client.halo.updateProfile({
+        // Merge onto the current profile data so unrelated metadata is preserved.
+        (profile: Partial<UserProfile>, currentData?: Record<string, unknown>) =>
+          invokePromise(ClientOperation.UpdateProfile, {
             displayName: profile.displayName,
             data: {
+              ...currentData,
               emoji: profile.emoji,
               hue: profile.hue,
             },
           }),
         2_000,
       ),
-    [],
+    [invokePromise],
   );
 
   const handleChange = useCallback(
@@ -76,9 +80,9 @@ export const ProfileContainer = () => {
         }
       }
 
-      void updateProfile(profile);
+      void updateProfile(profile, identity?.data);
     },
-    [identity],
+    [identity, updateProfile],
   );
 
   const values = useMemo(
@@ -184,3 +188,5 @@ export const ProfileContainer = () => {
     </Clipboard.Provider>
   );
 };
+
+ProfileContainer.displayName = 'ProfileContainer';

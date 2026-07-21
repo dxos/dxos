@@ -9,7 +9,7 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '../types';
-import { browserCorsProxy, type FeedFetcher, fetchRss, fetchStandardSite } from './sources';
+import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources';
 
 /** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, Standard.site uses the record AT-URI). */
 const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;
@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       invariant(url, 'Feed URL is required.');
       const echoFeed = yield* Database.load(subscriptionFeed.feed);
       invariant(echoFeed, 'Backing ECHO feed not found.');
-      invariant(Feed.getQueueUri(echoFeed), 'Feed not stored in a space.');
+      invariant(Feed.getFeedUri(echoFeed), 'Feed not stored in a space.');
 
       const fetcher = getFetcher(subscriptionFeed.type);
       const { feed: feedMeta, posts } = yield* fetcher(url, { corsProxy: browserCorsProxy() });
@@ -55,10 +55,10 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       //
       // Pull the backing queue before reading existing posts: this handler runs in a
       // freshly-spawned process whose local queue replica may not have the blocks yet. Without
-      // this, `runQuery` returns an empty set, `seenKeys` is empty, and every fetched item
+      // this, the query returns an empty set, `seenKeys` is empty, and every fetched item
       // re-appends — duplicating the whole feed on a cold sync.
       yield* Feed.sync(echoFeed, { shouldPush: false });
-      const existing = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
+      const existing = yield* Feed.query(echoFeed, Filter.type(Subscription.Post)).run;
       const seenKeys = new Set<string>();
       for (const post of existing) {
         const key = postKey(post);
@@ -86,7 +86,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       // `_objectCache` for the deleted posts, but those same Post objects
       // persist in `space.db` (they were added there when first curated
       // into a Magazine via `createRef` → `database.add`). On the next
-      // sync/curate, `Feed.runQuery(...)` returns fresh proxies for the
+      // sync/curate, `Feed.query(...).run` returns fresh proxies for the
       // kept items, and any magazine refs to *deleted* posts now
       // reference proxies whose `_internals.database` link is unset —
       // `createRef` then tries to re-add them, hitting the

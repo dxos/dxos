@@ -6,17 +6,17 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Ref, DXN } from '@dxos/echo';
+import { DXN, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import {
+  Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
 } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
@@ -45,9 +45,9 @@ export const GetDiscordChannels = Operation.make({
 
 /**
  * Find-or-create the empty local feed-backed `Channel` for a selected Discord
- * channel so a {@link SyncBinding} relation can be created eagerly (relations
- * require both endpoints to exist). Keyed by the Discord channel id foreign
- * key, so it is idempotent across re-selection.
+ * channel so a {@link Cursor.Cursor} can reference it as its sync target.
+ * Keyed by the Discord channel id foreign key, so it is idempotent across
+ * re-selection.
  */
 export const MaterializeDiscordTarget = Operation.make({
   meta: {
@@ -61,22 +61,22 @@ export const MaterializeDiscordTarget = Operation.make({
 });
 
 /**
- * Pull-only sync of the single Discord channel bound by a {@link SyncBinding}.
+ * Pull-only sync of the single Discord channel bound by a {@link Cursor.Cursor}.
  *
- * Loads the binding, asks Discord for messages newer than `binding.cursor`,
+ * Loads the binding, asks Discord for messages newer than `binding.max`,
  * maps each into a `@dxos/types` `Message`, and appends them to the bound
- * Channel's feed. Updates the binding's `cursor`/`lastSyncAt`/`lastError`.
+ * Channel's feed. Updates the binding's `max`/`lastTick`/`lastError`.
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {
     key: makeKey('syncDiscordChannel'),
     name: 'Sync Discord Channel',
-    description: 'Reconcile messages for the Discord channel bound by a SyncBinding.',
+    description: 'Reconcile messages for the Discord channel bound by a Cursor.',
     icon: 'ph--arrows-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({
@@ -84,3 +84,33 @@ export const SyncDiscordChannel = Operation.make({
     }),
   }),
 }).pipe(Operation.visible);
+
+/**
+ * Incremental crawl of a set of Discord channels (optionally descending threads) through the
+ * `DiscordPipeline`: messages land in the session SQLite store, facts in the fact graph, and open
+ * questions are attempted as targets drain. Separate from feed sync — nothing is written to ECHO.
+ * Resumable: re-invoking continues from the per-target durable cursors.
+ */
+export const CrawlDiscordChannels = Operation.make({
+  meta: {
+    key: makeKey('crawlDiscordChannels'),
+    name: 'Crawl Discord Channels',
+    description: 'Incrementally crawl Discord channels through the fact-extraction pipeline.',
+    icon: 'ph--bulldozer--regular',
+  },
+  services: [Capability.Service, AiService.AiService],
+  input: Schema.Struct({
+    connection: Ref.Ref(Connection.Connection),
+    channels: Schema.Array(Schema.String),
+    descendThreads: Schema.optional(Schema.Boolean),
+    maxDays: Schema.optional(Schema.Number),
+    maxSteps: Schema.optional(Schema.Number),
+    /** Standing questions to register before the crawl (idempotent by text). */
+    questions: Schema.optional(Schema.Array(Schema.String)),
+  }),
+  output: Schema.Struct({
+    done: Schema.Boolean,
+    errored: Schema.Number,
+    steps: Schema.Number,
+  }),
+});

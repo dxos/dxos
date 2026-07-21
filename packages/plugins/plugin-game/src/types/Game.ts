@@ -4,9 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { CardAnnotation } from '@dxos/schema';
+
+// @import-as-namespace
 
 /**
  * A player in a game.
@@ -49,7 +51,7 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--sword--regular', hue: 'indigo' }),
-    AppAnnotation.CardAnnotation.set(true),
+    CardAnnotation.set(true),
     // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
     // the static `ph--sword--regular` above while the variant ref is still loading.
     Annotation.IconFromRefAnnotation.set('variant'),

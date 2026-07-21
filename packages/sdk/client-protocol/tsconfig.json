@@ -13,6 +13,12 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -34,7 +40,13 @@
       "path": "../../core/mesh/rpc"
     },
     {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../worker-framework"
     }
   ]
 }

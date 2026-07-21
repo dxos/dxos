@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ui-theme",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,6 +41,7 @@
     "@dxos/util": "workspace:*",
     "@fontsource-variable/inter": "catalog:",
     "@fontsource-variable/jetbrains-mono": "catalog:",
+    "@fontsource-variable/nunito": "catalog:",
     "@fontsource/poiret-one": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@tailwindcss/forms": "catalog:",

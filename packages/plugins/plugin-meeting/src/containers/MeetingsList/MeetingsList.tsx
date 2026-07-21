@@ -7,9 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
@@ -92,3 +92,5 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
     </div>
   );
 };
+
+MeetingsList.displayName = 'MeetingsList';

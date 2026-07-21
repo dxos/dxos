@@ -7,7 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
+import { Entity, Feed, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder, createDataAssertion } from '@dxos/echo-client/testing';
 import { MeshEchoReplicator } from '@dxos/echo-host';
 import {
@@ -445,14 +445,14 @@ describe('Integration tests', () => {
 
       await expect
         .poll(async () => {
-          const state = await db2.getSyncState();
+          const state = await db2.getAutomergeSyncState();
           return state.peers!.length;
         })
         .toBe(1);
 
       await expect
         .poll(async () => {
-          const state = await db2.getSyncState();
+          const state = await db2.getAutomergeSyncState();
           return state.peers![0].differentDocuments + state.peers![0].missingOnRemote + state.peers![0].missingOnLocal;
         })
         .toEqual(0);
@@ -526,6 +526,97 @@ describe('Integration tests', () => {
         expect(source.name).toEqual('Bob');
         expect(target.name).toEqual('Alice');
       }
+    });
+
+    test('a relation with a deleted target is excluded from queries', async () => {
+      await using peer = await builder.createPeer();
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: bob,
+          [Relation.Target]: alice,
+        }),
+      );
+      await db.flush();
+
+      // Delete the relation's target object (Alice, the manager).
+      db.remove(alice);
+      await db.flush();
+
+      // A relation with a deleted endpoint is a dangling edge and is treated as deleted, so it is
+      // excluded from a default query.
+      const relations = await db.query(Query.select(Filter.type(TestSchema.HasManager))).run();
+      expect(relations.length).to.eq(0);
+    });
+
+    test('relation getTarget resolves a deleted target object', async () => {
+      await using peer = await builder.createPeer();
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const hasManager = db.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: bob,
+          [Relation.Target]: alice,
+        }),
+      );
+      await db.flush();
+
+      // The relation is returned before its target is deleted.
+      const before = await db.query(Query.select(Filter.type(TestSchema.HasManager))).run();
+      expect(before.length).to.eq(1);
+
+      // Deleting the target only marks it; resolution is deletion-agnostic, so the relation keeps
+      // resolving its endpoint to the deleted object instead of throwing.
+      db.remove(alice);
+      await db.flush();
+
+      const target = Relation.getTarget(hasManager);
+      expect(target.id).to.eq(alice.id);
+      expect(Obj.isDeleted(target)).to.be.true;
+    });
+
+    test('a relation with a deleted target is returned when querying with deleted: include', async () => {
+      await using peer = await builder.createPeer();
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const hasManager = db.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: bob,
+          [Relation.Target]: alice,
+        }),
+      );
+      const relationId = hasManager.id;
+      await db.flush();
+
+      // Delete the relation's target object (Alice, the manager).
+      db.remove(alice);
+      await db.flush();
+
+      // The `deleted: 'include'` option surfaces the relation despite its deleted endpoint.
+      const relations = await db
+        .query(Query.select(Filter.type(TestSchema.HasManager)).options({ deleted: 'include' }))
+        .run();
+      expect(relations.length).to.eq(1);
+      expect(relations[0].id).to.eq(relationId);
     });
   });
 
@@ -661,6 +752,20 @@ describe('Integration tests', () => {
       expect(deletedObjects[0].name).to.eq('Alice');
       expect(Obj.isDeleted(deletedObjects[0])).to.be.true;
     }
+  });
+
+  test('db.add and db.appendToFeed throw when adding plain objects', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+
+    const plainObj = { name: 'john' };
+    // Cast to any to bypass static type-checking and verify runtime validation.
+    expect(() => db.add(plainObj as any)).toThrow(TypeError);
+
+    const feed = db.add(Feed.make({ name: 'people' }));
+    await db.flush();
+    // Cast to any to bypass static type-checking and verify runtime validation.
+    await expect(db.appendToFeed(feed, [plainObj as any])).rejects.toThrow(TypeError);
   });
 });
 

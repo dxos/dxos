@@ -8,7 +8,7 @@ import {
   FormContent,
   type FormContentProps,
   FormError,
-  FormFieldSetController,
+  FormFieldSetContainer,
   FormGroup,
   type FormGroupProps,
   FormLayoutController,
@@ -30,7 +30,7 @@ export const Form = {
   Content: FormContent,
   Section: FormSection,
   Group: FormGroup,
-  FieldSet: FormFieldSetController,
+  FieldSet: FormFieldSetContainer,
   Layout: FormLayoutController,
   Label: FormFieldLabel,
   Row: FormRow,
@@ -40,13 +40,13 @@ export const Form = {
 };
 
 export type {
-  FormRootProps,
-  FormViewportProps,
+  FormActionsProps,
   FormContentProps,
-  FormSectionProps,
   FormGroupProps,
   FormLayoutProps,
-  FormActionsProps,
-  FormSubmitProps,
+  FormRootProps,
   FormRowProps,
+  FormSectionProps,
+  FormSubmitProps,
+  FormViewportProps,
 };

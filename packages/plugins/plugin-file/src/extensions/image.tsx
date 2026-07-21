@@ -5,10 +5,13 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Blob, Database, Filter, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
@@ -16,13 +19,12 @@ import { defaultTx } from '@dxos/react-ui';
 import { focusField } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
 
-import { FileCapabilities, File } from '#types';
+import { File } from '#types';
 
 const WAIT_UNTIL_LOADER = 1500;
 
 export type ImageOptions = {
   space: Space;
-  resolvers: readonly FileCapabilities.UrlResolver[];
 };
 
 /**
@@ -79,7 +81,7 @@ const buildDecorations = ({
   to,
   blobUrlCache,
   preload,
-  options: { space, resolvers },
+  options: { space },
 }: {
   state: EditorState;
   from: number;
@@ -126,34 +128,53 @@ const buildDecorations = ({
       }
 
       const cacheKey = urlText;
-      const blobUrlPromise = (async () => {
-        const matched = await space.db.query(Filter.id(echoUri!)).first();
-        if (!matched || !Obj.instanceOf(File.File, matched)) {
-          return undefined;
-        }
+      const cached = blobUrlCache[cacheKey];
+      // Skip the DB query and Blob resolution entirely once a URL is cached — otherwise every
+      // decoration rebuild (e.g. on cursor movement) re-fetches and, on the object-URL fallback
+      // path, mints and leaks a new `blob:` URL even though the cached one is still valid.
+      const blobUrlPromise =
+        cached ??
+        (async () => {
+          const matched = await space.db.query(Filter.id(echoUri!)).first();
+          if (!matched || !Obj.instanceOf(File.File, matched)) {
+            return undefined;
+          }
 
-        let url: string | undefined;
-        const { data } = matched;
-        if (data._tag === 'inline') {
-          url = URL.createObjectURL(new Blob([data.bytes as BlobPart], { type: matched.type }));
-        } else if (/^(?:https?|data|blob):/i.test(data.url)) {
-          url = data.url;
-        } else {
-          const resolver = resolvers.find((r) => r.test(data.url));
-          url = await resolver?.resolve(data.url, matched, space);
-        }
-        if (!url) {
-          return undefined;
-        }
-        blobUrlCache[cacheKey] = url;
-        preload(url);
-        return url;
-      })();
+          const url = await EffectEx.runPromise(
+            Effect.gen(function* () {
+              const blob = yield* Database.load(matched.data);
+              const urlOption = yield* Blob.url(blob);
+              if (Option.isSome(urlOption)) {
+                return urlOption.value;
+              }
+              const bytes = yield* Blob.read(blob);
+              // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while
+              // DOM's `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib
+              // types and the TS standard lib, not fixable by typing `bytes` differently.
+              return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
+            }).pipe(
+              Effect.provide(Database.layer(space.db)),
+              Effect.catchAll(() => Effect.succeed(undefined)),
+            ),
+          );
+          if (!url) {
+            return undefined;
+          }
+          // Only object URLs we minted via `createObjectURL` above need revoking — `Blob.url()`
+          // results (data:/https: URLs) aren't owned by this cache.
+          const previous = blobUrlCache[cacheKey];
+          if (previous?.startsWith('blob:')) {
+            URL.revokeObjectURL(previous);
+          }
+          blobUrlCache[cacheKey] = url;
+          preload(url);
+          return url;
+        })();
 
       decorations.push(
         Decoration.replace({
           block: true,
-          widget: new DxnImageWidget(urlText, blobUrlCache[cacheKey] ?? blobUrlPromise),
+          widget: new DxnImageWidget(urlText, blobUrlPromise),
         }).range(hide ? node.from : node.to, node.to),
       );
     },

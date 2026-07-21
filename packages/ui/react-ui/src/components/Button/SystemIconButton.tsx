@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React, { InputHTMLAttributes, forwardRef, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { translationKey } from '#translations';
@@ -137,6 +137,115 @@ const CloseIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ labe
 CloseIconButton.displayName = 'SystemIconButton.Close';
 
 //
+// Clipboard
+//
+
+type ClipboardIconButtonProps = StaticPresetProps & {
+  onCopy: () => string;
+};
+
+const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonProps>(
+  ({ label, onCopy, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const handleCopy = useCallback(() => {
+      const text = onCopy();
+      if (text) {
+        void navigator.clipboard.writeText(text);
+      }
+    }, [onCopy]);
+    return (
+      <IconButton
+        {...props}
+        icon='ph--clipboard--regular'
+        label={label ?? t('system-button.clipboard.label')}
+        onClick={handleCopy}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+ClipboardIconButton.displayName = 'SystemIconButton.Clipboard';
+
+//
+// Upload
+//
+
+type UploadIconButtonProps = StaticPresetProps &
+  Pick<InputHTMLAttributes<HTMLInputElement>, 'accept'> & {
+    onFileChange?: InputHTMLAttributes<HTMLInputElement>['onChange'];
+  };
+
+const UploadIconButton = forwardRef<HTMLButtonElement, UploadIconButtonProps>(
+  ({ accept, onFileChange, label, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    return (
+      <>
+        <input className='sr-only' type='file' accept={accept} onChange={onFileChange} ref={fileInputRef} />
+        <IconButton
+          icon='ph--upload-simple--regular'
+          label={label ?? t('system-button.upload.label')}
+          {...props}
+          onClick={() => fileInputRef.current?.click()}
+          ref={forwardedRef}
+        />
+      </>
+    );
+  },
+);
+
+UploadIconButton.displayName = 'SystemIconButton.Upload';
+
+//
+// Download
+//
+
+type DownloadIconButtonProps = StaticPresetProps & {
+  filename: string;
+  // Blob may be produced asynchronously (e.g. serialized from a query) or synchronously.
+  onDownload: () => Blob | null | Promise<Blob | null>;
+};
+
+const DownloadIconButton = forwardRef<HTMLButtonElement, DownloadIconButtonProps>(
+  ({ filename, onDownload, label, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const handleDownload = useCallback(async () => {
+      try {
+        const blob = await onDownload();
+        if (!blob) {
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+
+        // TODO(burdon): Use Domino.
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(url);
+      } catch {
+        // Best-effort: blob generation or the download click may fail; swallow to avoid an unhandled
+        // promise rejection (the click handler discards the returned promise with `void`).
+      }
+    }, [onDownload, filename]);
+    return (
+      <IconButton
+        icon='ph--download-simple--regular'
+        label={label ?? t('system-button.download.label')}
+        {...props}
+        onClick={() => void handleDownload()}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+DownloadIconButton.displayName = 'SystemIconButton.Download';
+
+//
 // Namespace
 //
 
@@ -148,6 +257,15 @@ export const SystemIconButton = {
   Delete: DeleteIconButton,
   Edit: EditIconButton,
   Close: CloseIconButton,
+  Clipboard: ClipboardIconButton,
+  Upload: UploadIconButton,
+  Download: DownloadIconButton,
 };
 
-export type { StaticPresetProps, TogglePresetProps };
+export type {
+  ClipboardIconButtonProps,
+  DownloadIconButtonProps,
+  StaticPresetProps,
+  TogglePresetProps,
+  UploadIconButtonProps,
+};

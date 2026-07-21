@@ -5,7 +5,15 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
-import React, { CSSProperties, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
+import React, {
+  CSSProperties,
+  type KeyboardEventHandler,
+  MouseEventHandler,
+  type ReactNode,
+  forwardRef,
+  useId,
+  useMemo,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { iconSize } from '@dxos/ui-theme';
@@ -30,13 +38,14 @@ import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type To
 const CARD_ROOT_NAME = 'Card.Root';
 
 type CardRootProps = {
-  id?: string;
-  border?: boolean;
-  fullWidth?: boolean;
-  density?: Density;
-  style?: CSSProperties;
-  tabIndex?: number;
-  onClick?: MouseEventHandler<HTMLDivElement>;
+  'id'?: string;
+  'border'?: boolean;
+  'fullWidth'?: boolean;
+  'density'?: Density;
+  'style'?: CSSProperties;
+  'tabIndex'?: number;
+  'onClick'?: MouseEventHandler<HTMLDivElement>;
+  'onKeyDown'?: KeyboardEventHandler<HTMLDivElement>;
   'data-selected'?: boolean;
   'data-testid'?: string;
 };
@@ -45,7 +54,7 @@ type CardRootProps = {
  * `Card.Root` does not support `asChild`. The Column grid is the root element
  * (one `<div>` carrying both the `dx-card` and `dx-column-root` classes
  * instead of the previous outer-card + inner-column pair), so caller-provided
- * HTML attributes — `onClick`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
+ * HTML attributes — `onClick`, `onKeyDown`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
  * overrides via `classNames` — land directly on the grid container.
  * Slot-parents (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to
  * work because `composable()` preserves the COMPOSABLE marker that slottable parents
@@ -201,10 +210,11 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
           <DropdownMenu.Portal>
             <DropdownMenu.Content>
               <DropdownMenu.Viewport>
-                {items?.map(({ label, onClick: onSelect }, index) => (
+                {items?.map(({ label, icon, onClick: onSelect }, index) => (
                   // `context` is the generic payload threaded to each handler; the cast is the
                   // generic boundary (T may be `void`, so `context` is typed `T | undefined`).
                   <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                    {icon && <Icon icon={icon} />}
                     {label}
                   </DropdownMenu.Item>
                 ))}
@@ -252,6 +262,12 @@ CardBlock.displayName = CARD_BLOCK_NAME;
 
 const CARD_TITLE_NAME = 'Card.Title';
 
+/**
+ * Card heading text. Carries no column placement of its own, so it must be a child of a subgrid
+ * part — `Card.Header` (the usual home), `Card.Row`, or `Card.Section` — which places it in the
+ * center content track. Placed directly under `Card.Root` (or a `display:contents` `Card.Body`) it
+ * auto-places into a gutter track and renders clamped/misaligned.
+ */
 const CardTitle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props, { role: 'heading' });
@@ -370,6 +386,12 @@ CardRow.displayName = CARD_ROW_NAME;
 
 const CARD_TEXT_NAME = 'Card.Text';
 
+/**
+ * Body text within a Card. Carries no column placement of its own, so it must be a child of a subgrid
+ * part — `Card.Row` (the usual home), `Card.Header`, or `Card.Section` — which places it in the center
+ * content track. Placed directly under `Card.Root` (or a `display:contents` `Card.Body`) it auto-places
+ * into a gutter track and renders squeezed. Use `variant='description'` for muted secondary text.
+ */
 // `onClick` is opted in explicitly: `ComposableProps` deliberately excludes event handlers, but the
 // part spreads rest props onto its element, so the handler is forwarded at runtime.
 type CardTextProps = {
@@ -528,22 +550,22 @@ CardLink.displayName = CARD_LINK_NAME;
 export const Card = {
   Root: CardRoot,
 
-  // Header
+  // Containers
   Header: CardHeader,
+  Body: CardBody,
 
-  // Header / row parts
+  // Header components
   Block: CardBlock,
   DragHandle: CardDragHandle,
   ActionIconButton: CardActionIconButton,
   Menu: CardMenu,
   Title: CardTitle,
 
-  // Body
-  Body: CardBody,
+  // Body components
   Section: CardSection,
   Row: CardRow,
 
-  // Body parts
+  // Row components
   Text: CardText,
   Html: CardHtml,
   Poster: CardPoster,
@@ -552,11 +574,11 @@ export const Card = {
 };
 
 export type {
-  CardRootProps,
-  CardHeaderProps,
+  CardActionIconButtonProps,
   CardBlockProps,
   CardDragHandleProps,
-  CardActionIconButtonProps,
+  CardHeaderProps,
   CardMenuProps,
+  CardRootProps,
   CardSectionProps,
 };

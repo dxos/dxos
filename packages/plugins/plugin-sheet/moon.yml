@@ -2,28 +2,12 @@ layer: library
 language: typescript
 tags:
   - e2e
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/SheetPlugin.tsx'
-      - '--entryPoint=src/SheetPlugin.node.ts'
-      - '--entryPoint=src/SheetPlugin.workerd.ts'
-      - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/components/index.ts'
-      - '--entryPoint=src/containers/index.ts'
-      - '--entryPoint=src/meta.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/plugin.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
-      - '--platform=neutral'
   e2e:
     inputs:
       - .storybook/*

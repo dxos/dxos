@@ -1,0 +1,85 @@
+{
+  "name": "@dxos/plugin-typefully",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Sync blog post drafts to Typefully.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/capabilities.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/TypefullyPlugin.tsx",
+      "types": "./dist/types/src/TypefullyPlugin.d.ts",
+      "default": "./dist/lib/TypefullyPlugin.mjs"
+    },
+    "#services": {
+      "source": "./src/services/index.ts",
+      "types": "./dist/types/src/services/index.d.ts",
+      "default": "./dist/lib/services.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/link": "workspace:*",
+    "@dxos/plugin-blogger": "workspace:*",
+    "@dxos/plugin-connector": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo-client": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

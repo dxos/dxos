@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
+import { DraftMessage } from '@dxos/types';
 
-import { DraftMessage, InboxOperation } from '../types';
+import { InboxOperation, SystemTags } from '../types';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOperation.DraftEmail.pipe(
   Operation.withHandler(
@@ -18,10 +19,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
 
       const message = yield* Database.add(
         DraftMessage.make({
-          [Obj.Meta]: {
-            tags: ['org.dxos.plugin-inbox.draft'],
-          },
-
           created: new Date().toISOString(),
           sender: { name: 'Me' },
           blocks: [{ _tag: 'text', text: body }],
@@ -33,6 +30,10 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
           },
         }),
       );
+
+      // Tag as 'draft' so the Drafts view picks it up — same mechanism every draft-creation path uses.
+      yield* SystemTags.toggleTag(mailbox, message, 'draft');
+
       return {
         newMessageDXN: Obj.getURI(message),
       };

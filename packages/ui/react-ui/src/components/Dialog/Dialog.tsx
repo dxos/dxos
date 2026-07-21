@@ -127,7 +127,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         )}
         ref={forwardedRef}
       >
-        <Column.Root classNames='dx-expander' gutter='md'>
+        <Column.Root classNames='dx-expander' gutter='lg'>
           {children}
         </Column.Root>
       </DialogPrimitive.Content>
@@ -298,17 +298,17 @@ export const Dialog = {
 };
 
 export type {
-  DialogRootProps,
-  DialogTriggerProps,
-  DialogPortalProps,
-  DialogOverlayProps,
-  DialogContentProps,
-  DialogHeaderProps,
-  DialogBodyProps,
-  DialogTitleProps,
-  DialogDescriptionProps,
   DialogActionBarProps,
-  DialogCloseProps,
   DialogActionIconButtonAction,
   DialogActionIconButtonProps,
+  DialogBodyProps,
+  DialogCloseProps,
+  DialogContentProps,
+  DialogDescriptionProps,
+  DialogHeaderProps,
+  DialogOverlayProps,
+  DialogPortalProps,
+  DialogRootProps,
+  DialogTitleProps,
+  DialogTriggerProps,
 };

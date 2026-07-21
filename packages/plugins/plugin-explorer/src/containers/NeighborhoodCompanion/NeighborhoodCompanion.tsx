@@ -6,9 +6,10 @@ import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { DxAnchorActivate, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type TreeNode } from '@dxos/react-ui-graph';
 import '@dxos/react-ui-graph/styles/graph.css';
 
-import { type TreeNode, Visualization } from '#components';
+import { Visualization } from '#components';
 import { DEFAULT_NEIGHBORHOOD_DEPTH, useNeighborhoodModel } from '#hooks';
 import { meta } from '#meta';
 
@@ -70,7 +71,7 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <div role='none' className='grow' />
+          <div className='grow' />
           <Toolbar.ToggleGroup type='single' value={String(depth)} onValueChange={handleDepthChange}>
             {DEPTHS.map((value) => (
               <Toolbar.ToggleGroupItem
@@ -99,3 +100,5 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
     </Panel.Root>
   );
 };
+
+NeighborhoodCompanion.displayName = 'NeighborhoodCompanion';

@@ -14,10 +14,10 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
-import { type Credential, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
+import { type Credential, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
+import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import { type Database, type Key, Registry } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
-import { credentialsLayerFromDatabase } from '@dxos/functions';
 
 export type AiChatServices =
   | AiService.AiService

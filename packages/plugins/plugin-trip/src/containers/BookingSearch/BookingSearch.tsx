@@ -7,7 +7,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { getSpace } from '@dxos/react-client/echo';
 import { Message, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
@@ -150,11 +149,11 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
       if (offer._tag !== 'flight') {
         return;
       }
-      const space = getSpace(segment);
-      if (!space) {
+      const db = Obj.getDatabase(segment);
+      if (!db) {
         return;
       }
-      const booking = space.db.add(Booking.make(offerToBookingProps(offer)));
+      const booking = db.add(Booking.make(offerToBookingProps(offer)));
       const details = offerToFlightDetails(offer);
       Obj.update(segment, (segment) => {
         // Mutate the (flight) details in place: a whole-object assignment would require the
@@ -248,3 +247,5 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
     </div>
   );
 };
+
+BookingSearch.displayName = 'BookingSearch';

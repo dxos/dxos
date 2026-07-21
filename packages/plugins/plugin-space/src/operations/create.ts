@@ -1,21 +1,26 @@
 // Copyright 2025 DXOS.org
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { hues } from '@dxos/ui-theme';
 
-import { SpaceEvents, SpaceCapabilities } from '../types';
+import { SpaceNotReadyError } from '../errors';
+import { SpaceCapabilities, SpaceEvents } from '../types';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
+
+/** Bounds how long space creation waits for the new space's properties object to become available. */
+const SPACE_READY_TIMEOUT = Duration.seconds(10);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperation.Create.pipe(
   Operation.withHandler(
@@ -33,7 +38,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       if (edgeReplication) {
         yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
       }
-      yield* Effect.promise(() => space.waitUntilReady());
+      yield* Effect.tryPromise({
+        try: () => space.waitUntilReady(),
+        catch: SpaceNotReadyError.wrap(),
+      }).pipe(Effect.timeoutFail({ duration: SPACE_READY_TIMEOUT, onTimeout: () => new SpaceNotReadyError() }));
 
       const collection = Obj.make(Collection.Collection, { objects: [] });
       Obj.update(space.properties, (properties) => {

@@ -12,11 +12,11 @@ import { TrelloOperation } from '../types';
 import { findKanbanForBoard, makeEmptyKanbanForBoard } from './sync';
 
 /**
- * Eagerly materializes an empty local Kanban for a remote Trello board so a
- * {@link SyncBinding} can be created (relations require both endpoints to exist).
- * Find-or-create keyed on the board's foreign key, so re-running for the same
- * board returns the existing Kanban without duplicating it. The Kanban is left
- * empty here — cards are reconciled on the first `SyncTrelloBoard` run.
+ * Eagerly materializes an empty local Kanban for a remote Trello board so an
+ * external-sync `Cursor` can be created against it. Find-or-create keyed on the
+ * board's foreign key, so re-running for the same board returns the existing
+ * Kanban without duplicating it. The Kanban is left empty here — cards are
+ * reconciled on the first `SyncTrelloBoard` run.
  */
 const handler: Operation.WithHandler<typeof TrelloOperation.MaterializeTrelloTarget> =
   TrelloOperation.MaterializeTrelloTarget.pipe(

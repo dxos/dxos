@@ -4,11 +4,12 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AccessToken } from '@dxos/types';
+import { Feed } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 
 import { AppGraphBuilder, CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, SyncBinding } from '#types';
+import { Connection } from '#types';
 
 import { connector } from './commands';
 
@@ -21,7 +22,9 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCommandModule({ commands: [connector] }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken, Connection.Connection, SyncBinding.SyncBinding] }),
+  AppPlugin.addSchemaModule({
+    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
+  }),
   Plugin.make,
 );
 

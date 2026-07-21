@@ -8,16 +8,18 @@ import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'rea
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { useAppGraph, useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
+import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
   Table as TableComponent,
   type TableController,
+  type TableExportFormat,
   type TableFeatures,
   type TableModelProps,
   TablePresentation,
@@ -31,6 +33,7 @@ import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { TableOperation } from '#types';
 
 export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 
@@ -53,14 +56,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const { graph } = useAppGraph();
     const customActions = useMemo(() => {
-      return Atom.make((get) => {
-        const actions = get(graph.actions(attendableId!));
-        const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-        return {
-          nodes,
-          edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
-        };
-      });
+      return Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }));
     }, [graph, attendableId]);
 
     const objectSchema = schema && Type.isObject(schema) ? schema : undefined;
@@ -129,6 +125,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       object,
       projection,
       features,
+      db,
       rows: filteredObjects,
       rowActions,
       onInsertRow: addRow,
@@ -147,6 +144,45 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const handleSave = useCallback(() => {
       model?.saveView();
     }, [model]);
+
+    const handleExport = useCallback(
+      (format: TableExportFormat) => {
+        if (!model || !db) {
+          return;
+        }
+
+        const selectedRows = model.selection.getSelectedRows();
+        const rows = selectedRows.length > 0 ? selectedRows : model.getRows();
+        const columns =
+          model.projection?.getFields().map((field) => {
+            const { props } = model.projection!.getFieldProjection(field.id);
+            return {
+              path: field.path,
+              title: props.title ?? (Array.isArray(field.path) ? field.path.map(String).join('.') : String(field.path)),
+              type: props.type,
+              format: props.format,
+              referencePath: field.referencePath,
+            };
+          }) ?? [];
+
+        void invokePromise(TableOperation.ExportRows, { format, rows, columns }, { spaceId: db.spaceId }).then(
+          (result) => {
+            if (result.error || !result.data) {
+              return;
+            }
+
+            const blob = new Blob([result.data.content], { type: result.data.mimeType });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = result.data.filename;
+            anchor.click();
+            URL.revokeObjectURL(url);
+          },
+        );
+      },
+      [db, invokePromise, model],
+    );
 
     const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
@@ -168,12 +204,13 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               customActions={customActions}
               viewDirty={model?.getViewDirty()}
               onAdd={handleInsertRow}
+              onExport={handleExport}
               onSave={handleSave}
             />
           </Panel.Toolbar>
           <Panel.Content asChild>
             <TableComponent.Content
-              classNames='border-t border-separator'
+              classNames='border-t border-subdued-separator'
               key={attendableId}
               attendableId={attendableId}
               model={model}

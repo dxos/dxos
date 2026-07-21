@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+
 import {
   Event,
   PersistentLifecycle,
@@ -43,15 +45,32 @@ export type MessengerConfig = {
 export interface EdgeConnection extends Required<Lifecycle> {
   statusChanged: Event<EdgeStatus>;
   get info(): any;
-  get identityKey(): string;
+  /** Identity DID (`did:halo:…`) of the connected identity. */
+  get identityDid(): string;
   get peerKey(): string;
   get isOpen(): boolean;
   get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
   send(ctx: Context, message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
-  onReconnected(listener: ReconnectListener): () => void;
+  /**
+   * Subscribe to connection (re-)establishment.
+   *
+   * By default the listener also fires once immediately when the connection is already ready at
+   * subscription time — a current-state notification for late subscribers. Pass
+   * `emitCurrentState: false` for reconnect-reaction logic (e.g. restarting a session): reacting
+   * to the subscribe-time firing there causes restart loops, since each restart re-subscribes.
+   */
+  onReconnected(listener: ReconnectListener, opts?: { emitCurrentState?: boolean }): () => void;
 }
+
+/**
+ * Effect service tag for {@link EdgeConnection}.
+ */
+export class EdgeConnectionService extends EffectContext.Tag('@dxos/edge-client/EdgeConnection')<
+  EdgeConnectionService,
+  EdgeConnection
+>() {}
 
 /**
  * Messenger client for EDGE:
@@ -88,7 +107,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return {
       open: this.isOpen,
       status: this.status,
-      identity: this._identity.identityKey,
+      identity: this._identity.identityDid,
       device: this._identity.peerKey,
     };
   }
@@ -108,8 +127,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
     };
   }
 
-  get identityKey() {
-    return this._identity.identityKey;
+  get identityDid() {
+    return this._identity.identityDid;
   }
 
   get peerKey() {
@@ -117,7 +136,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   setIdentity(identity: EdgeIdentity) {
-    if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
+    if (identity.identityDid !== this._identity.identityDid || identity.peerKey !== this._identity.peerKey) {
       log('Edge identity changed', { identity, oldIdentity: this._identity });
       this._identity = identity;
       this._closeCurrentConnection(new EdgeIdentityChangedError());
@@ -139,9 +158,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeConnectionClosedError();
     }
 
+    // DX-1059: sources are DID-only; validate against identityDid.
     if (
       message.source &&
-      (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
+      (message.source.peerKey !== this._identity.peerKey || message.source.identityDid !== this.identityDid)
     ) {
       throw new EdgeIdentityChangedError();
     }
@@ -163,9 +183,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return () => this._messageListeners.delete(listener);
   }
 
-  public onReconnected(listener: ReconnectListener) {
+  public onReconnected(listener: ReconnectListener, opts?: { emitCurrentState?: boolean }) {
     this._reconnectListeners.add(listener);
-    if (this._ready.state === TriggerState.RESOLVED) {
+    if ((opts?.emitCurrentState ?? true) && this._ready.state === TriggerState.RESOLVED) {
       // Microtask so that listener is always called asynchronously, no matter the state of the ready trigger
       // at the moment of registration.
       scheduleMicroTask(this._ctx, () => {

@@ -10,8 +10,9 @@ import { type Space } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { bundleFunction } from '@dxos/functions-runtime/native';
+import { FunctionsServiceClient } from '@dxos/edge-compute';
+import { bundleFunction } from '@dxos/edge-compute/native';
+import { failedInvariant } from '@dxos/invariant';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
@@ -27,11 +28,11 @@ describe.skip('Function', { tags: ['functions-e2e'] }, () => {
   });
 
   test('deploy empty function', { timeout: 120_000 }, async () => {
-    const { space, functionsServiceClient } = await setup();
+    const { space, functionsServiceClient, ownerUri } = await setup();
 
     await sync(space);
     const func = await deployFunction(
-      space,
+      ownerUri,
       functionsServiceClient,
       new URL('../templates/ping.ts', import.meta.url).pathname,
     );
@@ -40,10 +41,10 @@ describe.skip('Function', { tags: ['functions-e2e'] }, () => {
   });
 
   test('deploy and invoke anthropic function', { timeout: 120_000 }, async () => {
-    const { space, functionsServiceClient } = await setup();
+    const { space, functionsServiceClient, ownerUri } = await setup();
     await sync(space);
     const func = await deployFunction(
-      space,
+      ownerUri,
       functionsServiceClient,
       new URL('../templates/anthropic.ts', import.meta.url).pathname,
     );
@@ -57,13 +58,14 @@ describe.skip('Function', { tags: ['functions-e2e'] }, () => {
   const setup = async () => {
     const client = await new Client({ config, types: [Operation.PersistentOperation] }).initialize();
     await client.halo.createIdentity();
+    const ownerUri = client.halo.identity.get()?.did ?? failedInvariant('identity not created');
 
     const space = await client.spaces.create();
     await space.waitUntilReady();
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
-    return { client, space, functionsServiceClient };
+    return { client, space, functionsServiceClient, ownerUri };
   };
 
   const sync = async (space: Space) => {
@@ -74,20 +76,21 @@ describe.skip('Function', { tags: ['functions-e2e'] }, () => {
     });
   };
 
-  const deployFunction = async (space: Space, functionsServiceClient: FunctionsServiceClient, entryPoint: string) => {
+  const deployFunction = async (
+    ownerUri: string,
+    functionsServiceClient: FunctionsServiceClient,
+    entryPoint: string,
+  ) => {
     const artifact = await bundleFunction({
       entryPoint,
       verbose: true,
     });
-    const func = await functionsServiceClient.deploy(Context.default(), {
+    return functionsServiceClient.deploy(Context.default(), {
       version: '0.0.1',
-      ownerPublicKey: space.key,
+      ownerUri,
       entryPoint: artifact.entryPoint,
       assets: artifact.assets,
       runtime: FunctionRuntimeKind.enums.WORKER_LOADER,
     });
-
-    space.db.add(func);
-    return func;
   };
 });
