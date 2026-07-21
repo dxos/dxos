@@ -1,6 +1,6 @@
 # URL & Deck Redesign — Tasks
 
-_Resume: Phase C (below) fixes the two runtime bugs found in manual e2e — urlKey fallback and deck-renders-nothing-on-reload. All implemented + browser-verified locally; uncommitted (not yet committed/pushed to PR #12273). Next: commit Phase C, run full lint/fmt, re-verify nested-collection + type-section deep links, then mark PR ready. Earlier: all phases (B1, A1, A2, B2, B3, A3, B4) implemented, validated, and pushed._
+_Resume: Phase C (urlKey fallback + cold-restore resolution + inline-child provenance) and Phase D (companions as ordinary planks, `companion/<variant>` URL) are committed and pushed to PR #12273 (25ebc0842a, 73312a99de, 655a35d7ee). All browser-verified locally. Uncommitted: none. Next: watch PR #12273 Check workflow; then the small deferred cleanups (delete dead useCompanionSplit + companionFrameSizing schema field; confirm a nested-collection object cold-load), then mark PR ready for review. Gotcha saved to memory: never import a DOM/UI package (@dxos/react-ui-attention) into worker-reachable modules (app-toolkit AppNode) — crashes the client dedicated worker._
 
 ## Phase C: Runtime fixes (manual-e2e findings)
 
@@ -36,9 +36,10 @@ plugin-id fallback key instead of `collection`; (2) reload/deep-link to an objec
       `urlKey` mapping → workspace-only URL. Fixed: `_recordProvenance` recurses into inline `nodes`.
       Fixes both reverse (representNode) and forward (BFS keys off getNodeExtensionId). Browser-verified
       on a Routine: select → `/w/<ws>/routine/<id>`; cold reload resolves + renders. app-graph 114 green.
+- [x] **Fold Phase C into PR #12273** — committed (25ebc0842a urlKey/cold-restore, 73312a99de
+      inline-child provenance) and pushed to `claude/url-mapping-deck-structure-s6rpnk`.
 - [ ] **Re-verify nested-collection deep link** — root-collection + type-section (routine) + warm cases
       done; still confirm a _nested_-collection object (BFS fallback) cold-load.
-- [ ] **Fold Phase C into PR #12273** — committed locally (25ebc0842a + provenance fix); push when ready.
 
 ## Phase D: Companions as ordinary planks
 
@@ -56,28 +57,23 @@ ALL companions. Turning it on in solo → deck mode (counts as a plank). Contrib
       buildUrlKeyTable seeds `companion` (hasId). `UrlPath` reserves `companion`. app-graph 114 green.
 - [x] **Normalize makeCompanion** — always a linked segment (`~<variant>`), so plain-id companions
       (execute, chat, help, debug, …) share attention and are addressable.
-- [ ] **Deck render** — DeckPlanks appends the derived companion plank (`${lastActive}/~${variant}`)
-      when `companionOpen`; presentation counts it (solo+companion → sliding). DeckPlank renders a
-      companion id via a custom companion-plank (tabs switcher + close), not the nested Splitter.
-- [ ] **Toggle** — "open companion" button only on the last real plank when off; companion plank close
-      sets `companionOpen:false`; variant switch updates companionVariantAspect + URL.
-- [ ] **URL handler** — syncUrl appends `companion/<variant>` after the last plank; handleNavigation
-      maps a `companion` pair → companionOpen + variant (not a Set plank).
-- [ ] **Cleanup** — remove useCompanionSplit / companionFrameSizing / nested Companion split pane /
-      companionShown plumbing.
-- [x] **Deck render / toggle / URL handler / (partial) cleanup** — DeckPlanks derives the trailing
-      companion plank (`useRenderedPlanks`), presentation counts it; DeckPlank delegates companion ids
-      to new CompanionPlank (Companion pane reused as a full plank, tabs switcher + close); nested
-      Splitter removed; useDeckPlank re-gates the open-companion button to the last real plank when off;
-      url-handler serializes/parses `companion/<variant>` after the last plank. Builds clean; app-graph
-      114 / app-toolkit 101 / plugin-deck 49 tests green.
-- [ ] **Browser verification BLOCKED (infra, not code)** — the dev env's DXOS worker connection times
-      out (30s startup timeout, `plugin.client.Client` module) after this session's dev-server churn.
-      Proven via `git stash`: HEAD (without Phase D) fails identically, so it is not the companion code.
-      Tried: clean restart, vite cache clear, full storage wipe (IndexedDB+OPFS), fresh tab. Needs a
-      fresh browser/dev-server environment to verify: solo→companion enters deck mode; companion URL is
-      `companion/<variant>`; cold reload restores it; variant switch + close work.
-- [ ] **Deferred cleanup** — delete now-dead useCompanionSplit + companionFrameSizing schema field.
+- [x] **Deck render / toggle / URL handler** — DeckPlanks derives the trailing companion plank
+      (`useRenderedPlanks`), presentation counts it (solo+companion → deck mode); DeckPlank delegates a
+      companion id to new `CompanionPlank` (the `Companion` tabs pane reused as a full plank, variant
+      switcher + close), nested `Splitter` removed; `useDeckPlank` re-gates the open-companion button to
+      the last real plank when off; `adjust.ts` seeds the first variant on open; url-handler
+      serializes/parses `companion/<variant>` after the last plank.
+- [x] **Worker DOM-leak fix (root cause of the "System Error" boot failures)** — `AppNode` importing
+      `@dxos/react-ui-attention` pulled `document`-referencing UI code into the client dedicated-worker
+      bundle → `ReferenceError: document is not defined` → client never connected → app-wide System
+      Error on every profile. Fixed by inlining the `~` linked-segment helper (no DOM import). Saved to
+      memory: `dxos-no-dom-in-worker-reachable-modules`.
+- [x] **Browser-verified** — open companion → deck mode with custom header; URL becomes
+      `/w/<ws>/collection/<id>/companion/comments`; variant switch updates it; cold reload preserves and
+      restores it. Committed 655a35d7ee, pushed to PR #12273. app-graph 114 / app-toolkit 101 /
+      plugin-deck 49 tests green; lint + format clean.
+- [ ] **Deferred cleanup** — delete now-dead `useCompanionSplit` + the `companionFrameSizing` schema
+      field (unused after the split pane was removed).
 
 > **Execution policy** — of paramount importance for all execution: delegate the
 > bulk of the work to cheaper models. Sonnet subagents do the file-by-file
