@@ -13,6 +13,7 @@ import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { TestHelpers } from '@dxos/effect/testing';
+import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
@@ -62,12 +63,12 @@ describe('accept-change operation', () => {
         expect(rootText.content).toBe('alpha\nBRAVO\ncharlie\n');
 
         // Undo the accept via the returned splice (RestoreText): the base reverts.
-        expect(undo).toBeDefined();
+        invariant(undo);
         yield* Operation.invoke(CollaborationOperation.RestoreText, {
           subject: doc,
-          from: undo!.from,
-          del: undo!.del,
-          insert: undo!.insert,
+          from: undo.from,
+          del: undo.del,
+          insert: undo.insert,
         });
         expect(rootText.content).toBe('alpha\nbravo\ncharlie\n');
       },

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, revertHunk } from './diff';
+import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, groupHunks, revertHunk } from './diff';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');
@@ -133,5 +133,42 @@ describe('diffHunks', () => {
   test('handles empty inputs', ({ expect }) => {
     expect(diffHunks('', '')).toEqual([]);
     expect(diffHunks('same', 'same')).toEqual([]);
+  });
+});
+
+describe('groupHunks', () => {
+  /** Apply every hunk's replacement to `before` (right-to-left so earlier offsets stay valid). */
+  const applyAll = (before: string, hunks: DiffHunk[]): string =>
+    [...hunks]
+      .sort((a, b) => b.from - a.from)
+      .reduce((text, hunk) => text.slice(0, hunk.from) + hunk.inserted + text.slice(hunk.to), before);
+
+  test('default policy leaves each hunk its own group', ({ expect }) => {
+    const before = 'alpha bravo charlie';
+    const hunks = diffHunks(before, 'ALPHA bravo CHARLIE');
+    expect(groupHunks(hunks, before)).toEqual(hunks);
+  });
+
+  test('coalesces adjacent hunks within maxGap and still reconstructs after', ({ expect }) => {
+    const before = 'alpha bravo charlie';
+    const after = 'ALPHA bravo CHARLIE';
+    const hunks = diffHunks(before, after);
+    expect(hunks).toHaveLength(2);
+    // The gap between the two changes is ' bravo ' (7 chars); a maxGap covering it merges them.
+    const grouped = groupHunks(hunks, before, { maxGap: 7 });
+    expect(grouped).toHaveLength(1);
+    expect(before.slice(grouped[0].from, grouped[0].to)).toBe(grouped[0].removed);
+    expect(applyAll(before, grouped)).toBe(after);
+  });
+
+  test('respects block boundaries — a paragraph break is never bridged', ({ expect }) => {
+    const before = 'alpha\n\nbravo';
+    const after = 'ALPHA\n\nBRAVO';
+    const hunks = diffHunks(before, after);
+    expect(hunks).toHaveLength(2);
+    // Even with a maxGap wide enough for the gap, the blank line keeps the groups separate.
+    expect(groupHunks(hunks, before, { maxGap: 10 })).toHaveLength(2);
+    // Opting out of boundary-respect bridges them.
+    expect(groupHunks(hunks, before, { maxGap: 10, respectBlockBoundaries: false })).toHaveLength(1);
   });
 });

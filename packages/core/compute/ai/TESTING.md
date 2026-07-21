@@ -10,7 +10,8 @@ collapses all of them into one mechanism (`src/testing/memoization/MemoizedLangu
 
 This document defines the **dimensions** of an AI conversation, records **what we do today** and
 what it achieves vs. misses, describes **what we should do** (a tier per dimension), and gives a
-**prioritized plan**, including retiring the memoized e2e framework.
+**prioritized plan**, including retiring the memoized e2e framework. For how the current
+memoization mechanism itself works, see [`DESIGN.md`](./DESIGN.md).
 
 ## Dimensions of an AI conversation
 

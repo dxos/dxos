@@ -119,7 +119,7 @@ export const ISO_TIMESTAMP_PATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}
  * such tools aren't otherwise memoizable since the value differs on every live execution.
  * @example 5baed323-7879-4fde-0441-c2cf954f2900
  */
-export const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
 
 const dynamicPlaceholder = (index: number): string => `<memoized-dynamic-${index}>`;
 
@@ -135,7 +135,22 @@ const buildDynamicMatcher = (patterns: readonly RegExp[]): RegExp | undefined =>
     return undefined;
   }
 
-  return new RegExp(patterns.map((pattern) => `(?:${pattern.source})`).join('|'), 'g');
+  // Only each pattern's `.source` is combined into the alternation, so per-pattern flags would be
+  // dropped. Union them (always adding `g`) so a pattern's flag is not silently lost — e.g. dropping
+  // UUID_PATTERN's case-insensitivity would leave uppercase-hex UUIDs unmatched. Regex flags are
+  // whole-regex in JS and cannot be scoped per-alternative, so encode case-sensitivity in the
+  // character class (as the exported patterns do) rather than relying on `i`, which a union would
+  // apply to every alternative. `y` (sticky) is excluded because it breaks alternation scanning.
+  const flags = new Set<string>(['g']);
+  for (const pattern of patterns) {
+    for (const flag of pattern.flags) {
+      if (flag !== 'y') {
+        flags.add(flag);
+      }
+    }
+  }
+
+  return new RegExp(patterns.map((pattern) => `(?:${pattern.source})`).join('|'), [...flags].join(''));
 };
 
 /**
@@ -148,7 +163,7 @@ const collectDynamicValues = (prompt: unknown, matcher: RegExp): string[] => {
   // each token's positional placeholder — matches the order used for comparison (jsonStableStringify).
   // Walking the live object graph in insertion order (deepMapValues, `for..in`) would number
   // placeholders in an order that diverges from the sorted comparison, producing false misses when a
-  // snapshot and the live prompt differ only in object key order.
+  // snapshot and the live prompt differ only in object key order. See DESIGN.md.
   const canonical = jsonStableStringify(prompt) ?? '';
   for (const match of canonical.matchAll(matcher)) {
     const token = match[0];
@@ -210,8 +225,19 @@ const remapStoredResponse = (
     return storedResponse;
   }
 
-  const storedValues = collectDynamicValues(storedPrompt, matcher);
-  const liveValues = collectDynamicValues(livePrompt, matcher);
+  // Collect over the same timestamp/datetime-normalized form the matcher compared — but WITHOUT
+  // canonicalizing dynamic tokens, since we need the real values to build the stored→live mapping.
+  // Collecting over the raw prompt would pick up tokens the matcher had normalized away (e.g. ISO
+  // timestamps in `timestamp` metadata when ISO_TIMESTAMP_PATTERN is registered), diverging the
+  // token count/order from what the match established and misaligning the positional remap. See DESIGN.md.
+  const storedValues = collectDynamicValues(
+    normalizePromptForMemoization(cloneForMemoNormalization(storedPrompt)),
+    matcher,
+  );
+  const liveValues = collectDynamicValues(
+    normalizePromptForMemoization(cloneForMemoNormalization(livePrompt)),
+    matcher,
+  );
   const mapping = new Map<string, string>();
   for (let index = 0; index < storedValues.length; index++) {
     const live = liveValues[index];
