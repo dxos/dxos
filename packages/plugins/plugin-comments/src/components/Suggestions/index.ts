@@ -3,3 +3,4 @@
 //
 
 export * from './SuggestionThread';
+export * from './Suggestions';

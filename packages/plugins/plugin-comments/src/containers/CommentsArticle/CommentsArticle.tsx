@@ -29,14 +29,13 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
-import { Branch } from '@dxos/versioning';
 
-import { CommentThread, type CommentThreadProps, SuggestionThread } from '#components';
+import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
 import { CommentCapabilities, type ViewState } from '#types';
 
-import { type SuggestionGroup, useStatus, useSuggestionSources } from '../../hooks';
+import { type SuggestionGroup, useStatus } from '../../hooks';
 import { getMessageMetadata } from '../../util';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
@@ -311,10 +310,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // Suggestion review: the document's `kind:'suggestion'` branches overlaid as change-block tiles
   // alongside comment threads. Accept/Reject route through the same durable ops as branch review.
-  const suggestionSources = useSuggestionSources(markdownDoc);
   const mainText = markdownDoc?.content.target;
-  useObject(markdownDoc?.content);
-  const base = mainText?.content ?? '';
+  const [base = ''] = useObject(markdownDoc?.content, 'content');
 
   const routeSuggestion = useCallback(
     async (
@@ -342,23 +339,6 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     (group: SuggestionGroup) => routeSuggestion(CollaborationOperation.RejectChange, group),
     [routeSuggestion],
   );
-
-  // Lazy cleanup: archive suggestion branches that carry no changes vs their fork point (e.g. every
-  // hunk accepted or rejected). Swept only when the companion opens for a document — deliberately not
-  // after each accept/reject, so the reject op's in-session undo (which re-applies on the branch) is
-  // never raced by an archive that would discard the branch.
-  useEffect(() => {
-    const doc = markdownDoc;
-    if (!doc) {
-      return;
-    }
-    const branches = doc.history?.branches.filter(
-      (branch) => branch.status === 'active' && branch.kind === 'suggestion',
-    );
-    for (const branch of branches ?? []) {
-      void Branch.archiveIfEmpty(doc, branch).catch(() => {});
-    }
-  }, [markdownDoc]);
 
   // Scroll the current thread into view when it changes.
   useEffect(() => {
@@ -444,14 +424,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         <Panel.Content asChild>
           <ScrollArea.Root thin>
             <ScrollArea.Viewport>
-              {suggestionSources.length > 0 && (
-                <SuggestionThread
-                  base={base}
-                  sources={suggestionSources}
-                  onAccept={handleAcceptSuggestion}
-                  onReject={handleRejectSuggestion}
-                />
-              )}
+              <Suggestions
+                document={markdownDoc}
+                base={base}
+                onAccept={handleAcceptSuggestion}
+                onReject={handleRejectSuggestion}
+              />
               <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
               <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
             </ScrollArea.Viewport>
