@@ -18,16 +18,16 @@ memoization mechanism itself works, see [`DESIGN.md`](./DESIGN.md).
 An agent turn factors into distinct concerns. The first four (A–D) are the ones we usually mean
 by "the agent works"; the rest (E–H) are the seams a four-way split silently omits.
 
-| Dim | Concern | Owner | Determinism | Right tool |
-| --- | --- | --- | --- | --- |
-| **A** | **Comprehension** — interpret NL instructions | LLM | Non-deterministic | Eval |
-| **B** | **Tool selection & argument synthesis** — pick the tool, emit schema-valid JSON | LLM | Non-deterministic | Eval |
-| **C** | **Operation execution** — the tool handler runs | Developer code | Deterministic | Unit test |
-| **D** | **Turn loop / harness** — feed tool results back, iterate to stop, max-iterations, error and malformed-output handling, persistence | Developer code (`AiSession.run`) | Deterministic | Unit test (scripted model) |
-| **E** | **Context assembly** — system prompt + skill instructions + bound objects → the prompt the LLM sees | Developer code | Deterministic | Unit test / snapshot |
-| **F** | **Schema & (de)serialization** — tool JSON-schema generation, argument decode, result encode | Developer code | Deterministic | Unit test (round-trip) |
-| **G** | **Evaluation / grading** — did the run meet its criteria? | Test oracle (must not be the system under test) | — | Assertion or graded scorer |
-| **H** | **End-to-end composition** — emergent behavior across A–F on a realistic path | Whole system | Non-deterministic | Thin integration eval |
+| Dim   | Concern                                                                                                                             | Owner                                           | Determinism       | Right tool                 |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------- | -------------------------- |
+| **A** | **Comprehension** — interpret NL instructions                                                                                       | LLM                                             | Non-deterministic | Eval                       |
+| **B** | **Tool selection & argument synthesis** — pick the tool, emit schema-valid JSON                                                     | LLM                                             | Non-deterministic | Eval                       |
+| **C** | **Operation execution** — the tool handler runs                                                                                     | Developer code                                  | Deterministic     | Unit test                  |
+| **D** | **Turn loop / harness** — feed tool results back, iterate to stop, max-iterations, error and malformed-output handling, persistence | Developer code (`AiSession.run`)                | Deterministic     | Unit test (scripted model) |
+| **E** | **Context assembly** — system prompt + skill instructions + bound objects → the prompt the LLM sees                                 | Developer code                                  | Deterministic     | Unit test / snapshot       |
+| **F** | **Schema & (de)serialization** — tool JSON-schema generation, argument decode, result encode                                        | Developer code                                  | Deterministic     | Unit test (round-trip)     |
+| **G** | **Evaluation / grading** — did the run meet its criteria?                                                                           | Test oracle (must not be the system under test) | —                 | Assertion or graded scorer |
+| **H** | **End-to-end composition** — emergent behavior across A–F on a realistic path                                                       | Whole system                                    | Non-deterministic | Thin integration eval      |
 
 Key observations that drive everything below:
 
@@ -125,14 +125,14 @@ deterministic code through a frozen LLM recording.
     graded, not asserted away.
   - **Model-pinned** and run **on a schedule / on demand**, not on every PR. This relocates LLM
     cost and variance out of the gating path instead of freezing it.
-  - **H (composition)** lives here too: a *small* number of true end-to-end scenarios (real model,
+  - **H (composition)** lives here too: a _small_ number of true end-to-end scenarios (real model,
     real operations, real loop) so we retain coverage of the seams that isolated tiers miss.
 
 ### Why this is better
 
 - Deterministic code is tested deterministically, in CI, with clear failures — no cache misses
   masquerading as bugs, no multi-MB fixtures, no coupled ID streams.
-- The LLM-dependent behavior we care about (A/B/H) is actually *measured* over time instead of
+- The LLM-dependent behavior we care about (A/B/H) is actually _measured_ over time instead of
   frozen and ignored.
 - The oracle is explicit and trustworthy instead of self-certifying.
 
@@ -218,7 +218,7 @@ deterministic tiers that make it safe.
 12. Once no consumer depends on frozen-conversation replay, **reduce the memoization layer to the
     scripted-model primitive** and drop the prompt-matching / canonicalization / closest-match code
     and `memoization.test.ts`'s dynamic-value suite. `TestAiService` remains the seam. The
-    *strategy* of frozen full-conversation replay as primary coverage is what we retire.
+    _strategy_ of frozen full-conversation replay as primary coverage is what we retire.
 
 ### Non-goals / risks
 
