@@ -25,8 +25,8 @@ export const translations = [
         'no-comments.message':
           'Select text and click <commentIcon></commentIcon> in the toolbar to comment or click <versionsIcon></versionsIcon> to propose changes for review.',
         'comments.label': 'Comments',
+        'show-unresolved.label': 'Active comments',
         'show-all.label': 'All comments',
-        'show-unresolved.label': 'Unresolved comments',
         'add-comment.label': 'Add comment',
       },
     },
