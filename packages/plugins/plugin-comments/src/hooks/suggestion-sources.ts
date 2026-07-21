@@ -46,6 +46,10 @@ export type SuggestionGroup = DiffHunk & {
   colour: string;
 };
 
+/** Stable, position-independent key for a suggestion group (author + change). */
+export const suggestionGroupKey = (group: SuggestionGroup): string =>
+  `${group.author} ${group.removed} ${group.inserted}`;
+
 /**
  * Flatten every {@link SuggestionSource} into the per-author grouped changes the review layer renders
  * as cards — one card per {@link groupHunks} group. Anchored in `base`, ordered by offset then author

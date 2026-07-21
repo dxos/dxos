@@ -12,8 +12,8 @@ import {
   type MessageMetadata,
   Thread,
   type ThreadComponents,
+  ThreadStatusProps,
 } from '@dxos/react-ui-thread';
-import { ThreadStatusProps } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
