@@ -14,10 +14,10 @@ import { Chess, ChessPositionIndex, PlayerReview } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(GameVariant),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(GameVariant),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',
@@ -25,8 +25,8 @@ export const ChessPlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addLazyModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

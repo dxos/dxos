@@ -24,12 +24,12 @@ import { ObservabilityCapabilities, type ObservabilityPluginOptions } from '#typ
 export type { ObservabilityPluginOptions } from '#types';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(Observability),
-  Plugin.addLazyModule(ObservabilitySettings),
-  Plugin.addLazyModule(ObservabilityState),
-  Plugin.addLazyModule(Namespace),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Observability),
+  Plugin.addModule(ObservabilitySettings),
+  Plugin.addModule(ObservabilityState),
+  Plugin.addModule(Namespace),
   Plugin.addModule(({ downloadLogs }: ObservabilityPluginOptions) => ({
     id: 'log-downloader',
     requires: [],
@@ -39,9 +39,9 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
         downloadLogs !== undefined ? [Capability.provide(ObservabilityCapabilities.LogDownloader, downloadLogs)] : [],
       ),
   })),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(PrivacyNotice),
-  Plugin.addLazyModule(ClientReady),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PrivacyNotice),
+  Plugin.addModule(ClientReady),
   Plugin.make,
 );
 

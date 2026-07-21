@@ -13,14 +13,14 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(State),
-  Plugin.addLazyModule(Expose),
-  Plugin.addLazyModule(Keyboard),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(State),
+  Plugin.addModule(Expose),
+  Plugin.addModule(Keyboard),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

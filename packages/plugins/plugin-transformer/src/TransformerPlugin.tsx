@@ -12,9 +12,9 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TransformerPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([])),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppCapability.schema([])),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

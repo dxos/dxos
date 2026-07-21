@@ -10,11 +10,11 @@ import { AppGraphBuilder, CreateObject, OperationHandler, SkillDefinition } from
 import { meta } from '#meta';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Script.Script])),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Script.Script])),
   Plugin.make,
 );
 

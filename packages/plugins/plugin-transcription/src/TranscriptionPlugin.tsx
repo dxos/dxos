@@ -27,21 +27,21 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(TextContent),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Transcript.Transcript])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(TranscriptionSettings),
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(TranscriptionDriver),
-  Plugin.addLazyModule(Transcriber),
-  Plugin.addLazyModule(EntityLookup),
-  Plugin.addLazyModule(RecordingSession),
-  Plugin.addLazyModule(PipelineStatus),
-  Plugin.addLazyModule(MarkdownExtension),
-  Plugin.addLazyModule(
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(TextContent),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Transcript.Transcript])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(TranscriptionSettings),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(TranscriptionDriver),
+  Plugin.addModule(Transcriber),
+  Plugin.addModule(EntityLookup),
+  Plugin.addModule(RecordingSession),
+  Plugin.addModule(PipelineStatus),
+  Plugin.addModule(MarkdownExtension),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

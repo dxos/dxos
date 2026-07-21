@@ -21,15 +21,15 @@ import { translations } from './translations';
 import { Ibkr } from './types';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(AppCapability.schema([Ibkr.Portfolio, Ibkr.Report, Ibkr.Instrument, Ibkr.Lot])),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(Connector),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(AppCapability.schema([Ibkr.Portfolio, Ibkr.Report, Ibkr.Instrument, Ibkr.Lot])),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Connector),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

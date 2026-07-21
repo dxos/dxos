@@ -30,11 +30,11 @@ import { type AssistantPluginOptions } from '#types';
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    Plugin.addLazyModule(AppGraphBuilder),
-    Plugin.addLazyModule(SkillDefinition),
-    Plugin.addLazyModule(CreateObject),
-    Plugin.addLazyModule(OperationHandler),
-    Plugin.addLazyModule(
+    Plugin.addModule(AppGraphBuilder),
+    Plugin.addModule(SkillDefinition),
+    Plugin.addModule(CreateObject),
+    Plugin.addModule(OperationHandler),
+    Plugin.addModule(
       AppCapability.schema([
         Chat.Chat,
         Chat.CompanionTo,
@@ -52,13 +52,13 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Text.Text,
       ]),
     ),
-    Plugin.addLazyModule(EdgeModelResolver),
-    Plugin.addLazyModule(LocalModelResolver),
-    Plugin.addLazyModule(AiService),
-    Plugin.addLazyModule(AiContextCapability),
-    Plugin.addLazyModule(Toolkit),
-    Plugin.addLazyModule(AgentRuntime),
+    Plugin.addModule(EdgeModelResolver),
+    Plugin.addModule(LocalModelResolver),
+    Plugin.addModule(AiService),
+    Plugin.addModule(AiContextCapability),
+    Plugin.addModule(Toolkit),
+    Plugin.addModule(AgentRuntime),
   )
-  .pipe(Plugin.addLazyModule(AgentHydrator), Plugin.make);
+  .pipe(Plugin.addModule(AgentHydrator), Plugin.make);
 
 export default AssistantPlugin;

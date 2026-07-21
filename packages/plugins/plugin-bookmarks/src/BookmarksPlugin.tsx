@@ -15,13 +15,13 @@ import { Bookmark } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BookmarksPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CommentConfig),
-  Plugin.addLazyModule(AppCapability.schema([Bookmark.Bookmark, Text.Text])),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(PageActionProvider),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(AppCapability.schema([Bookmark.Bookmark, Text.Text])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PageActionProvider),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

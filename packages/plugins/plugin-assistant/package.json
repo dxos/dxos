@@ -19,8 +19,12 @@
       "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/workerd.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities/workerd.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {

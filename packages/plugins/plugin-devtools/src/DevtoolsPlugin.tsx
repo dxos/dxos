@@ -20,12 +20,12 @@ const SetupDevtools = Capability.inlineModule('setup-devtools', { provides: [] }
 );
 
 export const DevtoolsPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(ReactContext),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(SetupDevtools),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(SetupDevtools),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

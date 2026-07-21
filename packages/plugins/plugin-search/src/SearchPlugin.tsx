@@ -13,11 +13,11 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SearchPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

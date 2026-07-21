@@ -10,8 +10,8 @@ import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Transcript.Transcript])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Transcript.Transcript])),
   Plugin.make,
 );
 

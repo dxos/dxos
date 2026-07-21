@@ -30,17 +30,17 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 setAutoFreeze(false);
 
 export const DeckPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(DeckSettings),
-  Plugin.addLazyModule(CheckAppScheme),
-  Plugin.addLazyModule(DeckState),
-  Plugin.addLazyModule(ReactRoot),
-  Plugin.addLazyModule(UrlHandler),
-  Plugin.addLazyModule(NotificationTracker),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(DeckSettings),
+  Plugin.addModule(CheckAppScheme),
+  Plugin.addModule(DeckState),
+  Plugin.addModule(ReactRoot),
+  Plugin.addModule(UrlHandler),
+  Plugin.addModule(NotificationTracker),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

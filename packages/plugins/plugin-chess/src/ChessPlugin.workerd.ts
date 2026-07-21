@@ -10,8 +10,8 @@ import { meta } from '#meta';
 import { Chess, ChessPositionIndex, PlayerReview } from '#types';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
   Plugin.make,
 );
 

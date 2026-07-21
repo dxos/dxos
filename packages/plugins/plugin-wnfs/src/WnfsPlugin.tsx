@@ -13,10 +13,10 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(Dependencies),
-  Plugin.addLazyModule(BlobBackend),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Dependencies),
+  Plugin.addModule(BlobBackend),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

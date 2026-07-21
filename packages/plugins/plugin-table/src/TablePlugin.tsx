@@ -23,15 +23,15 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TablePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CommentConfig),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Table.Table])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations([...translations, ...formTranslations, ...tableTranslations])),
-  Plugin.addLazyModule(OnTypeAdded),
-  Plugin.addLazyModule(
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Table.Table])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations([...translations, ...formTranslations, ...tableTranslations])),
+  Plugin.addModule(OnTypeAdded),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

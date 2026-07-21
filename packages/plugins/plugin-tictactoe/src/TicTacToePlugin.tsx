@@ -14,11 +14,11 @@ import { TicTacToe } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TicTacToePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(GameVariant),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([TicTacToe.State])),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(GameVariant),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([TicTacToe.State])),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

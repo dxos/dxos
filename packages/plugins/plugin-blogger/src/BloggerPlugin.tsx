@@ -14,8 +14,8 @@ import { Blog } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BloggerPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Blog.Publication, Blog.Post])),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppCapability.schema([Blog.Publication, Blog.Post])),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',
@@ -23,11 +23,11 @@ export const BloggerPlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppGraphBuilder),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppGraphBuilder),
   Plugin.make,
 );
 

@@ -24,14 +24,14 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BrainPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(AppCapability.schema([Topic.Topic])),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(NavigationResolver),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.schema([Topic.Topic])),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(NavigationResolver),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',
@@ -39,16 +39,16 @@ export const BrainPlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(AppCapability.translations(translations)),
   // Provisions the per-space FactStore LayerSpec + registry; the mailbox `AnalyzeMailbox` operation
   // (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever analysis
   // runs.
-  Plugin.addLazyModule(FactStore),
+  Plugin.addModule(FactStore),
   // Owns the fact-analysis settings (model/provider/strict) and registers them in the settings UI.
-  Plugin.addLazyModule(Settings),
+  Plugin.addModule(Settings),
   // Injects the `Analyze` action into plugin-inbox's mailbox toolbar menu (fact analysis is owned by
   // brain); reads the settings atom live at invoke time. Shares the atom with the Settings module.
-  Plugin.addLazyModule(MailboxAction),
+  Plugin.addModule(MailboxAction),
   Plugin.make,
 );
 

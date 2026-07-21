@@ -10,11 +10,11 @@ import { AppGraphBuilder, OperationHandler, SkillDefinition, UndoMappings } from
 import { meta } from '#meta';
 
 export const CommentsPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(UndoMappings),
-  Plugin.addLazyModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
   Plugin.make,
 );
 

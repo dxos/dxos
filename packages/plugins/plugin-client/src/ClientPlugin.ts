@@ -26,26 +26,26 @@ import { translations } from '#translations';
 import { type ClientPluginOptions } from '#types';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(NavigationHandler),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(ReactContext),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(Client),
-  Plugin.addLazyModule(AccountCache),
-  Plugin.addLazyModule(HubHttpClient),
-  Plugin.addLazyModule(SchemaDefs),
-  Plugin.addLazyModule(Migrations),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(NavigationHandler),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Client),
+  Plugin.addModule(AccountCache),
+  Plugin.addModule(HubHttpClient),
+  Plugin.addModule(SchemaDefs),
+  Plugin.addModule(Migrations),
   // Runtime event: spaces become ready when the client observes them, not at startup — see the
   // SpaceReplicationProgress module definition.
-  Plugin.addLazyModule(SpaceReplicationProgress),
+  Plugin.addModule(SpaceReplicationProgress),
   // Project remote (edge) trace progress into the registry (DX-1125) — see the TraceProgress
   // module definition for its activation gating.
-  Plugin.addLazyModule(TraceProgress),
-  Plugin.addLazyModule(LayerSpecs),
+  Plugin.addModule(TraceProgress),
+  Plugin.addModule(LayerSpecs),
   // Swarm-backed remote trace source (DX-1125). Collected when the process-manager runtime is built.
-  Plugin.addLazyModule(RemoteTraceMonitor),
-  Plugin.addLazyModule(ReactSurface),
+  Plugin.addModule(RemoteTraceMonitor),
+  Plugin.addModule(ReactSurface),
   Plugin.make,
 );
 

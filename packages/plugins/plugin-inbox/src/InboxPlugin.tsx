@@ -26,12 +26,12 @@ import { translations } from '#translations';
 import { Calendar, ExtractedFrom, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(NavigationResolver),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(NavigationResolver),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.schema([
       Event.Event,
       Mailbox.Mailbox,
@@ -44,12 +44,12 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Cursor.Cursor,
     ]),
   ),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(InboxSettings),
-  Plugin.addLazyModule(Connector),
-  Plugin.addLazyModule(ContactExtractor),
-  Plugin.addLazyModule(SummarizeExtractor),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(InboxSettings),
+  Plugin.addModule(Connector),
+  Plugin.addModule(ContactExtractor),
+  Plugin.addModule(SummarizeExtractor),
   Plugin.make,
 );
 

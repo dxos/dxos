@@ -33,8 +33,8 @@ import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 random.seed(123);
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addLazyModule(DeckState),
-  Plugin.addLazyModule(OperationHandler),
+  Plugin.addModule(DeckState),
+  Plugin.addModule(OperationHandler),
   Plugin.make,
 );
 

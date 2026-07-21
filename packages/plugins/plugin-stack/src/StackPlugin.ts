@@ -14,10 +14,10 @@ import { Stack } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const StackPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Stack.Stack])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppCapability.schema([Stack.Stack])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

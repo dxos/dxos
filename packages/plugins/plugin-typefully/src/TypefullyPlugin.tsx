@@ -13,8 +13,8 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 import { translations } from './translations';
 
 export const TypefullyPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',
@@ -22,8 +22,8 @@ export const TypefullyPlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addLazyModule(Connector),
-  Plugin.addLazyModule(PublisherService),
+  Plugin.addModule(Connector),
+  Plugin.addModule(PublisherService),
   Plugin.make,
 );
 

@@ -13,13 +13,13 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(State),
-  Plugin.addLazyModule(Markdown),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(State),
+  Plugin.addModule(Markdown),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

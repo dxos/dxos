@@ -19,14 +19,14 @@ import { meta } from './meta';
 import { translations } from './translations';
 
 export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(Settings),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(OAuthRecoveryRedirect),
-  Plugin.addLazyModule(DefaultContent),
-  Plugin.addLazyModule(Onboarding),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Settings),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(OAuthRecoveryRedirect),
+  Plugin.addModule(DefaultContent),
+  Plugin.addModule(Onboarding),
   Plugin.make,
 );
 

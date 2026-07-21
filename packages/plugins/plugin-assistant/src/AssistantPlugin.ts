@@ -43,12 +43,12 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
-    Plugin.addLazyModule(AppGraphBuilder),
-    Plugin.addLazyModule(NavigationResolver),
-    Plugin.addLazyModule(SkillDefinition),
-    Plugin.addLazyModule(CreateObject),
-    Plugin.addLazyModule(OperationHandler),
-    Plugin.addLazyModule(
+    Plugin.addModule(AppGraphBuilder),
+    Plugin.addModule(NavigationResolver),
+    Plugin.addModule(SkillDefinition),
+    Plugin.addModule(CreateObject),
+    Plugin.addModule(OperationHandler),
+    Plugin.addModule(
       AppCapability.schema([
         Chat.Chat,
         Chat.CompanionTo,
@@ -66,33 +66,33 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Text.Text,
       ]),
     ),
-    Plugin.addLazyModule(Settings),
-    Plugin.addLazyModule(ReactSurface),
-    Plugin.addLazyModule(AppCapability.translations(translations)),
-    Plugin.addLazyModule(AutomationTemplates),
-    Plugin.addLazyModule(MarkdownExtension),
+    Plugin.addModule(Settings),
+    Plugin.addModule(ReactSurface),
+    Plugin.addModule(AppCapability.translations(translations)),
+    Plugin.addModule(AutomationTemplates),
+    Plugin.addModule(MarkdownExtension),
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    Plugin.addLazyModule(AssistantState),
-    Plugin.addLazyModule(EdgeModelResolver),
-    Plugin.addLazyModule(LocalModelResolver),
-    Plugin.addLazyModule(AiService),
+    Plugin.addModule(AssistantState),
+    Plugin.addModule(EdgeModelResolver),
+    Plugin.addModule(LocalModelResolver),
+    Plugin.addModule(AiService),
     // Process-affinity `Harness.HarnessService` LayerSpec — needed so operations
     // dispatched as their own processes (e.g. via `Operation.invoke` from
     // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
     // conversation-scoped services without an inline `Effect.provideService`
     // upstream. See `capabilities/ai-context.ts` for the rationale.
-    Plugin.addLazyModule(AiContextCapability),
-    Plugin.addLazyModule(AgentRuntime),
+    Plugin.addModule(AiContextCapability),
+    Plugin.addModule(AgentRuntime),
   )
   .pipe(
-    Plugin.addLazyModule(Toolkit),
-    Plugin.addLazyModule(AgentHydrator),
-    Plugin.addLazyModule(CompanionChatProvisioner),
-    Plugin.addLazyModule(Migrations),
-    Plugin.addLazyModule(Connector),
-    Plugin.addLazyModule(
+    Plugin.addModule(Toolkit),
+    Plugin.addModule(AgentHydrator),
+    Plugin.addModule(CompanionChatProvisioner),
+    Plugin.addModule(Migrations),
+    Plugin.addModule(Connector),
+    Plugin.addModule(
       AppCapability.pluginAsset({
         pluginId: meta.profile.key,
         path: 'PLUGIN.mdl',

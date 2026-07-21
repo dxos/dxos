@@ -14,12 +14,12 @@ import { translations } from './translations';
 import { FreeqChannel } from './types';
 
 export const FreeqPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(AppCapability.schema([FreeqChannel])),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(AppCapability.schema([FreeqChannel])),
   // Single module contributes both the connection manager and the channel backend
   // (see channel-backend.ts) — same-wave modules cannot `waitFor` each other's contributions.
-  Plugin.addLazyModule(ChannelBackend),
-  Plugin.addLazyModule(
+  Plugin.addModule(ChannelBackend),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

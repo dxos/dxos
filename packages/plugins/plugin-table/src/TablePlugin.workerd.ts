@@ -10,8 +10,8 @@ import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const TablePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Table.Table])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Table.Table])),
   Plugin.make,
 );
 

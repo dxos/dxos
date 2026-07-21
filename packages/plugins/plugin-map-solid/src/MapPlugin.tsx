@@ -12,8 +12,8 @@ import { meta } from '#meta';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MapPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(Surface),
-  Plugin.addLazyModule(
+  Plugin.addModule(Surface),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

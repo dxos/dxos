@@ -39,9 +39,9 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
 
       // TODO(burdon): This should be factored ouf from SimpleLayoutPlugin.
       Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
-        Plugin.addLazyModule(State),
-        Plugin.addLazyModule(ReactRoot),
-        Plugin.addLazyModule(ReactSurface),
+        Plugin.addModule(State),
+        Plugin.addModule(ReactRoot),
+        Plugin.addModule(ReactSurface),
         Plugin.make,
       )({ isPopover }),
     ],

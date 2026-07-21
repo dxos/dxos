@@ -38,15 +38,15 @@ export type CommentsPluginOptions = {
 };
 
 export const CommentsPlugin = Plugin.define<CommentsPluginOptions>(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(UndoMappings),
-  Plugin.addLazyModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations([...translations, ...threadTranslations])),
-  Plugin.addLazyModule(CommentState),
-  Plugin.addLazyModule(Markdown),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations([...translations, ...threadTranslations])),
+  Plugin.addModule(CommentState),
+  Plugin.addModule(Markdown),
   // Default comment-thread agent runner (one-shot LLM call per scheduled turn). `AgentRunner`
   // is a singleton capability, so a test/storybook host that wants a stub runner passes
   // `agentRunner` in `CommentsPluginOptions` instead of contributing a second provider.
@@ -65,8 +65,8 @@ export const CommentsPlugin = Plugin.define<CommentsPluginOptions>(meta).pipe(
           activate: AgentRunner,
         };
   }),
-  Plugin.addLazyModule(AgentIdentityModule),
-  Plugin.addLazyModule(
+  Plugin.addModule(AgentIdentityModule),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

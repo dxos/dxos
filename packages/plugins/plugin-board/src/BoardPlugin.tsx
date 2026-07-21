@@ -15,11 +15,11 @@ import { Board } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppCapability.schema([Board.Board])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations([...translations, ...boardTranslations])),
-  Plugin.addLazyModule(
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Board.Board])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations([...translations, ...boardTranslations])),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

@@ -9,4 +9,4 @@ const Debug = Capability.lazyModule('Debug', { provides: [Capabilities.ReactSurf
 
 export const DebugPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.test.pluginDebug'), name: 'Debug' }),
-).pipe(Plugin.addLazyModule(Debug), Plugin.make);
+).pipe(Plugin.addModule(Debug), Plugin.make);

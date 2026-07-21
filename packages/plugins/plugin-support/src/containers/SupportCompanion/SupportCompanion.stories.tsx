@@ -28,7 +28,7 @@ const TestPluginMeta = {
   ],
 };
 const TestPlugin = Plugin.define(TestPluginMeta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Support.Ticket])),
+  Plugin.addModule(AppCapability.schema([Support.Ticket])),
   Plugin.make,
 );
 

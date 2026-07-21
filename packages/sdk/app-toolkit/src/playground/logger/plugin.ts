@@ -37,7 +37,7 @@ const meta = Plugin.makeMeta({
 });
 
 export const LoggerPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(Toolbar),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Toolbar),
   Plugin.make,
 );

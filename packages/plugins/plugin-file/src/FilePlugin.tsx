@@ -25,18 +25,18 @@ import { File } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const FilePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([File.File, Blob.Blob])),
-  Plugin.addLazyModule(Settings),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(InlineBackend),
-  Plugin.addLazyModule(FileUploader),
-  Plugin.addLazyModule(EdgeBackend),
-  Plugin.addLazyModule(Markdown),
-  Plugin.addLazyModule(
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([File.File, Blob.Blob])),
+  Plugin.addModule(Settings),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(InlineBackend),
+  Plugin.addModule(FileUploader),
+  Plugin.addModule(EdgeBackend),
+  Plugin.addModule(Markdown),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

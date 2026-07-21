@@ -44,7 +44,7 @@ const MockDeckOperationsPlugin = Plugin.define(
     name: 'Mock Deck Ops',
   }),
 ).pipe(
-  Plugin.addLazyModule(
+  Plugin.addModule(
     Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
         Capability.provide(

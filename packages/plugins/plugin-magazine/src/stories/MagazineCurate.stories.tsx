@@ -48,7 +48,7 @@ const aiServiceSpec = LayerSpec.make({ affinity: 'space', requires: [], provides
 const AgentRuntimePlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.magazineStoryAgent'), name: 'Magazine Story Agent Runtime' }),
 ).pipe(
-  Plugin.addLazyModule<void>(
+  Plugin.addModule<void>(
     Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([Capability.provide(Capabilities.OperationHandler, AgentHandlers)]),
     ),

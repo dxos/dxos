@@ -54,7 +54,7 @@ const MockDeckOperationsPlugin = Plugin.define(
     key: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'),
     name: 'Mock Deck Ops',
   }),
-).pipe(Plugin.addLazyModule(MockDeckOperations), Plugin.make);
+).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
 
 /** Real term repeated across several `SAMPLE_MESSAGES` entries; used by `SearchFilter`'s play test. */
 const SEARCH_TERM = 'invoice';

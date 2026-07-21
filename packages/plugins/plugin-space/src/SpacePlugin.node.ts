@@ -27,10 +27,10 @@ import { database, queue, space } from './commands';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addLazyModule(AppCapability.commands([database, queue, space])),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppCapability.commands([database, queue, space])),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.schema([
       ...DataTypes,
       AnchoredTo.AnchoredTo,
@@ -46,8 +46,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Task.Task,
     ]),
   ),
-  Plugin.addLazyModule(UndoMappings),
-  Plugin.addLazyModule(IdentityCreated),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(IdentityCreated),
   Plugin.make,
 );
 

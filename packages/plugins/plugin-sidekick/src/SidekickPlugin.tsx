@@ -14,11 +14,11 @@ import { Profile, Sidekick } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SidekickPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(AppCapability.schema([Sidekick.Profile, Profile.Profile])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.schema([Sidekick.Profile, Profile.Profile])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

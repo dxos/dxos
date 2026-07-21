@@ -14,13 +14,13 @@ import { translations } from './translations';
 import { BlueskyChannel } from './types';
 
 export const BlueskyPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(AppCapability.schema([BlueskyChannel])),
-  Plugin.addLazyModule(Connector),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(AppCapability.schema([BlueskyChannel])),
+  Plugin.addModule(Connector),
   // Read-only ATProto channel backend (contributes ThreadCapabilities.ChannelBackend).
-  Plugin.addLazyModule(ChannelBackend),
-  Plugin.addLazyModule(
+  Plugin.addModule(ChannelBackend),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

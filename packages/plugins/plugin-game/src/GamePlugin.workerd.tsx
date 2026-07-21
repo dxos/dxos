@@ -9,7 +9,7 @@ import { meta } from '#meta';
 import { Game } from '#types';
 
 export const GamePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Game.Game])),
+  Plugin.addModule(AppCapability.schema([Game.Game])),
   Plugin.make,
 );
 

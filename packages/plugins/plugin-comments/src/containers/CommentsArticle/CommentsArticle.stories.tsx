@@ -176,7 +176,7 @@ const StoryGraphPlugin = Plugin.define(
     key: DXN.make('org.dxos.plugin.comments.story.storyGraph'),
     name: 'Story Graph',
   }),
-).pipe(Plugin.addLazyModule(StoryAppGraphBuilder), Plugin.addLazyModule(StoryOperationHandler), Plugin.make);
+).pipe(Plugin.addModule(StoryAppGraphBuilder), Plugin.addModule(StoryOperationHandler), Plugin.make);
 
 type StoryArgs = {
   /**

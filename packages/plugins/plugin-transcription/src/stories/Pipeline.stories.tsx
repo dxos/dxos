@@ -90,7 +90,7 @@ const StoryGraphPlugin = () =>
       name: 'Transcription Pipeline Story Graph',
     }),
   ).pipe(
-    Plugin.addLazyModule(
+    Plugin.addModule(
       Capability.inlineModule(
         'AppGraphBuilder',
         { provides: [AppCapabilities.AppGraphBuilder] },

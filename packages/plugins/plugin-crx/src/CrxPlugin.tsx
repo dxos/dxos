@@ -13,13 +13,13 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrxPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CrxSettings),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(InstallPageActions),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(PageActionProvider),
-  Plugin.addLazyModule(
+  Plugin.addModule(CrxSettings),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(InstallPageActions),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PageActionProvider),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

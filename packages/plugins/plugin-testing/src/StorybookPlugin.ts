@@ -13,9 +13,9 @@ export type StorybookPluginOptions = {
 };
 
 export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(ReactContext),
-  Plugin.addLazyModule(State),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(State),
   Plugin.make,
 );
 

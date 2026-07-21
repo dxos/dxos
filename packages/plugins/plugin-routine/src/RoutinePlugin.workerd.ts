@@ -11,13 +11,13 @@ import { meta } from '#meta';
 import { Routine } from '#types';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.schema([Routine.Routine, Operation.PersistentOperation, Trigger.Trigger, Trace.Message]),
   ),
   // CreateRoutine (in OperationHandler) resolves RoutineCapabilities.Template, so the template
   // provider must be present wherever the handler is exported.
-  Plugin.addLazyModule(Templates),
+  Plugin.addModule(Templates),
   Plugin.make,
 );
 

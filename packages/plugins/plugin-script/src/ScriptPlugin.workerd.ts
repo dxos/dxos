@@ -10,8 +10,8 @@ import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Script.Script])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Script.Script])),
   Plugin.make,
 );
 

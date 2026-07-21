@@ -10,4 +10,4 @@ const Toolbar = Capability.lazyModule('Toolbar', { provides: [Capabilities.React
 
 export const GeneratorPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.test.generator'), name: 'Generator' }),
-).pipe(Plugin.addLazyModule(Main), Plugin.addLazyModule(Toolbar), Plugin.make);
+).pipe(Plugin.addModule(Main), Plugin.addModule(Toolbar), Plugin.make);

@@ -8,8 +8,8 @@ import { AppGraphBuilder, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
   Plugin.make,
 );
 

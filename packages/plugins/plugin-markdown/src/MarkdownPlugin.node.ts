@@ -11,10 +11,10 @@ import { meta } from '#meta';
 import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Markdown.Document, Text.Text])),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Markdown.Document, Text.Text])),
   Plugin.make,
 );
 

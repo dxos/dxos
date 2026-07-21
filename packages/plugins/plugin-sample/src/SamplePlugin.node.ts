@@ -15,9 +15,9 @@ import { meta } from '#meta';
 import { SampleItem } from '#types';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppCapability.schema([SampleItem.SampleItem])),
-  Plugin.addLazyModule(OperationHandler),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([SampleItem.SampleItem])),
+  Plugin.addModule(OperationHandler),
   Plugin.make,
 );
 

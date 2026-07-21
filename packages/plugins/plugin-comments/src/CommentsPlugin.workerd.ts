@@ -10,8 +10,8 @@ import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const CommentsPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
   Plugin.make,
 );
 

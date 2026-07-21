@@ -10,8 +10,8 @@ import { meta } from '#meta';
 import { Sheet } from '#types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Sheet.Sheet])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Sheet.Sheet])),
   Plugin.make,
 );
 

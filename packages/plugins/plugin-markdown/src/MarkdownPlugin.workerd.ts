@@ -10,9 +10,9 @@ import { meta } from '#meta';
 import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.skillDefinition(() => import('./capabilities/skill-definition'))),
-  Plugin.addLazyModule(AppCapability.operationHandler(() => import('./capabilities/operation-handler'))),
-  Plugin.addLazyModule(AppCapability.schema([Markdown.Document, Text.Text])),
+  Plugin.addModule(AppCapability.skillDefinition(() => import('./capabilities/skill-definition'))),
+  Plugin.addModule(AppCapability.operationHandler(() => import('./capabilities/operation-handler'))),
+  Plugin.addModule(AppCapability.schema([Markdown.Document, Text.Text])),
   Plugin.make,
 );
 

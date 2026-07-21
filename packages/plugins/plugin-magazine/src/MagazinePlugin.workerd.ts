@@ -11,9 +11,9 @@ import { meta } from '#meta';
 import { Magazine, Subscription } from '#types';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.schema([
       Subscription.Subscription,
       Subscription.Post,

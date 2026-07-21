@@ -16,13 +16,13 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
 
 export const PresenterPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(PresenterSettings),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(MarkdownExtension),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PresenterSettings),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(MarkdownExtension),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

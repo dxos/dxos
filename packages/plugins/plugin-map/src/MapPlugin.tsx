@@ -23,17 +23,17 @@ import { Map } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MapPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Map.Map])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(MapSettings),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(MarkerProvider),
-  Plugin.addLazyModule(MapState),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Map.Map])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(MapSettings),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(MarkerProvider),
+  Plugin.addModule(MapState),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

@@ -24,17 +24,17 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 // TODO(wittjosiah): Rename to ChatPlugin.
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(NavigationResolver),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Channel.Channel, Message.Message, Thread.Thread])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations([...translations, ...threadTranslations])),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(NavigationResolver),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Channel.Channel, Message.Message, Thread.Thread])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations([...translations, ...threadTranslations])),
   // Default local-feed channel backend. Other plugins contribute additional
   // `ChannelBackend` providers (e.g. ATProto) earlier in plugin order.
-  Plugin.addLazyModule(ChannelBackendFeed),
-  Plugin.addLazyModule(
+  Plugin.addModule(ChannelBackendFeed),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

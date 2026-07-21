@@ -10,10 +10,10 @@ import { ChannelBackendFeed, CreateObject, OperationHandler } from '#capabilitie
 import { meta } from '#meta';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Channel.Channel, Message.Message, Thread.Thread])),
-  Plugin.addLazyModule(ChannelBackendFeed),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Channel.Channel, Message.Message, Thread.Thread])),
+  Plugin.addModule(ChannelBackendFeed),
   Plugin.make,
 );
 

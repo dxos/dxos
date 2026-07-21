@@ -10,8 +10,8 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const StatusBarPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

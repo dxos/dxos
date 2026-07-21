@@ -18,8 +18,8 @@ const OperationHandlerModule = Capability.inlineModule(
 );
 
 export const InboxPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandlerModule),
-  Plugin.addLazyModule(AppCapability.schema([Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message])),
+  Plugin.addModule(OperationHandlerModule),
+  Plugin.addModule(AppCapability.schema([Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message])),
   Plugin.make,
 );
 

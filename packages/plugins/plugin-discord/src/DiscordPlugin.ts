@@ -13,10 +13,10 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 import { translations } from './translations';
 
 export const DiscordPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(Connector),
-  Plugin.addLazyModule(
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Connector),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

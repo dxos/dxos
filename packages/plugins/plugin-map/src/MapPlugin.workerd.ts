@@ -10,8 +10,8 @@ import { meta } from '#meta';
 import { Map } from '#types';
 
 export const MapPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Map.Map])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Map.Map])),
   Plugin.make,
 );
 

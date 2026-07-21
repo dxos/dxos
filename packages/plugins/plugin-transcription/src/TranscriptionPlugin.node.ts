@@ -10,10 +10,10 @@ import { OperationHandler, SkillDefinition, TextContent } from '#capabilities';
 import { meta } from '#meta';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(TextContent),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Transcript.Transcript])),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(TextContent),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Transcript.Transcript])),
   Plugin.make,
 );
 

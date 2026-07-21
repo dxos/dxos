@@ -10,11 +10,11 @@ import { CommentConfig, CreateObject, OperationHandler, SkillDefinition } from '
 import { meta } from '#meta';
 
 export const TablePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CommentConfig),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Table.Table])),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Table.Table])),
   Plugin.make,
 );
 

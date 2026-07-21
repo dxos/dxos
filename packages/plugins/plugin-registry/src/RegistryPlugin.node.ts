@@ -10,7 +10,7 @@ import { meta } from '#meta';
 import { plugin, registry } from './commands';
 
 export const RegistryPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.commands([plugin, registry])),
+  Plugin.addModule(AppCapability.commands([plugin, registry])),
   Plugin.make,
 );
 

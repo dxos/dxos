@@ -14,12 +14,12 @@ import { Voxel } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const VoxelPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppCapability.schema([Voxel.World])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Voxel.World])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

@@ -374,62 +374,64 @@ class PluginBuilderImpl<T = void> implements PluginBuilder<T> {
 export const define = <T = void>(meta: Meta): PluginBuilder<T> => new PluginBuilderImpl<T>(meta);
 
 /**
- * Adds a module to a plugin builder.
- * Supports both pipeline and direct call styles.
- * Modules can be either module options or functions that receive plugin options.
+ * Adds a module to a plugin builder. Supports both pipeline and direct call styles.
  *
- * Typed modules declare `provides`/`requires` (dependency mode) or `activatesOn` +
- * `requires`/`provides` (runtime-event mode); the activate effect's environment is
- * constrained to the declared requires and its return must cover the declared provides.
+ * Accepts either:
+ * - A spec-carrying module ({@link Capability.lazyModule} / {@link Capability.inlineModule}):
+ *   requires/provides/activatesOn/props all come from the module's own spec (declared where
+ *   it is authored), so the call needs only an optional id override.
+ * - An inline authoring record (or a function receiving plugin options): declares
+ *   `provides`/`requires` (dependency mode) or `activatesOn` + `requires`/`provides`
+ *   (runtime-event mode); the activate effect's environment is constrained to the declared
+ *   requires and its return must cover the declared provides.
  */
+export function addModule<T = void>(
+  module: Capability.Module<void>,
+  options?: { id?: string },
+): (builder: PluginBuilder<T>) => PluginBuilder<T>;
+/** Spec-carrying module whose props are mapped from the plugin options. */
+export function addModule<Options, T extends Options = Options>(
+  module: Capability.Module<Options>,
+  options?: { id?: string },
+): (builder: PluginBuilder<T>) => PluginBuilder<T>;
 export function addModule<T, const Opts extends Types.NoExcessProperties<TypedModuleOptions, Opts>>(
   moduleOptions: Opts | ((options: T) => Opts),
 ): true extends ValidateModuleOptions<Opts>
   ? (builder: PluginBuilder<T>) => PluginBuilder<T>
   : ValidateModuleOptions<Opts>;
-/** Direct-call variant of the typed overload above (see {@link PluginBuilder.addModule}). */
+/** Direct-call variant of the typed record overload above (see {@link PluginBuilder.addModule}). */
 export function addModule<T>(
   builder: PluginBuilder<T>,
   moduleOptions: TypedModuleOptions | ((options: T) => TypedModuleOptions),
 ): PluginBuilder<T>;
 export function addModule<T>(
-  moduleOptionsOrBuilder: ModuleEntry | ((options: T) => ModuleEntry) | PluginBuilder<T>,
-  moduleOptions?: ModuleEntry | ((options: T) => ModuleEntry),
+  moduleOrOptionsOrBuilder: Capability.Module<any> | ModuleEntry | ((options: T) => ModuleEntry) | PluginBuilder<T>,
+  moduleOptions?: ModuleEntry | ((options: T) => ModuleEntry) | { id?: string },
 ): ((builder: PluginBuilder<T>) => PluginBuilder<T>) | PluginBuilder<T> {
-  // If second arg is provided, it's the direct call style: addModule(builder, moduleOptions)
-  if (moduleOptions !== undefined) {
-    return (moduleOptionsOrBuilder as PluginBuilder<T>).addModule(moduleOptions);
+  // Spec-carrying module: a tagged function whose requires/provides/activatesOn come from its
+  // own spec; only an optional id override is supplied at the call site.
+  if (typeof moduleOrOptionsOrBuilder === 'function' && Capability.ModuleTag in moduleOrOptionsOrBuilder) {
+    const module = moduleOrOptionsOrBuilder as Capability.Module<any>;
+    const { id } = (moduleOptions as { id?: string } | undefined) ?? {};
+    return (builder: PluginBuilder<T>) =>
+      builder.addModule((pluginOptions: T) => ({
+        id: id ?? Capability.getModuleTag(module),
+        activatesOn: module.activatesOn,
+        requires: module.requires,
+        provides: module.provides,
+        activate: () => module(pluginOptions),
+      }));
   }
-  // Otherwise it's pipeline style: addModule(moduleOptions) returns a function
-  const moduleOpts = moduleOptionsOrBuilder as ModuleEntry | ((options: T) => ModuleEntry);
+  // Direct-call style: addModule(builder, moduleOptions).
+  if (moduleOptions !== undefined) {
+    return (moduleOrOptionsOrBuilder as PluginBuilder<T>).addModule(
+      moduleOptions as ModuleEntry | ((options: T) => ModuleEntry),
+    );
+  }
+  // Pipeline style: addModule(moduleOptions) returns a function.
+  const moduleOpts = moduleOrOptionsOrBuilder as ModuleEntry | ((options: T) => ModuleEntry);
   return (builder: PluginBuilder<T>) => builder.addModule(moduleOpts);
 }
-
-/**
- * Adds a module from a spec-carrying body ({@link Capability.lazyModule} /
- * {@link Capability.inlineModule}): requires/provides/activatesOn/props all come from the
- * module's own spec (declared where it is authored), so this only needs an optional id
- * override.
- */
-export const addLazyModule: {
-  <T = void>(
-    module: Capability.Module<void>,
-    options?: { id?: string },
-  ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
-  <Options, T extends Options = Options>(
-    module: Capability.Module<Options>,
-    options?: { id?: string },
-  ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
-} =
-  <Options, T extends Options = Options>(module: Capability.Module<Options>, options?: { id?: string }) =>
-  (builder: PluginBuilder<T>): PluginBuilder<T> =>
-    builder.addModule((pluginOptions: T) => ({
-      id: options?.id ?? Capability.getModuleTag(module),
-      activatesOn: module.activatesOn,
-      requires: module.requires,
-      provides: module.provides,
-      activate: () => module(pluginOptions),
-    }));
 
 export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
 

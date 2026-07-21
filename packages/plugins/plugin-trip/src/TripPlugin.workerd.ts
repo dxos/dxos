@@ -9,7 +9,7 @@ import { meta } from '#meta';
 import { Booking, Trip } from '#types';
 
 export const TripPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Trip.Trip, Booking.Booking])),
+  Plugin.addModule(AppCapability.schema([Trip.Trip, Booking.Booking])),
   Plugin.make,
 );
 

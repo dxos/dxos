@@ -45,8 +45,8 @@ const RegisterPwa = Capability.inlineModule(
 );
 
 export const PwaPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(RegisterPwa),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(RegisterPwa),
   Plugin.make,
 );
 

@@ -25,11 +25,11 @@ import { Routine } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(NavigationResolver),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(NavigationResolver),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',
@@ -37,7 +37,7 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addLazyModule(
+  Plugin.addModule(
     AppCapability.schema([
       Routine.Routine,
       Operation.PersistentOperation,
@@ -46,17 +46,17 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
       Trace.Message,
     ]),
   ),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
   // Dependency-mode: the specs resolve services (client, database, ...) lazily at
   // slice-materialisation time, so activation needs nothing — and providing
   // Capabilities.LayerSpec soft-orders this module before the process-manager snapshot.
-  Plugin.addLazyModule(LayerSpecs),
-  Plugin.addLazyModule(RegistrySync),
+  Plugin.addModule(LayerSpecs),
+  Plugin.addModule(RegistrySync),
   // CreateRoutine (in OperationHandler) resolves RoutineCapabilities.Template, so the template
   // provider must be present wherever the handler is exported.
-  Plugin.addLazyModule(Templates),
-  Plugin.addLazyModule(TriggerRuntimeController),
+  Plugin.addModule(Templates),
+  Plugin.addModule(TriggerRuntimeController),
   Plugin.make,
 );
 

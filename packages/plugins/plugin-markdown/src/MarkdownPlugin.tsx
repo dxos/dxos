@@ -24,19 +24,19 @@ import { translations } from '#translations';
 import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CommentConfig),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CommentConfig),
   // Opts documents into the generic history companion contributed by plugin-space.
-  Plugin.addLazyModule(HistoryProvider),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(UndoMappings),
-  Plugin.addLazyModule(AppCapability.schema([Markdown.Document, Text.Text])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations([...translations, ...editorTranslations])),
-  Plugin.addLazyModule(MarkdownSettings),
-  Plugin.addLazyModule(MarkdownState),
-  Plugin.addLazyModule(AnchorSort),
+  Plugin.addModule(HistoryProvider),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(AppCapability.schema([Markdown.Document, Text.Text])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations([...translations, ...editorTranslations])),
+  Plugin.addModule(MarkdownSettings),
+  Plugin.addModule(MarkdownState),
+  Plugin.addModule(AnchorSort),
   Plugin.make,
 );
 

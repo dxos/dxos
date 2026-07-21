@@ -13,13 +13,13 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NativePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(NativeSettings),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(SpotlightListener),
-  Plugin.addLazyModule(Updater),
-  Plugin.addLazyModule(Ollama),
-  Plugin.addLazyModule(
+  Plugin.addModule(NativeSettings),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(SpotlightListener),
+  Plugin.addModule(Updater),
+  Plugin.addModule(Ollama),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

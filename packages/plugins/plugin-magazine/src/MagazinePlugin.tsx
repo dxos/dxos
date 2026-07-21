@@ -24,11 +24,11 @@ import { Magazine, Subscription } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(NavigationResolver),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(NavigationResolver),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',
@@ -36,7 +36,7 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addLazyModule(
+  Plugin.addModule(
     AppCapability.schema([
       Subscription.Subscription,
       Subscription.Post,
@@ -47,10 +47,10 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       TagIndex.TagIndex,
     ]),
   ),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(RoutineTemplates),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(RoutineTemplates),
   Plugin.make,
 );
 

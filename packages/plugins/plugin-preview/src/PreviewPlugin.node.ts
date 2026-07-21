@@ -9,7 +9,7 @@ import { Organization, Person } from '@dxos/types';
 import { meta } from '#meta';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Person.Person, Organization.Organization])),
+  Plugin.addModule(AppCapability.schema([Person.Person, Organization.Organization])),
   Plugin.make,
 );
 

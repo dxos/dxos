@@ -26,18 +26,18 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Support.Ticket])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(HelpState),
-  Plugin.addLazyModule(ReactRoot),
-  Plugin.addLazyModule(OnSpaceCreated),
-  Plugin.addLazyModule(SupportSettings),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Support.Ticket])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(HelpState),
+  Plugin.addModule(ReactRoot),
+  Plugin.addModule(OnSpaceCreated),
+  Plugin.addModule(SupportSettings),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

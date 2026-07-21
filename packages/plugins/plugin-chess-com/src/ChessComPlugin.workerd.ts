@@ -10,8 +10,8 @@ import { meta } from '#meta';
 import { ChessComAccount } from '#types';
 
 export const ChessComPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([ChessComAccount.Account])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([ChessComAccount.Account])),
   Plugin.make,
 );
 

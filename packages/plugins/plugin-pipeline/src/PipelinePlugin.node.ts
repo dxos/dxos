@@ -10,8 +10,8 @@ import { CreateObject } from '#capabilities';
 import { meta } from '#meta';
 
 export const PipelinePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppCapability.schema([Pipeline.Pipeline])),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Pipeline.Pipeline])),
   Plugin.make,
 );
 

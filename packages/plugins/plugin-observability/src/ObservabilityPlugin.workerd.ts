@@ -11,7 +11,7 @@ import { meta } from '#meta';
 import { ObservabilityOperation } from '#types';
 
 export const ObservabilityPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(
+  Plugin.addModule(
     Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
         Capability.provide(

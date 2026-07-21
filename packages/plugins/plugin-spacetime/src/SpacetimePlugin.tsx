@@ -14,12 +14,12 @@ import { Model, Scene } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppCapability.schema([Scene.Scene, Model.Object])),
-  Plugin.addLazyModule(SpacetimeSettings),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Scene.Scene, Model.Object])),
+  Plugin.addModule(SpacetimeSettings),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

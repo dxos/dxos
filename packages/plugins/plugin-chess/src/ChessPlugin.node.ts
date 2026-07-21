@@ -14,9 +14,9 @@ import { Chess, ChessPositionIndex, PlayerReview } from '#types';
  * Used in node contexts (CLI, agents) where rendering is unavailable.
  */
 export const ChessPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
   Plugin.make,
 );
 

@@ -23,7 +23,7 @@ export const StorySyncPlugin = Plugin.define(
     name: 'Mailbox Sync Story',
   }),
 ).pipe(
-  Plugin.addLazyModule(
+  Plugin.addModule(
     Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
         Capability.provide(

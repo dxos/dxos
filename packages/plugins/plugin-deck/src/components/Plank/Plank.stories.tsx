@@ -27,8 +27,8 @@ import { Plank } from './Plank';
 random.seed(99);
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addLazyModule(DeckState),
-  Plugin.addLazyModule(OperationHandler),
+  Plugin.addModule(DeckState),
+  Plugin.addModule(OperationHandler),
   Plugin.make,
 );
 

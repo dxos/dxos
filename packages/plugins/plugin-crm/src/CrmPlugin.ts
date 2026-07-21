@@ -14,13 +14,13 @@ import { ProfileOf } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrmPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(AppCapability.schema([ProfileOf.ProfileOf])),
-  Plugin.addLazyModule(AutomationTemplates),
-  Plugin.addLazyModule(
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(AppCapability.schema([ProfileOf.ProfileOf])),
+  Plugin.addModule(AutomationTemplates),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

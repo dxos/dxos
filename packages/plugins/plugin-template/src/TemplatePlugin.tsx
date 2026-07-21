@@ -11,10 +11,10 @@ import { translations } from '#translations';
 import { Template } from '#types';
 
 export const TemplatePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppCapability.schema([Template.Data])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppCapability.schema([Template.Data])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

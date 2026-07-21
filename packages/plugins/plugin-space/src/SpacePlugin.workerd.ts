@@ -23,8 +23,8 @@ import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const SpacePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.schema([
       ...DataTypes,
       AnchoredTo.AnchoredTo,

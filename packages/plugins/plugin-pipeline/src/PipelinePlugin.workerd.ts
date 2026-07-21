@@ -9,7 +9,7 @@ import { Pipeline } from '@dxos/types';
 import { meta } from '#meta';
 
 export const PipelinePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Pipeline.Pipeline])),
+  Plugin.addModule(AppCapability.schema([Pipeline.Pipeline])),
   Plugin.make,
 );
 

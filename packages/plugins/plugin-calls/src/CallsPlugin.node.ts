@@ -13,7 +13,7 @@ import { translations } from '#translations';
  * (CLI, agents) where rendering is unavailable.
  */
 export const CallsPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

@@ -9,7 +9,7 @@ import { meta } from '#meta';
 import { Score } from '#types';
 
 export const SequencerPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Score.Score])),
+  Plugin.addModule(AppCapability.schema([Score.Score])),
   Plugin.make,
 );
 

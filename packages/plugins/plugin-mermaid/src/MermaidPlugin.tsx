@@ -12,8 +12,8 @@ import { meta } from '#meta';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MermaidPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(MarkdownExtension),
-  Plugin.addLazyModule(
+  Plugin.addModule(MarkdownExtension),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

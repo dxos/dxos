@@ -10,8 +10,8 @@ import { meta } from '#meta';
 import { Kanban } from '#types';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Kanban.Kanban])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Kanban.Kanban])),
   Plugin.make,
 );
 

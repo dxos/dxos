@@ -10,11 +10,11 @@ import { meta } from '#meta';
 import { Sheet } from '#types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CommentConfig),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(UndoMappings),
-  Plugin.addLazyModule(AppCapability.schema([Sheet.Sheet])),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(AppCapability.schema([Sheet.Sheet])),
   Plugin.make,
 );
 

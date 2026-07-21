@@ -11,10 +11,10 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppCapability.schema([Person.Person, Organization.Organization])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(PreviewPopover),
+  Plugin.addModule(AppCapability.schema([Person.Person, Organization.Organization])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(PreviewPopover),
   Plugin.make,
 );
 

@@ -20,8 +20,8 @@ import { DeckCapabilities, getMode } from '#types';
 import { Deck } from './Deck';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addLazyModule(DeckSettings),
-  Plugin.addLazyModule(DeckState),
+  Plugin.addModule(DeckSettings),
+  Plugin.addModule(DeckState),
   Plugin.make,
 );
 

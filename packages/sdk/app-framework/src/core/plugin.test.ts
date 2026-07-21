@@ -269,12 +269,12 @@ describe('Plugin module authoring', () => {
     });
   });
 
-  describe('addLazyModule', () => {
+  describe('addModule (spec-carrying module)', () => {
     it('derives the module id and spec from the module', () => {
       const Lazy = Capability.lazyModule('Total', { provides: [Total] }, () =>
         Promise.resolve({ default: () => Effect.succeed([Capability.provide(Total, { total: 1 })]) }),
       );
-      const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addLazyModule(Lazy)));
+      const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
       const [module] = Test().modules;
       expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
       assert(module.activation.mode === 'dependency');
@@ -296,7 +296,7 @@ describe('Plugin module authoring', () => {
                 Effect.succeed([Capability.provide(Total, { total: props.start })]),
             }),
         );
-        const Test = Plugin.make(Plugin.define<{ offset: number }>(testMeta).pipe(Plugin.addLazyModule(Lazy)));
+        const Test = Plugin.make(Plugin.define<{ offset: number }>(testMeta).pipe(Plugin.addModule(Lazy)));
 
         const [module] = Test({ offset: 41 }).modules;
         expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
@@ -322,7 +322,7 @@ describe('Plugin module authoring', () => {
         { requires: [String], provides: [], activatesOn: CountEvent },
         () => Promise.resolve({ default: () => Effect.succeed([]) }),
       );
-      const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addLazyModule(Lazy)));
+      const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
       const [module] = Test().modules;
       assert(module.activation.mode === 'event');
       expect(module.activation.activatesOn).toEqual(CountEvent);

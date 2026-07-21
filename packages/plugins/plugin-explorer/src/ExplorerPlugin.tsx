@@ -14,12 +14,12 @@ import { Graph } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ExplorerPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(AppCapability.schema([Graph.Graph])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(AppCapability.schema([Graph.Graph])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

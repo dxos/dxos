@@ -22,15 +22,15 @@ import { Meeting } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Meeting.Meeting, AnchoredTo.AnchoredTo])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(MeetingSettings),
-  Plugin.addLazyModule(MeetingState),
-  Plugin.addLazyModule(CallExtension),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Meeting.Meeting, AnchoredTo.AnchoredTo])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(MeetingSettings),
+  Plugin.addModule(MeetingState),
+  Plugin.addModule(CallExtension),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

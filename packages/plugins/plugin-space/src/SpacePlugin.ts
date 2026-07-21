@@ -46,12 +46,12 @@ import { type SpacePluginOptions } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(NavigationHandler),
-  Plugin.addLazyModule(NavigationResolver),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(ReactRoot),
-  Plugin.addLazyModule(
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(NavigationHandler),
+  Plugin.addModule(NavigationResolver),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactRoot),
+  Plugin.addModule(
     AppCapability.schema([
       ...DataTypes,
       AnchoredTo.AnchoredTo,
@@ -68,18 +68,18 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Task.Task,
     ]),
   ),
-  Plugin.addLazyModule(SpaceSettings),
-  Plugin.addLazyModule(
+  Plugin.addModule(SpaceSettings),
+  Plugin.addModule(
     AppCapability.translations([...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations]),
   ),
-  Plugin.addLazyModule(SpaceState),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(UndoMappings),
-  Plugin.addLazyModule(IdentityCreated),
-  Plugin.addLazyModule(SpacesReady),
-  Plugin.addLazyModule(Repair),
-  Plugin.addLazyModule(
+  Plugin.addModule(SpaceState),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(IdentityCreated),
+  Plugin.addModule(SpacesReady),
+  Plugin.addModule(Repair),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

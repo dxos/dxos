@@ -26,15 +26,15 @@ import { Booking, Segment, Trip } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TripPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Trip.Trip, Segment.Segment, Booking.Booking])),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(Settings),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Trip.Trip, Segment.Segment, Booking.Booking])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Settings),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',
@@ -42,12 +42,12 @@ export const TripPlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addLazyModule(
+  Plugin.addModule(
     Capability.inlineModule('trip-extractor', { provides: [InboxCapabilities.ObjectExtractor] }, () =>
       Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
     ),
   ),
-  Plugin.addLazyModule(MarkerProvider),
+  Plugin.addModule(MarkerProvider),
   Plugin.make,
 );
 

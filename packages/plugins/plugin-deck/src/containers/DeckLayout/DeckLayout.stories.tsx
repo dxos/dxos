@@ -257,9 +257,9 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
     activate: storyDeckState,
   }),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(storySurfaces),
-  Plugin.addLazyModule(storyGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(storySurfaces),
+  Plugin.addModule(storyGraphBuilder),
   Plugin.make,
 );
 

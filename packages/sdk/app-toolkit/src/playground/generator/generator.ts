@@ -28,7 +28,7 @@ export const createNumberPlugin = (id: string) => {
   const AlertOperation = createAlertOperation(pluginId);
 
   return Plugin.define(Plugin.makeMeta({ key: pluginId, name: `Plugin ${DXN.getName(pluginId)}` })).pipe(
-    Plugin.addLazyModule(
+    Plugin.addModule(
       Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
         Effect.succeed([
           Capability.provide(
@@ -40,7 +40,7 @@ export const createNumberPlugin = (id: string) => {
         ]),
       ),
     ),
-    Plugin.addLazyModule(
+    Plugin.addModule(
       Capability.inlineModule('Main', { provides: [Number], activatesOn: CountEvent }, () =>
         Effect.succeed([Capability.provide(Number, number)]),
       ),

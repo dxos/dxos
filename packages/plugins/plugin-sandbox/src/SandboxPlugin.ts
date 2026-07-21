@@ -14,10 +14,10 @@ import { Sandbox } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SandboxPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Sandbox.Sandbox, AccessToken.AccessToken])),
-  Plugin.addLazyModule(
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Sandbox.Sandbox, AccessToken.AccessToken])),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

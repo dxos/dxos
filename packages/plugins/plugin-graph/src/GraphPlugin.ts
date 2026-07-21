@@ -18,6 +18,6 @@ const Graph = Capability.lazyModule(
  * Enables other plugins to register node builders to add nodes to the graph.
  * This includes actions and annotation each other's nodes.
  */
-export const GraphPlugin = Plugin.define(meta).pipe(Plugin.addLazyModule(Graph), Plugin.make);
+export const GraphPlugin = Plugin.define(meta).pipe(Plugin.addModule(Graph), Plugin.make);
 
 export default GraphPlugin;

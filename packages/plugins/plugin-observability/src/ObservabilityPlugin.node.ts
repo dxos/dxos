@@ -12,7 +12,7 @@ import { ObservabilityOperation } from '#types';
 
 // TODO(wittjosiah): Hook up.
 export const ObservabilityPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(
+  Plugin.addModule(
     Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
         Capability.provide(

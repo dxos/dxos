@@ -24,18 +24,18 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 import { translations } from './translations';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
     AppCapability.schema([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed]),
   ),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(BuiltinConnectors),
-  Plugin.addLazyModule(Coordinator),
-  Plugin.addLazyModule(OAuthRedirect),
-  Plugin.addLazyModule(
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(BuiltinConnectors),
+  Plugin.addModule(Coordinator),
+  Plugin.addModule(OAuthRedirect),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

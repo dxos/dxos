@@ -23,14 +23,14 @@ export type SimpleLayoutPluginOptions = {
 };
 
 export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(State),
-  Plugin.addLazyModule(SpotlightDismiss),
-  Plugin.addLazyModule(ReactRoot),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(UrlHandler),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(State),
+  Plugin.addModule(SpotlightDismiss),
+  Plugin.addModule(ReactRoot),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(UrlHandler),
   Plugin.make,
 );
 

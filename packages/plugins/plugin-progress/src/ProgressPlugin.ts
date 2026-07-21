@@ -10,10 +10,10 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const ProgressPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(ProgressRegistry),
-  Plugin.addLazyModule(TraceProgressSink),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(ProgressRegistry),
+  Plugin.addModule(TraceProgressSink),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

@@ -13,12 +13,12 @@ import { account, config, device, edge, halo, profile } from './commands';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addLazyModule(AppCapability.commands([account, config, device, edge, halo, profile])),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(Client),
-  Plugin.addLazyModule(SchemaDefs),
-  Plugin.addLazyModule(Migrations),
-  Plugin.addLazyModule(LayerSpecs),
+  Plugin.addModule(AppCapability.commands([account, config, device, edge, halo, profile])),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Client),
+  Plugin.addModule(SchemaDefs),
+  Plugin.addModule(Migrations),
+  Plugin.addModule(LayerSpecs),
   Plugin.make,
 );
 

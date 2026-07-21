@@ -11,13 +11,13 @@ import { translations } from '#translations';
 
 export const IrohBeaconPlugin = Plugin.define(meta).pipe(
   // Beacon service: creates transport + starts broadcasting.
-  Plugin.addLazyModule(BeaconServiceModule),
+  Plugin.addModule(BeaconServiceModule),
 
   // Status indicator surface.
-  Plugin.addLazyModule(ReactSurface),
+  Plugin.addModule(ReactSurface),
 
   // Translations.
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(AppCapability.translations(translations)),
 
   Plugin.make,
 );

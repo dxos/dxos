@@ -10,10 +10,10 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const SettingsPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(SettingsAppGraphBuilder),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
+  Plugin.addModule(SettingsAppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

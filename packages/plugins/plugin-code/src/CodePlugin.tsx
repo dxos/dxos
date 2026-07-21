@@ -22,16 +22,16 @@ import { CodeProject, SourceFile, Spec } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CodePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(SkillDefinition),
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile])),
-  Plugin.addLazyModule(SettingsCapability),
-  Plugin.addLazyModule(ReactSurface),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(BuildRunState),
-  Plugin.addLazyModule(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile])),
+  Plugin.addModule(SettingsCapability),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(BuildRunState),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

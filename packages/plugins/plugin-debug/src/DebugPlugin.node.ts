@@ -9,8 +9,8 @@ import { meta } from '#meta';
 import { type DebugPluginOptions } from '#types';
 
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
-  Plugin.addLazyModule(AppGraphBuilder),
-  Plugin.addLazyModule(DebugSettings),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(DebugSettings),
   Plugin.make,
 );
 

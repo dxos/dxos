@@ -13,12 +13,12 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpotlightPlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.translations(translations)),
-  Plugin.addLazyModule(State),
-  Plugin.addLazyModule(SpotlightDismiss),
-  Plugin.addLazyModule(ReactRoot),
-  Plugin.addLazyModule(
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(State),
+  Plugin.addModule(SpotlightDismiss),
+  Plugin.addModule(ReactRoot),
+  Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
       path: 'PLUGIN.mdl',

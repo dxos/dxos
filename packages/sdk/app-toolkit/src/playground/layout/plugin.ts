@@ -9,4 +9,4 @@ const Layout = Capability.lazyModule('Layout', { provides: [Capabilities.ReactRo
 
 const meta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.layout'), name: 'Layout' });
 
-export const LayoutPlugin = Plugin.define(meta).pipe(Plugin.addLazyModule(Layout), Plugin.make);
+export const LayoutPlugin = Plugin.define(meta).pipe(Plugin.addModule(Layout), Plugin.make);

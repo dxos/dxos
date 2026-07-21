@@ -11,9 +11,9 @@ import { meta } from '#meta';
 import { File } from '#types';
 
 export const FilePlugin = Plugin.define(meta).pipe(
-  Plugin.addLazyModule(CreateObject),
-  Plugin.addLazyModule(OperationHandler),
-  Plugin.addLazyModule(AppCapability.schema([File.File, Blob.Blob])),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([File.File, Blob.Blob])),
   Plugin.make,
 );
 
