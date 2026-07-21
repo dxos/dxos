@@ -2,7 +2,8 @@
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
-[#12291](https://github.com/dxos/dxos/pull/12291) (Phase 1 step 1 — de-gate G2/G3, OPEN).
+[#12291](https://github.com/dxos/dxos/pull/12291) (Phase 1 steps 1-3 — de-gate G2/G3 + scripted
+`LanguageModel` primitive + `AiRequest` loop (D) tests, Check GREEN, landing).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
