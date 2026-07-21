@@ -166,7 +166,14 @@ export const SuggestEdit = Operation.make({
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotations({ description: 'The document to suggest edits on.' }),
-    creator: Schema.String.annotations({ description: "The author's identity DID; keys the suggestion branch." }),
+    // Optional: the runtime supplies the calling agent's identity DID automatically. An agent must
+    // NOT set this — leave it undefined so the suggestion is attributed to the agent itself.
+    creator: Schema.optional(
+      Schema.String.annotations({
+        description:
+          'Do not set. The author identity DID keying the suggestion branch; filled from the calling agent identity.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     branchId: Schema.String.annotations({ description: 'The id of the suggestion branch.' }),

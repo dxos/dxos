@@ -18,6 +18,7 @@ const make = () =>
         MarkdownOperation.Open,
         MarkdownOperation.Update,
         MarkdownOperation.CreateBranch,
+        MarkdownOperation.SuggestEdit,
         MarkdownOperation.MergeBranch,
         MarkdownOperation.CreateCheckpoint,
       ],
@@ -40,9 +41,13 @@ const make = () =>
         ${'```'}
 
         You can also work on a document without touching the live copy by branching it:
-        - When asked to edit in a branch (or to propose changes for review), first create a branch
-          with the create-branch tool, then apply the edits with the update tool passing the returned
-          branchId. Leave the branch unmerged so the changes can be reviewed. Do not merge unless asked.
+        - To propose changes for review (the usual case), use the suggest-edit tool to open your own
+          suggestion branch, then apply edits with the update tool passing the returned branchId. The
+          suggestion is attributed to you automatically — do NOT pass a creator. Leave it unmerged for
+          review; each of your suggestions accrues on this one branch.
+        - When asked to work in a named draft branch instead, create one with the create-branch tool,
+          then apply edits with the update tool passing the returned branchId. Leave it unmerged. Do
+          not merge unless asked.
         - Merge a branch back into the document with the merge-branch tool once its changes are approved.
         - Record a named checkpoint of the current content with the create-checkpoint tool.
       `,

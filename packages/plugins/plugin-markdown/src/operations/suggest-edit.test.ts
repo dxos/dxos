@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation } from '@dxos/compute';
+import { AgentIdentity, Operation } from '@dxos/compute';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
@@ -68,6 +68,29 @@ describe('suggest-edit operation', () => {
           branchId: first.branchId,
         });
         expect(rootText.content).toBe('alpha\nbravo\n');
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'defaults the creator to the calling agent identity when none is passed',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({ name: 'Doc', content: 'alpha\nbravo\n' });
+        yield* Database.add(doc);
+
+        // No explicit creator: the agent identity in scope supplies it.
+        const result = yield* Operation.invoke(MarkdownOperation.SuggestEdit, { doc: Ref.make(doc) }).pipe(
+          Effect.provideService(AgentIdentity.AgentIdentity, { did: 'did:agent:zed', name: 'Zed' }),
+        );
+
+        const branch = doc.history?.branches.find(({ id }) => id === result.branchId);
+        invariant(branch);
+        expect(branch.kind).toBe('suggestion');
+        expect(branch.creator).toBe('did:agent:zed');
       },
       WithProperties,
       Effect.provide(TestLayer),
