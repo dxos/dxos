@@ -61,4 +61,15 @@ projects:
     prs: [12287]
     resume: 'Design doc PR #12287 (draft): packages/core/compute/ai/TESTING.md — dimensions A-H, current-approach gaps, tiered target, prioritized plan + consumer inventory (G1/G2/G3) and removal blast-radius. No implementation started. Next code step: extract the scripted LanguageModel primitive from MemoizedLanguageModel (substrate for D tests + G1 boot-smoke), then delete G1 (assistant-e2e). Quick relief available first: de-gate G2/G3 memoized replay from PR CI.'
 
+  - name: fact-store
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-21
+    summary: Dialog-inspired append-only fact store — Dialog's triple data model over @dxos/feed logs + a derived @dxos/index-core DatomIndex (zero new protocol surface).
+    tasks: .agents/projects/fact-store/TASKS.md
+    design: agents/superpowers/specs/2026-07-13-fact-store-design.md
+    prs: []
+    resume: 'Spec drafted (agents/superpowers/specs/2026-07-13-fact-store-design.md); project scaffolded, branch synced to main. Next: resolve the 5 open questions with the user (naming, value set, attribute discipline, feed-per-base vs shared, re-fold strategy) before implementation.'
+
 ended: []
