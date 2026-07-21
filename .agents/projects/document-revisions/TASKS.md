@@ -219,10 +219,17 @@ Polish + fixes required before landing the suggestion-review flow.
       Done: toolbar branch-switch action calls `setView('diff')` (MarkdownArticle.tsx).
 - [ ] Show the history companion below the comments companion in `CommentsArticle.stories.tsx`
       (right column split into equal rows: comments top, `subject:'history'` companion bottom).
-- [ ] BUG: selecting a branch then adding a comment throws `RangeError: Cannot getCursorPosition:
+- [x] BUG: selecting a branch then adding a comment throws `RangeError: Cannot getCursorPosition:
       cursor <id> is invalid`. **Root cause:** in Branch view the editor binds to the branch doc, so
       comment cursors are branch-doc cursors, but `threads.ts getName` always resolves against
-      `doc.content.target` (main) → invalid. **Decision (2026-07-21, ontology-driven):**
+      `doc.content.target` (main) → invalid. **Fixed (2026-07-21, ontology-driven):** `getName`
+      resolves against the editor-bound Text (branch doc in Branch view, main otherwise) + defensive
+      try/catch; new `readonly` option on the `comments()` editor extension no-ops `createComment` on
+      suggestion branches. Plumbing: `MarkdownExtensionProvider` gains `branchText` + `suggestionBranch`;
+      `MarkdownArticle` passes the editor-bound branch Text (undefined in diff/suggest) + kind flag;
+      `threads()` takes an options bag. ui-editor `createComment` readonly unit test; build+lint+tests
+      green. FULL switch-to-branch-then-comment manual flow still blocked in-pane by the 30s
+      full-stack boot timeout — verify manually once bootable. **Decision (2026-07-21, ontology-driven):**
   - Branch ontology: (1) **main**; (2) per-user **suggestion** branches (`kind:'suggestion'`); (3)
     private **draft** branches (regular; public today, private under Keyhive ACLs later).
   - **Comments allowed on any branch EXCEPT suggestion branches.** So: fix cursor resolution to use

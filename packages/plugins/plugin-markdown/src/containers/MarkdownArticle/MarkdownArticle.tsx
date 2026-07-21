@@ -103,6 +103,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // carries no registry key). Threaded to extension providers so branch-review affordances (e.g.
     // comments) scope to the branch in view.
     const reviewBranch = activeBranch && Branch.isCore(activeBranch) ? activeBranch.key : undefined;
+    // Per-user suggestion branches prohibit inline comments (review happens on the suggestion card);
+    // comments are allowed on main and on draft branches.
+    const suggestionBranch = activeBranch?.kind === 'suggestion';
     // While a core-branch binding is resolving, the editor must not mount against the root object
     // — edits would silently land on main. Render an empty panel until the binding is ready. The
     // same applies to a branch CHECKPOINT: its content is read from the branch-bound Text, which
@@ -157,14 +160,34 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return [...(otherExtensionProviders ?? []), ...(extensionProviders ?? [])]
         .flat()
         .reduce((acc: Extension[], provider) => {
-          const extension = typeof provider === 'function' ? provider({ document, viewMode, reviewBranch }) : provider;
+          const extension =
+            typeof provider === 'function'
+              ? provider({
+                  document,
+                  viewMode,
+                  reviewBranch,
+                  // Only when the editor is bound to the branch doc directly (Branch view) — in the
+                  // diff/suggest overlay the editor stays on main, so anchors resolve against main.
+                  branchText: suggestActive ? undefined : branchText,
+                  suggestionBranch,
+                })
+              : provider;
           if (extension) {
             acc.push(extension);
           }
 
           return acc;
         }, []);
-    }, [extensionProviders, otherExtensionProviders, object, viewMode, reviewBranch]);
+    }, [
+      extensionProviders,
+      otherExtensionProviders,
+      object,
+      viewMode,
+      reviewBranch,
+      branchText,
+      suggestActive,
+      suggestionBranch,
+    ]);
 
     // Route the inline suggestion Accept/Reject controls through the durable, undoable collaboration
     // ops. The anchor is a cursor range over the parent (main) content — the editor is bound to main

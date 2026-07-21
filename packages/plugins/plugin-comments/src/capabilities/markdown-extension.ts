@@ -21,11 +21,11 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc, reviewBranch }) => {
+      ({ document: doc, reviewBranch, branchText, suggestionBranch }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
-        return threads({ registry, stateAtom }, doc, invokePromise, reviewBranch);
+        return threads({ registry, stateAtom }, doc, invokePromise, { reviewBranch, branchText, suggestionBranch });
       },
       ({ document: doc }) => {
         if (!doc) {
