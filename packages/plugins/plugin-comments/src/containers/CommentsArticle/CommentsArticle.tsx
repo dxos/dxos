@@ -16,7 +16,9 @@ import {
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { toCursorRange } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { Markdown } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -28,12 +30,12 @@ import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-t
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { CommentThread, type CommentThreadProps } from '#components';
+import { CommentThread, type CommentThreadProps, SuggestionThread } from '#components';
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
 import { CommentCapabilities, type ViewState } from '#types';
 
-import { useStatus } from '../../hooks';
+import { type SuggestionGroup, useStatus, useSuggestionSources } from '../../hooks';
 import { getMessageMetadata } from '../../util';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
@@ -306,6 +308,40 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [invokePromise, subject, reviewBranch],
   );
 
+  // Suggestion review: the document's `kind:'suggestion'` branches overlaid as change-block tiles
+  // alongside comment threads. Accept/Reject route through the same durable ops as branch review.
+  const suggestionSources = useSuggestionSources(markdownDoc);
+  const mainText = markdownDoc?.content.target;
+  useObject(markdownDoc?.content);
+  const base = mainText?.content ?? '';
+
+  const routeSuggestion = useCallback(
+    async (
+      operation: typeof CollaborationOperation.AcceptChange | typeof CollaborationOperation.RejectChange,
+      group: SuggestionGroup,
+    ) => {
+      // Resolve the author's suggestion branch and anchor the change by its base offsets.
+      const branch = markdownDoc?.history?.branches.find(
+        (candidate) =>
+          candidate.status === 'active' && candidate.kind === 'suggestion' && candidate.creator === group.author,
+      )?.key;
+      if (!mainText || !branch) {
+        return;
+      }
+      const anchor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
+      await invokePromise(operation, { subject, anchor, branch });
+    },
+    [markdownDoc, mainText, invokePromise, subject],
+  );
+  const handleAcceptSuggestion = useCallback(
+    (group: SuggestionGroup) => routeSuggestion(CollaborationOperation.AcceptChange, group),
+    [routeSuggestion],
+  );
+  const handleRejectSuggestion = useCallback(
+    (group: SuggestionGroup) => routeSuggestion(CollaborationOperation.RejectChange, group),
+    [routeSuggestion],
+  );
+
   // Scroll the current thread into view when it changes.
   useEffect(() => {
     if (currentId) {
@@ -390,6 +426,14 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         <Panel.Content asChild>
           <ScrollArea.Root thin>
             <ScrollArea.Viewport>
+              {suggestionSources.length > 0 && (
+                <SuggestionThread
+                  base={base}
+                  sources={suggestionSources}
+                  onAccept={handleAcceptSuggestion}
+                  onReject={handleRejectSuggestion}
+                />
+              )}
               <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
               <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
             </ScrollArea.Viewport>

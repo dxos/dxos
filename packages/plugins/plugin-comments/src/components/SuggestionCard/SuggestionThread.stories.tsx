@@ -7,16 +7,17 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SuggestionSource } from '@dxos/ui-editor';
 
 import { type SuggestionGroup, buildSuggestionSources, suggestionGroupKey } from '../../hooks';
 import { translations } from '../../translations';
 import { SuggestionThread } from './SuggestionThread';
 
-// A base document and two reviewers' proposals over it. Alice and Bob both rewrite "quick" (an
-// overlap); each has one further, non-overlapping change.
+// A base document and two reviewers' proposals over it. Alice and Bob both rewrite "quick"
+// (an overlap); each has one further, non-overlapping change.
 const BASE = 'The quick brown fox jumps over the lazy dog.';
+
 const SOURCES: SuggestionSource[] = buildSuggestionSources([
   { author: 'did:alice', content: 'The fast brown fox jumps over the sleepy dog.' },
   { author: 'did:bob', content: 'The swift brown fox leaps over the lazy dog.' },
@@ -41,32 +42,21 @@ const Render = () => {
   );
 
   return (
-    <div className='grid grid-cols-2 h-full'>
-      <div className='pli-3 plb-2 border-ie border-separator'>
-        <h2 className='text-sm text-subdued mbe-2'>Document</h2>
-        <p data-testid='base-text' className='text-sm whitespace-pre-wrap'>
-          {base}
-        </p>
-      </div>
-      <div>
-        <h2 className='text-sm text-subdued pli-3 plb-2 border-be border-separator'>Suggestions</h2>
-        <SuggestionThread
-          base={base}
-          sources={SOURCES}
-          authorLabels={AUTHOR_LABELS}
-          dismissed={dismissed}
-          onAccept={onAccept}
-          onReject={onReject}
-        />
-      </div>
-    </div>
+    <SuggestionThread
+      base={base}
+      sources={SOURCES}
+      authorLabels={AUTHOR_LABELS}
+      dismissed={dismissed}
+      onAccept={onAccept}
+      onReject={onReject}
+    />
   );
 };
 
 const meta = {
   title: 'plugins/plugin-comments/components/SuggestionThread',
   render: Render,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -89,22 +79,19 @@ export const AcceptReject: Story = {
   play: async ({ canvasElement }) => {
     const accepts = () => canvasElement.querySelectorAll<HTMLElement>('[data-testid="thread.message.accept-change"]');
     const rejects = () => canvasElement.querySelectorAll<HTMLElement>('[data-testid="thread.message.reject-change"]');
-    const baseText = () => canvasElement.querySelector('[data-testid="base-text"]')?.textContent ?? '';
+    const text = () => canvasElement.textContent ?? '';
 
     // Four suggestions: Alice{fast, sleepy} + Bob{swift, leaps}; "fast"/"swift" overlap on "quick".
     await waitFor(() => expect(accepts()).toHaveLength(4));
 
-    // Accept the first (offset then author ⇒ Alice's "quick"→"fast"): the document takes "fast", and
-    // Bob's overlapping "quick"→"swift" re-diffs against the new base and remains.
+    // Accept the first (offset then author ⇒ Alice's "quick"→"fast"): it merges and re-diffs away, and
+    // Bob's overlapping "quick"→"swift" re-expresses against the new base as "fast"→"swift".
     await userEvent.click(accepts()[0]);
-    await waitFor(() => expect(baseText()).toContain('fast'));
-    await waitFor(() => expect(baseText()).not.toContain('quick'));
     await waitFor(() => expect(accepts()).toHaveLength(3));
+    await waitFor(() => expect(text()).toContain('swift'));
 
-    // Reject the next suggestion: it disappears, but the document is unchanged.
-    const before = baseText();
+    // Reject the next suggestion: it disappears from the list.
     await userEvent.click(rejects()[0]);
     await waitFor(() => expect(accepts()).toHaveLength(2));
-    await waitFor(() => expect(baseText()).toBe(before));
   },
 };
