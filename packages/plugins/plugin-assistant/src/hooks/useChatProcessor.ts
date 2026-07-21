@@ -104,6 +104,8 @@ export const useChatProcessor = ({
       observableRegistry,
       registry,
       model: preset?.model,
+      // A personal-space chat reads across the user's spaces (tier-1); others stay in their space.
+      readScope: AppSpace.isPersonalSpace(space) ? 'membership' : 'home',
     });
   }, [runtime, session, registry, preset, chat, feed, space?.id]);
 

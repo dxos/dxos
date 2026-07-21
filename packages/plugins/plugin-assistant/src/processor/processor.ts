@@ -69,6 +69,12 @@ export type AiChatProcessorOptions = {
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
+
+  /**
+   * Read confinement for the agent session (agent firewall): `'home'` (default) reads only the
+   * chat's space; `'membership'` reads across the user's spaces (set for a personal-space chat).
+   */
+  readScope?: 'home' | 'membership';
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -272,7 +278,10 @@ export class AiChatProcessor {
       const effect = Effect.gen(this, function* () {
         // NOTE: Gets or creates a session for the feed.
         log.info('init agent session', { feed: Obj.getURI(this._feed), model: this._options.model });
-        const session = yield* AgentService.getSession(this._feed, { model: this._options.model });
+        const session = yield* AgentService.getSession(this._feed, {
+          model: this._options.model,
+          readScope: this._options.readScope,
+        });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
           Stream.runForEach((message) =>

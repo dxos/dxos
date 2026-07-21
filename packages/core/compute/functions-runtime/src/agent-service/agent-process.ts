@@ -120,6 +120,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const allowlist = options.readScope === 'membership' ? db.graph.spaceIds() : [db.spaceId];
         const hypergraphScope = Hypergraph.scopedLayer([...allowlist]);
 
+        // The read tools' descriptions speak of "the space" (singular); for a tier-1 session that
+        // would mislead the agent into thinking it cannot read other spaces. Tell it otherwise — its
+        // read tools already span the user's spaces — while keeping writes scoped to the home space.
+        const systemPrompt =
+          options.readScope === 'membership'
+            ? `${options.systemPrompt ?? ''}\n\nYou can read across all of the user's spaces: your query, search, and load tools span every space the user belongs to, not just the current one. When asked about other spaces or "all spaces", just use these tools — they already search across spaces. (You still create and modify objects only in the current space.)`
+            : options.systemPrompt;
+
         const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(hypergraphScope));
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
@@ -284,7 +292,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // toolkit: AsynchronousExectionToolkit,
                   // The alarm tools (set-alarm/get-current-date) now arrive as a bound blueprint whose
                   // operations reach this host's AlarmManager over HarnessService Tier B.
-                  system: options.systemPrompt,
+                  system: systemPrompt,
                   mcpServers: options.getMcpServers?.(),
                 })
                 .pipe(

@@ -109,14 +109,15 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       // the old process and spawns a fresh one (see below).
       const sessionCache = new Map<string, { model: ModelName | undefined; handle: AgentHandle; session: Session }>();
 
-      const makeExecutable = (model?: ModelName) =>
+      const makeExecutable = (model?: ModelName, readScope?: 'home' | 'membership') =>
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
           model: model ?? opts?.model,
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
-          readScope: opts?.readScope,
+          // Per-session read scope (e.g. a personal-space chat) overrides the service default.
+          readScope: readScope ?? opts?.readScope,
         });
 
       const hydrateAgents = Effect.fnUntraced(function* () {
@@ -159,7 +160,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             const target = Obj.getURI(feed);
             const parsedEchoUri = EID.tryParse(target);
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-            const executable = makeExecutable(model);
+            const executable = makeExecutable(model, options?.readScope);
 
             // Reuse a still-running process for this feed only when there was no cached session
             // (e.g. after the UI remounted). After a model change we always spawn a fresh process,

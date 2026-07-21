@@ -84,4 +84,11 @@ export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => s
 export interface GetSessionOptions {
   readonly model?: ModelName;
   readonly systemPrompt?: string;
+
+  /**
+   * Read confinement for this session (agent firewall): `'home'` (default, tier-0) reads only the
+   * hosting space; `'membership'` (tier-1) reads across the user's in-process spaces. Decided
+   * per-session by the caller (e.g. a personal-space chat). See `docs/design/agent-firewall.md`.
+   */
+  readonly readScope?: 'home' | 'membership';
 }
