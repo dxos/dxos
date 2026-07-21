@@ -169,6 +169,10 @@ Deeper conventions:
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, land, …).
+- **Flaky test quarantining** — investigating a flaky/red CI run or setting up
+  Trunk test uploads → `trunk-quarantine` skill
+  (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
+  `REPOSITORY_GUIDE.md`.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.
