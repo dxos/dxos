@@ -121,6 +121,13 @@ Deferred from the CodeRabbit round (stage 3/4):
       (fork→merge×2), case 4 ConflictAutoResolve (CRDT no-markers) & ConflictResolution (markers).
       Every action driven through the real UI. 7 play tests green in chromium.
 
+## Phase 4 follow-ups
+
+- [ ] Create test plan + usage script for demo video — the suggestion-review flow (Suggest edits →
+      edit on the suggestion branch → accept/reject in the companion), which stories to exercise
+      (`SuggestionThread`, `Message/WithChange`, `VersionBanner`, integrated `CommentsArticle`), and
+      an end-to-end narration for recording.
+
 ## Future
 
 - **True nested branch-of-branch** (fork off a branch tip, keep live, merge child→parent→main).

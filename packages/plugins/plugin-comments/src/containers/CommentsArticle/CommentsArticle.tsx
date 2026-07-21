@@ -29,6 +29,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
+import { Branch } from '@dxos/versioning';
 
 import { CommentThread, type CommentThreadProps, SuggestionThread } from '#components';
 import { meta } from '#meta';
@@ -341,6 +342,23 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     (group: SuggestionGroup) => routeSuggestion(CollaborationOperation.RejectChange, group),
     [routeSuggestion],
   );
+
+  // Lazy cleanup: archive suggestion branches that carry no changes vs their fork point (e.g. every
+  // hunk accepted or rejected). Swept only when the companion opens for a document — deliberately not
+  // after each accept/reject, so the reject op's in-session undo (which re-applies on the branch) is
+  // never raced by an archive that would discard the branch.
+  useEffect(() => {
+    const doc = markdownDoc;
+    if (!doc) {
+      return;
+    }
+    const branches = doc.history?.branches.filter(
+      (branch) => branch.status === 'active' && branch.kind === 'suggestion',
+    );
+    for (const branch of branches ?? []) {
+      void Branch.archiveIfEmpty(doc, branch).catch(() => {});
+    }
+  }, [markdownDoc]);
 
   // Scroll the current thread into view when it changes.
   useEffect(() => {
