@@ -9,6 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
 import { IconButton, Main, type MainContentProps, ScrollArea, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
+import { isLinkedSegment } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
@@ -37,6 +38,10 @@ const DECK_VIEWPORT_NAME = 'DeckViewport';
 const DEFAULT_PLANK_SIZE = 50;
 const MIN_PLANK_SIZE = 20;
 const MAX_PLANK_SIZE = 120;
+
+// The companion plank persists a single shared width (keyed variant-independently) so switching
+// companion tabs does not resize the pane. Not a valid node id, so it never collides with a plank.
+const COMPANION_SIZE_KEY = 'companion';
 
 //
 // DeckViewport
@@ -144,14 +149,17 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
   const soloLook = rendered.length === 1;
+  // The companion plank keeps one shared width across its variants (a companion id is
+  // `<plank>/~<variant>`), so switching tabs never resizes it; ordinary planks size per id.
+  const sizingKey = isLinkedSegment(id) ? COMPANION_SIZE_KEY : id;
 
   const handleSizeChange = useCallback<NonNullable<MosaicTileProps['onSizeChange']>>(
     (size) => {
       if (typeof size === 'number') {
-        void invokePromise(DeckOperation.UpdatePlankSize, { id, size: Math.round(size) });
+        void invokePromise(DeckOperation.UpdatePlankSize, { id: sizingKey, size: Math.round(size) });
       }
     },
-    [invokePromise, id],
+    [invokePromise, sizingKey],
   );
 
   if (presentation === 'fullbleed') {
@@ -181,7 +189,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     <Mosaic.Tile
       {...props}
       classNames='relative h-full'
-      size={deck.plankSizing[id] ?? DEFAULT_PLANK_SIZE}
+      size={deck.plankSizing[sizingKey] ?? DEFAULT_PLANK_SIZE}
       minSize={MIN_PLANK_SIZE}
       maxSize={MAX_PLANK_SIZE}
       onSizeChange={handleSizeChange}
