@@ -22,6 +22,12 @@ export type MarkdownExtensionProvider = (props: {
   branchText?: Text.Text;
   /** True when the active branch is a per-user suggestion branch (comment creation is prohibited). */
   suggestionBranch?: boolean;
+  /**
+   * Whether comment affordances should render, per the active review policy (see
+   * `SpaceCapabilities.ReviewRenderPolicy`). Defaults to `true`; a policy override may hide comments
+   * (e.g. a distraction-free reading mode) without changing the default Viewing behaviour.
+   */
+  showComments?: boolean;
 }) => Extension | undefined;
 
 export type MarkdownPluginState = {

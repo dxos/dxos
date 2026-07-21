@@ -4,7 +4,7 @@
 
 import { Compartment, type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
-import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
@@ -16,6 +16,7 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
@@ -28,7 +29,7 @@ import {
   isToolbarAction,
 } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
-import { type DiffHunk, diffView, suggestChanges } from '@dxos/ui-editor';
+import { type DiffHunk, type SuggestionSource, diffView, suggestChanges, suggestions } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
 import {
@@ -61,6 +62,11 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
 // scroll/selection). The branch binding is unchanged while comparing, so only the overlay moves.
 const compareCompartment = new Compartment();
 
+// The ambient multi-author suggestion overlay lives in its own compartment, reconfigured live as the
+// resolved sources or the review mode change — like `compareCompartment`, it must never remount the
+// editor (which would rebind automerge and lose scroll/selection).
+const suggestionsCompartment = new Compartment();
+
 export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   (
     { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, viewMode, ...props },
@@ -83,8 +89,11 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       checkpointText,
       checkpointContent,
       branchBaseContent,
+      selection,
       setSelection,
       setView,
+      mode,
+      setMode,
     } = versioning;
     // Default branch compare to the accept/reject review overlay ('suggest'); the read-only diff
     // modes (inline/sideBySide/gutter) are opt-in via settings.
@@ -106,6 +115,16 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // Per-user suggestion branches prohibit inline comments (review happens on the suggestion card);
     // comments are allowed on main and on draft branches.
     const suggestionBranch = activeBranch?.kind === 'suggestion';
+    // Ambient review model: the default view (`selection.kind === 'current'`) stays bound to main and
+    // overlays every author's suggestions plus comments per the per-user review mode. Any explicit
+    // selection (branch/checkpoint/fork) keeps the advanced behaviour below untouched — the policy is
+    // consulted only on the ambient path. The policy capability is contributed by plugin-space (A2);
+    // absent (e.g. a bare story host) ⇒ the GDocs-parity default.
+    const [reviewRenderPolicy] = useCapabilities(SpaceCapabilities.ReviewRenderPolicy);
+    const renderPolicy = reviewRenderPolicy ?? SpaceCapabilities.defaultReviewRenderPolicy;
+    const ambient = selection.kind === 'current';
+    const policy = renderPolicy(mode);
+    const ambientEditable = ambient ? policy.editable : true;
     // While a core-branch binding is resolving, the editor must not mount against the root object
     // — edits would silently land on main. Render an empty panel until the binding is ready. The
     // same applies to a branch CHECKPOINT: its content is read from the branch-bound Text, which
@@ -137,10 +156,12 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       : suggestActive
         ? (docContent ?? textContent)
         : (branchText?.content ?? docContent ?? textContent);
-    const effectiveViewMode = readonlySnapshot || suggestActive ? 'readonly' : viewMode;
+    // Ambient Viewing (policy not editable) forces read-only without touching the advanced path.
+    const effectiveViewMode = readonlySnapshot || suggestActive || !ambientEditable ? 'readonly' : viewMode;
     // Remount only when the editor's bound document changes (checkpoint/fork snapshot, branch, or the
     // suggest overlay which rebinds to the parent). Toggling Compare keeps the same binding — its
-    // overlay is reconfigured live via `compareCompartment`, so it is deliberately NOT in the key.
+    // overlay is reconfigured live via `compareCompartment`, so it is deliberately NOT in the key. A
+    // review-mode switch changes `effectiveViewMode`, which `useTextEditor` already reconfigures for.
     const editorKey = readonlySnapshot
       ? readonlySnapshot.key
       : suggestActive
@@ -170,6 +191,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                   // diff/suggest overlay the editor stays on main, so anchors resolve against main.
                   branchText: suggestActive ? undefined : branchText,
                   suggestionBranch,
+                  // Ambient view follows the review policy; the advanced paths always show comments.
+                  showComments: ambient ? policy.showComments : true,
                 })
               : provider;
           if (extension) {
@@ -187,6 +210,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       branchText,
       suggestActive,
       suggestionBranch,
+      ambient,
+      policy.showComments,
     ]);
 
     // Route the inline suggestion Accept/Reject controls through the durable, undoable collaboration
@@ -216,6 +241,54 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       [object, reviewBranch, invokePromise],
     );
 
+    // Ambient overlay Accept/Reject: unlike the single-branch compare path (which keys off
+    // `reviewBranch`), the aggregated overlay identifies the target branch from the suggestion's
+    // author — the branch's creator DID, carried through `buildSuggestionSources`. Resolve it to the
+    // core branch key and route the same durable op. No matching core branch ⇒ no-op.
+    const resolveAuthorBranch = useCallback(
+      (author: string): string | undefined => {
+        const branch = document?.history?.branches.find(
+          (branch) =>
+            branch.status === 'active' &&
+            branch.kind === 'suggestion' &&
+            (branch.creator ?? branch.id) === author &&
+            Branch.isCore(branch),
+        );
+        return branch?.key;
+      },
+      [document],
+    );
+    const handleAmbientAccept = useCallback(
+      (hunk: DiffHunk, author: string) => {
+        const content = Obj.instanceOf(Markdown.Document, object) ? object.content?.target : undefined;
+        const branch = resolveAuthorBranch(author);
+        if (!content || !branch) {
+          return;
+        }
+        const anchor = toCursorRange(Doc.createAccessor(content, ['content']), hunk.from, hunk.to);
+        void invokePromise?.(CollaborationOperation.AcceptChange, { subject: object, anchor, branch });
+      },
+      [object, resolveAuthorBranch, invokePromise],
+    );
+    const handleAmbientReject = useCallback(
+      (hunk: DiffHunk, author: string) => {
+        const content = Obj.instanceOf(Markdown.Document, object) ? object.content?.target : undefined;
+        const branch = resolveAuthorBranch(author);
+        if (!content || !branch) {
+          return;
+        }
+        const anchor = toCursorRange(Doc.createAccessor(content, ['content']), hunk.from, hunk.to);
+        void invokePromise?.(CollaborationOperation.RejectChange, { subject: object, anchor, branch });
+      },
+      [object, resolveAuthorBranch, invokePromise],
+    );
+
+    // Live-resolved suggestion sources for the ambient overlay, fed by the (invisible) provider
+    // bridge below; empty until a provider is contributed (plugin-comments) — the overlay then simply
+    // renders nothing.
+    const [suggestionSources, setSuggestionSources] = useState<SuggestionSource[]>([]);
+    const [SuggestionSourcesProvider] = useCapabilities(MarkdownCapabilities.SuggestionSourcesProvider);
+
     // The suggestion author's palette colour — the same colour as their banner tag and avatar — so
     // the inline markers attribute the change by colour. Resolved against the space members.
     const members = useMembers(getSpace(object)?.id);
@@ -229,7 +302,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // `useTextEditor` recreate the view. The suggest overlay stays baked in: it rebinds the editor to
     // the parent and so already remounts via `editorKey`.
     const combinedExtensions = useMemo<Extension[]>(() => {
-      const list = [...extensions, mergeConflicts(), compareCompartment.of([])];
+      const list = [...extensions, mergeConflicts(), compareCompartment.of([]), suggestionsCompartment.of([])];
       if (suggestActive && branchText) {
         // Editor is bound to the parent; the branch content is the proposal. Accept cherry-picks the
         // hunk into the parent (AcceptChange); reject reverts it on the author's branch (RejectChange).
@@ -325,12 +398,45 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           ),
         ];
 
+        // Per-user review mode toggle (ambient path): Editing / Suggesting / Viewing. Suggesting is
+        // authoring, gated behind the later spike (Milestone B) — exposed but disabled so the control
+        // ships whole.
+        const modeGroupId = 'review-mode';
+        const modeGroup = createMenuItemGroup(modeGroupId, {
+          label: ['review-mode.title', { ns: meta.profile.key }],
+          icon: 'ph--eye--regular',
+          iconOnly: true,
+          variant: 'dropdownMenu',
+          applyActive: false,
+          selectCardinality: 'single',
+        } satisfies ToolbarMenuActionGroupProperties);
+        const modeActions = [
+          createMenuAction('review-mode--editing', () => setMode('editing'), {
+            label: ['review-mode.editing.label', { ns: meta.profile.key }],
+            icon: 'ph--pencil-simple-line--regular',
+            checked: mode === 'editing',
+          }),
+          createMenuAction('review-mode--suggesting', () => {}, {
+            label: ['review-mode.suggesting.label', { ns: meta.profile.key }],
+            icon: 'ph--pencil-simple--regular',
+            checked: mode === 'suggesting',
+            disabled: true,
+          }),
+          createMenuAction('review-mode--viewing', () => setMode('viewing'), {
+            label: ['review-mode.viewing.label', { ns: meta.profile.key }],
+            icon: 'ph--eye--regular',
+            checked: mode === 'viewing',
+          }),
+        ];
+
         return {
-          nodes: [...base.nodes, group, ...actions],
+          nodes: [...base.nodes, group, ...actions, modeGroup, ...modeActions],
           edges: [
             ...base.edges,
             { source: 'root', target: groupId, relation: 'child' as const },
             ...actions.map((action) => ({ source: groupId, target: action.id, relation: 'child' as const })),
+            { source: 'root', target: modeGroupId, relation: 'child' as const },
+            ...modeActions.map((action) => ({ source: modeGroupId, target: action.id, relation: 'child' as const })),
           ],
         };
       });
@@ -342,6 +448,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       branchesKey,
       activeBranch?.id,
       activeVersion?.id,
+      mode,
+      setMode,
       setSelection,
       setView,
       handleSuggest,
@@ -402,6 +510,17 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           <Editor.Root {...editorRootProps}>
             <RegisterEditorView id={id} attendableId={attendableId} />
             <CompareOverlay overlay={compareOverlay} />
+            {/* Ambient review: enumerate every author's suggestion branches (invisible bridge) and
+                overlay them live; both are no-ops off the ambient path or when no provider exists. */}
+            {ambient && document && SuggestionSourcesProvider && (
+              <SuggestionSourcesProvider document={document} onSources={setSuggestionSources} />
+            )}
+            <SuggestionsOverlay
+              sources={suggestionSources}
+              enabled={ambient && policy.showSuggestions}
+              onAccept={handleAmbientAccept}
+              onReject={handleAmbientReject}
+            />
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar>
@@ -453,6 +572,38 @@ const CompareOverlay = ({ overlay }: { overlay?: Extension }) => {
       view.dispatch({ effects: compareCompartment.reconfigure(overlay ?? []) });
     }
   }, [view, overlay]);
+
+  return null;
+};
+
+/**
+ * Reconfigures the ambient multi-author suggestion overlay on the live editor as the resolved sources
+ * or review mode change — no remount (see {@link suggestionsCompartment}). Renders the `suggestions`
+ * extension only when enabled and non-empty; otherwise clears the compartment. Must render inside
+ * `Editor.Root`.
+ */
+const SuggestionsOverlay = ({
+  sources,
+  enabled,
+  onAccept,
+  onReject,
+}: {
+  sources: SuggestionSource[];
+  enabled: boolean;
+  onAccept: (hunk: DiffHunk, author: string) => void;
+  onReject: (hunk: DiffHunk, author: string) => void;
+}) => {
+  const { controller } = useEditorContext('MarkdownArticle.SuggestionsOverlay');
+  const view = controller?.view;
+  useEffect(() => {
+    if (view) {
+      view.dispatch({
+        effects: suggestionsCompartment.reconfigure(
+          enabled && sources.length > 0 ? suggestions({ sources, onAccept, onReject }) : [],
+        ),
+      });
+    }
+  }, [view, sources, enabled, onAccept, onReject]);
 
   return null;
 };

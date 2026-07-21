@@ -20,9 +20,11 @@
 //                                    legacy/external conflict block.
 //
 
+import { type Extension } from '@codemirror/state';
+import { ViewPlugin } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Capability, Plugin } from '@dxos/app-framework';
@@ -31,7 +33,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Text as EchoText, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -43,6 +45,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { Cursor, EditorView, type SuggestionSource, comments, documentId, setComments } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
 import { translations } from '#translations';
@@ -63,6 +66,136 @@ const MarkdownExtensionsPlugin = Plugin.define(
     id: 'extensions',
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.ExtensionProvider, [])),
+  }),
+  Plugin.make,
+);
+
+//
+// Ambient review (A5) story fixtures. plugin-markdown cannot import plugin-comments (the dependency
+// runs the other way), so the story stands in its own headless SuggestionSourcesProvider and a
+// comment-seeding extension — both built from `@dxos/ui-editor` primitives — to exercise the ambient
+// overlay + comment coexistence without pulling in plugin-comments.
+//
+
+/** Binds one active suggestion branch and reports its live content up as a {@link SuggestionSource}. */
+const StoryBranchSource = ({
+  document,
+  branch,
+  onSource,
+}: {
+  document: Markdown.Document;
+  branch: NonNullable<Markdown.Document['history']>['branches'][number];
+  onSource: (id: string, source: SuggestionSource) => void;
+}) => {
+  const [binding, setBinding] = useState<Awaited<ReturnType<typeof Branch.bind>> | undefined>();
+  useEffect(() => {
+    let disposed = false;
+    let bound: Awaited<ReturnType<typeof Branch.bind>> | undefined;
+    void Branch.bind(document, branch).then((next) => {
+      if (disposed) {
+        next.dispose();
+        return;
+      }
+      bound = next;
+      setBinding(next);
+    });
+    return () => {
+      disposed = true;
+      bound?.dispose();
+      setBinding(undefined);
+    };
+  }, [document, branch.id]);
+
+  const [content] = useObject(binding?.object, 'content');
+  useEffect(() => {
+    if (content !== undefined) {
+      onSource(branch.id, {
+        author: branch.creator ?? branch.id,
+        colour: 'var(--color-primary-500)',
+        content,
+      });
+    }
+  }, [content, branch.id, branch.creator, onSource]);
+
+  return null;
+};
+
+/** Story-local stand-in for the plugin-comments provider: enumerates + resolves suggestion branches. */
+const StorySuggestionSourcesProvider = ({
+  document,
+  onSources,
+}: MarkdownCapabilities.SuggestionSourcesProviderProps) => {
+  useObject(document, 'history');
+  const branches = (document?.history?.branches ?? []).filter(
+    (branch) => branch.status === 'active' && branch.kind === 'suggestion',
+  );
+  const [sources, setSources] = useState<Record<string, SuggestionSource>>({});
+  // Stable + change-guarded so a re-render never re-fires the child effect (which would loop).
+  const setSource = React.useCallback((id: string, source: SuggestionSource) => {
+    setSources((current) =>
+      current[id]?.content === source.content && current[id]?.author === source.author
+        ? current
+        : { ...current, [id]: source },
+    );
+  }, []);
+  const resolved = branches
+    .map((branch) => sources[branch.id])
+    .filter((source): source is SuggestionSource => !!source);
+  useEffect(() => {
+    onSources(resolved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onSources, JSON.stringify(resolved)]);
+
+  return (
+    <>
+      {document &&
+        branches.map((branch) => (
+          <StoryBranchSource key={branch.id} document={document} branch={branch} onSource={setSource} />
+        ))}
+    </>
+  );
+};
+
+/**
+ * Comment-highlight extension for the story: seeds one comment over the word "Hello" on mount,
+ * dispatching `setComments` directly (bypassing a comments store) so a `.cm-comment` mark is present
+ * regardless of the review mode. Mirrors what plugin-comments' `threads` extension renders. A
+ * `ViewPlugin` (not an `updateListener`) so it fires without waiting for a document change.
+ */
+const storyCommentsExtension = (): Extension => [
+  comments({ id: 'story-comment', readonly: true }),
+  ViewPlugin.fromClass(
+    class {
+      constructor(view: EditorView) {
+        const from = view.state.doc.toString().indexOf('Hello');
+        if (from < 0) {
+          return;
+        }
+        const id = view.state.facet(documentId);
+        const cursor = Cursor.getCursorFromRange(view.state, { from, to: from + 'Hello'.length });
+        queueMicrotask(() =>
+          view.dispatch({ effects: setComments.of({ id, comments: [{ id: 'story-comment-1', cursor }] }) }),
+        );
+      }
+    },
+  ),
+];
+
+/** Contributes the ambient-review fixtures; gated to the AmbientReview story via `ambientReview` param. */
+const AmbientReviewPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.markdown.story.ambientReview'),
+    name: 'Story Ambient Review',
+  }),
+).pipe(
+  Plugin.addModule({
+    id: 'ambient-review',
+    activatesOn: MarkdownEvents.SetupExtensions,
+    activate: () =>
+      Effect.succeed([
+        Capability.contributes(MarkdownCapabilities.ExtensionProvider, [() => storyCommentsExtension()]),
+        Capability.contributes(MarkdownCapabilities.SuggestionSourcesProvider, StorySuggestionSourcesProvider),
+      ]),
   }),
   Plugin.make,
 );
@@ -100,6 +233,20 @@ const setBranchContent = async (branchName: string, content: string) => {
 const editorContent = (canvasElement: HTMLElement): string => {
   const content = canvasElement.querySelector('.cm-content');
   return content?.textContent ?? '';
+};
+
+// Find-or-create a per-author suggestion branch and set its content (splice, as the editor would),
+// so the ambient overlay diffs it against main into an attributable suggestion.
+const seedSuggestion = async (creator: string, content: string) => {
+  const doc = getDoc();
+  const parent = doc.content.target;
+  invariant(parent, 'root text not loaded');
+  const branch = await Branch.suggestion(doc, parent, creator);
+  const binding = await Branch.bind(doc, branch);
+  Obj.update(binding.object, () => {
+    EchoText.update(binding.object, 'content', content);
+  });
+  binding.dispose();
 };
 
 const DefaultStory = () => {
@@ -172,6 +319,8 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin({}),
         MarkdownExtensionsPlugin(),
+        // Ambient-review fixtures only for the AmbientReview story (keeps other stories untouched).
+        ...(context.parameters?.ambientReview ? [AmbientReviewPlugin()] : []),
         ClientPlugin({
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
@@ -492,5 +641,67 @@ export const ConflictResolution: Story = {
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha theirs'));
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('alpha ours'));
     await waitFor(() => expect(editorContent(canvasElement)).toContain('bravo'));
+  },
+};
+
+/** Concatenated text of the inline suggestion inserts currently overlaid in the editor. */
+const suggestInserts = (canvasElement: HTMLElement): string =>
+  Array.from(canvasElement.querySelectorAll('.cm-suggest-insert'))
+    .map((node) => node.textContent ?? '')
+    .join(' ');
+
+// Read the editor's read-only state directly from the CodeMirror view (the review policy drives
+// `EditorState.readOnly`); `contenteditable` is unaffected by `readOnly`, so it cannot be asserted.
+const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
+  const dom = canvasElement.querySelector<HTMLElement>('.cm-content');
+  const view = dom ? EditorView.findFromDOM(dom) : null;
+  return view?.state.readOnly;
+};
+
+/** Open the toolbar review-mode dropdown and pick a mode (Editing / Suggesting / Viewing). */
+const selectReviewMode = async (canvasElement: HTMLElement, label: string) => {
+  const canvas = within(canvasElement);
+  const body = within(canvasElement.ownerDocument.body);
+  await userEvent.click(await canvas.findByRole('button', { name: 'Review mode' }, { timeout: 15_000 }));
+  await userEvent.click(await body.findByText(label));
+};
+
+/**
+ * Case A5 (ambient review): the default view stays on main and overlays EVERY author's suggestions
+ * plus comments, governed by the per-user review mode. Editing overlays both authors' suggestions and
+ * shows the comment highlight (editor editable); switching to Viewing hides the suggestions but keeps
+ * the comment and makes the editor read-only. Suggestion resolution + comments here are stood in by
+ * story-local `@dxos/ui-editor` fixtures (plugin-markdown cannot depend on plugin-comments).
+ */
+export const AmbientReview: Story = {
+  args: {
+    content: '# Hello World\n',
+  },
+  parameters: {
+    ambientReview: true,
+  },
+  play: async ({ canvasElement }) => {
+    // Wait for the editor and the seeded comment highlight (mode defaults to editing).
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('Hello World'), { timeout: 20_000 });
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment')).not.toBeNull(), { timeout: 15_000 });
+
+    // Seed two authors' suggestion branches on main; each appends a distinct line.
+    await seedSuggestion('did:alice', '# Hello World\n\nAlice: nice intro.\n');
+    await seedSuggestion('did:bob', '# Hello World\n\nBob: add an example.\n');
+
+    // Editing mode: both authors' suggestions overlay the editor AND the comment highlight remains.
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Alice'), { timeout: 15_000 });
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'));
+    await expect(canvasElement.querySelector('.cm-comment')).not.toBeNull();
+    // Editor is editable in the ambient editing mode.
+    await waitFor(() => expect(editorReadOnly(canvasElement)).toBe(false));
+
+    // Switch to Viewing via the toolbar: suggestions disappear, the comment remains, editor read-only.
+    await selectReviewMode(canvasElement, 'Viewing');
+    await waitFor(() => expect(canvasElement.querySelectorAll('.cm-suggest-insert')).toHaveLength(0), {
+      timeout: 15_000,
+    });
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment')).not.toBeNull(), { timeout: 15_000 });
+    await waitFor(() => expect(editorReadOnly(canvasElement)).toBe(true), { timeout: 15_000 });
   },
 };
