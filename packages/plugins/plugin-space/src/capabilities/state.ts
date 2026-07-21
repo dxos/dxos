@@ -62,6 +62,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(SpaceCapabilities.State, stateAtom),
       Capability.contributes(SpaceCapabilities.VersioningState, versioningAtom),
+      Capability.contributes(SpaceCapabilities.ReviewRenderPolicy, SpaceCapabilities.defaultReviewRenderPolicy),
       Capability.contributes(SpaceCapabilities.EphemeralState, ephemeralAtom, () =>
         Effect.sync(() => {
           unsubscribe();

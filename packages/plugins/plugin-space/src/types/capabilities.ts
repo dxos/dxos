@@ -83,6 +83,26 @@ export namespace SpaceCapabilities {
     `${meta.profile.key}.capability.versioning-state`,
   );
 
+  /** What the editor should render for a given review mode. */
+  export type ReviewRenderConfig = { showSuggestions: boolean; showComments: boolean; editable: boolean };
+
+  /** Maps a per-document review mode to the editor's render config. */
+  export type ReviewRenderPolicyFn = (mode: ReviewMode) => ReviewRenderConfig;
+
+  /**
+   * GDocs parity: Editing/Suggesting overlay suggestions + comments and are editable; Viewing is a
+   * clean, read-only read (comments still shown). Override by contributing a stronger capability
+   * earlier in plugin order.
+   */
+  export const defaultReviewRenderPolicy: ReviewRenderPolicyFn = (mode) =>
+    mode === 'viewing'
+      ? { showSuggestions: false, showComments: true, editable: false }
+      : { showSuggestions: true, showComments: true, editable: true };
+
+  export const ReviewRenderPolicy = Capability.make<ReviewRenderPolicyFn>(
+    `${meta.profile.key}.capability.review-render-policy`,
+  );
+
   /**
    * Per-type opt-in to the generic history companion (checkpoints/branches timeline).
    * `id` is the typename gating the companion; `getTarget` resolves the versioned Text root.
