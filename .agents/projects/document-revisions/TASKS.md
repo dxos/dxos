@@ -215,10 +215,23 @@ Deferred from the CodeRabbit round (stage 3/4):
 
 Polish + fixes required before landing the suggestion-review flow.
 
-- [ ] When switching to a branch via the toolbar, default the view to **Diff** (not Base/Branch).
+- [x] When switching to a branch via the toolbar, default the view to **Diff** (not Base/Branch).
+      Done: toolbar branch-switch action calls `setView('diff')` (MarkdownArticle.tsx).
+- [ ] Show the history companion below the comments companion in `CommentsArticle.stories.tsx`
+      (right column split into equal rows: comments top, `subject:'history'` companion bottom).
 - [ ] BUG: selecting a branch then adding a comment throws `RangeError: Cannot getCursorPosition:
-      cursor <id> is invalid`. Investigate; likely disable comment-add on a branch/diff view (the
-      comment anchor cursor resolves against the wrong doc). Decide: disable vs fix the anchor.
+      cursor <id> is invalid`. **Root cause:** in Branch view the editor binds to the branch doc, so
+      comment cursors are branch-doc cursors, but `threads.ts getName` always resolves against
+      `doc.content.target` (main) → invalid. **Decision (2026-07-21, ontology-driven):**
+  - Branch ontology: (1) **main**; (2) per-user **suggestion** branches (`kind:'suggestion'`); (3)
+    private **draft** branches (regular; public today, private under Keyhive ACLs later).
+  - **Comments allowed on any branch EXCEPT suggestion branches.** So: fix cursor resolution to use
+    the editor-bound doc (main in Diff/suggest view; branch doc in Branch view), enabling comments on
+    main + draft branches; and **prohibit** comment creation while the active branch is a suggestion
+    branch (`activeBranch.kind === 'suggestion'`).
+  - Plumbing: thread the editor-bound branch Text + a "comments prohibited" flag from
+    `MarkdownArticle` → `MarkdownExtensionProvider` props → `threads()`; `getName` resolves against
+    the branch Text; the `comments()` extension suppresses the create affordance when prohibited.
 - [ ] Storybook with a real LLM making suggestions; a play function where suggestions are created by
       a mock agent and dismissed by the user. (tracked 2026-07-21)
 - [ ] BUG: creating a comment — after pressing Enter the comment flashes. (tracked 2026-07-21)

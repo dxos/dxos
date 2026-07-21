@@ -287,6 +287,14 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
     }),
     [doc, attendableId],
   );
+  const historyData = useMemo(
+    () => ({
+      subject: 'history',
+      companionTo: doc,
+      attendableId: attendableId ?? 'story',
+    }),
+    [doc, attendableId],
+  );
 
   if (!doc) {
     return <Loading data={{ doc: !!doc }} />;
@@ -295,7 +303,10 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   return (
     <div className='dx-container grid grid-cols-[3fr_2fr]' {...attentionAttrs}>
       <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-      <Surface.Surface type={AppSurface.Article} data={companionData} limit={1} />
+      <div className='grid grid-rows-2 min-bs-0'>
+        <Surface.Surface type={AppSurface.Article} data={companionData} limit={1} />
+        <Surface.Surface type={AppSurface.Article} data={historyData} limit={1} />
+      </div>
     </div>
   );
 };
