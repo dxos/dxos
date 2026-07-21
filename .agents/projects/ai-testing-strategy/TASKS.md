@@ -1,7 +1,8 @@
 # AI Testing Strategy — Tasks
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
-PR: [#12287](https://github.com/dxos/dxos/pull/12287) (draft — design doc only).
+PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
+[#12291](https://github.com/dxos/dxos/pull/12291) (Phase 1 step 1 — de-gate G2/G3, OPEN).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
