@@ -84,11 +84,7 @@ export type MessageStackProps = {
    * destructuring and re-bundling it themselves, which would defeat its referential stability.
    */
   pagination?: PaginationResult<unknown>;
-  /**
-   * Renders a spinner in the scroll flow after the last item while a page loads, instead of the
-   * caller blanking the whole list. On an empty list (height 0) it sits at the top — the only thing
-   * shown during a first load — so the list container never gets replaced by a full-panel loader.
-   */
+  /** Renders a spinner after the last item while a page loads (at the top when the list is empty). */
   loading?: boolean;
   /**
    * Show the "Ignore sender" tile menu item. Off by default — only the mailbox view handles the

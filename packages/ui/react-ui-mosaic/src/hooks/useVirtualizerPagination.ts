@@ -204,11 +204,9 @@ const evictedPrefixHeight = (virtualizer: Virtualizer<any, any>, oldIndexOfNewFi
 };
 
 /**
- * True when `items` is exactly `prevItems` sliced from `oldIndexOfNewFirst`, optionally with new
- * items appended after it -- the shape a genuine slide/eviction/append actually produces. False for
- * anything that reorders retained items (e.g. a conversation bumped to the head by a new reply
- * arriving mid-sync): the bumped item's old mid-list offset would otherwise be misread as "evicted"
- * height, growing the leading spacer by a bogus amount that's never reversed.
+ * True when `items` is `prevItems` sliced from `oldIndexOfNewFirst` (a genuine slide/eviction/append).
+ * False for a reorder -- e.g. a conversation bumped to the head by a mid-sync reply -- whose old
+ * mid-list offset would otherwise be misread as evicted height and grow the spacer for good.
  */
 const isContiguousSlide = <TItem>(
   prevItems: readonly TItem[],
@@ -442,9 +440,8 @@ export const useVirtualizerPagination = <TItem = any>({
       return;
     }
     if (!anchor) {
-      // Evicted/appended (a `getNext` page, or eviction sliding the window), or a caller-driven
-      // `items` change with no front-edge classification (pagination unset) -- no prepend to
-      // correct, but still re-arm: see the hook's own doc comment for why this can't be skipped.
+      // Evicted/appended (a `getNext` page or a slide), or an unclassified change -- no prepend to
+      // correct, but still re-arm (see the hook doc for why this can't be skipped).
       rearmTriggers(virtualizer);
       return;
     }

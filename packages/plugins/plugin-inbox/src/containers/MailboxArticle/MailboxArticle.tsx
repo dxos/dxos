@@ -235,13 +235,10 @@ export const MailboxArticle = ({
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // `source` is only undefined for a free-text view whose feed hasn't resolved yet. `isLoading`
-  // covers a page fetch in flight (initial load, paging). It drives an in-flow spinner in the list,
-  // NOT a full-panel fallback: a subsequent-page load — or a background query-identity refresh as
-  // sync tags messages (`usePagination` holds the prior page across it) — must never blank the list.
+  // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
+  // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
   const loading = !source || pagination.isLoading;
-  // The empty-mailbox panel shows only once the query has genuinely settled with nothing — never
-  // mid-load — so it can't flash in before the first page (or a refresh) delivers.
+  // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
   const showEmptyState = !loading && messages.length === 0;
 
   const handleClear = useCallback(() => {

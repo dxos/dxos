@@ -68,10 +68,8 @@ const createPaginationStore = <Q extends Query.Any, O>(
   innerAst: Parameters<typeof Query.fromAst>[0],
   pageSize: number,
   initialMaxWindowSize: number,
-  // The page shown by the previous store, handed over when the query *identity* changes (see the
-  // hook's `previousItemsRef`). A live filter whose id set grows -- e.g. a mailbox's system-tag view
-  // gaining members as sync tags them -- rebuilds the store on every batch; seeding from the prior
-  // page keeps that page on screen until the new query delivers, instead of flashing empty + loading.
+  // Seed for the visible page, handed over when a query-identity change rebuilds the store, so the
+  // view refreshes in place instead of flashing empty + loading (see the hook's `previousItemsRef`).
   initialItems: O[],
 ) => {
   let maxWindowSize = initialMaxWindowSize;
@@ -81,13 +79,11 @@ const createPaginationStore = <Q extends Query.Any, O>(
   // virtualizer's `onChange` fires once per rendered row) into one range change.
   let rangeChangePending = false;
   let innerUnsubscribe: (() => void) | undefined;
-  // The items currently shown. Held across a range change until the new range delivers its own
-  // results, so the list never flickers to empty while a new (possibly async) range loads. Seeded
-  // from the previous store's page so a query-identity change refreshes in place, not to empty.
+  // Held across a range change (and seeded across an identity change) until the new range delivers,
+  // so the list never flickers to empty while a new (possibly async) range loads.
   let displayItems: O[] = initialItems.length > 0 ? initialItems : EMPTY_ARRAY;
-  // Cleared only on the range's first delivery (never on a timer), so it never sticks true even for
-  // an empty async feed. Starts false when seeded: we already have a page to show, so this is a
-  // background refresh, not a first load that should blank the view.
+  // Cleared on the range's first delivery, never on a timer, so it can't stick true on an empty feed.
+  // False when seeded: a page is already shown, so this is a background refresh, not a first load.
   let isLoading = resource !== undefined && displayItems.length === 0;
   let snapshot: Snapshot<O> = { items: displayItems, skip, limit, isLoading };
   const listeners = new Set<() => void>();
@@ -99,11 +95,9 @@ const createPaginationStore = <Q extends Query.Any, O>(
     }
   };
 
-  // (Re)points the query at the current skip/limit. `markLoading` flags a range the user navigated
-  // to (initial load, `getNext`/`getPrevious`, `jumpToHead`) -- one worth surfacing a loading state
-  // for. A seeded background refresh (a query-identity change that handed over a page to show)
-  // passes `false`: the previous page stays visible and `isLoading` stays put, so consumers don't
-  // blank the view for a refresh the user never asked for.
+  // (Re)points the query at the current skip/limit. `markLoading` is true for a range the user
+  // navigated to (initial load, `getNext`/`getPrevious`, `jumpToHead`); a seeded background refresh
+  // passes false so the previous page stays visible and consumers don't blank on it.
   //
   // TODO(wittjosiah): For feeds, this re-fetches/decodes the whole feed on every range change --
   // only what's rendered is bounded, not what's fetched. Needs index-backed keyset pagination to
@@ -237,10 +231,8 @@ export const usePagination = <Q extends Query.Any>(
   const innerAstKey = JSON.stringify(innerAst);
   const maxWindowSize = options?.maxWindowSize ?? pageSize * 10;
 
-  // The page shown right now, carried across store rebuilds so the new store can seed from it (a
-  // query-identity change hands over the visible page rather than resetting to empty). Written on
-  // every render just after the snapshot is read, so the next render's `useMemo` below sees the
-  // page the previous render displayed.
+  // The page shown right now, carried across a store rebuild to seed the new store. Written just
+  // after the snapshot below, so the next render's `useMemo` sees the previously-displayed page.
   const previousItemsRef = useRef<PaginationElement<Q>[]>(EMPTY_ARRAY);
 
   // A new store is built when "what" is being shown changes: filter/order (`innerAstKey`), page
