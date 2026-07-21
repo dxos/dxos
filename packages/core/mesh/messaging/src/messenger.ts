@@ -186,8 +186,13 @@ export class Messenger {
     const unsubscribe = await this._signalManager.subscribeMessages({
       peer,
       onMessage: (message) => {
+        // Subscriptions can outlive a close (they are torn down on dispose, and survive offline/online
+        // cycles), so ignore late deliveries and never let a handler rejection escape as unhandled.
+        if (this._closed) {
+          return;
+        }
         log('received message', { from: message.author });
-        void this._handleMessage(message);
+        void this._handleMessage(message).catch((err) => log.catch(err));
       },
     });
     const clearDispose = this._ctx.onDispose(unsubscribe);
