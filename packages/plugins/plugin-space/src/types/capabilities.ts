@@ -66,11 +66,16 @@ export namespace SpaceCapabilities {
    */
   export type BranchView = 'base' | 'diff' | 'branch';
 
+  /** Per-user editing posture for a document (Google-Docs-style). Local UI preference, never replicated. */
+  export type ReviewMode = 'editing' | 'suggesting' | 'viewing';
+
   export type VersioningState = {
     /** Selection keyed by object id. Missing entry = current. */
     selection: Record<string, VersionSelection>;
     /** Active branch view keyed by object id. Missing entry = `branch` (the editable draft). */
     view: Record<string, BranchView>;
+    /** Review mode keyed by object id. Missing entry = `editing`. */
+    mode: Record<string, ReviewMode>;
   };
 
   /** In-memory (per-session) version selection state. */

@@ -55,7 +55,7 @@ export default Capability.makeModule(
     const unsubscribe = registry.subscribe(manager.enabled, updateNavigableCollections);
 
     // Version selection is per-user, per-session view state — deliberately not persisted.
-    const versioningAtom = Atom.make<SpaceCapabilities.VersioningState>({ selection: {}, view: {} }).pipe(
+    const versioningAtom = Atom.make<SpaceCapabilities.VersioningState>({ selection: {}, view: {}, mode: {} }).pipe(
       Atom.keepAlive,
     );
 
