@@ -125,3 +125,28 @@ type alias there documents the TS2883 guard) for the exact types, and
 - **Commit nothing silently** — `git status` and account for every file
   first.
 - Commit trailer: `Co-Authored-By: Claude <model> <noreply@anthropic.com>`.
+
+---
+
+## RESUME (2026-07-21) — reopened for two API-ergonomics follow-ups
+
+State: committed `e93156f8`, pushed to `claude/app-framework-capability-activation-0gaz6c`.
+**UNBUILT / UNTESTED** — moon could not initialize (proto binary from GitHub release
+assets 403'd by egress). First job on resume: build + test, then fix any fallout.
+
+Two changes in the commit (full detail in TASKS.md "Reopened addendum"):
+1. `Plugin.addLazyModule` dissolved into `Plugin.addModule` (overloads in
+   `core/plugin.ts`; 167 call sites swept; 0 `addLazyModule` remain).
+2. plugin-assistant gained a `workerd`-conditioned `#capabilities` →
+   `src/capabilities/workerd.ts`; `AssistantPlugin.workerd.ts` no longer hand-writes
+   `inlineModule` wrappers.
+
+Validate: `moon run app-framework:build` + `:test`; `moon run plugin-assistant:build`
+(workerd `#capabilities` resolution + check-module-structure); then
+`moon exec --on-failure continue --quiet :build`; then `:lint` + `pnpm format`.
+The novel risk is `addModule` overload resolution — watch for a call site the old
+`addLazyModule` accepted but the merged overloads now resolve differently.
+
+Env: fresh clone (`pnpm i` first). `moonrepo.dev`/`ghcr.io` reachable; GitHub
+release-asset downloads (proto self-install) were 403 — verify that's fixed before
+fighting the toolchain.

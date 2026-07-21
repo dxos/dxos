@@ -222,3 +222,35 @@ site repo-wide, now that every module carries its own tag from where it's author
 Gates: build+test green for all 10 touched packages; one pre-existing `plugin-assistant`
 failure (`can run memoized instructions`, `ServiceNotAvailable`) confirmed unrelated via
 `git stash` A/B; full-repo build green; lint/format clean.
+
+### Reopened addendum — dissolve addLazyModule + workerd #capabilities barrel (2026-07-21)
+
+Committed `e93156f8` (pushed to `claude/app-framework-capability-activation-0gaz6c`).
+**UNBUILT / UNTESTED** — moon could not self-initialize this session (proto binary
+download from GitHub release assets 403'd by egress policy). Validation is the next
+agent's first job.
+
+- [x] Dissolved `Plugin.addLazyModule` into `Plugin.addModule` (`core/plugin.ts`): two
+      `Capability.Module` overloads added, `addLazyModule` removed. Runtime dispatch keys on
+      `typeof fn === 'function' && Capability.ModuleTag in fn`; record/factory/`(builder,opts)`
+      direct-call paths unchanged. `plugin.test.ts` block renamed
+      `'addModule (spec-carrying module)'`. All 167 call-site files swept
+      `Plugin.addLazyModule` → `Plugin.addModule`; zero occurrences remain.
+- [x] plugin-assistant workerd `#capabilities` barrel (approach A): new
+      `src/capabilities/workerd.ts` (server-safe `lazyModule`s for SkillDefinition/
+      OperationHandler/Toolkit; module ids preserved as `skill-definition`/`operation-handler`/
+      `toolkit`). `package.json` `#capabilities.source` now `{ workerd, default }` + `workerd`
+      dist condition. `AssistantPlugin.workerd.ts` imports the three from `#capabilities`
+      instead of hand-written `inlineModule` wrappers. Node/browser unchanged (→ `default`).
+      Mirrors plugin-connector/plugin-routine.
+- [ ] VALIDATE: `moon run app-framework:build` + `:test` (overload resolution is the novel
+      bit); `moon run plugin-assistant:build` (workerd resolves `#capabilities`→`workerd.ts`,
+      check-module-structure gate); `moon exec --on-failure continue --quiet :build` to catch
+      any swept call site the overload doesn't accept identically; then `:lint` + `pnpm format`.
+- [ ] Watch for overload-resolution regressions (a call site the old `addLazyModule` accepted
+      but the merged `addModule` now resolves differently).
+
+Remaining pre-existing follow-ups (from before, still open): startup-deferral opportunities
+in composer-app/AUDIT.md §12; one `Plugin.addModule<void>` (was `addLazyModule<void>`) anchor
+in a plugin-magazine story; the `plugin-assistant` "can run memoized instructions" failure
+(compute-runtime LayerStack, unrelated to this refactor).
