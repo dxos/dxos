@@ -30,9 +30,7 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
 });
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('Agent prompt', () => {
+describe.skipIf(!runMemoizedTests())('Agent prompt', () => {
   it.effect(
     'chat mode appends assistant messages to the chat queue',
     Effect.fnUntraced(

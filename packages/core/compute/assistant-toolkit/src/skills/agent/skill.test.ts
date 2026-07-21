@@ -69,9 +69,7 @@ const SYSTEM = trim`
   DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('Agent', () => {
+describe.skipIf(!runMemoizedTests())('Agent', () => {
   const skill = AgentSkillDef.make();
 
   it.scoped(

@@ -249,10 +249,10 @@ TabsTabGroupHeading.displayName = 'Tabs.TabGroupHeading';
 // Tab
 //
 
-type TabsTabProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
+type TabsButtonProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
-const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProps) => {
-  const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
+const TabsButton = ({ value, classNames, children, onClick, ...props }: TabsButtonProps) => {
+  const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsButton');
   const { hasAttention } = useAttention(attendableId);
 
   const handleClick = useCallback(
@@ -284,16 +284,16 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
   );
 };
 
-TabsTab.displayName = 'Tabs.Tab';
+TabsButton.displayName = 'Tabs.Button';
 
 //
-// IconTab
+// IconButton
 //
 
-type TabsIconTabProps = IconButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
+type TabsIconButtonProps = IconButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
-const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps) => {
-  const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
+const TabsIconButton = ({ value, classNames, onClick, ...props }: TabsIconButtonProps) => {
+  const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsIconButton');
   const { hasAttention } = useAttention(attendableId);
 
   // NOTE: This handler is only called if the tab is *already active*.
@@ -323,7 +323,7 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
   );
 };
 
-TabsIconTab.displayName = 'Tabs.IconTab';
+TabsIconButton.displayName = 'Tabs.IconButton';
 
 //
 // Panel
@@ -354,8 +354,8 @@ type TabsTabPrimitiveProps = TabsPrimitive.TabsTriggerProps;
 export const Tabs = {
   Root: TabsRoot,
   Tablist: TabsTablist,
-  Tab: TabsTab,
-  IconTab: TabsIconTab,
+  Button: TabsButton,
+  IconButton: TabsIconButton,
   TabPrimitive: TabsPrimitive.Trigger,
   TabGroupHeading: TabsTabGroupHeading,
   Viewport: TabsViewport,
@@ -365,11 +365,12 @@ export const Tabs = {
 
 export type {
   TabsActivePart,
+  TabsButtonProps,
+  TabsIconButtonProps,
   TabsPanelProps,
   TabsRootProps,
   TabsTabGroupHeadingProps,
   TabsTablistProps,
   TabsTabPrimitiveProps,
-  TabsTabProps,
   TabsViewportProps,
 };

@@ -93,7 +93,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
             {companions.map((companion) => (
-              <Tabs.Tab key={getLinkedVariant(companion.id)} value={getLinkedVariant(companion.id)} asChild>
+              <Tabs.Button key={getLinkedVariant(companion.id)} value={getLinkedVariant(companion.id)} asChild>
                 <IconButton
                   classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
                   label={toLocalizedString(companion.properties.label, t)}
@@ -111,7 +111,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                   }
                   onClick={handleTabClick}
                 />
-              </Tabs.Tab>
+              </Tabs.Button>
             ))}
           </Tabs.Tablist>
           <div
