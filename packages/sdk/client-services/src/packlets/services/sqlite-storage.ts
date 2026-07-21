@@ -224,12 +224,23 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
   private async _saveToDb(): Promise<void> {
     const filePath = this.filePath;
     const data = this.#buffer;
-    await RuntimeProvider.runPromise(this.runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`INSERT OR REPLACE INTO hypercore_files (path, data) VALUES (${filePath}, ${data})`;
-      }),
-    );
+    try {
+      await RuntimeProvider.runPromise(this.runtime)(
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          yield* sql`INSERT OR REPLACE INTO hypercore_files (path, data) VALUES (${filePath}, ${data})`;
+        }),
+      );
+    } catch (err) {
+      // Symmetric with `_loadFromDb`: a write racing teardown rejects (as `SqlError: Failed to
+      // execute statement` wrapping "connection is not open") when the shared SQL connection is
+      // torn down before this file's `#closed` flips. Persisting to a dead connection is moot
+      // during disposal, so swallow it; rethrow only a genuine failure against a live connection.
+      // An unswallowed rejection here surfaces as an unhandled rejection that fails the test worker.
+      if (!this.#closed && !isClosedConnectionError(err)) {
+        throw err;
+      }
+    }
   }
 
   write(offset: number, data: Buffer, cb: Callback<any>): void {
