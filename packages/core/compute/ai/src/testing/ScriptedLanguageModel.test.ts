@@ -3,7 +3,7 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import { describe, expect, it } from '@effect/vitest';
+import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import * as ScriptedLanguageModel from './ScriptedLanguageModel';
@@ -12,7 +12,7 @@ const { text, toolCall, scriptedLanguageModelLayer, __testing } = ScriptedLangua
 
 describe('ScriptedLanguageModel', () => {
   describe('encoders', () => {
-    it('encodes a text turn as streamed deltas ending in stop', () => {
+    test('encodes a text turn as streamed deltas ending in stop', ({ expect }) => {
       const parts = __testing.encodeStreamTurn([text('Hello')], 0, 'stop');
       expect(parts.map((part) => part.type)).toEqual([
         'response-metadata',
@@ -25,7 +25,7 @@ describe('ScriptedLanguageModel', () => {
       expect(parts.find((part) => part.type === 'finish')).toMatchObject({ reason: 'stop' });
     });
 
-    it('encodes a tool call turn with JSON-serialized input and deterministic id', () => {
+    test('encodes a tool call turn with JSON-serialized input and deterministic id', ({ expect }) => {
       const parts = __testing.encodeStreamTurn([toolCall('Calculator', { input: '2 + 2' })], 1, 'tool-calls');
       expect(parts.map((part) => part.type)).toEqual([
         'response-metadata',
@@ -43,7 +43,7 @@ describe('ScriptedLanguageModel', () => {
       });
     });
 
-    it('encodes an aggregated (non-streamed) tool call', () => {
+    test('encodes an aggregated (non-streamed) tool call', ({ expect }) => {
       const parts = __testing.encodeTurn([toolCall('Calculator', { input: '2 + 2' }, 'call-1')], 0, 'tool-calls');
       expect(parts.map((part) => part.type)).toEqual(['response-metadata', 'tool-call', 'finish']);
       expect(parts.find((part) => part.type === 'tool-call')).toMatchObject({
@@ -53,7 +53,7 @@ describe('ScriptedLanguageModel', () => {
       });
     });
 
-    it('infers the finish reason from the parts', () => {
+    test('infers the finish reason from the parts', ({ expect }) => {
       expect(__testing.finishReasonFor([text('hi')])).toEqual('stop');
       expect(__testing.finishReasonFor([toolCall('t', {})])).toEqual('tool-calls');
     });
@@ -62,7 +62,7 @@ describe('ScriptedLanguageModel', () => {
   it.effect(
     'replays turns sequentially and fails once exhausted',
     Effect.fnUntraced(
-      function* () {
+      function* ({ expect }) {
         const first = yield* LanguageModel.generateText({ prompt: 'ignored' });
         expect(first.text).toEqual('one');
 

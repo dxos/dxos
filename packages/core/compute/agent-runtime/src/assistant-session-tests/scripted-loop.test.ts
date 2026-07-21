@@ -48,16 +48,6 @@ const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
     Layer.provideMerge(toolkitLayer),
   );
 
-const textOf = (messages: readonly Message.Message[]): string =>
-  messages
-    .flatMap((message) => message.blocks)
-    .filter(ContentBlock.is('text'))
-    .map((block) => block.text)
-    .join('');
-
-const toolResultsOf = (messages: readonly Message.Message[]) =>
-  messages.flatMap((message) => message.blocks).filter(ContentBlock.is('toolResult'));
-
 // Dimension D (harness / turn loop): deterministic developer code driven by a scripted model.
 describe('AiRequest loop (scripted model)', () => {
   it.effect(
@@ -117,3 +107,13 @@ describe('AiRequest loop (scripted model)', () => {
     ),
   );
 });
+
+const textOf = (messages: readonly Message.Message[]): string =>
+  messages
+    .flatMap((message) => message.blocks)
+    .filter(ContentBlock.is('text'))
+    .map((block) => block.text)
+    .join('');
+
+const toolResultsOf = (messages: readonly Message.Message[]) =>
+  messages.flatMap((message) => message.blocks).filter(ContentBlock.is('toolResult'));
