@@ -1,6 +1,7 @@
 //
 // Copyright 2026 DXOS.org
 //
+// @vitest-environment happy-dom
 
 import { describe, test } from 'vitest';
 

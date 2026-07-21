@@ -22,7 +22,5 @@ export default defineConfig({
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  // `happy-dom` so extension unit tests can construct a real `EditorView` (see
-  // `suggestions-overlay.test.ts`), mirroring `ui-editor`'s vite.config.ts.
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  test: { node: true, storybook: true },
 });
