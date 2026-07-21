@@ -154,14 +154,26 @@ Deferred from the CodeRabbit round (stage 3/4):
       Implementation (this branch):
   - [x] `Agent.did` field (`IdentityDid`, seeded via `IdentityDid.random()` in `makeInitialized`;
         optional for back-compat) — persisted, import-stable, `did:halo:` format.
-  - [ ] `AgentIdentityService` in assistant-toolkit; agent worker provides it from `agent.did` /
-        `agent.name`.
-  - [ ] `SuggestEdit`: `creator` optional, defaults from `AgentIdentityService`; add to the Markdown
-        skill `operations` + update instructions (suggest-edit over create-branch for review).
+  - [x] `AgentIdentity` service in `@dxos/compute` (`{ did, name?, hue? }` + `currentDid`, read via
+        `serviceOption` — no hard requirement). Verified: an ambiently-provided `AgentIdentity`
+        reaches an op handler.
+  - [x] `SuggestEdit`: `creator` optional, defaults from `AgentIdentity.currentDid` (dies if
+        neither); added to the Markdown skill `operations` + instructions (suggest-edit over
+        create-branch for review). Test: creator defaults from the provided identity; explicit
+        creator overrides.
+  - [ ] **Runtime provision (needs live-agent verification — deferred).** Provide the `AgentIdentity`
+        layer where the agent executes ops, resolved from the current `Agent.did`/`name`:
+        `agent-process.ts` and `run-instructions.ts` both `Effect.provide(Layer.mergeAll(...))` around
+        the tool session — add `Layer.succeed(AgentIdentity.AgentIdentity, { did: agent.did, name })`
+        (empty when no agent, e.g. a routine). Resolve the agent from the feed (feed→chat→Agent via
+        `Chat.CompanionTo`, cf. `delegation-strategy.ts` `Database.query(Filter.type(Agent))`).
+        Mechanism proven by the op test; left for an env with a live agent since that is exactly what
+        this wiring needs to be verified against.
   - [ ] `resolveAuthor(did, members, agents)` so agent authors show name + hue in banner + companion
-        (query space `Agent` objects; seed `authorLabels`/`authorHues`).
-  - [ ] Tests: agent suggestion attributed to `did:agent:<id>`; two agents ⇒ two authors.
-  - [ ] Future: swap synthetic provider for real HALO identity; re-key `creator`; drop seeding.
+        (query space `Agent` objects; seed `authorLabels`/`authorHues`). Lands with the runtime
+        provision — until agents actually author suggestions there is nothing to display.
+  - [ ] Future: swap synthetic provider for real HALO identity in `Agent.did`; no `creator` re-key
+        (already `IdentityDid` format); drop the agent-author seeding once agents are members.
 - [ ] Full-stack `CommentsArticle` verification could not run in-pane (30s boot timeout) — verify
       the suggestion companion + empty state manually (see morning test plan).
 - [ ] Create test plan + usage script for demo video — the suggestion-review flow (Suggest edits →
