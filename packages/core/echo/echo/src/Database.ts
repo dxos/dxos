@@ -95,14 +95,13 @@ export type FlushOptions = {
 };
 
 /**
- * A caller-owned, writable per-surface binding to one branch of one object.
+ * A caller-owned, writable **independent instance** of one object bound to one branch: a distinct
+ * object instance (not a UI surface), separate from the device-global canonical object.
  * @see Database.branch
  */
 export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
   /** Live object bound to the branch document (`'main'` -> the canonical live object). */
   readonly object: T;
-  /** The branch this binding resolves. */
-  readonly branch: string;
   /** Release the binding (drops the doc-handle listener; never deletes the branch document). */
   dispose(): void;
 };
@@ -204,8 +203,18 @@ export interface Database extends Queryable {
   // the currently-viewed branch stays device-local.
   //
 
-  /** The branch name this device currently views the object on (`'main'` by default). */
+  /**
+   * The device-global current branch for an object id (`'main'` by default).
+   * @deprecated Prefer `Obj.getBranch(obj)` — it takes the object and reports the branch of that
+   * specific instance (including `db.branch()` independent instances), not just the device selection.
+   */
   getCurrentBranch(objectId: string): string;
+
+  /**
+   * An immutable snapshot of the object at the given historical heads — a detached instance, not a
+   * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
+   */
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
 
   /** All branch names available for an object, including the implicit `'main'` (always first). */
   listBranches(objectId: string): string[];

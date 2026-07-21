@@ -26,6 +26,8 @@ export const Create = Operation.make({
     name: Schema.optional(Schema.String),
     anchor: Schema.optional(Schema.String),
     subject: Obj.Unknown,
+    /** Branch the comment pertains to (a branch-review comment); undefined = main/unbranched. */
+    branch: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });

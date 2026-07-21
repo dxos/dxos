@@ -18,8 +18,11 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.MergeBranch> = Mar
       const branch = document.history?.branches.find((candidate) => candidate.id === branchId);
       invariant(branch, `branch not found: ${branchId}`);
       const parent = yield* Database.load(branch.parent);
-      yield* Database.load(branch.content);
-      const { conflicts } = VersioningBranch.merge(document, branch);
+      if (branch.content) {
+        // Legacy content-copy branches merge textually and need their Text loaded.
+        yield* Database.load(branch.content);
+      }
+      const { conflicts } = yield* Effect.promise(() => VersioningBranch.merge(document, branch));
       return { conflicts, newContent: parent.content };
     }),
   ),

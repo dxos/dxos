@@ -56,6 +56,7 @@ import { type BranchStore, EntityManager } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
+  checkoutVersionSnapshot,
   createObject,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
@@ -167,7 +168,8 @@ export interface EchoDatabase extends Database.Database {
 }
 
 /**
- * A caller-owned, writable per-surface binding to one branch of one object.
+ * A caller-owned, writable **independent instance** of one object bound to one branch (a distinct
+ * object instance, not a UI surface).
  * @see Database.BranchBinding
  */
 export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.BranchBinding<T>;
@@ -840,6 +842,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.getCurrentBranch(objectId);
   }
 
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T> {
+    return checkoutVersionSnapshot(obj, [...heads]);
+  }
+
   listBranches(objectId: string): string[] {
     return this._entityManager.listBranches(objectId);
   }
@@ -872,11 +878,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     assertArgument(getObjectCore(obj).database === this, 'obj', 'object is not bound to this database');
     if (name === 'main') {
       // The live object IS the main binding; nothing to release.
-      return { object: obj, branch: 'main', dispose: () => {} };
+      return { object: obj, dispose: () => {} };
     }
     const { core, dispose } = await this._entityManager.bindCoreToBranch(getObjectCore(obj).id, name);
     const object = initEchoReactiveObjectRootProxy(core, this) as T;
-    return { object, branch: name, dispose };
+    return { object, dispose };
   }
 
   getObjectCoreById(id: string, opts?: Parameters<EntityManager['getObjectCoreById']>[1]) {

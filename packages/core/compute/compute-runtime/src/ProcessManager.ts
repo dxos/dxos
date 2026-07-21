@@ -348,6 +348,12 @@ export class ProcessManagerImpl implements Manager {
 
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
+  /**
+   * Manager-level ephemeral trace hub (DX-1125). Every process's ephemeral messages are fanned out
+   * here so {@link Process.Monitor.subscribeToTraceMessages} can stream them (filtered) without
+   * attaching to individual handles.
+   */
+  readonly #traceSubscribers: Queue.Queue<Trace.Message>[] = [];
   readonly #lifecycleSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   #shutDown = false;
 
@@ -365,7 +371,33 @@ export class ProcessManagerImpl implements Manager {
     this.#monitor = {
       processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
       processTreeAtom: this.#processTreeAtom,
+      subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
+        Stream.unwrapScoped(
+          Effect.gen(this, function* () {
+            const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message>(), (queue) =>
+              Effect.sync(() => {
+                const index = this.#traceSubscribers.indexOf(queue);
+                if (index !== -1) {
+                  this.#traceSubscribers.splice(index, 1);
+                }
+              }).pipe(Effect.zipRight(Queue.shutdown(queue))),
+            );
+            this.#traceSubscribers.push(queue);
+            return Stream.fromQueue(queue).pipe(
+              Stream.filter((message) => message.isEphemeral && Trace.matchesFilter(message, filter)),
+            );
+          }),
+        ),
     };
+  }
+
+  /**
+   * Fan an ephemeral trace message out to all local trace subscribers (DX-1125).
+   */
+  #pushEphemeralToHub(message: Trace.Message): void {
+    for (const queue of this.#traceSubscribers) {
+      Queue.unsafeOffer(queue, message);
+    }
   }
 
   get monitor(): Process.Monitor {
@@ -532,7 +564,10 @@ export class ProcessManagerImpl implements Manager {
             runtimeName: this.#runtimeName,
             space: environment.space,
             sink: this.#traceSink,
-            onEphemeral: (message) => handleRef?.pushEphemeral(message),
+            onEphemeral: (message) => {
+              handleRef?.pushEphemeral(message);
+              this.#pushEphemeralToHub(message);
+            },
           }),
         ),
       );
@@ -736,7 +771,10 @@ export class ProcessManagerImpl implements Manager {
             runtimeName: this.#runtimeName,
             space: environment.space,
             sink: this.#traceSink,
-            onEphemeral: (message) => handleRef?.pushEphemeral(message),
+            onEphemeral: (message) => {
+              handleRef?.pushEphemeral(message);
+              this.#pushEphemeralToHub(message);
+            },
           }),
         ),
       );

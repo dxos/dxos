@@ -13,7 +13,6 @@ import { PublicKey } from '@dxos/keys';
 import { EchoTestBuilder } from '../testing';
 import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching';
 import { getEditHistoryWithDiffs } from './edit-history';
-import { clearTimeTravel, setTimeTravel } from './time-travel';
 import { getVersion } from './version';
 
 describe('branching', () => {
@@ -222,32 +221,18 @@ describe('branching', () => {
     await expect(createBranch(inline, 'b1')).rejects.toThrow(/inline object/);
   });
 
-  test('time-travel: switching branch is independent of history; writes blocked while scrubbing', async () => {
+  test('switching branch gives an independent edit history', async () => {
     const { db, root } = await setup();
     await createBranch(root, 'b1');
     await switchBranch(root, 'b1');
-    // Capture the branch tip BEFORE the edit — a content-addressed frontier that is guaranteed to
-    // show `root-v0` (deriving the historical point from `getEditHistoryWithDiffs` indices is
-    // fragile: automerge change-batching varies, so the second-to-last entry may not differ).
-    const beforeEditHeads = getVersion(root).heads;
     Obj.update(root, (root: any) => {
       root.title = 'root-b1-v1';
     });
     await db.flush();
 
-    // Scrubbing within the branch reads the branch's history.
+    // The branch carries its own edit history, independent of `main`.
     const diffs = getEditHistoryWithDiffs(root);
     expect(diffs.length).toBeGreaterThan(1);
-
-    // Pin to the pre-edit point on the branch: reads resolve the past, writes throw.
-    setTimeTravel(root, beforeEditHeads);
-    expect(root.title).toBe('root-v0');
-    expect(() =>
-      Obj.update(root, (root: any) => {
-        root.title = 'nope';
-      }),
-    ).toThrow();
-    clearTimeTravel(root);
     expect(root.title).toBe('root-b1-v1');
   });
 

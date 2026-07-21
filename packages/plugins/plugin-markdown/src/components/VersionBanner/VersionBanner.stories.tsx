@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
+import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -16,7 +17,7 @@ const meta = {
   component: VersionBanner,
   decorators: [withTheme()],
   parameters: {
-    translations,
+    translations: [...translations, ...spaceTranslations],
   },
 } satisfies Meta<typeof VersionBanner>;
 
@@ -28,7 +29,7 @@ export const Checkpoint: Story = {
   args: {
     mode: 'checkpoint',
     name: 'v2 outline',
-    detail: '2 days ago',
+    timestamp: '2026-07-17T10:00:00.000Z',
     onRestore: fn(),
     onBranchFrom: fn(),
     onClose: fn(),
@@ -39,9 +40,19 @@ export const Branch: Story = {
   args: {
     mode: 'branch',
     name: 'agent-draft',
-    detail: 'anchored at v2 outline',
+    timestamp: '2026-07-19T09:00:00.000Z',
     onMerge: fn(),
-    onCompare: fn(),
+    view: 'branch',
+    onViewChange: fn(),
+    onClose: fn(),
+  },
+};
+
+export const Fork: Story = {
+  args: {
+    mode: 'fork',
+    name: 'agent-draft',
+    timestamp: '2026-07-17T10:00:00.000Z',
     onClose: fn(),
   },
 };

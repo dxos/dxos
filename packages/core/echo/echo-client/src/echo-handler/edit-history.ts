@@ -4,14 +4,14 @@
 
 import { next as A, type Doc, type Heads, type State } from '@automerge/automerge';
 
-import type { Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { EntityStructure } from '@dxos/echo-protocol';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
 import { ObjectCore } from '../core-db';
-import { getObjectCore } from './echo-handler';
+import { getObjectCore, initEchoReactiveObjectRootProxy } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';
 
 /**
@@ -146,4 +146,26 @@ export const checkoutVersion = (object: Obj.Unknown, version: Heads): unknown =>
     [ATTR_META]: structure?.meta,
     ...(structure && structure.data),
   } as any;
+};
+
+/**
+ * @returns An immutable {@link Obj.Snapshot} of the object at the given historical heads — a detached
+ * instance, not a pin on the live object. Every surface that wants the historical value renders this
+ * snapshot; the live object is unaffected (nothing else in the app rewinds).
+ */
+export const checkoutVersionSnapshot = <T extends Obj.Unknown>(object: T, version: Heads): Obj.Snapshot<T> => {
+  assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');
+  assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
+
+  const objectCore = getObjectCore(object);
+  const historical = A.view(objectCore.getDoc() as Doc<any>, version);
+
+  // Reconstruct the object over the historical doc in a detached core, then brand it as an immutable
+  // snapshot. The core is transient — it exists only to produce the snapshot.
+  const versionCore = new ObjectCore();
+  versionCore.id = objectCore.id;
+  versionCore.doc = historical;
+  versionCore.mountPath = objectCore.mountPath;
+  const proxy = initEchoReactiveObjectRootProxy(versionCore) as T;
+  return Obj.getSnapshot(proxy);
 };

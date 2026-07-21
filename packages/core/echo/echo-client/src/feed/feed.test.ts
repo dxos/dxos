@@ -362,6 +362,28 @@ describe('Feed', () => {
     expect((traversed[0] as TestSchema.Person).name).toBe('alice');
   });
 
+  test('query unions items across multiple feeds', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    // Duplicate same-kind feeds occur in production: writers race on feed creation (e.g. the
+    // edge's indexer-backed lookup missing a not-yet-indexed feed), so readers must be able to
+    // union items across all of a space's feeds in one query.
+    let feedA!: Feed.Feed;
+    let feedB!: Feed.Feed;
+    await Effect.gen(function* () {
+      feedA = yield* Database.add(Feed.make({ name: 'trace-a', namespace: 'trace' }));
+      feedB = yield* Database.add(Feed.make({ name: 'trace-b', namespace: 'trace' }));
+
+      yield* Feed.append(feedA, [Obj.make(TestSchema.Person, { name: 'alice' })]);
+      yield* Feed.append(feedB, [Obj.make(TestSchema.Person, { name: 'bob' })]);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+
+    const results = await db.query(Query.type(TestSchema.Person).from([feedA, feedB])).run();
+    expect(results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+  });
+
   describe('feed namespaces', () => {
     test('Feed.append assigns data and trace namespaces in feed store', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });

@@ -6,8 +6,8 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Transcription, renderByline, useFeedModelAdapter } from '@dxos/react-ui-transcription';

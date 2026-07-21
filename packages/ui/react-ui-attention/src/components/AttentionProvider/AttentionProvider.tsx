@@ -154,7 +154,6 @@ const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>
     const Comp = asChild ? Slot : Primitive.div;
     return (
       <Comp
-        role='none'
         {...props}
         {...attentionAttrs}
         className={mx('dx-attention-surface', props.tabIndex === 0 && 'dx-focus-ring-inset-over-all', classNames)}

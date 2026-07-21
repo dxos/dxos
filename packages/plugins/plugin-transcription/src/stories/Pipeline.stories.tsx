@@ -29,6 +29,7 @@ import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } fr
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import {
@@ -49,7 +50,7 @@ import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-mar
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { PipelineStatus } from '@dxos/react-ui-transcription';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -283,8 +284,8 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   }
 
   return (
-    <div role='none' className='dx-container grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
-      <div role='none' className='dx-expander'>
+    <div className='dx-container grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
+      <div className='dx-expander'>
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
       <PipelineStatus

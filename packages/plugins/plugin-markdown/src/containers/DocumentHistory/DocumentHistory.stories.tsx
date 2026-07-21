@@ -9,11 +9,15 @@ import React from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Obj, Query } from '@dxos/echo';
+import { Text as EchoText, Obj, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { ObjectHistory } from '@dxos/plugin-space/containers';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch, Version } from '@dxos/versioning';
@@ -22,7 +26,6 @@ import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
-import { DocumentHistory } from './DocumentHistory';
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define(
@@ -46,7 +49,7 @@ const DefaultStory = () => {
     return <></>;
   }
 
-  return <DocumentHistory role='article' subject={doc} attendableId={Obj.getURI(doc)} />;
+  return <ObjectHistory role='article' subject={doc} attendableId={Obj.getURI(doc)} />;
 };
 
 const meta = {
@@ -79,18 +82,18 @@ const meta = {
                 });
                 Version.create(doc, { name: 'v2 outline', target: root });
 
-                const branch = Branch.create(doc, { name: 'agent-draft', parent: root });
-                const branchText = branch.content.target;
-                if (branchText) {
-                  Obj.update(branchText, (branchText) => {
-                    branchText.content = 'alpha edited\nbravo\ncharlie\ndelta\nepsilon\n';
-                  });
-                }
+                const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'agent-draft', parent: root }));
+                const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
+                Obj.update(binding.object, () => {
+                  EchoText.update(binding.object, 'content', 'alpha edited\nbravo\ncharlie\ndelta\nepsilon\n');
+                });
+                binding.dispose();
               }
 
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
+        SpacePlugin({}),
         MarkdownPlugin(),
       ],
     })),
@@ -98,7 +101,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations,
+    translations: [...translations, ...spaceTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

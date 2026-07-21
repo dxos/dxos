@@ -32,7 +32,6 @@ export {
   type UpdateInfo,
   type VersionDiff,
   checkoutVersion,
-  clearTimeTravel,
   clone,
   createArrayMethodError,
   createBranch,
@@ -54,7 +53,6 @@ export {
   isEchoObject,
   matchKeys,
   mergeBranch,
-  setTimeTravel,
   switchBranch,
 } from './echo-handler';
 export * from './hypergraph';

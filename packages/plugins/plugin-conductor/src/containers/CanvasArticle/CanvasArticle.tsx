@@ -13,7 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Credential, Operation, OperationRegistry, ServiceResolver } from '@dxos/compute';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Database, Obj } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
   ComputeContext,
