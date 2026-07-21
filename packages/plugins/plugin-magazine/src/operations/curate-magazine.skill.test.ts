@@ -12,7 +12,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, vi } from 'vitest';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { AssistantTestLayer, runMemoizedTests } from '@dxos/agent-runtime/testing';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
@@ -87,7 +87,9 @@ const articleHtml = (title: string, body: string) =>
 // eslint-disable-next-line no-restricted-globals
 const realFetch = globalThis.fetch.bind(globalThis);
 
-describe('CurateMagazine (LLM)', () => {
+const describeMemoized = runMemoizedTests() ? describe : describe.skip;
+
+describeMemoized('CurateMagazine (LLM)', () => {
   // Stub only the network boundary: serve canned HTML for the candidate article URLs (so the real
   // fetchArticleContent tool runs deterministically), and pass everything else (Anthropic) through.
   beforeEach(() => {

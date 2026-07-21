@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { AssistantTestLayer, runMemoizedTests } from '@dxos/agent-runtime/testing';
 import { OpaqueToolkit } from '@dxos/ai';
 import { Skill } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
@@ -36,7 +36,9 @@ const TestLayerWithWebSearch = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-describe('Memory Skill', () => {
+const describeMemoized = runMemoizedTests() ? describe : describe.skip;
+
+describeMemoized('Memory Skill', () => {
   it.effect(
     'save: saves a memory',
     Effect.fnUntraced(

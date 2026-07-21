@@ -24,7 +24,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer, runMemoizedTests } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
 import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';
@@ -144,7 +144,9 @@ const DelegationTestLayer = AssistantTestLayer({
   agent: { delegationStrategy: StubDelegationStrategy },
 });
 
-describe('Agent Service', () => {
+const describeMemoized = runMemoizedTests() ? describe : describe.skip;
+
+describeMemoized('Agent Service', () => {
   it.effect(
     'can answer a question',
     Effect.fnUntraced(

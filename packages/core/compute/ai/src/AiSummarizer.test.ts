@@ -12,7 +12,7 @@ import { EntityId } from '@dxos/keys';
 
 import * as AiService from './AiService';
 import * as AiSummarizer from './AiSummarizer';
-import { TestAiService, TestData } from './testing';
+import { TestAiService, TestData, runMemoizedTests } from './testing';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -20,7 +20,9 @@ const TestLanguageModel = AiService.model('com.anthropic.model.claude-sonnet-4-6
   Layer.provide(TestAiService()),
 );
 
-describe('AiSummarizer', () => {
+const describeMemoized = runMemoizedTests() ? describe : describe.skip;
+
+describeMemoized('AiSummarizer', () => {
   it.effect(
     'summarizes an email order conversation',
     Effect.fnUntraced(

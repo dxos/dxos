@@ -17,7 +17,7 @@ projects:
     prs: [12163, 12167, 12178]
     resume: 'PRs #12178 + #12205 merged (Topics UX v2 + Topics/Subscriptions Mosaic lists). In progress (uncommitted, NOT yet a PR): converted plugin-inbox folder articles to the ObjectArticleProps<Mailbox> pattern (db from subject, folder graph nodes carry data:mailbox, sentinels dropped) + SubscriptionsArticle unsubscribe removes on success. Build/lint/fmt + 167 unit tests green. NOTE: TopicsArticle/CreateTopic storybook play-tests fail on the committed baseline too (pre-existing, headless topic-query returns empty). Next: commit this work / open PR when ready; then Priority 1 manual topics + management. Deferred: Active Topics v2 (LLM labels + personEmails), two-tier latency, re-sync dedup bug, MailboxArticle search wiring.'
 
-  - name: task-planning-skill-update
+  - name: task-planning-skill
     status: active
     user: burdon
     host: burdon-mbp-2022
@@ -58,7 +58,7 @@ projects:
     summary: Replace the memoized-LLM e2e strategy with tiered tests (deterministic unit tiers in CI + graded evals out-of-band); retire the current e2e framework.
     tasks: .agents/projects/ai-testing-strategy/TASKS.md
     design: packages/core/compute/ai/TESTING.md
-    prs: [12287]
-    resume: 'Design doc PR #12287 (draft): packages/core/compute/ai/TESTING.md — dimensions A-H, current-approach gaps, tiered target, prioritized plan + consumer inventory (G1/G2/G3) and removal blast-radius. No implementation started. Next code step: extract the scripted LanguageModel primitive from MemoizedLanguageModel (substrate for D tests + G1 boot-smoke), then delete G1 (assistant-e2e). Quick relief available first: de-gate G2/G3 memoized replay from PR CI.'
+    prs: [12287, 12291]
+    resume: 'Design doc PR #12287 MERGED. PR #12291 OPEN carries Phase 1 steps 1-3 (branch is one-per-session, so all Phase 1 lands here): (1) de-gated G2/G3 memoized replay via env-gated describe.skip; (2) scripted LanguageModel primitive (ai/src/testing/ScriptedLanguageModel.ts, @import-as-namespace PascalCase, re-exported as ScriptedLanguageModel); (3) AiRequest loop (D) tests (agent-runtime scripted-loop.test.ts) driving the real loop via AssistantTestLayer({aiService}). All green locally + tsc :build fixed (it.effect generators need function*(_) or tsc infers unknown — vitest transpile misses it). Watching Check post-fix (commit ac3fe866d8). NEXT: land #12291 when green; then step 4 (delete G1 assistant-e2e + fixtures, replace with scripted-model boot-smoke), G2→C unit conversions, E/F/G tiers. Also tracked: delete orphaned .agent/ dir (own PR); decide whether AiRequest.run should have a max-iterations cap (none exists today). New ai/src/testing/gate.ts exports runMemoizedTests() (false by default; true on DX_RUN_LLM_TESTS=1 or ALLOW_LLM_GENERATION=1), re-exported from @dxos/ai/testing + @dxos/agent-runtime/testing. 14 test files gated per-suite (co-located non-LLM tests kept: planning hasIncompleteTasks, AssistantPlugin module-activation boot). Verified skipped + exit 0 + oxfmt clean across ai/agent-runtime/assistant-toolkit/plugin-markdown/plugin-magazine/plugin-assistant. G1 (assistant-e2e) NOT touched (own harness; scheduled for deletion, not de-gating). Next: commit + open PR, OR proceed to Phase 1 step 2 (extract scripted LanguageModel primitive from MemoizedLanguageModel — substrate for D tests + G1 boot-smoke).'
 
 ended: []

@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer, runMemoizedTests } from '../testing';
 
 // Define a calendar event artifact schema.
 class CalendarEvent extends Type.makeObject<CalendarEvent>(DXN.make('com.example.type.calendarEvent', '0.1.0'))(
@@ -71,7 +71,9 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(toolkitLayer),
 );
 
-describe('AiRequest.Request', () => {
+const describeMemoized = runMemoizedTests() ? describe : describe.skip;
+
+describeMemoized('AiRequest.Request', () => {
   it.effect(
     'no tools',
     Effect.fnUntraced(
