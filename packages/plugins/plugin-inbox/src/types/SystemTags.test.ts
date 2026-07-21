@@ -101,8 +101,7 @@ describe('SystemTags', () => {
     const starredTag = await SystemTags.findOrCreateSystemTag(db, 'starred');
     const starredUri = Obj.getURI(starredTag).toString();
 
-    // Only the oldest message is starred — mirrors a conversation tile whose displayed star must
-    // reflect ANY member, not just the one it happens to anchor on (the latest message).
+    // Only the oldest message is starred — the display must reflect ANY member, not just the latest.
     const oldest = thread.reduce((a, b) => (a.created < b.created ? a : b));
     await EffectEx.runAndForwardErrors(
       SystemTags.setTagged(mailbox, oldest, 'starred', true).pipe(Effect.provide(Database.layer(db))),

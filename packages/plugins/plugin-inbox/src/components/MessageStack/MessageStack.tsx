@@ -26,9 +26,8 @@ export type MessageStackAction =
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
   | { type: 'star'; messageId: string }
-  // Carries the conversation's own id (a `threadId`, or the message id for a singleton) rather than
-  // a resolved message list — a real thread can extend beyond this tile's capped preview (see
-  // `total`), so the handler must resolve every member itself.
+  // A thread can extend beyond this tile's capped preview (see `total`), so the handler resolves
+  // every member itself from this id instead of trusting an already-loaded message list.
   | { type: 'star-conversation'; conversationId: string }
   | { type: 'ignore-sender'; messageId: string }
   | { type: 'create-topic'; messageId: string }
@@ -70,10 +69,7 @@ export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
 const EMPTY_TAGS_ATOM = Atom.make((): MessageStackTag[] => []);
 const NOT_STARRED_ATOM = Atom.make(() => false);
 
-/**
- * OR-combines per-member starred atoms — true if any id carries the tag. Limited to the ids in the
- * tile's loaded (possibly capped) preview; a thread member outside that window isn't reflected here.
- */
+/** Only sees the ids in the tile's loaded (possibly capped) preview — a thread member outside that window isn't reflected. */
 const anyStarredAtom = (family: StarredFamily, ids: readonly string[]): Atom.Atom<boolean> =>
   Atom.make((get) => ids.some((id) => get(family(id))));
 
