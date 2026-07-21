@@ -3,20 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { toCursorRange } from '@dxos/echo-client';
-import { Doc } from '@dxos/echo-doc';
-import { useQuery } from '@dxos/echo-react';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { useSpaces } from '@dxos/react-client/echo';
+import { Obj, Ref, Relation } from '@dxos/echo';
+import { createObject } from '@dxos/echo-client';
 import { type MessageMetadata } from '@dxos/react-ui-thread';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -34,42 +27,54 @@ const message = (name: string, text: string): Message.Message =>
     blocks: [{ _tag: 'text', text }],
   });
 
-// CommentThread is space-agnostic: the container injects author metadata. The story supplies simple
-// resolvers (author name from the message sender; a fixed composer author).
+// CommentThread is space-agnostic: metadata is injected. The story supplies simple resolvers (author
+// name from the message sender; a fixed composer author), so no client/space is needed.
 const getMetadata = (message: Message.Message): MessageMetadata =>
   getMessageMetadata(Obj.getURI(message), undefined, message.sender);
 const authorMetadata: MessageMetadata = { id: 'you', authorName: 'You' };
 
-const threadOf = (anchor: AnchoredTo.AnchoredTo): Thread.Thread | undefined => {
-  const source = Relation.getSource(anchor);
-  return Obj.instanceOf(Thread.Thread, source) ? source : undefined;
-};
-
 const Render = () => {
-  const [space] = useSpaces();
-  const [anchor] = useQuery(space?.db, Filter.type(AnchoredTo.AnchoredTo));
+  // Live in-memory ECHO objects (no client): the anchored thread the component subscribes to.
+  const { anchor, thread } = useMemo(() => {
+    const text = createObject(Text.make({ content: DOCUMENT }));
+    const thread = createObject(
+      Thread.make({
+        name: PHRASE,
+        status: 'active',
+        messages: [
+          Ref.make(message('Alice', 'Should we tighten this opening line?')),
+          Ref.make(message('Bob', 'Agreed — it reads a little slow.')),
+        ],
+      }),
+    );
+    const start = DOCUMENT.indexOf(PHRASE);
+    const anchor = createObject(
+      Relation.make(AnchoredTo.AnchoredTo, {
+        [Relation.Source]: thread,
+        [Relation.Target]: text,
+        anchor: `${start}:${start + PHRASE.length}`,
+      }),
+    );
+    return { anchor, thread };
+  }, []);
 
-  const onComment = useCallback((anchor: AnchoredTo.AnchoredTo, text: string) => {
-    const thread = threadOf(anchor);
-    if (thread) {
+  const onComment = useCallback(
+    (_anchor: AnchoredTo.AnchoredTo, text: string) => {
       Obj.update(thread, (thread) => {
         (thread.messages as Ref.Ref<Message.Message>[]).push(Ref.make(message('You', text)));
       });
-    }
-  }, []);
+    },
+    [thread],
+  );
 
-  const onResolve = useCallback((anchor: AnchoredTo.AnchoredTo) => {
-    const thread = threadOf(anchor);
-    if (thread) {
+  const onResolve = useCallback(
+    (_anchor: AnchoredTo.AnchoredTo) => {
       Obj.update(thread, (thread) => {
         thread.status = thread.status === 'resolved' ? 'active' : 'resolved';
       });
-    }
-  }, []);
-
-  if (!anchor) {
-    return <Loading data={{ anchor: !!anchor }} />;
-  }
+    },
+    [thread],
+  );
 
   return (
     <div className='w-96 border-ie border-separator'>
@@ -88,43 +93,7 @@ const Render = () => {
 const meta = {
   title: 'plugins/plugin-comments/components/CommentThread',
   render: Render,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager(() => ({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              const text = personalSpace.db.add(Text.make({ content: DOCUMENT }));
-              const start = DOCUMENT.indexOf(PHRASE);
-              const anchor = toCursorRange(Doc.createAccessor(text, ['content']), start, start + PHRASE.length);
-              const thread = personalSpace.db.add(
-                Thread.make({
-                  name: PHRASE,
-                  status: 'active',
-                  messages: [
-                    Ref.make(message('Alice', 'Should we tighten this opening line?')),
-                    Ref.make(message('Bob', 'Agreed — it reads a little slow.')),
-                  ],
-                }),
-              );
-              personalSpace.db.add(
-                Relation.make(AnchoredTo.AnchoredTo, {
-                  [Relation.Source]: thread,
-                  [Relation.Target]: text,
-                  anchor,
-                }),
-              );
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
-            }),
-        }),
-      ],
-    })),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

@@ -13,6 +13,7 @@ import {
   Thread,
   type ThreadComponents,
 } from '@dxos/react-ui-thread';
+import { ThreadStatusProps } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
@@ -29,19 +30,17 @@ const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.So
   }
 };
 
-export type CommentThreadProps = {
+export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   anchor: AnchoredTo.AnchoredTo;
   /** Injected renderers (e.g. the Surface-backed object tile) supplied by the container. */
   components: ThreadComponents;
-  /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
-  getMetadata: (message: Message.Message) => MessageMetadata;
   /** The local author's metadata for the reply composer. */
   authorMetadata: MessageMetadata;
   /** The local identity DID (decides message editability). */
   identityDid?: string;
-  /** Whether an agent is currently responding on this thread (typing indicator). */
-  activity?: boolean;
   current?: boolean;
+  /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
+  getMetadata: (message: Message.Message) => MessageMetadata;
   onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
   onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
@@ -57,13 +56,13 @@ export type CommentThreadProps = {
  * primitives (`Thread.*` / `Message.Tile`).
  */
 export const CommentThread = ({
+  activity,
   anchor,
   components,
-  getMetadata,
   authorMetadata,
   identityDid,
-  activity,
   current,
+  getMetadata,
   onAttend,
   onComment,
   onResolve,
