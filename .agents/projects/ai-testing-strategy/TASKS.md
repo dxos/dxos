@@ -29,7 +29,16 @@ as primary coverage.
 
 ## Phase 1 — stop the bleeding + recover deterministic coverage
 
-- [ ] De-gate G2/G3 memoized replay from the default `:test` path (env flag / tag / describe.skip).
+- [x] De-gate G2/G3 memoized replay from the default `:test` path. **Mechanism chosen:** env-gated
+      `describe.skip`. `runMemoizedTests()` (new `ai/src/testing/gate.ts`, re-exported from
+      `@dxos/ai/testing` and `@dxos/agent-runtime/testing`) is false by default, so each memoized
+      suite is `runMemoizedTests() ? describe : describe.skip`. Runs only when `DX_RUN_LLM_TESTS=1`
+      or `ALLOW_LLM_GENERATION=1` (regeneration). Reversible, no deletion, per-suite (co-located
+      non-LLM tests — planning `hasIncompleteTasks`, AssistantPlugin module-activation boot — keep
+      running). Gated: 14 files (G2: run-instructions, {agent,database,memory,planning} skills,
+      markdown create/update, magazine, AssistantPlugin ×3 tests, AiSummarizer; G3: functions,
+      AgentService, request, xml-response). Left running: `memoization.test.ts` (tests the machinery
+      itself), G1 `assistant-e2e` (own harness — deleted in a later step, not de-gated here).
 - [ ] Extract a scripted `LanguageModel` primitive from `MemoizedLanguageModel` (given a call →
       scripted parts/tool-calls; no prompt-matching, no file I/O). Substrate for D + G1 boot-smoke.
 - [ ] Harness (D) unit tests on the scripted model: tool-call→result→continue, stop, max-iterations,
@@ -54,6 +63,14 @@ as primary coverage.
 - [ ] Reduce the memoization layer to the scripted-model primitive; drop prompt-matching /
       canonicalization / closest-match + the dynamic-value suite in memoization.test.ts.
       `TestAiService` stays the seam.
+
+## Follow-ups (out of band)
+
+- [ ] Delete the orphaned `.agent/` (singular) directory. Unreferenced by any code, config, or
+      tooling (Cursor/VS Code use `.cursor/` → `.agents/` plural); origin PR #10381 example
+      workflow/function fixtures, only kept current by mechanical repo-wide refactors. Verify no
+      runtime dynamic path load globs it before removing. NOTE: separate concern from the testing
+      strategy — do in its own PR.
 
 ## Deferred / open questions
 

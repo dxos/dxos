@@ -4,6 +4,7 @@
 
 export * from './calculator';
 export * from './defs';
+export * from './gate';
 export * from './memoization';
 export * from './tap';
 export * from './test-data';

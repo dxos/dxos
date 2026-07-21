@@ -10,14 +10,16 @@ import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer, runMemoizedTests } from '../testing';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(ToolExecutionServices),
   Layer.provideMerge(AssistantTestLayer({ tracing: 'noop' })),
 );
 
-describe('AiRequest.Request xml response', () => {
+const describeMemoized = runMemoizedTests() ? describe : describe.skip;
+
+describeMemoized('AiRequest.Request xml response', () => {
   // End-to-end regression: drive a real (memoized) LLM call via `AiRequest` and inspect the
   // streamed blocks. Original bug: when the user prompted "respond with your name inside an
   // xml tag", the model emitted `<name>Claude</name>` as text, but `AiParser.makeContentBlock`

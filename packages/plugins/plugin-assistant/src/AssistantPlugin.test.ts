@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { TestAiService, runMemoizedTests } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
@@ -32,6 +32,10 @@ import { AssistantSkill } from './skills/assistant';
 EntityId.dangerouslyDisableRandomness();
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+
+// Memoized-replay cases (frozen A/B); gated off the default `:test` path. The module-activation
+// boot test below carries the real composition signal and always runs.
+const testMemoized = runMemoizedTests() ? test : test.skip;
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -68,7 +72,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can memoize ai-service requests', async (ctx) => {
+  testMemoized('can memoize ai-service requests', async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -98,7 +102,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
+  testMemoized('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -142,7 +146,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('smoke test for agent service with standard skills', { timeout: 120_000 }, async (ctx) => {
+  testMemoized('smoke test for agent service with standard skills', { timeout: 120_000 }, async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
