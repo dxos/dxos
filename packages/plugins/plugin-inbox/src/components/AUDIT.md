@@ -33,15 +33,15 @@ compose from — the reconciliation target.
 
 ## The three, compared
 
-|             | **MessageTile** (list)             | **ConversationMessageRow** (grouped preview) | **ConversationStack MessageTile** (opened thread) |
-| ----------- | ---------------------------------- | -------------------------------------------- | ------------------------------------------------- |
+|             | **MessageTile** (list)                     | **ConversationMessageRow** (grouped preview) | **ConversationStack MessageTile** (opened thread) |
+| ----------- | ------------------------------------------ | -------------------------------------------- | ------------------------------------------------- |
 | Container   | `CardTile.Root` / `CardTile.Header` (Card) | `Card.Row` inside a `ConversationTile`       | subgrid rows (`grid-cols-subgrid`) on the tile    |
-| Avatar      | **`Row.Person avatar`** (gutter)   | **hand-rolled `DxAvatar`** size 6            | **hand-rolled `DxAvatar`** size 9                 |
-| Avatar hue  | `toHue(hashString(displayName))`   | `getMessageProps().hue`                      | `getMessageProps().hue`                           |
-| Lead line   | **subject** + date                 | **sender name** + date                       | **sender** (`h2`); date in col 3                  |
-| Secondary   | snippet (`Card.Text`)              | snippet (`line-clamp-2` button)              | snippet when collapsed; subject/to when expanded  |
-| Star / menu | `CardTile.Header` menu + star          | —                                            | `Row.Star` + `MessageMenu` (expanded only)        |
-| Data source | `getMessageProps({ compact })`     | `getMessageProps({ compact, time })`         | `getMessageProps()`                               |
+| Avatar      | **`Row.Person avatar`** (gutter)           | **hand-rolled `DxAvatar`** size 6            | **hand-rolled `DxAvatar`** size 9                 |
+| Avatar hue  | `toHue(hashString(displayName))`           | `getMessageProps().hue`                      | `getMessageProps().hue`                           |
+| Lead line   | **subject** + date                         | **sender name** + date                       | **sender** (`h2`); date in col 3                  |
+| Secondary   | snippet (`Card.Text`)                      | snippet (`line-clamp-2` button)              | snippet when collapsed; subject/to when expanded  |
+| Star / menu | `CardTile.Header` menu + star              | —                                            | `Row.Star` + `MessageMenu` (expanded only)        |
+| Data source | `getMessageProps({ compact })`             | `getMessageProps({ compact, time })`         | `getMessageProps()`                               |
 
 ## What stands out
 
@@ -78,5 +78,6 @@ see the low-level shared-primitive inventory in the plugin [`AUDIT.md`](../../AU
 ## Stages
 
 - [x] Stage 0 — audit (this file), refreshed to current reality; `MessageSummary` dropped.
-- [ ] Stage 1 — one shared `Avatar` primitive + single hue derivation; route all four sites through it.
+- [x] Stage 1 — one shared `Avatar` primitive (`components/Avatar/`) + single `nameToHue`; all four
+      sites routed through it; `getMessageProps.hue` removed.
 - [ ] Stage 2 — extract the shared low-level primitives (`Row`, `CardTile`, `Avatar`) into the card package.

@@ -54,10 +54,9 @@ calendar + contacts move out; provider + apis split; shared card-focused `@dxos/
       `ConversationStack`. Both are Stack forms with different (Card vs ad-hoc) grid Tiles.
 - [x] Move `useInjectedMailboxActions` + `useMailboxExtractorActions` from
       `components/Mailbox/` to `hooks/` (they're capability-fed hooks, not components).
-- [ ] Unify the avatar: one shared `Avatar` primitive (actor/name → single hue derivation),
-      route all four summary sites through it (3 currently hand-roll `DxAvatar`). **No
-      `MessageSummary` composite** — the four layouts are deliberately distinct
-      (`src/components/AUDIT.md`).
+- [x] Unify the avatar: one shared `Avatar` primitive (`components/Avatar/`, actor/name → single
+      `nameToHue`), routed through `Row.Person` + the 3 hand-rolled sites; dropped `getMessageProps.hue`.
+      **No `MessageSummary` composite** — the four layouts are deliberately distinct.
 - [ ] Extract `@dxos/react-ui-card` — the shared low-level card vocabulary (`Row`, `CardTile`,
       `Avatar`). Blockers: `Row` couples to `#hooks` (`useActorContact`), `#meta` (i18n),
       `../../util` (`hashString`) — relocate those into the package. Reuse react-ui's

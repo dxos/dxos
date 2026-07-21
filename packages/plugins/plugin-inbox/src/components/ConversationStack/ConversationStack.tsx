@@ -11,7 +11,6 @@ import { type Capabilities } from '@dxos/app-framework';
 import { type Graph } from '@dxos/app-graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { DxAvatar } from '@dxos/lit-ui/react';
 import { normalizeText } from '@dxos/markdown';
 import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -24,6 +23,7 @@ import { meta } from '#meta';
 import { Mailbox, SystemTags } from '#types';
 
 import { createDraftMessage, getMessageProps } from '../../util';
+import { Avatar } from '../Avatar';
 import { EditMessage } from '../EditMessage';
 import { HtmlViewer } from '../HtmlViewer';
 import { MarkdownViewer } from '../MarkdownViewer';
@@ -368,7 +368,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     return null;
   }
 
-  const { from, to, date, snippet, subject, hue } = getMessageProps(target);
+  const { from, to, date, snippet, subject } = getMessageProps(target);
   const sender = from ?? target.sender?.email ?? '';
 
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
@@ -377,7 +377,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
       <div className='col-span-full grid grid-cols-subgrid items-start'>
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
         <div className='p-2'>
-          <DxAvatar hue={hue} hueVariant='surface' variant='circle' size={9} fallback={sender} />
+          <Avatar actor={target.sender} name={sender} size={9} />
         </div>
 
         <div className='col-start-2 flex flex-col py-1'>

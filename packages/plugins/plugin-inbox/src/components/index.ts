@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './Avatar';
 export * from './ConversationStack';
 export * from './EditMessage';
 export * from './Event';

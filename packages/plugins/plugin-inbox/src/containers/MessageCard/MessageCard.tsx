@@ -5,21 +5,20 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { Row } from '#components';
+import { Avatar, Row } from '#components';
 
 import { getMessageProps } from '../../util';
 
 export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Message.Message>) => {
-  const { date, email, from, hue, snippet } = getMessageProps(message, new Date(), { compact: true });
+  const { date, email, from, snippet } = getMessageProps(message, new Date(), { compact: true });
   return (
     <Card.Body>
       <Card.Header>
         <Card.Block>
-          <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
+          <Avatar actor={message.sender} name={from} variant='square' size={7} />
         </Card.Block>
         <div className='flex gap-3 items-center justify-between col-span-2'>
           <span className='grow truncate'>{from}</span>

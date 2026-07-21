@@ -6,7 +6,6 @@ import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fn
 
 import { Obj } from '@dxos/echo';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
-import { toHue } from '@dxos/util';
 
 import { type Mailbox } from '#types';
 
@@ -216,7 +215,6 @@ type MessageProps = {
   email?: string;
   subject: string;
   snippet: string;
-  hue: string;
 };
 
 /**
@@ -272,8 +270,7 @@ export const getMessageProps = (
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? getMessageBodyText(message);
-  const hue = toHue(hashString(from));
-  return { id, text, date, from, to, email, subject, snippet, hue };
+  return { id, text, date, from, to, email, subject, snippet };
 };
 
 /**
