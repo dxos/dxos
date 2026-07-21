@@ -8,7 +8,7 @@ preservation) while replacing its replication model with `@dxos/feed` — the lo
 is the replicated artifact, the index is derived local state. Zero new protocol
 surface.
 
-Design: [`agents/superpowers/specs/2026-07-13-fact-store-design.md`](../../../agents/superpowers/specs/2026-07-13-fact-store-design.md)
+Design: [`DESIGN.md`](DESIGN.md)
 
 ## Phase 0: Finalize spec
 
@@ -89,6 +89,6 @@ existing `FeedDataSource` → `IndexEngine` path.
 
 ## References
 
-- Spec: `agents/superpowers/specs/2026-07-13-fact-store-design.md`
+- Spec: `.agents/projects/fact-store/DESIGN.md`
 - Dialog DB: https://github.com/dialog-db/dialog-db (data model reference)
 - `Feed.ts` in `@dxos/echo` — surface/veneer convention to mirror.

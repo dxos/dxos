@@ -68,8 +68,8 @@ projects:
     created: 2026-07-21
     summary: Dialog-inspired append-only fact store — Dialog's triple data model over @dxos/feed logs + a derived @dxos/index-core DatomIndex (zero new protocol surface).
     tasks: .agents/projects/fact-store/TASKS.md
-    design: agents/superpowers/specs/2026-07-13-fact-store-design.md
+    design: .agents/projects/fact-store/DESIGN.md
     prs: []
-    resume: 'Spec drafted (agents/superpowers/specs/2026-07-13-fact-store-design.md); project scaffolded, branch synced to main. Next: resolve the 5 open questions with the user (naming, value set, attribute discipline, feed-per-base vs shared, re-fold strategy) before implementation.'
+    resume: 'Spec drafted (.agents/projects/fact-store/DESIGN.md); project scaffolded, branch synced to main. Next: resolve the 5 open questions with the user (naming, value set, attribute discipline, feed-per-base vs shared, re-fold strategy) before implementation.'
 
 ended: []
