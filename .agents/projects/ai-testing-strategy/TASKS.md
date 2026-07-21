@@ -7,7 +7,7 @@ PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 (`test`+context-`expect`, helpers below `describe`); MERGED);
 [#12297](https://github.com/dxos/dxos/pull/12297) (revised plan — gate G1 in place instead of
 deleting it, remove all committed conversation fixtures, switch the gating mechanism to native
-`describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; OPEN).
+`describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
