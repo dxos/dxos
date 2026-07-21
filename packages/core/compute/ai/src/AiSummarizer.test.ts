@@ -20,9 +20,7 @@ const TestLanguageModel = AiService.model('com.anthropic.model.claude-sonnet-4-6
   Layer.provide(TestAiService()),
 );
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('AiSummarizer', () => {
+describe.skipIf(!runMemoizedTests())('AiSummarizer', () => {
   it.effect(
     'summarizes an email order conversation',
     Effect.fnUntraced(

@@ -144,9 +144,7 @@ const DelegationTestLayer = AssistantTestLayer({
   agent: { delegationStrategy: StubDelegationStrategy },
 });
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('Agent Service', () => {
+describe.skipIf(!runMemoizedTests())('Agent Service', () => {
   it.effect(
     'can answer a question',
     Effect.fnUntraced(

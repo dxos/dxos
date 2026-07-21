@@ -60,9 +60,7 @@ const TestLayer = Layer.empty.pipe(
   ),
 );
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('Research', () => {
+describe.skipIf(!runMemoizedTests())('Research', () => {
   it.effect(
     'call a function with a ref input',
     Effect.fnUntraced(

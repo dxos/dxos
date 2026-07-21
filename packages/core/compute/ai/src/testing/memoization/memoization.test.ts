@@ -74,7 +74,6 @@ class TestObjectReadToolkit extends Toolkit.make(
 // frozen-conversation replay (A/B) like the rest of the memoized suites — off by default
 // (`DX_RUN_LLM_TESTS=1` / `ALLOW_LLM_GENERATION=1` to run). The `dynamic value matching` describe
 // below tests the matching machinery itself with no model involved, so it stays ungated.
-const itMemoized = runMemoizedTests() ? it.effect : it.effect.skip;
 
 describe('memoization', () => {
   it.effect(
@@ -85,7 +84,7 @@ describe('memoization', () => {
     }),
   );
 
-  itMemoized(
+  it.effect.skipIf(!runMemoizedTests())(
     'generate a poem',
     Effect.fnUntraced(
       function* (_) {
@@ -98,7 +97,7 @@ describe('memoization', () => {
     ),
   );
 
-  itMemoized(
+  it.effect.skipIf(!runMemoizedTests())(
     'tools',
     Effect.fnUntraced(
       function* (_) {
@@ -129,7 +128,7 @@ describe('memoization', () => {
     ),
   );
 
-  itMemoized(
+  it.effect.skipIf(!runMemoizedTests())(
     'tools with encoding',
     Effect.fnUntraced(
       function* (_) {
@@ -154,7 +153,7 @@ describe('memoization', () => {
     ),
   );
 
-  itMemoized(
+  it.effect.skipIf(!runMemoizedTests())(
     'provider-defined tool',
     Effect.fnUntraced(
       function* (_) {
@@ -302,7 +301,7 @@ describe('dynamic value matching', () => {
     expect(tokens).toEqual([SPACE_A, OBJECT_ID]);
   });
 
-  itMemoized(
+  it.effect.skipIf(!runMemoizedTests())(
     'works with tool calsl',
     Effect.fnUntraced(
       function* (_) {

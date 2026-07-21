@@ -47,9 +47,7 @@ const SEED_EMAIL_INPUT = {
 
 // Frozen-conversation replay (A/B); off by default (`DX_RUN_LLM_TESTS=1` / `ALLOW_LLM_GENERATION=1`
 // to run) — see `packages/core/compute/ai/TESTING.md`.
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('CRM Mailbox', () => {
+describe.skipIf(!runMemoizedTests())('CRM Mailbox', () => {
   it.effect(
     'processes a mailbox email into CRM profiles and employer relation',
     agentTest({

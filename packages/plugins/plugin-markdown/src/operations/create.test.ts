@@ -33,9 +33,7 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('create', () => {
+describe.skipIf(!runMemoizedTests())('create', () => {
   it.effect(
     'call a function to create a markdown document',
     Effect.fnUntraced(

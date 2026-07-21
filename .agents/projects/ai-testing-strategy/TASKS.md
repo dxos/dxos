@@ -4,7 +4,10 @@ Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/a
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 [#12291](https://github.com/dxos/dxos/pull/12291) (Phase 1 steps 1-3 — de-gate G2/G3 + scripted
 `LanguageModel` primitive + `AiRequest` loop (D) tests; CodeRabbit nits addressed
-(`test`+context-`expect`, helpers below `describe`); Check GREEN, auto-merge enabled).
+(`test`+context-`expect`, helpers below `describe`); MERGED);
+[#12297](https://github.com/dxos/dxos/pull/12297) (revised plan — gate G1 in place instead of
+deleting it, remove all committed conversation fixtures, switch the gating mechanism to native
+`describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; OPEN).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -34,28 +37,32 @@ as primary coverage.
 
 ## Phase 1 — stop the bleeding + recover deterministic coverage
 
-- [x] De-gate G2/G3 memoized replay from the default `:test` path. **Mechanism chosen:** env-gated
-      `describe.skip`. `runMemoizedTests()` (new `ai/src/testing/gate.ts`, re-exported from
-      `@dxos/ai/testing` and `@dxos/agent-runtime/testing`) is false by default, so each memoized
-      suite is `runMemoizedTests() ? describe : describe.skip`. Runs only when `DX_RUN_LLM_TESTS=1`
-      or `ALLOW_LLM_GENERATION=1` (regeneration). Reversible, no deletion, per-suite (co-located
-      non-LLM tests — planning `hasIncompleteTasks`, AssistantPlugin module-activation boot — keep
-      running). Gated: 14 files (G2: run-instructions, {agent,database,memory,planning} skills,
-      markdown create/update, magazine, AssistantPlugin ×3 tests, AiSummarizer; G3: functions,
-      AgentService, request, xml-response). Left running: `memoization.test.ts` (tests the machinery
-      itself), G1 `assistant-e2e` (own harness — deleted in a later step, not de-gated here).
-- [x] **Revised plan (superseded "delete G1" below):** rather than deleting `assistant-e2e`,
-      extended the same `runMemoizedTests()` gate to it — cheaper, reversible, and keeps the
-      suites runnable locally as live/eval tests + design inspiration, per direct guidance. Gated
-      all 6 behavioral files (crm-mailbox, database, markdown, planning, smoke, web-search) with
-      `describeMemoized`. Also swept `ai/testing/memoization/memoization.test.ts`: the 5 tests that
-      call through to a real model (generate a poem, tools, tools with encoding, provider-defined
-      tool, works with tool calsl) are now gated per-test (`itMemoized`); the `dynamic value
-      matching` describe block (pure canonicalization/matching logic, no model call) stays ungated
-      — it was the one legitimate "tests the machinery, not behavior" exception. Removed all 21
-      committed `.conversations.json` fixtures repo-wide (the loader falls back to an empty store
-      when the file is missing, so this only affects tests actually run under the flag — they
-      re-record fresh, uncommitted, when run locally with `ALLOW_LLM_GENERATION=1`). Verified: build
+- [x] De-gate G2/G3 memoized replay from the default `:test` path. `runMemoizedTests()` (new
+      `ai/src/testing/gate.ts`, re-exported from `@dxos/ai/testing` and `@dxos/agent-runtime/testing`)
+      is false by default, true only under `DX_RUN_LLM_TESTS=1` or `ALLOW_LLM_GENERATION=1`
+      (regeneration). Reversible, no deletion, per-suite (co-located non-LLM tests — planning
+      `hasIncompleteTasks`, AssistantPlugin module-activation boot — keep running). Gated: 14 files
+      (G2: run-instructions, {agent,database,memory,planning} skills, markdown create/update,
+      magazine, AssistantPlugin ×3 tests, AiSummarizer; G3: functions, AgentService, request,
+      xml-response). Left running: `memoization.test.ts` (tests the machinery itself), G1
+      `assistant-e2e` (own harness — deleted in a later step, not de-gated here).
+- [x] **Revised plan (superseded "delete G1" below), PR #12297:** rather than deleting
+      `assistant-e2e`, extended the same gate to it — cheaper, reversible, and keeps the suites
+      runnable locally as live/eval tests + design inspiration, per direct guidance. Gated all 6
+      behavioral files (crm-mailbox, database, markdown, planning, smoke, web-search). Also swept
+      `ai/testing/memoization/memoization.test.ts`: the 5 tests that call through to a real model
+      (generate a poem, tools, tools with encoding, provider-defined tool, works with tool calls)
+      are now gated per-test; the `dynamic value matching` describe block (pure
+      canonicalization/matching logic, no model call) stays ungated — it was the one legitimate
+      "tests the machinery, not behavior" exception. Removed all 21 committed `.conversations.json`
+      fixtures repo-wide (the loader falls back to an empty store when the file is missing, so this
+      only affects tests actually run under the flag — they re-record fresh, uncommitted, when run
+      locally with `ALLOW_LLM_GENERATION=1`). **Mechanism revised again mid-review:** replaced the
+      ad hoc `const describeMemoized = runMemoizedTests() ? describe : describe.skip` helper
+      (and its `it`/`test` analogues) across all 20 gated files with the native
+      `describe.skipIf(!runMemoizedTests())(...)` / `it.effect.skipIf(!runMemoizedTests())(...)` /
+      `test.skipIf(!runMemoizedTests())(...)` — `@effect/vitest`'s `it.effect` and vitest's `test`
+      both support `.skipIf` directly, so the custom helper was pure duplication. Verified: build
       green (`assistant-e2e`, `ai`, `plugin-assistant` + deps, 187 tasks), tests green (assistant-e2e
       13/13 skipped as expected; ai 82 passed/29 skipped incl. memoization.test.ts 9 passed/5
       skipped; plugin-assistant 127 passed/10 skipped once run under the pinned Node 24.11.1 — a
@@ -110,6 +117,5 @@ as primary coverage.
 
 ## Deferred / open questions
 
-- Exact de-gating mechanism (env flag vs moon tag vs skip) — decide in Phase 1 step 1.
 - Whether plugin-markdown create/update (largest G2 fixtures) convert cleanly to mocked unit tests
   or need the scripted-model primitive too.

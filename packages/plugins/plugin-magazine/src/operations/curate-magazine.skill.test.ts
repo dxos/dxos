@@ -87,9 +87,7 @@ const articleHtml = (title: string, body: string) =>
 // eslint-disable-next-line no-restricted-globals
 const realFetch = globalThis.fetch.bind(globalThis);
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('CurateMagazine (LLM)', () => {
+describe.skipIf(!runMemoizedTests())('CurateMagazine (LLM)', () => {
   // Stub only the network boundary: serve canned HTML for the candidate article URLs (so the real
   // fetchArticleContent tool runs deterministically), and pass everything else (Anthropic) through.
   beforeEach(() => {

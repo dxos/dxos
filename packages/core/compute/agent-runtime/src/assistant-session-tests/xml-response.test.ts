@@ -17,9 +17,7 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(AssistantTestLayer({ tracing: 'noop' })),
 );
 
-const describeMemoized = runMemoizedTests() ? describe : describe.skip;
-
-describeMemoized('AiRequest.Request xml response', () => {
+describe.skipIf(!runMemoizedTests())('AiRequest.Request xml response', () => {
   // End-to-end regression: drive a real (memoized) LLM call via `AiRequest` and inspect the
   // streamed blocks. Original bug: when the user prompted "respond with your name inside an
   // xml tag", the model emitted `<name>Claude</name>` as text, but `AiParser.makeContentBlock`
