@@ -51,6 +51,8 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   checkpoint — interrupt immediately only when fully blocked.
 - **Automate the user's role where you can.** If their step is mechanical
   (running a command, checking output), do it yourself rather than asking.
+- **Name.** When the user's name is known, refer to them by it in commentary;
+  otherwise use a neutral form of address.
 
 ## Non-negotiables
 
@@ -116,9 +118,11 @@ Universal rules. Deeper conventions live in skills — see the pointers below.
 - Prefer named exports; avoid default exports. Use barrel imports.
 - **Never leave compatibility re-exports or shims when moving code.** Update
   every call site to the new location in the same change.
-- Comments state _why_ the code is necessary (the constraint it satisfies), end
-  with a period, and never narrate history or this conversation. JSDoc public
-  functions.
+- Comments state _why_ the code is necessary (the constraint it satisfies) in
+  **one load-bearing clause** — not a multi-sentence essay — end with a period,
+  and never narrate history or this conversation. Delete a comment the code
+  already makes obvious. Audit added comments in your diff before every commit,
+  same as casts. JSDoc public functions. Full rule → `code-style` skill.
 - Prefer ES `#private` over the TypeScript `private` keyword in new code
   (`_private` is fine to keep).
 - No single-letter variable names. Remove/update TODOs as you touch them.
@@ -127,9 +131,9 @@ Universal rules. Deeper conventions live in skills — see the pointers below.
 
 Deeper conventions:
 
-- No-cast rule, namespace-export packages, internal-module imports, class-member
-  ordering, options-bag types, overload syntax, and test structure →
-  `code-style` skill.
+- No-cast rule, comment rule (say why, once), namespace-export packages,
+  internal-module imports, class-member ordering, options-bag types, overload
+  syntax, and test structure → `code-style` skill.
 - ECHO objects, queries, schema, Ref/DXN → `echo` skill.
 - Effect-TS services, layers, and typed domain errors → `effect` skill.
 - React components, theme tokens, and Composer UI primitives → `composer-ui`

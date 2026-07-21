@@ -36,13 +36,13 @@ const handler: Operation.WithHandler<typeof CollaborationOperation.AcceptChange>
             ? subject
             : undefined;
         if (!content) {
-          return;
+          return {};
         }
 
         const accessor = Doc.createAccessor(content, ['content']);
         const range = getRangeFromCursor(accessor, anchor);
         if (!range) {
-          return;
+          return {};
         }
 
         // Pull the LATEST compare-branch text and recompute the diff (not a stored snapshot). Widen to
@@ -53,12 +53,15 @@ const handler: Operation.WithHandler<typeof CollaborationOperation.AcceptChange>
         // Find the hunk overlapping the anchored range and cherry-pick the compare branch's version.
         const splice = cherryPickHunk(content.content, compareText, range);
         if (!splice) {
-          return;
+          return {};
         }
 
+        // Capture the base text before the splice so the accept can be undone (RestoreText).
+        const replaced = content.content.slice(splice.from, splice.from + splice.del);
         accessor.handle.change((doc) => {
           A.splice(doc, accessor.path.slice(), splice.from, splice.del, splice.insert);
         });
+        return { undo: { from: splice.from, del: splice.insert.length, insert: replaced } };
       }),
     ),
   );

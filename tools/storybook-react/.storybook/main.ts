@@ -219,16 +219,27 @@ export const createConfig = ({
       {
         publicDir: staticDir,
         resolve: {
-          alias: {
-            'node-fetch': 'isomorphic-fetch',
-            'tiktoken/lite': resolve(__dirname, './stub.mjs'),
-            'node:util': '@dxos/node-std/util',
-            'util': '@dxos/node-std/util',
-            'node:crypto': '@dxos/node-std/crypto',
-            'crypto': '@dxos/node-std/crypto',
+          // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
+          // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
+          // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
+          // native node: polyfill layer handle subpaths like `node:util/types`.
+          alias: [
+            { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
+            { find: /^node:util$/, replacement: '@dxos/node-std/util' },
+            { find: /^util$/, replacement: '@dxos/node-std/util' },
+            { find: /^node:path$/, replacement: '@dxos/node-std/path' },
+            { find: /^path$/, replacement: '@dxos/node-std/path' },
+            { find: /^node:crypto$/, replacement: '@dxos/node-std/crypto' },
+            { find: /^crypto$/, replacement: '@dxos/node-std/crypto' },
+            { find: /^node:stream$/, replacement: '@dxos/node-std/stream' },
+            { find: /^stream$/, replacement: '@dxos/node-std/stream' },
+            { find: /^tiktoken\/lite$/, replacement: resolve(__dirname, './stub.mjs') },
             // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
-            '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
-          },
+            {
+              find: /^@dxos\/client\/opfs-worker$/,
+              replacement: resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
+            },
+          ],
         },
         // `build.target` only lowers syntax for `storybook build`; the e2e tests run against
         // `storybook dev`, which otherwise serves source syntax untransformed straight to the

@@ -1,0 +1,235 @@
+# AI testing strategy — design
+
+## Purpose
+
+Testing an AI conversation is hard because a single "e2e" run mixes concerns with wildly
+different determinism and cost profiles: pure developer code that should be trivially unit-tested,
+and LLM inference that is slow, costly, and non-deterministic. The current memoization approach
+collapses all of them into one mechanism (`src/testing/memoization/MemoizedLanguageModel.ts`,
+`*.conversations.json` snapshots) and pays for that conflation in brittleness and false confidence.
+
+This document defines the **dimensions** of an AI conversation, records **what we do today** and
+what it achieves vs. misses, describes **what we should do** (a tier per dimension), and gives a
+**prioritized plan**, including retiring the memoized e2e framework. For how the current
+memoization mechanism itself works, see [`DESIGN.md`](./DESIGN.md).
+
+## Dimensions of an AI conversation
+
+An agent turn factors into distinct concerns. The first four (A–D) are the ones we usually mean
+by "the agent works"; the rest (E–H) are the seams a four-way split silently omits.
+
+| Dim   | Concern                                                                                                                             | Owner                                           | Determinism       | Right tool                 |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------- | -------------------------- |
+| **A** | **Comprehension** — interpret NL instructions                                                                                       | LLM                                             | Non-deterministic | Eval                       |
+| **B** | **Tool selection & argument synthesis** — pick the tool, emit schema-valid JSON                                                     | LLM                                             | Non-deterministic | Eval                       |
+| **C** | **Operation execution** — the tool handler runs                                                                                     | Developer code                                  | Deterministic     | Unit test                  |
+| **D** | **Turn loop / harness** — feed tool results back, iterate to stop, max-iterations, error and malformed-output handling, persistence | Developer code (`AiSession.run`)                | Deterministic     | Unit test (scripted model) |
+| **E** | **Context assembly** — system prompt + skill instructions + bound objects → the prompt the LLM sees                                 | Developer code                                  | Deterministic     | Unit test / snapshot       |
+| **F** | **Schema & (de)serialization** — tool JSON-schema generation, argument decode, result encode                                        | Developer code                                  | Deterministic     | Unit test (round-trip)     |
+| **G** | **Evaluation / grading** — did the run meet its criteria?                                                                           | Test oracle (must not be the system under test) | —                 | Assertion or graded scorer |
+| **H** | **End-to-end composition** — emergent behavior across A–F on a realistic path                                                       | Whole system                                    | Non-deterministic | Thin integration eval      |
+
+Key observations that drive everything below:
+
+- **B is not monolithic.** "The LLM picks the right tool and produces valid args" is A/B (LLM,
+  eval). "Given valid args, the handler decodes/executes/encodes correctly" is C/F (code, unit).
+  The seam between them (F) is deterministic and must not be tested through the LLM.
+- **G is an oracle, not part of the system under test.** If the pass/fail verdict is itself an
+  LLM output, the test certifies itself.
+- **C, D, E, F are ordinary deterministic code.** None of them needs an LLM to be tested.
+
+## What we do today
+
+Two mechanisms, both centered on `MemoizedLanguageModel`:
+
+1. **Generate a conversation snapshot** (`ALLOW_LLM_GENERATION=1`, run by a developer with
+   `DX_ANTHROPIC_API_KEY`, never in CI). The memoized layer intercepts
+   `LanguageModel.generateText`/`streamText`, calls the real model, and appends
+   `{ parameters, prompt, response }` to a per-test-file `*.conversations.json`. This records
+   dimensions **A + B** (plus the final grading output — see below).
+2. **Replay under CI.** The same layer matches the live prompt against the snapshot (exact
+   structural equality after timestamp/date normalization and opt-in dynamic-id canonicalization)
+   and returns the stored response. On a miss it fails hard. The agent e2e harness
+   (`@dxos/assistant-e2e`) wraps a prompt as a test and checks structured `completedCriteria`.
+
+### What replay actually exercises
+
+A crucial nuance: on replay, **C, D, E, and F all run for real** — the operation handlers execute
+against a real ECHO database, the `AiSession` loop genuinely iterates, the prompt is genuinely
+assembled and the tool args/results are genuinely (de)serialized. **Only A and B are frozen.**
+
+### What it achieves
+
+- Deterministic, offline CI for flows that would otherwise require a live model.
+- Genuine integration coverage of C + D + E + F along **one recorded path** — a hard crash in an
+  operation or the loop is caught (indirectly; see below).
+- A single command to refresh fixtures when prompts change.
+
+### What it misses
+
+- **A and B are never tested.** They are frozen recordings. If comprehension or tool selection
+  regresses, CI is blind — that is the point of memoization, but it means the LLM-dependent
+  behavior we most care about has zero CI signal.
+- **G is self-certifying.** `completedCriteria` is structured output produced by the LLM
+  (`harness.ts` `OutputSchema`) and frozen into the snapshot. Replay re-reads the recording's own
+  verdict; CI is not evaluating whether criteria were met.
+- **C/D regressions surface as `No memoized conversation found`.** When an operation result
+  changes, the next turn's prompt diverges from the recording and the match fails. A genuine bug
+  is indistinguishable from a stale fixture or a reworded system prompt.
+- **D is only ever exercised along one frozen path** — never branched (max-iterations, tool
+  error, malformed output, early stop).
+- **Brittle by construction.** Matching is exact structural equality over the entire prompt; any
+  drift (reordered tool call, one-token id slide, changed system line, model/prompt edit) is a
+  hard miss requiring full regeneration. See git history for the positional-placeholder
+  `41 → 43` class of failures.
+- **Operationally heavy.** 21 `*.conversations.json` files, several megabytes each (`crm-mailbox`
+  ~5.4 MB), committed to git; the store appends and never prunes; per-file shared ID streams mean
+  a single test cannot be regenerated in isolation.
+
+Net: complex, brittle, and it gives a **false sense of security** — CI proves "the same frozen
+path still replays," not "the agent comprehends, selects tools, and completes tasks correctly."
+
+## What we should do
+
+Test each dimension with the tool that fits its determinism and cost, and stop routing
+deterministic code through a frozen LLM recording.
+
+### Deterministic tiers (fast, offline, gate every PR)
+
+- **C — operation unit tests.** Each operation gets ordinary unit tests with mocked services,
+  like any other code. Some already exist (`run-instructions.test.ts`, `skill-resolution.test.ts`);
+  extend to full coverage. Seed inputs with **golden tool-call args captured from the eval tier**
+  so handlers are tested against args the real LLM actually produces, not idealized ones.
+- **D — harness unit tests over a scripted `LanguageModel`.** Drive `AiSession.run` with a model
+  that emits a fixed, scripted sequence of parts/tool-calls, and a fake toolkit. Cover every
+  branch: tool-call → result → continue, clean stop, max-iterations, tool error propagation,
+  malformed-output handling, persistence to the feed. The scripted-model primitive already exists
+  in reduced form inside `MemoizedLanguageModel` — extract it (see plan).
+- **E — context-assembly tests.** Snapshot the assembled prompt (system + skill instructions +
+  bound objects) for representative inputs. Pure function of inputs; no model.
+- **F — schema round-trip tests.** Assert tool JSON-schema generation and arg/result
+  encode↔decode for each toolkit. Catches the "LLM emits args the handler can't decode" class
+  without invoking the LLM.
+- **G — code-side oracle.** Express completion as **assertions over observable effects** (ECHO
+  database state, which tools were invoked, returned shapes), not a frozen LLM boolean.
+
+### Non-deterministic tiers (graded, model-pinned, out-of-band, non-gating)
+
+- **A + B + H — `@dxos/assistant-evals`.** The package already exists (`evalite` + `autoevals`,
+  model-variant matrix, `createEvalRunner`). Grow it into the home for comprehension, tool
+  selection/arg synthesis, and thin end-to-end composition:
+  - **Scorers:** tool-match (did it call the expected tool), schema-validity (are args valid),
+    DB-effect assertions (did the expected objects appear), and LLM-as-judge for open-ended
+    quality. `basic.eval.ts` already carries a TODO for exactly this.
+  - **Statistical, not binary:** report pass-rate ≥ threshold over N runs; the LLM variance is
+    graded, not asserted away.
+  - **Model-pinned** and run **on a schedule / on demand**, not on every PR. This relocates LLM
+    cost and variance out of the gating path instead of freezing it.
+  - **H (composition)** lives here too: a _small_ number of true end-to-end scenarios (real model,
+    real operations, real loop) so we retain coverage of the seams that isolated tiers miss.
+
+### Why this is better
+
+- Deterministic code is tested deterministically, in CI, with clear failures — no cache misses
+  masquerading as bugs, no multi-MB fixtures, no coupled ID streams.
+- The LLM-dependent behavior we care about (A/B/H) is actually _measured_ over time instead of
+  frozen and ignored.
+- The oracle is explicit and trustworthy instead of self-certifying.
+
+## Consumer inventory & blast radius
+
+Removing the memoized tests is not one action — the ~20 consumers have very different value, and
+the analysis below drives the sequencing. Blast-radius facts:
+
+- **Nothing imports `@dxos/assistant-e2e`** — it is a leaf test package, so deleting it has zero
+  compile/coverage impact anywhere else.
+- The machinery (`MemoizedAiService` / `MemoizedLanguageModel`) is imported only by
+  `assistant-e2e/harness.ts` and `ai/src/testing/test-layers.ts` (`TestAiService`). **`TestAiService`
+  is the single seam** every other consumer goes through; keep it compiling and consumers are
+  unaffected.
+
+The consumers fall into three groups:
+
+- **G1 — pure agent e2e (`@dxos/assistant-e2e`):** `database`, `crm-mailbox`, `web-search`,
+  `planning`, `markdown`, `smoke`. Highest cost (~7.5 MB of fixtures; `crm-mailbox` alone 5.4 MB),
+  lowest signal, most redundant — the operations and the `AiSession` loop they touch are also
+  exercised by G2/G3. The **only** unique thing G1 covers is that the **full plugin composition**
+  boots (`ClientPlugin` + `AssistantPlugin` + `InboxPlugin` in `harness.ts`).
+- **G2 — per-operation / skill (behavioral through the LLM):** `plugin-markdown` create/update,
+  `plugin-magazine`, `plugin-assistant`, `assistant-toolkit` `run-instructions` + the `database`/
+  `memory`/`planning`/`agent` skills, `AiSummarizer`. Carry **unique operation-level deterministic
+  signal**; convert to mocked unit tests before deleting.
+- **G3 — agent-runtime session:** `functions`, `AgentService`, `request`, `xml-response`. Closest
+  to harness/loop (D) behavior; convert to scripted-model tests before deleting.
+
+### Impact of removing each group
+
+- **A/B/H/G signal:** none lost for any group — already frozen / self-certifying.
+- **G1:** its deterministic C/D signal is almost entirely redundant, so deletion drops no unique
+  coverage. The one genuine loss is the full-plugin **boot/wiring** path, recovered cheaply by a
+  single scripted-model boot-smoke (no fixture). Net: low impact, high relief.
+- **G2/G3:** deleting early **would** open real per-operation / per-loop gaps, because that
+  deterministic signal is unique. De-gate them from PR CI now to stop the flakiness, then convert
+  before deleting.
+
+## Prioritized plan
+
+Ordered by ROI. The guardrail is narrower than "never drop coverage": **behavioral (A/B/H)
+coverage is already ~zero and safe to drop immediately; only the deterministic (C/D) signal must be
+preserved — and it is cheap to recover (D is one scripted test; C is ordinary unit testing), so
+recover it in the same change that removes the corresponding memoized tests rather than treating it
+as a long migration.**
+
+### Phase 1 — stop the bleeding + recover deterministic coverage (highest ROI, fully in CI)
+
+This phase both removes the worst offender (G1) and de-gates the rest, while standing up the cheap
+deterministic tiers that make it safe.
+
+1. **De-gate G2/G3 from PR CI immediately** — move the memoized replay tests off the default
+   `:test` path (env flag / separate tag / `describe.skip`). No deletion, reversible; instantly
+   removes the flakiness and slowdown while conversion proceeds.
+2. **Extract a scripted `LanguageModel` primitive** from `MemoizedLanguageModel` — "given this
+   call, return these scripted parts/tool-calls" — decoupled from prompt-matching and file I/O.
+   This is the substrate for D and for the G1 boot-smoke.
+3. **Harness (D) unit tests** on the scripted model: all loop branches listed above.
+4. **Delete G1 (`@dxos/assistant-e2e`) and its fixtures** (~7.5 MB), and replace it with a **single
+   scripted-model boot-smoke** that boots the full plugin composition and asserts a trivial 1-tool
+   task completes — preserving the one unique thing G1 covered (composition/wiring) without any
+   memoized fixture. Safe to do here because nothing imports the package and its C/D signal is
+   redundant with G2/G3.
+5. **Operation (C) unit tests**: begin converting G2 to deterministic mocked unit tests; introduce
+   the golden-args fixture convention. Delete each G2 fixture only once its unit test lands.
+6. **Context-assembly (E) and schema round-trip (F) tests.**
+7. **Code-side oracle (G):** add DB-state / tool-invocation assertion helpers to the test harness.
+
+### Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
+
+8. Add scorers (tool-match, schema-validity, DB-effect, LLM-judge) and datasets covering the
+   comprehension / tool-selection scenarios previously implicit in the G1 suite.
+9. Pin model versions; define pass-rate thresholds; wire a scheduled (nightly / on-demand) run
+   distinct from PR CI.
+10. Port the highest-value former-G1 scenarios into evals as **H** integration cases (real model,
+    real operations), non-gating.
+
+### Phase 3 — finish migration & reduce the machinery
+
+11. Convert the remaining **G3** (agent-runtime session) fixtures to scripted-model (D) tests and
+    delete them.
+12. Once no consumer depends on frozen-conversation replay, **reduce the memoization layer to the
+    scripted-model primitive** and drop the prompt-matching / canonicalization / closest-match code
+    and `memoization.test.ts`'s dynamic-value suite. `TestAiService` remains the seam. The
+    _strategy_ of frozen full-conversation replay as primary coverage is what we retire.
+
+### Non-goals / risks
+
+- **Behavioral coverage is already ~zero** (A/B frozen, G self-certifying), so removing memoized
+  tests loses no behavioral signal — the earlier "coverage would drop to zero" framing was too
+  conservative. What must not drop is the **deterministic (C/D)** signal, recovered per group in
+  the same change that removes its tests (G1 → boot-smoke + D tests; G2 → C unit tests; G3 → D
+  tests).
+- **G2/G3 must be converted before their fixtures are deleted** — unlike G1, their deterministic
+  signal is unique.
+- **Isolated tiers miss emergent bugs** across seams; the thin H integration eval (step 10) is the
+  mitigation and must not be skipped.
+- Evals still hit real models — cost and variance are relocated and graded, not eliminated; budget
+  and schedule them accordingly.

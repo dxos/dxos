@@ -7,9 +7,11 @@ import { createContext } from '@radix-ui/react-context';
 import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
+import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
 
 import { type AiChatProcessor } from '../../processor';
+import { type MessageRange } from '../ChatThread';
 import { type ChatEvent } from './events';
 
 /**
@@ -31,6 +33,12 @@ export type ChatContextValue = {
   messages: Message.Message[];
   processor: AiChatProcessor;
   requestTiming: ChatRequestTiming | null;
+  /** The thread's editor controller, shared between `Chat.Thread` and `Chat.Minimap`. */
+  controller: MarkdownStreamController | null;
+  setController: (controller: MarkdownStreamController | null) => void;
+  /** Per-message document offset ranges, published by `Chat.Thread`'s syncer. */
+  messageRanges: MessageRange[];
+  setMessageRanges: (ranges: MessageRange[]) => void;
 };
 
 // Internal: not re-exported from `Chat/index.ts`. Accessed by sibling components in this

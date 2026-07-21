@@ -65,8 +65,7 @@ export const WithMail: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[Module.Chat], [Module.Context]],
     skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
   },
 };
@@ -97,8 +96,7 @@ export const WithGmail: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat], [Module.Inbox, Module.TokenManager]],
+    layout: [[Module.Chat], [Module.Inbox, Module.TokenManager], [Module.Context]],
     skills: [AssistantSkill.key, InboxSkill.key],
   },
 };
@@ -136,8 +134,7 @@ export const WithConnectorPrompt: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[Module.Chat], [Module.Context]],
     skills: [AssistantSkill.key, ConnectorsSkill.key],
   },
 };
@@ -168,8 +165,7 @@ export const WithCalendar: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat], [Module.TokenManager]],
+    layout: [[Module.Chat], [Module.TokenManager], [Module.Context]],
     skills: [AssistantSkill.key, CalendarSkill.key],
   },
 };
@@ -217,8 +213,7 @@ export const WithTranscription: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[Module.Chat], [Module.Context]],
     skills: [AssistantSkill.key, TranscriptionSkill.key],
   },
 };

@@ -14,6 +14,7 @@ export default Config2.make({
       Core theming engine providing consistent visual styling across the workspace.
       Switch between light and dark modes and apply custom theme configurations.
     `,
+    icon: { key: 'ph--palette--regular', hue: 'pink' },
     tags: ['system'],
   },
 });

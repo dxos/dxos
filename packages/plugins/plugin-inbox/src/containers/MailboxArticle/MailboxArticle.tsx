@@ -23,7 +23,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Icon, Panel } from '@dxos/react-ui';
+import { ElevationProvider, Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
@@ -218,9 +218,11 @@ export const MailboxArticle = ({
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // Gates on the query settling, not on `messages.length`, so the empty-mailbox panel never renders
-  // mid-load. `source` is only undefined for a free-text view whose feed hasn't resolved yet.
+  // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
+  // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
   const loading = !source || pagination.isLoading;
+  // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
+  const showEmptyState = !loading && messages.length === 0;
 
   const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
@@ -367,16 +369,12 @@ export const MailboxArticle = ({
         </Menu.Root>
       </ElevationProvider>
       <Panel.Content asChild>
-        {loading ? (
-          // Fade-in delayed 1s so a fast load never flashes the spinner.
-          <div className='grid place-items-center bs-full is-full'>
-            <Icon
-              icon='ph--spinner-gap--regular'
-              size={6}
-              classNames='text-subdued [animation:spin_1s_linear_infinite,fade-in_200ms_ease-out_1s_backwards]'
-            />
-          </div>
-        ) : messages.length > 0 ? (
+        {showEmptyState ? (
+          <InitializeMailbox mailbox={mailbox} />
+        ) : (
+          // Always keep the list mounted (even with no items yet); `loading` renders an in-flow
+          // spinner at the end of the list rather than replacing the whole panel — so a page fetch
+          // or a mid-sync refresh never blanks what's already shown.
           <MessageStack
             id={id}
             items={items}
@@ -384,13 +382,12 @@ export const MailboxArticle = ({
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
             pagination={pagination}
+            loading={loading}
             enableIgnoreSender
             enableCreateTopic
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        ) : (
-          <InitializeMailbox mailbox={mailbox} />
         )}
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
