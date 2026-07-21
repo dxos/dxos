@@ -63,9 +63,13 @@ const explicitConfig = flagValue('config');
 const dryRun = args.includes('--dry-run');
 const root = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
 
-// Positional args after `mode`, skipping over `--flag value` pairs.
+// Positional args after `mode`, skipping over `--flag value` pairs (`--dry-run` is boolean — it has no
+// value to skip).
 const positionals = [];
 for (let i = 1; i < args.length; i++) {
+  if (args[i] === '--dry-run') {
+    continue;
+  }
   if (args[i].startsWith('--')) {
     i++; // also skip its value
     continue;
