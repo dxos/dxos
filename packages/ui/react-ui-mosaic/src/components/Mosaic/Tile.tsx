@@ -20,7 +20,7 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -147,6 +147,15 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       },
       [onSizeChange],
     );
+    // The `size` prop is the source of truth; internal state exists only to reflect the live extent
+    // during a drag (which commits back through `onSizeChange`). Re-sync when the prop changes so a
+    // tile that first rendered without a size — e.g. before the breakpoint settled, or a
+    // mobile/fullbleed → sliding branch switch that swaps `size` in — applies it once it arrives,
+    // instead of staying stuck at its initial (often `undefined`) extent. A live drag never changes
+    // the prop (only the committed drop does), so this does not fight the drag.
+    useEffect(() => {
+      setInternalSize(sizeProp);
+    }, [sizeProp]);
 
     const allowedEdges = useMemo<Edge[]>(
       () => allowedEdgesProp || (orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
