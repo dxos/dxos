@@ -40,10 +40,18 @@ as primary coverage.
       markdown create/update, magazine, AssistantPlugin ×3 tests, AiSummarizer; G3: functions,
       AgentService, request, xml-response). Left running: `memoization.test.ts` (tests the machinery
       itself), G1 `assistant-e2e` (own harness — deleted in a later step, not de-gated here).
-- [ ] Extract a scripted `LanguageModel` primitive from `MemoizedLanguageModel` (given a call →
-      scripted parts/tool-calls; no prompt-matching, no file I/O). Substrate for D + G1 boot-smoke.
-- [ ] Harness (D) unit tests on the scripted model: tool-call→result→continue, stop, max-iterations,
-      tool error, malformed output.
+- [x] Extract a scripted `LanguageModel` primitive from `MemoizedLanguageModel`:
+      `ai/src/testing/ScriptedLanguageModel.ts` (`@import-as-namespace`, PascalCase like
+      `MemoizedLanguageModel.ts`), re-exported from `@dxos/ai/testing` as `ScriptedLanguageModel`.
+      `scriptedAiService(turns)` / `scriptedLanguageModelLayer(turns)` + `text()` / `toolCall()`
+      builders; turns replay sequentially (Nth call → Nth turn), exhaustion fails loudly; supports
+      streamText (deltas) + generateText (aggregated) + a `{ fail }` turn for provider-error branches.
+      No prompt-matching, no file I/O, no casts. Own unit tests (encoders + sequential/exhaustion).
+- [x] Harness (D) tests on the scripted model — `agent-runtime/.../scripted-loop.test.ts` drives the
+      real `AiRequest` loop via `AssistantTestLayer({ aiService })` + a fake Echo toolkit: clean stop
+      (no tool calls), tool-call→result→continue→stop, multi-iteration (result fed back each turn +
+      `toolCalls` count). NOTE: `AiRequest.run` has **no max-iterations cap** in code — not tested
+      (would be testing a nonexistent feature). Tool-error / malformed-output branches deferred.
 - [ ] Delete G1 (`@dxos/assistant-e2e`) + fixtures; replace with one scripted-model boot-smoke
       (full plugin composition boots, trivial 1-tool task completes).
 - [ ] Convert G2 → deterministic mocked C unit tests; golden-args fixture convention; delete each
