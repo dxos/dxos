@@ -63,7 +63,7 @@ describe('AiRequest loop (scripted model)', () => {
   it.effect(
     'completes in one turn when the model emits no tool calls',
     Effect.fnUntraced(
-      function* () {
+      function* (_) {
         const request = new AiRequest.Request();
         const messages = yield* request.run({ prompt: 'Say hi.', history: [] });
 
@@ -78,7 +78,7 @@ describe('AiRequest loop (scripted model)', () => {
   it.effect(
     'executes a tool call, feeds the result back, then stops',
     Effect.fnUntraced(
-      function* () {
+      function* (_) {
         const request = new AiRequest.Request();
         const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
         const messages = yield* request.run({ toolkit, prompt: 'Echo hello.', history: [] });
@@ -97,7 +97,7 @@ describe('AiRequest loop (scripted model)', () => {
   it.effect(
     'iterates until the model stops, feeding each tool result back',
     Effect.fnUntraced(
-      function* () {
+      function* (_) {
         const request = new AiRequest.Request();
         const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
         const messages = yield* request.run({ toolkit, prompt: 'Echo twice.', history: [] });
