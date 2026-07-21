@@ -62,6 +62,14 @@ export type AddOptions = {
    * @default 'linked-doc'
    */
   placeIn?: ObjectPlacement;
+
+  /**
+   * Append the object to this feed instead of the automerge-backed space database. The object is
+   * returned synchronously (a live feed object) and persisted in the background — confirm the write
+   * completed with {@link Database.flush}. Synchronous alternative to the async
+   * {@link Database.appendToFeed}; `placeIn` is ignored when set.
+   */
+  to?: Feed.Feed;
 };
 
 /**
@@ -160,6 +168,8 @@ export interface Database extends Queryable {
    *
    * Only Object and Relation entities are accepted. To persist a Type definition use
    * {@link addType} — passing a Type entity is rejected at compile time (and at runtime).
+   *
+   * Pass `{ to: feed }` to append to a feed instead (synchronous; confirm with {@link flush}).
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T & RejectTypeEntity<T>, opts?: AddOptions): T;
 
@@ -262,6 +272,14 @@ export interface Database extends Queryable {
    * Returns queue replication backlog for the feed's namespace.
    */
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
+
+  /**
+   * Disposes and drops the in-memory handle (live working-set / core cache) for a feed, so the next
+   * access re-reads it cold. Advanced cache-control; primarily used by tests to model a spawned
+   * process reading the feed with an empty in-memory cache. Public (not `_`-prefixed) so it survives
+   * declaration stripping for cross-package test use.
+   */
+  evictFeedHandle(feed: Feed.Feed): Promise<void>;
 
   /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
@@ -412,6 +430,9 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
+// The Effect wrapper intentionally omits the method's `opts` (e.g. `{ to: feed }`): it is applied
+// point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
+// iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
   Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
 

@@ -9,7 +9,7 @@ import { Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope } from '@dxos/ec
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
-import { EID } from '@dxos/keys';
+import { EID, PublicKey } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 describe('feeds', () => {
@@ -304,6 +304,350 @@ describe('feeds', () => {
 
       expect(objects2).toHaveLength(1);
       expect(objects2[0].name).toEqual('john');
+    });
+  });
+
+  describe('Live updates', () => {
+    test('Obj.update mutates synchronously; direct assignment throws', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+      expect(john.name).toEqual('john v2');
+
+      expect(() => {
+        (john as any).name = 'john v3';
+      }).toThrow();
+    });
+
+    test('Obj.update persists: flush then a fresh query returns the same instance with the update', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+      await db.flush();
+
+      const [result] = await queryFeed(db, feed, Filter.everything()).run();
+      expect(result.name).toEqual('john v2');
+      expect(result).toBe(john);
+    });
+
+    test('Obj.update survives reload', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+      await db.flush();
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+      await db.flush();
+
+      await peer.reload();
+
+      const db2 = await peer.openLastDatabase();
+      const [feed2] = await db2.query(Filter.type(Feed.Feed)).run();
+      const [result] = await queryFeed(db2, feed2, Filter.everything()).run();
+      expect(result.name).toEqual('john v2');
+    });
+
+    test('identity: consecutive queries and the appended proxy are the same instance', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+
+      const [first] = await queryFeed(db, feed, Filter.everything()).run();
+      const [second] = await queryFeed(db, feed, Filter.everything()).run();
+      expect(first).toBe(john);
+      expect(second).toBe(john);
+    });
+
+    test('reactivity: Obj.subscribe fires on Obj.update and on a re-append-by-id, updating in place', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+
+      let notified = 0;
+      const unsubscribe = Entity.subscribe(john, () => {
+        notified++;
+      });
+
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+      expect(notified).toEqual(1);
+
+      // Re-appending by id is an update: the working-set instance (`john`) updates in place —
+      // locks in PR #12226's contract against the unified working set.
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { id: john.id, name: 'john v3' })]);
+      expect(notified).toEqual(2);
+      expect(john.name).toEqual('john v3');
+
+      const [result] = await queryFeed(db, feed, Filter.everything()).run();
+      expect(result).toBe(john);
+      unsubscribe();
+    });
+
+    test('coalescing: N synchronous Obj.update calls flush as a single feed block', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+      await db.flush();
+
+      const [before] = await queryFeed(db, feed, Filter.everything()).run();
+      const positionBefore = Number(Entity.getKeys(before, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id);
+
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+      Obj.update(john, (john) => {
+        john.name = 'john v3';
+      });
+      Obj.update(john, (john) => {
+        john.name = 'john v4';
+      });
+      await db.flush();
+
+      const [after] = await queryFeed(db, feed, Filter.everything()).run();
+      const positionAfter = Number(Entity.getKeys(after, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id);
+
+      expect(after.name).toEqual('john v4');
+      expect(positionAfter - positionBefore).toEqual(1);
+    });
+
+    test('reconciliation does not clobber a not-yet-flushed local update', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      const jane = Obj.make(TestSchema.Person, { name: 'jane' });
+      await db.appendToFeed(feed, [john, jane]);
+      await db.flush();
+
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+
+      // Force an index emission (a reactive query re-evaluation) via an unrelated append, without
+      // flushing john's own pending update.
+      const query = queryFeed(db, feed, Filter.everything());
+      const called = new Event();
+      const calledOnce = called.waitForCount(1);
+      const sub = query.subscribe(() => called.emit());
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { id: jane.id, name: 'jane v2' })]);
+      await calledOnce;
+      sub();
+
+      // The local, not-yet-flushed update to john must survive the unrelated index emission.
+      expect(john.name).toEqual('john v2');
+
+      await db.flush();
+      const [johnResult] = await queryFeed(db, feed, Filter.id(john.id)).run();
+      expect(johnResult.name).toEqual('john v2');
+    });
+
+    test('delete interplay: Obj.update after delete does not throw or resurrect; re-append after delete works', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+      await db.flush();
+
+      await db.removeFeedItemsByIds(feed, [john.id]);
+
+      expect(() => {
+        Obj.update(john, (john) => {
+          john.name = 'ghost';
+        });
+      }).not.toThrow();
+
+      let results = await queryFeed(db, feed, Filter.everything()).run();
+      expect(results).toHaveLength(0);
+
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { id: john.id, name: 'john reborn' })]);
+      results = await queryFeed(db, feed, Filter.everything()).run();
+      expect(results).toHaveLength(1);
+      expect(results[0].name).toEqual('john reborn');
+    });
+
+    test('Obj.getSnapshot is a non-live snapshot unaffected by later updates', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+
+      const snapshot = Obj.getSnapshot(john);
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+
+      expect(snapshot.name).toEqual('john');
+      expect(john.name).toEqual('john v2');
+    });
+
+    test('a callback that throws partway through Obj.update leaves the partial mutation dirty and propagates', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+      await db.flush();
+
+      expect(() => {
+        Obj.update(john, (john) => {
+          john.name = 'partial';
+          throw new Error('boom');
+        });
+      }).toThrow('boom');
+      expect(john.name).toEqual('partial');
+
+      await db.flush();
+      const [result] = await queryFeed(db, feed, Filter.everything()).run();
+      expect(result.name).toEqual('partial');
+    });
+
+    test('concurrent db.flush() calls resolve together without hanging or double-appending', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      await db.appendToFeed(feed, [john]);
+      await db.flush();
+
+      Obj.update(john, (john) => {
+        john.name = 'john v2';
+      });
+
+      await Promise.all([db.flush(), db.flush(), db.flush()]);
+
+      const [result] = await queryFeed(db, feed, Filter.everything()).run();
+      expect(result.name).toEqual('john v2');
+      const position = Number(Entity.getKeys(result, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id);
+      expect(position).toEqual(1);
+    });
+
+    test('two independent clients writing the same id: last flush observed wins wholesale', async ({ expect }) => {
+      const [spaceKey] = PublicKey.randomSequence();
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      await using db1 = await peer.createDatabase(spaceKey);
+      const feed = db1.add(Feed.make({ name: 'people' }));
+
+      const john = Obj.make(TestSchema.Person, { name: 'john', email: 'john@example.com' });
+      await db1.appendToFeed(feed, [john]);
+      await db1.flush();
+
+      // A second client on the same space/feed gets its own independent live proxy for `john`.
+      await using client2 = await peer.createClient();
+      await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, { client: client2 });
+      const [feed2] = await db2.query(Filter.type(Feed.Feed)).run();
+      const [john2] = await queryFeed(db2, feed2, Filter.everything()).run();
+      expect(john2).not.toBe(john);
+
+      // Both clients mutate different fields before either observes the other's write.
+      Obj.update(john, (john) => {
+        john.name = 'john from client1';
+      });
+      Obj.update(john2 as TestSchema.Person, (mutable) => {
+        mutable.email = 'client2@example.com';
+      });
+
+      await db1.flush();
+      await db2.flush();
+
+      // Whole-object last-flush-wins: client2's flush (observed last) overwrites client1's field
+      // too — client1's `name` edit is silently reverted even though client2 never touched `name`,
+      // since client2's captured snapshot still carries the pre-edit value. This is the documented
+      // data-loss mode, not a bug to "fix" without a real merge protocol.
+      const [finalResult] = await queryFeed(db1, feed, Filter.everything()).run();
+      expect(finalResult.email).toEqual('client2@example.com');
+      expect(finalResult.name).toEqual('john');
+    });
+  });
+
+  describe('db.add({ to: feed })', () => {
+    test('synchronously adds to a feed and returns the same live instance', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const john = db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      expect(john.name).toEqual('john');
+
+      // Live: Obj.update works synchronously on the returned instance.
+      Obj.update(john, (mutable) => {
+        mutable.name = 'john v2';
+      });
+      expect(john.name).toEqual('john v2');
+
+      // Confirmed by flush; a fresh query returns the same instance with the persisted value.
+      await db.flush();
+      const [result] = await queryFeed(db, feed, Filter.everything()).run();
+      expect(result).toBe(john);
+      expect(result.name).toEqual('john v2');
+    });
+
+    test('persists across reload', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+      await db.flush();
+
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      await db.flush();
+
+      await peer.reload();
+
+      const db2 = await peer.openLastDatabase();
+      const [feed2] = await db2.query(Filter.type(Feed.Feed)).run();
+      const [result] = await queryFeed(db2, feed2, Filter.everything()).run();
+      expect(result.name).toEqual('john');
     });
   });
 });

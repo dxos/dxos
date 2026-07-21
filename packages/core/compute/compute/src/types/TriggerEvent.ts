@@ -30,20 +30,26 @@ export const FeedEvent = Schema.Struct({
 });
 export type FeedEvent = Schema.Schema.Type<typeof FeedEvent>;
 
+/**
+ * Kind of mutation a subscription trigger observed for its subject.
+ */
+export const SubscriptionMutationType = Schema.Literal('created', 'updated', 'deleted');
+export type SubscriptionMutationType = Schema.Schema.Type<typeof SubscriptionMutationType>;
+
 export const SubscriptionEvent = Schema.Struct({
   /**
    * Type of the mutation.
    */
-  // TODO(dmaretskyi): Specify enum.
-  type: Schema.String,
+  type: SubscriptionMutationType,
 
   /**
-   * Reference to the object that was changed or created.
+   * Reference to the object that was changed or created. For `deleted`, carries the object's URI;
+   * dereferencing may yield `undefined` since the object is gone.
    */
   subject: Ref.Ref(Obj.Unknown),
 
   /**
-   * @deprecated
+   * @deprecated Use `subject`.
    */
   changedObjectId: Schema.optional(Schema.String),
 });

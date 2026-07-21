@@ -61,4 +61,15 @@ projects:
     prs: [12287]
     resume: 'Design doc PR #12287 (draft): packages/core/compute/ai/TESTING.md — dimensions A-H, current-approach gaps, tiered target, prioritized plan + consumer inventory (G1/G2/G3) and removal blast-radius. No implementation started. Next code step: extract the scripted LanguageModel primitive from MemoizedLanguageModel (substrate for D tests + G1 boot-smoke), then delete G1 (assistant-e2e). Quick relief available first: de-gate G2/G3 memoized replay from PR CI.'
 
+  - name: feed-live-objects
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-21
+    summary: Make feed-backed ECHO objects live (reactive/mutable/identity-stable) unified with automerge objects; subscription triggers with real mutation types over feeds + tombstone visibility fix.
+    tasks: .agents/projects/feed-live-objects/TASKS.md
+    design: .agents/projects/feed-live-objects/DESIGN.md
+    prs: [12235]
+    resume: 'PR #12235 (draft). Merged main up to 0f4bb22993; full build green (313), touched-package tests green, assistant-toolkit agent skill memoized cache regenerated. All impl + Dmytro review rounds done: live feed objects, db.add({to}), FeedObjectCore single-state reconciliation, subscription triggers (created/updated/deleted) over feeds, feed tombstone visibility (FtsIndex/EntityMetaIndex partial-block merge, dropped id-set diff), evictFeedHandle made public (d.ts _-strip), Database.add namespace opts dropped (point-free). NEXT: watch Check workflow green on 0f4bb22993; take out of draft + land; address any new review comments. Deferred (own PRs): partial update blocks + field-level LWW + feed compaction; bounded edge-dispatcher dedup state; optional SubscriptionSpec mutationTypes filter.'
+
 ended: []

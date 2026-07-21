@@ -495,6 +495,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
+    if (opts?.to) {
+      // Synchronous feed append: registers the object as a live feed object and schedules the
+      // background write. Returns the same instance; confirm persistence with `db.flush()`.
+      this.#getFeedHandle(opts.to).appendSync([obj]);
+      return obj;
+    }
     return this._addObject(obj, opts);
   }
 
@@ -624,6 +630,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * @internal
+   * Like {@link _getOrCreateFeedHandle}, but returns `undefined` instead of throwing when no feed
+   * service is connected. Used by query hydration, which must fall back to a plain (non-live)
+   * decode rather than fail the whole query when the feed backend isn't available.
+   */
+  _getFeedHandleIfAvailable(feedUri: EID.EID, namespace?: string): FeedHandle | undefined {
+    if (!this.#feedService) {
+      return undefined;
+    }
+    return this._getOrCreateFeedHandle(feedUri, namespace);
+  }
+
+  /**
+   * @internal
    * Returns an already-instantiated feed handle for a URI, without creating one.
    */
   _tryGetFeedHandle(feedUri: EID.EID): FeedHandle | undefined {
@@ -636,6 +655,23 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   _knownFeedHandles(): Iterable<FeedHandle> {
     return this.#feeds.values();
+  }
+
+  /**
+   * Disposes and drops the cached feed handle for a feed (its live working-set / core cache). A
+   * subsequent access re-creates a fresh handle that re-reads the feed cold — primarily used by
+   * tests to model a spawned process reading the feed with an empty in-memory cache.
+   */
+  async evictFeedHandle(feed: Feed.Feed): Promise<void> {
+    const feedUri = Feed.getFeedUri(feed);
+    if (!feedUri) {
+      return;
+    }
+    const handle = this.#feeds.get(feedUri);
+    if (handle) {
+      this.#feeds.delete(feedUri);
+      await handle.dispose();
+    }
   }
 
   #getFeedHandle(feed: Feed.Feed): FeedHandle {
@@ -668,6 +704,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
+    await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {

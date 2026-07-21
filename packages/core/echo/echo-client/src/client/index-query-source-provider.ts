@@ -7,9 +7,9 @@ import * as Runtime from 'effect/Runtime';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, type Hypergraph, Obj, Query } from '@dxos/echo';
+import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,7 +22,9 @@ import {
 import { type QueryService } from '@dxos/protocols/rpc';
 import { isNonNullable } from '@dxos/util';
 
+import { type FeedHandle } from '../feed/feed-handle';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
+import { DatabaseImpl } from '../proxy-db';
 import { type QuerySource, type SourceEntry, getTargetSpacesForQuery } from '../query';
 
 export type LoadObjectProps = {
@@ -413,20 +415,43 @@ export class IndexQuerySource implements QuerySource {
       // A feed item's parent is the Feed object (whose id equals the queue id). Setting it here mirrors
       // the client feed-handle read path so `Obj.getParent` resolves for index-hydrated feed items.
       const parent = database?.getObjectById(result.queueId);
+      // Route through the feed handle so index-hydrated results share identity (and live `Obj.update`
+      // semantics) with the same object read via polling or `db.appendToFeed`. When no handle is
+      // available (feed service not connected, or the Feed object isn't loaded) we still return a
+      // *live* object — feed objects must uniformly follow the live type-spec/API; only core-tracked
+      // identity and background persistence are unavailable in that degraded state.
+      let feedHandle: FeedHandle | undefined;
+      if (database instanceof DatabaseImpl) {
+        if (Obj.instanceOf(Feed.Feed)(parent)) {
+          feedHandle = database._getFeedHandleIfAvailable(queueEchoUri, parent.namespace);
+          feedHandle?.setParentEntity(parent);
+        } else {
+          // Parent Feed not loaded — reuse an already-created handle (correct namespace) if present,
+          // but don't mint one at a guessed namespace.
+          feedHandle = database._tryGetFeedHandle(queueEchoUri);
+        }
+      }
       let object;
       try {
-        object = await Obj.fromJSON(json, {
-          refResolver,
-          uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
-          database,
-          parent,
-        });
+        object = feedHandle
+          ? await feedHandle.upsertFromJSON(json)
+          : makeDecodedEntityLive(
+              await Obj.fromJSON(json, {
+                refResolver,
+                uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
+                database,
+                parent,
+              }),
+            );
       } catch (err) {
         const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
         if (!emittedSchemaValidationWarnings.has(typeDxn)) {
           emittedSchemaValidationWarnings.add(typeDxn);
           log.warn('object failed schema validation', { type: typeDxn, error: err });
         }
+        return null;
+      }
+      if (!object) {
         return null;
       }
       const queryResult: SourceEntry = {

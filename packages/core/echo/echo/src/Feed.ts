@@ -67,6 +67,12 @@ export interface Cursor<T = Obj.Snapshot> {
 
 /**
  * Retention options for a feed.
+ *
+ * Live feed objects persist every `Obj.update` as a whole-object re-append reusing the object's id
+ * (see `EchoFeedCodec.encode`), so superseded blocks accumulate indefinitely — retention/compaction
+ * of those superseded blocks (driven by these options, once implemented) is the reclaim mechanism.
+ * TODO(wittjosiah): Implement when feed retention is supported (see `setRetention` below and
+ * `FeedStore.appendLocal`).
  */
 export interface RetentionOptions {
   /** Retain items after this cursor position. */
@@ -129,8 +135,11 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
 /**
  * Returns the feed object's EID when the feed is stored in a space.
  *
- * Used internally by the feed service layer.
+ * Private-ish and on track to be removed — prefer resolving feed scopes via higher-level APIs
+ * (e.g. `Feed.query`) rather than threading the raw queue URI. Used internally by the feed service
+ * layer.
  */
+// TODO(dmaretskyi): Remove — private-ish, prefer higher-level feed-scope APIs.
 export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
 
 //

@@ -8,17 +8,26 @@ import { describe, expect, test } from 'vitest';
 import { DXN, EID } from '@dxos/keys';
 
 import * as Obj from '../../Obj';
+import * as Relation from '../../Relation';
 import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
 import { getTypename, getTypeURI } from '../Annotation';
 import { getMetaChecked } from '../common/api';
-import { ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
+import { makeDecodedEntityLive } from '../common/proxy';
+import { type AnyEntity, ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
 import { MetaId } from '../common/types/model-symbols';
 import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity';
 import * as JsonSchema from '../JsonSchema';
-import { Ref, StaticRefResolver } from '../Ref';
+import { Ref, type RefResolver, StaticRefResolver } from '../Ref';
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
+
+/**
+ * Decode JSON and rewrap as a live reactive proxy — mirrors the feed hydration path
+ * (`objectFromJSON` then {@link makeDecodedEntityLive}).
+ */
+const decodeLive = async (json: unknown, options?: { refResolver?: RefResolver }): Promise<AnyEntity> =>
+  makeDecodedEntityLive(await objectFromJSON(json, options));
 
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
@@ -156,6 +165,157 @@ describe('Object JSON serializer', () => {
       // `typename` lives in `EntityMeta.key` on persisted Type.Type entities
       // — surfaced via `Type.getTypename`.
       expect(Type.getTypename(reconstructed)).toBe('com.example.type.regression');
+    });
+  });
+
+  describe('live decode', () => {
+    test('decodes as a live proxy, not a plain snapshot', async () => {
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const contactJson = objectToJSON(contact);
+      const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
+
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
+
+      expect(Obj.instanceOf(TestSchema.Person)(live)).toBe(true);
+      expect(live.name).toBe('Alice');
+    });
+
+    test('Obj.update mutates synchronously and notifies subscribers', async () => {
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const contactJson = objectToJSON(contact);
+      const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
+
+      let notified = 0;
+      const unsubscribe = Obj.subscribe(live, () => {
+        notified++;
+      });
+
+      Obj.update(live, (live) => {
+        live.name = 'Bob';
+      });
+
+      expect(live.name).toBe('Bob');
+      expect(notified).toBe(1);
+      unsubscribe();
+    });
+
+    test('direct assignment outside Obj.update throws', async () => {
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const contactJson = objectToJSON(contact);
+      const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
+
+      expect(() => {
+        (live as any).name = 'Bob';
+      }).toThrow();
+    });
+
+    test('Obj.getSnapshot returns a non-live snapshot unaffected by later updates', async () => {
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const contactJson = objectToJSON(contact);
+      const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
+
+      const snapshot = Obj.getSnapshot(live);
+      Obj.update(live, (live) => {
+        live.name = 'Bob';
+      });
+
+      expect(snapshot.name).toBe('Alice');
+      expect(live.name).toBe('Bob');
+    });
+
+    test('meta is mutable within a change context', async () => {
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const contactJson = objectToJSON(contact);
+      const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
+
+      Obj.update(live, (live) => {
+        Obj.getMeta(live).keys.push({ id: 'abc', source: 'example.com' });
+      });
+
+      expect(Obj.getMeta(live).keys).toEqual([{ id: 'abc', source: 'example.com' }]);
+    });
+
+    test('live decode of a relation', async () => {
+      const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const org = Obj.make(TestSchema.Organization, { name: 'Acme' });
+      const relation = Relation.make(TestSchema.EmployedBy, {
+        [Relation.Source]: alice,
+        [Relation.Target]: org,
+        role: 'Engineer',
+      });
+      const relationJson = objectToJSON(relation as any);
+      const refResolver = new StaticRefResolver()
+        .addSchema(TestSchema.EmployedBy)
+        .addSchema(TestSchema.Person)
+        .addSchema(TestSchema.Organization)
+        .addObject(alice)
+        .addObject(org);
+
+      const live = (await decodeLive(relationJson, { refResolver })) as any;
+
+      let notified = 0;
+      const unsubscribe = Obj.subscribe(live, () => {
+        notified++;
+      });
+      Relation.update(live, (live) => {
+        live.role = 'Senior Engineer';
+      });
+      expect(live.role).toBe('Senior Engineer');
+      expect(notified).toBe(1);
+      unsubscribe();
+    });
+
+    test('schemaless (unresolvable type) items stay plain, non-proxy snapshots', async () => {
+      const contact = createObject(TestSchema.Person, { name: 'Alice' });
+      const contactJson = objectToJSON(contact);
+
+      const live: any = await decodeLive(contactJson);
+
+      expect(getSchema(live)).toBeUndefined();
+      expect(live.name).toBe('Alice');
+      // No schema means `Obj.update` cannot validate mutations — direct assignment remains a
+      // silent no-op-safe plain-object write, not a throw.
+      live.name = 'Bob';
+      expect(live.name).toBe('Bob');
+    });
+
+    test('a malformed decoded shape surfaces a clear error rather than a silent bad proxy', async () => {
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const contactJson: any = objectToJSON(contact);
+      // Corrupt a field so it violates the schema; live decode must not swallow this.
+      contactJson.age = 'not-a-number';
+      const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
+
+      await expect(decodeLive(contactJson, { refResolver })).rejects.toThrow();
+    });
+
+    test('nested array fields become reactive on live decode', async () => {
+      const task1 = Obj.make(TestSchema.Task, { title: 'Task 1' });
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [Ref.make(task1)] });
+      const contactJson = objectToJSON(contact);
+      const refResolver = new StaticRefResolver()
+        .addSchema(TestSchema.Person)
+        .addSchema(TestSchema.Task)
+        .addObject(task1);
+
+      const live = (await decodeLive(contactJson, { refResolver })) as TestSchema.Person;
+
+      let notified = 0;
+      const unsubscribe = Obj.subscribe(live, () => {
+        notified++;
+      });
+      const task2 = Obj.make(TestSchema.Task, { title: 'Task 2' });
+      Obj.update(live, (live) => {
+        live.tasks!.push(Ref.make(task2));
+      });
+
+      expect(live.tasks).toHaveLength(2);
+      expect(notified).toBe(1);
+      unsubscribe();
     });
   });
 

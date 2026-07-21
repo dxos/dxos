@@ -18,10 +18,12 @@ export class EchoFeedCodec {
   static readonly #decoder = new TextDecoder();
 
   /**
-   * Prepares a value for feed storage (strips queue position from metadata) and encodes to bytes.
+   * Feed blocks are always whole-object snapshots; the index collapses entries by id to the latest
+   * block. TODO(wittjosiah): Follow-up — a partial-object update block format with field-level
+   * last-write-wins merge at the index (see EntityMetaIndex.update).
    */
   static encode(value: Record<string, unknown>): Uint8Array {
-    const prepared = EchoFeedCodec.#stripQueuePosition(value);
+    const prepared = EchoFeedCodec.stripQueuePosition(value);
     return EchoFeedCodec.#encoder.encode(JSON.stringify(prepared));
   }
 
@@ -37,7 +39,11 @@ export class EchoFeedCodec {
     return decoded;
   }
 
-  static #stripQueuePosition(value: Record<string, unknown>): Record<string, unknown> {
+  /**
+   * Strips the queue-position foreign key from an object's metadata, producing a canonical form
+   * comparable across a local snapshot and an inbound feed block (positions differ per-append).
+   */
+  static stripQueuePosition(value: Record<string, unknown>): Record<string, unknown> {
     if (typeof value !== 'object' || value === null) {
       return value;
     }
