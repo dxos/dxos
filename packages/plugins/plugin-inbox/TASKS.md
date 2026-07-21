@@ -81,7 +81,7 @@ delivers Tier 4 (browser-e2e, task #7).**
     `connectorPlugin.connect(.{id})`, `AppNode.makeToolbarActionGroup` gained an optional `testId`.
     (2) the vite+rolldown library build (#11319, flattened `dist/lib/` — no more `neutral/`, fixed the
     `./testing/http-mock` export path) landing alongside `plugin-inbox: incremental mail sync +
-    unified system tags` (#12248, moved the manual sync button from an inline `MailboxArticle`
+unified system tags` (#12248, moved the manual sync button from an inline `MailboxArticle`
     action into a multi-disposition `['toolbar','list-item']` graph action calling `syncTarget(mailbox)`)
     and the "conversation mosaic stack with per-message toolbars" redesign (#12247, renamed
     `Message/useToolbar.tsx` → `ConversationStack/useToolbar.tsx` and moved Reply behind a "more"
