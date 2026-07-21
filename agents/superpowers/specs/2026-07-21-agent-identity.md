@@ -19,8 +19,17 @@ wired into the Markdown skill, so agents fall back to plain named `CreateBranch`
 ## Anchor: the `Agent` object
 
 An agent is already an ECHO object (`assistant-toolkit` `Agent`, with `name`, its own `Feed`, and a
-`Chat.CompanionTo` relation). Each agent instance has a stable object id — the natural identity key.
-Multiple agents ⇒ multiple `Agent` objects ⇒ distinct ids already.
+`Chat.CompanionTo` relation). **The `Agent` schema has NO identity key / DID field** (verified,
+`Agent.ts`) — its only stable handle is the ECHO object id (`Obj.getURI(agent)`), which is an object
+identifier, not key material. Multiple agents ⇒ multiple `Agent` objects ⇒ distinct ids already.
+
+Caveat: ECHO object ids are **remapped on space import/copy** (see `DatabaseRoot.mapLinks`), so an
+object id is not a durably stable author key across copy/import. Two ways to key the synthetic DID:
+- **(a) Object id as the handle** — `did:agent:<agent.id>`; simplest, but a copied space re-keys the
+  author (acceptable if we don't need cross-space author stability yet).
+- **(b) A persisted author field on `Agent`** — add e.g. `authorDid: Schema.optional(Schema.String)`
+  seeded once at creation; stable across import and the natural slot to hold a real HALO DID later.
+  Preferred if author stability matters. **Open decision.**
 
 ## Design: an `AgentIdentity` service
 
@@ -44,7 +53,8 @@ class AgentIdentityService extends Context.Tag(...)<AgentIdentityService, AgentI
 
 Worker derives the identity from the current `Agent` object:
 
-- `did = 'did:agent:' + <agentObjectId>` (stable, distinct per agent).
+- `did = 'did:agent:' + <key>` where `<key>` is the object id (option a) or a persisted author field
+  (option b) — distinct per agent; NOT key material, just a synthetic author label.
 - `name = agent.name` (e.g. "Research assistant").
 - `hue` = omitted → `stringToHue(did)` fallback (stable palette colour).
 
