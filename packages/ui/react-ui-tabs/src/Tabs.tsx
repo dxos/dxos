@@ -251,7 +251,7 @@ TabsTabGroupHeading.displayName = 'Tabs.TabGroupHeading';
 
 type TabsButtonProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
-const TabsButton = ({ value, classNames, children, onClick, ...props }: TabsButtonProps) => {
+const TabsButton = ({ value, classNames, children, onClick, variant, ...props }: TabsButtonProps) => {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsButton');
   const { hasAttention } = useAttention(attendableId);
 
@@ -269,7 +269,8 @@ const TabsButton = ({ value, classNames, children, onClick, ...props }: TabsButt
       <Button
         {...props}
         variant={
-          orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost'
+          variant ??
+          (orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost')
         }
         classNames={[
           orientation === 'vertical' && 'block justify-start text-start w-full',
@@ -292,7 +293,7 @@ TabsButton.displayName = 'Tabs.Button';
 
 type TabsIconButtonProps = IconButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
-const TabsIconButton = ({ value, classNames, onClick, ...props }: TabsIconButtonProps) => {
+const TabsIconButton = ({ value, classNames, onClick, variant, iconOnly, ...props }: TabsIconButtonProps) => {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsIconButton');
   const { hasAttention } = useAttention(attendableId);
 
@@ -309,11 +310,13 @@ const TabsIconButton = ({ value, classNames, onClick, ...props }: TabsIconButton
     <TabsPrimitive.Trigger value={value} asChild>
       <IconButton
         {...props}
+        iconOnly={iconOnly}
         variant={
-          orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost'
+          variant ??
+          (orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost')
         }
         classNames={[
-          orientation === 'vertical' && 'justify-start text-start w-full',
+          orientation === 'vertical' && !iconOnly && 'justify-start text-start w-full',
           orientation === 'vertical' && 'dx-selected',
           classNames,
         ]}
