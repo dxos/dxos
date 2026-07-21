@@ -79,7 +79,8 @@ const NOVA_SUGGESTION = SAMPLE_CONTENT.replace(
   'Select text in the editor to add a new comment, or view existing threads in the companion.',
   'Select text in the editor to add a comment, or open the companion to review threads and suggestions.',
 );
-const STORY_AGENTS = [
+/** Exported for reuse by `SuggestionSources.stories.tsx` (two deterministic synthetic-DID authors). */
+export const STORY_AGENTS = [
   { did: 'did:agent:kai', name: STORY_AGENT_NAME, content: KAI_SUGGESTION },
   { did: 'did:agent:nova', name: 'Nova', content: NOVA_SUGGESTION },
 ];
@@ -128,8 +129,10 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
  * `kind:'suggestion'` branch (via {@link Branch.suggestion}) and edits the content to that agent's
  * proposed revision, so the companion overlays them against the base as agent-authored suggestion
  * cards (multiple authors, each colour-coded by its own hue).
+ *
+ * Exported for reuse by `SuggestionSources.stories.tsx`.
  */
-const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.Text) => {
+export const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.Text) => {
   for (const agent of STORY_AGENTS) {
     const branch = await Branch.suggestion(doc, parent, agent.did);
     const binding = await Branch.bind(doc, branch);
