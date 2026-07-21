@@ -71,8 +71,6 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     return (
       <Dialog.Content ref={forwardedRef}>
         <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.profile.key })}</Dialog.Title>
-        {/* Dialog.Body is the column propagator; without it the SearchList input/viewport are direct
-            children of Dialog.Content's Column grid and land in the gutter (misplaced searchbox). */}
         <Dialog.Body>
           <SearchList.Root onSearch={handleSearch}>
             <SearchList.Input placeholder={t('command-list-input.placeholder')} />
