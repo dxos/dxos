@@ -40,6 +40,7 @@ const hashString = (str: string): number => {
   for (let index = 0; index < str.length; index++) {
     hash = (hash * 31 + str.charCodeAt(index)) | 0;
   }
+
   return hash >>> 0;
 };
 
@@ -47,7 +48,7 @@ const hashString = (str: string): number => {
  * Resolve presentational metadata (author name, avatar) for a message.
  */
 export const getMessageMetadata = (
-  id: string,
+  id: string | undefined,
   identity?: MessageAuthor,
   /**
    * Externally-sourced sender info (Slack/Discord/etc). Used only when no

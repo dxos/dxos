@@ -17,22 +17,39 @@ import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { useIdentity } from '@dxos/halo-react';
+import { useIdentity, useMembers } from '@dxos/halo-react';
 import { Markdown } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
+import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { type ObjectTileComponent } from '@dxos/react-ui-thread';
-import { AnchoredTo, Thread } from '@dxos/types';
+import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { CommentThread } from '#components';
+import { CommentThread, type CommentThreadProps } from '#components';
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
 import { CommentCapabilities, type ViewState } from '#types';
 
+import { useStatus } from '../../hooks';
+import { getMessageMetadata } from '../../util';
+
 const initialViewState: ViewState = { showResolvedThreads: false };
+
+/**
+ * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
+ * stays free of a space/client dependency (it renders purely from injected metadata + callbacks).
+ */
+const CommentThreadItem = ({
+  space,
+  threadUri,
+  ...props
+}: { space?: Space; threadUri: string } & Omit<CommentThreadProps, 'activity'>) => {
+  const activity = useStatus(space, threadUri);
+  return <CommentThread activity={activity} {...props} />;
+};
 
 /**
  * Reads a best-effort string label off an untyped ECHO object for the object-tile fallback.
@@ -61,6 +78,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
     [subject],
   );
   const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
+
   return (
     <Card.Root className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
       <Surface.Surface
@@ -85,9 +103,30 @@ export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
+  const registry = useCapability(Capabilities.AtomRegistry);
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
-  const registry = useCapability(Capabilities.AtomRegistry);
+
+  // Space-derived presentation, supplied to the (space-agnostic) CommentThread:
+  // author metadata resolved against members, and the local author's composer metadata.
+  const space = getSpace(subject);
+  const members = useMembers(space?.id);
+  const getMetadata = useCallback(
+    (message: MessageType.Message) => {
+      const senderIdentity = members.find(
+        (member) =>
+          (message.sender.identityDid && member.did === message.sender.identityDid) ||
+          (message.sender.identityKey && member.identityKey === message.sender.identityKey),
+      );
+
+      return getMessageMetadata(Obj.getURI(message), senderIdentity, message.sender);
+    },
+    [members],
+  );
+  const authorMetadata = useMemo<MessageMetadata>(
+    () => getMessageMetadata(subjectId, identity ?? undefined),
+    [subjectId, identity],
+  );
 
   const stateAtom = useCapability(CommentCapabilities.State);
   const viewStoreAtom = useCapability(CommentCapabilities.ViewState);
@@ -306,10 +345,15 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           const thread = Relation.getSource(anchor) as Thread.Thread;
           const threadId = Obj.getURI(thread);
           return (
-            <CommentThread
+            <CommentThreadItem
               key={threadId}
+              space={space}
+              threadUri={threadId}
               anchor={anchor}
               components={threadComponents}
+              getMetadata={getMetadata}
+              authorMetadata={authorMetadata}
+              identityDid={identity?.did}
               current={currentId === threadId}
               onAttend={handleAttend}
               onComment={handleComment}

@@ -14,7 +14,7 @@ import { type FallbackValue } from '@dxos/util';
  * free of `@dxos/react-client`.
  */
 export type MessageMetadata = {
-  id: string;
+  id?: string;
   timestamp?: string;
   authorId?: string;
   authorName?: string;

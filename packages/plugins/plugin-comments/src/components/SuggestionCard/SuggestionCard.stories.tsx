@@ -63,7 +63,7 @@ const Render = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-comments/SuggestionCard',
+  title: 'plugins/plugin-comments/components/SuggestionCard',
   render: Render,
   decorators: [withTheme()],
   parameters: {
