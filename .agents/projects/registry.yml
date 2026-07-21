@@ -61,4 +61,15 @@ projects:
     prs: [12287]
     resume: 'Design doc PR #12287 (draft): packages/core/compute/ai/TESTING.md — dimensions A-H, current-approach gaps, tiered target, prioritized plan + consumer inventory (G1/G2/G3) and removal blast-radius. No implementation started. Next code step: extract the scripted LanguageModel primitive from MemoizedLanguageModel (substrate for D tests + G1 boot-smoke), then delete G1 (assistant-e2e). Quick relief available first: de-gate G2/G3 memoized replay from PR CI.'
 
+  - name: composer-e2e-stagehand
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-21
+    summary: Migrate Composer's browser e2e suite from Playwright to an AI-driven Stagehand + vitest suite (plain-language act/extract, no selector layer, no retries).
+    tasks: packages/apps/composer-app/src/e2e/TASKS.md
+    design: packages/apps/composer-app/src/e2e/README.md
+    prs: []
+    resume: 'Migration + origin/main merge committed on branch t3code/composer-e2e-stagehand (2 ahead, tree clean). Consistency validated: ~15min/run @2 workers, 21/23 green across 3 runs, ~2-3% flake tail; concurrency ceiling is 2 (3/4 saturate cold boot). Merge added openai>zod peer rule + kept stagehand 3.6.0. Next: open the PR (surface Composer preview URL, watch Check). Follow-ups: bump warm-cold start benchmark budget to ~180s; decide on the edit-message extract schema flake.'
+
 ended: []
