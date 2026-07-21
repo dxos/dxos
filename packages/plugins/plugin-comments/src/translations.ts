@@ -23,7 +23,7 @@ export const translations = [
         'message-deleted.label': 'Message deleted',
         'draft.button': 'DRAFT',
         'no-comments.message':
-          'Select text and click <commentIcon></commentIcon> in the toolbar to comment, or choose <versionsIcon></versionsIcon> Suggest edits to propose changes for review.',
+          'Select text and click <commentIcon></commentIcon> in the toolbar to comment or click <versionsIcon></versionsIcon> to propose changes for review.',
         'comments.label': 'Comments',
         'show-all.label': 'All comments',
         'show-unresolved.label': 'Unresolved comments',
