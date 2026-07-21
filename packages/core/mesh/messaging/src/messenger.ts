@@ -91,10 +91,10 @@ export class Messenger {
       return;
     }
     this._closed = true;
-    // NOTE: Subscriptions are owned by their {@link ListeningHandle}s (Swarm.destroy → unsubscribe),
-    // not by the messenger, so they survive a `close`/`open` transport cycle (e.g. going
-    // offline/online) where the swarm does not re-`listen`. Only the reliable-delivery context is
-    // disposed here.
+    // Disposing the context tears down every still-active subscription — each `listen` registers its
+    // transport unsubscribe via `onDispose`, and a handle unsubscribed manually has already cleared
+    // its registration. The offline/online cycle keeps the messenger open (only signaling toggles),
+    // so subscriptions are torn down only on a real close.
     await this._ctx.dispose();
   }
 
@@ -179,9 +179,10 @@ export class Messenger {
     invariant(peer.peerKey, 'Peer key is required');
     const peerKey = peer.peerKey;
 
-    // Multiplexing and subscription lifecycle are owned by the signal manager. The messenger keeps
-    // only reliable delivery (ACK/dedup) and payloadType routing, and passes the transport
-    // unsubscribe straight back through the returned handle.
+    // Multiplexing is owned by the signal manager. The messenger keeps only reliable delivery
+    // (ACK/dedup) and payloadType routing, and passes the transport unsubscribe back through the
+    // handle. The unsubscribe is also registered on the messenger context so `close` tears every
+    // subscription down; a handle unsubscribed manually clears that registration first.
     const unsubscribe = await this._signalManager.subscribeMessages({
       peer,
       onMessage: (message) => {
@@ -189,6 +190,7 @@ export class Messenger {
         void this._handleMessage(message);
       },
     });
+    const clearDispose = this._ctx.onDispose(unsubscribe);
 
     let listeners: Set<OnMessage> | undefined;
     if (!payloadType) {
@@ -209,6 +211,7 @@ export class Messenger {
 
     return {
       unsubscribe: async () => {
+        clearDispose();
         listeners!.delete(onMessage);
         await unsubscribe();
       },
