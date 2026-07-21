@@ -60,19 +60,35 @@ export const idHue = [
   'rose' as const,
 ];
 
+/** FNV-1a hash of an arbitrary string, as an unsigned 32-bit integer. */
+const fnv1a = (id: string): number => {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < id.length; index++) {
+    hash ^= id.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return Math.abs(hash);
+};
+
 /**
  * Deterministic palette hue for an arbitrary id string that isn't hex-parseable (e.g. an identity
  * DID). Seeds the shared {@link idHue} palette via FNV-1a so the same id always maps to the same hue,
  * matching the colouring used for avatars/tags elsewhere. Prefer {@link hexToHue} when a hex
  * identity key is available (it aligns with the awareness-cursor palette).
  */
-export const stringToHue = (id: string): (typeof idHue)[number] => {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < id.length; index++) {
-    hash ^= id.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return idHue[Math.abs(hash) % idHue.length];
+export const stringToHue = (id: string): (typeof idHue)[number] => idHue[fnv1a(id) % idHue.length];
+
+/**
+ * Deterministic avatar fallback (emoji + hue) for an arbitrary id string (e.g. an identity DID).
+ * Shares {@link stringToHue}'s FNV-1a seed, so `stringToFallback(id).hue === stringToHue(id)` — an
+ * avatar seeded from an id and a tag coloured by {@link stringToHue} for the same id agree.
+ */
+export const stringToFallback = (id: string): FallbackValue => {
+  const hash = fnv1a(id);
+  return {
+    emoji: idEmoji[Math.floor(hash / idHue.length) % idEmoji.length],
+    hue: idHue[hash % idHue.length],
+  };
 };
 
 export const keyToEmoji = (key: PublicKey) => keyToFallback(key).emoji;

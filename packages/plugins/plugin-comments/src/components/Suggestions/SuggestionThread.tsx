@@ -8,6 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Message as MessageComponent, Thread } from '@dxos/react-ui-thread';
 import { Message } from '@dxos/types';
 import { type GroupPolicy, type SuggestionSource } from '@dxos/ui-editor';
+import { stringToFallback } from '@dxos/util';
 
 import { type SuggestionGroup, suggestionGroupKey, suggestionGroups, suggestionHue } from '../../hooks';
 import { getMessageMetadata } from '../../util';
@@ -65,13 +66,14 @@ export const SuggestionThread = ({
   const getMetadata = useCallback(
     (message: Message.Message) => {
       const metadata = getMessageMetadata(Obj.getURI(message), undefined, message.sender);
-      // Tint the avatar with the author's palette hue — the same hue the suggestion is coloured with
-      // (identity hue when known, else a stable hue seeded from the author id) — so a suggestion card
-      // reads with its author's consistent colour rather than a name-hash fallback.
+      // Seed the avatar from the author DID so it agrees with the version banner's author tag: the
+      // hue is the author's palette hue (identity hue when known, else a stable DID-seeded hue — the
+      // same `stringToHue` the banner uses), and the emoji is coherent with that DID rather than a
+      // separate name-hash fallback.
       const author = message.sender.identityDid;
-      if (author && metadata.authorAvatarProps) {
+      if (author) {
         metadata.authorAvatarProps = {
-          ...metadata.authorAvatarProps,
+          emoji: stringToFallback(author).emoji,
           hue: suggestionHue(author, authorHues?.[author]),
         };
       }
