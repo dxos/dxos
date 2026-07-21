@@ -74,3 +74,20 @@ fails on the old insertion-order collection and passes on the sorted collection.
   longer patterns first (`SPACE_ID_PATTERN` before `ENTITY_ID_PATTERN`).
 - **Snapshot growth.** The store appends and never prunes unused conversations (see the TODO in the
   source); large files should eventually be scoped per-test with last-used pruning.
+
+## Follow-up fixes
+
+- **Remap now collects over the normalized prompt.** `remapStoredResponse` previously collected
+  dynamic tokens from the **raw** prompt while matching compared the **timestamp/datetime-normalized**
+  prompt. A pattern that also matches normalized-away content (e.g. `ISO_TIMESTAMP_PATTERN` over the
+  ISO `timestamp` metadata) was collected on remap but not on match, so a duplicate-timestamp
+  asymmetry (stored dedups to one token, live to two) shifted every downstream positional index and
+  remapped a space key to a timestamp value. Remap now normalizes (timestamps/datetime only, dynamic
+  tokens left intact for the real→real mapping) before collecting, so its token count/order matches
+  what the match established.
+- **`buildDynamicMatcher` preserves per-pattern flags.** It combined only each pattern's `.source`
+  with a hard-coded `g`, silently dropping flags — notably `UUID_PATTERN`'s `i`, leaving
+  uppercase-hex UUIDs unmatched once combined. It now unions the input flags. Because JS flags are
+  whole-regex (a unioned `i` would apply to every alternative), patterns should still encode
+  case-sensitivity in their character class rather than relying on `i`; `UUID_PATTERN` now uses
+  `[0-9a-fA-F]` and drops the flag.
