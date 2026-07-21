@@ -308,6 +308,48 @@ describe('usePagination', () => {
     });
   });
 
+  test('holds the previous page across a query-identity change instead of blanking', async () => {
+    // Regression test for the mailbox "flash to loading during sync" bug. The Inbox/Sent view
+    // selects by an explicit id set (`Filter.id(...ids)`); each message tagged mid-sync grows that
+    // set, which is a new query identity and rebuilds the internal store. The rebuilt store must
+    // seed from the page already on screen -- keeping it visible with `isLoading` false -- rather
+    // than resetting to empty + loading and blanking the whole list on every sync batch.
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'tagged' }));
+    await appendPeople(feed, db, 5);
+
+    // Resolve the feed's object ids (newest-first) to build a growing id-set filter, as the mailbox
+    // system-tag view does from its `TagIndex`.
+    const all = await db
+      .query(Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')))
+      .run();
+    const ids = all.map((person) => person.id);
+
+    const queryFor = (selected: string[]) =>
+      Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.id(...selected)))
+        .from(feed)
+        .orderBy(Order.natural('desc'))
+        .limit(10);
+
+    const { result, rerender } = renderHook(({ query }) => usePagination(db, query), {
+      initialProps: { query: queryFor(ids.slice(0, 3)) },
+    });
+
+    await waitFor(() => expect(result.current.items).toHaveLength(3));
+    expect(result.current.isLoading).toBe(false);
+
+    // A new message gets tagged: the id set grows -> new query identity -> internal store rebuild.
+    rerender({ query: queryFor(ids.slice(0, 5)) });
+
+    // The previously-shown page stays on screen (never empties) and no loading state is surfaced for
+    // this background refresh -- the whole point of the fix. (Pre-fix: items [] and isLoading true.)
+    expect(result.current.items.length).toBeGreaterThan(0);
+    expect(result.current.isLoading).toBe(false);
+
+    await waitFor(() => expect(result.current.items).toHaveLength(5));
+  });
+
   test('pages over whole groups for a grouped query', async () => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();

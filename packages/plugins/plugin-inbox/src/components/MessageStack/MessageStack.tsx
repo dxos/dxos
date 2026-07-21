@@ -8,7 +8,7 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 
 import type { PaginationResult } from '@dxos/echo-react';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
@@ -84,6 +84,8 @@ export type MessageStackProps = {
    * destructuring and re-bundling it themselves, which would defeat its referential stability.
    */
   pagination?: PaginationResult<unknown>;
+  /** Renders a spinner after the last item while a page loads (at the top when the list is empty). */
+  loading?: boolean;
   /**
    * Show the "Ignore sender" tile menu item. Off by default — only the mailbox view handles the
    * `ignore-sender` action, so other consumers (e.g. drafts) must not render a no-op menu item.
@@ -108,6 +110,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       selectedIds,
       starredAtom,
       pagination,
+      loading,
       enableIgnoreSender,
       enableCreateTopic,
       searchQuery,
@@ -229,6 +232,15 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                 gap={4}
                 pagination={pagination}
               />
+              {loading && (
+                <div role='status' className='grid place-items-center pli-2 plb-3'>
+                  <Icon
+                    icon='ph--spinner-gap--regular'
+                    size={5}
+                    classNames='text-subdued [animation:spin_1s_linear_infinite]'
+                  />
+                </div>
+              )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Mosaic.Container>

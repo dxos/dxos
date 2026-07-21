@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useMemo, useSyncExternalStore } from 'react';
+import { useMemo, useRef, useSyncExternalStore } from 'react';
 
 import { type Database, type Entity, Query } from '@dxos/echo';
 
@@ -68,6 +68,9 @@ const createPaginationStore = <Q extends Query.Any, O>(
   innerAst: Parameters<typeof Query.fromAst>[0],
   pageSize: number,
   initialMaxWindowSize: number,
+  // Seed for the visible page, handed over when a query-identity change rebuilds the store, so the
+  // view refreshes in place instead of flashing empty + loading (see the hook's `previousItemsRef`).
+  initialItems: O[],
 ) => {
   let maxWindowSize = initialMaxWindowSize;
   let skip = 0;
@@ -76,12 +79,12 @@ const createPaginationStore = <Q extends Query.Any, O>(
   // virtualizer's `onChange` fires once per rendered row) into one range change.
   let rangeChangePending = false;
   let innerUnsubscribe: (() => void) | undefined;
-  // Cleared only on the range's first delivery (never on a timer), so it never sticks true even for
-  // an empty async feed.
-  let isLoading = resource !== undefined;
-  // The items currently shown. Held across a range change until the new range delivers its own
-  // results, so the list never flickers to empty while a new (possibly async) range loads.
-  let displayItems: O[] = EMPTY_ARRAY;
+  // Held across a range change (and seeded across an identity change) until the new range delivers,
+  // so the list never flickers to empty while a new (possibly async) range loads.
+  let displayItems: O[] = initialItems.length > 0 ? initialItems : EMPTY_ARRAY;
+  // Cleared on the range's first delivery, never on a timer, so it can't stick true on an empty feed.
+  // False when seeded: a page is already shown, so this is a background refresh, not a first load.
+  let isLoading = resource !== undefined && displayItems.length === 0;
   let snapshot: Snapshot<O> = { items: displayItems, skip, limit, isLoading };
   const listeners = new Set<() => void>();
 
@@ -92,12 +95,14 @@ const createPaginationStore = <Q extends Query.Any, O>(
     }
   };
 
-  // (Re)points the query at the current skip/limit.
+  // (Re)points the query at the current skip/limit. `markLoading` is true for a range the user
+  // navigated to (initial load, `getNext`/`getPrevious`, `jumpToHead`); a seeded background refresh
+  // passes false so the previous page stays visible and consumers don't blank on it.
   //
   // TODO(wittjosiah): For feeds, this re-fetches/decodes the whole feed on every range change --
   // only what's rendered is bounded, not what's fetched. Needs index-backed keyset pagination to
   // fix properly.
-  const pointAtRange = () => {
+  const pointAtRange = (markLoading: boolean) => {
     innerUnsubscribe?.();
     innerUnsubscribe = undefined;
 
@@ -113,7 +118,9 @@ const createPaginationStore = <Q extends Query.Any, O>(
     // selection/filter/type -- the entity type this query selects is unchanged from `Q`.
     const effectiveQuery = Query.fromAst(innerAst).skip(skip).limit(limit) as Q;
     const nextQueryResult = resource.query(effectiveQuery);
-    isLoading = true;
+    if (markLoading) {
+      isLoading = true;
+    }
 
     // Publish results and clear `isLoading` only on delivery -- deferred for an async source (a feed
     // served by the index) until its first response, which arrives even when that response is empty.
@@ -137,7 +144,8 @@ const createPaginationStore = <Q extends Query.Any, O>(
     subscribe: (onStoreChange: () => void) => {
       listeners.add(onStoreChange);
       if (listeners.size === 1) {
-        pointAtRange();
+        // Seeded (background identity refresh) → don't surface loading; otherwise it's a first load.
+        pointAtRange(displayItems.length === 0);
       }
       return () => {
         listeners.delete(onStoreChange);
@@ -163,7 +171,7 @@ const createPaginationStore = <Q extends Query.Any, O>(
         limit = maxWindowSize;
         skip += pageSize;
       }
-      pointAtRange();
+      pointAtRange(true);
     },
     getPrevious: () => {
       if (isLoading || rangeChangePending || skip === 0) {
@@ -175,13 +183,13 @@ const createPaginationStore = <Q extends Query.Any, O>(
       // of the oldest loaded items, mirroring getNext's own "slide" branch (taken once it hits
       // maxWindowSize) in the opposite direction.
       skip = Math.max(0, skip - pageSize);
-      pointAtRange();
+      pointAtRange(true);
     },
     jumpToHead: () => {
       rangeChangePending = false;
       skip = 0;
       limit = pageSize;
-      pointAtRange();
+      pointAtRange(true);
     },
   };
 };
@@ -194,8 +202,10 @@ const createPaginationStore = <Q extends Query.Any, O>(
  * The query's `.orderBy(...)` is otherwise untouched, and applies to any query the underlying
  * `Database.Queryable` supports -- e.g. `Order.natural('desc')` for feed insertion order.
  *
- * Keeps showing the previous page while a new one loads: `items` only resets to empty when the
- * query's filter/order/page-size/resource identity changes, not when `skip`/`limit` move.
+ * Keeps showing the previous page while a new one loads -- across both a `skip`/`limit` move and a
+ * query-identity change (filter/order/page-size/resource). The latter rebuilds the internal store;
+ * the last page is handed to the new store as its seed so the view refreshes in place instead of
+ * flashing empty, and `isLoading` stays put (a background refresh isn't a load the user asked for).
  *
  * @example
  * ```tsx
@@ -221,11 +231,22 @@ export const usePagination = <Q extends Query.Any>(
   const innerAstKey = JSON.stringify(innerAst);
   const maxWindowSize = options?.maxWindowSize ?? pageSize * 10;
 
-  // A new store -- and thus a reset to empty -- is only built when "what" is being shown changes:
-  // filter/order (`innerAstKey`), page size, or `resource` (matching `useQuery`, which likewise
-  // keys its memo on `resource` directly rather than just its truthiness).
+  // The page shown right now, carried across a store rebuild to seed the new store. Written just
+  // after the snapshot below, so the next render's `useMemo` sees the previously-displayed page.
+  const previousItemsRef = useRef<PaginationElement<Q>[]>(EMPTY_ARRAY);
+
+  // A new store is built when "what" is being shown changes: filter/order (`innerAstKey`), page
+  // size, or `resource` (matching `useQuery`, which likewise keys its memo on `resource` directly
+  // rather than just its truthiness). It is seeded from the previous store's page (see above).
   const store = useMemo(
-    () => createPaginationStore<Q, PaginationElement<Q>>(resource, innerAst, pageSize, maxWindowSize),
+    () =>
+      createPaginationStore<Q, PaginationElement<Q>>(
+        resource,
+        innerAst,
+        pageSize,
+        maxWindowSize,
+        previousItemsRef.current,
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [resource, innerAstKey, pageSize],
   );
@@ -235,6 +256,7 @@ export const usePagination = <Q extends Query.Any>(
   store.setMaxWindowSize(maxWindowSize);
 
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  previousItemsRef.current = snapshot.items;
 
   // Stable across renders that don't change `snapshot` (`store`'s own methods are already stable
   // per store identity) -- callers can pass this straight through to a memoized child (e.g. a
