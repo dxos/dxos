@@ -2,16 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Jmap } from '../apis';
-import { type GmailDataset, type JmapDataset } from '../services';
-import { generateGmailDataset } from './gmail-fixtures';
-import { generateJmapDataset } from './jmap-fixtures';
+import {
+  type GmailDataset,
+  type Jmap,
+  type JmapDataset,
+  generateGmailDataset,
+  generateJmapDataset,
+} from '@dxos/plugin-inbox/testing';
 
 // HTTP-level mock for the Gmail and JMAP provider APIs, driven by the same deterministic fixtures the
-// unit suite uses. It answers the exact requests mailbox sync/send make, so a Playwright test can run
-// the real client code with its network intercepted (via `page.route`) instead of hitting a provider.
-// The handler is pure and synchronous — no server, no socket — so it slots straight into a route
-// interceptor: parse the request, return a response, `route.fulfill`.
+// plugin-inbox unit suite uses. It answers the exact requests mailbox sync/send make, so a Playwright
+// test can run the real client code with its network intercepted (via `page.route`) instead of hitting
+// a provider. The handler is pure and synchronous — no server, no socket — so it slots straight into a
+// route interceptor: parse the request, return a response, `route.fulfill`.
 
 export type MockRequest = {
   method: string;

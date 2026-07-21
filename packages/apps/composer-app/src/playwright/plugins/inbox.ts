@@ -4,11 +4,7 @@
 
 import { type Locator, type Page } from '@playwright/test';
 
-import {
-  type InboxHttpMock,
-  type InboxHttpMockOptions,
-  createInboxHttpMock,
-} from '@dxos/plugin-inbox/testing/http-mock';
+import { type InboxHttpMock, type InboxHttpMockOptions, createInboxHttpMock } from './inbox-http-mock';
 
 // Page-object for the inbox/mailbox surface. All selectors are data-testid (see the
 // `browser-e2e-tests` skill); the credential-form fields are the one exception — they're

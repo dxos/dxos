@@ -117,6 +117,3 @@ Every interaction lives behind a page-object so specs read as intent, not select
 | `page.waitForTimeout(1000)`                          | `expect(locator).toBeVisible()` / `waitFor()`                  |
 | Inline selectors scattered across a spec             | a page-object helper under `plugins/`                          |
 | Live provider credentials / real third-party network | mock + a gated test bridge; `DX_PWA=false`                     |
-
-> An earlier Stagehand (AI-driven act/extract) experiment is **not** the convention and is not
-> currently landed. Author plain Playwright with testid-scoped page objects.

@@ -1,10 +1,20 @@
 # plugin-inbox — Tasks
 
-_Resume: task #7 (JMAP e2e) is done and green; next is #6 (unskip agent-e2e) or #8-#11 (bench/
-traceability/live runbook), whichever the user prioritizes next. Uncommitted: none. Last: merged
-`origin/main` (29 commits) into `t3code/0ac1d42d`, re-verified 3/3 e2e green — no fixes needed this
-round. Committed but not yet pushed: http-mock export-path fix, reply e2e simplified to Reply All,
-this merge._
+\_Resume: task #7 (JMAP e2e) is done and green; next is #6 (unskip agent-e2e) or #8-#11 (bench/
+traceability/live runbook), whichever the user prioritizes next. Uncommitted: none. Last: relocated
+the HTTP mock (`createInboxHttpMock`) out of `plugin-inbox` entirely, into
+`composer-app/src/playwright/plugins/inbox-http-mock.ts` — it has exactly one consumer and belongs
+next to it, not in the plugin. `plugin-inbox`'s `./testing` export is now conditional (`node`/
+`default`, mirroring the existing `#plugin`/`#capabilities` internal-import pattern): the `default`
+(storybook/vite-dev) branch stays `InboxPlugin` + fixtures; the `node` branch exports only
+`gmail-fixtures`/`jmap-fixtures` + the `Jmap`/`GmailDataset`/`JmapDataset` type contracts the
+relocated mock needs — deliberately NOT `InboxPlugin` (breaks under Playwright's Node loader, no
+`.pcss` support) NOR `builder`/`data` (pull in `Mailbox` → `@dxos/compute`'s `Instructions` →
+the AI parser's `parsimmon` dep, which Playwright's esbuild loader mishandles differently than
+Vite). Also: dropped the reply-test's `EmailSubmission/set` poll timeout override (measured ~350-865ms
+actual latency against the 15s override — pure historical over-caution) and added a success-toast
+assertion (`getByTestId(/^notify-success-/)`, the process-invocation framework's toast id
+convention).
 
 ## Test suite — PLUGIN.mdl enforcement
 
@@ -52,10 +62,12 @@ delivers Tier 4 (browser-e2e, task #7).**
     aiReply (`inbox.message.*`), generate (`inbox.draft.generate`), message+conversation rows
     (`inbox.message.row`/`inbox.conversation.row`), mailbox root (`inbox.mailbox`); companion via
     existing `message-header`, send via existing `save-button`. Compiles + lints.
-    [x] (b) HTTP mock — `plugin-inbox/src/testing/http-mock.ts` (`createInboxHttpMock`; Gmail REST +
-    JMAP envelope, fixture-backed, mirrors the in-memory filter/sort/paginate; also implements JMAP
-    send which the in-memory mock omits), exported via `@dxos/plugin-inbox/testing/http-mock`;
-    `page.route` bridge `composer-app/src/playwright/plugins/inbox.ts` (`installInboxMock`). Typechecks.
+    [x] (b) HTTP mock — `composer-app/src/playwright/plugins/inbox-http-mock.ts` (`createInboxHttpMock`;
+    Gmail REST + JMAP envelope, fixture-backed, mirrors the in-memory filter/sort/paginate; also
+    implements JMAP send which the in-memory mock omits), consuming `generateGmailDataset`/
+    `generateJmapDataset` + `Jmap`/`GmailDataset`/`JmapDataset` from `@dxos/plugin-inbox/testing`
+    (its one consumer, so it lives in composer-app rather than the plugin); `page.route` bridge
+    `composer-app/src/playwright/plugins/inbox.ts` (`installInboxMock`). Typechecks.
     [x] (c) `plugins/inbox.ts` page-object (JMAP form-fill, sync, select-thread, reply) — Gmail
     connection bridge + provider adapter still to come with (e).
     [x] (d) JMAP suite (`composer-app/src/playwright/inbox.spec.ts`): connect+sync ✓, select-thread ✓

@@ -92,14 +92,13 @@
       "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./testing/http-mock": {
-      "source": "./src/testing/http-mock.ts",
-      "types": "./dist/types/src/testing/http-mock.d.ts",
-      "import": "./dist/lib/testing/http-mock.mjs"
+      "source": {
+        "node": "./src/testing/node.ts",
+        "default": "./src/testing/index.ts"
+      },
+      "types": "./dist/types/src/testing/node.d.ts",
+      "node": "./dist/lib/testing/node.mjs",
+      "default": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

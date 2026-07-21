@@ -53,8 +53,8 @@ test.describe('Inbox', () => {
     const mock = await openSyncedMailbox();
     await Inbox.selectFirstThread(host.page);
     await Inbox.reply(host.page, 'Thanks, sounds good.');
-    // The reply round-trips through JMAP submission; assert on the recorded provider calls (the
-    // success toast is transient and its text is duplicated across notification nodes).
-    await expect.poll(() => mock.calls, { timeout: 15_000 }).toContain('EmailSubmission/set');
+    // The reply round-trips through JMAP submission; assert on the recorded provider calls.
+    await expect.poll(() => mock.calls).toContain('EmailSubmission/set');
+    await expect(host.page.getByTestId(/^notify-success-/).first()).toBeVisible();
   });
 });
