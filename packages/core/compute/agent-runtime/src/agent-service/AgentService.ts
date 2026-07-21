@@ -35,6 +35,7 @@ type AgentHandle = ProcessManager.Handle<string, void, AgentRpcs>;
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
 
+// TODO(burdon): Agent identity?
 export interface CreateSessionOptions {
   readonly skills?: Skill.Skill[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
@@ -68,6 +69,7 @@ export const createSession: (
 
 export interface AgentServiceOptions {
   systemPrompt?: string;
+
   /**
    * Default model used by sessions that don't specify one explicitly.
    */
@@ -77,11 +79,6 @@ export interface AgentServiceOptions {
    * Default provider used to resolve the model for sessions that don't specify one explicitly.
    */
   provider?: DXN.DXN;
-
-  /**
-   * Provider for space-level MCP server configs.
-   */
-  getMcpServers?: () => McpServer.McpServer[];
 
   /**
    * If true, long-running tool calls are moved to the background and the agent is notified
@@ -96,6 +93,11 @@ export interface AgentServiceOptions {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * Provider for space-level MCP server configs.
+   */
+  getMcpServers?: () => McpServer.McpServer[];
 }
 
 export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>

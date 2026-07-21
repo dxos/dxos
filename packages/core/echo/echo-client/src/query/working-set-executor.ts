@@ -3,7 +3,13 @@
 //
 
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { type GroupAggregates, GroupBy, type GroupKeyValue, type QueryPlan } from '@dxos/echo-host/query';
+import {
+  type GroupAggregates,
+  GroupBy,
+  type GroupKeyValue,
+  type QueryPlan,
+  filterContainsInQuery,
+} from '@dxos/echo-host/query';
 import {
   EncodedReference,
   type EntityPropPath,
@@ -130,6 +136,7 @@ export class WorkingSetQueryExecutor {
       (item) => GroupBy.serializeGroupKey(item.groupKey!),
       step.aggregates,
       (item, property) => WorkingSetItem.getProperty(item, [property]),
+      (a, b, order) => this._compareByOrder(a, b, order),
     );
   }
 
@@ -196,6 +203,16 @@ export class WorkingSetQueryExecutor {
 
     // Timestamp filter requires index — bail.
     if (_filterContainsTimestamp(step.filter)) {
+      return null;
+    }
+
+    // A nested in-query (subquery-membership) predicate cannot be resolved correctly against
+    // this in-memory working set: the subquery may target a feed or another space, and
+    // `_execSelectStep` returns an *empty* (not null) result for scopes outside this space — so
+    // resolving locally would silently compute an empty membership set instead of the real one.
+    // Bail so the whole branch defers to the index-backed source, which can resolve the subquery
+    // across every scope.
+    if (filterContainsInQuery(step.filter)) {
       return null;
     }
 

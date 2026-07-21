@@ -131,15 +131,9 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
 export type Hunk = { fromA: number; toA: number; fromB: number; toB: number };
 
 /**
- * Compute the changed hunks between `original` (A) and `modified` (B) as character ranges. Used to
- * locate and apply an individual change (e.g. accepting one hunk from a branch) outside an editor.
- *
- * Granularity is LINE-level (via `@codemirror/merge` `Chunk.build`), unlike the word-level
- * {@link diffHunks} the suggestion UI renders. This means {@link cherryPickHunk} / {@link revertHunk}
- * accept or revert a whole changed line, even when only one word on it differs: an anchor anywhere on
- * the line resolves to the same line-sized splice. Per-word cherry-pick would require a word-level
- * hunk carrying both A and B ranges (extending {@link diffHunks}, which anchors in the before text
- * only) and reworking the anchor contract these functions' tests encode — deferred as a follow-up.
+ * LINE-level changed hunks between `original` (A) and `modified` (B) as character ranges (via
+ * `@codemirror/merge` `Chunk.build`). Coarser than {@link computeWordHunks}; retained for callers that
+ * want whole-line change regions.
  */
 export const computeHunks = (original: string, modified: string): Hunk[] =>
   Chunk.build(Text.of(original.split('\n')), Text.of(modified.split('\n'))).map((chunk) => ({
@@ -148,6 +142,42 @@ export const computeHunks = (original: string, modified: string): Hunk[] =>
     fromB: chunk.fromB,
     toB: chunk.toB,
   }));
+
+/**
+ * WORD-level changed hunks between `original` (A) and `modified` (B), each carrying both coordinate
+ * ranges. Matches the word granularity of {@link diffHunks} (same `diffWordsWithSpace` alignment), so
+ * {@link cherryPickHunk} / {@link revertHunk} resolve exactly the anchored word(s) — accepting one
+ * word does not pull in the rest of its line.
+ */
+export const computeWordHunks = (original: string, modified: string): Hunk[] => {
+  const hunks: Hunk[] = [];
+  let positionA = 0;
+  let positionB = 0;
+  let pending: Hunk | undefined;
+  const flush = () => {
+    if (pending) {
+      hunks.push(pending);
+      pending = undefined;
+    }
+  };
+  for (const change of diffWordsWithSpace(original, modified)) {
+    if (change.added) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionB += change.value.length;
+      pending.toB = positionB;
+    } else if (change.removed) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionA += change.value.length;
+      pending.toA = positionA;
+    } else {
+      flush();
+      positionA += change.value.length;
+      positionB += change.value.length;
+    }
+  }
+  flush();
+  return hunks;
+};
 
 /**
  * Resolve a single change to apply when cherry-picking from `compare` (A) into `current` (B): find
@@ -162,7 +192,7 @@ export const cherryPickHunk = (
   range: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
   // Half-open overlap: a range touching a neighbouring hunk's boundary is not on that hunk.
-  const hunk = computeHunks(compare, current).find((h) => h.fromB < range.end && h.toB > range.start);
+  const hunk = computeWordHunks(compare, current).find((h) => h.fromB < range.end && h.toB > range.start);
   if (!hunk) {
     return undefined;
   }
@@ -185,7 +215,7 @@ export const revertHunk = (
   baseRange: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
   // A = base, B = compare (branch); locate the hunk by its base-side range.
-  const hunk = computeHunks(base, compare).find((h) => h.fromA < baseRange.end && h.toA > baseRange.start);
+  const hunk = computeWordHunks(base, compare).find((h) => h.fromA < baseRange.end && h.toA > baseRange.start);
   if (!hunk) {
     return undefined;
   }

@@ -95,6 +95,10 @@ export const filterMatchDoc = (filter: QueryAST.Filter, obj: MatchedDoc): boolea
       throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
     }
 
+    case 'in-query': {
+      throw new Error('in-query filters must be resolved to a literal `in` by the query executor before matching.');
+    }
+
     case 'not': {
       return !filterMatchDoc(filter.filter, obj);
     }
@@ -184,6 +188,10 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
 
     case 'child-of': {
       throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
+    }
+
+    case 'in-query': {
+      throw new Error('in-query filters must be resolved to a literal `in` by the query executor before matching.');
     }
 
     case 'not': {

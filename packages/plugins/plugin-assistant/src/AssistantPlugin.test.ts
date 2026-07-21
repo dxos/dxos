@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { TestAiService, runMemoizedTests } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
@@ -32,6 +32,9 @@ import { AssistantSkill } from './skills/assistant';
 EntityId.dangerouslyDisableRandomness();
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+
+// Memoized-replay cases (frozen A/B); gated off the default `:test` path. The module-activation
+// boot test below carries the real composition signal and always runs.
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -68,7 +71,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can memoize ai-service requests', async (ctx) => {
+  test.skipIf(!runMemoizedTests())('can memoize ai-service requests', async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -98,7 +101,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
+  test.skipIf(!runMemoizedTests())('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -142,48 +145,52 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('smoke test for agent service with standard skills', { timeout: 120_000 }, async (ctx) => {
-    const { expect } = ctx;
-    await using harness = await createComposerTestApp({
-      plugins: [
-        ClientPlugin({}),
-        AssistantPlugin({
-          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
-        }),
-        RoutinePlugin(),
-      ],
-    });
+  test.skipIf(!runMemoizedTests())(
+    'smoke test for agent service with standard skills',
+    { timeout: 120_000 },
+    async (ctx) => {
+      const { expect } = ctx;
+      await using harness = await createComposerTestApp({
+        plugins: [
+          ClientPlugin({}),
+          AssistantPlugin({
+            aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+          }),
+          RoutinePlugin(),
+        ],
+      });
 
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+      await harness.fire(AppActivationEvents.SetupArtifactDefinition);
 
-    const { personalSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
-      EffectEx.runAndForwardErrors,
-    );
+      const { personalSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
+        EffectEx.runAndForwardErrors,
+      );
 
-    await harness.runPromise(
-      Effect.gen(function* () {
-        const skills = yield* Effect.forEach(
-          [DatabaseSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
-          (_) => Skill.resolve(_.key),
-        );
+      await harness.runPromise(
+        Effect.gen(function* () {
+          const skills = yield* Effect.forEach(
+            [DatabaseSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
+            (_) => Skill.resolve(_.key),
+          );
 
-        const agent = yield* AgentServiceRuntime.createSession({
-          skills,
-        });
-        yield* agent.submitPrompt('Hello');
-        yield* agent.waitForCompletion();
-      }).pipe(
-        Effect.provide(
-          ServiceResolver.provide(
-            { space: personalSpace.id },
-            Database.Service,
-            AgentService.AgentService,
-            Registry.Service,
+          const agent = yield* AgentServiceRuntime.createSession({
+            skills,
+          });
+          yield* agent.submitPrompt('Hello');
+          yield* agent.waitForCompletion();
+        }).pipe(
+          Effect.provide(
+            ServiceResolver.provide(
+              { space: personalSpace.id },
+              Database.Service,
+              AgentService.AgentService,
+              Registry.Service,
+            ),
           ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 });
 
 const makeMemoizedAiServiceMiddleware = (

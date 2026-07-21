@@ -155,8 +155,8 @@ describe.skip('Swarm', () => {
 
     const signalManager = new MemorySignalManager(context);
     const sendOriginal = signalManager.sendMessage.bind(signalManager);
-    const messages = new ComplexSet<{ author: PeerInfo; recipient: PeerInfo }>(
-      ({ author, recipient }) => author.peerKey + recipient.peerKey,
+    const messages = new ComplexSet<{ author: PeerInfo; recipient?: PeerInfo }>(
+      ({ author, recipient }) => author.peerKey + recipient?.peerKey,
     );
     signalManager.sendMessage = async (ctx, message) => {
       messages.add({ author: message.author, recipient: message.recipient });

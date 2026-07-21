@@ -4,7 +4,9 @@
 
 export * from './calculator';
 export * from './defs';
+export * from './gate';
 export * from './memoization';
+export * as ScriptedLanguageModel from './ScriptedLanguageModel';
 export * from './tap';
 export * from './test-data';
 export * from './test-layers';
