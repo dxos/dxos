@@ -9,7 +9,7 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -105,3 +105,5 @@ const ensureSyncFeedOperation = async (db: NonNullable<ReturnType<typeof Obj.get
 
   return db.add(Operation.serialize(FeedOperation.SyncFeed));
 };
+
+FeedProperties.displayName = 'FeedProperties';

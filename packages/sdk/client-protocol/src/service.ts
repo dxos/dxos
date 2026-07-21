@@ -8,22 +8,23 @@ import type {
   ContactsService,
   DevicesService,
   EdgeAgentService,
+  FeedService,
   IdentityService,
   InvitationsService,
   LoggingService,
   NetworkService,
-  QueueService,
   SpacesService,
   SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
-import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
-import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
+import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
+import { type ServiceBundle } from '@dxos/rpc';
 
-export type { QueueService } from '@dxos/protocols/proto/dxos/client/services';
+import { type ClientServicesRpc } from './service-rpc';
+
+export type { FeedService } from '@dxos/protocols/proto/dxos/client/services';
 
 //
 // NOTE: Should contain client/proxy dependencies only.
@@ -41,7 +42,7 @@ export type ClientServices = {
 
   DataService: DataService;
   QueryService: QueryService;
-  QueueService: QueueService;
+  FeedService: FeedService;
 
   ContactsService: ContactsService;
   EdgeAgentService: EdgeAgentService;
@@ -73,51 +74,22 @@ export interface ClientServicesProvider {
    */
   onReconnect?: (callback: () => Promise<void>) => void;
 
-  descriptors: ServiceBundle<ClientServices>;
+  /**
+   * Effect-native client for all client services, inferred from the effect-rpc definitions.
+   * Preferred surface for new consumers; must be re-read after reconnect rather than cached.
+   * Effects it produces require only the default runtime and can be run with any `Runtime<never>`.
+   */
+  rpc: ClientServicesRpc;
+
+  /**
+   * @deprecated Prefer {@link rpc}. Promise/`Stream` shaped services derived from {@link rpc}.
+   */
   services: Partial<ClientServices>;
 
   // TODO(burdon): Should take context from parent?
   open(): Promise<unknown>;
   close(): Promise<unknown>;
 }
-
-/**
- * Services supported by host.
- */
-export const clientServiceBundle = createServiceBundle<ClientServices>({
-  SystemService: schema.getService('dxos.client.services.SystemService'),
-  NetworkService: schema.getService('dxos.client.services.NetworkService'),
-  LoggingService: schema.getService('dxos.client.services.LoggingService'),
-
-  IdentityService: schema.getService('dxos.client.services.IdentityService'),
-  QueryService: schema.getService('dxos.echo.query.QueryService'),
-  InvitationsService: schema.getService('dxos.client.services.InvitationsService'),
-  DevicesService: schema.getService('dxos.client.services.DevicesService'),
-  SpacesService: schema.getService('dxos.client.services.SpacesService'),
-  DataService: schema.getService('dxos.echo.service.DataService'),
-  ContactsService: schema.getService('dxos.client.services.ContactsService'),
-  EdgeAgentService: schema.getService('dxos.client.services.EdgeAgentService'),
-  QueueService: schema.getService('dxos.client.services.QueueService'),
-
-  // TODO(burdon): Deprecated.
-  DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
-});
-
-export type IframeServiceBundle = {
-  BridgeService: BridgeService;
-};
-
-export const iframeServiceBundle: ServiceBundle<IframeServiceBundle> = {
-  BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-};
-
-export type WorkerServiceBundle = {
-  WorkerService: WorkerService;
-};
-
-export const workerServiceBundle: ServiceBundle<WorkerServiceBundle> = {
-  WorkerService: schema.getService('dxos.iframe.WorkerService'),
-};
 
 export type AppServiceBundle = {
   AppService: AppService;

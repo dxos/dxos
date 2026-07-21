@@ -1,31 +1,29 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
   - memoized-llm
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/AssistantPlugin.ts'
-      - '--entryPoint=src/AssistantPlugin.node.ts'
-      - '--entryPoint=src/AssistantPlugin.workerd.ts'
-      - '--entryPoint=src/skills/index.ts'
-      - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/components/index.ts'
-      - '--entryPoint=src/containers/index.ts'
-      - '--entryPoint=src/execution-graph/index.ts'
-      - '--entryPoint=src/extensions/index.ts'
-      - '--entryPoint=src/hooks/index.ts'
-      - '--entryPoint=src/meta.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/plugin.ts'
-      - '--entryPoint=src/plugin.workerd.ts'
-      - '--entryPoint=src/testing.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
-      - '--platform=neutral'
+  check-module-structure:
+    # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
+    # remain UI-free under workerd so it can load in non-DOM environments.
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./plugin
+      --to "@dxos/react-ui"
+      --conditions workerd,worker,node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - '^@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60

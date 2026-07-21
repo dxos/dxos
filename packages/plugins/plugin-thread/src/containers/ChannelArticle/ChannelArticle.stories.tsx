@@ -11,6 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -18,7 +19,8 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
@@ -43,6 +45,7 @@ const meta = {
   component: ChannelArticle,
   render: DefaultStory,
   decorators: [
+    withMosaic(),
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({

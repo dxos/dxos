@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type FC,
   Fragment,
   type NamedExoticComponent,
   Profiler,
-  type RefAttributes,
   Suspense,
-  forwardRef,
   memo,
+  useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -20,22 +20,15 @@ import React, {
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { Position } from '@dxos/util';
 
-import { Capabilities } from '../../../common';
-import { type CapabilityManager } from '../../../core';
+import { Capabilities, Role } from '../../../common';
 import { usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
-import { SurfaceInfo } from './SurfaceInfo';
+import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
+import { useSurfaceManager } from './SurfaceManagerContext';
+import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
-import {
-  type Definition,
-  type Props,
-  type RoleToken,
-  type TokenData,
-  type TypedProps,
-  type WebComponentDefinition,
-} from './types';
+import { type Definition, type Props, type TypedProps, type WebComponentDefinition } from './types';
 
 const DEBUG = import.meta.env?.VITE_DEBUG;
 
@@ -54,67 +47,58 @@ type WebComponentWrapperProps = {
   [key: string]: any;
 };
 
-const WebComponentWrapper = memo(
-  forwardRef<HTMLElement, WebComponentWrapperProps>(({ id, role, data, limit, definition, ...rest }, forwardedRef) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const elementRef = useRef<HTMLElement | null>(null);
-    const propsRef = useRef({ id, role, data, limit, ...rest });
+const WebComponentWrapper = memo(({ id, role, data, limit, definition, ...rest }: WebComponentWrapperProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const elementRef = useRef<HTMLElement | null>(null);
+  const propsRef = useRef({ id, role, data, limit, ...rest });
 
-    // Update props ref on every render
-    propsRef.current = { id, role, data, limit, ...rest };
+  // Update props ref on every render.
+  propsRef.current = { id, role, data, limit, ...rest };
 
-    // Create element only once
-    useEffect(() => {
-      if (!containerRef.current || elementRef.current) {
-        return;
+  // Create element only once.
+  useEffect(() => {
+    if (!containerRef.current || elementRef.current) {
+      return;
+    }
+
+    // Create the Web Component.
+    const element = document.createElement(definition.tagName);
+    elementRef.current = element;
+
+    // Set initial properties on the Web Component.
+    Object.assign(element, propsRef.current);
+
+    // Append to container.
+    containerRef.current.appendChild(element);
+
+    // Cleanup on unmount to prevent memory leaks.
+    return () => {
+      if (elementRef.current && containerRef.current?.contains(elementRef.current)) {
+        containerRef.current.removeChild(elementRef.current);
       }
+      elementRef.current = null;
+    };
+  }, [definition.tagName]);
 
-      // Create the Web Component
-      const element = document.createElement(definition.tagName);
-      elementRef.current = element;
+  const previousPropsRef = useRef<Record<string, any>>({});
 
-      // Set initial properties on the Web Component
-      Object.assign(element, propsRef.current);
-
-      // Append to container
-      containerRef.current.appendChild(element);
-
-      // Setup ref forwarding if provided
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(element);
-      } else if (forwardedRef) {
-        forwardedRef.current = element;
-      }
-
-      // Cleanup on unmount to prevent memory leaks
-      return () => {
-        if (elementRef.current && containerRef.current?.contains(elementRef.current)) {
-          containerRef.current.removeChild(elementRef.current);
+  // Keep all props (including those in `rest`) in sync on the existing element,
+  // removing any that disappeared since the last render so no stale config lingers.
+  useEffect(() => {
+    const element = elementRef.current;
+    if (element) {
+      for (const key of Object.keys(previousPropsRef.current)) {
+        if (!(key in propsRef.current)) {
+          Reflect.deleteProperty(element, key);
         }
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(null);
-        } else if (forwardedRef) {
-          forwardedRef.current = null;
-        }
-        elementRef.current = null;
-      };
-    }, [definition.tagName, forwardedRef]);
-
-    // Update props on existing element without recreating it
-    // This runs on every render to ensure all props (including those in `rest`) are kept up to date
-    useEffect(() => {
-      const element = elementRef.current;
-      if (!element) {
-        return;
       }
-
-      // Update properties on the existing Web Component
       Object.assign(element, propsRef.current);
-    });
+      previousPropsRef.current = propsRef.current;
+    }
+  });
 
-    return <div ref={containerRef} />;
-  }),
-);
+  return <div ref={containerRef} />;
+});
 
 WebComponentWrapper.displayName = 'WebComponentWrapper';
 
@@ -133,124 +117,139 @@ type SurfaceContextProviderProps = {
  */
 // TODO(burdon): Allow DebugPlugin to provide different fallback using react-ui ErrorFallback.
 const SurfaceContextProvider = memo(
-  forwardRef<HTMLElement, SurfaceContextProviderProps>(
-    ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }, forwardedRef) => {
-      const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
-      const onProfilerRender = useSurfaceProfilerCallback();
-      const profilerId = `surface/${id}/${role}`;
+  ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }: SurfaceContextProviderProps) => {
+    const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
+    const onProfilerRender = useSurfaceProfilerCallback();
+    const profilerId = `surface/${id}/${role}`;
+    // Count error-boundary trips against this surface (dev only).
+    const onError = isSurfaceDebugEnabled() ? () => surfaceMetrics.recordError(id, role) : undefined;
 
-      // Handle Web Component surfaces
-      if (definition.kind === 'web-component') {
-        return (
-          <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
-            <SurfaceContext.Provider value={contextValue}>
-              <WebComponentWrapper
-                id={id}
-                role={role}
-                data={data}
-                limit={limit}
-                definition={definition}
-                ref={forwardedRef}
-                {...rest}
-              />
-            </SurfaceContext.Provider>
-          </ErrorBoundary>
-        );
-      }
-
-      // Handle React component surfaces
-      const Component = definition.component;
-
-      // TODO(burdon): Remove from production build?
-      const debug = DEBUG || '__DX_DEBUG__' in window;
-      if (debug) {
-        return (
-          <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
-            <div className='contents' data-id={id} data-role={role}>
-              <SurfaceContext.Provider value={contextValue}>
-                <SurfaceInfo ref={forwardedRef}>
-                  {onProfilerRender && !profilerId.includes('org.dxos.plugin.debug') ? (
-                    <Profiler id={profilerId} onRender={onProfilerRender}>
-                      <Component id={id} role={role} data={data} limit={limit} {...rest} />
-                    </Profiler>
-                  ) : (
-                    <Component id={id} role={role} data={data} limit={limit} {...rest} />
-                  )}
-                </SurfaceInfo>
-              </SurfaceContext.Provider>
-            </div>
-          </ErrorBoundary>
-        );
-      }
-
+    // Handle Web Component surfaces.
+    if (definition.kind === 'web-component') {
       return (
-        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
-          <div className='contents' data-id={id} data-role={role}>
-            <SurfaceContext.Provider value={contextValue}>
-              <Component id={id} role={role} data={data} limit={limit} {...rest} ref={forwardedRef} />
-            </SurfaceContext.Provider>
-          </div>
+        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
+          <SurfaceContext.Provider value={contextValue}>
+            <WebComponentWrapper id={id} role={role} data={data} limit={limit} definition={definition} {...rest} />
+          </SurfaceContext.Provider>
         </ErrorBoundary>
       );
-    },
-  ),
+    }
+
+    // Handle React component surfaces.
+    const Component = definition.component;
+    const component = <Component id={id} role={role} data={data} limit={limit} {...rest} />;
+    const profiled =
+      onProfilerRender && !profilerId.includes('org.dxos.plugin.debug') ? (
+        <Profiler id={profilerId} onRender={onProfilerRender}>
+          {component}
+        </Profiler>
+      ) : (
+        component
+      );
+
+    // Dev builds wrap every surface in `<dx-surface>` for DOM inspection / `window.__DX__`; the
+    // `__DX_DEBUG__` flag separately gates the visual highlight overlay (see SurfaceDebug).
+    if (isSurfaceWrapperEnabled()) {
+      return (
+        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
+          <SurfaceContext.Provider value={contextValue}>
+            <DebugSurface info={contextValue}>{profiled}</DebugSurface>
+          </SurfaceContext.Provider>
+        </ErrorBoundary>
+      );
+    }
+
+    // Production renders the matched component directly: a surface adds no wrapper element of its own.
+    return (
+      <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
+        <SurfaceContext.Provider value={contextValue}>{profiled}</SurfaceContext.Provider>
+      </ErrorBoundary>
+    );
+  },
 );
 
 SurfaceContextProvider.displayName = 'SurfaceContextProvider';
 
 /**
  * A surface is a named region of the screen that can be populated by plugins.
- * The `type` prop is a {@link RoleToken} that defines which region and its
+ * The `type` prop is a {@link Role.Role} that defines which region and its
  * associated data contract.
+ *
+ * A surface is a boundary that may resolve to zero, one, or many components, so
+ * it intentionally accepts no `ref`; consumers needing an element should own one
+ * inside their contributed component.
  */
-// TODO(burdon): Remove `ref` since relying on this would be error prone.
 export const SurfaceComponent = memo(
-  forwardRef<HTMLElement, TypedProps<RoleToken<any>>>(
-    ({ id: _id, type, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
-      const data = useDefaultValue(dataProp, () => ({}));
-      // TODO(wittjosiah): This will make all surfaces depend on a single signal.
-      //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
-      //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
-      //   This should be fine for now because it's how it worked prior to capabilities api anyway.
-      //   In the future, it would be nice to be able to bucket the surface contributions by role.
-      const surfaces = useSurfaces();
+  ({
+    id: _id,
+    type,
+    data: dataProp,
+    limit,
+    placeholder = DEFAULT_PLACEHOLDER,
+    ...rest
+  }: TypedProps<Role.Role<any>>) => {
+    const data = useDefaultValue(dataProp, () => ({}));
+    const surfaceManager = useSurfaceManager();
+    // Subscribe only to this role's contributions: contributing/removing a surface for a
+    // different role keeps this bucket referentially stable, so the atom does not re-render us.
+    const effectiveRole = type?.role ?? '';
+    const roleCandidates = useAtomValue(surfaceManager.candidatesAtom(effectiveRole));
 
-      const effectiveRole = type?.role;
-      if (effectiveRole == null) {
-        if (DEBUG) {
-          log.warn('Surface is missing required `type` prop', { id: _id });
-        }
-        return null;
+    // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
+    const definitions = matchCandidates(roleCandidates, effectiveRole, data);
+    // `limit != null` (not truthiness) so an explicit `limit={0}` renders nothing.
+    const candidates = limit != null ? definitions.slice(0, limit) : definitions;
+    const truncated = limit != null && definitions.length > limit;
+
+    // Dev metrics: track dispatch count, candidate count, and `data` instability (see SurfaceMetrics).
+    const churnRef = useRef<{ data: unknown; churn: number }>({ data: undefined, churn: 0 });
+    useEffect(() => {
+      if (!isSurfaceDebugEnabled() || effectiveRole === '') {
+        return;
       }
-
-      // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
-      const definitions = findCandidates(surfaces, { role: effectiveRole, data });
-      const candidates = limit ? definitions.slice(0, limit) : definitions;
-      if (DEBUG && candidates.length === 0) {
-        log.warn('no candidates for surface', { role: effectiveRole, data });
-        return null;
+      const previous = churnRef.current;
+      const churn = previous.data === undefined ? 0 : nextDataChurn(previous.data, data, previous.churn);
+      churnRef.current = { data, churn };
+      for (const definition of candidates) {
+        surfaceMetrics.recordDispatch(definition.id, effectiveRole, {
+          candidates: candidates.length,
+          truncated,
+          dataChurn: churn,
+        });
       }
+    });
 
-      return (
-        <Suspense fallback={placeholder}>
-          {candidates.map((definition) => (
-            <SurfaceContextProvider
-              key={definition.id}
-              id={definition.id}
-              role={effectiveRole}
-              data={data}
-              limit={limit}
-              definition={definition}
-              ref={forwardedRef}
-              {...rest}
-            />
-          ))}
-        </Suspense>
-      );
-    },
-  ),
-) as (<TToken extends RoleToken<any>>(props: TypedProps<TToken> & RefAttributes<HTMLElement>) => React.ReactNode) &
-  NamedExoticComponent<TypedProps<RoleToken<any>> & RefAttributes<HTMLElement>>;
+    if (type?.role == null) {
+      if (DEBUG) {
+        log.warn('Surface is missing required `type` prop', { id: _id });
+      }
+      return null;
+    }
+
+    if (DEBUG && candidates.length === 0) {
+      log.warn('no candidates for surface', { role: effectiveRole, data });
+      return null;
+    }
+
+    return (
+      <Suspense fallback={placeholder}>
+        {candidates.map((definition) => (
+          <SurfaceContextProvider
+            key={definition.id}
+            id={definition.id}
+            role={effectiveRole}
+            data={data}
+            limit={limit}
+            definition={definition}
+            {...rest}
+          />
+        ))}
+      </Suspense>
+    );
+  },
+  // The generic call signature is reattached here because `memo` erases it from the inferred type.
+) as (<TToken extends Role.Role<any>>(props: TypedProps<TToken>) => React.ReactNode) &
+  NamedExoticComponent<TypedProps<Role.Role<any>>>;
 
 SurfaceComponent.displayName = 'Surface';
 
@@ -259,18 +258,23 @@ const ErrorFallback = ({ error }: { error: Error }) => {
   const { message } = error instanceof Error ? error : { message: String(error) };
   return (
     <div role='alert' data-testid='error-boundary-fallback'>
-      <h1 className='flex gap-2 text-sm mt-2 text-info-text'>{message}</h1>
+      <h1 className='flex p-2 text-sm text-info-text'>{message}</h1>
     </div>
   );
 };
 
-const findCandidates = (surfaces: Definition[], { role, data }: { role: string; data: Props['data'] }) => {
-  return Object.values(surfaces)
-    .filter((definition) =>
-      Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
-    )
-    .filter(({ filter }) => (filter ? filter(data ?? {}, role) : true))
-    .toSorted(Position.compare);
+/**
+ * Filters the pre-indexed candidates for a role through their data guards.
+ */
+const matchCandidates = (
+  definitions: ReadonlyArray<Definition> | undefined,
+  role: string,
+  data: Props['data'],
+): Definition[] => {
+  if (!definitions) {
+    return [];
+  }
+  return definitions.filter(({ filter }) => (filter ? filter(data ?? {}, role) : true));
 };
 
 /**
@@ -291,24 +295,37 @@ export const useSurfaces = () => {
 };
 
 /**
- * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
+ * Reports whether a contributed surface matches the given role & data, without mounting it.
  *
  * Typed: pass a `type` role token and `data` is constrained to the token's
  * declared contract (e.g. `AppSurface.Section` requires `attendableId`).
  */
-export function isSurfaceAvailable<TToken extends RoleToken<any>>(
-  capabilityManager: CapabilityManager.CapabilityManager,
-  args: { type: TToken; data?: TokenData<TToken> },
-): boolean {
-  const effectiveRole = args.type?.role;
-  if (effectiveRole == null) {
-    return false;
-  }
+type IsSurfaceAvailable = <TToken extends Role.Role<any>>(args: { type: TToken; data?: Role.Data<TToken> }) => boolean;
 
-  const surfaces = capabilityManager.getAll(Capabilities.ReactSurface);
-  const candidates = findCandidates(surfaces.flat(), {
-    role: effectiveRole,
-    data: args.data as Props['data'],
-  });
-  return candidates.length > 0;
-}
+/**
+ * @returns a stable function that checks whether a contributed surface is available for a
+ * role & data. The surface manager is captured via context, so the returned function carries
+ * no dependency of its own and is safe to store and invoke later — e.g. from inside another
+ * callback such as a render-prop or event handler — since it calls no hooks itself.
+ */
+export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
+  const surfaceManager = useSurfaceManager();
+  const registry = useContext(RegistryContext);
+  return useCallback<IsSurfaceAvailable>(
+    (args: { type: Role.Role<any>; data?: Props['data'] }) => {
+      const effectiveRole = args.type?.role;
+      if (effectiveRole == null) {
+        return false;
+      }
+
+      const candidates = matchCandidates(
+        registry.get(surfaceManager.candidatesAtom(effectiveRole)),
+        effectiveRole,
+        args.data,
+      );
+
+      return candidates.length > 0;
+    },
+    [surfaceManager, registry],
+  );
+};

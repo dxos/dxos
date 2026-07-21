@@ -3,6 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
+import { Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
@@ -61,6 +62,50 @@ describe('TagIndex', () => {
     tags.unsetTag(urgent, b.id);
     expect([...tags.objects(urgent)]).toEqual([]);
     expect(tags.tagIds()).toEqual([later]);
+  });
+
+  test('atom family returns tag uris for one object', () => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const first = EntityId.random();
+    const second = EntityId.random();
+    const urgent = 'dxn:tag:urgent';
+    const later = 'dxn:tag:later';
+
+    tags.setTag(urgent, first);
+    tags.setTag(later, first);
+    tags.setTag(urgent, second);
+
+    const tagsForObject = TagIndex.atom(tagIndex);
+    const registry = Registry.make();
+    expect(registry.get(tagsForObject(first)).sort()).toEqual([later, urgent]);
+    expect(registry.get(tagsForObject(second))).toEqual([urgent]);
+
+    tags.unsetTag(later, first);
+    expect(registry.get(tagsForObject(first))).toEqual([urgent]);
+  });
+
+  test('taggedIdsAtom returns object ids for one tag', ({ expect }) => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const first = EntityId.random();
+    const second = EntityId.random();
+    const urgent = 'dxn:tag:urgent';
+    const later = 'dxn:tag:later';
+
+    tags.setTag(urgent, first);
+    tags.setTag(urgent, second);
+    tags.setTag(later, first);
+
+    const registry = Registry.make();
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, urgent))).toEqual([first, second]);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, later))).toEqual([first]);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, 'dxn:tag:missing'))).toEqual([]);
+
+    tags.unsetTag(urgent, first);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, urgent))).toEqual([second]);
   });
 });
 

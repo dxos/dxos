@@ -103,7 +103,7 @@ const entryLabel = (args: ParsedArgs, entryPath: string): string =>
 const main = async () => {
   const args = await parseArgs();
 
-  const result = await traceImports({
+  const result = traceImports({
     from: args.from ?? undefined,
     exportSubpath: args.exportSubpath ?? undefined,
     to: args.to,

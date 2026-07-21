@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,12 +16,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./extraction": {
       "source": "./src/extraction/index.ts",
       "types": "./dist/types/src/extraction/index.d.ts",
-      "default": "./dist/lib/neutral/extraction/index.mjs"
+      "import": "./dist/lib/extraction.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -46,7 +46,6 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

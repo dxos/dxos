@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
+import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
 
 import { ClientEvents } from '#types';
@@ -44,6 +45,15 @@ export default Capability.makeModule(
       });
     });
 
+    // Interim fix: when a guest tab reconnects to a newly-elected leader worker (e.g. after the
+    // previous leader tab closes), its proxies are left in a broken state. Force a full reload to
+    // re-establish a clean session until the reconnect flow can recover in place.
+    // TODO(dmaretskyi): Remove once guest tabs recover from a leader handover without reloading.
+    client.services.reconnected?.on(() => {
+      log.info('client reconnected, reloading to re-establish session');
+      window.location.reload();
+    });
+
     let spacesReadyFired = false;
     const subscription = client.spaces.subscribe(async () => {
       if (!spacesReadyFired) {
@@ -75,6 +85,10 @@ export default Capability.makeModule(
         }),
       ),
       Capability.contributes(Capabilities.Layer, ClientService.fromClient(client)),
+      // HALO service instances for imperative consumers (so plugins read identity/spaces
+      // through @dxos/halo instead of the client directly).
+      Capability.contributes(ClientCapabilities.IdentityService, makeIdentityService(client)),
+      Capability.contributes(ClientCapabilities.SpaceService, makeSpaceService(client)),
     ];
   }),
 );

@@ -4,10 +4,11 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Connector } from '@dxos/plugin-connector';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -21,13 +22,9 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
+  const connectors = useCapabilities(Connector);
 
-  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
-    db,
-    subject,
-    functionKey: 'org.dxos.function.inbox.google-mail-sync',
-    input: { restrictedMode: true },
-  });
+  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject, connectors });
 
   const handleViewTrigger = useCallback(() => {
     if (!db) {
@@ -61,3 +58,5 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     </Form.Section>
   );
 };
+
+MailboxProperties.displayName = 'MailboxProperties';

@@ -3,10 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Column, Message, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Column, IconButton, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, EditorViewProps } from '@dxos/react-ui-editor';
 import { Form, FormRootProps } from '@dxos/react-ui-form';
@@ -29,13 +29,16 @@ export type EditMessageProps = {
   message: MessageType.Message;
   extensions?: Extension[];
   onSend?: (message: MessageType.Message) => Promise<void>;
+  /** Optional header title (e.g. "Draft"); shown with the delete affordance when provided. */
+  title?: string;
+  /** When set, renders a delete button in the header that discards the message. */
+  onDelete?: () => void;
 };
 
 export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
-  ({ message, extensions, onSend, ...props }, forwardedRef) => {
+  ({ message, extensions, onSend, title, onDelete, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
-    const [error, setError] = useState<string | null>(null);
 
     const extension = useMemo(
       () =>
@@ -88,19 +91,20 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
       [message],
     );
 
+    // Send success/failure is surfaced via toasts by the caller's `onSend` (see `useSendEmail`).
     const handleSave = useCallback<NonNullable<FormRootProps<MessageProperties>['onSave']>>(async () => {
-      try {
-        setError(null);
-        await onSend?.(message);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : t('send-email-error-unknown.message');
-        setError(errorMessage);
-      }
-    }, [t, onSend, message]);
+      await onSend?.(message);
+    }, [onSend, message]);
+
+    const showHeader = title != null || !!onDelete;
 
     return (
       <Column.Root
-        {...composableProps(props, { classNames: 'grid-rows-[min-content_1fr_min-content]' })}
+        {...composableProps(props, {
+          classNames: showHeader
+            ? 'grid-rows-[min-content_min-content_1fr_min-content]'
+            : 'grid-rows-[min-content_1fr_min-content]',
+        })}
         gutter='sm'
         ref={forwardedRef}
       >
@@ -112,23 +116,31 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
           onSave={handleSave}
           testId='edit-email-form'
         >
+          {showHeader && (
+            <Column.Center classNames='flex items-center justify-between pbs-form-gap'>
+              <h2 className='text-lg'>{title}</h2>
+              {onDelete && (
+                <IconButton
+                  iconOnly
+                  variant='ghost'
+                  icon='ph--trash--regular'
+                  label={t('delete-draft-button.label')}
+                  onClick={onDelete}
+                />
+              )}
+            </Column.Center>
+          )}
           <Column.Center>
             <Form.Content>
               <Form.FieldSet />
-              {error && (
-                <Message.Root valence='error'>
-                  <Message.Title>{t('send-email-error.title')}</Message.Title>
-                  <Message.Content>{error}</Message.Content>
-                </Message.Root>
-              )}
             </Form.Content>
           </Column.Center>
-          <Column.Center classNames='pbs-form-gap'>
+          <Column.Center classNames='pbs-3'>
             <Editor.Root>
               <Editor.View
-                classNames='dx-expander border border-separator'
+                classNames='dx-expander border border-separator min-h-[16lh]'
                 extensions={extension}
-                initialValue={message.blocks?.find((b) => b._tag === 'text')?.text}
+                value={message.blocks?.find((b) => b._tag === 'text')?.text ?? ''}
                 onChange={(value) => {
                   handleBodyChanged(value);
                 }}

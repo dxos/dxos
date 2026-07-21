@@ -16,6 +16,7 @@ import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
+  type DxGridPlane,
   type DxGridPlanePosition,
   type DxGridPlaneRange,
   type DxGridPosition,
@@ -88,12 +89,18 @@ export type TableFeatures = {
   selection: { enabled: boolean; mode?: SelectionMode };
   dataEditable: boolean;
   schemaEditable: boolean;
+  /**
+   * Number of leading data columns to pin (freeze) so they remain visible while the remaining
+   * columns scroll horizontally. Pinned columns are rendered in the grid's frozen-column planes.
+   */
+  pinColumns: number;
 };
 
 const defaultFeatures: TableFeatures = {
   selection: { enabled: true, mode: 'multiple' },
   dataEditable: false,
   schemaEditable: false,
+  pinColumns: 0,
 };
 
 export type InsertRowResult = 'draft' | 'final';
@@ -354,6 +361,24 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   /**
+   * Reports the grid's currently-visible cell range (called by the presentation from `getCells`). Drives the
+   * per-row subscriptions that keep cells reactive to external mutations, so it must be wired for the grid to
+   * reflect edits made outside it. Guarded so identical ranges don't churn the subscriptions.
+   */
+  public setVisibleRange(range: DxGridPlaneRange): void {
+    const current = this._registry.get(this._visibleRange);
+    if (
+      current.start.row === range.start.row &&
+      current.end.row === range.end.row &&
+      current.start.col === range.start.col &&
+      current.end.col === range.end.col
+    ) {
+      return;
+    }
+    this._registry.set(this._visibleRange, range);
+  }
+
+  /**
    * Change a row using the configured change callback.
    * Use this instead of directly mutating to ensure consistent mutation handling.
    */
@@ -363,6 +388,57 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public get features(): TableFeatures {
     return this._features;
+  }
+
+  /**
+   * Number of leading data columns pinned (frozen), clamped to the available field count.
+   */
+  public get pinColumns(): number {
+    const fieldCount = this.getColumnCount();
+    return Math.max(0, Math.min(this._features.pinColumns, fieldCount));
+  }
+
+  /**
+   * Number of frozen-start columns preceding the pinned data columns (the selection column, if enabled).
+   */
+  public get selectionColumns(): number {
+    return this._features.selection.enabled ? 1 : 0;
+  }
+
+  /**
+   * Total number of columns rendered in the `frozenColsStart` plane: the selection column (if enabled)
+   * plus the pinned data columns. Single source of truth for the frozen-start boundary.
+   */
+  public get frozenColsStart(): number {
+    return this.selectionColumns + this.pinColumns;
+  }
+
+  /**
+   * Maps a plane-local column index to a field index for the data-bearing planes.
+   * Returns undefined for non-data columns (e.g. the selection or action columns).
+   *
+   * Column layout across planes:
+   * - `frozenColsStart`: [selection?] then the first `pinColumns` data fields.
+   * - `grid` / `frozenRowsStart` / `frozenRowsEnd`: data fields starting at index `pinColumns`.
+   */
+  public getFieldIndex(plane: DxGridPlane, planeCol: number): number | undefined {
+    switch (plane) {
+      case 'frozenColsStart':
+      case 'fixedStartStart':
+      case 'fixedEndStart': {
+        const dataCol = planeCol - this.selectionColumns;
+        if (dataCol < 0 || dataCol >= this.pinColumns) {
+          return undefined;
+        }
+        return dataCol;
+      }
+      case 'grid':
+      case 'frozenRowsStart':
+      case 'frozenRowsEnd':
+        return this.pinColumns + planeCol;
+      default:
+        return undefined;
+    }
   }
 
   /**
@@ -420,14 +496,38 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     // The projection.fields atom handles subscriptions to view changes internally.
     this._columnMeta = Atom.make((get) => {
       const fields = get(this._projection.fields);
-      const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: this.table.sizes[field.path] ?? 256, resizeable: true }]),
-      );
+      const pin = this.pinColumns;
+      const selectionColumns = this.selectionColumns;
+
+      const fieldSize = (field: (typeof fields)[number]) => ({
+        size: this.table.sizes[field.path] ?? 256,
+        resizeable: true,
+      });
+
+      // The scrolling `grid` plane holds the un-pinned fields, re-keyed to plane-local indices.
+      const grid = Object.fromEntries(fields.slice(pin).map((field, index: number) => [index, fieldSize(field)]));
+
+      // The `frozenColsStart` plane holds the selection column (if enabled) followed by the pinned fields.
+      const frozenColsStart: Record<number, { size: number; resizeable: boolean }> = {};
+      if (selectionColumns > 0) {
+        frozenColsStart[0] = {
+          size: 32,
+          resizeable: false,
+        };
+      }
+      fields.slice(0, pin).forEach((field, index: number) => {
+        frozenColsStart[selectionColumns + index] = fieldSize(field);
+      });
 
       return {
-        grid: meta,
-        frozenColsStart: { 0: { size: 30, resizeable: false } },
-        frozenColsEnd: { 0: { size: 32, resizeable: false } },
+        grid,
+        frozenColsStart,
+        frozenColsEnd: {
+          0: {
+            size: 32,
+            resizeable: false,
+          },
+        },
       };
     });
   }
@@ -442,9 +542,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     // Track row subscriptions for cleanup.
     const rowSubscriptions = new Map<string, () => void>();
 
-    // Subscribe to visible range changes to set up row subscriptions.
-    const visibleRangeUnsubscribe = this._registry.subscribe(this._visibleRange, () => {
-      // Unsubscribe from old row subscriptions.
+    // (Re)subscribe to each visible row's mutations so external edits (e.g. from a companion form) bump the
+    // cell-update counter and repaint the affected cells. Must re-run when either the visible range changes (scroll)
+    // or the row set changes (data load / sort), since rows arrive asynchronously after the range is first reported.
+    const subscribeVisibleRows = () => {
       for (const [id, unsub] of rowSubscriptions) {
         unsub();
         rowSubscriptions.delete(id);
@@ -453,21 +554,25 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const { start, end } = this._registry.get(this._visibleRange);
       const sortedRows = this._registry.get(this._sortedRows);
 
-      // Subscribe to each visible row's changes.
       for (let row = start.row; row <= end.row && row < sortedRows.length; row++) {
         const obj = sortedRows[row];
         if (Obj.isObject(obj) && !rowSubscriptions.has(obj.id)) {
+          const cell = { row, col: start.col, plane: 'grid' as const };
           const unsub = Obj.subscribe(obj, () => {
             // Increment cell update counter to notify UI of changes.
             this._registry.set(this._cellUpdateCounter, this._registry.get(this._cellUpdateCounter) + 1);
-            this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
+            this._onCellUpdate?.(cell);
           });
           rowSubscriptions.set(obj.id, unsub);
         }
       }
-    });
+    };
+
+    const visibleRangeUnsubscribe = this._registry.subscribe(this._visibleRange, subscribeVisibleRows);
+    const sortedRowsUnsubscribe = this._registry.subscribe(this._sortedRows, subscribeVisibleRows);
     this._ctx.onDispose(() => {
       visibleRangeUnsubscribe();
+      sortedRowsUnsubscribe();
       for (const unsub of rowSubscriptions.values()) {
         unsub();
       }
@@ -625,11 +730,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   public getCellData = (cell: DxGridPosition): any => {
     const { col, row, plane } = cell;
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return undefined;
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     let value: any;
 
     if (plane === 'frozenRowsEnd') {
@@ -671,11 +777,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public validateCellData = async ({ col, row, plane }: DxGridPosition, value: any): Promise<ValidationResult> => {
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return { valid: false, error: 'Invalid column index' };
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
@@ -727,11 +834,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   public setCellData = (cell: DxGridPosition, value: any): void => {
     const { col, row, plane } = cell;
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return;
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
@@ -762,9 +870,16 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * @param {DxGridPlanePosition} position - The position of the cell to update.
    * @param {(value: any) => any} update - A function that takes the current value and returns the updated value.
    */
-  public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
+  public updateCellData(
+    { col, row, plane = 'grid' }: DxGridPlanePosition & { plane?: DxGridPlane },
+    update: (value: any) => any,
+  ): void {
     const fields = this._projection?.getFields() ?? [];
-    const field = fields[col];
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
+      return;
+    }
+    const field = fields[fieldIndex];
     const sortedRows = this._registry.get(this._sortedRows);
     const rowData = sortedRows[row];
 
@@ -821,11 +936,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   // Resize
   //
 
-  public setColumnWidth(columnIndex: number, width: number): void {
+  public setColumnWidth(columnIndex: number, width: number, plane: DxGridPlane = 'grid'): void {
     const fields = this._projection?.getFields() ?? [];
-    if (columnIndex < fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, columnIndex);
+    if (fieldIndex !== undefined && fieldIndex < fields.length) {
       const newWidth = Math.max(0, width);
-      const field = fields[columnIndex];
+      const field = fields[fieldIndex];
       if (field) {
         this._change.table((mutableTable) => {
           mutableTable.sizes[field.path] = newWidth;

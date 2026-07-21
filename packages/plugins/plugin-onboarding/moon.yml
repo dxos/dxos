@@ -1,20 +1,13 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/plugin.ts'
-      - '--entryPoint=src/OnboardingPlugin.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--platform=neutral'
   build-exemplar:
     script: pnpm run --silent build-exemplar
     deps:
-      - ^:compile
+      - ^:build
     inputs:
       - scripts/build-exemplar-space.ts
       - src/content/space-tour.md

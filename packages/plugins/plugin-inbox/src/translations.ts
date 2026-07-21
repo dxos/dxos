@@ -56,18 +56,15 @@ export const translations = [
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
         'event.label': 'Event',
+        'facts.label': 'Facts',
         'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
 
-        'sync-mailbox.label': 'Sync mailbox',
-        'sync-mailbox-error.title': 'Failed to sync mailbox',
-        'sync-mailbox-success.title': 'Mailbox sync complete',
+        'sync-mailbox.label': 'Sync',
         'empty-mailbox.message': 'Mailbox empty',
 
         'sync-calendar.label': 'Sync calendar',
-        'sync-calendar-error.title': 'Failed to sync calendar',
-        'sync-calendar-success.title': 'Calendar sync complete',
         'empty-calendar.message': 'Calendar empty',
 
         'sync-contacts.label': 'Sync contacts',
@@ -93,6 +90,7 @@ export const translations = [
         'view-trigger.label': 'View trigger',
 
         'view-mode.menu': 'View mode',
+        'view-mode-html.menu': 'HTML',
         'view-mode-enriched.menu': 'Enriched',
         'view-mode-markdown.menu': 'Markdown',
         'view-mode-plain.menu': 'Plain text',
@@ -113,14 +111,21 @@ export const translations = [
         'calendar-toolbar-create-event.menu': 'Create event',
         'calendar-toolbar-sync.menu': 'Save events to calendar',
 
+        'conversation-toolbar.label': 'Conversation toolbar',
+        'collapse-all.menu': 'Collapse all',
+        'expand-all.menu': 'Expand all',
         'message-toolbar.label': 'Message toolbar',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
+        'message-toolbar-ai-reply.menu': 'AI reply',
+        'draft-toolbar.label': 'Draft toolbar',
+        'draft-toolbar-generate.menu': 'Generate reply',
         'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
+        'message-toolbar-collapse.label': 'Collapse message',
 
         'message-body.placeholder': 'Enter message text...',
 
@@ -138,9 +143,15 @@ export const translations = [
 
         'mailboxes-section.label': 'Mailboxes',
         'all-mail.label': 'All Mail',
+        'sent.label': 'Sent',
         'drafts.label': 'Drafts',
-        'drafts.article.description': 'Draft list (coming soon).',
-        'drafts.empty.message': 'No drafts yet.',
+        'subscriptions.label': 'Subscriptions',
+        'subscriptions.toolbar.title': 'Subscriptions toolbar',
+        'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
+        'subscriptions.count.label': '{{email}} · {{count}} messages',
+        'subscriptions.remove.label_zero': 'Remove',
+        'subscriptions.remove.label_one': 'Remove ({{count}})',
+        'subscriptions.remove.label_other': 'Remove ({{count}})',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',
@@ -152,8 +163,10 @@ export const translations = [
         'compose-email-dialog.title': 'Compose Email',
         'close.label': 'Close',
         'send-email-button.label': 'Send',
+        'send-email-success.title': 'Message sent',
         'send-email-error.title': 'Failed to send email',
-        'send-email-error-unknown.message': 'An unknown error occurred',
+        'draft-message.title': 'Draft',
+        'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 
         'draft-subject.label': 'Subject',

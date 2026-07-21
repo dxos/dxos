@@ -25,3 +25,5 @@ export const OutlineCard = ({ subject }: OutlineCardProps) => {
     </Outline.Root>
   );
 };
+
+OutlineCard.displayName = 'OutlineCard';

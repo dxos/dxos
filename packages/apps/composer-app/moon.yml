@@ -14,9 +14,26 @@ tasks:
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
-  compile:
+  # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
+  # frontend + macOS ollama sidecar are hoisted to task deps here (no moon-in-moon). Locally
+  # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
+  # prebuilt artifact, sidecar fetched directly — to keep moon out of the native job.
+  tauri-build:
     deps:
-      - prebuild
+      - bundle
+      - fetch-ollama
+  tauri-ios-build:
+    deps:
+      - bundle
+  # Downloads the pinned macOS ollama runtime + triple-named sidecars embedded in the desktop app. Cacheable:
+  # keyed on the fetch script (which pins the version + SHA-256), with the downloaded sidecar dir as the
+  # output — so a cache hit restores it instead of re-downloading the (large) runtime.
+  fetch-ollama:
+    command: node scripts/fetch-ollama.mjs
+    inputs:
+      - scripts/fetch-ollama.mjs
+    outputs:
+      - src-tauri/sidecar
   prebuild:
     script: pnpm run --silent copy:assets
     deps:

@@ -8,9 +8,10 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, ContentBlock, Message } from '@dxos/types';
@@ -138,22 +139,22 @@ export const findChannelForConversation: (
  * re-running on the same `(space, conversationId)` returns the same Channel.
  *
  * Used by the connector's `materializeTarget` to create the local root eagerly
- * when a binding is created, so the `SyncBinding` relation has a target endpoint.
+ * when a binding is created, so the `Cursor`'s `spec.target` has somewhere to point.
  */
 export const findOrCreateChannelForTarget: (input: {
-  remoteId: string;
+  externalId: string;
   name?: string;
 }) => Effect.Effect<Channel.Channel, never, Database.Service> = Effect.fn('findOrCreateChannelForTarget')(function* ({
-  remoteId,
+  externalId,
   name,
 }) {
-  const existing = yield* findChannelForConversation(remoteId);
+  const existing = yield* findChannelForConversation(externalId);
   if (existing) {
     return existing;
   }
   const channel = Channel.make({
-    [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: remoteId }] },
-    name: name ?? remoteId,
+    [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: externalId }] },
+    name: name ?? externalId,
   });
   return yield* Database.add(channel);
 });
@@ -240,13 +241,13 @@ const resolveBots = (
  * Reconciles messages for a single Slack channel binding.
  *
  * Pull-only:
- *  1. Resolve the binding's connection (source) and local Channel (target).
- *  2. Ask Slack for messages since the binding's `cursor` (or all history on first sync).
+ *  1. Resolve the binding's credential (`spec.source`) and local Channel (`spec.target`).
+ *  2. Ask Slack for messages since the binding's `value` (or all history on first sync).
  *  3. Resolve referenced user / bot ids in one batch (cached per sync).
  *  4. Map each Slack message → `@dxos/types` Message and append the batch to
  *     the channel's feed.
- *  5. Write the newest `ts` seen back onto the binding's `cursor` so the next
- *     sync is incremental, plus `lastSyncAt` / `lastError`.
+ *  5. Write the newest `ts` seen back onto the binding's `value` so the next
+ *     sync is incremental, plus `lastTick` / `lastError`.
  *
  * `Database.Service` is provided inside the handler.
  * The binding ref carries the database; the space db is resolved via the
@@ -258,7 +259,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       // TODO(wittjosiah): The operation should depend on `Database.Service` once
       //   the OperationInvoker has a `databaseResolver`. Until then we require
       //   the caller to preload `binding.target` so we can derive the db and
-      //   resolve the relation's source/target endpoints.
+      //   resolve the cursor's credential.
       const bindingTarget = bindingRef.target;
       if (!bindingTarget) {
         return yield* Effect.fail(new SyncDatabaseMissingError());
@@ -267,30 +268,38 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       if (!db) {
         return yield* Effect.fail(new SyncDatabaseMissingError());
       }
+      // The integration mechanism only ever creates external-sync cursors for Slack.
+      if (!Cursor.isExternal(bindingTarget)) {
+        return { pulled: { added: 0 } satisfies PullResult };
+      }
 
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
 
-      // The binding's source is the Connection that authenticates the sync;
-      // its target is the local Channel root that messages sync into.
-      const connection = Relation.getSource(bindingTarget);
-      const localRoot = Relation.getTarget(bindingTarget);
+      // The binding's `spec.source` is the AccessToken that authenticates the sync directly.
+      const accessTokenRef = bindingTarget.spec.source;
 
       const bindingId = EID.getEntityId(EID.tryParse(bindingRef.uri)!) ?? 'unknown';
 
       const outcome = yield* Effect.either(
         Effect.gen(function* () {
           const binding = yield* Database.load(bindingRef);
+          if (!Cursor.isExternal(binding)) {
+            return { pulled: { added: 0 } satisfies PullResult };
+          }
+          const localRoot = yield* Database.load(binding.spec.target);
 
-          // Resolve the remote conversation id: prefer the binding's `remoteId`,
+          // Resolve the remote conversation id: prefer the binding's `spec.externalId`,
           // fall back to the target Channel's Slack foreign key (legacy bindings).
-          const remoteId =
-            binding.remoteId ?? Obj.getMeta(localRoot).keys.find((key) => key.source === SLACK_SOURCE)?.id;
+          const externalId =
+            binding.spec.externalId ?? Obj.getMeta(localRoot).keys.find((key) => key.source === SLACK_SOURCE)?.id;
 
+          // Captured on the success path so the cursor's value + run status advance in one atomic update.
+          let newestTs: string | undefined;
           const syncResult = yield* Effect.either(
             Effect.gen(function* () {
-              if (remoteId === undefined) {
+              if (externalId === undefined) {
                 return { added: 0 } satisfies PullResult;
               }
               if (!Channel.instanceOf(localRoot)) {
@@ -301,9 +310,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               // One round-trip to fetch the conversation metadata so we can
               // mirror a friendly name onto the local Channel.
               const allConversations = yield* SlackApi.fetchConversations();
-              const conversation = allConversations.find((conv) => conv.id === remoteId);
+              const conversation = allConversations.find((conv) => conv.id === externalId);
 
-              const messages = yield* SlackApi.fetchHistory(remoteId, { oldest: binding.cursor });
+              const messages = yield* SlackApi.fetchHistory(externalId, { oldest: binding.max });
               if (messages.length === 0) {
                 return { added: 0 } satisfies PullResult;
               }
@@ -327,12 +336,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               invariant(feed, 'Channel is not feed-backed');
               yield* Feed.append(feed, mapped);
 
-              // Advance the binding's cursor to the newest `ts` seen so the
-              // next sync is incremental.
-              const newestTs = sorted[sorted.length - 1].ts;
-              Relation.update(binding, (binding) => {
-                binding.cursor = newestTs;
-              });
+              // Capture the newest `ts` seen; the cursor advances (value + status) after the sync
+              // succeeds so the next sync is incremental.
+              newestTs = sorted[sorted.length - 1].ts;
 
               // Mirror the conversation's display name onto the local Channel if
               // we just learned a better one (first sync, or renamed remotely).
@@ -349,16 +355,12 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
             }),
           );
 
-          // Record per-binding sync status. Both branches write through
-          // `Relation.update` so the change is batched on the binding relation.
-          Relation.update(binding, (binding) => {
-            if (syncResult._tag === 'Right') {
-              binding.lastSyncAt = new Date().toISOString();
-              binding.lastError = undefined;
-            } else {
-              binding.lastError = formatSlackSyncFailure(syncResult.left);
-            }
-          });
+          // Record per-binding sync status directly on the cursor (value + status in one atomic update).
+          if (syncResult._tag === 'Right') {
+            Cursor.advance(binding, newestTs);
+          } else {
+            Cursor.recordError(binding, formatSlackSyncFailure(syncResult.left));
+          }
 
           if (syncResult._tag === 'Left') {
             log.warn('slack sync: binding failed', { error: syncResult.left });
@@ -368,7 +370,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           return { pulled: syncResult.right };
         }).pipe(
           Effect.provide(Database.layer(db)),
-          Effect.provide(SlackApi.SlackCredentials.fromConnection(Ref.make(connection))),
+          Effect.provide(SlackApi.SlackCredentials.fromAccessToken(accessTokenRef)),
         ),
       );
 

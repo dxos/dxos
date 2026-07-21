@@ -1,0 +1,56 @@
+From 1234567890123456789@xxx Fri Jan 10 09:15:00 2026
+X-GM-THRID: 1770000000000000001
+X-Gmail-Labels: Inbox,Important
+Message-ID: <CAF-plain-0001@mail.example.com>
+Date: Fri, 10 Jan 2026 09:15:00 +0000
+Subject: Project Kickoff
+From: Alice Johnson <alice.johnson@acme-corp.com>
+To: team@acme-corp.com
+Content-Type: text/plain; charset="UTF-8"
+
+Hi team,
+
+We are excited to announce the kickoff of the Apollo project.
+>From here on we meet every Monday.
+Best,
+Alice
+
+From 2234567890123456789@xxx Fri Jan 10 14:30:00 2026
+X-GM-THRID: 1770000000000000002
+X-Gmail-Labels: Inbox,Finance
+Message-ID: <CAF-html-0002@mail.example.com>
+Date: Fri, 10 Jan 2026 14:30:00 +0000
+Subject: Invoice Reminder
+From: "Carol Finance" <carol.finance@invoicesolutions.com>
+To: accounts@acme-corp.com
+Cc: alice.johnson@acme-corp.com
+Content-Type: multipart/alternative; boundary="BOUNDARY42"
+
+--BOUNDARY42
+Content-Type: text/plain; charset="UTF-8"
+
+Hello, invoice #12345 is due next week.
+
+--BOUNDARY42
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<html><body><p>Hello,</p><p>Invoice <b>#12345</b> is due =
+next week. Please see <a href=3D"https://pay.example.com">the portal</a>.</=
+p></body></html>
+--BOUNDARY42--
+
+From 3234567890123456789@xxx Sat Jan 11 08:00:00 2026
+X-GM-THRID: 1770000000000000001
+X-Gmail-Labels: Inbox
+Message-ID: <CAF-reply-0003@mail.example.com>
+In-Reply-To: <CAF-plain-0001@mail.example.com>
+References: <CAF-plain-0001@mail.example.com>
+Date: Sat, 11 Jan 2026 08:00:00 +0000
+Subject: Re: Project Kickoff
+From: Bob Smith <bob.smith@acme-corp.com>
+To: team@acme-corp.com
+Content-Type: text/plain; charset="UTF-8"
+
+Sounds great, Alice. Looking forward to it.
+Bob

@@ -2,17 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Atom from '@effect-atom/atom/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
+import type { PaginationResult } from '@dxos/echo-react';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
 import { type Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';
 
-import { getMessageProps } from '../../util';
+import { getMessageBodyText, getMessageProps } from '../../util';
 import { Row } from '../Row';
 import { Tile } from '../Tile';
 
@@ -22,6 +26,8 @@ export type MessageStackAction =
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
   | { type: 'star'; messageId: string }
+  | { type: 'ignore-sender'; messageId: string }
+  | { type: 'create-topic'; messageId: string }
   | { type: 'save'; filter: string };
 
 export type MessageStackActionHandler = (action: MessageStackAction) => void;
@@ -36,28 +42,57 @@ export type MessageStackActionHandler = (action: MessageStackAction) => void;
  */
 export type MessageStackTag = { id: string; label: string; hue?: string };
 
-/**
- * Inverted index `messageId → tags`. Built by `Mailbox.buildMessageTagsIndex` in the parent
- * (MailboxArticle) so each tile can look up its tags by message id with no extra query.
- */
-export type MessageTagsIndex = Record<string, MessageStackTag[]>;
+/** A conversation (email thread) rendered as one stack entry. */
+export type MessageGroup = {
+  /** Thread id, or the message id for singleton conversations without a thread. */
+  id: string;
+  /** Messages in the conversation, most recent first. May be a capped preview (see {@link total}). */
+  messages: Message.Message[];
+  /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
+  total?: number;
+};
+
+/** A stack entry: an individual message or a conversation group. Entries of both kinds may be mixed. */
+export type MessageStackItem = Message.Message | MessageGroup;
+
+export const isMessageGroup = (item: MessageStackItem): item is MessageGroup => 'messages' in item;
+
+/** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
+export type MessageTagsFamily = (messageId: string) => Atom.Atom<MessageStackTag[]>;
+
+/** Per-message starred atom family; each tile subscribes to just its own star state. */
+export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
+
+const EMPTY_TAGS_ATOM = Atom.make((): MessageStackTag[] => []);
+const NOT_STARRED_ATOM = Atom.make(() => false);
 
 export type MessageStackProps = {
   id: string;
-  messages?: Message.Message[];
-  /** Per-message tag list, indexed by message id. */
-  tags?: MessageTagsIndex;
+  /** Stack entries in display order: individual messages, conversation groups, or a mix. */
+  items?: MessageStackItem[];
+  /** Per-message tag chip atom family; each tile subscribes to only its own message's tags. */
+  tagsAtom?: MessageTagsFamily;
   currentId?: string;
   /** IDs of selected messages (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
   selectedIds?: ReadonlySet<string>;
-  /** IDs of starred messages; drives the per-tile star toggle. */
-  starredIds?: ReadonlySet<string>;
+  /** Per-message starred atom family; each tile subscribes to only its own star state. */
+  starredAtom?: StarredFamily;
   /**
-   * When true, messages are grouped into conversations by `threadId` (the email thread key) and only
-   * the most recent message per conversation is displayed. Messages without a `threadId` form singleton
-   * conversations.
+   * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
+   * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
+   * result directly (its `items` field is unused here) so callers can pass it through without
+   * destructuring and re-bundling it themselves, which would defeat its referential stability.
    */
-  conversations?: boolean;
+  pagination?: PaginationResult<unknown>;
+  /**
+   * Show the "Ignore sender" tile menu item. Off by default — only the mailbox view handles the
+   * `ignore-sender` action, so other consumers (e.g. drafts) must not render a no-op menu item.
+   */
+  enableIgnoreSender?: boolean;
+  /** Show the "Create Topic" tile menu item. Off by default (only the mailbox handles `create-topic`). */
+  enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, tiles render a highlighted best-match snippet instead of the default preview. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
@@ -65,90 +100,81 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, tags, currentId, selectedIds, starredIds, conversations, onAction, ...props }, forwardedRef) => {
+  (
+    {
+      items,
+      tagsAtom,
+      currentId,
+      selectedIds,
+      starredAtom,
+      pagination,
+      enableIgnoreSender,
+      enableCreateTopic,
+      searchQuery,
+      onAction,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-    const conversationGroups = useMemo(() => {
-      if (!conversations) {
-        return undefined;
-      }
+    const tileItems = useMemo(
+      () =>
+        items?.map(
+          (item): StackTileData =>
+            isMessageGroup(item)
+              ? {
+                  conversationId: item.id,
+                  messages: item.messages,
+                  total: item.total,
+                  // Conversations show the latest message; star reflects/toggles that message.
+                  starredAtom: starredAtom?.(item.messages[0]?.id),
+                  enableIgnoreSender,
+                  enableCreateTopic,
+                  searchQuery,
+                  onAction,
+                }
+              : {
+                  message: item,
+                  tagsAtom: tagsAtom?.(item.id),
+                  starredAtom: starredAtom?.(item.id),
+                  enableIgnoreSender,
+                  enableCreateTopic,
+                  searchQuery,
+                  onAction,
+                },
+        ),
+      [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction],
+    );
 
-      const groups = new Map<string, Message.Message[]>();
-      for (const message of messages ?? []) {
-        const key = message.threadId ?? message.id;
-        const group = groups.get(key);
-        if (group) {
-          group.push(message);
-        } else {
-          groups.set(key, [message]);
-        }
-      }
-
-      // Sort each group by created descending (most recent first).
-      for (const group of groups.values()) {
-        group.sort((a, b) => b.created.localeCompare(a.created));
-      }
-
-      return groups;
-    }, [messages, conversations]);
-
-    const items = useMemo(() => {
-      if (conversationGroups) {
-        return Array.from(conversationGroups.entries(), ([conversationId, conversationMessages]) => ({
-          conversationId,
-          messages: conversationMessages,
-          tags,
-          // Conversations show the latest message; star reflects/toggles that message.
-          starred: starredIds?.has(conversationMessages[0]?.id),
-          onAction,
-        }));
-      }
-
-      return messages?.map((message) => ({
-        message,
-        tags: tags?.[message.id],
-        starred: starredIds?.has(message.id),
-        onAction,
-      }));
-    }, [conversationGroups, messages, tags, starredIds, onAction]);
-
-    // In conversation view, the incoming `currentId` is a message ID (set when a
-    // specific message becomes selected), but the tiles are keyed by conversation ID.
-    // Map the message ID up to its enclosing conversation so the tile actually lights
-    // up. Without this, `aria-current` is never set on a conversation tile and
-    // `dx-current`'s background never appears (especially visible when the
+    // The incoming `currentId` is a message ID (set when a specific message becomes selected),
+    // but conversation tiles are keyed by conversation ID. Map the message ID up to its enclosing
+    // conversation so the tile actually lights up. Without this, `aria-current` is never set on a
+    // conversation tile and `dx-current`'s background never appears (especially visible when the
     // Card has `border={false}` and no default surface).
-    const effectiveCurrentId = useMemo(() => {
-      if (!conversationGroups || !currentId) {
-        return currentId;
-      }
-      for (const [conversationId, conversationMessages] of conversationGroups) {
-        if (conversationId === currentId || conversationMessages.some((message) => message.id === currentId)) {
-          return conversationId;
-        }
-      }
-      return currentId;
-    }, [conversationGroups, currentId]);
-
-    // Tiles are keyed by conversation id in conversation mode, so map selected message ids up to their
-    // enclosing conversation — otherwise controlled `aria-selected`/`dx-selected` never matches.
-    const effectiveSelectedIds = useMemo(() => {
-      if (!conversationGroups || !selectedIds) {
-        return selectedIds;
-      }
-      const mapped = new Set<string>();
-      for (const selectedId of selectedIds) {
-        let resolved = selectedId;
-        for (const [conversationId, conversationMessages] of conversationGroups) {
-          if (conversationId === selectedId || conversationMessages.some((message) => message.id === selectedId)) {
-            resolved = conversationId;
-            break;
+    const resolveTileId = useCallback(
+      (id: string) => {
+        for (const item of items ?? []) {
+          if (isMessageGroup(item) && (item.id === id || item.messages.some((message) => message.id === id))) {
+            return item.id;
           }
         }
-        mapped.add(resolved);
-      }
-      return mapped;
-    }, [conversationGroups, selectedIds]);
+        return id;
+      },
+      [items],
+    );
+
+    const effectiveCurrentId = useMemo(
+      () => (currentId ? resolveTileId(currentId) : currentId),
+      [resolveTileId, currentId],
+    );
+
+    // Conversation tiles are keyed by conversation id, so map selected message ids up to their
+    // enclosing conversation — otherwise controlled `aria-selected`/`dx-selected` never matches.
+    const effectiveSelectedIds = useMemo(
+      () => (selectedIds ? new Set(Array.from(selectedIds, resolveTileId)) : selectedIds),
+      [resolveTileId, selectedIds],
+    );
 
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
@@ -176,6 +202,11 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       }
     }, []);
 
+    const getItemId = useCallback(
+      (item: StackTileData) => ('conversationId' in item ? item.conversationId : item.message.id),
+      [],
+    );
+
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
@@ -188,16 +219,15 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         >
           <ScrollArea.Root padding centered thin>
             <ScrollArea.Viewport ref={setViewport}>
-              {/* The two tile components carry different data shapes (message vs conversation), which the
-                  single-typed Mosaic `Tile`/`items` generics can't express — hence the casts at this boundary. */}
               <Mosaic.VirtualStack
-                Tile={conversations ? (ConversationTile as any) : MessageTile}
-                items={items as any}
+                Tile={StackTile}
+                items={tileItems}
                 draggable={false}
-                getId={(item: any) => item.conversationId ?? item.message?.id}
+                getId={getItemId}
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
                 gap={4}
+                pagination={pagination}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -210,22 +240,47 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
 MessageStack.displayName = 'MessageStack';
 
 //
+// StackTile
+//
+
+type StackTileData = MessageTileData | ConversationTileData;
+
+type StackTileProps = Pick<MosaicTileProps<StackTileData>, 'data' | 'location' | 'current'>;
+
+/** Dispatches on the entry kind: message entries render a message tile, groups a conversation tile. */
+const StackTile = forwardRef<HTMLDivElement, StackTileProps>(({ data, location, current }, forwardedRef) =>
+  'message' in data ? (
+    <MessageTile ref={forwardedRef} data={data} location={location} current={current} />
+  ) : (
+    <ConversationTile ref={forwardedRef} data={data} location={location} current={current} />
+  ),
+);
+
+StackTile.displayName = 'StackTile';
+
+//
 // MessageTile
 //
 
 type MessageTileData = {
   message: Message.Message;
-  tags?: MessageStackTag[];
-  starred?: boolean;
+  tagsAtom?: Atom.Atom<MessageStackTag[]>;
+  starredAtom?: Atom.Atom<boolean>;
+  enableIgnoreSender?: boolean;
+  enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, the tile renders a highlighted best-match snippet. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tags, starred, onAction } = data;
+  const { message, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
+  const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
+  const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
   const messageTags = useGmailTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
@@ -251,6 +306,33 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
   const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
 
+  const searchSnippet = useMemo(
+    () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
+    [message, searchQuery],
+  );
+
+  const menuItems = useMemo(() => {
+    if (!onAction) {
+      return undefined;
+    }
+    const items = [];
+    if (enableIgnoreSender && message.sender?.email) {
+      items.push({
+        label: 'Ignore sender',
+        icon: 'ph--prohibit--regular',
+        onClick: () => onAction({ type: 'ignore-sender', messageId: message.id }),
+      });
+    }
+    if (enableCreateTopic) {
+      items.push({
+        label: 'Create Topic',
+        icon: 'ph--stack--regular',
+        onClick: () => onAction({ type: 'create-topic', messageId: message.id }),
+      });
+    }
+    return items.length > 0 ? items : undefined;
+  }, [enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id]);
+
   return (
     <Tile.Root
       ref={forwardedRef}
@@ -262,6 +344,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     >
       <Tile.Header
         menu
+        menuItems={menuItems}
         starred={starred}
         onToggleStar={onAction ? handleToggleStar : undefined}
         title={
@@ -274,9 +357,12 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       <Card.Body>
         <Row.Person actor={message.sender} avatar role='from' onClick={handleAvatarClick} />
 
+        {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
           <Card.Row>
-            <Card.Text variant='description'>{snippet}</Card.Text>
+            <Card.Text variant='description'>
+              {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
+            </Card.Text>
           </Card.Row>
         )}
 
@@ -295,8 +381,13 @@ MessageTile.displayName = 'MessageTile';
 type ConversationTileData = {
   conversationId: string;
   messages: Message.Message[];
-  tags?: MessageTagsIndex;
-  starred?: boolean;
+  /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
+  total?: number;
+  starredAtom?: Atom.Atom<boolean>;
+  enableIgnoreSender?: boolean;
+  enableCreateTopic?: boolean;
+  /** Active mailbox search term; when set, each message's snippet renders a highlighted best-match. */
+  searchQuery?: string;
   onAction?: MessageStackActionHandler;
 };
 
@@ -304,8 +395,20 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, starred, onAction } = data;
+    const {
+      conversationId,
+      messages,
+      total,
+      starredAtom,
+      enableIgnoreSender,
+      enableCreateTopic,
+      searchQuery,
+      onAction,
+    } = data;
     const latest = messages[0];
+    // `messages` is already the capped preview; `total` (when larger) is the full thread size.
+    const remaining = total !== undefined ? total - messages.length : 0;
+    const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
 
@@ -352,34 +455,48 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
       >
         <Tile.Header
           menu
+          menuItems={
+            onAction
+              ? [
+                  ...(enableIgnoreSender && latest.sender?.email
+                    ? [
+                        {
+                          label: 'Ignore sender',
+                          icon: 'ph--prohibit--regular',
+                          onClick: () => onAction({ type: 'ignore-sender', messageId: latest.id }),
+                        },
+                      ]
+                    : []),
+                  ...(enableCreateTopic
+                    ? [
+                        {
+                          label: 'Create Topic',
+                          icon: 'ph--stack--regular',
+                          onClick: () => onAction({ type: 'create-topic', messageId: latest.id }),
+                        },
+                      ]
+                    : []),
+                ]
+              : undefined
+          }
           starred={starred}
           onToggleStar={onAction ? handleToggleStar : undefined}
           title={<span className='grow truncate font-medium'>{subject}</span>}
         />
         <Card.Body>
-          {/* TODO(burdon): Currently limits to last n messages. */}
-          {messages.slice(0, 4).map((message) => {
-            const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
-            return (
-              <Card.Row key={message.id}>
-                <Card.Block>
-                  <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
-                </Card.Block>
-                <div className='flex flex-col' onClick={(event) => handleMessageClick(event, message.id)}>
-                  <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
-                    {from && <span className='truncate'>{from}</span>}
-                    <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
-                  </button>
-
-                  {snippet && (
-                    <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
-                      {snippet}
-                    </button>
-                  )}
-                </div>
-              </Card.Row>
-            );
-          })}
+          {messages.map((message) => (
+            <ConversationMessageRow
+              key={message.id}
+              message={message}
+              searchQuery={searchQuery}
+              onMessageClick={handleMessageClick}
+            />
+          ))}
+          {remaining > 0 && (
+            <Card.Row>
+              <Card.Text variant='description'>{`+${remaining} more`}</Card.Text>
+            </Card.Row>
+          )}
         </Card.Body>
       </Tile.Root>
     );
@@ -387,3 +504,50 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
 );
 
 ConversationTile.displayName = 'ConversationTile';
+
+//
+// ConversationMessageRow
+//
+
+type ConversationMessageRowProps = {
+  message: Message.Message;
+  /** Active mailbox search term; when set, renders a highlighted best-match snippet. */
+  searchQuery?: string;
+  onMessageClick: (event: MouseEvent, messageId: string) => void;
+};
+
+/**
+ * One message row within a {@link ConversationTile}. Extracted so the search snippet can be
+ * memoized per message via `useMemo` — inlining it in the `messages.map` would recompute the
+ * snippet on every keystroke for every message in the conversation.
+ */
+const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: ConversationMessageRowProps) => {
+  const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
+  const searchSnippet = useMemo(
+    () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
+    [message, searchQuery],
+  );
+
+  return (
+    <Card.Row>
+      <Card.Block>
+        <DxAvatar hue={hue} hueVariant='surface' variant='circle' size={6} fallback={from} />
+      </Card.Block>
+      <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
+        <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
+          {from && <span className='truncate'>{from}</span>}
+          <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
+        </button>
+
+        {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
+        {snippet && (
+          <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
+            {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
+          </button>
+        )}
+      </div>
+    </Card.Row>
+  );
+};
+
+ConversationMessageRow.displayName = 'ConversationMessageRow';

@@ -16,7 +16,7 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
-import { useApp } from '@dxos/app-framework/ui';
+import { bootLoader, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
@@ -64,15 +64,12 @@ declare global {
   var downloadLogs: () => Promise<void>;
 }
 
-// `window.__bootLoader` is declared globally by `@dxos/app-framework/ui`
-// (alongside the React `Placeholder` that calls `dismiss()`).
-
 /**
  * Updates the native-DOM boot loader text. No-op once React has replaced #root.
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: text });
+const bootStatus = (text: string) => bootLoader?.status({ humanized: text });
 
 // Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
 // from a true page boot. Dev-only — production has no HMR and the diagnostic
@@ -337,27 +334,12 @@ const main = async () => {
   // Decide the deployment mode for client services. The factory is a dumb switch on
   // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
-  // invokes the one required by the configured mode.
+  // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
+  // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
   const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
-  const useSharedWorker = isTrue(config.values.runtime?.app?.env?.DX_SHARED_WORKER);
-  // iOS has a SharedWorker crash bug (Apple FB11723920); if a caller asks for SharedWorker there,
-  // transparently fall back to in-process host mode instead of letting the factory throw later.
-  const isIos = typeof navigator !== 'undefined' && /iP(hone|ad|od)/.test(navigator.userAgent);
-  const sharedWorkerSupported = typeof SharedWorker !== 'undefined' && !isIos;
   const servicesMode = useLocalServices
     ? defs.Runtime.Client.ServicesMode.HOST
-    : useSharedWorker
-      ? sharedWorkerSupported
-        ? defs.Runtime.Client.ServicesMode.SHARED_WORKER
-        : defs.Runtime.Client.ServicesMode.HOST
-      : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
-
-  // Host and dedicated worker use OPFS-backed SQLite. SharedWorker still uses in-memory SQLite
-  // because OPFS is not available there (see `onconnect.ts`).
-  const sqliteMode =
-    servicesMode === defs.Runtime.Client.ServicesMode.SHARED_WORKER
-      ? defs.Runtime.Client.Storage.SqliteMode.MEMORY
-      : defs.Runtime.Client.Storage.SqliteMode.OPFS;
+    : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
 
   config = new Config(
     {
@@ -367,18 +349,14 @@ const main = async () => {
           signalTelemetryEnabled: !observabilityDisabled,
           singleClientMode: useSingleClientMode,
           servicesMode,
-          storage: { sqliteMode },
+          // Host and dedicated worker both use OPFS-backed SQLite.
+          storage: { sqliteMode: defs.Runtime.Client.Storage.SqliteMode.OPFS },
         },
       },
     },
     config.values,
   );
   const services = await createClientServices(config, {
-    createWorker: () =>
-      new SharedWorker(new URL('./workers/shared-worker', import.meta.url), {
-        type: 'module',
-        name: 'dxos-client-worker',
-      }),
     createDedicatedWorker: () =>
       new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
         type: 'module',
@@ -433,19 +411,19 @@ const main = async () => {
         // Pass `range` so the loader updates the existing line in place
         // ("Loading plugins (3/12)") instead of appending a fresh entry per
         // tick — keeps the visible log compact.
-        window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
+        bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
         // The ring spans two phases — remote-plugin preload (0 → 50%) and
         // module activation (50 → 100%, driven from `Placeholder` once
         // React mounts). Splitting the range keeps it monotonic across
         // the boundary.
-        window.__bootLoader?.progress((loaded / total) * 0.5);
+        bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
   );
 
   bootStatus('Starting Composer…');
   // Park the ring at 50% — preload done, activation about to take over.
-  window.__bootLoader?.progress(0.5);
+  bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });

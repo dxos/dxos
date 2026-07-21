@@ -1,6 +1,6 @@
 {
   "name": "@dxos/edge-client",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "EDGE Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,27 +16,27 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./cors-proxy": {
       "source": "./src/cors-proxy.ts",
       "types": "./dist/types/src/cors-proxy.d.ts",
-      "default": "./dist/lib/neutral/cors-proxy.mjs"
+      "import": "./dist/lib/cors-proxy.mjs"
     },
     "./muxer": {
       "source": "./src/edge-ws-muxer.ts",
       "types": "./dist/types/src/edge-ws-muxer.d.ts",
-      "default": "./dist/lib/neutral/edge-ws-muxer.mjs"
+      "import": "./dist/lib/edge-ws-muxer.mjs"
     },
     "./service": {
       "source": "./src/service/index.ts",
       "types": "./dist/types/src/service/index.d.ts",
-      "default": "./dist/lib/neutral/service/index.mjs"
+      "import": "./dist/lib/service.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

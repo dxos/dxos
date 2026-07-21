@@ -45,6 +45,7 @@ export default Capability.makeModule(
     const stateAtom = yield* Capability.get(SpaceCapabilities.State);
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
 
     //
     // Personal space initialization — deferred until found.
@@ -211,7 +212,7 @@ export default Capability.makeModule(
 
       const send = () => {
         const spaces = client.spaces.get();
-        const identity = client.halo.identity.get();
+        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           // Group parts by space for efficient messaging.
           const idsBySpace = reduceGroupBy(active, (id: string) => {
@@ -248,7 +249,7 @@ export default Capability.makeModule(
 
             void space
               .postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
+                identityKey: identity.identityKey,
                 attended: current,
                 added,
                 removed,
@@ -287,10 +288,10 @@ export default Capability.makeModule(
             const { added, removed, attended } = message.payload;
 
             const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-            const currentIdentity = client.halo.identity.get();
+            const currentIdentity = Option.getOrUndefined(haloIdentity.getSnapshot());
             if (
               identityKey &&
-              !currentIdentity?.identityKey.equals(identityKey) &&
+              currentIdentity?.identityKey !== identityKey.toHex() &&
               Array.isArray(added) &&
               Array.isArray(removed)
             ) {
@@ -330,18 +331,28 @@ export default Capability.makeModule(
     subscriptions.add(() => viewingSub.unsubscribe());
 
     // Enable edge replication for all spaces.
-    try {
-      yield* Effect.tryPromise(() =>
-        Promise.all(
-          client.spaces
-            .get()
-            .map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
-        ),
-      );
-      registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
-    } catch (err) {
-      log.catch(err);
-    }
+    // Per-space failures (e.g. a timeout waiting for the property to propagate) must not
+    // block activation of the whole plugin, so each space is enabled independently.
+    yield* Effect.tryPromise(() =>
+      Promise.allSettled(
+        client.spaces
+          .get()
+          .filter((space) => space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED)
+          .map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
+      ),
+    ).pipe(
+      Effect.tap((results) =>
+        Effect.sync(() => {
+          results.forEach((result) => {
+            if (result.status === 'rejected') {
+              log.catch(result.reason);
+            }
+          });
+        }),
+      ),
+      Effect.catchAll((err) => Effect.sync(() => log.catch(err))),
+    );
+    registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.gen(function* () {

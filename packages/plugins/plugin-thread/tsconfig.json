@@ -44,6 +44,15 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -69,6 +78,9 @@
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-thread"

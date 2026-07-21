@@ -3,7 +3,7 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import type * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -24,7 +24,10 @@ export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
 
 export const make = ({
   endpoint = DEFAULT_OLLAMA_ENDPOINT,
-  transformClient,
+  // Ollama's CORS preflight rejects the `traceparent` header Effect's HttpClient injects for
+  // distributed tracing (a local model server participates in no trace), so disable propagation by
+  // default — otherwise browser calls to Ollama fail the preflight. Callers may override.
+  transformClient = (client) => HttpClient.withTracerPropagation(client, false),
   provider = Provider.ollama.id,
   models = Model.forProvider(provider),
 }: {

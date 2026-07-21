@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 
 import { type Bookmark } from '#types';
@@ -44,3 +44,5 @@ export const BookmarkCard = ({ subject }: BookmarkCardProps) => {
 };
 
 export default BookmarkCard;
+
+BookmarkCard.displayName = 'BookmarkCard';

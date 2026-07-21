@@ -15,6 +15,13 @@ import { rehydrateToolWidgetsFromMessages } from './tool-widget-state';
 export type TextModel = Pick<MarkdownStreamController, 'length' | 'setContent' | 'append' | 'updateWidget'>;
 
 /**
+ * Document offset range occupied by a message's rendered blocks. Positions are in the same
+ * space as the CodeMirror document (i.e. what {@link MarkdownStreamController.scrollTo} and
+ * {@link MarkdownStreamController.getVisibleRange} operate on).
+ */
+export type MessageRange = { id: string; from: number; to: number };
+
+/**
  * Renders a block to markdown.
  *
  * Contract: for any block whose lifetime spans multiple invocations (i.e. a streaming block
@@ -31,6 +38,7 @@ export type BlockRenderer = (
 
 /**
  * Thread context passed to renderer.
+ * This enables the renderer to "stream" content into the widget state.
  */
 export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
   constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
@@ -61,8 +69,18 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
  */
 export class MessageSyncer {
   private _threadId?: string;
+
+  /** Cumulative block index (across all completed blocks in all messages). */
   private _completed = 0;
+
+  /** Chars of the in-flight block (at index `_completed`) already appended. */
   private _trailing = 0;
+
+  /** Document offset at the `_completed` boundary (length of all fully-appended blocks). */
+  private _completedOffset = 0;
+
+  /** Per-message document offset ranges, keyed by message id in document order. */
+  private readonly _ranges = new Map<string, { from: number; to: number }>();
 
   private readonly _context: MessageThreadContext;
 
@@ -78,6 +96,25 @@ export class MessageSyncer {
   }
 
   /**
+   * Per-message document offset ranges, in document order. Valid synchronously after
+   * {@link reset} or {@link update} (the offsets are derived from the same rendered buffer
+   * that is dispatched to the document).
+   */
+  getRanges(): MessageRange[] {
+    return Array.from(this._ranges, ([id, { from, to }]) => ({ id, from, to }));
+  }
+
+  /** Record (or extend) the offset range of a message. `from` is preserved across calls. */
+  private _recordRange(id: string, from: number, to: number): void {
+    const existing = this._ranges.get(id);
+    if (existing) {
+      existing.to = to;
+    } else {
+      this._ranges.set(id, { from, to });
+    }
+  }
+
+  /**
    * Replace the document with the rendering of `messages`. Use on mount, on thread switch,
    * and from {@link update} when it detects an identity change in `messages[0]`.
    */
@@ -85,6 +122,8 @@ export class MessageSyncer {
     this._threadId = messages[0]?.id;
     this._completed = 0;
     this._trailing = 0;
+    this._completedOffset = 0;
+    this._ranges.clear();
     const buffer = this._walk(messages);
     // Match the pre-rewrite behaviour: rendering from a steady state (initial mount with
     // non-empty messages, or thread switch) lands the entire content via `setContent` — which
@@ -122,6 +161,9 @@ export class MessageSyncer {
   _walk(messages: Message.Message[]): string {
     let buffer = '';
     let index = 0;
+    // Absolute document offset at the `_completed` boundary; blocks before it were rendered on
+    // earlier calls and their offsets are already baked into `_completedOffset` (and `_ranges`).
+    let offset = this._completedOffset;
     outer: for (const message of messages) {
       for (const block of message.blocks) {
         if (index < this._completed) {
@@ -132,6 +174,8 @@ export class MessageSyncer {
         if (rendered.length > this._trailing) {
           buffer += rendered.slice(this._trailing);
         }
+        // The block occupies `[offset, offset + rendered.length)`; extend the message's range.
+        this._recordRange(message.id, offset, offset + rendered.length);
         if (block.pending) {
           // Stay on this block; record how far we've appended so the next call can resume.
           // `Math.max`-style guard against a non-monotonic renderer output without shrinking the doc.
@@ -142,6 +186,8 @@ export class MessageSyncer {
         }
         this._completed = index + 1;
         this._trailing = 0;
+        offset += rendered.length;
+        this._completedOffset = offset;
         index++;
       }
     }

@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Space, getSpace } from '@dxos/client/echo';
+import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/compute-runtime';
+import { TraceEvent } from '@dxos/compute-runtime';
+import { InvocationOutcome } from '@dxos/compute-runtime';
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { TraceEvent } from '@dxos/functions-runtime';
-import { InvocationOutcome } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 
-export class QueueLogger implements SequenceLogger {
+export class FeedLogger implements SequenceLogger {
   private _space: Space;
   private _invocationTraceFeed: Feed.Feed;
   private _feedServiceLayer: Layer.Layer<Database.Service>;
@@ -34,11 +34,11 @@ export class QueueLogger implements SequenceLogger {
       // A feed reference exists; ensure its target is loaded. If not, fail loudly
       // rather than silently creating a new feed and orphaning existing traces.
       invariant(existingFeedRef.target, 'invocationTraceFeed reference is not yet loaded');
-      invariant(Feed.getQueueUri(existingFeedRef.target), 'invocationTraceFeed has no queue DXN');
+      invariant(Feed.getFeedUri(existingFeedRef.target), 'invocationTraceFeed has no feed URI');
       this._invocationTraceFeed = existingFeedRef.target;
     } else {
       const feed = space.db.add(Feed.make({ namespace: 'trace' }));
-      invariant(Feed.getQueueUri(feed), 'New invocationTraceFeed has no queue DXN');
+      invariant(Feed.getFeedUri(feed), 'New invocationTraceFeed has no feed URI');
       Obj.update(this._space.properties, (obj) => {
         obj.invocationTraceFeed = Ref.make(feed);
       });

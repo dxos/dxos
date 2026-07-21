@@ -5,6 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
+import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -17,7 +18,7 @@ import { AppCapabilities } from '../../app-framework';
 // Internal type helpers
 //
 
-type TokenData<T> = T extends Surface.RoleToken<infer D> ? D : never;
+type TokenData<T> = T extends Role.Role<infer D> ? D : never;
 type FilterData<F> = F extends Surface.Filter<infer D> ? D : never;
 type UnionToIntersection<U> = (U extends any ? (arg: U) => void : never) extends (arg: infer I) => void ? I : never;
 type IsAny<T> = 0 extends 1 & T ? true : false;
@@ -88,18 +89,18 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
  * without having to hand-roll a fully typed `Surface.Filter`.
  */
 export const object: {
-  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
+  <TToken extends Role.Role<{ subject?: any }>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S> }>;
-  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity[]>(
+  <TToken extends Role.Role<{ subject?: any }>, S extends Type.AnyEntity[]>(
     token: TToken,
     schemas: [...S],
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S[number]> }>;
 } = (
-  token: Surface.RoleToken<any>,
+  token: Role.Role<any>,
   schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
   predicate?: (data: any) => boolean,
 ): Surface.Filter<any> => {
@@ -131,7 +132,7 @@ export const object: {
  * The token's data contract is preserved (e.g. Article carries `attendableId`)
  * and only `subject` is narrowed to the literal.
  */
-export const literal = <TToken extends Surface.RoleToken<{ subject?: any }>, T extends string | null>(
+export const literal = <TToken extends Role.Role<{ subject?: any }>, T extends string | null>(
   token: TToken,
   value: T,
 ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: T }> => {
@@ -156,15 +157,15 @@ export const literal = <TToken extends Surface.RoleToken<{ subject?: any }>, T e
  * `attendableId`) and only `subject` is narrowed by the predicate.
  */
 export const subject: {
-  <TToken extends Surface.RoleToken<{ subject?: any }>, T>(
+  <TToken extends Role.Role<{ subject?: any }>, T>(
     token: TToken,
     check: (value: unknown) => value is T,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: T }>;
-  <TToken extends Surface.RoleToken<{ subject?: any }>>(
+  <TToken extends Role.Role<{ subject?: any }>>(
     token: TToken,
     check: (value: unknown) => boolean,
   ): Surface.Filter<NonNullable<TokenData<TToken>>>;
-} = (token: Surface.RoleToken<any>, check: (value: unknown) => boolean): Surface.Filter<any> => {
+} = (token: Role.Role<any>, check: (value: unknown) => boolean): Surface.Filter<any> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -178,7 +179,7 @@ export const subject: {
  * Filter: matches when `data.subject` is an ECHO snapshot of the given schema.
  * Preserves the token's other data fields (e.g. Article/Section `attendableId`).
  */
-export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.Obj<any>>(
+export const snapshot = <TToken extends Role.Role<{ subject?: any }>, S extends Type.Obj<any>>(
   token: TToken,
   schema: S,
 ): Surface.Filter<
@@ -199,21 +200,18 @@ export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S 
  * {@link allOf} and {@link object} to express "article displaying X whose companion is Y".
  */
 export const companion: {
-  <TToken extends Surface.RoleToken<any>>(token: TToken): Surface.Filter<{ companionTo: Obj.Any }>;
-  <TToken extends Surface.RoleToken<any>, S extends Type.AnyEntity>(
+  <TToken extends Role.Role<any>>(token: TToken): Surface.Filter<{ companionTo: Obj.Any }>;
+  <TToken extends Role.Role<any>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
   ): Surface.Filter<{ companionTo: Type.InstanceType<S> }>;
-  <TToken extends Surface.RoleToken<any>, T extends string>(
-    token: TToken,
-    value: T,
-  ): Surface.Filter<{ companionTo: T }>;
-  <TToken extends Surface.RoleToken<any>, T>(
+  <TToken extends Role.Role<any>, T extends string>(token: TToken, value: T): Surface.Filter<{ companionTo: T }>;
+  <TToken extends Role.Role<any>, T>(
     token: TToken,
     guard: (value: unknown) => value is T,
   ): Surface.Filter<{ companionTo: T }>;
 } = (
-  token: Surface.RoleToken<any>,
+  token: Role.Role<any>,
   schemaOrValueOrGuard?: Type.AnyEntity | string | ((value: unknown) => boolean),
 ): Surface.Filter<any> => {
   const guard = (data: unknown): boolean => {
@@ -245,7 +243,7 @@ export const companion: {
 /** Role token for the `article` role. Subject defaults to `any` until narrowed
  * via {@link object}, {@link literal}, or {@link subject}. Extra passthrough
  * props are permitted. */
-export const Article: Surface.RoleToken<ArticleData<any>> = Surface.makeType('org.dxos.role.article');
+export const Article: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.article');
 
 /** Surface data for article role (from PlankComponent). */
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
@@ -338,7 +336,7 @@ export type SettingsProps<T extends {}, Props extends {} = {}> = {
  * filter matches any settings subject (used by the generic default settings
  * surface); pass a `prefix` to match a single plugin's settings.
  */
-export const settings = (token: Surface.RoleToken<any>, prefix?: string): Surface.Filter<SettingsData> => {
+export const settings = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -355,13 +353,13 @@ export const settings = (token: Surface.RoleToken<any>, prefix?: string): Surfac
 //
 
 /** Role token for the `section` role. */
-export const Section: Surface.RoleToken<SectionData<any>> = Surface.makeType('org.dxos.role.section');
+export const Section: Role.Role<SectionData<any>> = Role.make('org.dxos.role.section');
 
 /** Role token for the `slide` role. Shares the section data shape. */
-export const Slide: Surface.RoleToken<SectionData<any>> = Surface.makeType('org.dxos.role.slide');
+export const Slide: Role.Role<SectionData<any>> = Role.make('org.dxos.role.slide');
 
 /** Role token for the `tabpanel` role. Shares the article data shape. */
-export const Tabpanel: Surface.RoleToken<ArticleData<any>> = Surface.makeType('org.dxos.role.tabpanel');
+export const Tabpanel: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.tabpanel');
 
 /** Roles whose data contract requires a string `attendableId`. */
 const ATTENDABLE_ROLES = new Set([Article.role, Section.role, Tabpanel.role]);
@@ -371,8 +369,7 @@ const ATTENDABLE_ROLES = new Set([Article.role, Section.role, Tabpanel.role]);
  * plank (attendable) and popover (non-attendable) contexts, so `attendableId`
  * is optional here.
  */
-export const Related: Surface.RoleToken<{ attendableId?: string; subject: any }> =
-  Surface.makeType('org.dxos.role.related');
+export const Related: Role.Role<{ attendableId?: string; subject: any }> = Role.make('org.dxos.role.related');
 
 /**
  * Surface data for section role (from StackSection). Sections always render
@@ -413,9 +410,7 @@ export type ObjectSectionProps<
  * Role token for the `objectProperties` role (per-object configuration panel).
  * Distinct from Section: no `attendableId` requirement.
  */
-export const ObjectProperties: Surface.RoleToken<ObjectPropertiesData<any>> = Surface.makeType(
-  'org.dxos.role.objectProperties',
-);
+export const ObjectProperties: Role.Role<ObjectPropertiesData<any>> = Role.make('org.dxos.role.objectProperties');
 
 /** Surface data for object-properties surfaces (distinct from section; no attendableId). */
 export type ObjectPropertiesData<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
@@ -435,7 +430,7 @@ export type ObjectPropertiesProps<
 //
 
 /** Role token for the card slot. */
-export const CardContent: Surface.RoleToken<CardData<any>> = Surface.makeType('org.dxos.role.cardContent');
+export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {
@@ -470,10 +465,10 @@ export type ObjectCardProps<Subject extends Obj.Unknown | undefined = Obj.Unknow
 //
 
 /** Role token for the `dialog` role. */
-export const Dialog: Surface.RoleToken<DialogData> = Surface.makeType('org.dxos.role.dialog');
+export const Dialog: Role.Role<DialogData> = Role.make('org.dxos.role.dialog');
 
 /** Role token for the `popover` role. */
-export const Popover: Surface.RoleToken<DialogData> = Surface.makeType('org.dxos.role.popover');
+export const Popover: Role.Role<DialogData> = Role.make('org.dxos.role.popover');
 
 /**
  * Surface data for dialog/popover role.
@@ -516,7 +511,7 @@ export type ComponentProps<Component extends string = string, ComponentProps ext
  * to be specified; the common override is just `component<MyProps>(Dialog, id)`.
  */
 export const component = <ComponentProps = any, Component extends string = string>(
-  token: Surface.RoleToken<DialogData>,
+  token: Role.Role<DialogData>,
   id: Component,
 ): Surface.Filter<DialogData<Component, ComponentProps>> => {
   const guard = (data: unknown): boolean => {
@@ -530,22 +525,25 @@ export const component = <ComponentProps = any, Component extends string = strin
 //
 
 /** Role token for the `navigation` role. */
-export const Navigation: Surface.RoleToken<NavigationData> = Surface.makeType('org.dxos.role.navigation');
+export const Navigation: Role.Role<NavigationData> = Role.make('org.dxos.role.navigation');
 
 /** Role token for the `menuFooter` role (was `menu-footer`). */
-export const MenuFooter: Surface.RoleToken<MenuFooterData<unknown>> = Surface.makeType('org.dxos.role.menuFooter');
+export const MenuFooter: Role.Role<MenuFooterData<unknown>> = Role.make('org.dxos.role.menuFooter');
 
 /** Role token for the `navbarEnd` role (was `navbar-end`). */
-export const NavbarEnd: Surface.RoleToken<NavbarEndData<unknown>> = Surface.makeType('org.dxos.role.navbarEnd');
+export const NavbarEnd: Role.Role<NavbarEndData<unknown>> = Role.make('org.dxos.role.navbarEnd');
 
 /** Role token for the `documentTitle` role (was `document-title`). */
-export const DocumentTitle: Surface.RoleToken<DocumentTitleData<unknown>> =
-  Surface.makeType('org.dxos.role.documentTitle');
+export const DocumentTitle: Role.Role<DocumentTitleData<unknown>> = Role.make('org.dxos.role.documentTitle');
 
 /** Role token for the `statusIndicator` role (was `status-indicator`). */
-export const StatusIndicator: Surface.RoleToken<Record<string, unknown>> = Surface.makeType(
-  'org.dxos.role.statusIndicator',
-);
+export const StatusIndicator: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.statusIndicator');
+
+/**
+ * Slot for the devtools-overview sub-surface. Defined here (not in plugin-devtools) so public
+ * contributor plugins can target it without depending on the private devtools plugin.
+ */
+export const DevtoolsOverview: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.devtoolsOverview');
 
 /**
  * Data passed to FormInput surface components by `useInputSurfaceLookup`.
@@ -559,7 +557,7 @@ export type FormInputData = {
 };
 
 /** Role token for the `formInput` role (was `form-input`). */
-export const FormInput: Surface.RoleToken<FormInputData> = Surface.makeType('org.dxos.role.formInput');
+export const FormInput: Role.Role<FormInputData> = Role.make('org.dxos.role.formInput');
 
 /** Filter FormInput surfaces by a typed data predicate. */
 export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> =>
@@ -581,10 +579,10 @@ export type NavtreeItemEndData<Subject = unknown> = {
 };
 
 /** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
-export const NavtreeItemEnd: Surface.RoleToken<NavtreeItemEndData> = Surface.makeType('org.dxos.role.navtreeItemEnd');
+export const NavtreeItemEnd: Role.Role<NavtreeItemEndData> = Role.make('org.dxos.role.navtreeItemEnd');
 
 /** Role token for the `searchInput` role (was `search-input`). */
-export const SearchInput: Surface.RoleToken<Record<string, unknown>> = Surface.makeType('org.dxos.role.searchInput');
+export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');
 
 /**
  * Creates a role token for a deck companion variant. Both the deck consumer
@@ -594,13 +592,13 @@ export const SearchInput: Surface.RoleToken<Record<string, unknown>> = Surface.m
  *
  * Variant ids must be camelCase alphanumeric (DXN rule: no hyphens in the final segment).
  */
-export const deckCompanion = (variant: string): Surface.RoleToken<{ subject?: any }> => {
+export const deckCompanion = (variant: string): Role.Role<{ subject?: any }> => {
   if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(variant)) {
     throw new Error(
       `Invalid deck companion variant id: "${variant}". Must be camelCase alphanumeric (no hyphens or underscores).`,
     );
   }
-  return Surface.makeType(`org.dxos.role.deckCompanion.${variant}` as any);
+  return Role.make(`org.dxos.role.deckCompanion.${variant}` as any);
 };
 
 /** Surface data for navigation role. */

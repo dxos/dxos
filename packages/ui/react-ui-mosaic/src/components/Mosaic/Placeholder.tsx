@@ -12,11 +12,11 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { type Axis, type ThemedClassName } from '@dxos/react-ui';
+import { type DndLocation, type DndPlaceholderData, getSourceData } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
 import { useMosaicContainerContext } from './Container';
 import { useMosaicTileContext } from './Tile';
-import { type LocationType, type MosaicPlaceholderData, getSourceData } from './types';
 
 //
 // Placeholder
@@ -35,7 +35,7 @@ const MOSAIC_PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 // a specific gap unambiguously without relying on layout-dependent indices.
 const MOSAIC_PLACEHOLDER_LOCATION_ATTR = 'mosaic-placeholder-location';
 
-type MosaicPlaceholderProps<Location = LocationType> = ThemedClassName<
+type MosaicPlaceholderProps<Location = DndLocation> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
     orientation?: Axis;
@@ -43,7 +43,7 @@ type MosaicPlaceholderProps<Location = LocationType> = ThemedClassName<
   }>
 >;
 
-const MosaicPlaceholder = <Location extends LocationType = LocationType>({
+const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
   classNames,
   children,
   asChild,
@@ -59,13 +59,13 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
     activeLocation,
     setActiveLocation,
   } = useMosaicContainerContext(MOSAIC_PLACEHOLDER_NAME);
-  const data = useMemo<MosaicPlaceholderData<Location>>(
+  const data = useMemo<DndPlaceholderData<Location>>(
     () =>
       ({
         type: 'placeholder',
         containerId,
         location,
-      }) satisfies MosaicPlaceholderData<Location>,
+      }) satisfies DndPlaceholderData<Location>,
     [containerId, location],
   );
 
@@ -103,7 +103,6 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
         [`data-${MOSAIC_PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
         [`data-${MOSAIC_PLACEHOLDER_LOCATION_ATTR}`]: String(location),
       }}
-      role='none'
       className={mx('relative', classNames)}
       ref={rootRef}
     >

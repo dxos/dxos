@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Carousel, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
@@ -85,3 +85,5 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
     </div>
   );
 };
+
+ResultDetail.displayName = 'ResultDetail';

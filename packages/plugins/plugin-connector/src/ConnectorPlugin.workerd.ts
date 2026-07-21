@@ -4,15 +4,19 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { AccessToken } from '@dxos/types';
+import { Feed } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, SyncBinding } from '#types';
+import { Connection } from '#types';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken, Connection.Connection, SyncBinding.SyncBinding] }),
+  AppPlugin.addSchemaModule({
+    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
+  }),
+
   Plugin.make,
 );
 

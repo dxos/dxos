@@ -5,13 +5,24 @@
 import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
-import { type PublicKey } from '@dxos/react-client';
-import { type Identity } from '@dxos/react-client/halo';
+import { type PublicKey } from '@dxos/keys';
 import { type Selection } from '@dxos/react-ui-attention';
 import { type MessageMetadata } from '@dxos/react-ui-thread';
 import { hexToFallback, toFallback } from '@dxos/util';
 
 export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageMetadata;
+
+/**
+ * Minimal author shape for message metadata. Satisfied by both the `@dxos/halo`
+ * `Identity.Info` and `Space.Member` (hex `identityKey`, flat `displayName`/`data`).
+ */
+export type MessageAuthor = {
+  did?: string;
+  identityKey?: string;
+  displayName?: string;
+  // Arbitrary profile metadata (matches the `@dxos/halo` `Schema.Any`-valued `data`).
+  data?: { readonly [key: string]: any };
+};
 
 /**
  * Stable hash for an arbitrary string — used as the avatar-fallback seed for
@@ -37,7 +48,7 @@ const hashString = (str: string): number => {
  */
 export const getMessageMetadata = (
   id: string,
-  identity?: Identity,
+  identity?: MessageAuthor,
   /**
    * Externally-sourced sender info (Slack/Discord/etc). Used only when no
    * matching DXOS `identity` is available — provides `name`/`email` for the
@@ -46,19 +57,19 @@ export const getMessageMetadata = (
   fallbackSender?: { name?: string; email?: string },
 ): MessageMetadata => {
   const fallback = identity?.identityKey
-    ? hexToFallback(identity.identityKey.toHex())
+    ? hexToFallback(identity.identityKey)
     : toFallback(hashString(fallbackSender?.name ?? fallbackSender?.email ?? '0'));
   return {
     id,
     authorId: identity?.did,
     authorName:
-      identity?.profile?.displayName ??
-      (identity?.identityKey ? generateName(identity.identityKey.toHex()) : undefined) ??
+      identity?.displayName ??
+      (identity?.identityKey ? generateName(identity.identityKey) : undefined) ??
       fallbackSender?.name ??
       fallbackSender?.email,
     authorAvatarProps: {
-      hue: identity?.profile?.data?.hue ?? fallback.hue,
-      emoji: identity?.profile?.data?.emoji ?? fallback.emoji,
+      hue: identity?.data?.hue ?? fallback.hue,
+      emoji: identity?.data?.emoji ?? fallback.emoji,
     },
   };
 };

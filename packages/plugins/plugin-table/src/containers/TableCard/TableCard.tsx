@@ -7,8 +7,8 @@ import React, { useContext, useMemo, useRef } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
+import { useQuery, useType } from '@dxos/echo-react';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useQuery, useType } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 import {
   Table as TableComponent,
@@ -70,3 +70,5 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
     </Card.Body>
   );
 };
+
+TableCard.displayName = 'TableCard';

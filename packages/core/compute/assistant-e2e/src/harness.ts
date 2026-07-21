@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
+import { traceFeedPrettyPrintSubscription } from '@dxos/agent-runtime/testing';
 import { AiService } from '@dxos/ai';
 import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
@@ -17,15 +18,11 @@ import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
-// Skill is imported so TypeScript can name Skill.Skill in the emitted .d.ts for getDefaultSkills
-// (SkillManagerSkill.make() returns Skill.Skill, which propagates into the inferred return type).
-// eslint-disable-next-line unused-imports/no-unused-imports
 import { Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
 import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
-import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -43,7 +40,10 @@ export const DEFAULT_TEST_TIMEOUT = 360_000;
 // headroom for slow CI nodes without enabling full LLM generation.
 const MEMOIZED_TEST_TIMEOUT = 60_000;
 
-export const getDefaultSkills = () => [Ref.make(SkillManagerSkill.make()), Ref.make(DatabaseSkill.make())];
+export const getDefaultSkills = (): Ref.Ref<Skill.Skill>[] => [
+  Ref.make(SkillManagerSkill.make()),
+  Ref.make(DatabaseSkill.make()),
+];
 
 const INSTRUCTIONS = trim`
   You are running within a test environment.
@@ -66,9 +66,7 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
 
   model?: DXN.DXN;
 
-  /**
-   * @default 'direct'
-   */
+  /** @default 'direct' */
   inferenceProvider?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
 
   disableLlmMemoization?: boolean;
@@ -132,9 +130,14 @@ const makeMemoizedAiServiceMiddleware = (
       TestAiService({
         preset: options.inferenceProvider ?? 'direct',
         disableMemoization: options.disableLlmMemoization ?? false,
-        // Space keys and entity IDs differ across runs; canonicalize for matching and
+        // Space keys, entity IDs, and ids minted by external services on every live tool call
+        // (e.g. an image-hosting upload id) differ across runs; canonicalize for matching and
         // substitute live values back into memoized responses on a cache hit.
-        dynamicValuePatterns: [MemoizedLanguageModel.SPACE_ID_PATTERN, MemoizedLanguageModel.ENTITY_ID_PATTERN],
+        dynamicValuePatterns: [
+          MemoizedLanguageModel.SPACE_ID_PATTERN,
+          MemoizedLanguageModel.ENTITY_ID_PATTERN,
+          MemoizedLanguageModel.UUID_PATTERN,
+        ],
       }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
     Effect.map((service) => (_upstream: AiService.Service) => service),

@@ -9,14 +9,15 @@ import React, { type ComponentProps, useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace, useHomeVisibility, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
+import { useType } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { ViewAnnotation } from '@dxos/schema';
+import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
 import {
@@ -29,8 +30,8 @@ import {
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
-  MenuFooter,
   ObjectCardStack,
+  ObjectHistory,
   RecordArticle,
   RelatedArticle,
   RenamePopover,
@@ -38,12 +39,13 @@ import {
   SchemaContainer,
   SmallPresenceLive,
   SpaceHomeArticle,
+  SpaceHomeDashboard,
   SpaceHomeRecent,
   SpacePresence,
   SpaceSettings,
   SpaceSettingsContainer,
   SyncStatus,
-  TypeCollectionArticle,
+  TypeArticle,
   ViewEditor,
 } from '#containers';
 import { meta } from '#meta';
@@ -84,7 +86,18 @@ export default Capability.makeModule(
       Surface.create({
         id: 'spaceHomeRecent',
         filter: Surface.makeFilter(SpaceHomeContent),
-        component: ({ data }) => <SpaceHomeRecent space={data.space} />,
+        component: ({ data }) => {
+          const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
+          return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
+        },
+      }),
+      Surface.create({
+        id: 'spaceHomeDashboard',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        component: ({ data }) => {
+          const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
+          return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;
+        },
       }),
       Surface.create({
         id: 'collectionFallback',
@@ -107,14 +120,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          return (
-            <TypeCollectionArticle
-              role={role}
-              space={space}
-              typeUri={Type.getURI(data.subject)}
-              attendableId={data.attendableId}
-            />
-          );
+          return <TypeArticle role={role} space={space} type={data.subject} attendableId={data.attendableId} />;
         },
       }),
       Surface.create({
@@ -149,6 +155,16 @@ export default Capability.makeModule(
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
+      }),
+      Surface.create({
+        id: 'companion.objectHistory',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'history'),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ data, role, ref }) => (
+          <ObjectHistory role={role} attendableId={data.attendableId} subject={data.companionTo} ref={ref} />
+        ),
       }),
       Surface.create({
         id: 'spaceSettingsProperties',
@@ -191,24 +207,55 @@ export default Capability.makeModule(
         id: 'selectedObjects',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'selected-objects'),
-          AppSurface.companion(AppSurface.Article, Obj.isObject),
+          AppSurface.companion(
+            AppSurface.Article,
+            (value): value is Type.AnyEntity | Obj.Unknown => Type.isType(value) || Obj.isObject(value),
+          ),
         ),
         // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => {
-          const type = Obj.getType(data.companionTo);
-          const path = type
-            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+          const activeSpace = useActiveSpace();
+          const companionTo = data.companionTo;
+          const isTypeCompanion = Type.isType(companionTo);
+
+          // Object companion (e.g. a Table.Table): resolve its type via the view backing it.
+          const objectType = !isTypeCompanion ? Obj.getType(companionTo) : undefined;
+          const path = objectType
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(objectType)), () => [] as readonly string[])
             : [];
-          const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
-          if (!view) {
+          const view =
+            !isTypeCompanion && path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(companionTo, path) : undefined;
+          const viewDb = view ? Obj.getDatabase(view) : undefined;
+          const viewTypeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+          const resolvedViewType = useType(viewDb, viewTypeUri);
+
+          // Type/schema companion (e.g. a TypeArticle plank): the type IS the subject, no view lookup needed.
+          if (isTypeCompanion) {
+            if (!activeSpace) {
+              return null;
+            }
+
+            return (
+              <ObjectCardStack
+                key={Type.getURI(companionTo)}
+                objectId={Type.getURI(companionTo)}
+                db={activeSpace.db}
+                type={companionTo}
+                ref={ref}
+              />
+            );
+          }
+
+          if (!view || !viewDb || !resolvedViewType) {
             return null;
           }
 
           return (
             <ObjectCardStack
-              key={Obj.getURI(data.companionTo)}
-              objectId={Obj.getURI(data.companionTo)}
-              view={view}
+              key={Obj.getURI(companionTo)}
+              objectId={Obj.getURI(companionTo)}
+              db={viewDb}
+              type={resolvedViewType}
               ref={ref}
             />
           );
@@ -333,11 +380,6 @@ export default Capability.makeModule(
         id: RENAME_POPOVER,
         filter: AppSurface.component<RenameSubject>(AppSurface.Popover, RENAME_POPOVER),
         component: ({ data }) => <RenamePopover subject={data.props} />,
-      }),
-      Surface.create({
-        id: 'menuFooter',
-        filter: AppSurface.subject(AppSurface.MenuFooter, Obj.isObject),
-        component: ({ data }) => <MenuFooter object={data.subject} />,
       }),
       Surface.create({
         id: 'navtreePresence',

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ui-editor",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Text editor components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,14 +16,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -47,6 +45,7 @@
     "@codemirror/language": "catalog:",
     "@codemirror/language-data": "catalog:",
     "@codemirror/lint": "catalog:",
+    "@codemirror/merge": "catalog:",
     "@codemirror/search": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/theme-one-dark": "catalog:",
@@ -79,6 +78,7 @@
     "@uiw/codemirror-theme-vscode": "catalog:",
     "ajv": "catalog:",
     "codemirror": "catalog:",
+    "diff": "catalog:",
     "lib0": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.merge": "catalog:",
@@ -113,7 +113,7 @@
     "vite-plugin-wasm": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:^",
     "@effect/platform": "catalog:",
     "effect": "catalog:"
   },

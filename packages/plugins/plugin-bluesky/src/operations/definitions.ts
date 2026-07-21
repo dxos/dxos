@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import {
   // eslint-disable-next-line unused-imports/no-unused-imports
   type Connection,
@@ -14,7 +15,6 @@ import {
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
@@ -45,9 +45,9 @@ export const GetBlueskyTargets = Operation.make({
 
 /**
  * Find-or-create the empty local `Subscription.Feed` root for a selected
- * Bluesky target so a {@link SyncBinding} relation can be created eagerly
- * (relations require both endpoints to exist). Keyed by the target's `remoteId`
- * foreign key, so it is idempotent across re-selection.
+ * Bluesky target so the sync cursor's target exists before the cursor is
+ * created. Keyed by the target's `remoteId` foreign key, so it is idempotent
+ * across re-selection.
  */
 export const MaterializeBlueskyTarget = Operation.make({
   meta: {
@@ -61,23 +61,23 @@ export const MaterializeBlueskyTarget = Operation.make({
 });
 
 /**
- * Pull-only sync of a single Bluesky feed bound by a {@link SyncBinding}.
+ * Pull-only sync of a single Bluesky feed bound by a {@link Cursor.Cursor}.
  * Fetches posts via XRPC (public for the user's own feed; via Edge atproto
  * proxy for `getActorLikes` / `getBookmarks` / `getFeed`) and appends new
- * Posts to the backing `Subscription.Feed` queue (the binding's target).
- * Updates the binding's `cursor` / `lastSyncAt` / `lastError`.
+ * Posts to the backing `Subscription.Feed` queue (the cursor's target).
+ * Updates the cursor's `value` / `lastTick` / `lastError`.
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
     key: makeKey('syncBlueskyTargets'),
     name: 'Sync Bluesky',
-    description: 'Pull posts for the Bluesky feed bound by a SyncBinding.',
+    description: 'Pull posts for the Bluesky feed bound by a sync cursor.',
     icon: 'ph--arrows-clockwise--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Struct({
     /** Total posts appended for this binding's target. */

@@ -3,7 +3,6 @@
 //
 
 export * from './assert';
-export * from './error-handler';
 export * from './error-stream';
 export * from './fail';
 export * from './inspect';

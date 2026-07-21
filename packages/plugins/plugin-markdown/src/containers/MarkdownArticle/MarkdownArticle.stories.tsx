@@ -12,13 +12,19 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { Sketch } from '@dxos/plugin-sketch';
+import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
+import { SketchBuilder } from '@dxos/plugin-sketch/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -35,6 +41,11 @@ random.seed(1);
 
 const generator: ValueGenerator = random as any;
 
+// A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
+const SKETCH_CONTENT = new SketchBuilder()
+  .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
+  .build();
+
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.makeMeta({
@@ -49,6 +60,12 @@ const MarkdownExtensionsPlugin = Plugin.define(
   }),
   Plugin.make,
 );
+
+type StoryArgs = {
+  title: string;
+  content: string;
+  objects?: boolean;
+};
 
 const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
@@ -76,38 +93,63 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<{ title?: string; content?: string }>((context) => ({
+    withPluginManager<StoryArgs>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
+      // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),
         MarkdownExtensionsPlugin(),
+        SketchPlugin(),
         ClientPlugin({
-          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
+          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Sketch.Sketch, Sketch.Canvas],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
 
-              const createObjects = createObjectFactory(personalSpace.db, generator);
-              yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
+              let objects: Obj.Any[] = [];
+              if (showObjects) {
+                const createObjects = createObjectFactory(personalSpace.db, generator);
+                objects = yield* Effect.promise(() =>
+                  createObjects([
+                    {
+                      type: Organization.Organization,
+                      count: 1,
+                    },
+                    {
+                      type: Person.Person,
+                      count: 1,
+                    },
+                  ]),
+                );
 
-              const kai = personalSpace.db.add(Obj.make(Person.Person, { fullName: 'Kai' }));
-              const dxos = personalSpace.db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
-              yield* Effect.promise(() => personalSpace.db.flush());
+                objects.push(
+                  Sketch.make({
+                    name: 'Test Sketch',
+                    canvas: {
+                      content: SKETCH_CONTENT,
+                    },
+                  }),
+                );
+
+                objects.forEach((object) => personalSpace.db.add(object));
+                yield* Effect.promise(() => personalSpace.db.flush());
+              }
 
               personalSpace.db.add(
                 Markdown.make({
-                  name: context.args.title ?? 'Testing',
+                  name: title,
                   content: [
-                    `# ${context.args.title ?? 'Testing'}`,
-                    context.args.content ?? '',
-                    // TODO(burdon): Popovers not currently working.
-                    '## Here are some objects',
-                    `![Alice](${Obj.getURI(kai)})`,
-                    `![DXOS](${Obj.getURI(dxos)})`,
-                    '',
-                    'END',
-                    '',
+                    `# ${title}`,
+                    content,
+                    objects
+                      .map((object, i) => [
+                        'This is object #' + (i + 1),
+                        `![${Obj.getLabel(object)}|300](${Obj.getURI(object)})`,
+                      ])
+                      .flat()
+                      .join('\n\n'),
+                    'This is the end of the document.',
                   ].join('\n\n'),
                 }),
               );
@@ -116,6 +158,8 @@ const meta = {
             }),
         }),
 
+        // Contributes the versioning-state atom consumed by useVersioning.
+        SpacePlugin({}),
         MarkdownPlugin(),
         PreviewPlugin(),
       ],
@@ -124,17 +168,25 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations,
+    translations: [...translations, ...spaceTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {
   args: {
     title: 'Testing',
-    content: ['This is a line with **some** formatting.'].join('\n\n'),
+    content: 'Hello, world!',
+  },
+};
+
+export const WithObjects: Story = {
+  args: {
+    title: 'Testing with objects',
+    content: 'Here are some inline objects:',
+    objects: true,
   },
 };

@@ -8,9 +8,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { EID, Filter, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { useClient } from '@dxos/react-client';
-import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import { ViewModel } from '@dxos/schema';
@@ -98,3 +98,5 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
     />
   );
 };
+
+ViewEditor.displayName = 'ViewEditor';

@@ -8,17 +8,19 @@ import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMe
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
 import { Process, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import { FeedTraceSink } from '@dxos/compute-runtime';
 import { Feed, Filter, Query } from '@dxos/echo';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -307,6 +309,9 @@ export const Default: Story = {
     withTheme(),
     withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size) overflow-hidden' }),
     withPluginManager({
+      // Fire SetupSettings so the assistant settings module activates and contributes
+      // `AssistantCapabilities.Settings`, which `TracePanel` reads via `useAtomCapability`.
+      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

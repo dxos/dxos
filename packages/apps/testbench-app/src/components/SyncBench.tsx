@@ -50,13 +50,13 @@ export const SyncBench = () => {
   const [syncState, setSyncState] = useState<SpaceSyncState>();
   useEffect(() => {
     const ctx = new Context();
-    space?.internal.db.subscribeToSyncState(ctx, (state) => {
+    space?.internal.db.subscribeToAutomergeSyncState(ctx, (state) => {
       setSyncState(structuredClone(state));
     });
     scheduleTaskInterval(
       ctx,
       async () => {
-        setSyncState(structuredClone(await space?.internal.db.getSyncState()));
+        setSyncState(structuredClone(await space?.internal.db.getAutomergeSyncState()));
       },
       1000,
     );
@@ -66,7 +66,7 @@ export const SyncBench = () => {
     };
   }, [space]);
   const refreshSyncState = async () => {
-    setSyncState(structuredClone(await space?.internal.db.getSyncState()));
+    setSyncState(structuredClone(await space?.internal.db.getAutomergeSyncState()));
   };
 
   const handleInvite = async () => {

@@ -5,11 +5,11 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
+import { Proxy } from '@dxos/crx-protocol';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { Settings } from '../../types';
-import { PING_ACK_EVENT, PING_EVENT, RENDER_READY_DATASET_KEY } from '../../util';
 import { CrxSettings } from './CrxSettings';
 
 /**
@@ -19,11 +19,11 @@ import { CrxSettings } from './CrxSettings';
  */
 const withFakeExtension: Decorator = (Story) => {
   useEffect(() => {
-    document.documentElement.dataset[RENDER_READY_DATASET_KEY] = '1';
+    document.documentElement.dataset[Proxy.RENDER_READY_DATASET_KEY] = '1';
     const listener = (event: Event) => {
       const detail = (event as CustomEvent).detail as { id: string };
       window.dispatchEvent(
-        new CustomEvent(PING_ACK_EVENT, {
+        new CustomEvent(Proxy.PING_ACK_EVENT, {
           detail: {
             version: 1,
             id: detail.id,
@@ -34,10 +34,10 @@ const withFakeExtension: Decorator = (Story) => {
         }),
       );
     };
-    window.addEventListener(PING_EVENT, listener);
+    window.addEventListener(Proxy.PING_EVENT, listener);
     return () => {
-      delete document.documentElement.dataset[RENDER_READY_DATASET_KEY];
-      window.removeEventListener(PING_EVENT, listener);
+      delete document.documentElement.dataset[Proxy.RENDER_READY_DATASET_KEY];
+      window.removeEventListener(Proxy.PING_EVENT, listener);
     };
   }, []);
   return <Story />;

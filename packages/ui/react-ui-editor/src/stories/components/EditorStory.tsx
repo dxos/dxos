@@ -9,7 +9,6 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -50,6 +49,7 @@ export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
   ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
     const controllerRef = useRef<EditorController>(null);
     const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
+    const view = controllerRef.current?.view;
 
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
@@ -60,7 +60,6 @@ export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
       [debug, extensionsProp],
     );
 
-    const view = controllerRef.current?.view;
     return (
       <div className={mx('dx-container grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
@@ -124,8 +123,19 @@ const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
         selection,
         initialValue: text,
         extensions: [
-          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
-          createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
+          createBasicExtensions({
+            lineNumbers,
+            placeholder,
+            readOnly,
+            scrollPastEnd: true,
+            search: true,
+          }),
+          createThemeExtensions({
+            monospace,
+            slots,
+            syntaxHighlighting: true,
+            themeMode,
+          }),
           createMarkdownExtensions(),
           extensions || [],
         ],
@@ -135,7 +145,6 @@ const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
 
     // External controller.
     useImperativeHandle(forwardedRef, () => {
-      log.info('view updated', { id });
       return createEditorController(view);
     }, [id, view]);
 

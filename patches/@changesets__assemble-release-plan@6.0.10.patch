@@ -1,0 +1,15 @@
+diff --git a/dist/changesets-assemble-release-plan.cjs.js b/dist/changesets-assemble-release-plan.cjs.js
+index a91112a7ddf4b6f242965e0bf99ba2f60f988ede..631c24d7a5cbbff898bba30a949d9ec63dd29590 100644
+--- a/dist/changesets-assemble-release-plan.cjs.js
++++ b/dist/changesets-assemble-release-plan.cjs.js
+@@ -224,7 +224,9 @@ function determineDependents({
+             preInfo,
+             onlyUpdatePeerDependentsWhenOutOfRange: config.___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH.onlyUpdatePeerDependentsWhenOutOfRange
+           })) {
+-            type = "major";
++            // DXOS patch: 0.x semver — a breaking peerDependency change is a minor below 1.0.0
++            // (0.9 -> 0.10), not a major (-> 1.0.0). At >=1.0.0 it stays a major as upstream does.
++            type = semverParse__default["default"](dependentPackage.packageJson.version)?.major === 0 ? "minor" : "major";
+           } else if ((!releases.has(dependent) || releases.get(dependent).type === "none") && (config.___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH.updateInternalDependents === "always" || !semverSatisfies__default["default"](incrementVersion(nextRelease, preInfo), versionRange))) {
+             switch (depType) {
+               case "dependencies":

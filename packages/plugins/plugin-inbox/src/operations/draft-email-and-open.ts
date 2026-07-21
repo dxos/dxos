@@ -6,11 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
+import { linkedSegment } from '@dxos/react-ui-attention/types';
+import { DraftMessage } from '@dxos/types';
 
-import { getMailboxMessagePath } from '../paths';
-import { DraftMessage, InboxOperation } from '../types';
+import { getMailboxDraftsPath } from '../paths';
+import { InboxOperation, Mailbox, SystemTags } from '../types';
 import { createDraftMessage } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
@@ -23,11 +25,20 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
         target: db,
       });
 
-      // Same linked path as feed messages; feed-object resolver resolves drafts from the DB.
-      const mailboxId = mailbox ? (Obj.isObject(mailbox) ? mailbox.id : undefined) : undefined;
-      const draftPath = mailboxId ? getMailboxMessagePath(db.spaceId, mailboxId, draft.id) : undefined;
-      if (draftPath) {
-        yield* Operation.invoke(LayoutOperation.Open, { subject: [draftPath] });
+      if (Mailbox.instanceOf(mailbox)) {
+        // Tag as 'draft' so the Drafts view (a systemTag filter, like Inbox/Sent) picks it up;
+        // `useSendEmail` removes the tag at send time.
+        yield* SystemTags.toggleTag(mailbox, draft, 'draft').pipe(Effect.provide(Database.layer(db)));
+
+        // Navigate to Drafts and select the new draft, mirroring the select-then-show-companion flow
+        // a list click does via `useShowItem` (invoked directly here since this runs outside a component).
+        const draftsPath = getMailboxDraftsPath(db.spaceId, mailbox.id);
+        yield* Operation.invoke(LayoutOperation.Select, {
+          contextId: draftsPath,
+          subject: { mode: 'single', id: draft.id },
+        });
+        yield* Operation.invoke(LayoutOperation.Open, { subject: [draftsPath] });
+        yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: linkedSegment('message') });
       }
     }),
   ),

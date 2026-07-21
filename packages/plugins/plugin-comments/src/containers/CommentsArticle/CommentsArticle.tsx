@@ -6,12 +6,20 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import {
+  Surface,
+  useAtomCapabilityState,
+  useCapabilities,
+  useCapability,
+  useOperationInvoker,
+} from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useQuery } from '@dxos/echo-react';
+import { useIdentity } from '@dxos/halo-react';
+import { Markdown } from '@dxos/plugin-markdown';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -105,8 +113,28 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [anchorSorts, subject],
   );
 
+  // The active review branch: the core branch the local user is currently viewing for this subject
+  // (per-object version selection, shared with the editor surface). `undefined` = main/unbranched.
+  // Comments are scoped to it so the companion shows only the branch under review's threads.
+  const [versioningState] = useAtomCapabilityState(SpaceCapabilities.VersioningState);
+  const markdownDoc = Obj.instanceOf(Markdown.Document, subject) ? subject : undefined;
+  const reviewBranch = useMemo(() => {
+    const selection = versioningState.selection[subject.id];
+    if (!markdownDoc || selection?.kind !== 'branch') {
+      return undefined;
+    }
+    const branch = markdownDoc.history?.branches.find(
+      (candidate) => candidate.id === selection.branchId && candidate.status === 'active',
+    );
+    return branch?.key;
+  }, [markdownDoc, versioningState, subject.id]);
+  const activeBranch = reviewBranch ?? 'main';
+
   const db = Obj.getDatabase(subject);
   const objectsAnchoredTo = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
+  // Resolving a thread mutates the Thread object, not the AnchoredTo relation the query above tracks;
+  // subscribe to threads so the resolved filter (below) re-applies when a thread's status changes.
+  useQuery(db, Filter.type(Thread.Thread));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
     .filter((anchor) => {
@@ -117,7 +145,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return false;
       }
     })
-    .concat(drafts ?? []);
+    .concat(drafts ?? [])
+    .filter((anchor) => (anchor.branch ?? 'main') === activeBranch);
 
   const handleChangeViewState = useCallback(
     (nextValue: string) => {
@@ -152,7 +181,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             void invokePromise(commentConfig.scrollToAnchor, {
               subject: attendableId,
               cursor: anchor.anchor,
-              ref: threadId,
+              id: threadId,
             });
           }
         }
@@ -219,6 +248,25 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [invokePromise, subject],
   );
 
+  const handleAcceptChange = useCallback(
+    async (anchor: AnchoredTo.AnchoredTo) => {
+      // The branch to cherry-pick from: the comment's own branch tag, or — for a comment left on the
+      // base (untagged/main) while reviewing — the branch currently under review.
+      const branch = anchor.branch ?? reviewBranch;
+      if (!anchor.anchor || !branch) {
+        return;
+      }
+      // Cherry-pick the latest version of this change from the branch, then resolve the thread.
+      await invokePromise(CollaborationOperation.AcceptChange, {
+        subject,
+        anchor: anchor.anchor,
+        branch,
+      });
+      await invokePromise(CommentOperation.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread });
+    },
+    [invokePromise, subject, reviewBranch],
+  );
+
   // Scroll the current thread into view when it changes.
   useEffect(() => {
     if (currentId) {
@@ -269,6 +317,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               onMessageDelete={handleMessageDelete}
               onThreadDelete={handleThreadDelete}
               onAcceptProposal={handleAcceptProposal}
+              onAcceptChange={reviewBranch ? handleAcceptChange : undefined}
             />
           );
         })}
@@ -306,3 +355,5 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     </Panel.Root>
   );
 };
+
+CommentsArticle.displayName = 'CommentsArticle';

@@ -1,0 +1,64 @@
+# Project registry — every active work-stream, one entry each. Managed via the `task-planning` skill
+# ($project new/list/end; $resume/$hydrate key off it). Each project has a TASKS.md (ledger) and a
+# DESIGN.md (spec + decisions) — the `tasks`/`design` fields record where they live (a package file,
+# or .agents/projects/<name>/{TASKS,DESIGN}.md). Keep this committed and current.
+#
+# status: active | paused | blocked | ended
+
+projects:
+  - name: mailbox-research
+    status: active
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-05
+    summary: Open-weight vs premier model routing for the mailbox pipelines (labeling / summaries / drafts).
+    tasks: packages/stories/stories-brain/TASKS.md
+    design: packages/stories/stories-brain/fixtures/REPORT.md
+    prs: [12163, 12167, 12178]
+    resume: 'PRs #12178 + #12205 merged (Topics UX v2 + Topics/Subscriptions Mosaic lists). In progress (uncommitted, NOT yet a PR): converted plugin-inbox folder articles to the ObjectArticleProps<Mailbox> pattern (db from subject, folder graph nodes carry data:mailbox, sentinels dropped) + SubscriptionsArticle unsubscribe removes on success. Build/lint/fmt + 167 unit tests green. NOTE: TopicsArticle/CreateTopic storybook play-tests fail on the committed baseline too (pre-existing, headless topic-query returns empty). Next: commit this work / open PR when ready; then Priority 1 manual topics + management. Deferred: Active Topics v2 (LLM labels + personEmails), two-tier latency, re-sync dedup bug, MailboxArticle search wiring.'
+
+  - name: task-planning-skill-update
+    status: active
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-12
+    summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
+    tasks: .agents/skills/task-planning/TASKS.md
+    design: .agents/skills/task-planning/SKILL.md
+    prs: [12174]
+    resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
+
+  - name: composer-search
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-07-14
+    summary: Unify Composer search (lexical/semantic/structured/agent) + tiered client↔EDGE vector index synced via feeds.
+    tasks: packages/plugins/plugin-search/TASKS.md
+    design: packages/plugins/plugin-search/docs/DESIGN.md
+    prs: []
+    resume: 'Audit + design + roadmap + M1 implementation plan authored in packages/plugins/plugin-search/docs. Next: execute Milestone 1 (real lexical search) per docs/M1-lexical-search-plan.md.'
+
+  - name: document-revisions
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-07-15
+    summary: Document revisions & branches (checkpoints, draft branches, merge) for markdown + @dxos/versioning; convergence with PR 11829 core branching.
+    tasks: .agents/projects/document-revisions/TASKS.md
+    design: packages/plugins/plugin-markdown/DESIGN.md
+    prs: [12237, 12246]
+    resume: 'PR #12246 GREEN (Check passed on HEAD e7b6ec0a0c) with ALL stages 1-4 complete + all post-merge/CI fixes. NEXT (morning): review + land (submit-pr/land skill); no failures outstanding, no new review comments. Future (not blocking, own PR): discriminated-union Branch shape after legacy content-copy records drain; generalize @dxos/versioning to non-Text objects; branch-level access control. User has role=none cleanup WIP uncommitted in the shared worktree (theirs, untouched by me). Overnight-fixed: flaky forkDump head-count assertion; useVersioning tolerant of absent VersioningState (plugin-blogger crash); assistant-e2e markdown + crm-mailbox memoized fixtures regenerated for the branchId/accept-change tool-schema change.'
+
+  - name: ai-testing-strategy
+    status: active
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-20
+    summary: Replace the memoized-LLM e2e strategy with tiered tests (deterministic unit tiers in CI + graded evals out-of-band); retire the current e2e framework.
+    tasks: .agents/projects/ai-testing-strategy/TASKS.md
+    design: packages/core/compute/ai/TESTING.md
+    prs: [12287]
+    resume: 'Design doc PR #12287 (draft): packages/core/compute/ai/TESTING.md — dimensions A-H, current-approach gaps, tiered target, prioritized plan + consumer inventory (G1/G2/G3) and removal blast-radius. No implementation started. Next code step: extract the scripted LanguageModel primitive from MemoizedLanguageModel (substrate for D tests + G1 boot-smoke), then delete G1 (assistant-e2e). Quick relief available first: de-gate G2/G3 memoized replay from PR CI.'
+
+ended: []

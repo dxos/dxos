@@ -99,7 +99,7 @@ export type FetchResult = {
   threads: ThreadFetchResult[];
 };
 
-/** Binding-level state that mirrors the fields written onto a `SyncBinding`. */
+/** Binding-level state that mirrors the fields written onto a `Cursor`. */
 export type BindingState = {
   channelId: string;
   cursor: string | undefined;
@@ -114,7 +114,7 @@ export type ThreadBindingState = BindingState & {
 
 /**
  * Fixture shape produced by `generate-fixtures.ts`.
- * `state` mirrors the `SyncBinding` cursor fields; `messages` is the feed content.
+ * `state` mirrors the `Cursor` progress fields; `messages` is the feed content.
  * Each discovered thread is stored as a separate entry with its own state.
  */
 export type DiscordChannelFixture = {

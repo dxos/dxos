@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Card, Image, Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -82,7 +82,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar classNames='dx-container' asChild>
+        <Panel.Toolbar asChild classNames='dx-container'>
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content classNames='dx-container flex flex-col'>
@@ -124,3 +124,5 @@ const isExternalHttpUrl = (value?: string): boolean => {
     return false;
   }
 };
+
+BookmarkArticle.displayName = 'BookmarkArticle';

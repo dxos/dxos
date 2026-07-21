@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { DXN } from '@dxos/keys';
-
-// TODO(wittjosiah): Cleanup to avoid re-naming.
+import { Role } from '../../../common';
 import { SurfaceContext } from './context';
-import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
+import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent';
+import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
+import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics';
 import {
   SurfaceProfilerProvider,
   useSurfaceProfilerCallback,
@@ -15,17 +15,14 @@ import {
   useSurfaceProfilerStats,
 } from './SurfaceProfilerContext';
 import {
-  type SurfaceBinding as SurfaceBindingType,
+  type Binding as SurfaceBindingType,
   type Definition as SurfaceDefinition,
-  type SurfaceFilter as SurfaceFilterType,
-  type RoleToken as SurfaceRoleToken,
-  type TokenData as SurfaceTokenData,
+  type Filter as SurfaceFilterType,
   type TypedProps as SurfaceTypedProps,
   create as createSurface,
   createWeb as createWebSurface,
-  isSurfaceFilter as isSurfaceFilterFn,
+  isFilter as isFilterFn,
   makeFilter as makeFilterFn,
-  makeType as makeTypeFn,
 } from './types';
 
 export namespace Surface {
@@ -37,29 +34,30 @@ export namespace Surface {
   export const Context = SurfaceContext;
 
   export const Surface = SurfaceComponent;
-  export const isAvailable = isSurfaceAvailable;
+  export const useIsAvailable = useIsSurfaceAvailable;
 
-  export type RoleToken<TData> = SurfaceRoleToken<TData>;
   export type Binding = SurfaceBindingType;
   export type Filter<TData> = SurfaceFilterType<TData>;
-  export type TokenData<T> = SurfaceTokenData<T>;
-  export type TypedProps<TToken extends SurfaceRoleToken<any>> = SurfaceTypedProps<TToken>;
-
-  /** Mints a typed role token. The NSID is validated at compile time via {@link DXN.Name}. */
-  export const makeType: {
-    <TData = unknown, T extends string = string>(
-      nsid: [DXN.Name<T>] extends [never] ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)` : T,
-    ): SurfaceRoleToken<TData>;
-  } = makeTypeFn;
-
   export const makeFilter = makeFilterFn;
-  export const isFilter = isSurfaceFilterFn;
+  export const isFilter = isFilterFn;
+
+  export type TypedProps<TToken extends Role.Role<any>> = SurfaceTypedProps<TToken>;
+
+  export const isDebugEnabled = isSurfaceDebugEnabled;
+  export const setDebug = setSurfaceDebug;
 
   export const ProfilerProvider = SurfaceProfilerProvider;
   export const useProfilerCallback = useSurfaceProfilerCallback;
   export const useProfilerEntries = useSurfaceProfilerEntries;
   export const useProfilerStats = useSurfaceProfilerStats;
   export const useProfilerClear = useSurfaceProfilerClear;
+
+  export type Metric = SurfaceMetric;
+  export const useMetrics = useSurfaceMetrics;
+  export const clearMetrics = () => surfaceMetrics.clear();
 }
 
 export type { SurfaceProfilerEntry, SurfaceProfilerStats } from './SurfaceProfilerContext';
+export type { SurfaceMetric } from './SurfaceMetrics';
+export { SurfaceManager } from './SurfaceManager';
+export { SurfaceManagerProvider, useSurfaceManager } from './SurfaceManagerContext';

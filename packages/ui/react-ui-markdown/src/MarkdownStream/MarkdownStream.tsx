@@ -3,7 +3,7 @@
 //
 
 import { EditorSelection, type Extension, Transaction } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
@@ -26,12 +26,15 @@ import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, us
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,
+  PROMPT_ELEMENT,
+  ThemeExtensionsOptions,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
   crawlerLineEffect,
   createBasicExtensions,
   createThemeExtensions,
+  createTurnSource,
   decorateMarkdown,
   documentSlots,
   extendedMarkdown,
@@ -40,6 +43,7 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   scroller,
+  turnFolding,
   typewriter,
   typewriterBypass,
   xmlBlockDecoration,
@@ -54,16 +58,35 @@ import { isTruthy } from '@dxos/util';
 
 import { footer, setFooterVisibleEffect } from './footer';
 import { type StreamerOptions, createStreamer } from './stream';
+
+/** Document offset range (CodeMirror positions). */
+export type DocumentRange = { from: number; to: number };
+
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
   focus: () => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
+  /** Scroll the given document position into view. */
+  scrollTo: (pos: number, options?: { y?: 'start' | 'center' | 'end' | 'nearest' }) => void;
+  /** The document range currently visible in the viewport, or `undefined` if not mounted. */
+  getVisibleRange: () => DocumentRange | undefined;
+  /** Subscribe to visible-range changes (fires immediately with the current range). Returns an unsubscribe fn. */
+  onVisibleRangeChange: (cb: (range: DocumentRange) => void) => () => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
   setContext: (context: any) => void;
   setContent: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
 }
+
+/** Map the scroll container's top/bottom edges to document positions. */
+const computeVisibleRange = (view: EditorView): DocumentRange => {
+  const rect = view.scrollDOM.getBoundingClientRect();
+  // `posAtCoords(_, false)` clamps to the nearest position rather than returning null.
+  const from = view.posAtCoords({ x: rect.left + 1, y: rect.top + 1 }, false);
+  const to = view.posAtCoords({ x: rect.left + 1, y: rect.bottom - 1 }, false);
+  return { from, to };
+};
 
 export type MarkdownStreamEvent = {
   type: 'submit';
@@ -113,6 +136,11 @@ export type MarkdownStreamProps = ThemedClassName<
      */
     extensions?: Extension;
 
+    /**
+     * Theme extensions.
+     */
+    slots?: ThemeExtensionsOptions['slots'];
+
     /** Event handler. */
     onEvent?: (event: MarkdownStreamEvent) => void;
   } & (XmlTagsOptions & AutoScrollProps)
@@ -122,7 +150,7 @@ export type MarkdownStreamProps = ThemedClassName<
  * Codemirror-based markdown editor with xml tag widtgets and streaming support.
  */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, options, registry, extensions, footer, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, options, registry, extensions, footer, slots, onEvent }, forwardedRef) => {
     // Store current content so that we can toggle debug mode. Default to '' so the
     // `append()` path (which does `contentRef.current += text`) doesn't concatenate
     // against `undefined` and stamp `"undefined"` into the transcript snapshot.
@@ -133,6 +161,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
 
     // Codemirror editor.
     const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
+      slots,
       debug,
       registry,
       options,
@@ -226,9 +255,13 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   },
 );
 
-type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options' | 'extensions'> & {
-  setFooterRoot?: (el: HTMLElement | null) => void;
-};
+// Fold each agent response beneath its `<prompt>` (the head element rendered by `xmlBlockDecoration`).
+const turnSource = createTurnSource(PROMPT_ELEMENT);
+
+type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options' | 'extensions'> &
+  Pick<ThemeExtensionsOptions, 'slots'> & {
+    setFooterRoot?: (el: HTMLElement | null) => void;
+  };
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
@@ -240,7 +273,14 @@ type MarkdownStreamTextEditorResult = UseTextEditor & {
  */
 const useMarkdownStreamTextEditor = (
   currentContent: RefObject<string | undefined>,
-  { debug, registry, options, extensions: extraExtensions, setFooterRoot }: MarkdownStreamTextEditorParams,
+  {
+    debug,
+    registry,
+    options,
+    extensions: extensionsProp,
+    slots = documentSlots,
+    setFooterRoot,
+  }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
   const { themeMode } = useThemeContext();
 
@@ -254,40 +294,30 @@ const useMarkdownStreamTextEditor = (
       initialValue: content,
       selection: EditorSelection.cursor(content?.length ?? 0),
       extensions: [
-        createBasicExtensions({
-          lineWrapping: true,
-          readOnly: true,
-        }),
-        createThemeExtensions({
-          slots: documentSlots,
-          scrollbarThin: true,
-          syntaxHighlighting: true,
-          themeMode,
-        }),
+        createBasicExtensions({ lineWrapping: true, readOnly: true }),
+        createThemeExtensions({ slots, scrollbarThin: true, syntaxHighlighting: true, themeMode }),
         xmlFormatting({ skip: debug ? [] : ['prompt'] }),
         !debug &&
           [
             extendedMarkdown({ registry }),
             decorateMarkdown({
-              // `echo:`/`dxn:` links/images are handled by the `link-preview` entry in the
-              // registry via `xmlTags` `urlSchemes`. Skipping them here avoids `decorateMarkdown`
-              // adding a non-functional `LinkButton` anchor on top of the same node.
+              // xmlTags extension will handle `dxn:`/`echo:` links/images.
               skip: (node) =>
                 (node.name === 'Link' || node.name === 'Image') &&
                 (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
             }),
             // TODO(burdon): Make optional; Removes need for '\n\n'.
             lineSpacing(),
-            // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
-            // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
-            // up these utility classes from this source file.
             xmlBlockDecoration({
               tag: 'prompt',
-              lineClass: 'cm-prompt-line my-8',
-              contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 box-decoration-clone rounded-sm [&_*]:text-inherit!',
+              lineClass:
+                'cm-prompt-line cm-prompt-bubble dx-panel bg-group-surface text-base-fg border-l-[8px] pl-[8px]! pr-2 [&_*]:text-inherit!',
+              firstLineClass: 'pt-1.5 rounded-t-sm',
+              lastLineClass: 'pb-1.5 rounded-b-sm',
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&
               typewriter({
@@ -301,7 +331,7 @@ const useMarkdownStreamTextEditor = (
             options?.fader && fader(),
             setFooterRoot && footer(setFooterRoot),
           ].filter(isTruthy),
-        extraExtensions,
+        extensionsProp,
       ].filter(isTruthy),
     };
   }, [
@@ -312,7 +342,8 @@ const useMarkdownStreamTextEditor = (
     options?.typewriter,
     options?.cursor,
     options?.fader,
-    extraExtensions,
+    slots,
+    extensionsProp,
   ]);
 
   const viewRef = useDynamicRef(view);
@@ -392,6 +423,33 @@ const createMarkdownStreamController = ({
       viewRef.current?.dispatch({
         effects: crawlerLineEffect.of({ line: -1, behavior }),
       });
+    },
+
+    /** Scroll the given document position into view. */
+    scrollTo: (pos: number, options?: { y?: 'start' | 'center' | 'end' | 'nearest' }) => {
+      const view = viewRef.current;
+      if (!view) {
+        return;
+      }
+      const clamped = Math.max(0, Math.min(pos, view.state.doc.length));
+      view.dispatch({ effects: EditorView.scrollIntoView(clamped, { y: options?.y ?? 'start' }) });
+    },
+
+    /** The document range currently visible in the viewport. */
+    getVisibleRange: () => {
+      const view = viewRef.current;
+      return view ? computeVisibleRange(view) : undefined;
+    },
+
+    /** Subscribe to visible-range changes (scroll). Fires immediately with the current range. */
+    onVisibleRangeChange: (cb: (range: DocumentRange) => void) => {
+      const view = viewRef.current;
+      if (!view) {
+        return () => {};
+      }
+      const handler = () => cb(computeVisibleRange(view));
+      handler();
+      return addEventListener(view.scrollDOM, 'scroll', handler, { passive: true });
     },
 
     /** Navigate previous prompt. */

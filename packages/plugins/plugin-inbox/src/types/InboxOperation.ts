@@ -10,13 +10,14 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
+import { FactStore } from '@dxos/pipeline-rdf';
 import {
   Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
@@ -107,6 +108,18 @@ export const DraftEmailAndOpen = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * The provider's "sent" tag, returned by the send ops so the caller can tag the local draft with the
+ * same tag its canonical synced copy will carry — Gmail's `SENT` label (a well-known id) or the JMAP
+ * account's Sent folder (a server-assigned id resolved by folder role). The `source`/`id` form the
+ * tag's foreign key; `label` is a fallback used only when the tag doesn't exist yet (pre first sync).
+ */
+const SentTagOutput = Schema.Struct({
+  source: Schema.String,
+  id: Schema.String,
+  label: Schema.String,
+});
+
 export const GmailSend = Operation.make({
   meta: {
     key: makeKey('googleMailSend'),
@@ -124,6 +137,7 @@ export const GmailSend = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
+    sentTag: SentTagOutput,
   }),
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
@@ -136,7 +150,7 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
     userId: Schema.String.pipe(Schema.optional),
@@ -146,30 +160,17 @@ export const GoogleMailSync = Operation.make({
       }),
       Schema.optional,
     ),
-    after: Schema.Union(Schema.Number, Schema.String).pipe(
-      Schema.annotations({
-        description: 'Date to start syncing from, either a unix timestamp or yyyy-MM-dd string.',
-      }),
-      Schema.optional,
-    ),
-    restrictedMode: Schema.Boolean.pipe(
-      Schema.annotations({
-        description: 'Use restricted mode to limit to single date range and max 20 messages. Reduces subrequests.',
-      }),
-      Schema.optional,
-    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
-}).pipe(Operation.visible);
+}).pipe(Operation.visible, Operation.idempotent);
 
 /**
- * Eagerly materializes the local Mailbox bound to a Gmail connection so a
- * {@link SyncBinding} can be created (relations require both endpoints to exist).
- * Gmail is a single-target connector with no remote selection, so a fresh Mailbox
- * is always created; the connection's `accessToken.account` seeds the default name.
+ * Eagerly materializes the local Mailbox bound to a Gmail connection so the sync cursor's target
+ * exists before the cursor is created. Gmail is a single-target connector with no remote selection,
+ * so a fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
  */
 export const MaterializeGmailTarget = Operation.make({
   meta: {
@@ -190,7 +191,7 @@ export const JmapSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
   }),
@@ -200,13 +201,13 @@ export const JmapSync = Operation.make({
   // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
   // HTTP client and JMAP credentials are provided by the handler from the connection.
   services: [Capability.Service, Database.Service, Trace.TraceService],
-}).pipe(Operation.visible);
+}).pipe(Operation.visible, Operation.idempotent);
 
 /**
- * Eagerly materializes the local Mailbox bound to a JMAP connection so a {@link SyncBinding} can be
- * created. JMAP is a single-target connector (the account inbox), so a fresh Mailbox is always
- * created; the connection's `accessToken.account` seeds the default name. Mirrors
- * {@link MaterializeGmailTarget}.
+ * Eagerly materializes the local Mailbox bound to a JMAP connection so the sync cursor's target
+ * exists before the cursor is created. JMAP is a single-target connector (the account inbox), so a
+ * fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
+ * Mirrors {@link MaterializeGmailTarget}.
  */
 export const MaterializeJmapTarget = Operation.make({
   meta: {
@@ -235,6 +236,7 @@ export const JmapSend = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
+    sentTag: SentTagOutput,
   }),
 }).pipe(Operation.visible);
 
@@ -247,7 +249,7 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
     }),
     googleCalendarId: Schema.optional(Schema.String),
@@ -262,9 +264,9 @@ export const GoogleCalendarSync = Operation.make({
 }).pipe(Operation.visible);
 
 /**
- * Eagerly materializes the local Calendar for a selected remote Google calendar so a
- * {@link SyncBinding} can be created. Find-or-create keyed on the calendar's foreign key,
- * so re-running for the same remote calendar returns the existing Calendar.
+ * Eagerly materializes the local Calendar for a selected remote Google calendar so the sync
+ * cursor's target exists before the cursor is created. Find-or-create keyed on the calendar's
+ * foreign key, so re-running for the same remote calendar returns the existing Calendar.
  */
 export const MaterializeCalendarTarget = Operation.make({
   meta: {
@@ -397,8 +399,8 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
-      description: 'Binding whose connection owns credentials and whose remoteId is the contact group to sync.',
+    binding: Ref.Ref(Cursor.Cursor).annotations({
+      description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
     }),
     pageSize: Schema.optional(Schema.Number),
   }),
@@ -417,7 +419,7 @@ export const SyncContacts = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    binding: Ref.Ref(SyncBinding.SyncBinding),
+    binding: Ref.Ref(Cursor.Cursor),
   }),
   output: Schema.Void,
 });
@@ -547,7 +549,9 @@ export const ExtractMessage = Operation.make({
   meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
-    source: Obj.Unknown,
+    // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
+    // re-resolves the live proxy by id when available and reads only `source.id` otherwise.
+    source: Schema.Any,
     extractorId: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
@@ -589,5 +593,111 @@ export const ExtractMailbox = Operation.make({
     failed: Schema.Number,
     created: Schema.Number,
     updated: Schema.Number,
+  }),
+});
+
+/** Default page size for {@link AnalyzeMailbox} fact-store commits. */
+export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
+
+export const AnalyzeMailbox = Operation.make({
+  meta: {
+    key: makeKey('analyzeMailbox'),
+    name: 'Analyze Mailbox',
+    description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
+    icon: 'ph--brain--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed messages are analyzed.',
+    }),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Number of messages processed per fact-store commit.',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotations({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotations({ description: 'Strict structured output; set false for weak local models.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    processed: Schema.Number,
+    facts: Schema.Number,
+  }),
+});
+
+export const CreateTopicFromMessage = Operation.make({
+  meta: {
+    key: makeKey('createTopicFromMessage'),
+    name: 'Create Topic',
+    description: "Creates a Topic seeded from a message's thread, with an LLM summary.",
+    icon: 'ph--stack--regular',
+  },
+  services: [AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox the message belongs to; the created topic is anchored to it.',
+    }),
+    message: Type.getSchema(Message.Message).annotations({
+      description: 'Message whose thread seeds the topic.',
+    }),
+  }),
+  output: Schema.Struct({
+    topicId: Schema.String,
+  }),
+});
+
+export const UnsubscribeSender = Operation.make({
+  meta: {
+    key: makeKey('unsubscribeSender'),
+    name: 'Unsubscribe',
+    description: 'Adds a skip-sender filter and fires the List-Unsubscribe one-click request for a bulk sender.',
+    icon: 'ph--prohibit--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox to add the skip-sender filter to.' }),
+    email: Schema.String.annotations({ description: 'Sender email to unsubscribe from and filter.' }),
+    unsubscribe: Schema.String.annotations({ description: 'The raw List-Unsubscribe header value.' }),
+  }),
+  output: Schema.Struct({
+    filtered: Schema.Boolean,
+    /** True when a List-Unsubscribe one-click HTTP request was sent successfully. */
+    unsubscribed: Schema.Boolean,
+  }),
+});
+
+/** Default number of thread messages included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
+
+/** Default maximum number of facts included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
+
+export const GenerateReply = Operation.make({
+  meta: {
+    key: makeKey('generateReply'),
+    name: 'Generate Reply',
+    description:
+      'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
+    icon: 'ph--sparkle--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed holds the thread.',
+    }),
+    message: Schema.Any.annotations({
+      description: 'The message to reply to.',
+    }),
+  }),
+  output: Schema.Struct({
+    subject: Schema.String,
+    body: Schema.String,
   }),
 });

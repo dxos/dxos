@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -16,7 +17,7 @@ import type * as Types from 'effect/Types';
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
 
-import type { NoHandlerError } from './errors';
+import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
 
 /**
@@ -324,7 +325,7 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
 
     /**
      * List of required services.
-     * Match the Context.Tag keys of the FunctionServices variants.
+     * Match the Context.Tag keys of the services the operation handler declares.
      */
     services: Schema$.optional(Schema$.Array(Schema$.String)),
 
@@ -474,6 +475,30 @@ export const NotifyOptionsAnnotation = Annotation.make({
 });
 
 /**
+ * A serializable reference to an operation invocation — the target operation's key plus its input.
+ * Describes a deferred/late-bound invocation that must survive a serialization boundary (e.g. riding
+ * on a process-failure error, or persisted) where a live {@link Definition} cannot. Resolve the key
+ * with `OperationHandlerSet.getHandlerByKey` and hand the result to the invoker. Carries no functions,
+ * so `input` must itself be serializable.
+ */
+export interface SerializedInvocation {
+  /** Target operation key as a URI (a DXN, e.g. `dxn:org.dxos.plugin.deck.operation.open`). */
+  readonly operation: URI.URI;
+  /** Input passed to the operation; must be serializable. */
+  readonly input?: unknown;
+}
+
+/**
+ * Builds a {@link SerializedInvocation} from a live {@link Definition} and its input — the serializable
+ * counterpart to a direct `invoke`, for describing an invocation that must cross a serialization
+ * boundary (e.g. a deferred toast action). Resolve it later with `OperationHandlerSet.getHandlerByKey`.
+ */
+export const prepare = <I, O>(operation: Definition<I, O>, input: I): SerializedInvocation => ({
+  operation: operation.meta.key,
+  input,
+});
+
+/**
  * Options for operation invocation.
  */
 export interface InvokeOptions {
@@ -496,6 +521,12 @@ export interface InvokeOptions {
    * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
    */
   tracing?: unknown;
+
+  /**
+   * Specifies the runtime environment for the operation.
+   * By default, the operation is executed on the local runtime.
+   */
+  on?: 'edge' | 'local';
 }
 
 /**
@@ -559,6 +590,12 @@ export const visible = annotate(VisibleAnnotation, true);
  */
 export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
+
+/**
+ * Pipeable combinator that marks an operation idempotent — see {@link IdempotentAnnotation}. Apply at
+ * the definition site: `Operation.make({ ... }).pipe(Operation.idempotent)`.
+ */
+export const idempotent = annotate(IdempotentAnnotation, true);
 
 /**
  * Operation service interface - provides unified access to operation invocation and scheduling.
@@ -650,6 +687,14 @@ export const schedule = <I, O>(
   Effect.flatMap(Service, (ops) => ops.schedule(op, ...(args as [I, InvokeOptions?]))).pipe(
     Effect.withSpan('Operation.schedule'),
   );
+
+/**
+ * Call inside an operation to stop the current invocation and have the system re-run it (e.g. a capped
+ * sync run with more work left). Surfaces as a {@link RunAgainError} defect; the trigger dispatcher
+ * re-queues the same event FIFO to continue. A caller invoking via `Operation.invoke` directly gets the
+ * defect and does not auto-continue.
+ */
+export const runAgain = (): Effect.Effect<never, void> => Effect.failCauseSync(() => Cause.die(new RunAgainError()));
 
 /**
  * Provides additional invocation options to all invocations.

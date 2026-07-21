@@ -7,7 +7,7 @@ import React, { type ComponentProps, useEffect } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Agent, Chat, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Instructions } from '@dxos/compute';
@@ -56,7 +56,10 @@ export default Capability.makeModule(() =>
         id: 'spaceHomeSuggestions',
         filter: Surface.makeFilter(SpaceHomeContent),
         position: Position.last,
-        component: ({ data }) => <SpaceHomeSuggestions space={data.space} />,
+        component: ({ data }) => {
+          const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeSuggestions');
+          return visible ? <SpaceHomeSuggestions space={data.space} onClose={hide} /> : null;
+        },
       }),
       Surface.create({
         id: 'chat',
@@ -110,7 +113,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
-          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+          const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Instructions.Instructions, data.companionTo) ? undefined : data.companionTo;
 

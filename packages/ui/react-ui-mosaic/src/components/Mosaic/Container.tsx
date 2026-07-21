@@ -24,17 +24,18 @@ import React, {
 } from 'react';
 
 import { type AllowedAxis, composable, composableProps } from '@dxos/react-ui';
+import {
+  type DndContainerData,
+  type DndContainerHandler,
+  type DndDraggingState,
+  type DndLocation,
+  type DndTileData,
+  getSourceData,
+  useDndRootContext,
+} from '@dxos/react-ui-dnd';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
-import { type MosaicDraggingState, useMosaicRootContext } from './Root';
-import {
-  type LocationType,
-  type MosaicContainerData,
-  type MosaicEventHandler,
-  type MosaicTileData,
-  getSourceData,
-} from './types';
 
 //
 // Container
@@ -44,11 +45,11 @@ const MOSAIC_CONTAINER_NAME = 'Mosaic.Container';
 
 type MosaicContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
-type MosaicContainerContextValue<TData = any, Location = LocationType> = {
+type MosaicContainerContextValue<TData = any, Location = DndLocation> = {
   id: string;
-  eventHandler: MosaicEventHandler<TData>;
+  eventHandler: DndContainerHandler<TData>;
   orientation?: AllowedAxis;
-  dragging?: MosaicDraggingState;
+  dragging?: DndDraggingState;
   scrolling?: boolean;
   state: MosaicContainerState;
 
@@ -75,6 +76,9 @@ const [MosaicContainerContextProvider, useMosaicContainerContext] =
 
 // State attribute: [&:has(>_[data-mosaic-container-state=active])]
 const MOSAIC_CONTAINER_STATE_ATTR = 'mosaic-container-state';
+
+// Debug flag on the container's `group` element; Placeholder reads it via `group-data-[mosaic-debug=true]` (see styles.ts).
+const MOSAIC_CONTAINER_DEBUG_ATTR = 'mosaic-debug';
 
 // CSS variables: [var(--mosaic-placeholder-xxx)]
 const MOSAIC_CONTAINER_PLACEHOLDER_WIDTH = '--mosaic-placeholder-width';
@@ -104,6 +108,8 @@ type MosaicContainerProps = PropsWithChildren<
     /** Called when a tile requests to toggle selection. */
     onSelectionChange?: (id: string, selected: boolean) => void;
     debug?: () => ReactNode;
+    /** Toggles the `group` target that Placeholder's debug-highlight selectors read (see styles.ts). */
+    placeholderDebug?: boolean;
   }
 >;
 
@@ -126,6 +132,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       selectedIds,
       onSelectionChange,
       debug,
+      placeholderDebug,
       ...props
     },
     forwardedRef,
@@ -144,9 +151,9 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     );
 
     // State.
-    const { dragging } = useMosaicRootContext(MOSAIC_CONTAINER_NAME);
+    const { dragging } = useDndRootContext(MOSAIC_CONTAINER_NAME);
     const [state, setState] = useState<MosaicContainerState>({ type: 'idle' });
-    const [activeLocation, setActiveLocation] = useState<LocationType | undefined>();
+    const [activeLocation, setActiveLocation] = useState<DndLocation | undefined>();
     const [scrolling, setScrolling] = useState(false);
     const setCurrentId = useCallback((id: string | undefined) => onCurrentChange?.(id), [onCurrentChange]);
     const setSelected = useCallback(
@@ -179,18 +186,18 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     }, [setFocus, withFocus, state]);
 
     // Register handler.
-    const { addContainer, removeContainer } = useMosaicRootContext(eventHandler.id);
+    const { addContainer, removeContainer } = useDndRootContext(eventHandler.id);
     useEffect(() => {
       addContainer(eventHandler);
       return () => removeContainer(eventHandler.id);
     }, [eventHandler]);
 
-    const data = useMemo<MosaicContainerData>(
+    const data = useMemo<DndContainerData>(
       () =>
         ({
           type: 'container',
           id: eventHandler.id,
-        }) satisfies MosaicContainerData,
+        }) satisfies DndContainerData,
       [eventHandler.id],
     );
 
@@ -242,14 +249,14 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
              * Dragging started in this container.
              */
             onDragStart: ({ source }) => {
-              const sourceData = source.data as MosaicTileData;
+              const sourceData = source.data as DndTileData;
               setState({ type: 'active', bounds: sourceData.bounds });
             },
             /**
              * Dragging entered this container.
              */
             onDragEnter: ({ source }) => {
-              const sourceData = source.data as MosaicTileData;
+              const sourceData = source.data as DndTileData;
               setState({ type: 'active', bounds: sourceData.bounds });
             },
             /**
@@ -258,7 +265,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
              * triggering `onDragLeave`, which then causes the item to be added and removed continually (flickering).
              */
             onDragLeave: ({ source }) => {
-              const sourceData = source.data as MosaicTileData;
+              const sourceData = source.data as DndTileData;
               if (sourceData.containerId !== eventHandler.id) {
                 setState({ type: 'idle' });
               }
@@ -317,7 +324,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       >
         <Comp
           {...composableProps(props, {
-            classNames: 'h-full',
+            classNames: 'h-full group',
             style: {
               [MOSAIC_CONTAINER_PLACEHOLDER_WIDTH]:
                 state.type === 'active' && state.bounds ? `${state.bounds.width}px` : '0px',
@@ -327,6 +334,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
           })}
           {...{
             [`data-${MOSAIC_CONTAINER_STATE_ATTR}`]: state.type,
+            [`data-${MOSAIC_CONTAINER_DEBUG_ATTR}`]: placeholderDebug,
           }}
           ref={composedRef}
         >

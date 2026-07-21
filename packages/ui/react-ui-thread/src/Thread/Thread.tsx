@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { format } from 'date-fns/format';
+import { type Locale } from 'date-fns/locale';
+import { startOfDay } from 'date-fns/startOfDay';
 import React, {
   type ComponentPropsWithRef,
   type PropsWithChildren,
@@ -9,6 +12,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -26,6 +30,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
+import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
@@ -49,9 +54,9 @@ export type ThreadRootProps = PropsWithChildren<
 
 /**
  * Headless root of a thread. Provides message-tile context (metadata resolver,
- * injected renderers, callbacks) and the Mosaic root that `Thread.Messages`
- * renders its virtual stack within. Renders no DOM of its own — wrap the visible
- * thread chrome in `Thread.Content`.
+ * injected renderers, callbacks). Requires an ambient `Dnd.Root` ancestor,
+ * within which `Thread.Messages` renders its virtual stack. Renders no DOM of
+ * its own — wrap the visible thread chrome in `Thread.Content`.
  */
 const ThreadRoot = ({
   children,
@@ -82,7 +87,7 @@ const ThreadRoot = ({
       onMessageDelete={onMessageDelete}
       onAcceptProposal={onAcceptProposal}
     >
-      <Mosaic.Root>{children}</Mosaic.Root>
+      {children}
     </ThreadContextProvider>
   );
 };
@@ -205,30 +210,171 @@ ThreadHeader.displayName = 'Thread.Header';
 // Messages
 //
 
-const MessageTileAdapter = ({
-  id,
-  data,
-  location,
-  draggable,
-  current,
-  selected,
-}: MosaicTileProps<MessageType.Message>) => (
+/** A run of consecutive same-sender messages (within the grouping window) rendered as one tile. */
+type MessageGroupItem = { kind: 'group'; id: string; messages: MessageType.Message[]; last?: boolean };
+
+/**
+ * A divider row between groups: day-labeled (calendar-day boundary) or plain
+ * (a same-day gap exceeding `gapDividerMs`). Day boundaries take priority
+ * when both coincide on the same message — see `groupMessages`.
+ */
+type DividerItem = { kind: 'divider'; id: string; label?: string };
+
+type ThreadItem = MessageGroupItem | DividerItem;
+
+const getThreadItemId = (item: ThreadItem) => item.id;
+
+/** Stable per-sender key: prefers the DID, then the (deprecated) identity key, then name/email, else 'anon'. */
+const senderKey = (message: MessageType.Message): string =>
+  message.sender.identityDid ?? message.sender.identityKey ?? message.sender.name ?? message.sender.email ?? 'anon';
+
+/** Message send time in epoch ms; malformed/missing `created` sorts as if sent at the epoch. */
+const messageTime = (message: MessageType.Message): number => {
+  const time = Date.parse(message.created);
+  return Number.isFinite(time) ? time : 0;
+};
+
+/**
+ * Preprocesses ascending, time-ordered `messages` into a flat list of divider
+ * and group items for `Thread.Messages`'s virtual stack:
+ * - A day divider (labeled with the calendar date) precedes the first message
+ *   of each calendar day.
+ * - A plain divider (no label) marks a same-day gap exceeding `gapDividerMs`.
+ * - When both would fall on the same message, only the day divider is emitted.
+ * - Consecutive messages from the same sender within `groupWindowMs` of the
+ *   previous message in the group are merged into one `MessageGroupItem`; a
+ *   divider always starts a new group.
+ */
+const groupMessages = (
+  messages: readonly MessageType.Message[],
+  {
+    groupWindowMs,
+    dayDivider,
+    gapDividerMs,
+    dtLocale,
+  }: { groupWindowMs: number; dayDivider: boolean; gapDividerMs: number; dtLocale?: Locale },
+): ThreadItem[] => {
+  const items: ThreadItem[] = [];
+  let currentGroup: MessageGroupItem | undefined;
+  // Tracks the last message appended to `currentGroup`, since `Array.prototype.at(-1)`
+  // on `currentGroup.messages` would need a non-null assertion despite `currentGroup`
+  // always being non-empty by construction.
+  let lastGroupMessage: MessageType.Message | undefined;
+  let prevTime: number | undefined;
+  let prevDay: number | undefined;
+
+  for (const message of messages) {
+    const time = messageTime(message);
+    const day = startOfDay(time).getTime();
+
+    const dayBoundary = dayDivider && (prevDay === undefined || day !== prevDay);
+    const gapBoundary = !dayBoundary && prevTime !== undefined && time - prevTime > gapDividerMs;
+
+    if (dayBoundary) {
+      items.push({
+        kind: 'divider',
+        id: `divider:day:${day}`,
+        label: format(day, 'EEEE, MMMM d', { locale: dtLocale }),
+      });
+      currentGroup = undefined;
+    } else if (gapBoundary) {
+      items.push({ kind: 'divider', id: `divider:gap:${time}` });
+      currentGroup = undefined;
+    }
+
+    const sameSenderAsGroup = currentGroup && lastGroupMessage && senderKey(lastGroupMessage) === senderKey(message);
+    const withinGroupWindow = currentGroup && lastGroupMessage && time - messageTime(lastGroupMessage) <= groupWindowMs;
+
+    if (currentGroup && sameSenderAsGroup && withinGroupWindow) {
+      currentGroup.messages.push(message);
+    } else {
+      currentGroup = { kind: 'group', id: getMessageId(message), messages: [message] };
+      items.push(currentGroup);
+    }
+    lastGroupMessage = message;
+
+    prevTime = time;
+    prevDay = day;
+  }
+
+  // The trailing group is the last message tile; suppress its avatar-rail continuation line.
+  if (currentGroup) {
+    currentGroup.last = true;
+  }
+
+  return items;
+};
+
+//
+// Divider
+//
+
+const ThreadDivider = ({ label }: { label?: string }) =>
+  label ? (
+    <div className='flex items-center gap-2 px-2 py-2 text-xs text-description'>
+      <div className='h-px grow bg-separator' />
+      <span className='shrink-0'>{label}</span>
+      <div className='h-px grow bg-separator' />
+    </div>
+  ) : (
+    <div className='px-2 py-2'>
+      <div className='h-px bg-separator' />
+    </div>
+  );
+
+ThreadDivider.displayName = 'Thread.Divider';
+
+const ThreadItemAdapter = ({ id, data, location, draggable, current, selected }: MosaicTileProps<ThreadItem>) => (
   <Mosaic.Tile id={id} data={data} location={location} draggable={draggable} current={current} selected={selected}>
-    <Message.Tile message={data} />
+    {data.kind === 'divider' ? (
+      <ThreadDivider label={data.label} />
+    ) : (
+      <Message.Group messages={data.messages} continues={!data.last} />
+    )}
   </Mosaic.Tile>
 );
 
 export type ThreadMessagesProps = ThemedClassName<{
   messages: readonly MessageType.Message[];
+  /** Stable id of the owning thread; scopes the Mosaic container so multiple threads don't collide. */
+  id?: string;
   /** Estimated tile height for the virtualizer. */
   estimateSize?: number;
   currentId?: string;
+  /** Consecutive same-sender messages within this window (ms) are merged into one tile. */
+  groupWindowMs?: number;
+  /** Whether to insert a labeled divider before the first message of each calendar day. */
+  dayDivider?: boolean;
+  /** A same-day gap exceeding this (ms) inserts an unlabeled divider between groups. */
+  gapDividerMs?: number;
 }>;
 
+const DEFAULT_GROUP_WINDOW_MS = 60_000;
+const DEFAULT_GAP_DIVIDER_MS = 3 * 60 * 60 * 1000;
+
 /** Virtualized stack of message tiles (via Mosaic), within an internal scroll area. */
-const ThreadMessages = ({ messages, estimateSize = 80, currentId, classNames }: ThreadMessagesProps) => {
+const ThreadMessages = ({
+  messages,
+  id,
+  estimateSize = 80,
+  currentId,
+  groupWindowMs = DEFAULT_GROUP_WINDOW_MS,
+  dayDivider = true,
+  gapDividerMs = DEFAULT_GAP_DIVIDER_MS,
+  classNames,
+}: ThreadMessagesProps) => {
+  const { dtLocale } = useTranslation(translationKey);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
-  const items = useMemo(() => messages.filter(Boolean), [messages]);
+  const items = useMemo(
+    () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
+    [messages, groupWindowMs, dayDivider, gapDividerMs, dtLocale],
+  );
+  // Per-instance id keeps concurrent threads (incl. the same thread mounted twice) distinct in the DnD registry.
+  const instanceId = useId();
+  const eventHandler = useMemo<DndContainerHandler>(
+    () => ({ id: `thread:${id ?? 'anon'}:${instanceId}`, canDrop: () => false }),
+    [id, instanceId],
+  );
 
   return (
     <Mosaic.Container
@@ -236,14 +382,14 @@ const ThreadMessages = ({ messages, estimateSize = 80, currentId, classNames }: 
       orientation='vertical'
       autoScroll={viewport}
       currentId={currentId}
-      eventHandler={{ id: 'thread', canDrop: () => false }}
+      eventHandler={eventHandler}
     >
-      <ScrollArea.Root classNames={mx('col-span-2', classNames)} orientation='vertical'>
+      <ScrollArea.Root classNames={mx('col-span-2 flex-1 min-h-0', classNames)} orientation='vertical'>
         <ScrollArea.Viewport ref={setViewport}>
           <Mosaic.VirtualStack
+            Tile={ThreadItemAdapter}
             items={items}
-            getId={getMessageId}
-            Tile={MessageTileAdapter}
+            getId={getThreadItemId}
             draggable={false}
             getScrollElement={() => viewport}
             estimateSize={() => estimateSize}

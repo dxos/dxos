@@ -7,8 +7,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { Format } from '@dxos/echo/Format';
+import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
 
-import { IBKR_FEED_KIND } from '../constants';
+import { EdgarAdditionalFactsAnnotation, EdgarAsOfConceptsAnnotation, EdgarFieldAnnotation } from '../annotations';
+import { IBKR_CONNECTOR_ID, IBKR_FEED_KIND } from '../constants';
 
 /** An open position parsed from a Flex report. */
 export const Position = Schema.Struct({
@@ -41,15 +45,9 @@ export const Trade = Schema.Struct({
 });
 export type Trade = Schema.Schema.Type<typeof Trade>;
 
-/**
- * A single tax lot (one acquisition). An OPEN lot — still held, parsed from a `levelOfDetail="LOT"`
- * Open Positions row — has no `sold` date and carries the current `markPrice`/`value` and
- * `unrealizedPnl`. A CLOSED lot — a realized disposal, parsed from a `<Lot>` row in the Trades
- * section — has a `sold` date plus `proceeds` and `realizedPnl`; it is the capital-gains data for
- * tax reporting, with long-vs-short term derived from the holding period. The presence of `sold`
- * discriminates the two.
- */
-export const Lot = Schema.Struct({
+/** Shared lot fields parsed from Flex XML before materializing a persisted {@link Lot}. */
+// TODO(dmaretskyi): Re-use the Lot type instead of duplicating. Make `Ttpe.fields` typesafe and add `type.propertiesSchema`.
+export const LotSnapshot = Schema.Struct({
   symbol: Schema.String,
   quantity: Schema.Number,
   /** Acquisition date (IBKR `openDateTime`). */
@@ -70,7 +68,145 @@ export const Lot = Schema.Struct({
   realizedPnl: Schema.optional(Schema.Number),
   currency: Schema.optional(Schema.String),
 });
-export type Lot = Schema.Schema.Type<typeof Lot>;
+export type LotSnapshot = Schema.Schema.Type<typeof LotSnapshot>;
+
+export const AssetClass = Schema.Literal('stock', 'etf', 'mutual_fund', 'adr', 'reit', 'warrant', 'other');
+export type AssetClass = Schema.Schema.Type<typeof AssetClass>;
+
+/** Valuation multiples (reserved for future market-data sources). */
+export const FundamentalsValuation = Schema.Struct({
+  marketCap: Schema.optional(
+    Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotations({ title: 'Market cap' })),
+  ),
+  pe: Schema.optional(Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotations({ title: 'P/E' }))),
+  pb: Schema.optional(Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotations({ title: 'P/B' }))),
+}).pipe(Schema.annotations({ title: 'Valuation' }));
+export type FundamentalsValuation = Schema.Schema.Type<typeof FundamentalsValuation>;
+
+/** Income-statement metrics from SEC EDGAR XBRL. */
+export const FundamentalsPerformance = Schema.Struct({
+  revenue: Schema.optional(
+    Format.Currency({ decimals: 0, code: 'USD' }).pipe(
+      EdgarFieldAnnotation.set({
+        type: 'concept',
+        concepts: ['Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax', 'SalesRevenueNet'],
+      }),
+      Schema.annotations({ title: 'Revenue' }),
+    ),
+  ),
+  netIncome: Schema.optional(
+    Format.Currency({ decimals: 0, code: 'USD' }).pipe(
+      EdgarFieldAnnotation.set({
+        type: 'concept',
+        concepts: ['NetIncomeLoss', 'ProfitLoss'],
+      }),
+      Schema.annotations({ title: 'Net income' }),
+    ),
+  ),
+  eps: Schema.optional(
+    Format.Currency({ decimals: 2, code: 'USD' }).pipe(
+      EdgarFieldAnnotation.set({
+        type: 'concept',
+        concepts: ['EarningsPerShareDiluted', 'EarningsPerShareBasic'],
+        units: ['USD/shares', 'USD'],
+      }),
+      Schema.annotations({ title: 'EPS' }),
+    ),
+  ),
+}).pipe(Schema.annotations({ title: 'Performance' }));
+export type FundamentalsPerformance = Schema.Schema.Type<typeof FundamentalsPerformance>;
+
+/** Profitability and leverage ratios derived from SEC EDGAR XBRL. */
+export const FundamentalsRatios = Schema.Struct({
+  roe: Schema.optional(
+    Format.Percent({ decimals: 1 }).pipe(
+      EdgarFieldAnnotation.set({
+        type: 'ratio',
+        numerator: { concepts: ['NetIncomeLoss', 'ProfitLoss'] },
+        denominator: {
+          concepts: ['StockholdersEquity', 'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest'],
+        },
+      }),
+      Schema.annotations({ title: 'ROE' }),
+    ),
+  ),
+  debtToEquity: Schema.optional(
+    Schema.Number.pipe(
+      EdgarFieldAnnotation.set({
+        type: 'ratio',
+        numerator: { concepts: ['Liabilities'] },
+        denominator: {
+          concepts: ['StockholdersEquity', 'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest'],
+        },
+      }),
+      Schema.multipleOf(0.01),
+      Schema.annotations({ title: 'Debt / equity' }),
+    ),
+  ),
+}).pipe(Schema.annotations({ title: 'Ratios' }));
+export type FundamentalsRatios = Schema.Schema.Type<typeof FundamentalsRatios>;
+
+/** Remaining us-gaap concepts from SEC EDGAR, keyed by XBRL concept name. */
+export const FundamentalsAdditional = Schema.Struct({
+  additionalFacts: Schema.optional(
+    Schema.Record({ key: Schema.String, value: Schema.Number }).pipe(
+      EdgarAdditionalFactsAnnotation.set(true),
+      Schema.annotations({ title: 'Additional facts' }),
+    ),
+  ),
+}).pipe(Schema.annotations({ title: 'Additional' }));
+export type FundamentalsAdditional = Schema.Schema.Type<typeof FundamentalsAdditional>;
+
+/** Transient fundamentals snapshot returned by {@link IbkrOperation.GetInstrumentFundamentals} from SEC EDGAR. */
+export const FundamentalsSnapshot = Schema.Struct({
+  asOf: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false), Schema.annotations({ title: 'As of' }))),
+  valuation: Schema.optional(FundamentalsValuation),
+  performance: Schema.optional(FundamentalsPerformance),
+  ratios: Schema.optional(FundamentalsRatios),
+  additional: Schema.optional(FundamentalsAdditional),
+}).pipe(
+  EdgarAsOfConceptsAnnotation.set([
+    ['NetIncomeLoss', 'ProfitLoss'],
+    ['Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax', 'SalesRevenueNet'],
+    ['Assets'],
+  ]),
+);
+export type FundamentalsSnapshot = Schema.Schema.Type<typeof FundamentalsSnapshot>;
+
+/**
+ * A first-class reference to a tradable security. Holds static identity metadata only; market data
+ * and fundamentals are fetched at view time via operations and never persisted on the object.
+ */
+export class Instrument extends Type.makeObject<Instrument>(DXN.make('org.dxos.type.ibkr.Instrument', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.annotations({ title: 'Name' })),
+    symbol: Schema.String.pipe(Schema.annotations({ title: 'Symbol' })),
+    exchange: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Exchange' }))),
+    assetClass: Schema.optional(AssetClass.pipe(Schema.annotations({ title: 'Asset class' }))),
+    currency: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Currency' }))),
+    sector: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Sector' }))),
+    industry: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Industry' }))),
+    country: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Country' }))),
+    description: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Description' }))),
+  }).pipe(
+    LabelAnnotation.set(['symbol', 'name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--chart-line-up--regular', hue: 'blue' }),
+  ),
+) {}
+
+/** Checks if a value is an Instrument object. */
+export const isInstrument = (value: unknown): value is Instrument => Obj.instanceOf(Instrument, value);
+
+/** Creates an Instrument with optional foreign keys stamped on `Obj.Meta.keys`. */
+export const makeInstrument = (
+  props: Obj.MakeProps<typeof Instrument> & { keys?: readonly { source: string; id: string }[] },
+): Instrument => {
+  const { keys, ...fields } = props;
+  return Obj.make(Instrument, {
+    ...(keys ? { [Obj.Meta]: { keys: [...keys] } } : {}),
+    ...fields,
+  });
+};
 
 /**
  * A persisted Interactive Brokers Flex report captured by the daily sync.
@@ -96,6 +232,9 @@ export const Portfolio = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--chart-line--regular', hue: 'green' }),
+  // Offer "Connect Interactive Brokers" in the portfolio toolbar. IBKR has no external-sync Cursor, so
+  // the connection is detected space-wide by connectorId (bindTarget omitted).
+  ConnectorAuthAnnotation.set({ connectorIds: [IBKR_CONNECTOR_ID] }),
   Type.makeObject(DXN.make('org.dxos.type.ibkr.Portfolio', '0.1.0')),
 );
 
@@ -116,3 +255,30 @@ export const makePortfolio = (props: PortfolioProps = {}): Portfolio => {
   Obj.setParent(feed, portfolio);
   return portfolio;
 };
+
+/**
+ * A persisted tax lot synced from the portfolio's latest Flex report. An OPEN lot — still held —
+ * has no `sold` date and carries the current `markPrice`/`value` and `unrealizedPnl`. A CLOSED lot
+ * — a realized disposal — has a `sold` date plus `proceeds` and `realizedPnl`. The presence of
+ * `sold` discriminates the two.
+ */
+export class Lot extends Type.makeObject<Lot>(DXN.make('org.dxos.type.ibkr.Lot', '0.1.0'))(
+  Schema.Struct({
+    portfolio: Ref.Ref(Portfolio),
+    instrument: Ref.Ref(Instrument),
+    symbol: Schema.String.pipe(Schema.annotations({ title: 'Symbol' })),
+    quantity: Schema.Number.pipe(Schema.annotations({ title: 'Quantity' })),
+    acquired: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Acquired' }))),
+    sold: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Sold' }))),
+    costBasis: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Cost basis' }))),
+    markPrice: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Mark price' }))),
+    value: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Value' }))),
+    proceeds: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Proceeds' }))),
+    unrealizedPnl: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Unrealized P/L' }))),
+    realizedPnl: Schema.optional(Schema.Number.pipe(Schema.annotations({ title: 'Realized P/L' }))),
+    currency: Schema.optional(Schema.String.pipe(Schema.annotations({ title: 'Currency' }))),
+  }).pipe(
+    LabelAnnotation.set(['symbol', 'quantity']),
+    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
+  ),
+) {}

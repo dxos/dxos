@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-e2e",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "Assistant e2e tests.",
   "homepage": "https://dxos.org",
@@ -13,6 +13,7 @@
   "author": "info@dxos.org",
   "type": "module",
   "dependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -22,7 +23,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

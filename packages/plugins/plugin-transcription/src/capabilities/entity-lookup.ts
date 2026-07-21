@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppSpace } from '@dxos/app-toolkit';
+import { type EntityLookup, makeDatabaseLookup } from '@dxos/pipeline-transcription';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { type EntityLookup, makeDatabaseLookup } from '@dxos/transcription-pipeline';
 
 import { TranscriptionCapabilities } from '#types';
 

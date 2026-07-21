@@ -13,6 +13,11 @@ import * as Schema from 'effect/Schema';
 export const Session = Schema.Struct({
   /** Endpoint for all subsequent API requests. */
   apiUrl: Schema.String,
+  /**
+   * URI Template (RFC 6570) for blob downloads, with `accountId`/`blobId`/`type`/`name` variables
+   * (RFC 8620 §6.2). Required, matching the spec — every real JMAP session advertises one.
+   */
+  downloadUrl: Schema.String,
   /** Authenticated username (used to seed the connection account when the form leaves it blank). */
   username: Schema.optional(Schema.String),
   /** Capability urn → primary account id (e.g. `urn:ietf:params:jmap:mail`). */

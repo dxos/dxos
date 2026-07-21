@@ -7,13 +7,12 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { ClientService } from '@dxos/client';
 import { Operation, Script } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { bundleFunction, initializeBundler } from '@dxos/functions-runtime/bundler';
-import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
+import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';
+import { bundleFunction, initializeBundler } from '@dxos/edge-compute/bundler';
 import { FunctionRuntimeKind } from '@dxos/protocols';
-import { getSpace } from '@dxos/react-client/echo';
 
 import { Deploy } from './definitions';
 
@@ -27,8 +26,8 @@ export default Deploy.pipe(
       }
       const script = (yield* Database.load(loaded.source)) as Script.Script;
 
-      const space = getSpace(loaded);
-      if (!space || !script.source?.target?.content) {
+      const db = Obj.getDatabase(loaded);
+      if (!db || !script.source?.target?.content) {
         return yield* Effect.fail(new Error('Script source or space not available'));
       }
 

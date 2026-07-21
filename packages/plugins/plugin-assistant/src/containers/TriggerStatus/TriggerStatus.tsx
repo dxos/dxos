@@ -5,24 +5,20 @@
 import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type InvocationsState } from '@dxos/functions-runtime';
+import { type InvocationsState } from '@dxos/compute-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { useMulticastObservable } from '@dxos/react-client';
-import { SpaceState, useObject } from '@dxos/react-client/echo';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-type TriggerStatusState = 'disabled' | 'idle' | 'running' | 'edge' | 'error';
+type TriggerStatusState = 'disabled' | 'idle' | 'running' | 'error';
 
 const getIcon = (state: TriggerStatusState): string => {
   switch (state) {
     case 'disabled':
       return 'ph--lightning-slash--regular';
     case 'idle':
-      return 'ph--lightning--regular';
-    case 'edge':
       return 'ph--lightning--regular';
     case 'running':
       return 'ph--lightning--fill';
@@ -47,19 +43,12 @@ export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { state } = useTriggerRuntimeControls(space.db);
+  // The dispatcher is stopped for the space when `triggersDisabled` is set, so `enabled` already
+  // reflects the space-wide kill-switch; per-trigger edge routing does not affect this indicator.
   const isEnabled = state?.enabled ?? false;
-  // `space.properties` throws until the space finishes initializing (e.g. right after joining);
-  // gate on `space.state` so this component doesn't crash for a freshly-joined space.
-  const spaceState = useMulticastObservable(space.state);
-  const [properties] = useObject(spaceState === SpaceState.SPACE_READY ? space.properties : undefined);
-  const computeEnvironment = properties?.computeEnvironment ?? 'local';
 
   // Determine the current trigger status state.
   const triggerState: TriggerStatusState = useMemo(() => {
-    if (computeEnvironment === 'edge') {
-      return 'edge';
-    }
-
     if (!isEnabled) {
       return 'disabled';
     }
@@ -77,7 +66,7 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
     }
 
     return 'idle';
-  }, [computeEnvironment, isEnabled, state?.invocations]);
+  }, [isEnabled, state?.invocations]);
 
   return (
     <Popover.Root>
@@ -132,3 +121,7 @@ const TriggerStatusPopover = ({
     </div>
   );
 };
+
+SpaceStatus.displayName = 'SpaceStatus';
+
+TriggerStatusPopover.displayName = 'TriggerStatusPopover';

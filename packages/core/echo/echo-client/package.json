@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-client",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "ECHO client-side database runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,17 +16,17 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     },
     "./internal": {
       "source": "./src/internal/index.ts",
       "types": "./dist/types/src/internal/index.d.ts",
-      "default": "./dist/lib/neutral/internal/index.mjs"
+      "import": "./dist/lib/internal.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

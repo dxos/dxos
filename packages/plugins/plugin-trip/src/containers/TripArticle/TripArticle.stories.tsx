@@ -11,6 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -18,7 +19,7 @@ import { MapInline } from '@dxos/plugin-map';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
@@ -148,16 +149,14 @@ const withKeyboard: Decorator = (Story) => {
 };
 
 const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
-  const spaces = useSpaces();
-  const spaceId = spaces[0]?.id;
-  const db = useDatabase(spaceId ?? '');
-  const trips = useQuery(db, Filter.type(Trip.Trip));
+  const [space] = useSpaces();
+  const trips = useQuery(space?.db, Filter.type(Trip.Trip));
   const trip = trips[0];
   // The segment shown in the companion column tracks the article's selection (defaults to the first).
   const selectedId = useSelection(ATTENDABLE_ID, 'single');
 
-  if (!spaceId || !db || !trip) {
-    return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
+  if (!space?.db || !trip) {
+    return <Loading data={{ space: !!space, db: !!space?.db, trip: !!trip }} />;
   }
 
   const segments = Trip.getSegments(trip);
@@ -207,14 +206,12 @@ const baseDecorators = (
 
 // Renders the trip plotted on the generic plugin-map `map` surface (markers + route polyline).
 const MapStory = () => {
-  const spaces = useSpaces();
-  const spaceId = spaces[0]?.id;
-  const db = useDatabase(spaceId ?? '');
-  const trips = useQuery(db, Filter.type(Trip.Trip));
+  const [space] = useSpaces();
+  const trips = useQuery(space?.db, Filter.type(Trip.Trip));
   const trip = trips[0];
 
-  if (!spaceId || !db || !trip) {
-    return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
+  if (!space?.db || !trip) {
+    return <Loading data={{ space: !!space, db: !!space?.db, trip: !!trip }} />;
   }
 
   return (

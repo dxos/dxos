@@ -9,8 +9,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -144,3 +144,5 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     />
   );
 };
+
+MagazineArticle.displayName = 'MagazineArticle';

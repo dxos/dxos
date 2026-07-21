@@ -8,7 +8,8 @@ import { Provider } from '@dxos/ai';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
-import { useObject, useRegistry } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
+import { useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
@@ -68,3 +69,5 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
     </Chat.Root>
   );
 };
+
+ChatDialog.displayName = 'ChatDialog';

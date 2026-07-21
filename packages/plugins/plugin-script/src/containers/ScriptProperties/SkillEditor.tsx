@@ -9,7 +9,7 @@ import { Skill, Template } from '@dxos/compute';
 import { type Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Button, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
@@ -100,3 +100,5 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
     </div>
   );
 };
+
+SkillEditor.displayName = 'SkillEditor';

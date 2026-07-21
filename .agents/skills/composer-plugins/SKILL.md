@@ -54,7 +54,28 @@ If no idiom matches, proceed using the exemplar (`plugin-chess`); if you find yo
 
 ## Specification
 
-Each plugin MUST have a `PLUGIN.mdl` specification written in the **MDL** (`.mdl`) language defined by `@dxos/deus`. The authoritative references live under [`packages/reflect/deus/`](../../../packages/reflect/deus/):
+A plugin's design is captured in two artifacts across its lifecycle — a
+superpowers **design doc** during the initial build, then a durable
+**`PLUGIN.mdl`** that outlives the first session.
+
+### Initial plugin creation (first session)
+
+When creating a brand-new plugin, do NOT start with `PLUGIN.mdl`. Instead:
+
+1. Run the `superpowers:brainstorming` flow and write the approved design to a
+   separate design doc under `agents/superpowers/specs/YYYY-MM-DD-<name>-design.md`
+   (the DXOS override of the superpowers default `docs/superpowers/…` path).
+2. The user approves that design doc before any code is written.
+3. Implement Phase 1 against the design doc.
+4. **At the end of Phase 1, before opening the PR**, author
+   `packages/plugins/plugin-<name>/PLUGIN.mdl` from the design doc and the
+   as-built plugin. This is a required pre-PR step — the design doc drove the
+   build; `PLUGIN.mdl` is the hand-off spec that subsequent sessions consume.
+
+### `PLUGIN.mdl` — the durable spec
+
+`PLUGIN.mdl` is written in the **MDL** (`.mdl`) language defined by `@dxos/deus`.
+The authoritative references live under [`packages/reflect/deus/`](../../../packages/reflect/deus/):
 
 - [`docs/DESIGN.md`](../../../packages/reflect/deus/docs/DESIGN.md) — language specification.
 - [`docs/IDIOMS.md`](../../../packages/reflect/deus/docs/IDIOMS.md) — idiom format and `@idiom` JSDoc-tag conventions.
@@ -62,17 +83,18 @@ Each plugin MUST have a `PLUGIN.mdl` specification written in the **MDL** (`.mdl
 - [`lang/PLUGIN-.template.mdl`](../../../packages/reflect/deus/lang/PLUGIN-.template.mdl) — the plugin template.
 - [`src/extension/mdl.grammar`](../../../packages/reflect/deus/src/extension/mdl.grammar) — Lezer grammar (use only when chasing syntax questions).
 
-**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `agents/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use [`packages/reflect/deus/lang/PLUGIN-.template.mdl`](../../../packages/reflect/deus/lang/PLUGIN-.template.mdl) as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
+Use the template as the starting structure and `packages/plugins/plugin-chess/PLUGIN.mdl`
+as a reference. Once it exists (i.e. in every session AFTER the initial build),
+`PLUGIN.mdl` is the source of truth for what the plugin does. It must be:
 
-The specification is the source of truth for what the plugin does. It must be:
-
-- **Created first** — this is the first file written for any new plugin, before any code.
-- **Kept up-to-date** — when features are discussed, added, or changed, update the spec first.
-- **Used for testing** — derive user feature tests and acceptance criteria from the spec's `feat`, `req`, and `test` blocks.
-- **Reviewed before implementation** — the user must approve the PLUGIN.mdl before code is written.
-
-When the user discusses new features or changes, update `PLUGIN.mdl` to reflect the agreed requirements before implementing.
-Tests should verify the behaviors described in the spec.
+- **Present before a new plugin's first PR merges** — created at the close of
+  Phase 1 as described above; never omitted.
+- **Kept up-to-date** — when features are discussed, added, or changed in a later
+  session, update `PLUGIN.mdl` first, before implementing.
+- **Used for testing** — derive user feature tests and acceptance criteria from
+  the spec's `feat`, `req`, and `test` blocks.
+- **Reviewed before implementation** — for changes to an existing plugin, the
+  user approves the updated `PLUGIN.mdl` before code is written.
 
 ## Workflow
 
@@ -80,22 +102,24 @@ Tests should verify the behaviors described in the spec.
 
 ## Creating a New Plugin
 
-When asked to create a new plugin, start with a minimal skeleton before adding features. The skeleton should include:
+When asked to create a new plugin, first produce the superpowers design doc (see
+Specification above), then start with a minimal skeleton before adding features.
+`PLUGIN.mdl` is NOT part of the initial skeleton — it is authored at the end of
+Phase 1, before the PR. The skeleton should include:
 
-1. `PLUGIN.mdl` — specification starter with initial feature/requirement blocks.
-2. `README.md` — brief description of the plugin's purpose.
-3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
-4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
-5. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
-6. `src/translations.ts` — initial translation resources.
-7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
-8. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
-9. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
-10. `src/types/` — one schema type with `make()` factory.
-11. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
-12. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
-13. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
-14. `src/components/` — empty barrel, ready for primitives.
+1. `README.md` — brief description of the plugin's purpose.
+2. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
+3. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
+4. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
+5. `src/translations.ts` — initial translation resources.
+6. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
+7. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
+8. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
+9. `src/types/` — one schema type with `make()` factory.
+10. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
+11. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
+12. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
+13. `src/components/` — empty barrel, ready for primitives.
 
 Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
@@ -145,7 +169,7 @@ plugin-foo/
 
 ### Component (`src/components/`)
 
-Low-level UI. Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
+Low-level UI (plugin/src/components, react-ui-\*). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
 Each component lives in its own subdirectory with an `index.ts` barrel.
 Use named exports; no default exports. Create a basic storybook for each.
 
@@ -291,7 +315,7 @@ A spec's `affinity` determines the slice it lives in and which fields of `LayerC
 | `space`       | Per space, reused across all processes in space | `space`                                  |
 | `process`     | Per spawned process                             | `space`, `conversation`, `process` (pid) |
 
-`conversation` and `process` are **process-affinity only** — a `space`-affinity factory cannot see them. If a service is keyed on `conversation` (e.g. `AiContext.Service`, `AiSession.Service`), it must be `process`-affinity even though it depends on space-affinity services like `Database.Service` and `Feed.FeedService`. The `LayerStack` initialises lower-affinity slices first, so process specs can require space services without issue.
+`conversation` and `process` are **process-affinity only** — a `space`-affinity factory cannot see them. If a service is keyed on `conversation` (e.g. `AiContext.Service`, `AiSession.Service`), it must be `process`-affinity even though it depends on space-affinity services like `Database.Service`. The `LayerStack` initialises lower-affinity slices first, so process specs can require space services without issue.
 
 The `LayerContext.conversation` field is fed from the spawn `environment.conversation`, which in turn comes from `Operation.invoke(..., { conversation })` or `Operation.withInvocationOptions({ conversation })`. Operations dispatched by `TriggerDispatcher` also inherit `space`/`conversation` from the parent spawn environment.
 
@@ -300,21 +324,19 @@ The `LayerContext.conversation` field is fed from the spawn `environment.convers
 `LayerSpec.make`'s factory must return `Layer<Provides, never, Requires>` — the error channel is `never`, so the layer body cannot use typed `Effect.fail` to signal "this context is invalid". Use `Effect.die(new ServiceNotAvailableError(tag.key))` inside the `Layer.scoped` body when a required `LayerContext` field is missing:
 
 ```ts
-LayerSpec.make(
-  { affinity: 'process', requires: [Database.Service, Feed.FeedService], provides: [AiContext.Service] },
-  (context) =>
-    Layer.scoped(
-      AiContext.Service,
-      Effect.gen(function* () {
-        if (!context.conversation) {
-          return yield* Effect.die(new ServiceNotAvailableError(AiContext.Service.key));
-        }
-        const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-        return { binder };
-      }),
-    ),
+LayerSpec.make({ affinity: 'process', requires: [Database.Service], provides: [AiContext.Service] }, (context) =>
+  Layer.scoped(
+    AiContext.Service,
+    Effect.gen(function* () {
+      if (!context.conversation) {
+        return yield* Effect.die(new ServiceNotAvailableError(AiContext.Service.key));
+      }
+      const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+      const runtime = yield* Effect.runtime<Database.Service>();
+      const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+      return { binder };
+    }),
+  ),
 );
 ```
 
@@ -346,7 +368,14 @@ See: `plugin-chess/src/types/Chess.ts`
 
 Operation definitions use `Operation.make()` with meta, input/output schemas, and services. Handlers use `Operation.withHandler()` with Effect generators. The barrel exports definitions and a lazy `OperationHandlerSet`.
 
-See: `plugin-chess/src/operations/`
+Handler file shape (mirror `plugin-trip/src/operations/add-segment.ts`):
+
+- Default-export the piped handler: `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)`.
+- Pass runtime layers as the 2nd arg to `Effect.fn` (e.g. `Effect.provide(FetchHttpClient.layer)`), not an inner nested `Effect.gen` + `.pipe(Effect.provide(...))`.
+- Keep the handler body linear; put pure mapping in module-level helpers above the export.
+- Dedup/query transforms: prefer `Feed.query(...).run.pipe(Effect.map(...))` chains with Effect `Array`/`Predicate` over imperative loops.
+
+See: `plugin-chess/src/operations/`, `plugin-trip/src/operations/add-segment.ts`, `plugin-chess-com/src/operations/sync-games.ts`
 
 ## Plugin Definition
 
@@ -369,6 +398,30 @@ The main plugin file wires everything together using `Plugin.define(meta).pipe()
 | `addNavigationHandlerModule`  | Navigation handlers            | `OperationInvokerReady`   |
 
 See: `plugin-chess/src/ChessPlugin.tsx`
+
+### Module activation ordering
+
+Modules do **not** activate in registration order. Each module declares an
+event that triggers it (`activatesOn`), and ordering between modules is
+expressed through **shared activation events** — modules never reference each
+other directly. Two levers on `Plugin.addModule({...})`:
+
+- **`firesAfterActivation: [Event]`** — after this module's `activate` body
+  finishes, the framework fires `Event`; any module with `activatesOn: Event`
+  then runs. Use to publish "I'm ready" (e.g. `ClientEvents.ClientReady`).
+- **`firesBeforeActivation: [Event]`** — before this module's `activate` runs,
+  the framework activates `Event`'s contributors and **waits** for them. Use to
+  force a prerequisite (e.g. schema/migration setup) ahead of this module.
+
+To run module **B after** module A: A declares `firesAfterActivation: [E]`, B
+declares `activatesOn: E`. To force setup **before** B: B declares
+`firesBeforeActivation: [E]`. Combine events with `ActivationEvent.oneOf(...)`
+/ `allOf(...)`.
+
+Canonical example (idiom `org.dxos.app-framework.moduleActivationOrdering`):
+`plugin-client/src/ClientPlugin.ts` — the `Client` module fires
+`ClientEvents.ClientReady` after activating; `SchemaDefs`/`Migrations` listen on
+it and use `firesBeforeActivation` to sequence setup ahead of themselves.
 
 ## React Surface
 

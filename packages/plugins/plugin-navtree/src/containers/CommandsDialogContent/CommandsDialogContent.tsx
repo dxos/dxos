@@ -125,3 +125,5 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     );
   },
 );
+
+CommandsDialogContent.displayName = 'CommandsDialogContent';

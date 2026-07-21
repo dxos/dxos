@@ -10,6 +10,7 @@ import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { CardAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const StatusOptions = [
@@ -79,6 +80,7 @@ const _OrganizationSchema = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
+  CardAnnotation.set(true),
 );
 
 export class Organization extends Type.makeObject<Organization>(DXN.make('org.dxos.type.organization', '0.1.0'))(

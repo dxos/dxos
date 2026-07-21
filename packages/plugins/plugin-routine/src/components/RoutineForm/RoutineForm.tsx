@@ -7,8 +7,8 @@ import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Instructions, Operation, Trigger } from '@dxos/compute';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
-import { ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
+import { useObject, useQuery } from '@dxos/echo-react';
+import { ToggleGroup, ToggleGroupItem, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -45,59 +45,67 @@ export type RoutineFormProps = {
  * The sub-forms read and autosave the routine's owned instructions and primary trigger directly off the
  * `routine` graph (live editing); `readonly` displays them without edit affordances. The optional Save/Cancel
  * row is used only by the companion's create-from-template flow.
+ *
+ * Created with `composable()` so it carries the COMPOSABLE marker and can be the child of
+ * `Panel.Content asChild` (forwards ref and merges layout props onto the scroll viewport).
  */
-export const RoutineForm = ({ db, routine, readonly = false, onSave, onCancel }: RoutineFormProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const [auto, updateAuto] = useObject(routine);
-  const trigger = usePrimaryTrigger(routine);
+export const RoutineForm = composable<HTMLDivElement, RoutineFormProps>(
+  ({ db, routine, readonly = false, onSave, onCancel, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.profile.key);
+    const [auto, updateAuto] = useObject(routine);
+    const trigger = usePrimaryTrigger(routine);
 
-  // Read once per routine identity; the uncontrolled form owns edits after mount.
-  const defaultValues = useMemo<Partial<GeneralForm>>(
-    () => ({ name: auto.name, description: auto.description }),
-    [routine],
-  );
-  const handleValuesChanged = useCallback(
-    (values: Partial<GeneralForm>) => {
-      updateAuto((routine) => {
-        routine.name = values.name;
-        routine.description = values.description;
-      });
-    },
-    [updateAuto],
-  );
+    // Read once per routine identity; the uncontrolled form owns edits after mount.
+    const defaultValues = useMemo<Partial<GeneralForm>>(
+      () => ({ name: auto.name, description: auto.description }),
+      [routine],
+    );
 
-  return (
-    <Form.Root
-      schema={GeneralForm}
-      readonly={readonly}
-      defaultValues={defaultValues}
-      onValuesChanged={handleValuesChanged}
-      onSave={onSave}
-      onCancel={onCancel}
-    >
-      <Form.Viewport scroll>
-        <Form.Content>
-          <Form.FieldSet />
+    const handleValuesChanged = useCallback(
+      (values: Partial<GeneralForm>) => {
+        updateAuto((routine) => {
+          routine.name = values.name;
+          routine.description = values.description;
+        });
+      },
+      [updateAuto],
+    );
 
-          <Section title={t('actions.title')}>
-            <ActionEditor db={db} routine={routine} readonly={readonly} />
-          </Section>
+    // TODO(burdon): Could this be rewritten a single form with custom fields?
+    return (
+      <Form.Root
+        schema={GeneralForm}
+        readonly={readonly}
+        defaultValues={defaultValues}
+        onValuesChanged={handleValuesChanged}
+        onSave={onSave}
+        onCancel={onCancel}
+      >
+        <Form.Viewport scroll {...composableProps(props)} ref={forwardedRef}>
+          <Form.Content>
+            <Form.FieldSet />
 
-          <Section title={t('triggers.title')}>
-            <TriggerEditor db={db} routine={routine} trigger={trigger} readonly={readonly} />
-          </Section>
+            <Section title={t('actions.title')}>
+              <ActionEditor db={db} routine={routine} readonly={readonly} />
+            </Section>
 
-          {/* Save/Cancel for the edit session (the sub-forms autosave to the in-memory clones as they change). */}
-          {onSave && <Form.Actions />}
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
-  );
-};
+            {/* TODO(burdon): Support multiple triggers. */}
+            <Section title={t('triggers.title')}>
+              <TriggerEditor db={db} routine={routine} trigger={trigger} readonly={readonly} />
+            </Section>
+
+            {/* Save/Cancel for the edit session (the sub-forms autosave to the in-memory clones as they change). */}
+            {onSave && <Form.Actions />}
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
+  },
+);
 
 /** Lightweight labelled grouping for a sub-form (no `Settings` chrome). */
 const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
-  <div role='none' className='flex flex-col mbs-4'>
+  <div className='flex flex-col mbs-4'>
     <Form.Label standalone label={title} />
     {children}
   </div>
@@ -165,7 +173,7 @@ const ActionEditor = ({
   );
 
   return (
-    <div role='none' className='flex flex-col'>
+    <div className='flex flex-col'>
       {!readonly && <ActionKindToggle value={kind} onChange={handleKindChange} />}
       {kind === 'runnable' ? (
         <OperationEditor

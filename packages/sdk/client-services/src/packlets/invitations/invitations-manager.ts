@@ -2,6 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import { Event, PushStream, TimeoutError, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitation,
@@ -11,7 +15,6 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { type IMetadataStore, hasInvitationExpired } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,14 +26,22 @@ import {
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
 import type { InvitationProtocol } from './invitation-protocol';
-import { type InvitationsHandler, createAdmissionKeypair } from './invitations-handler';
+import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
+
+/**
+ * Effect service tag for {@link InvitationsManager}.
+ */
+export class InvitationsManagerService extends EffectContext.Tag('@dxos/client-services/InvitationsManager')<
+  InvitationsManagerService,
+  InvitationsManager
+>() {}
 
 /**
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and
  * emits events when the set changes.
  */
-@trace.resource()
 export class InvitationsManager {
   private readonly _createInvitations = new Map<string, CancellableInvitation>();
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitation>();
@@ -44,11 +55,28 @@ export class InvitationsManager {
   private readonly _persistentInvitationsLoadedEvent = new Event();
   private _persistentInvitationsLoaded = false;
 
+  private _invitationHandlerFactory?: (
+    invitation: Partial<Invitation> & Pick<Invitation, 'kind'>,
+  ) => InvitationProtocol;
+
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
-    private readonly _getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol,
     private readonly _metadataStore: IMetadataStore,
   ) {}
+
+  /**
+   * Wires the invitation handler factory after the composing stack is fully constructed.
+   */
+  setInvitationHandlerFactory(
+    getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol,
+  ): void {
+    this._invitationHandlerFactory = getHandler;
+  }
+
+  private _getHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+    invariant(this._invitationHandlerFactory, 'Invitation handler factory not set.');
+    return this._invitationHandlerFactory(invitation);
+  }
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   async createInvitation(
@@ -354,3 +382,23 @@ export class InvitationsManager {
     );
   }
 }
+
+/**
+ * Effect Layer constructing an {@link InvitationsManager}.
+ *
+ * The invitation handler factory points "up the stack" and is wired via
+ * {@link InvitationsManager.setInvitationHandlerFactory} after composition.
+ */
+export const InvitationsManagerLayer = (): Layer.Layer<
+  InvitationsManagerService,
+  never,
+  InvitationsHandlerService | IMetadataStoreService
+> =>
+  Layer.effect(
+    InvitationsManagerService,
+    Effect.gen(function* () {
+      const invitationsHandler = yield* InvitationsHandlerService;
+      const metadataStore = yield* IMetadataStoreService;
+      return new InvitationsManager(invitationsHandler, metadataStore);
+    }),
+  );

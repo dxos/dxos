@@ -18,6 +18,7 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   component: 'var(--color-pink-400)',
   service: 'var(--color-yellow-400)',
   db: 'var(--color-red-400)',
+  module: 'var(--color-indigo-400)',
 };
 
 const theme = EditorView.baseTheme({
@@ -253,6 +254,8 @@ export const mdlFenceHighlight: Extension = [
         }
       }
     },
-    { decorations: (instance) => instance.decorations },
+    {
+      decorations: (instance) => instance.decorations,
+    },
   ),
 ];

@@ -5,6 +5,7 @@
 
 export * from './AgentProperties';
 export * from './Chat';
+export * from './ConnectorAuthMenu';
 export { TracePanel } from '../containers/TracePanel/TracePanel';
 export * from './ProcessTree';
 export * from './TaskList';

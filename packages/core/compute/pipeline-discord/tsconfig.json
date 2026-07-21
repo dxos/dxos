@@ -1,0 +1,43 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-client"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../crawler"
+    },
+    {
+      "path": "../pipeline"
+    },
+    {
+      "path": "../pipeline-rdf"
+    }
+  ]
+}

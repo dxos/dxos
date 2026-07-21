@@ -40,3 +40,5 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
     </header>
   );
 };
+
+Banner.displayName = 'Banner';

@@ -13,8 +13,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { Annotation, Database, Entity, Feed, Filter, Obj, Query, type QueryAST, Ref, Scope, Type } from '@dxos/echo';
+import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { FeedAnnotation } from '@dxos/schema';
