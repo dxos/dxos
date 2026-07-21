@@ -28,6 +28,16 @@ const LOCAL_LEGACY_RE = /^echo:\/(?!\/)([^/]+)$/;
 /**
  * Addresses an ECHO object or space. Uses the `echo:` URI scheme.
  *
+ * Canonical forms:
+ * - `echo://<spaceId>/<objectId>` — fully-qualified object.
+ * - `echo://<spaceId>` — space.
+ * - `echo:///<objectId>` — local (space-less) object.
+ *
+ * @deprecated form: the single-slash local form `echo:/<objectId>` is retired in favour of the
+ * triple-slash `echo:///<objectId>` form. It is still accepted on read (and normalized by `parse`)
+ * so existing persisted data keeps resolving, but it is no longer produced — do not emit it in new
+ * code. Construct local EIDs with `make({ entityId })`.
+ *
  * @example
  * ```
  * echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6
