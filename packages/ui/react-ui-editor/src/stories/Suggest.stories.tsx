@@ -73,11 +73,12 @@ const MultiAuthorRender = (args: EditorViewProps) => {
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
       automerge(Doc.createAccessor(createObject(Text.make({ content: ORIGINAL })), ['content'])),
-      // Colours would come from the collaboration awareness palette in the app; fixed here.
+      // Author colours come from the shared hue palette (the same `--color-<hue>-text` tokens used
+      // for a user's avatar/tag), so a suggestion reads with its author's consistent colour.
       suggestions({
         sources: [
-          { author: 'did:alice', colour: '#2563eb', content: ALICE },
-          { author: 'did:bob', colour: '#d97706', content: BOB },
+          { author: 'did:alice', colour: 'var(--color-lime-text)', content: ALICE },
+          { author: 'did:bob', colour: 'var(--color-violet-text)', content: BOB },
         ],
       }),
     ],
@@ -146,10 +147,17 @@ export const MultipleAuthors: Story = {
     const insertText = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-insert')).map((node) => node.textContent);
 
+    const insertColours = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-insert')).map((node) => node.style.color);
+
     // Four suggestions total: Alice{fast, sleepy} + Bob{swift, leaps}; "fast"/"swift" overlap on "quick".
     await waitFor(() => expect(documentText(canvasElement)).toContain('quick'), { timeout: 15_000 });
     await waitFor(() => expect(acceptButtons()).toHaveLength(4));
     await waitFor(() => expect(insertText()).toEqual(expect.arrayContaining(['fast', 'swift', 'sleepy', 'leaps'])));
+
+    // Each author's inline markers carry that author's palette colour (Alice lime, Bob violet).
+    await waitFor(() => expect(insertColours().some((colour) => colour.includes('lime'))).toBe(true));
+    await waitFor(() => expect(insertColours().some((colour) => colour.includes('violet'))).toBe(true));
 
     // Accept the first (offset then author order ⇒ Alice's "quick"→"fast"): the base takes "fast".
     // Bob's overlapping "quick"→"swift" re-diffs against the new base and remains as a suggestion.

@@ -1,9 +1,9 @@
 # Agent Service
 
-`AgentService` spawns and caches a process-backed **agent** per conversation feed. The agent is a
-long-lived `AgentProcess` that handles user turns; when a `DelegationStrategy` is injected it also
-acts as a **supervisor** that delegates work to linked child processes and folds their results back
-into the conversation.
+`AgentService` spawns and caches a process-backed **agent** per conversation feed. 
+The agent is a long-lived `AgentProcess` that handles user turns; 
+when a `DelegationStrategy` is injected it also acts as a **supervisor** that delegates work 
+to linked child processes and folds their results back into the conversation.
 
 ## Layering
 

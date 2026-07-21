@@ -15,6 +15,14 @@ export default Config2.make({
       documents). Threads can be created inline on any commentable object, letting collaborators
       leave contextual comments and hold focused discussions without leaving the document surface.
 
+      The same companion doubles as a document review surface: a document's active suggestion
+      branches (one per author) are diffed against the current content and rendered as change-block
+      tiles alongside comment threads, so comments and Google-Docs-style suggestions share one
+      review UI. Each suggestion tile carries Accept/Reject controls that route through durable,
+      per-change cherry-pick / revert operations, and every suggestion is tinted with its author's
+      palette colour (matching the author's avatar/tag and the editor's inline markers). When there
+      are neither comments nor suggestions, a single empty-state prompt explains both affordances.
+
       Each thread carries an optional AI agent configuration that controls how the built-in
       assistant participates in the conversation. Threads can be set to off, mention-only (the
       agent responds only when @-mentioned by name), or auto mode (the agent replies to every new

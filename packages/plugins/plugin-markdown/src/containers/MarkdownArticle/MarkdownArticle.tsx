@@ -13,8 +13,10 @@ import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { useIdentity } from '@dxos/halo-react';
+import { useIdentity, useMembers } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { Editor, useEditorContext } from '@dxos/react-ui-editor';
@@ -40,6 +42,7 @@ import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 import { mergeConflicts, versionDiff } from '../../extensions';
+import { authorHue, hueColour } from './author-hue';
 import { VersionBanners } from './VersionBanners';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
@@ -81,6 +84,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       checkpointContent,
       branchBaseContent,
       setSelection,
+      setView,
     } = versioning;
     // Default branch compare to the accept/reject review overlay ('suggest'); the read-only diff
     // modes (inline/sideBySide/gutter) are opt-in via settings.
@@ -189,6 +193,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       [object, reviewBranch, invokePromise],
     );
 
+    // The suggestion author's palette colour — the same colour as their banner tag and avatar — so
+    // the inline markers attribute the change by colour. Resolved against the space members.
+    const members = useMembers(getSpace(object)?.id);
+    const suggestColour = useMemo(
+      () => (activeBranch ? hueColour(authorHue(activeBranch, members)) : undefined),
+      [activeBranch, members],
+    );
+
     // The compare overlay lives in a compartment (reconfigured live, see `compareCompartment`), so it
     // is intentionally absent here — its config changing must not alter this array, which would make
     // `useTextEditor` recreate the view. The suggest overlay stays baked in: it rebinds the editor to
@@ -201,13 +213,14 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         list.push(
           suggestChanges({
             proposal: branchText.content,
+            colour: suggestColour,
             onAccept: handleAcceptChange,
             onReject: handleRejectChange,
           }),
         );
       }
       return list;
-    }, [extensions, suggestActive, branchText, handleAcceptChange, handleRejectChange]);
+    }, [extensions, suggestActive, branchText, suggestColour, handleAcceptChange, handleRejectChange]);
 
     // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants use
     // the custom versionDiff decorations; sideBySide uses the richer editable unified merge overlay
@@ -222,6 +235,24 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return undefined;
     }, [compareActive, branchBaseContent, diffViewMode]);
 
+    // Local identity (collaboration awareness + suggestion authorship).
+    const identity = useIdentity();
+
+    // Enter suggesting: find-or-create the caller's suggestion branch and switch to editing it, so
+    // typed edits accrue on that branch for review rather than mutating main. Called directly (not via
+    // an operation) like the checkpoint "Branch from" action — the UI invoker has no Database.Service,
+    // and `Branch.suggestion` operates on the document's own database.
+    const handleSuggest = useCallback(async () => {
+      const creator = identity?.did;
+      const parent = document?.content.target;
+      if (!document || !parent || !creator) {
+        return;
+      }
+      const branch = await Branch.suggestion(document, parent, creator);
+      setSelection({ kind: 'branch', branchId: branch.id });
+      setView('branch');
+    }, [document, identity, setSelection, setView]);
+
     // Toolbar actions from app graph, plus the branch switcher dropdown.
     const { graph } = useAppGraph();
     const runAction = useActionRunner();
@@ -230,7 +261,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const customActions = useMemo(() => {
       return Atom.make((get) => {
         const base = graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction });
-        if (!document || activeBranches.length === 0) {
+        if (!document) {
           return base;
         }
 
@@ -244,6 +275,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           selectCardinality: 'single',
         } satisfies ToolbarMenuActionGroupProperties);
         const actions = [
+          createMenuAction('versions--suggest', () => void handleSuggest().catch((error) => log.catch(error)), {
+            label: ['suggest-edits.label', { ns: meta.profile.key }],
+            icon: 'ph--pencil-simple--regular',
+          }),
           createMenuAction('versions--current', () => setSelection({ kind: 'current' }), {
             label: ['main-branch.label', { ns: meta.profile.key }],
             icon: 'ph--git-branch--regular',
@@ -267,7 +302,17 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           ],
         };
       });
-    }, [graph, attendableId, id, document, branchesKey, activeBranch?.id, activeVersion?.id, setSelection]);
+    }, [
+      graph,
+      attendableId,
+      id,
+      document,
+      branchesKey,
+      activeBranch?.id,
+      activeVersion?.id,
+      setSelection,
+      handleSuggest,
+    ]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);
@@ -278,9 +323,6 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
       return async (file: File) => upload(db, file);
     }, [db, upload]);
-
-    // Local identity for collaboration awareness.
-    const identity = useIdentity();
 
     // Query for @ refs.
     const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);

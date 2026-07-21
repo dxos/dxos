@@ -121,6 +121,81 @@ Deferred from the CodeRabbit round (stage 3/4):
       (fork→merge×2), case 4 ConflictAutoResolve (CRDT no-markers) & ConflictResolution (markers).
       Every action driven through the real UI. 7 play tests green in chromium.
 
+## Phase 4 (this branch, PR #12290) — Google-Docs-style suggestion review
+
+- [x] `ui-editor`: `suggestChanges` inline per-change accept/reject overlay over a proposal;
+      multi-author `suggestions({ sources })` overlay; word-level `diffHunks` + `groupHunks`;
+      word-level `computeWordHunks` so `cherryPickHunk`/`revertHunk` resolve one word, not the
+      whole line; review extensions grouped under `review/`.
+- [x] `types`: `ContentBlock.Change` (`before`/`after`) so a suggestion renders through a message
+      tile. `react-ui-thread`: `Message.Tile` renders the change block with Accept/Reject
+      (`onAcceptChange`/`onRejectChange`); `CommentThread` decoupled from `@dxos/react-client`.
+- [x] `plugin-markdown`: "Suggest edits" authoring action + `SuggestEdit` op (find-or-create the
+      caller's per-author `kind:'suggestion'` branch via `Branch.suggestion`); VersionBanner
+      `[Base | Diff | Branch]` selector (Merge button removed — merge from the panel).
+- [x] `plugin-comments`: unified review companion — comment threads + suggestion cards in one
+      surface; `Suggestions` reactively tracks active suggestion branches (one bound probe each)
+      and routes Accept/Reject to the durable `AcceptChange`/`RejectChange` ops (services: []).
+- [x] Per-author colours: banner name tag + inline suggestion markers + cards tinted with the
+      author's palette hue (shared `authorHue`/`suggestionColour`, `@dxos/util` `stringToHue`);
+      `initializeIdentity({ displayName })` so stories show a name, not a DID.
+- [x] Empty state unified: `SuggestionThread` renders nothing when empty (dropped the "No open
+      suggestions" text); the companion's single Message prompt (comment + Suggest edits) covers it.
+- [x] Play/unit coverage: `Suggest` (accept/reject, multi-author, colour), `SuggestionThread`,
+      `Message/WithChange`, `VersionBanner/SuggestionBranch` (hue + view selector), diff word-level
+      unit tests, `suggestion-sources` colour tests; `DocumentVersioning` merge helper fixed for
+      the panel button.
+
+## Phase 4 — open decisions / follow-ups
+
+- [ ] **Agent suggestion identity — DECIDED (2026-07-21): synthetic DIDs now, real identities +
+      multi-agent later.** Design:
+      [`agents/superpowers/specs/2026-07-21-agent-identity.md`](../../../agents/superpowers/specs/2026-07-21-agent-identity.md).
+      Implementation (this branch):
+  - [x] `Agent.did` field (`IdentityDid`, seeded via `IdentityDid.random()` in `makeInitialized`;
+        optional for back-compat) — persisted, import-stable, `did:halo:` format.
+  - [x] `AgentIdentity` service in `@dxos/compute` (`{ did, name?, hue? }` + `currentDid`, read via
+        `serviceOption` — no hard requirement). Verified: an ambiently-provided `AgentIdentity`
+        reaches an op handler.
+  - [x] `SuggestEdit`: `creator` optional, defaults from `AgentIdentity.currentDid` (dies if
+        neither). Test: creator defaults from the provided identity; explicit creator overrides.
+        NOT yet exposed as an agent tool — see the runtime-provision item (exposing it before the
+        runtime supplies an identity would make an agent call die for lack of a creator).
+  - [ ] **Runtime provision (needs live-agent verification — deferred).** Correct mechanism: an
+        `AgentIdentity` **resolver** (NOT a spawn-time layer). Rationale discovered while wiring:
+        `agent-runtime` cannot import `Agent` (dep direction), and agent sessions are cached/hydrated,
+        so a `did` threaded at spawn is lost on hydration. Instead register
+        `ServiceResolver.succeed(AgentIdentity.AgentIdentity, ...)` in the production
+        `Capabilities.ServiceResolver` composition (a plugin/assistant-toolkit layer that CAN import
+        `Agent` + `Harness`); resolve via `Agent.getFromChatContext` → `{ did, name }` (fresh per call,
+        survives hydration — same pattern as planning/agent/delegation ops that declare
+        `Harness.HarnessService`). Requires: make `AgentIdentity.Identity.did` optional + resolver
+        always-succeeds (so the explicit-`creator`, no-agent path still works); `SuggestEdit` declares
+        `AgentIdentity`; add the resolver to `AssistantTestLayer` too; and re-expose
+        `MarkdownOperation.SuggestEdit` in the markdown skill `operations` + instructions (removed for
+        now so an agent can't call a tool that would die without an identity). Left for a live-agent
+        env: the resolver runs only inside a running agent's Harness context, which is exactly what
+        must be exercised to trust it. (The op-level default is already proven by the ambient test.)
+  - [ ] **Consider relocating the `Agent` definition** to break the dep-direction blocker above:
+        move `Agent` from `assistant-toolkit` down to `agent-runtime` (so the runtime can resolve its
+        own agent identity directly), or minimally extract an `AgentIdentity`/`Agent`-identity
+        subclass/base type into a lower package both can import. Would let the runtime provide identity
+        without the Harness-resolver indirection.
+  - [ ] `resolveAuthor(did, members, agents)` so agent authors show name + hue in banner + companion
+        (query space `Agent` objects; seed `authorLabels`/`authorHues`). Lands with the runtime
+        provision — until agents actually author suggestions there is nothing to display.
+  - [ ] Future: swap synthetic provider for real HALO identity in `Agent.did`; no `creator` re-key
+        (already `IdentityDid` format); drop the agent-author seeding once agents are members.
+- [ ] Reconcile comments view vs suggestions view — split them into different tabs (today the
+      `Suggestions` companion and comment threads share one surface in `CommentsArticle`; give
+      suggestions their own tab alongside the unresolved/all comment tabs).
+- [ ] Full-stack `CommentsArticle` verification could not run in-pane (30s boot timeout) — verify
+      the suggestion companion + empty state manually (see morning test plan).
+- [ ] Create test plan + usage script for demo video — the suggestion-review flow (Suggest edits →
+      edit on the suggestion branch → accept/reject in the companion), which stories to exercise
+      (`SuggestionThread`, `Message/WithChange`, `VersionBanner`, integrated `CommentsArticle`), and
+      an end-to-end narration for recording.
+
 ## Future
 
 - **True nested branch-of-branch** (fork off a branch tip, keep live, merge child→parent→main).
