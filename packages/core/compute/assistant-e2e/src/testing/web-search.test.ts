@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 
+import { runMemoizedTests } from '@dxos/ai/testing';
 import { WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
@@ -12,7 +13,11 @@ import { agentTest, agentTestTimeout } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
-describe('Web', () => {
+// Frozen-conversation replay (A/B); off by default (`DX_RUN_LLM_TESTS=1` / `ALLOW_LLM_GENERATION=1`
+// to run) — see `packages/core/compute/ai/TESTING.md`.
+const describeMemoized = runMemoizedTests() ? describe : describe.skip;
+
+describeMemoized('Web', () => {
   it.effect(
     'search the web',
     agentTest({
