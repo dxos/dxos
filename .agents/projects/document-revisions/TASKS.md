@@ -186,6 +186,21 @@ Deferred from the CodeRabbit round (stage 3/4):
         provision — until agents actually author suggestions there is nothing to display.
   - [ ] Future: swap synthetic provider for real HALO identity in `Agent.did`; no `creator` re-key
         (already `IdentityDid` format); drop the agent-author seeding once agents are members.
+  - [ ] **Unify the comment-bot identity with the compute author DID.** plugin-comments defines its
+        OWN `AgentIdentity` — an app-framework `Capability` (`{ name, identityDid?, avatar? }`,
+        default `{ name: 'Kai' }`, [types/AgentIdentity.ts](../../../packages/plugins/plugin-comments/src/types/AgentIdentity.ts))
+        naming the comment-thread `@mention` bot + stamping sender metadata — distinct from the
+        `@dxos/compute` `AgentIdentity` `Context.Tag` (`{ did, name?, hue? }`) that item 2 injects as
+        the suggestion `creator`. The comment bot already carries an unused-for-authorship
+        `identityDid?`; when the compute resolver lands, route the comment-bot's DID through the same
+        `resolveAuthor` path so a bot reply and a bot suggestion share one author/colour, and the two
+        `AgentIdentity` concepts don't drift. Verify the shared-name collision doesn't confuse
+        `Capability.get` vs `serviceOption` call sites.
+- [ ] **Naming collision — two `AgentIdentity`s.** plugin-comments' `AgentIdentity` (app-framework
+      `Capability`, the comment-bot "Kai") vs `@dxos/compute`'s `AgentIdentity` (`Context.Tag`, the
+      suggestion author DID). Unrelated today; no code path bridges them. Risk of confusion once the
+      compute resolver lands near comment code — resolution/unification tracked in the item-2 block
+      above ("Unify the comment-bot identity with the compute author DID").
 - [ ] Reconcile comments view vs suggestions view — split them into different tabs (today the
       `Suggestions` companion and comment threads share one surface in `CommentsArticle`; give
       suggestions their own tab alongside the unresolved/all comment tabs).
