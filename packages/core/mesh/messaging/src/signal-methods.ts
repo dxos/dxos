@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Context, type Lifecycle } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import {
   type JoinRequest,
@@ -100,13 +100,4 @@ export interface SignalMethods {
    * the subscription down; the subscriber owns that lifecycle.
    */
   subscribeMessages: (params: SubscribeMessagesParams) => Promise<UnsubscribeCallback>;
-}
-
-/**
- * Signaling client.
- * TODO(mykola): Delete.
- * @deprecated
- */
-export interface SignalClientMethods extends SignalMethods, Required<Lifecycle> {
-  getStatus(): SignalStatus;
 }

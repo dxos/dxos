@@ -5,12 +5,7 @@
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  type SignalManager,
-  WebsocketSignalManager,
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { schema } from '@dxos/protocols/proto';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -51,11 +46,9 @@ export class TestBuilder {
 
   constructor(public readonly options: TestBuilderOptions = {}) {}
 
-  createSignalManager(): WebsocketSignalManager | MemorySignalManager {
-    if (this.options.signalHosts) {
-      return new WebsocketSignalManager(this.options.signalHosts);
-    }
-
+  createSignalManager(): MemorySignalManager {
+    // KUBE `WebsocketSignalManager` was removed; the signal-server transport suites are skipped and
+    // signaling is always in-memory here (`signalHosts` still selects the WebRTC/TCP transport).
     return new MemorySignalManager(this._signalContext);
   }
 

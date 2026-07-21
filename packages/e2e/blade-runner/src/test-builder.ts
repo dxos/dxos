@@ -8,7 +8,12 @@ import { Context } from '@dxos/context';
 import { checkType, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Message, type UnsubscribeCallback, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  type Message,
+  type UnsubscribeCallback,
+} from '@dxos/messaging';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ComplexMap } from '@dxos/util';
 
@@ -68,7 +73,8 @@ export class TestPeer {
   private _messageSubscription?: UnsubscribeCallback;
   constructor({ signals, peerId = PublicKey.random() }: TestAgentProps) {
     this.signalServers = signals;
-    this.signalManager = new WebsocketSignalManager(signals);
+    // KUBE `WebsocketSignalManager` was removed; blade-runner peers use in-memory signaling.
+    this.signalManager = new MemorySignalManager(new MemorySignalManagerContext());
     this.peerId = peerId;
   }
 
