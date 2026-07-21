@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
+import { NamePopover, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -13,7 +13,6 @@ import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Branch, type History, Version } from '@dxos/versioning';
 
-import { NamePopover } from '#components';
 import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
@@ -179,6 +178,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
         <Toolbar.Root classNames='dx-document'>
           <NamePopover
             placeholder={t('revision-name.placeholder')}
+            submitLabel={t('create.label')}
             open={naming === 'checkpoint'}
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
@@ -194,6 +194,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
           </NamePopover>
           <NamePopover
             placeholder={t('branch-name.placeholder')}
+            submitLabel={t('create.label')}
             open={naming === 'branch'}
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}

@@ -15,5 +15,6 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));
 export const MarkdownSettings = Capability.lazy('MarkdownSettings', () => import('./settings'));
 export const MarkdownState = Capability.lazy('MarkdownState', () => import('./state'));

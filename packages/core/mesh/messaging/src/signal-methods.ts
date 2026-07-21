@@ -97,9 +97,12 @@ export interface SignalMethods {
   subscribeMessages: (peer: PeerInfo, tags?: string[]) => Promise<void>;
 
   /**
-   * Stop receiving messages from peer and clear any tag subscription.
+   * Stop receiving messages from peer. When `tags` are provided (DX-1125), release only this
+   * subscriber's registration of those tags — the transport keeps a tag refcount across subscribers,
+   * so another consumer's identical subscription stays live. Omitting `tags` clears the whole tag
+   * subscription (legacy behavior; avoid in new code — it clobbers concurrent subscribers).
    */
-  unsubscribeMessages: (peer: PeerInfo) => Promise<void>;
+  unsubscribeMessages: (peer: PeerInfo, tags?: string[]) => Promise<void>;
 }
 
 /**

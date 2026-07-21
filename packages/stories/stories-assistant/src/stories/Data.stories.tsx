@@ -86,8 +86,7 @@ export const WithResearch: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat], [Module.Graph, Module.ExecutionGraph]],
+    layout: [[Module.Chat], [Module.Graph, Module.ExecutionGraph], [Module.Context]],
     skills: [
       // AssistantSkill.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
