@@ -211,6 +211,18 @@ Deferred from the CodeRabbit round (stage 3/4):
       (`SuggestionThread`, `Message/WithChange`, `VersionBanner`, integrated `CommentsArticle`), and
       an end-to-end narration for recording.
 
+## Landing the suggestions feature (current goal)
+
+Polish + fixes required before landing the suggestion-review flow.
+
+- [ ] When switching to a branch via the toolbar, default the view to **Diff** (not Base/Branch).
+- [ ] BUG: selecting a branch then adding a comment throws `RangeError: Cannot getCursorPosition:
+      cursor <id> is invalid`. Investigate; likely disable comment-add on a branch/diff view (the
+      comment anchor cursor resolves against the wrong doc). Decide: disable vs fix the anchor.
+- [ ] Storybook with a real LLM making suggestions; a play function where suggestions are created by
+      a mock agent and dismissed by the user. (tracked 2026-07-21)
+- [ ] BUG: creating a comment — after pressing Enter the comment flashes. (tracked 2026-07-21)
+
 ## Future
 
 - **True nested branch-of-branch** (fork off a branch tip, keep live, merge child→parent→main).
