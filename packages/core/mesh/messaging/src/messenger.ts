@@ -15,7 +15,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { MessengerMonitor } from './messenger-monitor';
 import { type SignalManager } from './signal-manager';
-import { type Message, type PeerInfo, type UnsubscribeCallback } from './signal-methods';
+import { type Message, type PeerInfo } from './signal-methods';
 import { MESSAGE_TIMEOUT } from './timeouts';
 
 export type OnMessage = (params: Message) => Promise<void>;
@@ -43,13 +43,6 @@ export class Messenger {
 
   // peerId => listeners set
   private readonly _defaultListeners = new Map<string, Set<OnMessage>>();
-
-  /**
-   * peerKey => the shared transport subscription for that peer plus a refcount across the listeners
-   * registered against it. The subscription's callback drives {@link _handleMessage}; it is created
-   * lazily on the first `listen` for a peer and torn down when the last listener unsubscribes.
-   */
-  private readonly _peerSubscriptions = new Map<string, { unsubscribe: UnsubscribeCallback; count: number }>();
 
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(PublicKey.hash);
 
@@ -98,10 +91,10 @@ export class Messenger {
       return;
     }
     this._closed = true;
-    // NOTE: Transport subscriptions are intentionally NOT torn down here. `close`/`open` model a
-    // transient transport cycle (e.g. going offline/online), across which the logical listeners — and
-    // thus their transport subscriptions — must survive; the swarm does not re-`listen` on reconnect.
-    // Real teardown is owned by each {@link ListeningHandle} (Swarm.destroy → unsubscribe).
+    // NOTE: Subscriptions are owned by their {@link ListeningHandle}s (Swarm.destroy → unsubscribe),
+    // not by the messenger, so they survive a `close`/`open` transport cycle (e.g. going
+    // offline/online) where the swarm does not re-`listen`. Only the reliable-delivery context is
+    // disposed here.
     await this._ctx.dispose();
   }
 
@@ -186,7 +179,16 @@ export class Messenger {
     invariant(peer.peerKey, 'Peer key is required');
     const peerKey = peer.peerKey;
 
-    await this._ensurePeerSubscription(peer);
+    // Multiplexing and subscription lifecycle are owned by the signal manager. The messenger keeps
+    // only reliable delivery (ACK/dedup) and payloadType routing, and passes the transport
+    // unsubscribe straight back through the returned handle.
+    const unsubscribe = await this._signalManager.subscribeMessages({
+      peer,
+      onMessage: (message) => {
+        log('received message', { from: message.author });
+        void this._handleMessage(message);
+      },
+    });
 
     let listeners: Set<OnMessage> | undefined;
     if (!payloadType) {
@@ -208,47 +210,9 @@ export class Messenger {
     return {
       unsubscribe: async () => {
         listeners!.delete(onMessage);
-        await this._releasePeerSubscription(peerKey);
+        await unsubscribe();
       },
     };
-  }
-
-  /**
-   * Ensure a shared transport subscription exists for `peer`, creating it on first use and bumping a
-   * refcount otherwise. Its callback drives reliable-message handling for every listener on this peer.
-   */
-  private async _ensurePeerSubscription(peer: PeerInfo): Promise<void> {
-    invariant(peer.peerKey, 'Peer key is required');
-    const existing = this._peerSubscriptions.get(peer.peerKey);
-    if (existing) {
-      existing.count++;
-      return;
-    }
-
-    // Register synchronously so concurrent `listen` calls for the same peer share one subscription.
-    const entry: { unsubscribe: UnsubscribeCallback; count: number } = { unsubscribe: async () => {}, count: 1 };
-    this._peerSubscriptions.set(peer.peerKey, entry);
-    try {
-      entry.unsubscribe = await this._signalManager.subscribeMessages({
-        peer,
-        onMessage: (message) => {
-          log('received message', { from: message.author });
-          void this._handleMessage(message);
-        },
-      });
-    } catch (err) {
-      this._peerSubscriptions.delete(peer.peerKey);
-      throw err;
-    }
-  }
-
-  private async _releasePeerSubscription(peerKey: string): Promise<void> {
-    const entry = this._peerSubscriptions.get(peerKey);
-    if (!entry || --entry.count > 0) {
-      return;
-    }
-    this._peerSubscriptions.delete(peerKey);
-    await entry.unsubscribe();
   }
 
   private async _encodeAndSend(
