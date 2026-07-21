@@ -58,8 +58,15 @@ as primary coverage.
       (full plugin composition boots, trivial 1-tool task completes).
 - [ ] Convert G2 → deterministic mocked C unit tests; golden-args fixture convention; delete each
       G2 fixture once its unit test lands.
-- [ ] Context-assembly (E) + schema round-trip (F) tests.
-- [ ] Code-side oracle (G): DB-state / tool-invocation assertion helpers.
+- [ ] Context-assembly (E) + schema round-trip (F) tests. E: snapshot the assembled prompt
+      (system + skill instructions + bound objects + tool descriptions) from `formatSystemPrompt` /
+      `AiPreprocessor.preprocessPrompt` — pure function of inputs, no model; catches skill/instruction
+      wiring regressions as a prompt diff. F: assert tool JSON-schema gen + arg/result encode↔decode
+      per toolkit.
+- [ ] Code-side oracle (G): shared, deterministic DB-state / tool-invocation assertion helpers.
+      Verdict is always code, never an LLM output — deterministic wherever its inputs are: a
+      reproducible pass/fail over the C/D scripted tiers, reused as graded scorers (pass-rate ≥
+      threshold) over the A/B/H eval tier. See TESTING.md "Deterministic tiers".
 
 ## Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
