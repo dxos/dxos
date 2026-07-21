@@ -186,6 +186,9 @@ Deferred from the CodeRabbit round (stage 3/4):
         provision — until agents actually author suggestions there is nothing to display.
   - [ ] Future: swap synthetic provider for real HALO identity in `Agent.did`; no `creator` re-key
         (already `IdentityDid` format); drop the agent-author seeding once agents are members.
+- [ ] Reconcile comments view vs suggestions view — split them into different tabs (today the
+      `Suggestions` companion and comment threads share one surface in `CommentsArticle`; give
+      suggestions their own tab alongside the unresolved/all comment tabs).
 - [ ] Full-stack `CommentsArticle` verification could not run in-pane (30s boot timeout) — verify
       the suggestion companion + empty state manually (see morning test plan).
 - [ ] Create test plan + usage script for demo video — the suggestion-review flow (Suggest edits →

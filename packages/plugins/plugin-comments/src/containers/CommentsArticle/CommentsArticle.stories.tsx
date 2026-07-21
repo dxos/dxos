@@ -12,10 +12,11 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation, Text as EchoText } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -31,6 +32,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
+import { Branch } from '@dxos/versioning';
 
 import { CommentsPlugin } from '../../CommentsPlugin';
 import { textOf } from '../../should-trigger-agent';
@@ -40,6 +42,10 @@ import { AgentIdentity, CommentCapabilities } from '../../types';
 random.seed(1);
 
 const STORY_AGENT_NAME = 'Kai';
+// Fixed synthetic DID for the story agent so its authored suggestion is deterministic (no LLM).
+// The companion labels the suggestion by this DID until agent-author resolution lands (see the
+// document-revisions tasks); the point of the variant is that an agent-authored suggestion renders.
+const STORY_AGENT_DID = 'did:agent:kai';
 
 const SAMPLE_CONTENT = [
   '# Sample',
@@ -60,6 +66,13 @@ const SAMPLE_CONTENT = [
 
 // Phrases in LARGE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
+
+// The agent's proposed revision of the document — one reworded sentence, so it diffs against the
+// base as a single reviewable suggestion the companion renders.
+const AGENT_SUGGESTION_CONTENT = SAMPLE_CONTENT.replace(
+  'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
+  'The companion renders each thread and suggestion on a shared virtual stack, mirroring the chat experience while keeping the editor in sync.',
+);
 
 /**
  * Seed anchored comment threads over known phrases so the editor renders the
@@ -98,6 +111,20 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
       }),
     );
   }
+};
+
+/**
+ * Seed a suggestion authored by an agent — deterministic, no LLM. Opens the agent's per-author
+ * `kind:'suggestion'` branch (via {@link Branch.suggestion}) and edits its content to the proposed
+ * revision, so the companion overlays it against the base as an agent-authored suggestion card.
+ */
+const seedAgentSuggestion = async (doc: Markdown.Document, parent: Text.Text) => {
+  const branch = await Branch.suggestion(doc, parent, STORY_AGENT_DID);
+  const binding = await Branch.bind(doc, branch);
+  Obj.update(binding.object, () => {
+    EchoText.update(binding.object, 'content', AGENT_SUGGESTION_CONTENT);
+  });
+  binding.dispose();
 };
 
 /**
@@ -209,6 +236,8 @@ type StoryArgs = {
   agentMode?: Markdown.Settings['commentAgentMode'];
   /** Seed three anchored comment threads over known phrases in the document. */
   seedComments?: boolean;
+  /** Seed a suggestion branch authored by the story agent (deterministic; no LLM). */
+  seedAgentSuggestions?: boolean;
 };
 
 const DefaultStory = ({ agentMode }: StoryArgs) => {
@@ -281,6 +310,13 @@ const meta = {
                 seedComments(personalSpace, doc, text);
                 yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
               }
+
+              if (args.seedAgentSuggestions) {
+                const text = yield* Effect.promise(() => doc.content.load());
+                invariant(text, 'document content not loaded');
+                yield* Effect.promise(() => seedAgentSuggestion(doc, text));
+                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              }
             }),
         }),
         SpacePlugin({}),
@@ -332,5 +368,16 @@ export const WithAutoAgent: Story = {
 export const WithComments: Story = {
   args: {
     seedComments: true,
+  },
+};
+
+/**
+ * The companion showing a suggestion authored by an agent (the story agent "Kai"), seeded
+ * deterministically — no LLM. The agent's per-author `kind:'suggestion'` branch proposes a reworded
+ * sentence, which the companion overlays against the base as an accept/reject change-block card.
+ */
+export const WithAgentSuggestions: Story = {
+  args: {
+    seedAgentSuggestions: true,
   },
 };
