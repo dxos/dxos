@@ -13,8 +13,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { AppManager } from './app-manager';
-import { Markdown } from './plugins';
 import { here } from './harness-helpers';
+import { Markdown } from './plugins';
 
 const DURATION_MS = Number(process.env.DX_IDLE_DURATION_MS ?? 8 * 60_000);
 const INTERVAL_MS = Number(process.env.DX_IDLE_INTERVAL_MS ?? 30_000);
