@@ -5,5 +5,10 @@
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["vite.config.ts", "src/playwright/playwright.config.ts"]
+  "include": [
+    "vite.config.ts",
+    "src/e2e/vitest.config.ts",
+    "src/e2e/vitest.dev.config.ts",
+    "src/e2e/vitest.welcome-focus.config.ts"
+  ]
 }

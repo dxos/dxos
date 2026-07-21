@@ -37,6 +37,7 @@ catalog:
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
   '@babylonjs/loaders': ^7.54.3
+  '@browserbasehq/stagehand': ^3.6.0
   '@bryanguffey/astro-standard-site': ^1.0.3
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
@@ -764,11 +765,13 @@ overrides:
   nth-check: '>=2.0.1'
   on-headers: '>=1.1.0'
   path-to-regexp: '>=3.3.0'
+  pino: 9.13.1
   postcss: 'catalog:'
   prismjs: '>=1.30.0'
   qs: '>=6.14.1'
   react: 'catalog:'
   react-dom: 'catalog:'
+  slow-redact: 0.3.1
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
   typescript: 'catalog:'

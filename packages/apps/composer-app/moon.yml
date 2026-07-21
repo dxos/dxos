@@ -1,7 +1,8 @@
+# NOTE: The `e2e` tag is intentionally absent — composer's e2e suite runs on
+# Stagehand + vitest (src/e2e) rather than the shared playwright preset.
 layer: application
 language: typescript
 tags:
-  - e2e
   - tauri
   - typecheck
   - vite
@@ -28,16 +29,42 @@ tasks:
   serve:
     deps:
       - prebuild
-  # Dev-server startup harness — measures `vite serve` against the shared
-  # `dev-startup.spec.ts`. Distinct from `e2e` (which inherits from `ts-test`'s
-  # default playwright config and runs the production preview harness).
+  # Production preview e2e suite — Stagehand-driven browser tests run by vitest
+  # against `vite preview` (started by the suite's global setup).
+  e2e:
+    command: pnpm exec vitest run --config=src/e2e/vitest.config.ts
+    deps:
+      - target: ^:build
+        optional: true
+      - target: ^:compile
+        optional: true
+      - target: bundle
+        optional: true
+    env:
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+    inputs:
+      - src/e2e/**/*
+      - '@group(sources)'
+      - '@group(tests)'
+      - $CI
+      - $CONFIG_DYNAMIC
+      - $DX_ENVIRONMENT
+      - $DX_HOST
+      - $DX_HUB_URL
+      - $DX_IPDATA_API_KEY
+      - $DX_SHARED_WORKER
+      - $STAGEHAND_MODEL
+  # Dev-server startup harness — measures `vite serve` against
+  # `dev-startup.spec.ts`. Distinct from `e2e` (which runs the production
+  # preview harness).
   e2e-dev:
-    command: pnpm exec playwright test --config=src/playwright/playwright-dev.config.ts
+    command: pnpm exec vitest run --config=src/e2e/vitest.dev.config.ts
     deps:
       - prebuild
       - ^:build
   e2e-welcome-focus:
-    command: pnpm exec playwright test --config=src/playwright/playwright-welcome-focus.config.ts
+    command: pnpm exec vitest run --config=src/e2e/vitest.welcome-focus.config.ts
     deps:
       - prebuild
       - ^:build

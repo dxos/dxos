@@ -180,6 +180,7 @@
   },
   "devDependencies": {
     "@babel/core": "catalog:",
+    "@browserbasehq/stagehand": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-graph": "workspace:*",
@@ -293,7 +294,8 @@
     "vite-plugin-solid": "catalog:",
     "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:",
-    "workbox-window": "catalog:"
+    "workbox-window": "catalog:",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "@babel/core": "catalog:"

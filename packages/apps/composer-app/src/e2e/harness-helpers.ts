@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Page } from '@playwright/test';
+import { type Page } from '@browserbasehq/stagehand';
 import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -15,16 +15,16 @@ export const here = path.dirname(fileURLToPath(import.meta.url));
  * Boot scenarios captured by the harness. New scenarios should add a doc-line here
  * and a column-friendly tag (kebab-case is fine for the BENCHMARKS row).
  *
- *   - `cold`: fresh browser context, no IDB, no module cache. First-ever-user
+ *   - `cold`: fresh browser profile, no IDB, no module cache. First-ever-user
  *     experience; conflates "load app" with "create new identity from scratch".
- *   - `warm`: same context as cold, then `page.reload()`. Returning user in
+ *   - `warm`: same profile as cold, then `page.reload()`. Returning user in
  *     a still-running tab — IDB and bundle cache are warm.
- *   - `warm-cold`: persistent context primed once, closed, then re-launched.
+ *   - `warm-cold`: persistent profile primed once, closed, then re-launched.
  *     IDB persists across launches but module cache is fresh — closest to a
- *     real returning user opening Composer in a new tab. (chromium-only)
+ *     real returning user opening Composer in a new tab.
  *   - `throttled-cold`: cold scenario with Fast 3G + 2× CPU emulated via CDP.
- *     Reveals bundle-size wins that local-disk loads don't expose. (chromium-only)
- *   - `dev-cold`: vite dev server, fresh browser context, but with the vite
+ *     Reveals bundle-size wins that local-disk loads don't expose.
+ *   - `dev-cold`: vite dev server, fresh browser profile, but with the vite
  *     optimize-deps cache and module graph already primed by a previous
  *     navigation in the same `vite serve` process. Measures the inner-loop
  *     "edit-and-reload" experience, not the cold `vite serve` start.
@@ -56,9 +56,9 @@ export type StartupReport = {
     /** Top 10 slowest modules. */
     slowestModules: Array<{ name: string; duration: number }>;
   };
-  /** Approximate transferred bytes from network responses (`response_received` events). */
+  /** Approximate transferred bytes summed from resource-timing transferSize. */
   transferredBytes: number;
-  /** Number of network responses received. */
+  /** Number of network responses observed via resource timing. */
   responseCount: number;
 };
 
@@ -69,34 +69,24 @@ export const writeReport = (name: string, payload: unknown): void => {
   writeFileSync(path.join(REPORT_DIR, name), `${JSON.stringify(payload, null, 2)}\n`);
 };
 
-export const waitForReady = async (page: Page, timeout = 30_000): Promise<void> => {
-  await page.getByTestId('treeView.userAccount').waitFor({ timeout });
-};
-
 /**
- * Hooks `response` to count bytes and responses; the closure returned reads the
- * accumulated counters.
+ * Network counters sourced from the page's resource-timing buffer (navigation + resources).
+ * Stagehand's CDP page does not surface per-response events, so byte counts come from
+ * `transferSize`, which reflects on-the-wire size including headers (0 for cache hits).
  */
-export const trackNetwork = (page: Page): (() => { bytes: number; responses: number }) => {
-  let bytes = 0;
-  let responses = 0;
-  page.on('response', async (response) => {
-    responses += 1;
-    try {
-      const lengthHeader = response.headers()['content-length'];
-      if (lengthHeader) {
-        bytes += parseInt(lengthHeader, 10) || 0;
-      } else {
-        const body = await response.body().catch(() => null);
-        if (body) {
-          bytes += body.byteLength;
-        }
-      }
-    } catch {
-      // Ignore — some redirect / preflight responses can't be read.
-    }
+export const readNetworkCounts = async (page: Page): Promise<{ bytes: number; responses: number }> => {
+  // Grow the buffer before entries are evicted (default is 250).
+  await page.evaluate(() => performance.setResourceTimingBufferSize(10_000));
+  return page.evaluate(() => {
+    const entries = [
+      ...performance.getEntriesByType('navigation'),
+      ...performance.getEntriesByType('resource'),
+    ] as PerformanceResourceTiming[];
+    return {
+      bytes: entries.reduce((sum, entry) => sum + (entry.transferSize || 0), 0),
+      responses: entries.length,
+    };
   });
-  return () => ({ bytes, responses });
 };
 
 export const collectStartupReport = async (page: Page, scenario: Scenario): Promise<StartupReport> => {
@@ -152,8 +142,8 @@ const BENCHMARKS_FILE = path.join(here, '..', '..', 'BENCHMARKS.md');
 const BENCHMARKS_HEADER = [
   '# Composer-app startup benchmarks',
   '',
-  'Auto-recorded by `src/playwright/startup.spec.ts` (production preview) and ',
-  '`src/playwright/dev-startup.spec.ts` (vite dev). One row per scenario per harness run.',
+  'Auto-recorded by `src/e2e/startup.spec.ts` (production preview) and ',
+  '`src/e2e/dev-startup.spec.ts` (vite dev). One row per scenario per harness run.',
   '`profilerTotal` = `composer.profiler` (`main:start` → `Startup` activated).',
   '`navToReady` = wall-clock from `page.goto` until the user-account testid is visible.',
   '`fcp` = first contentful paint (the boot loader). `bytes` = sum of response bodies.',
@@ -183,7 +173,7 @@ const formatBenchmarkRow = (report: StartupReport): string => {
     sha,
     dirty ? '⚠' : '',
     report.scenario,
-    process.env.PLAYWRIGHT_BROWSER || 'chromium',
+    'chromium',
     report.profilerTotal,
     report.navigationToReady,
     report.firstContentfulPaint,

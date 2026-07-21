@@ -17,8 +17,10 @@
   },
   "exclude": [
     "demos/*",
+    "src/e2e/vitest.config.ts",
+    "src/e2e/vitest.dev.config.ts",
+    "src/e2e/vitest.welcome-focus.config.ts",
     "src/functions/*",
-    "src/playwright/playwright.config.ts",
     "vite.config.ts"
   ],
   "include": [
