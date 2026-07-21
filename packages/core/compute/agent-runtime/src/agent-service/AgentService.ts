@@ -35,6 +35,7 @@ type AgentHandle = ProcessManager.Handle<string, void, AgentRpcs>;
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
 
+// TODO(burdon): Agent identity?
 export interface CreateSessionOptions {
   readonly skills?: Skill.Skill[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
