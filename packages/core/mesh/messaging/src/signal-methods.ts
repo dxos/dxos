@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Context, type Lifecycle } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import {
   type JoinRequest,
@@ -18,11 +18,6 @@ export type { Message, SwarmEvent };
 export type PeerInfo = Peer;
 export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
 
-/**
- * A broadcast message delivered by tag intersection rather than to a single recipient (DX-1125).
- */
-export type BroadcastMessage = Pick<Message, 'author' | 'payload'> & { tags: string[] };
-
 export type SignalStatus = {
   host: string;
   state: SignalState;
@@ -31,6 +26,33 @@ export type SignalStatus = {
   connectionStarted: Date;
   lastStateChange: Date;
 };
+
+/**
+ * Parameters for {@link SignalMethods.subscribeMessages}.
+ */
+export type SubscribeMessagesParams = {
+  /**
+   * The subscribing peer. Point-to-point messages addressed to this `peerKey` are delivered.
+   */
+  peer: PeerInfo;
+
+  /**
+   * OR-subscription tags (DX-1125). When provided, swarm broadcasts whose tags intersect this set are
+   * also delivered. Only meaningful for edge signaling; other transports ignore them.
+   */
+  tags?: string[];
+
+  /**
+   * Invoked for every message delivered to this subscription (point-to-point or matching broadcast).
+   */
+  onMessage: (message: Message) => void;
+};
+
+/**
+ * Tears down a subscription created by {@link SignalMethods.subscribeMessages} and releases its
+ * transport resources (edge tag registration / receive stream). The subscriber owns this lifecycle.
+ */
+export type UnsubscribeCallback = () => Promise<void>;
 
 /**
  * Message routing interface.
@@ -42,17 +64,6 @@ export interface SignalMethods {
    * TODO(mykola): Use swarmState in network-manager instead.
    */
   swarmEvent: Event<SwarmEvent>;
-
-  /**
-   * Emits when a point-to-point message addressed to this peer is received.
-   */
-  onMessage: Event<Message>;
-
-  /**
-   * Emits when a tag broadcast matching this peer's subscription is received (DX-1125).
-   * Only edge signaling delivers broadcasts; other transports leave this undefined.
-   */
-  onBroadcast?: Event<BroadcastMessage>;
 
   /**
    * Emits when the swarm state changes.
@@ -75,41 +86,18 @@ export interface SignalMethods {
   query: (ctx: Context, params: QueryRequest) => Promise<SwarmResponse>;
 
   /**
-   * Send a point-to-point message to a peer.
+   * Send a message. Point-to-point when `recipient` is set; a swarm broadcast (DX-1125) when `tags`
+   * are set — fanned out to every peer whose tag subscription intersects, with the target swarm taken
+   * from `author.swarmKey`. Exactly one of `recipient` / `tags` must be present. Broadcasts are only
+   * supported by edge signaling.
    */
   sendMessage: (ctx: Context, message: Message) => Promise<void>;
 
   /**
-   * Broadcast a tagged message to a swarm (DX-1125). Fanned out to every peer whose tag subscription
-   * intersects `tags`. Only supported by edge signaling.
+   * Start receiving messages for `peer`: its point-to-point messages, plus — when `tags` are provided
+   * (DX-1125) — swarm broadcasts whose tags intersect. Matching messages are routed to
+   * `params.onMessage`; routing and the transport stream are owned here. Returns a callback that tears
+   * the subscription down; the subscriber owns that lifecycle.
    */
-  sendBroadcast?: (
-    ctx: Context,
-    params: { author: PeerInfo; swarmKey: string; tags: string[]; payload: Message['payload'] },
-  ) => Promise<void>;
-
-  /**
-   * Start receiving messages addressed to `peer`. When `tags` are provided (DX-1125), also register an
-   * OR-subscription so the peer receives swarm broadcasts whose tags intersect `tags` (emitted on
-   * {@link onBroadcast}). Tags are only meaningful for edge signaling; other transports ignore them.
-   */
-  // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
-  subscribeMessages: (peer: PeerInfo, tags?: string[]) => Promise<void>;
-
-  /**
-   * Stop receiving messages from peer. When `tags` are provided (DX-1125), release only this
-   * subscriber's registration of those tags — the transport keeps a tag refcount across subscribers,
-   * so another consumer's identical subscription stays live. Omitting `tags` clears the whole tag
-   * subscription (legacy behavior; avoid in new code — it clobbers concurrent subscribers).
-   */
-  unsubscribeMessages: (peer: PeerInfo, tags?: string[]) => Promise<void>;
-}
-
-/**
- * Signaling client.
- * TODO(mykola): Delete.
- * @deprecated
- */
-export interface SignalClientMethods extends SignalMethods, Required<Lifecycle> {
-  getStatus(): SignalStatus;
+  subscribeMessages: (params: SubscribeMessagesParams) => Promise<UnsubscribeCallback>;
 }

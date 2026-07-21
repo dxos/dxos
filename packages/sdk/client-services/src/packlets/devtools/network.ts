@@ -5,7 +5,8 @@
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { type SignalManager } from '@dxos/messaging';
+import { log } from '@dxos/log';
+import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
   type GetNetworkPeersRequest,
@@ -31,19 +32,47 @@ export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: Sig
     update();
   });
 
-export const subscribeToSignal = ({ signalManager }: { signalManager: SignalManager }) =>
+export const subscribeToSignal = ({
+  signalManager,
+  networkManager,
+}: {
+  signalManager: SignalManager;
+  networkManager: SwarmNetworkManager;
+}) =>
   new Stream<SignalResponse>(({ next }) => {
     const ctx = new Context();
-    signalManager.onMessage.on(ctx, (message) => {
-      next({
-        message: {
-          author: PublicKey.from(message.author.peerKey).asUint8Array(),
-          recipient: PublicKey.from(message.recipient.peerKey).asUint8Array(),
-          payload: message.payload,
-        },
-        receivedAt: new Date(),
-      });
-    });
+
+    // Observe point-to-point messages delivered to this node's own peer. The subscription owns its
+    // routing and teardown (DX-1125); with no local peer yet there is nothing to observe.
+    let unsubscribe: UnsubscribeCallback | undefined;
+    const peer = networkManager.getPeerInfo();
+    if (peer) {
+      void signalManager
+        .subscribeMessages({
+          peer,
+          onMessage: (message) => {
+            next({
+              message: {
+                author: PublicKey.from(message.author.peerKey).asUint8Array(),
+                recipient: message.recipient
+                  ? PublicKey.from(message.recipient.peerKey).asUint8Array()
+                  : new Uint8Array(),
+                payload: message.payload,
+              },
+              receivedAt: new Date(),
+            });
+          },
+        })
+        .then((unsub) => {
+          if (ctx.disposed) {
+            void unsub();
+          } else {
+            unsubscribe = unsub;
+          }
+        })
+        .catch((err) => log.catch(err));
+    }
+
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
       next({
         swarmEvent: swarmEvent.peerAvailable
@@ -59,6 +88,7 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
       });
     });
     return () => {
+      void unsubscribe?.();
       return ctx.dispose();
     };
   });
