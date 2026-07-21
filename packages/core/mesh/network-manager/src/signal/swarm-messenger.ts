@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -46,22 +45,13 @@ export class SwarmMessenger implements SignalMessenger {
     this._topic = topic;
   }
 
-  async receiveMessage(
-    ctx: Context,
-    {
-      author,
-      recipient,
-      payload,
-    }: {
-      author: PeerInfo;
-      recipient: PeerInfo;
-      payload: Any;
-    },
-  ): Promise<void> {
+  async receiveMessage(ctx: Context, { author, recipient, payload }: Message): Promise<void> {
     if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
       return;
     }
+    // Swarm signaling is point-to-point; a broadcast (DX-1125) never carries a SwarmMessage payload.
+    invariant(recipient, 'Recipient is required');
     const message: SwarmMessage = SwarmMessage.decode(payload.value);
 
     if (!this._topic.equals(message.topic)) {

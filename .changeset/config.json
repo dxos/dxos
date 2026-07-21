@@ -177,7 +177,6 @@
       "@dxos/rpc-tunnel-e2e",
       "@dxos/schema",
       "@dxos/shell",
-      "@dxos/signal",
       "@dxos/solid-ui",
       "@dxos/solid-ui-geo",
       "@dxos/sql-sqlite",

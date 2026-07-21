@@ -251,17 +251,20 @@ gh run watch
 
 Handy as aliases — e.g. `gh alias set deploy-labs 'workflow run deploy-apps.yml -f environment=labs'`, then just `gh deploy-labs`.
 
-**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`, docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. `remote` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it; `dev` always requires an app (there's no "all" for local `wrangler dev`). Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
 
 ```bash
-# Push secrets to the deployed composer-labs Worker.
+# Push secrets to every app that has a labs env (currently just composer).
 pnpm secrets remote labs
 
-# See what would be pushed without making any change.
+# Push secrets to one specific Worker.
+pnpm secrets remote staging docs
+
+# See what would be pushed, for the whole environment, without making any change.
 pnpm secrets remote main --dry-run
 
-# Write .dev.vars for local `wrangler dev`.
-pnpm secrets dev
+# Write .dev.vars for local `wrangler dev` (app is required).
+pnpm secrets dev composer
 
 # Target a different 1Password item.
 pnpm secrets remote labs --item "some other item"
@@ -297,6 +300,40 @@ Examples:
 ## CI
 
 See [CI docs](./.github/workflows/README.md).
+
+## Trunk (flaky test quarantining / CI Autopilot)
+
+CI already uploads test results to [Trunk](https://trunk.io), which detects
+flaky tests and quarantines (auto-skips) them instead of letting them block
+merges. The org-wide Trunk MCP server ("CI Autopilot") is already configured
+for this repo — it just needs a one-time per-user authentication:
+
+```bash
+claude mcp add --transport http trunk https://mcp.trunk.io/mcp --scope project
+```
+
+Then run `claude .`, run `/mcp`, select `trunk`, and hit Enter to authenticate
+with your own Trunk account.
+
+For how an agent should use the server's tools (investigating a CI failure,
+looking up a flaky test), see the `trunk-quarantine` agent skill
+(`.agents/skills/trunk-quarantine/SKILL.md`).
+
+### Manually quarantining a test
+
+Quarantining is a dashboard-only action — there's no CLI or config-file way to
+do it, and it's gated by each repo's **Manual Quarantine Permissions** setting
+(**Settings → Repositories → [repo] → Flaky Tests**), so admins may need to do
+this step.
+
+- **From a test's details page:** click **Quarantine**, choose **Always** in
+  the quarantine-status control, add a required comment, then **Save**.
+- **From the Flaky Tests table:** open the row's **⋮** actions menu and select
+  **Quarantine test**.
+
+To reverse it, use the same controls: **Remove Quarantine** on the details
+page, or **Unquarantine test** from the table's actions menu. Every override
+is logged in the test's **Events** tab (author, timestamp, comment).
 
 ## Patching third-party repos
 
