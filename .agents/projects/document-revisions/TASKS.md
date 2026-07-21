@@ -222,6 +222,11 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
 
 - [ ] **Maintain the precise ambient-review spec in `packages/plugins/plugin-comments/DESIGN.md`**
       (the plugin design file), not a separate superpowers spec. (tracked 2026-07-21)
+- Spec: [`plugin-comments/DESIGN.md` § Ambient review model](../../../packages/plugins/plugin-comments/DESIGN.md).
+  Implementation plan:
+  [`agents/superpowers/plans/2026-07-21-ambient-review-model.md`](../../../agents/superpowers/plans/2026-07-21-ambient-review-model.md)
+  (Milestone A: modes + policy + Editing/Viewing ambient overlay + review — fully specified;
+  Milestone B: Suggesting-mode authoring — spike-gated, tasks appended after Task B0).
 
 ## Landing the suggestions feature (current goal)
 
