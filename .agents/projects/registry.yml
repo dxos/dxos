@@ -61,4 +61,15 @@ projects:
     prs: [12287]
     resume: 'Design doc PR #12287 (draft): packages/core/compute/ai/TESTING.md — dimensions A-H, current-approach gaps, tiered target, prioritized plan + consumer inventory (G1/G2/G3) and removal blast-radius. No implementation started. Next code step: extract the scripted LanguageModel primitive from MemoizedLanguageModel (substrate for D tests + G1 boot-smoke), then delete G1 (assistant-e2e). Quick relief available first: de-gate G2/G3 memoized replay from PR CI.'
 
+  - name: agent-firewall
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-21
+    summary: Confine AI agent reads to a space allowlist (tier-0). Tier-1 personal-space chats read across the user's spaces (resolve/query/load/feed), wired into Composer via readScope.
+    tasks: .agents/projects/agent-firewall/TASKS.md
+    design: docs/design/agent-firewall.md
+    prs: []
+    resume: 'Branch claude/exciting-sammet-327268. Read confinement (resolve/query/load/feed via Hypergraph.Service allowlist) + tier-1 multi-space reads + membership source (Hypergraph.spaceIds) + per-session readScope threaded useChatProcessor->AiChatProcessor->getSession->AgentProcess + membership system-prompt clause. Verified live in Composer (personal-space chat reads across spaces). Just merged origin/main (commits e601db3f6e + ccb820944e); compiles. BLOCKER: main reworked the query planner (now requires an explicit from() clause; feeds handled via query sources), so the scoped-graph read path regressed — 5 hypergraph.test.ts cases fail (unscoped/multi-space/full-text/feed/spaceIds). NEXT: re-adapt ScopedHypergraph query path to main (bind from(allowlist) for unscoped; per-space fan-out for full-text; confirm feed via SpaceQuerySource). Then regenerate agent-firewall.conversations.json positive fixture (membership system-prompt changed it). Deferred: PR not opened per user.'
+
 ended: []
