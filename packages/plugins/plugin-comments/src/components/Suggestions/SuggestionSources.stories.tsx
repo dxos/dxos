@@ -200,7 +200,9 @@ export const SwapDocument: Story = {
     // Swap to Doc B. Assert straight after the click (no `waitFor`) that no trace of Doc A's content
     // survives — the stale frame this test guards against would show up right here, before Doc B's
     // own probes have had any chance to resolve.
-    await userEvent.click(swapButton()!);
+    const swap = swapButton();
+    invariant(swap, 'swap-document button not rendered');
+    await userEvent.click(swap);
     await expect(text()).not.toContain(STORY_AGENTS[0].content);
     await expect(text()).not.toContain(STORY_AGENTS[1].content);
 
