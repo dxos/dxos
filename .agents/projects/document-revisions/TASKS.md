@@ -161,14 +161,19 @@ Deferred from the CodeRabbit round (stage 3/4):
         neither); added to the Markdown skill `operations` + instructions (suggest-edit over
         create-branch for review). Test: creator defaults from the provided identity; explicit
         creator overrides.
-  - [ ] **Runtime provision (needs live-agent verification — deferred).** Provide the `AgentIdentity`
-        layer where the agent executes ops, resolved from the current `Agent.did`/`name`:
-        `agent-process.ts` and `run-instructions.ts` both `Effect.provide(Layer.mergeAll(...))` around
-        the tool session — add `Layer.succeed(AgentIdentity.AgentIdentity, { did: agent.did, name })`
-        (empty when no agent, e.g. a routine). Resolve the agent from the feed (feed→chat→Agent via
-        `Chat.CompanionTo`, cf. `delegation-strategy.ts` `Database.query(Filter.type(Agent))`).
-        Mechanism proven by the op test; left for an env with a live agent since that is exactly what
-        this wiring needs to be verified against.
+  - [ ] **Runtime provision (needs live-agent verification — deferred).** Correct mechanism: an
+        `AgentIdentity` **resolver** (NOT a spawn-time layer). Rationale discovered while wiring:
+        `agent-runtime` cannot import `Agent` (dep direction), and agent sessions are cached/hydrated,
+        so a `did` threaded at spawn is lost on hydration. Instead register
+        `ServiceResolver.succeed(AgentIdentity.AgentIdentity, ...)` in the production
+        `Capabilities.ServiceResolver` composition (a plugin/assistant-toolkit layer that CAN import
+        `Agent` + `Harness`); resolve via `Agent.getFromChatContext` → `{ did, name }` (fresh per call,
+        survives hydration — same pattern as planning/agent/delegation ops that declare
+        `Harness.HarnessService`). Requires: make `AgentIdentity.Identity.did` optional + resolver
+        always-succeeds (so the explicit-`creator`, no-agent path still works); `SuggestEdit` declares
+        `AgentIdentity`; add the resolver to `AssistantTestLayer` too. Left for a live-agent env: the
+        resolver runs only inside a running agent's Harness context, which is exactly what must be
+        exercised to trust it. (The op-level default is already proven by the ambient test.)
   - [ ] `resolveAuthor(did, members, agents)` so agent authors show name + hue in banner + companion
         (query space `Agent` objects; seed `authorLabels`/`authorHues`). Lands with the runtime
         provision — until agents actually author suggestions there is nothing to display.
