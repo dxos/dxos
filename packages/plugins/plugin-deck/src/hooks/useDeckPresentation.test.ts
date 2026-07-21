@@ -15,8 +15,13 @@ describe('getDeckPresentation', () => {
     expect(getDeckPresentation(1, 'tablet')).toEqual('fullbleed');
   });
 
-  test('two or more active planks render sliding on desktop', () => {
-    expect(getDeckPresentation(2, 'desktop')).toEqual('sliding');
+  test('exactly two active planks render tiling on desktop', () => {
+    expect(getDeckPresentation(2, 'desktop')).toEqual('tiling');
+    expect(getDeckPresentation(2, 'tablet')).toEqual('tiling');
+  });
+
+  test('three or more active planks render sliding on desktop', () => {
+    expect(getDeckPresentation(3, 'desktop')).toEqual('sliding');
     expect(getDeckPresentation(5, 'desktop')).toEqual('sliding');
   });
 

@@ -53,3 +53,19 @@ export const UpdatePlankSize = Operation.make({
   }),
   output: Schema.Void,
 });
+
+export const UpdateTilingSize = Operation.make({
+  meta: {
+    key: makeKey('updateTilingSize'),
+    name: 'Update Tiling Size',
+    description: 'Update the split ratio of the tiling deck.',
+    icon: 'ph--columns--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    weights: Schema.Array(Schema.Number).annotations({
+      description: 'Relative widths of the tiled planks by position.',
+    }),
+  }),
+  output: Schema.Void,
+});
