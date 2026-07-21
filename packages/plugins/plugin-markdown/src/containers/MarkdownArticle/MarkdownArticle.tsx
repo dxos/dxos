@@ -285,11 +285,20 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
             checked: !activeBranch && !activeVersion,
           }),
           ...activeBranches.map((branch) =>
-            createMenuAction(`versions--${branch.id}`, () => setSelection({ kind: 'branch', branchId: branch.id }), {
-              label: Branch.label(branch),
-              icon: 'ph--git-branch--regular',
-              checked: activeBranch?.id === branch.id,
-            }),
+            createMenuAction(
+              `versions--${branch.id}`,
+              () => {
+                setSelection({ kind: 'branch', branchId: branch.id });
+                // Switching to a branch from the toolbar defaults to the Diff (review) view rather
+                // than editing the branch directly.
+                setView('diff');
+              },
+              {
+                label: Branch.label(branch),
+                icon: 'ph--git-branch--regular',
+                checked: activeBranch?.id === branch.id,
+              },
+            ),
           ),
         ];
 
@@ -311,6 +320,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       activeBranch?.id,
       activeVersion?.id,
       setSelection,
+      setView,
       handleSuggest,
     ]);
 
