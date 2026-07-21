@@ -1,6 +1,11 @@
 # URL & Deck Redesign — Tasks
 
-_Resume: Phase C (urlKey fallback + cold-restore resolution + inline-child provenance) and Phase D (companions as ordinary planks, `companion/<variant>` URL) are committed and pushed to PR #12273 (25ebc0842a, 73312a99de, 655a35d7ee). All browser-verified locally. Uncommitted: none. Next: watch PR #12273 Check workflow; then the small deferred cleanups (delete dead useCompanionSplit + companionFrameSizing schema field; confirm a nested-collection object cold-load), then mark PR ready for review. Gotcha saved to memory: never import a DOM/UI package (@dxos/react-ui-attention) into worker-reachable modules (app-toolkit AppNode) — crashes the client dedicated worker._
+_Resume: Phases C+D plus the companion-width single-unit fix and the Tile size-prop re-sync fix are committed and pushed to PR #12273 (…655a35d7ee, e15aee02de, ec9c3df734). All browser-verified locally (companion width now sticks in both 2nd- and 3rd-plank positions). Uncommitted: none. Next: watch PR #12273 Check workflow; then the small deferred cleanups (delete dead useCompanionSplit + companionFrameSizing schema field; confirm a nested-collection object cold-load), then mark PR ready for review. Gotchas saved to memory: never import a DOM/UI package (@dxos/react-ui-attention) into worker-reachable modules (app-toolkit AppNode) — crashes the client dedicated worker; and `Mosaic.Tile` seeds size from the prop but must re-sync on prop change or a tile mounted without a size never applies it._
+
+## Companion width position-dependence (debug-mode, fixed)
+
+Root cause (confirmed via `[DEBUG H4]` logs): `Mosaic.Tile` (`react-ui-mosaic/Tile.tsx`) seeded internal size with `useState(sizeProp)` and never re-synced. A companion opened as the 2nd plank rode the fullbleed→sliding branch switch (or a not-yet-settled breakpoint), so its tile first rendered with no size, locking `internalSize=undefined`; the later real `size` prop was ignored (`sized=false`, no `inlineSize`). As the 3rd plank it mounted directly into an already-sliding deck, so it worked. Fix: `useEffect(() => setInternalSize(sizeProp), [sizeProp])` — prop is the source of truth; a live drag only changes it on commit. Fix `ec9c3df734` + patch changeset for `@dxos/react-ui-mosaic`.
+
 
 ## Phase C: Runtime fixes (manual-e2e findings)
 
