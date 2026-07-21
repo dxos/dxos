@@ -37,7 +37,7 @@ projects:
     tasks: packages/plugins/plugin-inbox/TASKS.md
     design: packages/plugins/plugin-inbox/PLUGIN.mdl
     prs: [12197]
-    resume: 'PR #12197 open, CI green. JMAP connect/sync/select-thread/reply e2e all passing against the page.route mock. Next: Gmail suite (DX_E2E-gated connection bridge + provider adapter), deferred per user.'
+    resume: 'PR #12197: task #7 (JMAP e2e) done, 3/3 green — survived two upstream refactors (connector-auth schema-annotation rewrite; vite+rolldown build + conversation-mosaic-toolbar redesign) and a code-review fix round (PLUGIN.mdl draftEmailAndOpen/jmapSync accuracy, http-mock Jmap.MethodCall/Filter reuse + validated parsing). Latest merge (origin/main, 29 commits) needed zero fixes. Committed but not pushed: http-mock export-path fix, reply e2e simplified to Reply All, latest merge. Next: push, then Gmail suite (#7e, DX_E2E-gated connection bridge + provider adapter) or #6/#8-#11 per user priority.'
 
   - name: composer-search
     status: active

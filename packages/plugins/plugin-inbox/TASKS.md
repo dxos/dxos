@@ -1,5 +1,11 @@
 # plugin-inbox — Tasks
 
+_Resume: task #7 (JMAP e2e) is done and green; next is #6 (unskip agent-e2e) or #8-#11 (bench/
+traceability/live runbook), whichever the user prioritizes next. Uncommitted: none. Last: merged
+`origin/main` (29 commits) into `t3code/0ac1d42d`, re-verified 3/3 e2e green — no fixes needed this
+round. Committed but not yet pushed: http-mock export-path fix, reply e2e simplified to Reply All,
+this merge._
+
 ## Test suite — PLUGIN.mdl enforcement
 
 Layered suite (tiers: unit → storybook → harness → agent-e2e → browser-e2e → bench →
@@ -10,7 +16,7 @@ delivers Tier 4 (browser-e2e, task #7).**
 
 ### Tasks
 
-- [ ] **#7 Browser-e2e Playwright inbox spec — THIS BRANCH**
+- [x] **#7 Browser-e2e Playwright inbox spec — THIS BRANCH — DONE (JMAP; Gmail split to #7e)**
   - `composer-app/src/playwright/` specs + `plugins/inbox.ts` helper. Run: `moon run composer-app:e2e`.
   - **Provider-parameterized structure.** Provider-specific behaviour (sync, reply) is tested for
     BOTH providers via a shared test body + a per-provider adapter; generic mailbox behaviour
@@ -58,10 +64,34 @@ delivers Tier 4 (browser-e2e, task #7).**
     edit-email-form testid); assert on the mock's recorded `EmailSubmission/set`.
     [ ] (e) Gmail suite (gated on DX_E2E): add the `window.composer` connection-injection bridge
     (DX_E2E runtime flag), provider adapter to share the generic bodies, Gmail sync + reply.
+    Deferred per user — not started.
   - Validation: `DX_PWA=false ... playwright test inbox.spec.ts` (chromium) — 3 passed. Bundle built
     with `DX_PWA=false DX_E2E=1`.
-  - Follow-ups (deferred per user): Gmail bridge + suite; provider-parameterized adapter (introduce
-    when Gmail gives the shared generic bodies a second consumer).
+  - **Review-fix round** (code-review comments on PLUGIN.mdl + http-mock.ts, each verified against
+    runtime before fixing): `draftEmailAndOpen`'s spec input/output now matches its actual schema
+    (`db` required, compose fields optional, no output — was a fictional string/DXN); `jmapSync`
+    output is `{ newMessages: number }` not a bare `number`; `http-mock.ts` reuses `Jmap.MethodCall`/
+    `Jmap.Filter` from the shared JMAP API module and validates the JSON body once at the request
+    boundary (rejects malformed input) instead of an unchecked cast. Skipped `renameFilter`'s
+    finding — the runtime doesn't take a replacement name as an operation input at all (arrives via a
+    `LayoutOperation.UpdatePopover` callback, UI-mediated); speccing one would misrepresent it.
+  - **Survived two upstream refactors** (merged from main, re-verified 3/3 green after each): (1)
+    `plugin-connector: drive connector-auth from a schema annotation + one graph extension` (#12218)
+    replaced `ConnectorAuthButton`/`InitializeAction` with `connectorAuthActions` — testids moved to
+    `connectorPlugin.connect(.{id})`, `AppNode.makeToolbarActionGroup` gained an optional `testId`.
+    (2) the vite+rolldown library build (#11319, flattened `dist/lib/` — no more `neutral/`, fixed the
+    `./testing/http-mock` export path) landing alongside `plugin-inbox: incremental mail sync +
+    unified system tags` (#12248, moved the manual sync button from an inline `MailboxArticle`
+    action into a multi-disposition `['toolbar','list-item']` graph action calling `syncTarget(mailbox)`)
+    and the "conversation mosaic stack with per-message toolbars" redesign (#12247, renamed
+    `Message/useToolbar.tsx` → `ConversationStack/useToolbar.tsx` and moved Reply behind a "more"
+    overflow menu — only Reply All stays directly visible). `react-ui-menu`'s `MenuBuilder.menu()`
+    gained an optional `testId` param (mirrors `makeToolbarActionGroup`) for the new overflow trigger.
+  - **Reply e2e simplified**: clicks `inbox.message.replyAll` directly instead of opening the "more"
+    overflow menu first — Reply All is the one reply-family action always visible on the toolbar,
+    same send-validation coverage with fewer steps.
+  - Follow-ups (deferred per user): Gmail bridge + suite (#7e); provider-parameterized adapter
+    (introduce when Gmail gives the shared generic bodies a second consumer).
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
       (register the skill), then add read/draft scenario tests. Enforces F-6.
 - [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above
@@ -88,6 +118,9 @@ interim backstop (F-11.5); sync main-thread contention (F-11.1).
 
 - `PLUGIN.mdl` — acceptance scenarios T-1..T-13, `feat F-11` responsiveness reqs (400ms ceiling /
   100ms target). Spec is the single source of truth for requirements; this ledger holds approach.
+  `draftEmailAndOpen`/`jmapSync` op blocks corrected to match runtime (see review-fix note above).
+- `.agents/skills/browser-e2e-tests/SKILL.md` — testid-first authoring convention this suite follows.
+- PR: #12197.
 
 ## Mailbox reply & triage
 
