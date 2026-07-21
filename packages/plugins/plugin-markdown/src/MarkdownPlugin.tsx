@@ -17,6 +17,7 @@ import {
   OperationHandler,
   ReactSurface,
   SkillDefinition,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -29,6 +30,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addLazyModule(HistoryProvider),
   Plugin.addLazyModule(CreateObject),
   Plugin.addLazyModule(OperationHandler),
+  Plugin.addLazyModule(UndoMappings),
   Plugin.addLazyModule(AppCapability.schema([Markdown.Document, Text.Text])),
   Plugin.addLazyModule(ReactSurface),
   Plugin.addLazyModule(AppCapability.translations([...translations, ...editorTranslations])),

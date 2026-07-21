@@ -18,6 +18,7 @@ import {
   MailboxModule,
   MessageModule,
   StatsModule,
+  SwarmTraceModule,
   SyncStateModule,
   TopicsModule,
   TraceModule,
@@ -40,6 +41,7 @@ export const Module = {
   Stats: Role.make<Record<string, any>>('org.dxos.storybook.inbox.stats'),
   SyncState: Role.make<Record<string, any>>('org.dxos.storybook.inbox.syncState'),
   Trace: Role.make<Record<string, any>>('org.dxos.storybook.inbox.trace'),
+  SwarmTrace: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.swarmTrace'),
   Triggers: Role.make<Record<string, any>>('org.dxos.storybook.inbox.triggers'),
 };
 
@@ -95,6 +97,11 @@ const moduleSurfaces: Surface.Definition[] = [
     id: 'inbox.trace',
     filter: Surface.makeFilter(Module.Trace),
     component: withModuleProps(TraceModule),
+  }),
+  Surface.create({
+    id: 'inbox.swarmTrace',
+    filter: Surface.makeFilter(Module.SwarmTrace),
+    component: withModuleProps(SwarmTraceModule),
   }),
   Surface.create({
     id: 'inbox.triggers',

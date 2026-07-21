@@ -4,24 +4,23 @@
 
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
-
-import { meta } from '#meta';
+import { Button, Input, Popover } from '@dxos/react-ui';
 
 export type NamePopoverProps = PropsWithChildren<{
   open: boolean;
   placeholder: string;
+  /** Translated label for the submit button (e.g. "Create"). */
+  submitLabel: string;
   onSubmit: (name: string) => void;
   onCancel: () => void;
 }>;
 
 /**
  * Name-entry popover anchored to its trigger (mirrors the object rename popover UX).
- * Enter or Create commits — an empty name is allowed; Escape or dismissal cancels.
+ * Enter or the submit button commits — an empty name is allowed; Escape or dismissal cancels.
  */
-export const NamePopover = ({ children, open, placeholder, onSubmit, onCancel }: NamePopoverProps) => {
+export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit, onCancel }: NamePopoverProps) => {
   const [value, setValue] = useState('');
-  const { t } = useTranslation(meta.profile.key);
 
   const submit = () => {
     onSubmit(value);
@@ -58,7 +57,7 @@ export const NamePopover = ({ children, open, placeholder, onSubmit, onCancel }:
               />
             </Input.Root>
             <Button variant='primary' onClick={submit}>
-              {t('create.label')}
+              {submitLabel}
             </Button>
           </div>
           <Popover.Arrow />

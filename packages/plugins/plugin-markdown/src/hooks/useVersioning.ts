@@ -19,8 +19,9 @@ export type UseVersioningResult = {
   history?: History.History;
   selection: SpaceCapabilities.VersionSelection;
   setSelection: (selection: SpaceCapabilities.VersionSelection) => void;
-  compare: boolean;
-  setCompare: (compare: boolean) => void;
+  /** Active branch view (base parent / diff overlay / branch draft); only meaningful with a branch selected. */
+  view: SpaceCapabilities.BranchView;
+  setView: (view: SpaceCapabilities.BranchView) => void;
   /** The branch being viewed (selection.kind === 'branch'). */
   activeBranch?: Branch.Branch;
   /** The branch whose fork point is being viewed (selection.kind === 'fork'). */
@@ -65,7 +66,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
 
   const documentId = document?.id;
   const selection = (documentId && state?.selection[documentId]) || { kind: 'current' as const };
-  const compare = (documentId && state?.compare[documentId]) || false;
+  const view = (documentId && state?.view[documentId]) || 'branch';
 
   const setSelection = useCallback(
     (next: SpaceCapabilities.VersionSelection) => {
@@ -77,12 +78,12 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     [documentId, setState],
   );
 
-  const setCompare = useCallback(
-    (next: boolean) => {
+  const setView = useCallback(
+    (next: SpaceCapabilities.BranchView) => {
       if (!documentId) {
         return;
       }
-      setState((current) => ({ ...current, compare: { ...current.compare, [documentId]: next } }));
+      setState((current) => ({ ...current, view: { ...current.view, [documentId]: next } }));
     },
     [documentId, setState],
   );
@@ -193,8 +194,8 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     history,
     selection,
     setSelection,
-    compare,
-    setCompare,
+    view,
+    setView,
     activeBranch,
     activeFork,
     forkContent,

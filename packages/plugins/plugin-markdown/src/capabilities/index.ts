@@ -35,3 +35,4 @@ export const MarkdownState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));

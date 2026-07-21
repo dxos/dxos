@@ -7,7 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import { type Node } from '@dxos/app-graph';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
-import { createComment } from '../../decoration/comments';
+import { createComment } from '../../review/comments';
 import {
   Inline,
   List,

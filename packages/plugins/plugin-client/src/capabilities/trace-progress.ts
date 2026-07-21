@@ -31,6 +31,7 @@ export default Capability.makeModule(
 
     const progressSink = createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0]);
 
+    // TODO(mykola): Possible bug source. Use `Effect.forkDaemon`.
     const fiber = processManagerRuntime.runFork(
       monitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(
         Stream.runForEach((message) =>

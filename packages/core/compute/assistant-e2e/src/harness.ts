@@ -17,9 +17,6 @@ import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
-// Skill is imported so TypeScript can name Skill.Skill in the emitted .d.ts for getDefaultSkills
-// (SkillManagerSkill.make() returns Skill.Skill, which propagates into the inferred return type).
-// eslint-disable-next-line unused-imports/no-unused-imports
 import { Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
 import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
@@ -42,7 +39,10 @@ export const DEFAULT_TEST_TIMEOUT = 360_000;
 // headroom for slow CI nodes without enabling full LLM generation.
 const MEMOIZED_TEST_TIMEOUT = 60_000;
 
-export const getDefaultSkills = () => [Ref.make(SkillManagerSkill.make()), Ref.make(DatabaseSkill.make())];
+export const getDefaultSkills = (): Ref.Ref<Skill.Skill>[] => [
+  Ref.make(SkillManagerSkill.make()),
+  Ref.make(DatabaseSkill.make()),
+];
 
 const INSTRUCTIONS = trim`
   You are running within a test environment.
@@ -65,9 +65,7 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
 
   model?: DXN.DXN;
 
-  /**
-   * @default 'direct'
-   */
+  /** @default 'direct' */
   inferenceProvider?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
 
   disableLlmMemoization?: boolean;

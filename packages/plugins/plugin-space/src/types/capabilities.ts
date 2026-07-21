@@ -65,11 +65,17 @@ export namespace SpaceCapabilities {
     | { kind: 'fork'; branchId: string }
     | { kind: 'checkpoint'; versionId: string };
 
+  /**
+   * Which side of a selected branch the editor shows: the parent content at the anchor (`base`,
+   * read-only), the diff/suggestion overlay (`diff`), or the editable branch draft (`branch`).
+   */
+  export type BranchView = 'base' | 'diff' | 'branch';
+
   export type VersioningState = {
     /** Selection keyed by object id. Missing entry = current. */
     selection: Record<string, VersionSelection>;
-    /** Whether the diff/compare overlay is enabled, keyed by object id. */
-    compare: Record<string, boolean>;
+    /** Active branch view keyed by object id. Missing entry = `branch` (the editable draft). */
+    view: Record<string, BranchView>;
   };
 
   /** In-memory (per-session) version selection state. */

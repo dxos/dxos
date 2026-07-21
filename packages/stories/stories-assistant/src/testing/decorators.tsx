@@ -10,7 +10,7 @@ import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { Capabilities, Capability, Plugin, PluginManager } from '@dxos/app-framework';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
@@ -26,7 +26,7 @@ import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
-import { Database, Obj } from '@dxos/echo';
+import { Collection, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -117,6 +117,7 @@ const buildPluginManagerOptions = ({
         types: [
           AccessToken.AccessToken,
           Assistant.Chat,
+          Collection.Collection,
           Plan.Plan,
           Skill.Skill,
           Operation.PersistentOperation,
@@ -152,7 +153,13 @@ const buildPluginManagerOptions = ({
 
             yield* Effect.promise(() => client.halo.createIdentity());
 
-            const space = yield* Effect.promise(() => client.spaces.create());
+            // Tag the space as personal: plugin-space only contributes space graph nodes (and thus
+            // the collection/object nodes that back object-scoped actions like the comment toolbar)
+            // when a personal space exists. Tags cannot be added retroactively, so set it at creation
+            // — the `options` (2nd) argument carries tags, distinct from the space's properties.
+            const space = yield* Effect.promise(() =>
+              client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
+            );
             yield* Effect.promise(() => space.waitUntilReady());
 
             // Add tokens.

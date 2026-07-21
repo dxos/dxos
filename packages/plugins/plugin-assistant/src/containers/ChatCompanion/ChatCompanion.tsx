@@ -27,22 +27,22 @@ export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unkn
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role = 'article', subject: chat, companionTo, attendableId }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
-    const space = getSpace(companionTo);
+    const db = Obj.getDatabase(companionTo);
     useSkills({ subject: chat, companionTo });
 
     // Persist (and flush) a transient chat before the first request so the agent can resolve
     // the now-durable conversation feed; subsequent submits are a no-op once persisted.
     const handleSubmit = useCallback(async () => {
-      if (!space || !chat || Obj.getDatabase(chat)) {
+      if (!db || !chat || Obj.getDatabase(chat)) {
         return;
       }
 
       await invokePromise(SpaceOperation.AddObject, {
         object: chat,
-        target: space.db,
+        target: db,
       });
       await invokePromise(SpaceOperation.AddRelation, {
-        db: space.db,
+        db,
         schema: Chat.CompanionTo,
         source: chat,
         target: companionTo,
@@ -51,8 +51,8 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         companionTo,
         chat,
       });
-      await space.db.flush();
-    }, [space, chat, companionTo, invokePromise]);
+      await db.flush();
+    }, [db, chat, companionTo, invokePromise]);
 
     return (
       <ChatArticle

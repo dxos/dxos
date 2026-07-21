@@ -157,7 +157,7 @@ const selectTimelineNode = async (canvasElement: HTMLElement, label: string) => 
 /** Merge the active branch via the version banner ('Merge' also labels a panel icon button). */
 const mergeViaBanner = async (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
-  const banner = canvas.getByRole('status');
+  const banner = canvas.getByTestId('version-banner-branch');
   await userEvent.click(within(banner).getByText('Merge'));
 };
 
@@ -231,7 +231,7 @@ export const TimeTravel: Story = {
     // Travel back to v1 (readonly).
     // TODO(burdon): Check readonly.
     await userEvent.click(canvas.getByText('v1'));
-    await canvas.findByText('Viewing checkpoint');
+    await canvas.findByTestId('version-banner-checkpoint');
     await waitFor(() => expect(editorContent(canvasElement)).toBe('1'));
 
     // Forward to v2 (readonly).
@@ -245,7 +245,7 @@ export const TimeTravel: Story = {
     // Back to the present: banner gone, tip content restored (editable).
     await userEvent.click(canvas.getByText('Now'));
     await waitFor(() => expect(editorContent(canvasElement)).toContain('1 2 3'));
-    await waitFor(() => expect(canvas.queryByText('Viewing checkpoint')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('version-banner-checkpoint')).toBeNull());
   },
 };
 
@@ -266,7 +266,7 @@ export const BranchRevisions: Story = {
 
     // Fork a branch through the panel; the editor switches to it.
     await createBranchViaUi(canvasElement, 'draft');
-    await canvas.findByText('Editing branch');
+    await canvas.findByTestId('version-banner-branch');
 
     // Sub-branching is unsupported (flat core registry): the New branch button is disabled while on a
     // branch, so a fork cannot silently derive from main instead of the branch.
@@ -284,7 +284,7 @@ export const BranchRevisions: Story = {
     // Select the FIRST branch revision: the editor shows that historical branch content (read-only),
     // not empty and not the parent — the binding must resolve before the editor mounts.
     await selectTimelineNode(canvasElement, 'draft-r1');
-    await canvas.findByText('Viewing checkpoint');
+    await canvas.findByTestId('version-banner-checkpoint');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('delta'));
     // Still no sub-branching from a branch revision (would fork from main).
@@ -292,15 +292,15 @@ export const BranchRevisions: Story = {
 
     // Return to the branch TIP via the per-branch tip node: editable again, latest branch content.
     await selectTimelineNode(canvasElement, 'Tip');
-    await canvas.findByText('Editing branch');
+    await canvas.findByTestId('version-banner-branch');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('delta'));
-    await waitFor(() => expect(canvas.queryByText('Viewing checkpoint')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('version-banner-checkpoint')).toBeNull());
 
     // Regression: from the branch tip, clicking a branch revision must highlight THAT revision — not
     // snap the highlight to the main-lane 'fork: draft' checkpoint (the timeline was jumping to the
     // first commit of the highlighted lane on every selection change).
     await selectTimelineNode(canvasElement, 'draft-r2');
-    await canvas.findByText('Viewing checkpoint');
+    await canvas.findByTestId('version-banner-checkpoint');
     // The label also appears in the checkpoint banner, so pick the timeline row (an aria-current ancestor).
     const currentRow = (label: string) =>
       canvas
@@ -329,7 +329,7 @@ export const BranchMerge: Story = {
 
     // Create a branch through the panel; the editor switches to it.
     await createBranchViaUi(canvasElement, 'draft');
-    await canvas.findByText('Editing branch');
+    await canvas.findByTestId('version-banner-branch');
 
     // Edit → create a named revision, repeated. Each revision is created via the panel while the
     // branch is selected, so it checkpoints the BRANCH (records the branch's heads, tagged with the
@@ -352,7 +352,7 @@ export const BranchMerge: Story = {
     await canvas.findByText('draft-r1');
     await canvas.findByText('draft-r2');
     await canvas.findByText('draft-r3');
-    await canvas.findByText('Editing branch');
+    await canvas.findByTestId('version-banner-branch');
     await waitFor(() =>
       ['charlie', 'delta', 'epsilon'].forEach((line) => expect(editorContent(canvasElement)).toContain(line)),
     );
@@ -368,7 +368,7 @@ export const BranchMerge: Story = {
     await waitFor(() =>
       ['charlie', 'delta', 'epsilon'].forEach((line) => expect(editorContent(canvasElement)).toContain(line)),
     );
-    await waitFor(() => expect(canvas.queryByText('Editing branch')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
 
     // The merge auto-checkpoint appears in the timeline.
     await canvas.findByText('merge: draft');
@@ -378,7 +378,7 @@ export const BranchMerge: Story = {
     // The merge folded the branch history into main, so the revision resolves against the root doc,
     // read-only: 'draft-r1' predates the later branch edits and the concurrent parent edit.
     await selectTimelineNode(canvasElement, 'draft-r1');
-    await canvas.findByText('Viewing checkpoint');
+    await canvas.findByTestId('version-banner-checkpoint');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('epsilon'));
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('alpha edited'));
@@ -403,21 +403,21 @@ export const ChainedBranches: Story = {
 
     // First branch: add a line, merge back to main.
     await createBranchViaUi(canvasElement, 'first');
-    await canvas.findByText('Editing branch');
+    await canvas.findByTestId('version-banner-branch');
     await setBranchContent('first', 'a\nb\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('b'));
     await mergeViaBanner(canvasElement);
-    await waitFor(() => expect(canvas.queryByText('Editing branch')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
     await waitFor(() => expect(editorContent(canvasElement)).toContain('b'), { timeout: 10_000 });
     await canvas.findByText('merge: first');
 
     // Second branch forks off the updated main (which now contains the first merge) and merges too.
     await createBranchViaUi(canvasElement, 'second');
-    await canvas.findByText('Editing branch');
+    await canvas.findByTestId('version-banner-branch');
     await setBranchContent('second', 'a\nb\nc\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('c'));
     await mergeViaBanner(canvasElement);
-    await waitFor(() => expect(canvas.queryByText('Editing branch')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
 
     // Main accumulates both branches' edits; both merges are recorded in the timeline.
     await waitFor(() => ['a', 'b', 'c'].forEach((line) => expect(editorContent(canvasElement)).toContain(line)));
@@ -442,7 +442,7 @@ export const ConflictAutoResolve: Story = {
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
 
     await createBranchViaUi(canvasElement, 'draft');
-    await canvas.findByText('Editing branch');
+    await canvas.findByTestId('version-banner-branch');
 
     // Branch edits the first line; parent edits the SAME line concurrently (isolated from the view).
     await setBranchContent('draft', 'alpha theirs\nbravo\n');
@@ -451,7 +451,7 @@ export const ConflictAutoResolve: Story = {
 
     // Merge: both edits interleave via the CRDT — no markers, both words present.
     await mergeViaBanner(canvasElement);
-    await waitFor(() => expect(canvas.queryByText('Editing branch')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
     await waitFor(() => expect(editorContent(canvasElement)).toContain('ours'), { timeout: 10_000 });
     await waitFor(() => expect(editorContent(canvasElement)).toContain('theirs'));
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('<<<<<<<'));
