@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -19,17 +19,30 @@ export type SuggestionSourcesProps = {
   document?: VersionedObject;
   /** Author palette hues keyed by DID; attached to each resolved branch so it survives to callers. */
   authorHues?: Record<string, string>;
-  /** Called with the resolved suggestion branches whenever the enumerated set or their content changes. */
-  onResolved: (resolved: ResolvedSuggestionBranch[]) => void;
+  /**
+   * Called with the resolved suggestion branches whenever the enumerated set or their content
+   * changes. Fires post-commit (`useEffect`), so on a `document` swap it lags one frame behind the
+   * new document's `resolved` set. Kept for the editor's ambient overlay, which binds into a
+   * CodeMirror extension and cannot consume a render-prop.
+   */
+  onResolved?: (resolved: ResolvedSuggestionBranch[]) => void;
+  /**
+   * Render-prop called synchronously in this component's own render with the `resolved` set derived
+   * from the CURRENT `document` — unlike `onResolved`, a `document` swap can never paint a stale
+   * frame from the previous document. Prefer this for consumers that render (e.g. the review
+   * companion); both may be provided at once.
+   */
+  children?: (resolved: ResolvedSuggestionBranch[]) => ReactNode;
 };
 
 /**
  * Headless enumerator for a document's active `kind:'suggestion'` branches: binds each to its live
- * content (via {@link BranchContent}) and reports the resolved set up through `onResolved`. Renders
- * only invisible probes — shared by the review companion ({@link Suggestions}) and the editor's
- * ambient overlay so both read the same resolved sources.
+ * content (via {@link BranchContent}) and reports the resolved set both synchronously (render-prop
+ * `children`) and post-commit (`onResolved`). Renders only invisible probes plus whatever `children`
+ * returns — shared by the review companion ({@link Suggestions}) and the editor's ambient overlay so
+ * both read the same resolved sources.
  */
-export const SuggestionSources = ({ document, authorHues, onResolved }: SuggestionSourcesProps) => {
+export const SuggestionSources = ({ document, authorHues, onResolved, children }: SuggestionSourcesProps) => {
   // Re-run when branches are added/removed/archived.
   useObject(document, 'history');
   const branches = (document?.history?.branches ?? []).filter(
@@ -46,30 +59,34 @@ export const SuggestionSources = ({ document, authorHues, onResolved }: Suggesti
     );
   }, []);
 
+  // Drop stale per-branch entries on a document swap so a lingering id can never leak content from
+  // the previous document into the new document's resolved set.
+  useEffect(() => {
+    setContents({});
+  }, [document]);
+
   const resolved = branches.map((branch) => contents[branch.id]).filter(isNonNullable);
 
   useEffect(() => {
-    onResolved(resolved);
+    onResolved?.(resolved);
     // `JSON.stringify` dep re-fires only when the resolved content actually changes (`resolved` is a
     // fresh array each render, so a reference-equality dep would fire on every parent re-render).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onResolved, JSON.stringify(resolved)]);
 
-  if (!document) {
-    return null;
-  }
-
   return (
     <>
-      {branches.map((branch) => (
-        <BranchContent
-          key={branch.id}
-          document={document}
-          branch={branch}
-          hue={authorHues?.[branch.creator ?? branch.id]}
-          onContent={setContent}
-        />
-      ))}
+      {document &&
+        branches.map((branch) => (
+          <BranchContent
+            key={branch.id}
+            document={document}
+            branch={branch}
+            hue={authorHues?.[branch.creator ?? branch.id]}
+            onContent={setContent}
+          />
+        ))}
+      {children?.(resolved)}
     </>
   );
 };

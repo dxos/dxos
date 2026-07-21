@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import { type GroupPolicy } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { type ResolvedSuggestionBranch, type SuggestionGroup, buildSuggestionSources } from '../../hooks';
+import { type SuggestionGroup, buildSuggestionSources } from '../../hooks';
 import { SuggestionSources } from './SuggestionSources';
 import { SuggestionThread } from './SuggestionThread';
 
@@ -46,25 +46,24 @@ export const Suggestions = ({
   onAccept,
   onReject,
 }: SuggestionsProps) => {
-  const [resolved, setResolved] = useState<ResolvedSuggestionBranch[]>([]);
-
   if (!document) {
     return null;
   }
 
   return (
-    <>
-      <SuggestionSources document={document} authorHues={authorHues} onResolved={setResolved} />
-      <SuggestionThread
-        base={base}
-        sources={buildSuggestionSources(resolved)}
-        group={group ?? DEFAULT_GROUP}
-        authorLabels={authorLabels}
-        authorHues={authorHues}
-        onAccept={onAccept}
-        onReject={onReject}
-      />
-    </>
+    <SuggestionSources document={document} authorHues={authorHues}>
+      {(resolved) => (
+        <SuggestionThread
+          base={base}
+          sources={buildSuggestionSources(resolved)}
+          group={group ?? DEFAULT_GROUP}
+          authorLabels={authorLabels}
+          authorHues={authorHues}
+          onAccept={onAccept}
+          onReject={onReject}
+        />
+      )}
+    </SuggestionSources>
   );
 };
 
