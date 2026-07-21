@@ -153,6 +153,28 @@ export const CreateBranch = Operation.make({
   services: [Database.Service],
 });
 
+export const SuggestEdit = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.markdown.suggestEdit'),
+    name: 'Suggest Edit',
+    description: trim`
+      Find-or-create the caller's suggestion branch of the document (one per author, keyed by creator)
+      and return its id. Edit it with the update operation to accrue suggested changes for review;
+      unlike a named draft branch, a suggestion branch is space-visible and labelled by its author.
+    `,
+    icon: 'ph--pencil-simple--regular',
+  },
+  input: Schema.Struct({
+    doc: Ref.Ref(Markdown.Document).annotations({ description: 'The document to suggest edits on.' }),
+    creator: Schema.String.annotations({ description: "The author's identity DID; keys the suggestion branch." }),
+  }),
+  output: Schema.Struct({
+    branchId: Schema.String.annotations({ description: 'The id of the suggestion branch.' }),
+    contentId: Schema.String.annotations({ description: 'The DXN of the branch Text object.' }),
+  }),
+  services: [Database.Service],
+});
+
 export const MergeBranch = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.markdown.mergeBranch'),

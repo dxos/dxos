@@ -43,6 +43,7 @@ export const translations = [
         'version-banner-fork.label': 'Branch created from',
         'restore.label': 'Restore',
         'branch-from.label': 'Branch from here',
+        'suggest-edits.label': 'Suggest edits',
         'merge.label': 'Merge',
         'branch-view-base.label': 'Base',
         'branch-view-diff.label': 'Diff',

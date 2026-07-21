@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
@@ -37,7 +37,7 @@ import {
 } from '#components';
 import { useLinkQuery, useVersioning } from '#hooks';
 import { meta } from '#meta';
-import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
+import { Markdown, MarkdownCapabilities, MarkdownOperation, type MarkdownPluginState } from '#types';
 
 import { mergeConflicts, versionDiff } from '../../extensions';
 import { VersionBanners } from './VersionBanners';
@@ -81,6 +81,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       checkpointContent,
       branchBaseContent,
       setSelection,
+      setView,
     } = versioning;
     // Default branch compare to the accept/reject review overlay ('suggest'); the read-only diff
     // modes (inline/sideBySide/gutter) are opt-in via settings.
@@ -222,6 +223,23 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       return undefined;
     }, [compareActive, branchBaseContent, diffViewMode]);
 
+    // Local identity (collaboration awareness + suggestion authorship).
+    const identity = useIdentity();
+
+    // Enter suggesting: find-or-create the caller's suggestion branch and switch to editing it, so
+    // typed edits accrue on that branch for review rather than mutating main.
+    const handleSuggest = useCallback(async () => {
+      const creator = identity?.did;
+      if (!document || !creator || !invokePromise) {
+        return;
+      }
+      const result = await invokePromise(MarkdownOperation.SuggestEdit, { doc: Ref.make(document), creator });
+      if (result.data?.branchId) {
+        setSelection({ kind: 'branch', branchId: result.data.branchId });
+        setView('branch');
+      }
+    }, [document, identity, invokePromise, setSelection, setView]);
+
     // Toolbar actions from app graph, plus the branch switcher dropdown.
     const { graph } = useAppGraph();
     const runAction = useActionRunner();
@@ -230,7 +248,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const customActions = useMemo(() => {
       return Atom.make((get) => {
         const base = graphActions(graph, get, attendableId ?? id, { filter: isToolbarAction });
-        if (!document || activeBranches.length === 0) {
+        if (!document) {
           return base;
         }
 
@@ -244,6 +262,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           selectCardinality: 'single',
         } satisfies ToolbarMenuActionGroupProperties);
         const actions = [
+          createMenuAction('versions--suggest', () => void handleSuggest(), {
+            label: ['suggest-edits.label', { ns: meta.profile.key }],
+            icon: 'ph--pencil-simple--regular',
+          }),
           createMenuAction('versions--current', () => setSelection({ kind: 'current' }), {
             label: ['main-branch.label', { ns: meta.profile.key }],
             icon: 'ph--git-branch--regular',
@@ -267,7 +289,17 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           ],
         };
       });
-    }, [graph, attendableId, id, document, branchesKey, activeBranch?.id, activeVersion?.id, setSelection]);
+    }, [
+      graph,
+      attendableId,
+      id,
+      document,
+      branchesKey,
+      activeBranch?.id,
+      activeVersion?.id,
+      setSelection,
+      handleSuggest,
+    ]);
 
     // File upload.
     const [upload] = useCapabilities(AppCapabilities.FileUploader);
@@ -278,9 +310,6 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
       return async (file: File) => upload(db, file);
     }, [db, upload]);
-
-    // Local identity for collaboration awareness.
-    const identity = useIdentity();
 
     // Query for @ refs.
     const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
