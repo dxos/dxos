@@ -4,7 +4,10 @@ name: MarkdownPlugin
 version: 0.1.0
 ---
 
-Collaborative markdown editor plugin for `DXOS` Composer.
+Collaborative markdown editor plugin for `DXOS` Composer. Beyond editing, it hosts the document
+**review model**: checkpoints, branches and merge (`@dxos/versioning`), the version toolbar/banner
+UI, and the ambient Google-Docs-style review surface (Editing / Suggesting / Viewing) that overlays
+every author's suggestions and comments on the live editor.
 
 ## Extensions
 
@@ -18,6 +21,23 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+
+## External types & capabilities
+
+The review model composes primitives owned elsewhere:
+
+- `Version`, `Branch`, `History`, `BranchBinding` (`@dxos/versioning`) — named checkpoints, per-object
+  branches (`kind: 'draft' | 'suggestion'`), CRDT merge, and the writable per-surface branch binding.
+- `SpaceCapabilities.VersioningState` / `ReviewMode` / `ReviewRenderPolicy` / `HistoryProvider`
+  (`@dxos/plugin-space`) — the per-user selection + review-mode state, the mode→visibility policy, and
+  the generic history-companion gate. This plugin contributes a `HistoryProvider` and consumes the rest.
+- `trackChanges`, `suggestions({ base })`, `suggestionsOverlay`, `rebaseHunks`, `diffView`,
+  `mergeConflicts` (`@dxos/ui-editor`) — the inline tracked-change / diff / overlay extensions.
+- `MarkdownCapabilities.SuggestionSourcesProvider` — the slot plugin-comments contributes to; this
+  plugin consumes it to overlay other authors' suggestions without a dependency cycle.
+- `CollaborationOperation.AcceptChange` / `RejectChange` (`@dxos/app-toolkit`) — the durable
+  cherry-pick/revert ops the ambient accept/reject controls route through.
 
 ## Types
 
@@ -27,12 +47,19 @@ type ViewMode
 ```
 
 ```mdl
+type DiffView
+  literals: inline | sideBySide | gutter | suggest
+  desc: How a selected branch is compared against its parent (default `suggest`).
+```
+
+```mdl
 type Document
   fields:
     name?: string
     fallbackName?: string
     description?: string
     content: Ref<Text>          # collaborative text payload
+    history?: History           # checkpoints + branches (@dxos/versioning)
 ```
 
 ```mdl
@@ -44,47 +71,81 @@ type Settings
     folding?: boolean
     editorInputMode?: string    # default | vim | vscode
     commentAgentMode?: off | auto | mention
+    diffView?: DiffView         # branch compare variant (default suggest)
     experimental?: boolean
     debug?: boolean
+```
+
+## Services
+
+```mdl
+service HistoryProvider
+  desc: |
+    Contributes SpaceCapabilities.HistoryProvider for Markdown.Document, so plugin-space renders the
+    generic version-history companion (timeline of checkpoints/branches/merges) for markdown docs.
+    Resolves the versioned root Text from a document.
+  methods:
+    getTarget(object: Obj.Unknown) -> Text?
+```
+
+```mdl
+service SuggestionSourcesConsumer
+  desc: |
+    MarkdownArticle consumes MarkdownCapabilities.SuggestionSourcesProvider (contributed by
+    plugin-comments) to enumerate every active suggestion branch and overlay them, diffed against
+    main, on the ambient editor. plugin-markdown never imports plugin-comments (capability only).
 ```
 
 ## Components
 
 ```mdl
 component MarkdownArticle
-  desc: Full-surface markdown editor for a Document or Text subject.
+  desc: |
+    Full-surface markdown editor for a Document or Text subject. Beyond editing it drives the review
+    model: an advanced path (explicit branch/checkpoint/fork selection via the version toolbar) and
+    the ambient default path (selection === current) that overlays all authors' suggestions + comments
+    per the per-user review mode. Suggesting mode binds the editor to the user's own suggestion branch
+    (edits accrue there, never to main) and renders them as character-level tracked changes.
   props:
     subject: Document | Text
     viewMode: ViewMode
     settings: Settings
   state:
     selection?: range           # current editor selection
+    mode: ReviewMode            # editing | suggesting | viewing (per-user, per-doc)
   slots:
-    toolbar?: ReactNode         # formatting toolbar (when settings.toolbar)
+    toolbar?: ReactNode         # formatting toolbar + version toolbar
   actions:
     setViewMode(mode: ViewMode)
+    setMode(mode: ReviewMode)
     uploadFile(file: File) → Ref<Image>
   emits:
     onSelectObject(id: string)  # follow @ref or link
-  layout: |
-    ┌─────────────────────────┐
-    │ [toolbar slot]          │
-    ├─────────────────────────┤
-    │                         │
-    │  CodeMirror editor      │
-    │  + preview blocks       │
-    │                         │
-    └─────────────────────────┘
-```
 
-```mdl
+component VersionToolbar
+  desc: |
+    The version-review banner row shown above the editor while off "main @ now": a slim strip for the
+    active checkpoint / branch / fork (at most one selected). Owns restore / branch-from / merge /
+    view-select / close handlers. (Renamed from VersionBanners.)
+  props:
+    versioning: UseVersioningResult
+
+component VersionBanner
+  desc: |
+    A single banner (checkpoint | branch | fork). Branch mode carries the Base/Diff/Branch view
+    selector; suggestion branches show the author's name + hue.
+  props:
+    mode: checkpoint | branch | fork
+    name: string
+    view?: BranchView
+  emits:
+    restore, branchFrom, viewChange, close
+
 component MarkdownCard
   desc: Read-only preview card for embedding a Document in other surfaces.
   props:
     subject: Document | Text
-```
 
-```mdl
 component EditableMarkdownCard
   desc: Inline-editable card variant used when data.editable is true.
   props:
@@ -96,41 +157,49 @@ component EditableMarkdownCard
 ```mdl
 op create
   desc: Creates a new markdown Document and adds it to the active space.
-  input:
-    name: string
-    content: string
+  input: { name: string, content: string }
   output: string                # DXN of created Document
   effects: [echo:write]
-```
 
-```mdl
 op open
   desc: Reads the current contents of a markdown Document.
-  input:
-    doc: Ref<Document>
-  output: string                # current Document content
+  input: { doc: Ref<Document> }
+  output: string
   effects: [echo:read]
-```
 
-```mdl
 op update
-  desc: Applies a set of find/replace edits to a markdown Document.
-  input:
-    doc: Ref<Document>
-    edits: Edit[]               # { oldString, newString, replaceAll? }
-  output: string                # new Document content
-  errors:
-    NotFound: oldString not present in document
+  desc: Applies a set of find/replace edits to a markdown Document (optionally on a branch).
+  input: { doc: Ref<Document>, edits: Edit[], branchId?: string }
+  output: string
+  errors: { NotFound: oldString not present in document }
   effects: [echo:write]
-```
 
-```mdl
+op CreateBranch
+  desc: Fork a core branch off main (or a checkpoint), returning the branch's canonical content DXN.
+  input: { doc: Ref<Document>, name?: string, from?: { target, heads } }
+  effects: [echo:write]
+
+op MergeBranch
+  desc: CRDT-merge a branch back into main and archive its registry entry.
+  input: { doc: Ref<Document>, branchId: string }
+  effects: [echo:write]
+
+op CreateCheckpoint
+  desc: Record a named checkpoint (Version) of main or the selected branch's heads.
+  input: { doc: Ref<Document>, name?: string, target?: Ref<Text> }
+  effects: [echo:write]
+
+op SuggestEdit
+  desc: |
+    Find-or-create the caller's per-author `kind:'suggestion'` branch and apply edits to it, so the
+    proposal accrues for review rather than mutating main. Creator defaults from the ambient agent
+    identity when absent.
+  input: { doc: Ref<Document>, edits: Edit[], creator?: string }
+  effects: [echo:write]
+
 op scrollToAnchor
   desc: Scrolls the editor for the attendable surface to a cursor position.
-  input:
-    subject: string             # attendable ID
-    cursor: string
-    ref?: string                # e.g. comment thread ID
+  input: { subject: string, cursor: string, ref?: string }
 ```
 
 ## Features
@@ -141,75 +210,98 @@ feat F-1: Edit Document
   req F-1.1: Editor opens Document.content as a collaborative CodeMirror surface.
   req F-1.2: Edits replicate to all peers via ECHO Text.
   req F-1.3: Document.name renders as the surface title; fallbackName used when name is empty.
-```
 
-```mdl
 feat F-2: View Modes
 
   req F-2.1: Document opens in settings.defaultViewMode (source | preview | readonly).
   req F-2.2:
     when: user toggles view mode
     then: editor switches between source and preview; state persists per Document
-
   req F-2.3:
     when: viewMode is readonly
     then: editor is non-editable; toolbar hidden
-```
 
-```mdl
 feat F-3: Formatting Toolbar
 
   req F-3.1:
     when: settings.toolbar is true
     then: formatting toolbar shown above editor with bold, italic, headings, lists, links
-
   req F-3.2: Toolbar surfaces toolbar-disposition actions from the app graph for the current attendable.
-```
 
-```mdl
 feat F-4: Inline References
 
   req F-4.1:
     when: user types `@` in the editor
     then: link query opens with objects from the active space
-
   req F-4.2:
     when: user selects a reference
     then: a link to the object DXN is inserted at the cursor
-
   req F-4.3:
     when: user clicks a reference
     then: LayoutOperation.Open invoked for the linked object
-```
 
-```mdl
 feat F-5: File Upload
 
   req F-5.1:
     when: user drops an image onto the editor
     then: file uploaded via AppCapabilities.FileUploader and inserted as a markdown image
-```
 
-```mdl
 feat F-6: AI Editing
 
   req F-6.1: Plugin contributes a Skill exposing op:create, op:open, op:update as tools.
   req F-6.2:
     when: agent invokes op:update
     then: edits applied as ordered oldString → newString diffs against Document.content
-```
 
-```mdl
 feat F-7: Comments
 
-  req F-7.1: Editor supports anchored comment threads on text ranges.
+  req F-7.1: Editor supports anchored comment threads on text ranges (via plugin-comments'
+    ExtensionProvider).
   req F-7.2:
     when: settings.commentAgentMode is `auto`
     then: every new user message in a thread triggers the comment agent
-
   req F-7.3:
     when: settings.commentAgentMode is `mention`
     then: agent responds only when the message contains its @name
+
+feat F-8: Versioning (checkpoints, branches, merge)
+
+  req F-8.1: The plugin MUST support named checkpoints (CreateCheckpoint), per-object branches
+    (CreateBranch), and CRDT merge-back (MergeBranch) over Document.history (@dxos/versioning).
+  req F-8.2: The plugin MUST contribute a HistoryProvider for Markdown.Document so plugin-space
+    renders the generic history companion (checkpoint/branch/merge timeline).
+  req F-8.3: The VersionToolbar MUST let the user select main / a branch / a checkpoint / a fork,
+    with a Base/Diff/Branch view selector for a selected branch (default Diff on toolbar switch).
+  req F-8.4: Selecting a branch/checkpoint/fork MUST NOT mutate main; edits on a branch accrue to
+    that branch's Text via a per-surface BranchBinding.
+
+feat F-9: Ambient review (Editing / Viewing)
+
+  req F-9.1: In the default view (selection === current) the editor MUST overlay every active
+    suggestion branch (via the SuggestionSourcesProvider capability), diffed against main, plus
+    comments — gated by ReviewRenderPolicy(mode).
+  req F-9.2: Editing overlays suggestions + comments and is editable; Viewing hides suggestions,
+    keeps comments, and is read-only. The mapping is a product-configurable policy.
+  req F-9.3: The advanced (explicit-selection) path MUST be unaffected by the ambient overlay.
+  req F-9.4: Accept/reject of a suggestion MUST route through the durable CollaborationOperation
+    AcceptChange / RejectChange (diffed against main), never a direct splice.
+
+feat F-10: Suggesting mode (authoring)
+
+  req F-10.1:
+    when: mode === 'suggesting' (ambient path)
+    then: the editor binds to the current user's own `kind:'suggestion'` branch (find-or-create) so
+      typed edits accrue there and render as character-level tracked changes vs main; edits MUST
+      never touch main (the mount is guarded until the branch binding resolves).
+  req F-10.2: Other authors' suggestions MUST overlay against main (base-decoupled), excluding the
+    current user's own branch (shown as tracked changes, not doubled).
+  req F-10.3: A multi-line/block deletion MUST render its removed text with line breaks preserved;
+    undo MUST re-instate a deleted region (no bespoke un-delete affordance).
+
+feat F-11: Independence
+
+  req F-11.1: plugin-markdown MUST NOT import plugin-comments source; the comment + suggestion-source
+    wiring is via MarkdownCapabilities slots only.
 ```
 
 ## Acceptance
@@ -222,32 +314,50 @@ test T-1: Create document
     - new Document persisted to ECHO
     - Document.name === "Notes"
     - Document.content target contains "# Hello"
-```
 
-```mdl
 test T-2: Apply edit
   given: Document.content is "There is a tyop."
   when: op:update invoked with edits [{ oldString: "tyop", newString: "typo" }]
   then:
     - Document.content becomes "There is a typo."
-```
 
-```mdl
 test T-3: Toggle view mode
   given: Document open, settings.defaultViewMode === source
   when: user toggles view mode
   then:
     - editor renders preview
     - reload restores preview mode for this Document
-```
 
-```mdl
 test T-4: Reference autocomplete
   given: Document open, space contains object "ProjectX"
   when: user types `@Proj`
   then:
     - link query shows ProjectX
     - selecting it inserts a DXN link at the cursor
+
+test T-5: Branch, edit, merge
+  given: A document on main
+  when: A branch is created, edited, and merged back
+  then:
+    - the branch edit lands on main after merge; a `merge:` checkpoint is recorded
+    - the branch edit never appeared on main before merge
+
+test T-6: Ambient overlay + mode
+  given: A document with two seeded suggestion branches, selection === current
+  when: mode is Editing
+  then:
+    - both authors' suggestions overlay the editor and comments are shown
+  when: mode switches to Viewing
+  then:
+    - suggestions are hidden, comments remain, the editor is read-only
+
+test T-7: Suggesting mode authors on the user's branch
+  given: A document, selection === current, mode === suggesting
+  when: the user types
+  then:
+    - the edit renders as a self tracked-change
+    - main/root content is unchanged; the user's suggestion branch gained the edit
+    - a second author's suggestion still renders vs main and does not strike the user's new text
 ```
 
 ---
@@ -314,4 +424,13 @@ ext op
     effects?: EffectList
     requires?: ServiceList
     note?: Prose
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: A capability/service contract with named methods.
+  fields:
+    desc?: Prose
+    methods?: MethodMap
 ```
