@@ -223,9 +223,11 @@ Verified by import tracing after the `react-ui-card` extraction:
   extract** — keep the mail version in plugin-inbox; when calendar splits it defines
   its own trivial markdown/plain toggle. Not worth a shared package.
 - **`Toolbar` (`toolbar.ts`)** — `openGroup` / `deleteGroup` / `deleteAction` are
-  one-line `MenuBuilder.action` wrappers shared by the Message + Event toolbars.
-  Same verdict as `ViewMode`: too thin to extract. Keep domain-side; calendar gets
-  its own (or duplicate the ~5 lines) on split. Not `react-ui-card`.
+  **generic** open/delete action builders (universal toolbar actions, not
+  inbox-specific), depending only on react-ui-menu's `ActionGroupBuilder(Fn)` types.
+  → move to **`@dxos/react-ui-menu`** as convenience action builders: zero new deps
+  (same package), no equivalent exists there today, and every plugin's toolbar can
+  reuse them. (Contrast `ViewMode`, which is domain-specific and stays.)
 - **`Header`** — a 20-line borderless-Card + bottom-rule wrapper (`Header.Root`).
   Its doc claims "Event and Message article headers," but that is **stale**: the
   Message header (`ConversationStack`) now hand-rolls its own subgrid, so the **only**
