@@ -26,14 +26,14 @@ export type EditorSelectionState = {
   selection?: EditorSelection;
 };
 
-export const EditorSelectionSchema = Schema.Struct({
+export const EditorSelection = Schema.Struct({
   anchor: Schema.Number,
   head: Schema.optional(Schema.Number),
 }).pipe(Schema.mutable);
 
 export const EditorSelectionStateSchema = Schema.Struct({
   scrollTo: Schema.optional(Schema.Number),
-  selection: Schema.optional(EditorSelectionSchema),
+  selection: Schema.optional(EditorSelection),
 }).pipe(Schema.mutable);
 
 export type EditorStateStore = {

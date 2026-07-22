@@ -488,7 +488,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## File structure (Phase 2)
 
-- Modify `packages/ui/react-ui-attention/src/selection.ts` — keep `SelectionMode`/`Selection`/`SelectionResult`/`SelectionSchema`/`defaultSelection`; add `selectionAspect` + pure helpers (`resolveSelection`, `toggleSelection`); reimplement `getSelectionSet` against `ViewStateManager`; **remove the `SelectionManager` class**.
+- Modify `packages/ui/react-ui-attention/src/selection.ts` — keep `SelectionMode`/`Selection`/`SelectionResult`/`Selection`/`defaultSelection`; add `selectionAspect` + pure helpers (`resolveSelection`, `toggleSelection`); reimplement `getSelectionSet` against `ViewStateManager`; **remove the `SelectionManager` class**.
 - Rename dir `components/SelectionProvider/` → `components/ViewStateProvider/`; file `ViewStateProvider.tsx` exporting `ViewStateProvider`, `useViewStateManager`, `useViewState`, `useViewStateActions`, `useSelection`, `useSelectionActions`.
 - Update `components/index.ts`, `src/index.ts`, `src/types/index.ts`.
 - Migrate all consumers (Tasks 5–8).
@@ -550,7 +550,7 @@ Expected: FAIL — `selectionAspect` / `resolveSelection` / `toggleSelection` no
 
 - [ ] **Step 3: Rewrite `selection.ts`**
 
-Keep the existing `SelectionMode`, `SelectionSchema`, `Selection`, `defaultSelection`, `SelectionResult` (lines 11–52 of the current file) unchanged. Replace `getSelectionSet` and the entire `SelectionManager` class (current lines 54–228) with:
+Keep the existing `SelectionMode`, `Selection`, `Selection`, `defaultSelection`, `SelectionResult` (lines 11–52 of the current file) unchanged. Replace `getSelectionSet` and the entire `SelectionManager` class (current lines 54–228) with:
 
 ```ts
 import { defineViewState } from './view-state';
@@ -560,7 +560,7 @@ import type { ViewStateManager } from './view-state';
 export const selectionAspect = defineViewState<Selection>({
   key: 'selection',
   backend: 'memory',
-  schema: SelectionSchema,
+  schema: Selection,
   defaultValue: () => ({ mode: 'multi', ids: [] }),
 });
 
@@ -1125,14 +1125,14 @@ Expected: FAIL — `EditorSelectionStateSchema` not exported.
 ```ts
 import * as Schema from 'effect/Schema';
 
-export const EditorSelectionSchema = Schema.Struct({
+export const EditorSelection = Schema.Struct({
   anchor: Schema.Number,
   head: Schema.optional(Schema.Number),
 }).pipe(Schema.mutable);
 
 export const EditorSelectionStateSchema = Schema.Struct({
   scrollTo: Schema.optional(Schema.Number),
-  selection: Schema.optional(EditorSelectionSchema),
+  selection: Schema.optional(EditorSelection),
 }).pipe(Schema.mutable);
 ```
 

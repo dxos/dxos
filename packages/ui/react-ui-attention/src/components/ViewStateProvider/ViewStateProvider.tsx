@@ -16,7 +16,7 @@ import {
   resolveSelection,
   selectionAspect,
   toggleSelection,
-} from '../../view-state/selection';
+} from '../../view-state/Selection';
 
 const VIEW_STATE_NAME = 'ViewState';
 

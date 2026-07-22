@@ -9,12 +9,12 @@ import { type AspectDef, defineViewState } from '@dxos/react-ui-attention';
 /** Global context shared by the deck-companion view-state aspects (split point + selected variant). */
 export const COMPANION_VIEW_STATE_CONTEXT = 'deck-companion';
 
-const CompanionSelectionSchema = Schema.Struct({
+const CompanionSelection = Schema.Struct({
   /** Linked variant of the currently selected companion tab. */
   variant: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
 
-export type CompanionSelection = Schema.Schema.Type<typeof CompanionSelectionSchema>;
+export type CompanionSelection = Schema.Schema.Type<typeof CompanionSelection>;
 
 /**
  * The globally-selected companion variant, persisted (localStorage) so reopening the companion restores
@@ -23,6 +23,6 @@ export type CompanionSelection = Schema.Schema.Type<typeof CompanionSelectionSch
 export const companionVariantAspect: AspectDef<CompanionSelection> = defineViewState<CompanionSelection>({
   key: 'deck-companion-variant',
   backend: 'local',
-  schema: CompanionSelectionSchema,
+  schema: CompanionSelection,
   defaultValue: () => ({}),
 });

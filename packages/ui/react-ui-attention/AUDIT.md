@@ -56,7 +56,7 @@ present, so stories work without wiring.
 export const companionVariantAspect = defineViewState<CompanionSelection>({
   key: 'deck-companion-variant',
   backend: 'local',
-  schema: CompanionSelectionSchema,
+  schema: CompanionSelection,
   defaultValue: () => ({}),
 });
 

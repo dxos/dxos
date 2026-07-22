@@ -5,11 +5,11 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { type AspectDef, type ViewStateManager, defineViewState } from './index';
+import { type AspectDef, type ViewStateManager, defineViewState } from '../view-state';
 
 export type SelectionMode = 'single' | 'multi' | 'range' | 'multi-range';
 
-export const SelectionSchema = Schema.Union(
+export const Selection = Schema.Union(
   Schema.Struct({
     mode: Schema.Literal('single'),
     id: Schema.optional(Schema.String),
@@ -29,7 +29,7 @@ export const SelectionSchema = Schema.Union(
   }).pipe(Schema.mutable),
 ).pipe(Schema.mutable);
 
-export type Selection = Schema.Schema.Type<typeof SelectionSchema>;
+export type Selection = Schema.Schema.Type<typeof Selection>;
 
 export const defaultSelection = Match.type<SelectionMode>().pipe(
   Match.withReturnType<Selection>(),
@@ -54,7 +54,7 @@ export type SelectionResult<T extends SelectionMode> = T extends 'single'
 export const selectionAspect: AspectDef<Selection> = defineViewState<Selection>({
   key: 'selection',
   backend: 'memory',
-  schema: SelectionSchema,
+  schema: Selection,
   defaultValue: () => ({ mode: 'multi', ids: [] }),
 });
 

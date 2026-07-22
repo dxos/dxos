@@ -112,7 +112,7 @@ Selection becomes:
 const selectionAspect = defineViewState({
   key: 'selection',
   backend: 'memory',
-  schema: SelectionSchema, // existing union: single | multi | range | multi-range
+  schema: Selection, // existing union: single | multi | range | multi-range
   defaultValue: () => ({ mode: 'multi', ids: [] }),
 });
 ```
@@ -192,11 +192,11 @@ files (suggested):
 
 - `src/view-state.ts` — `defineViewState`, `AspectDef`, `ViewStateManager`, backend
   implementations (or split backends into `src/view-state/`).
-- `src/selection.ts` — reduced to the `selectionAspect` + helpers, re-using `SelectionSchema`.
+- `src/selection.ts` — reduced to the `selectionAspect` + helpers, re-using `Selection`.
 - `src/components/ViewStateProvider/` — replaces `SelectionProvider`.
 
 The package's UI-free `./types` entry point continues to re-export the non-DOM pieces
-(`defineViewState`, schemas, `SelectionSchema`, helpers).
+(`defineViewState`, schemas, `Selection`, helpers).
 
 ## Testing
 
