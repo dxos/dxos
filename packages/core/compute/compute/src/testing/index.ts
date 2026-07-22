@@ -19,15 +19,10 @@ export const ExampleHandlers = OperationHandlerSet.lazy(
   () => import('./sleep'),
 );
 
-/**
- * Noop `Operation.Service` layer for testing — every invocation dies. Use in test layer stacks
- * that require `Operation.Service` to satisfy a type but never actually invoke/schedule an
- * operation on that path.
- */
+/** Noop `Operation.Service` for tests that must satisfy the type without invoking it — every call dies. */
 export const operationServiceLayerNoop: Layer.Layer<Operation.Service> = Layer.succeed(Operation.Service, {
   invoke: () => Effect.die('operationServiceLayerNoop: invoke is not implemented.'),
   schedule: () => Effect.die('operationServiceLayerNoop: schedule is not implemented.'),
   invokePromise: () => Promise.reject(new Error('operationServiceLayerNoop: invokePromise is not implemented.')),
-  // Operation.OperationService.invoke is a complex overloaded type; a partial test stub cannot
-  // express all overload variants without the cast.
+  // Overloaded interface; a partial stub can't express every variant without the cast.
 } as unknown as Operation.OperationService);

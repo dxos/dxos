@@ -21,9 +21,7 @@ import * as AiRequest from './AiRequest';
 
 const { text, toolCall, scriptedLanguageModelLayer } = ScriptedLanguageModel;
 
-// A minimal echo tool: the deterministic developer code the loop invokes when the (scripted) model
-// emits a tool call. Its handler runs for real, so a genuine tool-call → result → continue cycle is
-// exercised without any live model.
+// Real handler, so a scripted tool call drives a genuine tool-call → result → continue cycle.
 const TestToolkit = Toolkit.make(
   Tool.make('Echo', {
     description: 'Returns its input value verbatim.',
@@ -42,11 +40,7 @@ const toolkit = OpaqueToolkit.make(
   }),
 );
 
-// `AiRequest.RunRequirements` declares `Database.Service | Registry.Service | Operation.Service |
-// ToolExecutionService | ToolResolverService` but `run()` never actually yields them on this path
-// (no bound objects/skills, and tool calls are dispatched through the `toolkit` argument, not
-// through these services) — see AiRequest.ts. They exist only to satisfy the type, so noop/empty
-// layers are correct here, not a shortcut.
+// `RunRequirements` types several services `run()` never yields on this path, hence the noops below.
 const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
   Layer.mergeAll(
     scriptedLanguageModelLayer(turns),
@@ -58,10 +52,7 @@ const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
     Trace.testTraceService().pipe(Layer.provide(Trace.layerNoop)),
   );
 
-// Dimension D (harness / turn loop): deterministic developer code driven by a scripted model.
-// Exercises `AiRequest.Request` directly against the minimal set of services it actually requires,
-// rather than the full assistant-session/agent-service composition (see `scripted-loop.test.ts` in
-// `@dxos/agent-runtime` for the heavier, higher-level equivalent).
+// Lower-level counterpart to `scripted-loop.test.ts` (`@dxos/agent-runtime`): same loop shapes, no `AssistantTestLayer`.
 describe('AiRequest.Request.run (scripted model)', () => {
   it.effect('completes in one turn when the model emits no tool calls', () =>
     Effect.gen(function* () {

@@ -44,6 +44,17 @@ The code already says _what_ it does; a comment that restates that is noise.
   mechanism, state the constraint in a sentence and stop — resist narrating each
   step, the alternatives you rejected, or how it used to work. This applies
   hardest to JSDoc on a new abstraction, where the instinct to over-explain peaks.
+- **Line-count is itself a signal.** If a comment runs past ~2 lines, that length
+  is almost never buying explanatory power proportional to its size — it's
+  restating what a competent reader already infers from the code, the variable
+  names, or the fact that it's test/fixture scaffolding. Compress to the one
+  clause a reader couldn't get any other way, or delete outright. A correct but
+  low-stakes "why" (this is a toolkit stub, this layer is a noop) does not
+  justify three sentences of scene-setting — the reader can see it's a stub.
+- Test/fixture code gets a **lower** comment bar, not a higher one: "this is a
+  minimal/fake X for testing Y" is exactly what the surrounding `describe`
+  block, filename, and variable names (`TestToolkit`, `*LayerNoop`,
+  `scripted*`) already communicate — restating it in prose adds nothing.
 - Never narrate history or the conversation ("previously X, now Y", "as
   requested", "changed to…"). State the current invariant as if it always was.
 - Delete a comment that a competent reader gets from the code itself. Prefer a
@@ -53,6 +64,9 @@ The code already says _what_ it does; a comment that restates that is noise.
   `git diff origin/main | grep -nE '^\+\s*(//|\*|/\*)'`. Re-read each added line
   and cut it to its load-bearing clause — or delete it. A verbose comment is the
   autopilot default; conciseness is the deliberate pass. Do not defer to review.
+  **A comment that survives your own audit unchanged is a signal you skimmed
+  instead of cutting** — for each one, try deleting it first and only keep
+  words that don't come back on their own from re-reading the code.
 
 ```ts
 // ✅ why the code can't be the obvious thing, in one clause:
@@ -62,6 +76,16 @@ The code already says _what_ it does; a comment that restates that is noise.
 // Set displayItems to initialItems if it has items, otherwise the empty array.
 // We used to reset here but that flashed empty, so now we hold the previous page
 // and only replace it once the new query delivers its own results, which means…
+
+// ❌ correct but over-explained test scaffolding — the name/context already says this:
+// A minimal echo tool: the deterministic developer code the loop invokes when the
+// (scripted) model emits a tool call. Its handler runs for real, so a genuine
+// tool-call → result → continue cycle is exercised without any live model.
+const TestToolkit = Toolkit.make(Tool.make('Echo', { ... }));
+
+// ✅ same fact, one clause, or just delete it and let the name carry it:
+// Real handler, so tool-call → result → continue is a genuine cycle, not a mock.
+const TestToolkit = Toolkit.make(Tool.make('Echo', { ... }));
 ```
 
 ## Namespace-export packages
