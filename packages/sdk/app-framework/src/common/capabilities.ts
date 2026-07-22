@@ -35,12 +35,6 @@ import type {
 import type { Surface } from '../ui';
 
 /**
- * Null capability.
- * @category Capability
- */
-export const Null = Capability$.makeSingleton<null>()('org.dxos.app-framework.capability.null');
-
-/**
  * @category Capability
  */
 export const PluginManager = Capability$.makeSingleton<PluginManager$.PluginManager>()(
