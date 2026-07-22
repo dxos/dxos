@@ -59,18 +59,18 @@ present, so stories work without wiring.
 
 ```ts
 // Define the aspect once (co-located with the feature).
-export const companionVariantAspect = define<CompanionSelection>({
-  key: 'deck-companion-variant',
+export const companionAspect = define<CompanionState>({
+  key: 'deck-companion',
   backend: 'local',
-  schema: CompanionSelection,
+  schema: CompanionState,
   defaultValue: () => ({}),
 });
 
 // Read (reactive):
-const variant = useViewState(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT).variant;
+const variant = useViewState(companionAspect, COMPANION_VIEW_STATE_CONTEXT).variant;
 
 // Write:
-const { set, update, clear } = useViewStateActions(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
+const { set, update, clear } = useViewStateActions(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
 ```
 
 - Hooks: [`useViewState`](./src/components/ViewStateProvider/ViewStateProvider.tsx), [`useViewStateActions`](./src/components/ViewStateProvider/ViewStateProvider.tsx)
