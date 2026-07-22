@@ -15,7 +15,8 @@ The end-state topology and its rationale are in §4–§5; the seams to cut are 
 Each step below is independently landable + testable, and links to the section that
 details it.
 
-1. **Rename `GooglePeople` → `GoogleContacts`** — pure rename, no move. _(Done.)_
+1. ✅ **Rename `GooglePeople` → `GoogleContacts`** — pure rename, no move. _(Done —
+   PR #12300.)_
 2. **Extract `apis/` → `@dxos/google-apis` + `@dxos/jmap-apis`** — framework-free
    wrappers (§3.5); lowest risk, internal imports only.
 3. ✅ **Extract `@dxos/react-ui-card`** — shared low-level card vocabulary `Row` +
