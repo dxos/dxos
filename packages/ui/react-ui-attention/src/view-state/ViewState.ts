@@ -11,14 +11,13 @@ import type * as Schema from 'effect/Schema';
 export type BackendName = 'memory' | 'local';
 
 /**
- * Declares a kind of per-context UI state. The value type `T` is inferred from the schema.
+ * Declares a kind of per-context UI state. The value type `T` and its persisted wire type `Encoded`
+ * are inferred from the schema; `Encoded` defaults to `T` for the common no-transform case.
  */
-export interface Aspect<T> {
+export interface Aspect<T, Encoded = T> {
   readonly key: string;
   readonly backend: BackendName;
-  // Encoded type is intentionally unconstrained: persisted backends serialize `T` through the
-  // schema to an arbitrary wire form, and only the decoded `T` matters to consumers.
-  readonly schema: Schema.Schema<T, any>;
+  readonly schema: Schema.Schema<T, Encoded>;
   readonly defaultValue: () => T;
 }
 
@@ -36,7 +35,7 @@ export interface Aspect<T> {
  *   uses: {@link defineViewState}, {@link ViewStateManager}
  *   related: org.dxos.effect.kvsStore
  */
-export const defineViewState = <T>(def: Aspect<T>): Aspect<T> => def;
+export const defineViewState = <T, Encoded = T>(def: Aspect<T, Encoded>): Aspect<T, Encoded> => def;
 
 /**
  * A backend produces a reactive, writable atom for each `(aspect, contextId)` pair. Backends may
@@ -45,11 +44,11 @@ export const defineViewState = <T>(def: Aspect<T>): Aspect<T> => def;
  */
 export interface ViewStateBackend {
   /** Stable atom for the pair; created (and seeded) on first access, cached thereafter. */
-  atom: <T>(aspect: Aspect<T>, contextId: string) => Atom.Writable<T>;
+  atom: <T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string) => Atom.Writable<T>;
   /** Persist a value after the atom is updated. No-op for in-memory backends. */
-  persist?: <T>(aspect: Aspect<T>, contextId: string, value: T) => void;
+  persist?: <T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string, value: T) => void;
   /** Context ids that currently hold a value for the aspect. */
-  contexts: <T>(aspect: Aspect<T>) => string[];
+  contexts: <T, Encoded>(aspect: Aspect<T, Encoded>) => string[];
   /** Release listeners/timers (used by tests; app-lifetime managers do not call this). */
   dispose?: () => void;
 }
@@ -73,30 +72,30 @@ export class ViewStateManager {
   }
 
   /** Reactive atom for `(aspect, contextId)`; pass to `registry.get` inside derived atoms/hooks. */
-  atom<T>(aspect: Aspect<T>, contextId: string): Atom.Writable<T> {
+  atom<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string): Atom.Writable<T> {
     return this.#backends[aspect.backend].atom(aspect, contextId);
   }
 
-  get<T>(aspect: Aspect<T>, contextId: string): T {
+  get<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string): T {
     return this.#registry.get(this.atom(aspect, contextId));
   }
 
-  set<T>(aspect: Aspect<T>, contextId: string, value: T): void {
+  set<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string, value: T): void {
     const backend = this.#backends[aspect.backend];
     this.#registry.set(backend.atom(aspect, contextId), value);
     backend.persist?.(aspect, contextId, value);
   }
 
-  update<T>(aspect: Aspect<T>, contextId: string, fn: (prev: T) => T): void {
+  update<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string, fn: (prev: T) => T): void {
     this.set(aspect, contextId, fn(this.get(aspect, contextId)));
   }
 
-  subscribe<T>(aspect: Aspect<T>, contextId: string, cb: (value: T) => void): () => void {
+  subscribe<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string, cb: (value: T) => void): () => void {
     const atom = this.atom(aspect, contextId);
     return this.#registry.subscribe(atom, () => cb(this.#registry.get(atom)));
   }
 
-  contexts<T>(aspect: Aspect<T>): string[] {
+  contexts<T, Encoded>(aspect: Aspect<T, Encoded>): string[] {
     return this.#backends[aspect.backend].contexts(aspect);
   }
 }

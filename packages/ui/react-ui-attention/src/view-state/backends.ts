@@ -14,7 +14,7 @@ const cacheKey = (aspect: { key: string }, contextId: string) => `${aspect.key}:
 export class MemoryBackend implements ViewStateBackend {
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
 
-  atom<T>(aspect: Aspect<T>, contextId: string): Atom.Writable<T> {
+  atom<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string): Atom.Writable<T> {
     const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
@@ -25,7 +25,7 @@ export class MemoryBackend implements ViewStateBackend {
     return atom as Atom.Writable<T>;
   }
 
-  contexts<T>(aspect: Aspect<T>): string[] {
+  contexts<T, Encoded>(aspect: Aspect<T, Encoded>): string[] {
     const prefix = `${aspect.key}:`;
     return [...this.#atoms.keys()].filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length));
   }
@@ -59,7 +59,7 @@ export class LocalBackend implements ViewStateBackend {
   readonly #storage: Storage | undefined;
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
   // Reverse map: storage key -> (aspect, contextId) so `storage` events can target the right atom.
-  readonly #byStorageKey = new Map<string, { aspect: Aspect<unknown>; contextId: string }>();
+  readonly #byStorageKey = new Map<string, { aspect: Aspect<unknown, unknown>; contextId: string }>();
   #storageListener?: (event: StorageEvent) => void;
 
   constructor({ registry, storage }: LocalBackendOptions) {
@@ -80,7 +80,7 @@ export class LocalBackend implements ViewStateBackend {
     }
   }
 
-  atom<T>(aspect: Aspect<T>, contextId: string): Atom.Writable<T> {
+  atom<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string): Atom.Writable<T> {
     const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
@@ -89,17 +89,17 @@ export class LocalBackend implements ViewStateBackend {
       this.#atoms.set(key, atom);
       // Cast erases the per-aspect value type so the reverse map can hold aspects of any `T`; the
       // stored aspect is only used to re-read/decode its own value, so the erasure is safe.
-      this.#byStorageKey.set(storageKey, { aspect: aspect as Aspect<unknown>, contextId });
+      this.#byStorageKey.set(storageKey, { aspect: aspect as Aspect<unknown, unknown>, contextId });
     }
     // Cast bridges the per-aspect value type erased by the shared atom map; safe by construction.
     return atom as Atom.Writable<T>;
   }
 
-  persist<T>(aspect: Aspect<T>, contextId: string, value: T): void {
+  persist<T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string, value: T): void {
     this.#storage?.setItem(storageKeyFor(aspect, contextId), JSON.stringify(Schema.encodeSync(aspect.schema)(value)));
   }
 
-  contexts<T>(aspect: Aspect<T>): string[] {
+  contexts<T, Encoded>(aspect: Aspect<T, Encoded>): string[] {
     if (!this.#storage) {
       // No persistent storage: fall back to the in-memory atoms (mirrors `atom()`'s ephemeral path).
       const prefix = `${aspect.key}:`;
@@ -125,7 +125,7 @@ export class LocalBackend implements ViewStateBackend {
     this.#byStorageKey.clear();
   }
 
-  #read<T>(aspect: Aspect<T>, storageKey: string): T {
+  #read<T, Encoded>(aspect: Aspect<T, Encoded>, storageKey: string): T {
     const raw = this.#storage?.getItem(storageKey);
     if (raw == null) {
       return aspect.defaultValue();

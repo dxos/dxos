@@ -48,7 +48,7 @@ export const useViewStateManagerOptional = (): ViewState.ViewStateManager | unde
 };
 
 /** Reactive read of an aspect value for a context; yields the aspect default when unset or unprovided. */
-export const useViewState = <T,>(aspect: ViewState.Aspect<T>, contextId?: string): T => {
+export const useViewState = <T, Encoded = T>(aspect: ViewState.Aspect<T, Encoded>, contextId?: string): T => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   const [value, setValue] = useState<T>(() =>
     contextId && manager ? manager.get(aspect, contextId) : aspect.defaultValue(),
@@ -70,7 +70,10 @@ export type UseViewStateActions<T> = {
   clear: () => void;
 };
 
-export const useViewStateActions = <T,>(aspect: ViewState.Aspect<T>, contextId?: string): UseViewStateActions<T> => {
+export const useViewStateActions = <T, Encoded = T>(
+  aspect: ViewState.Aspect<T, Encoded>,
+  contextId?: string,
+): UseViewStateActions<T> => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   return useMemo<UseViewStateActions<T>>(
     () => ({
