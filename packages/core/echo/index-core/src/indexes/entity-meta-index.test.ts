@@ -4,12 +4,13 @@
 
 import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
@@ -66,16 +67,16 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('matches stored-schema type identifiers across legacy and canonical EID forms', () =>
+  it.effect('resolves a legacy single-slash type-identifier row when queried by the canonical form', () =>
     Effect.gen(function* () {
       const index = new EntityMetaIndex();
       yield* index.migrate();
+      const sql = yield* SqlClient.SqlClient;
 
       const spaceId = SpaceId.random();
       const objectId = EntityId.random();
       const schemaId = EntityId.random();
 
-      // Legacy persisted rows carry the single-slash local EID (`echo:/<id>`) as the type identifier.
       const item: IndexerObject = {
         spaceId,
         queueId: EntityId.random(),
@@ -86,19 +87,23 @@ describe('EntityMetaIndex', () => {
         updatedAt: Date.now(),
         data: {
           id: objectId,
-          [ATTR_TYPE]: URI.make(`echo:/${schemaId}`),
+          [ATTR_TYPE]: EID.make({ entityId: schemaId }),
           [ATTR_DELETED]: false,
         },
       };
 
       yield* index.update([item]);
 
-      // Both the canonical triple-slash form and the legacy single-slash form must resolve the row.
-      const canonical = yield* index.query({ spaceId, typeDXN: EID.make({ entityId: schemaId }) });
-      expect(canonical.map((_) => _.objectId)).toEqual([objectId]);
+      // The write path normalizes identifiers, so rewrite the row to the legacy single-slash form to
+      // simulate a pre-normalization on-disk row (parameterized to avoid SQL injection).
+      const legacyTypeDxn = `echo:/${schemaId}`;
+      yield* sql`UPDATE objectMeta SET typeDXN = ${legacyTypeDxn} WHERE objectId = ${objectId}`;
+      const [stored] = yield* sql<{ typeDXN: string }>`SELECT typeDXN FROM objectMeta WHERE objectId = ${objectId}`;
+      expect(stored.typeDXN).toBe(legacyTypeDxn);
 
-      const legacy = yield* index.query({ spaceId, typeDXN: URI.make(`echo:/${schemaId}`) });
-      expect(legacy.map((_) => _.objectId)).toEqual([objectId]);
+      // A canonical-form query must still resolve the legacy row without a reindex.
+      const results = yield* index.query({ spaceId, typeDXN: EID.make({ entityId: schemaId }) });
+      expect(results.map((_) => _.objectId)).toEqual([objectId]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
