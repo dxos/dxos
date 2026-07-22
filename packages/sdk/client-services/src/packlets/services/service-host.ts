@@ -47,7 +47,13 @@ import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  EdgeSignalManager,
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  type SignalManager,
+  SignalManagerService,
+} from '@dxos/messaging';
 import {
   SwarmNetworkManager,
   SwarmNetworkManagerService,
@@ -433,9 +439,11 @@ export class ClientServicesHost {
         this.#config?.get('runtime.services.iceProviders') &&
           createIceProvider(this.#config!.get('runtime.services.iceProviders')!),
       ),
+      // Edge is the only real signaling transport; without it fall back to an isolated in-memory
+      // manager (no cross-process signaling). The former KUBE `WebsocketSignalManager` is removed.
       signalManager = this.#edgeConnection && this.#config?.get('runtime.client.edgeFeatures')?.signaling
         ? new EdgeSignalManager({ edgeConnection: this.#edgeConnection })
-        : new WebsocketSignalManager(this.#config?.get('runtime.services.signaling') ?? []),
+        : new MemorySignalManager(new MemorySignalManagerContext()),
     } = options;
     this.#signalManager = signalManager;
 

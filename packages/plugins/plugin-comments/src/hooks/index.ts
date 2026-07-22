@@ -3,4 +3,5 @@
 //
 
 export * from './analytics';
+export * from './suggestion-sources';
 export * from './useStatus';

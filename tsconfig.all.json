@@ -775,9 +775,6 @@
       "path": "packages/sdk/shell/tsconfig.json"
     },
     {
-      "path": "packages/core/mesh/signal/tsconfig.json"
-    },
-    {
       "path": "packages/ui/solid-ui/tsconfig.json"
     },
     {

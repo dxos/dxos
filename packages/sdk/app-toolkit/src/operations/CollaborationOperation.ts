@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ContentBlock } from '@dxos/types';
 
@@ -53,8 +52,10 @@ export const AcceptChange = Operation.make({
     description: 'Accept an individual change from a branch.',
     icon: 'ph--check--regular',
   },
-  // The handler resolves and edits the subject's content Text; it needs database access only.
-  services: [Database.Service],
+  // The handler operates on the passed `subject` object directly (its ambient database) and requires
+  // no injected service, so it is invocable from any context — the UI operation invoker (which lacks
+  // Database.Service) as well as the agent runtime.
+  services: [],
   input: Schema.Struct({
     subject: Schema.Any,
     anchor: Schema.String,
@@ -77,7 +78,7 @@ export const RejectChange = Operation.make({
     description: 'Reject an individual change from a branch.',
     icon: 'ph--x--regular',
   },
-  services: [Database.Service],
+  services: [],
   input: Schema.Struct({
     subject: Schema.Any,
     anchor: Schema.String,
@@ -98,7 +99,7 @@ export const RestoreText = Operation.make({
     description: 'Apply a text splice to a document or one of its branches.',
     icon: 'ph--arrow-counter-clockwise--regular',
   },
-  services: [Database.Service],
+  services: [],
   input: Schema.Struct({
     subject: Schema.Any,
     branch: Schema.optional(Schema.String),

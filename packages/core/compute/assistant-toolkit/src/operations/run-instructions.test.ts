@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { AssistantTestLayer, runMemoizedTests } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import { Instructions, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
@@ -30,7 +30,7 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
 });
 
-describe('Agent prompt', () => {
+describe.skipIf(!runMemoizedTests())('Agent prompt', () => {
   it.effect(
     'chat mode appends assistant messages to the chat queue',
     Effect.fnUntraced(

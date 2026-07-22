@@ -144,6 +144,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/versioning": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:"
   },

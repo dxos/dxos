@@ -17,7 +17,7 @@ projects:
     prs: [12163, 12167, 12178]
     resume: 'PRs #12178 + #12205 merged (Topics UX v2 + Topics/Subscriptions Mosaic lists). In progress (uncommitted, NOT yet a PR): converted plugin-inbox folder articles to the ObjectArticleProps<Mailbox> pattern (db from subject, folder graph nodes carry data:mailbox, sentinels dropped) + SubscriptionsArticle unsubscribe removes on success. Build/lint/fmt + 167 unit tests green. NOTE: TopicsArticle/CreateTopic storybook play-tests fail on the committed baseline too (pre-existing, headless topic-query returns empty). Next: commit this work / open PR when ready; then Priority 1 manual topics + management. Deferred: Active Topics v2 (LLM labels + personEmails), two-tier latency, re-sync dedup bug, MailboxArticle search wiring.'
 
-  - name: task-planning-skill-update
+  - name: task-planning-skill
     status: active
     user: burdon
     host: burdon-mbp-2022
@@ -27,6 +27,17 @@ projects:
     design: .agents/skills/task-planning/SKILL.md
     prs: [12174]
     resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
+
+  - name: inbox-test-suite
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-13
+    summary: Layered test suite enforcing plugin-inbox PLUGIN.mdl (unit→storybook→harness→agent-e2e→browser-e2e→bench→live); current branch delivers Tier 4 Playwright browser-e2e (task #7).
+    tasks: packages/plugins/plugin-inbox/TASKS.md
+    design: packages/plugins/plugin-inbox/PLUGIN.mdl
+    prs: [12197]
+    resume: 'PR #12197: task #7 (JMAP e2e) done, 3/3 green — survived two upstream refactors (connector-auth schema-annotation rewrite; vite+rolldown build + conversation-mosaic-toolbar redesign) and a code-review fix round (PLUGIN.mdl draftEmailAndOpen/jmapSync accuracy, http-mock Jmap.MethodCall/Filter reuse + validated parsing). Latest merge (origin/main, 29 commits) needed zero fixes. Committed but not pushed: http-mock export-path fix, reply e2e simplified to Reply All, latest merge. Next: push, then Gmail suite (#7e, DX_E2E-gated connection bridge + provider adapter) or #6/#8-#11 per user priority.'
 
   - name: composer-search
     status: active
@@ -58,7 +69,7 @@ projects:
     summary: Replace the memoized-LLM e2e strategy with tiered tests (deterministic unit tiers in CI + graded evals out-of-band); retire the current e2e framework.
     tasks: .agents/projects/ai-testing-strategy/TASKS.md
     design: packages/core/compute/ai/TESTING.md
-    prs: [12287]
-    resume: 'Design doc PR #12287 (draft): packages/core/compute/ai/TESTING.md — dimensions A-H, current-approach gaps, tiered target, prioritized plan + consumer inventory (G1/G2/G3) and removal blast-radius. No implementation started. Next code step: extract the scripted LanguageModel primitive from MemoizedLanguageModel (substrate for D tests + G1 boot-smoke), then delete G1 (assistant-e2e). Quick relief available first: de-gate G2/G3 memoized replay from PR CI.'
+    prs: [12287, 12291, 12297]
+    resume: 'Design doc PR #12287 MERGED. PR #12291 MERGED — Phase 1 steps 1-3: de-gated G2/G3 memoized replay, scripted LanguageModel primitive, AiRequest loop (D) tests. PR #12297 MERGED — revised plan: kept G1 assistant-e2e instead of deleting it, extended the runMemoizedTests() gate to it + the 5 live-model tests in memoization.test.ts (dynamic value matching stays ungated), removed all 21 committed .conversations.json fixtures repo-wide, and — per reviewer request mid-review — replaced the ad hoc describeMemoized/itMemoized/testMemoized helper across all 20 gated files with native describe.skipIf/it.effect.skipIf/test.skipIf. CodeRabbit clean, CI green, merge-queued and merged. NEXT (fresh session/branch): G2→C mocked unit conversions (plugin-markdown create/update largest; plugin-magazine, plugin-assistant, assistant-toolkit skills, AiSummarizer), then E (context-assembly snapshot) + F (schema round-trip) tiers, then G (code-side oracle). Also tracked, own PRs: delete orphaned .agent/ (singular) dir; decide whether AiRequest.run needs a max-iterations cap (none exists today).'
 
 ended: []

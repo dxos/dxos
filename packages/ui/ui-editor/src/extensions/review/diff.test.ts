@@ -20,32 +20,34 @@ describe('diff hunks', () => {
     }
   });
 
-  test('cherryPickHunk applies the compare (A) version of the hunk overlapping the range', ({ expect }) => {
-    // Range over "Line one CHANGED." in the modified (current) text.
-    const start = modified.indexOf('Line one');
-    const splice = cherryPickHunk(modified, original, { start, end: start + 4 });
+  test('cherryPickHunk resolves only the anchored word hunk, not the whole line or other changes', ({ expect }) => {
+    // Range over the changed word "CHANGED" in the modified (current) text.
+    const start = modified.indexOf('CHANGED');
+    const splice = cherryPickHunk(modified, original, { start, end: start + 'CHANGED'.length });
     expect(splice).toBeDefined();
     if (!splice) {
       return;
     }
-    // Applying the splice to `modified` yields a string where that hunk matches `original`.
+    // Applying the splice to `modified` reverts that hunk to `original`.
     const applied = modified.slice(0, splice.from) + splice.insert + modified.slice(splice.from + splice.del);
     expect(applied).toContain('Line one.');
-    expect(applied).not.toContain('Line one CHANGED.');
+    expect(applied).not.toContain('CHANGED');
+    // Word-level: the separate change on another line is untouched (would break with line granularity).
+    expect(applied).toContain('Line three ADDED.');
   });
 
   test('reflects the latest compare text, not a snapshot', ({ expect }) => {
-    const start = modified.indexOf('Line one');
-    const range = { start, end: start + 4 };
+    const start = modified.indexOf('CHANGED');
+    const range = { start, end: start + 'CHANGED'.length };
 
-    // First compare version.
+    // First compare version does not carry the later edit.
     const v1 = cherryPickHunk(modified, original, range);
-    expect(v1?.insert).toContain('Line one.');
+    expect(v1?.insert).not.toContain('EDITED AGAIN');
 
     // Compare text edited further; cherry-pick now yields the NEWER version.
     const originalV2 = ['# Title', '', 'Line one EDITED AGAIN.', 'Line two.', ''].join('\n');
     const v2 = cherryPickHunk(modified, originalV2, range);
-    expect(v2?.insert).toContain('Line one EDITED AGAIN.');
+    expect(v2?.insert).toContain('EDITED AGAIN');
   });
 
   test('returns undefined when the range is not on a changed hunk', ({ expect }) => {
