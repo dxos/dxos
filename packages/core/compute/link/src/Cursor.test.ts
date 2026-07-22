@@ -520,8 +520,8 @@ describe('resolveHorizon', () => {
     return result;
   };
 
-  test('defaults to 30 days before now', ({ expect }) => {
-    expect(Cursor.resolveHorizon({ now: NOW })).toEqual(addCalendarDays(NOW, -30));
+  test('defaults to 2 years before now', ({ expect }) => {
+    expect(Cursor.resolveHorizon({ now: NOW })).toEqual(addCalendarDays(NOW, -365 * 2));
   });
 
   test('syncBackDays overrides the default', ({ expect }) => {
