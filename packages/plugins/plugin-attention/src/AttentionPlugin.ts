@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { ViewState, createDefaultBackends, Attention } from '@dxos/react-ui-attention';
+import { Attention, ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
 
 import { Keyboard, OperationHandler, ReactContext } from '#capabilities';
 import { meta } from '#meta';

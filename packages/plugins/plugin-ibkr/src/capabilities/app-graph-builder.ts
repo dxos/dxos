@@ -11,7 +11,7 @@ import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { Selection, Attention } from '@dxos/react-ui-attention';
+import { Attention, Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '../meta';
 import { Ibkr } from '../types';

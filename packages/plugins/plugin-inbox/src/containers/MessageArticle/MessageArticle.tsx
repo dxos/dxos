@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
-import { useViewStateManager, Attention } from '@dxos/react-ui-attention';
+import { Attention, useViewStateManager } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import {

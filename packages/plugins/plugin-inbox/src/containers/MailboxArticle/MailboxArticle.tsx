@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, Panel } from '@dxos/react-ui';
-import { useArticleKeyboardNavigation, useSelection, Attention } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
   Menu,

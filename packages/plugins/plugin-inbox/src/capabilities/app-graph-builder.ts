@@ -18,7 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Selection, Attention } from '@dxos/react-ui-attention';
+import { Attention, Selection } from '@dxos/react-ui-attention';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 

@@ -13,7 +13,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Selection, Attention } from '@dxos/react-ui-attention';
+import { Attention, Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#types';

@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSelection, Attention } from '@dxos/react-ui-attention';
+import { Attention, useSelection } from '@dxos/react-ui-attention';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';

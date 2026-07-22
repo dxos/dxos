@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { MapInline } from '@dxos/plugin-map';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { Panel } from '@dxos/react-ui';
-import { useArticleKeyboardNavigation, useSelection, Attention } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';

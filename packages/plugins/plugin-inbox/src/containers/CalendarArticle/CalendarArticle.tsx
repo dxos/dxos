@@ -13,7 +13,7 @@ import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { useArticleKeyboardNavigation, useSelection, Attention } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
   Menu,

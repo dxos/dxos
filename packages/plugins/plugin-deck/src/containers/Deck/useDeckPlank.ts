@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner, useActions, useNode } from '@dxos/plugin-graph';
-import { useAttention, Attention } from '@dxos/react-ui-attention';
+import { Attention, useAttention } from '@dxos/react-ui-attention';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
 import { meta } from '#meta';

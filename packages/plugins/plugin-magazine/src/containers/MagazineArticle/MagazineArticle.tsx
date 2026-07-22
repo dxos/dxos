@@ -12,7 +12,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { useSelection, Attention } from '@dxos/react-ui-attention';
+import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
