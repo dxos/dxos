@@ -175,7 +175,7 @@ describe('buildThreadSemiJoin (results)', () => {
     const fixture = await setup();
     try {
       // Two messages share a thread; two are singletons keyed on a unique threadId of their own — the
-      // shape the JMAP mapper produces for threadless mail. All four must survive the semi-join.
+      // shape a compose draft takes (a thread of one). All four must survive the semi-join.
       const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
       const t2 = message('two', '2020-01-02T00:00:00.000Z', 'thread-a');
       const s1 = message('three', '2020-01-03T00:00:00.000Z', 'thread-of-one-1');
@@ -189,11 +189,11 @@ describe('buildThreadSemiJoin (results)', () => {
     }
   });
 
-  test('a message with no threadId is dropped by the semi-join (documents the bug the mapper prevents)', async () => {
+  test('a message with no threadId is dropped by the semi-join (documents the bug thread-of-one keying avoids)', async () => {
     const fixture = await setup();
     try {
       const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
-      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // no threadId — the shape the mapper normalizes away
+      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // no threadId — the shape a compose draft must avoid
       await append(fixture, [t1, standalone]);
 
       // The `threadId IN (…)` semi-join excludes the null-threadId row — the exact failure this fix prevents.

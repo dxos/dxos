@@ -126,9 +126,8 @@ const meta = {
                 const mailbox = personalSpace.db.add(Mailbox.make());
                 const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
                 if (feed) {
-                  // Synced mail always carries a `threadId` (the mapper defaults a threadless message to
-                  // its own id); mirror that here by giving standalone samples a unique thread so they seed
-                  // as thread-of-one, matching production.
+                  // Synced JMAP mail always carries a `threadId` (server-set, RFC 8621); mirror that here
+                  // by giving standalone samples a unique thread so they seed realistically.
                   const messages = SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }, index) =>
                     Message.make({
                       created: subDays(new Date(), daysAgo ?? 0).toISOString(),
