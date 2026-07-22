@@ -102,19 +102,18 @@ type ConversationStackContextValue = {
   options: Atom.Writable<MessageOptions>;
   /** Ids of the expanded messages; every other message renders as a collapsed summary. */
   expanded: ReadonlySet<string>;
+  /** App graph for contributed (`disposition: 'toolbar'`) actions (container-resolved). */
+  graph?: Graph.ReadableGraph;
+  /** Process-manager runtime for draft send / composer AI (container-resolved). */
+  runtime?: Capabilities.ProcessManagerRuntime;
+  /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
+  getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
   onExpandedChange?: (id: string, expanded: boolean) => void;
   /** Folds every message (thread toolbar only). */
   onCollapseAll?: () => void;
   /** Unfolds every message (thread toolbar only). */
   onExpandAll?: () => void;
   onContactCreate?: MessageHeaderProps['onContactCreate'];
-
-  /** App graph for contributed (`disposition: 'toolbar'`) actions (container-resolved). */
-  graph?: Graph.ReadableGraph;
-  /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
-  getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
-  /** Process-manager runtime for draft send / composer AI (container-resolved). */
-  runtime?: Capabilities.ProcessManagerRuntime;
 } & ConversationMessageActions;
 
 const [ConversationStackProvider, useConversationStackContext] =
@@ -135,6 +134,9 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'companion'
     | 'options'
     | 'expanded'
+    | 'graph'
+    | 'runtime'
+    | 'getExtractActions'
     | 'onExpandedChange'
     | 'onCollapseAll'
     | 'onExpandAll'
@@ -142,9 +144,6 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'onAiReply'
     | 'onDelete'
     | 'onOpen'
-    | 'graph'
-    | 'getExtractActions'
-    | 'runtime'
   >
 >;
 
@@ -161,6 +160,9 @@ const ConversationStackRoot = ({
   expanded,
   mailbox,
   options,
+  graph,
+  runtime,
+  getExtractActions,
   onExpandedChange,
   onCollapseAll,
   onExpandAll,
@@ -168,9 +170,6 @@ const ConversationStackRoot = ({
   onAiReply,
   onDelete,
   onOpen,
-  graph,
-  getExtractActions,
-  runtime,
 }: ConversationStackRootProps) => (
   <ConversationStackProvider
     attendableId={attendableId}

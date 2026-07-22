@@ -176,21 +176,15 @@ stick. Two correct shapes:
 
 ---
 
-## The `@idiom` marker
+## The `@idiom` markers
 
-Durable UI state gets **one** idiom (NSID slug), pinned to a single exported artifact, so reviewers
-and agents can name it. Proposed:
+Each store is named by one idiom (NSID slug), pinned to its canonical artifact:
 
-```
-@idiom org.dxos.react-ui-attention.viewState
-  applies: Persisting per-context UI state (selection, view mode, scroll, split) across reloads and navigation
-  instead-of: ad-hoc useState that resets on remount, or stuffing per-context state into the plugin Settings store
-  uses: {@link defineViewState}, {@link useViewState}, {@link useViewStateActions}, {@link ViewStateManager}
-  related: org.dxos.react-ui-menu.toolbarMenu
-```
+- **`org.dxos.react-ui-attention.viewState`** → on `defineViewState` (`view-state/view-state.ts`).
+- **`org.dxos.effect.kvsStore`** → on `createKvsStore` (`common/effect/src/atom-kvs.ts`), the Settings
+  store, cross-referenced as `related`.
 
-Home: TBD in the follow-up task — either `defineViewState` (the shared contract both patterns use) or
-`ViewStateProvider` (the named entry point). The prose must describe both access patterns.
+The composer-ui skill's **State management** section references both.
 
 ---
 
@@ -218,5 +212,5 @@ Home: TBD in the follow-up task — either `defineViewState` (the shared contrac
 
 1. ✅ Document the two patterns + the Settings distinction (this file).
 2. ✅ Move the inbox message view mode from the Settings store to a ViewState aspect (Pattern A).
-3. Add the `@idiom org.dxos.react-ui-attention.viewState` marker to the chosen artifact.
+3. ✅ Add the `@idiom` markers (`viewState` on `defineViewState`, `kvsStore` on `createKvsStore`).
 4. Sweep for other misfiled per-context state and align it.

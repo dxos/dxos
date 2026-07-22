@@ -176,6 +176,9 @@ export const MessageArticle = ({
       companion={!!companionTo}
       options={optionsAtom}
       expanded={expanded}
+      graph={graph}
+      runtime={runtime}
+      getExtractActions={getExtractActions}
       onExpandedChange={onExpandedChange}
       onCollapseAll={onCollapseAll}
       onExpandAll={onExpandAll}
@@ -183,9 +186,6 @@ export const MessageArticle = ({
       onAiReply={mailbox ? handleAiReply : undefined}
       onDelete={mailbox ? handleDelete : undefined}
       onOpen={mailbox ? handleOpen : undefined}
-      graph={graph}
-      getExtractActions={getExtractActions}
-      runtime={runtime}
     >
       <Panel.Root role={role} data-testid={testId}>
         <Panel.Toolbar asChild>
