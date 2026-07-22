@@ -48,7 +48,7 @@ as primary coverage.
       magazine, AssistantPlugin ×3 tests, AiSummarizer; G3: functions, AgentService, request,
       xml-response). Left running: `memoization.test.ts` (tests the machinery itself), G1
       `assistant-e2e` (own harness — deleted in a later step, not de-gated here).
-- [x] **PR #12305 (draft):** added a leaner, package-level companion to the harness (D) tests below
+- [x] **PR #12305 (ready for review, CodeRabbit + Check green, landing next):** added a leaner, package-level companion to the harness (D) tests below
       — `assistant/src/request/AiRequest.test.ts` drives `AiRequest.Request.run` directly (no
       `AssistantTestLayer`/`ProcessManager`/`AgentServiceRuntime`/`AiService` model-resolution),
       using `ScriptedLanguageModel.scriptedLanguageModelLayer` as `LanguageModel.LanguageModel`
@@ -64,6 +64,21 @@ as primary coverage.
       failure signal. Keep both. Verified: `assistant:build`/`lint` green, `assistant:test` 39
       passed/5 skipped incl. the 3 new tests. Tool-error / malformed-output branches still
       deferred (same gap as the agent-runtime version — do in one place, not both).
+      **CodeRabbit review round (after marked ready):** 1 actionable comment, fixed —
+      `operationServiceLayerNoop`'s `invokePromise` was rejecting instead of resolving the
+      declared `{ data?: O; error?: Error }` shape; fixed to resolve `{ error }`, and (per the
+      same comment) the `as unknown as Operation.OperationService` cast turned out to be
+      removable after all — a directly-typed stub compiles cleanly, so the earlier
+      `Template.test.ts`-style cast wasn't actually needed here. One doc-wording nitpick on the
+      SKILL.md audit line adopted (softer framing, not "you skimmed"). One nitpick on
+      `AiRequest.test.ts`'s top-level `expect` import skipped — the suggestion doesn't match
+      `it.effect`'s actual usage in this codebase (`scripted-loop.test.ts` and
+      `memoization.test.ts` both import `expect` at module scope for `it.effect`; the
+      context-`expect` convention applies to plain vitest `test()`, not `it.effect`).
+      Re-verified build/lint/test green after the fix. Per direct feedback, also moved
+      `operationServiceLayerNoop` out of `testing/index.ts` into its own
+      `testing/operation.ts` (mirrors `registry.ts` in `@dxos/echo/testing`), re-exported via
+      `export * from './operation'`.
 - [x] **Revised plan (superseded "delete G1" below), PR #12297:** rather than deleting
       `assistant-e2e`, extended the same gate to it — cheaper, reversible, and keeps the suites
       runnable locally as live/eval tests + design inspiration, per direct guidance. Gated all 6

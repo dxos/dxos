@@ -64,9 +64,9 @@ The code already says _what_ it does; a comment that restates that is noise.
   `git diff origin/main | grep -nE '^\+\s*(//|\*|/\*)'`. Re-read each added line
   and cut it to its load-bearing clause — or delete it. A verbose comment is the
   autopilot default; conciseness is the deliberate pass. Do not defer to review.
-  **A comment that survives your own audit unchanged is a signal you skimmed
-  instead of cutting** — for each one, try deleting it first and only keep
-  words that don't come back on their own from re-reading the code.
+  **A comment that survives your own audit deserves a second look** — try
+  deleting it first, and keep only words that don't come back on their own
+  from re-reading the code.
 
 ```ts
 // ✅ why the code can't be the obvious thing, in one clause:
