@@ -167,16 +167,19 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 
 // Fold-transition variants to compare, selected via the `foldAnimation` control and scoped by a
 // `data-fold-anim` ancestor. `dx-fold-content` / `dx-fold-spine` are the hooks on the plank content and
-// its book-spine sigil (see DeckViewport). `crossfade` is the deck's base (opacity swap on the elements
-// themselves, matching the notes site); `slide` also slides the spine in from the leading edge.
+// its book-spine sigil, and `data-fold-side` (start|end) is the pile the plank pinned to (see
+// DeckViewport). `crossfade` is the deck's base (opacity swap on the elements themselves, matching the
+// notes site); `slide` also slides the spine in along the plank's own travel — from the trailing side in
+// the left pile, from the leading side in the right pile — so the motion tracks the scroll direction.
 const FOLD_ANIMATIONS = ['slide', 'crossfade'] as const;
 type FoldAnimation = (typeof FOLD_ANIMATIONS)[number];
 
 const FOLD_ANIMATION_CSS = `
 [data-fold-anim='slide'] .dx-fold-spine {
   transition: opacity 200ms ease-out, transform 220ms ease-out;
-  transform: translateX(-10px);
 }
+[data-fold-anim='slide'] [data-fold-side='start'] .dx-fold-spine { transform: translateX(10px); }
+[data-fold-anim='slide'] [data-fold-side='end'] .dx-fold-spine { transform: translateX(-10px); }
 [data-fold-anim='slide'] [data-folded] .dx-fold-spine { transform: translateX(0); }
 `;
 

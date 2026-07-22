@@ -61,9 +61,12 @@ const DEFAULT_PLANK_SIZE = 50;
 const MIN_PLANK_SIZE = 20;
 const MAX_PLANK_SIZE = 120;
 
+const REM_PX = 16;
+
 // Gap/padding that encapsulates each plank in its own container (the `--main-spacing` CSS var); tweak
 // here to change the deck's plank spacing.
-const PLANK_SPACING = '0.75rem';
+const PLANK_SPACING_REM = 0.75;
+const PLANK_SPACING = `${PLANK_SPACING_REM}rem`;
 
 // The companion plank persists a single shared width (keyed variant-independently) so switching
 // companion tabs does not resize the pane. Not a valid node id, so it never collides with a plank.
@@ -73,9 +76,9 @@ const COMPANION_SIZE_KEY = 'companion';
 // Each pinned plank reveals a `SPINE_PX`-wide sliver; once a plank's visible width drops below
 // `FOLD_THRESHOLD_PX` (no room for its header) it folds to a vertical spine sigil.
 const SPINE_PX = 44;
-// A plank folds to its spine once the sliver still showing narrows below this; smaller = fold later.
-const FOLD_THRESHOLD_PX = 96;
-const REM_PX = 16;
+// A plank folds to its spine once the sliver still showing narrows below a spine plus the inter-plank
+// gap — i.e. just as it would otherwise tuck fully behind its neighbor.
+const FOLD_THRESHOLD_PX = SPINE_PX + PLANK_SPACING_REM * REM_PX;
 
 // Scrolls a plank back into view when its folded spine is clicked (see fold behavior below).
 const ScrollToPlankContext = createContext<(id: string, index: number) => void>(() => {});
@@ -244,7 +247,9 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   return (
     <Mosaic.Tile
       {...props}
-      classNames='group/tile relative h-full'
+      // Faint leading-edge shadow so a plank reads as sitting on top of the one behind it as they slide
+      // over each other (planks stack by z-index; each one's left edge overlaps its left neighbor).
+      classNames='group/tile relative h-full shadow-[-6px_0_16px_-8px_rgba(0,0,0,0.45)]'
       size={plankSize}
       minSize={MIN_PLANK_SIZE}
       maxSize={maxSize}
@@ -536,6 +541,9 @@ export const DeckPlanks = () => {
         const coverLeft = rects[index + 1]?.left ?? Math.min(rect.right, vpRect.right);
         const uncovered = coverLeft - rect.left;
         tile.toggleAttribute('data-folded', uncovered > 0 && uncovered < FOLD_THRESHOLD_PX);
+        // Which pile the plank pinned to, so the fold animation can travel in the plank's own direction:
+        // `start` for the left pile (moving toward the start), `end` for the right pile.
+        tile.setAttribute('data-fold-side', rect.left - vpRect.left < vpRect.width / 2 ? 'start' : 'end');
       });
     };
     update();
