@@ -18,10 +18,11 @@ const CARD_TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md bor
 
 type CardTileRootProps = ThemedClassName<
   Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
-    id: string;
-    onCurrentChange: () => void;
-    onClick?: (event: MouseEvent) => void;
-    children?: ReactNode;
+    'id': string;
+    'onCurrentChange': () => void;
+    'onClick'?: (event: MouseEvent) => void;
+    'children'?: ReactNode;
+    'data-testid'?: string;
   }
 >;
 
@@ -31,10 +32,13 @@ type CardTileRootProps = ThemedClassName<
  * caller's `onCurrentChange` (Mosaic `current`/selection), so click/Enter light the tile up.
  */
 const CardTileRoot = forwardRef<HTMLDivElement, CardTileRootProps>(
-  ({ id, data, location, current, onCurrentChange, onClick, classNames, children }, forwardedRef) => (
+  (
+    { id, data, location, current, onCurrentChange, onClick, classNames, children, 'data-testid': testId },
+    forwardedRef,
+  ) => (
     <Mosaic.Tile asChild classNames={classNames ?? CARD_TILE_CLASSNAMES} id={id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
-        <Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef}>
+        <Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef} data-testid={testId}>
           {children}
         </Card.Root>
       </Focus.Item>

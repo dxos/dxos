@@ -3,6 +3,7 @@
 //
 
 export * from './deck';
+export * from './inbox';
 export * from './markdown';
 export * from './table';
 export * from './thread';
