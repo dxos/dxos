@@ -5,9 +5,9 @@
 import { Registry } from '@effect-atom/atom-react';
 import { describe, test } from 'vitest';
 
-import { createDefaultBackends } from '../backends';
-import { ViewStateManager } from '../ViewState';
+import { createDefaultBackends } from './backends';
 import { getSelectionSet, resolveSelection, selectionAspect, toggleSelection } from './Selection';
+import { ViewStateManager } from './ViewState';
 
 describe('selection helpers', () => {
   test('selectionAspect declares a memory-backed aspect', ({ expect }) => {
