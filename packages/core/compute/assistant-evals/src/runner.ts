@@ -12,9 +12,9 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
-import { Database, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -77,10 +77,20 @@ const runInstructions = <I>(
   model: DXN.DXN,
   spaceId: SpaceId,
   input: I,
+  sessionChat?: boolean,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
+
+      let chatRef: Ref.Ref<Chat.Chat> | undefined;
+      if (sessionChat) {
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), name: 'Eval Chat' }));
+        yield* Database.flush();
+        chatRef = Ref.make(chat);
+      }
+
       return yield* Operation.invoke(
         RunInstructions,
         {
@@ -88,6 +98,7 @@ const runInstructions = <I>(
           input,
           systemInstructions: SYSTEM_INSTRUCTIONS,
           model,
+          ...(chatRef ? { chat: chatRef } : {}),
         },
         { spaceId },
       );
@@ -101,6 +112,11 @@ export interface CreateEvalRunnerOptions<I, O> {
   skills?: Ref.Ref<Skill.Skill>[];
   model?: DXN.DXN;
   plugins?: Plugin.Plugin[];
+  /**
+   * Provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work
+   * (e.g. the planning skill's `update-tasks` resolves its plan via `Chat.getFromContext`).
+   */
+  sessionChat?: boolean;
   /**
    * `'failure'` inverts the run's success semantics: an agent failure resolves the task as
    * `{ failed: true }` instead of rejecting, so a scorer can grade "failed as instructed" as a
@@ -173,7 +189,7 @@ export function createEvalRunner<I, O, D>(
         );
 
         const agentOutput = yield* Effect.promise(() =>
-          runInstructions(harness, instructions, model, personalSpace.id, input),
+          runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat),
         );
 
         const dbQueryFn = options.dbQuery;

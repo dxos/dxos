@@ -67,6 +67,10 @@ export const completedBlocks = (): Effect.Effect<
 
 export interface ToolInvocation {
   readonly name: string;
+  /** Key of the Operation backing this call (e.g. `org.dxos.function.planning.updateTasks`) — a stable
+   * match target, unlike `name` (a display/toolkit name that varies by provider/toolkit). Absent for
+   * tool calls not backed by an Operation (provider-defined tools, MCP tools). */
+  readonly operationKey?: string;
   readonly input: string;
   readonly result?: unknown;
   readonly error?: string;
@@ -76,15 +80,16 @@ export interface ToolInvocation {
 export const toolInvocations = (): Effect.Effect<ToolInvocation[], unknown, Database.Service> =>
   Effect.gen(function* () {
     const blocks = yield* completedBlocks();
-    const calls = new Map<string, { name: string; input: string }>();
+    const calls = new Map<string, { name: string; operationKey?: string; input: string }>();
     const invocations: ToolInvocation[] = [];
     for (const { block } of blocks) {
       if (block._tag === 'toolCall') {
-        calls.set(block.toolCallId, { name: block.name, input: block.input });
+        calls.set(block.toolCallId, { name: block.name, operationKey: block.operationKey, input: block.input });
       } else if (block._tag === 'toolResult') {
         const call = calls.get(block.toolCallId);
         invocations.push({
           name: call?.name ?? block.name,
+          operationKey: call?.operationKey,
           input: call?.input ?? '',
           result: block.result,
           error: block.error,
