@@ -24,10 +24,19 @@
       "path": "../../../plugins/plugin-client"
     },
     {
+      "path": "../../../plugins/plugin-crm"
+    },
+    {
       "path": "../../../plugins/plugin-inbox"
     },
     {
+      "path": "../../../plugins/plugin-markdown"
+    },
+    {
       "path": "../../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../../plugins/plugin-sandbox"
     },
     {
       "path": "../../../plugins/plugin-testing"
@@ -39,13 +48,22 @@
       "path": "../../../sdk/app-toolkit"
     },
     {
+      "path": "../../../sdk/config"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {
       "path": "../../echo/echo"
     },
     {
+      "path": "../agent-runtime"
+    },
+    {
       "path": "../ai"
+    },
+    {
+      "path": "../assistant"
     },
     {
       "path": "../assistant-toolkit"

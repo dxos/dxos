@@ -25,9 +25,6 @@
       "path": "packages/core/compute/assistant/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/assistant-e2e/tsconfig.json"
-    },
-    {
       "path": "packages/core/compute/assistant-evals/tsconfig.json"
     },
     {

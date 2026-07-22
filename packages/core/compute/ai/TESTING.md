@@ -139,13 +139,41 @@ deterministic code through a frozen LLM recording.
   - **H (composition)** lives here too: a _small_ number of true end-to-end scenarios (real model,
     real operations, real loop) so we retain coverage of the seams that isolated tiers miss.
 
+### Where evals live: scoped by composition, not by history
+
+`@dxos/assistant-e2e` (G1) and `@dxos/assistant-evals` had been separate packages for a historical
+reason — memoized-replay vitest tests vs. `evalite`-scored evals — not a principled one. The right
+split is **composition scope**, and it collapses them into one package:
+
+- **Cross-plugin / full-composition scenarios** (G1 today — crm-mailbox spans CRM+Mailbox+Markdown,
+  planning spans the planning skill + task tools, web-search, smoke) need the full
+  `createComposerTestApp` harness wired across multiple plugins. That's inherently a central,
+  cross-cutting concern — it lives in `@dxos/assistant-evals`, which absorbs `assistant-e2e`'s
+  gated vitest tests (`src/testing/*.test.ts`) alongside the scored `evalite` scenarios
+  (`src/evals/*.eval.ts`). Same package, two task shapes: `:test` (gated, `describe.skipIf`) for
+  the memoized/live vitest suite, `:evals` for scored evals.
+- **Single-plugin/skill scenarios** (G2 today — `plugin-markdown` create/update, `plugin-magazine`,
+  `AiSummarizer`) have no reason to live anywhere but next to the plugin they test. Once one of
+  these grows a live-model eval (not just the deterministic C-tier unit test G2 converts to), it
+  belongs **inside that plugin's own package**, importing `createEvalRunner` /
+  assertion helpers from `@dxos/assistant-evals` as a library dependency.
+- `@dxos/assistant-evals` is therefore two things layered in one package: a **library**
+  (`runner.ts`, `assertions.ts`, harness setup — consumed by both its own cross-plugin scenarios
+  and any per-plugin evals elsewhere) plus the cross-plugin scenario suite itself. It is not a
+  dumping ground for every memoized test — G2/G3's deterministic conversions stay in their home
+  packages as ordinary unit/harness tests (dimension C/D), never migrating here.
+
+This supersedes Phase 1 item 4 below (originally "delete G1", reversed by #12297 to "gate it in
+place") with a further refinement: G1 doesn't just stay gated in its own package, it moves into
+`@dxos/assistant-evals` so the cross-plugin test surface has one home instead of two.
+
 ### Why this is better
 
 - Deterministic code is tested deterministically, in CI, with clear failures — no cache misses
   masquerading as bugs, no multi-MB fixtures, no coupled ID streams.
 - The LLM-dependent behavior we care about (A/B/H) is actually _measured_ over time instead of
   frozen and ignored.
-- The oracle is explicit and trustworthy instead of self-certifying.
+- The scorer is explicit and trustworthy instead of self-certifying.
 
 ## Consumer inventory & blast radius
 
@@ -203,11 +231,11 @@ deterministic tiers that make it safe.
    call, return these scripted parts/tool-calls" — decoupled from prompt-matching and file I/O.
    This is the substrate for D and for the G1 boot-smoke.
 3. **Harness (D) unit tests** on the scripted model: all loop branches listed above.
-4. **Delete G1 (`@dxos/assistant-e2e`) and its fixtures** (~7.5 MB), and replace it with a **single
-   scripted-model boot-smoke** that boots the full plugin composition and asserts a trivial 1-tool
-   task completes — preserving the one unique thing G1 covered (composition/wiring) without any
-   memoized fixture. Safe to do here because nothing imports the package and its C/D signal is
-   redundant with G2/G3.
+4. ~~Delete G1 (`@dxos/assistant-e2e`) and its fixtures, replace with a scripted-model
+   boot-smoke.~~ **Superseded twice:** #12297 kept G1 gated in place instead of deleting it
+   (cheaper, reversible, doubles as design inspiration); "Where evals live" above further merges
+   `@dxos/assistant-e2e` into `@dxos/assistant-evals` so the cross-plugin scenario surface has one
+   home. Its C/D signal is still redundant with G2/G3, so nothing unique is lost either way.
 5. **Operation (C) unit tests**: begin converting G2 to deterministic mocked unit tests; introduce
    the golden-args fixture convention. Delete each G2 fixture only once its unit test lands.
 6. **Context-assembly (E) and schema round-trip (F) tests.** E: snapshot the assembled prompt

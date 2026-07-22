@@ -11,9 +11,8 @@ import { trim } from '@dxos/util';
 import { objectExists } from '../assertions';
 import { createEvalRunner } from '../runner';
 
-// Ported from the gated `@dxos/assistant-e2e` `Database > create and query` scenario
-// (packages/core/compute/assistant-e2e/src/testing/database.test.ts). Grades the DB effect
-// directly instead of the agent's own self-reported `completedCriteria`.
+// Ported from the gated `Database > create and query` scenario (../testing/database.test.ts).
+// Grades the DB effect directly instead of the agent's own self-reported `completedCriteria`.
 const task = createEvalRunner({
   instructions: trim`
     Create a new organization called "{{name}}".

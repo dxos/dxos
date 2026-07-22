@@ -1,6 +1,6 @@
 ---
 name: agent-e2e-tests
-description: Use when writing, editing, or reviewing agent e2e tests in packages/core/assistant-e2e. Use when creating new test files in the testing/ directory, adding test cases, or fixing failing agent e2e tests.
+description: Use when writing, editing, or reviewing agent e2e tests in packages/core/compute/assistant-evals/src/testing. Use when creating new test files in the testing/ directory, adding test cases, or fixing failing agent e2e tests.
 ---
 
 # Agent E2E Tests
@@ -9,7 +9,8 @@ description: Use when writing, editing, or reviewing agent e2e tests in packages
 
 Agent e2e tests verify assistant behavior end-to-end by running prompts against the full agent stack. Each test is **only a prompt** — no setup code, no assertions, no manual DB manipulation. The harness handles everything.
 
-Package: `packages/core/assistant-e2e`
+Package: `packages/core/compute/assistant-evals` (`src/testing/`; merged with the `evalite`-scored
+evals in `src/evals/` — see `packages/core/compute/ai/TESTING.md` § "Where evals live").
 
 ## Test File Structure
 
@@ -18,6 +19,7 @@ Every test file follows this exact template:
 ```typescript
 import { describe, it } from '@effect/vitest';
 
+import { runMemoizedTests } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -25,7 +27,7 @@ import { agentTest, agentTestTimeout, getDefaultSkills } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
-describe('DescriptiveName', () => {
+describe.skipIf(!runMemoizedTests())('DescriptiveName', () => {
   it.effect(
     'short test name',
     agentTest({
@@ -124,17 +126,15 @@ agentTest({
 ## Running Tests
 
 ```bash
-# Replay from memoized conversations (CI mode)
-moon run assistant-e2e:test
+# Gated off by default (runMemoizedTests() is false) — replay from memoized conversations when opted in
+DX_RUN_LLM_TESTS=1 moon run assistant-evals:test
 
 # Generate new conversations (requires credentials)
-ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test
+ALLOW_LLM_GENERATION=1 moon run assistant-evals:test
 
 # Single test file
-ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test -- src/testing/database.test.ts
+ALLOW_LLM_GENERATION=1 moon run assistant-evals:test -- src/testing/database.test.ts
 ```
-
-Memoized conversations are stored in `*.conversations.json` next to each test file. Commit these after regeneration.
 
 ## Common Mistakes
 
@@ -144,7 +144,7 @@ Memoized conversations are stored in `*.conversations.json` next to each test fi
 | Missing `Obj.ID.dangerouslyDisableRandomness()`              | Add it at module scope before `describe`.                                            |
 | Vague prompts without completion criteria                    | Add explicit "Completion criteria:" section.                                         |
 | Assuming data exists in the DB                               | Instruct the agent to create required data.                                          |
-| Not committing `*.conversations.json`                        | Always commit updated conversation fixtures.                                         |
+| Missing `describe.skipIf(!runMemoizedTests())`                | Gate the suite so it doesn't run in default PR CI.                                    |
 | Pasting entire test files in chat when structure is standard | Use the short report format under **Reports**: heading + `@path (lines)`.            |
 | Assuming pre-seeded data without saying so in the prompt     | State empty DB; seed via database skill instructions at the start of the prompt. |
 ````

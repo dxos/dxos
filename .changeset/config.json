@@ -20,7 +20,6 @@
       "@dxos/app-solid",
       "@dxos/app-toolkit",
       "@dxos/assistant",
-      "@dxos/assistant-e2e",
       "@dxos/assistant-evals",
       "@dxos/assistant-toolkit",
       "@dxos/async",
