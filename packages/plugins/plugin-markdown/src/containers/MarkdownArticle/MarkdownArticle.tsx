@@ -424,9 +424,9 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
         // Per-user review mode toggle — only meaningful on the ambient path (`selection.kind ===
         // 'current'`): viewing an explicit branch/checkpoint/fork already pins its own read/write
-        // behaviour, so `setMode` would have no visible effect there. Editing / Suggesting / Viewing;
-        // Suggesting is authoring, gated behind the later spike (Milestone B) — exposed but disabled
-        // so the control ships whole.
+        // behaviour, so `setMode` would have no visible effect there. Only Editing / Viewing ship;
+        // Suggesting (authoring) is omitted until its spike (Milestone B) lands, rather than showing a
+        // dead control.
         const modeGroupId = 'review-mode';
         const modeGroup = ambient
           ? createMenuItemGroup(modeGroupId, {
@@ -444,12 +444,6 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                 label: ['review-mode.editing.label', { ns: meta.profile.key }],
                 icon: 'ph--pencil-simple-line--regular',
                 checked: mode === 'editing',
-              }),
-              createMenuAction('review-mode--suggesting', () => {}, {
-                label: ['review-mode.suggesting.label', { ns: meta.profile.key }],
-                icon: 'ph--pencil-simple--regular',
-                checked: mode === 'suggesting',
-                disabled: true,
               }),
               createMenuAction('review-mode--viewing', () => setMode('viewing'), {
                 label: ['review-mode.viewing.label', { ns: meta.profile.key }],
