@@ -156,7 +156,7 @@ as primary coverage.
       — every attempted `evalite run` (both `database.eval.ts` and the pre-existing, unrelated
       `basic.eval.ts`, predating this PR) fails deterministically before any model call with the
       `plugin-routine` registry-sync `TypeError: Cannot read properties of undefined (reading
-    'meta')` (`registry-sync.ts:74`, handler set read before `.meta` is populated). Notably this
+  'meta')` (`registry-sync.ts:74`, handler set read before `.meta` is populated). Notably this
       is **evalite-specific**: the same harness under the gated vitest `:test` path (e.g.
       `DX_RUN_LLM_TESTS=1 vitest run src/testing/database.test.ts`) does NOT hit it — it correctly
       reaches `Operation.invoke` and fails cleanly on "no memoized conversation" instead. Suggests
