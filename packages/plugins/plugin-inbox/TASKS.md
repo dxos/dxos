@@ -237,8 +237,8 @@ calendar + contacts move out; provider + apis split; shared card-focused `@dxos/
 - [ ] (Deferred) Generalize `HtmlViewer` core → `@dxos/react-ui-components` (inject cid/image + color
       callbacks); 1 consumer today, wait for a second (AUDIT §4d).
 - [ ] Hoist shared sync infra (`findBindingForTarget`/`createSyncRoutine`/`syncTarget`) from `util/` to
-      `@dxos/plugin-connector` — used by both mail + calendar sync (AUDIT §3.7, §6 step 5).
-- [ ] **Provider-first split** (AUDIT §8): extract headless `@dxos/plugin-google` + `@dxos/plugin-jmap`
+      `@dxos/plugin-connector` — used by both mail + calendar sync (AUDIT §3.7, Plan step 5).
+- [ ] **Provider-first split** (AUDIT §7): extract headless `@dxos/plugin-google` + `@dxos/plugin-jmap`
       (connector + services + apis + sync ops, no UI) **before** the domain split — leaf plugins with a
       single upstream `plugin-inbox` dep (defer the §3.1 connector-id inversion).
 - [ ] Different form layout for `EditMessage` (`components/EditMessage/`).
