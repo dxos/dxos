@@ -50,6 +50,11 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'studioArtifactsNode',
+        // The Artifacts branch (`root/<space>/content/<studio>/<artifacts>`) and its Artifact children
+        // sit under the studio section; the `artifacts` segment is the branch node's own id, so it is
+        // encoded into the pair id after this urlPath (`studio/artifacts`, `studio/artifacts+<id>`).
+        urlKey: 'studio',
+        urlPath: [Paths.GroupSegments.content, STUDIO_SEGMENT],
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === STUDIO_SECTION_TYPE && space ? Option.some(space) : Option.none();

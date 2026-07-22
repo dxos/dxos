@@ -100,6 +100,10 @@ export default Capability.makeModule(
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
       GraphBuilder.createExtension({
         id: 'codeProjectListing',
+        // CodeProjects are branch planks at `root/<space>/<codeProjects>/<projectId>`; their Spec and
+        // Build sub-nodes nest one level deeper (the project id is `+`-encoded into the pair id).
+        urlKey: 'code',
+        urlPath: [getCodeProjectsSectionId()],
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();
