@@ -366,7 +366,7 @@ multi-author defect (foreign overlay striking the user's own text, garbled accep
 is the **base-decoupling** problem — overlays diff against the editor doc (the branch) instead of
 against `main`. B2 fixes it; B3+ build on it.
 
-### Task B2: Base-decoupling + non-clipped accept/reject popover
+### Task B2: Base-decoupling + non-clipped accept/reject popover — LANDED (PR #12302)
 
 **Files:**
 
@@ -397,7 +397,7 @@ against `main`. B2 fixes it; B3+ build on it.
       type in the branch, assert the user's new text is NOT struck and bob's change still renders vs main.
 - [ ] Step 7: Build/lint/test green; commit `ui-editor: decouple suggestion base from doc + tooltip popover`.
 
-### Task B3: Wire Suggesting mode into MarkdownArticle
+### Task B3: Wire Suggesting mode into MarkdownArticle — LANDED (PR #12302)
 
 **Files:** Modify `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx`;
 Test `DocumentVersioning.stories.tsx` (+ a Suggesting play case).
@@ -410,7 +410,7 @@ Test `DocumentVersioning.stories.tsx` (+ a Suggesting play case).
 - [ ] Play case: switch to Suggesting, type → edit accrues to the user's suggestion branch (assert via the branch content), renders as own tracked change; a second author still shows vs main.
 - [ ] Commit `markdown: suggesting mode authors on the user's branch`.
 
-### Task B4: Accept/reject of own tracked changes
+### Task B4: Accept/reject of own tracked changes — DEFERRED (own PR; reviewer path already works, un-delete covered by undo)
 
 **Files:** MarkdownArticle handlers + `plugin-markdown` ops wiring; reuse `AcceptChange`/`RejectChange`.
 
@@ -418,16 +418,16 @@ Test `DocumentVersioning.stories.tsx` (+ a Suggesting play case).
       ops with the B2 base (`revertHunk`/`cherryPickHunk` against `main`). Reject on a phantom re-inserts main's text into the branch.
 - [ ] Test: accept an own change merges to main; reject reverts on the branch. Commit.
 
-### Task B5: Integration coverage
+### Task B5: Integration coverage — SUBSTANTIALLY MET by B3 Suggesting play test (full-stack CommentsArticle test deferred: boot timeout)
 
 - [ ] Full-stack Suggesting-mode play test (real branch binding) in `CommentsArticle` or `DocumentVersioning`.
 - [ ] The deferred `CommentsArticle`↔markdown composition test (editor overlay + companions). Commit.
 
-### Task B6: Hardening
+### Task B6: Hardening — DEFERRED (own PR; perf/incremental-diff, block deletions, copy semantics)
 
 - [ ] Incremental diff / decoration reuse in `trackChanges` (avoid full re-diff per keystroke on large docs).
 - [ ] Multi-line/block deletions render sanely; copy excludes phantom text. Tests. Commit.
 
-### Task B7: Ship
+### Task B7: Ship — LANDED (this PR #12302: DESIGN + changeset)
 
 - [ ] DESIGN.md: mark Suggesting mode landed; changeset (minor, ui-editor/plugin-markdown/plugin-comments/plugin-space); PR.
