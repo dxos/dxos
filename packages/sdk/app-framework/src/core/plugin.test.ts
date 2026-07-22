@@ -316,6 +316,24 @@ describe('Plugin module authoring', () => {
       }),
     );
 
+    it('allows omitting an all-optional options object and defaults it to {}', () => {
+      let seenOptions: { flag?: boolean } | undefined;
+      const Test = Plugin.make(
+        Plugin.define<{ flag?: boolean }>(testMeta).pipe(
+          Plugin.addModule((options) => {
+            seenOptions = options;
+            return { id: 'optional-options', provides: [], activate: () => Effect.succeed([]) };
+          }),
+        ),
+      );
+
+      // No argument is accepted (the factory parameter is optional when `T` has no required
+      // members); the module callback still receives a defined options object.
+      const plugin = Test();
+      expect(plugin.modules).toHaveLength(1);
+      expect(seenOptions).toEqual({});
+    });
+
     it('normalizes a module authored with activatesOn to event mode', () => {
       const Lazy = Capability.lazyModule(
         'Listener',

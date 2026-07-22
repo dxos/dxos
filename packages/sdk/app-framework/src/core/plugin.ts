@@ -433,7 +433,14 @@ export function addModule<T>(
   return (builder: PluginBuilder<T>) => builder.addModule(moduleOpts);
 }
 
-export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
+/**
+ * A plugin factory. The options parameter is optional exactly when `T` has no required members
+ * (`{} extends T` — every field is optional, or `T` is `void`), so `SomePlugin()` is accepted
+ * without an empty `{}`; a plugin whose options include a required field still demands them.
+ */
+export type PluginFactory<T = void> = ({} extends T ? (options?: T) => Plugin : (options: T) => Plugin) & {
+  meta: Meta;
+};
 
 /**
  * Normalizes an authoring record to an {@link ActivationSpec}. `activatesOn` selects event
@@ -496,7 +503,10 @@ const resolveModule = (
  * When T is void, the function takes no arguments: () => Plugin.
  */
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
-export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
+// The impl return names the required-parameter form; the public overload above narrows it to the
+// optional-parameter form when `T` has no required members (the conditional can't be reduced for a
+// generic `T` inside the body, so it is stated on the overload instead).
+export function make<T>(builder: PluginBuilder<T>): ((options: T) => Plugin) & { meta: Meta } {
   const meta = builder.meta;
   // `dependsOn` entries and `key` are both bare NSIDs, so compare directly.
   invariant(
@@ -504,8 +514,11 @@ export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
     `Plugin ${meta.profile.key} declares itself as a dependency.`,
   );
 
-  const factory = (options: T) => {
-    const modules = builder.modules.map((module) => resolveModule(meta, module, options));
+  const factory = (options?: T) => {
+    // Default to `{}` so an omitted all-optional options object (see {@link PluginFactory}) is
+    // safe for option-reading module callbacks; ignored by `void` and record modules.
+    const resolved = (options ?? {}) as T;
+    const modules = builder.modules.map((module) => resolveModule(meta, module, resolved));
     return new PluginImpl(meta, modules);
   };
 
@@ -557,8 +570,11 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * export default MarkdownPlugin;
  * ```
  */
-export const lazy = <T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory<T> => {
-  const factory = (options: T): Plugin => {
+export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory<T>;
+// Impl names the required-parameter form; the overload narrows to optional when `T` has no
+// required members (see {@link make} / {@link PluginFactory}).
+export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): ((options: T) => Plugin) & { meta: Meta } {
+  const factory = (options?: T): Plugin => {
     const stub = new PluginImpl(meta, []);
     Object.defineProperty(stub, LazyTag, {
       value: { loader, options } satisfies LazyPayload,
@@ -567,7 +583,7 @@ export const lazy = <T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory
     return stub;
   };
   return Object.assign(factory, { meta });
-};
+}
 
 /**
  * Type guard for lazy plugin stubs produced by {@link lazy}.
