@@ -454,12 +454,26 @@ advanced path, with the Suggesting-mode composition as a spike-first sub-milesto
 swap) + `MarkdownCapabilities.SuggestionSourcesProvider` slot (contributed by plugin-comments,
 consumed by markdown — no dependency cycle); `suggestionsOverlay` compartment factory in
 `@dxos/ui-editor`; MarkdownArticle ambient wiring (Editing overlays all suggestions + comments;
-Viewing hides suggestions, read-only, comments retained) + a Review-mode toolbar toggle
-(Suggesting disabled). Comment visibility is policy-threaded (`showComments`, default true).
-Build/lint/unit + `AmbientReview` and `DocumentVersioning` play tests green.
+Viewing hides suggestions, read-only, comments retained). Comment visibility is policy-threaded
+(`showComments`, default true — not yet consumed to hide comments; tracked). Build/lint/unit +
+`AmbientReview` and `DocumentVersioning` play tests green.
 
-**Milestone B (Suggesting-mode authoring) pending** the Task-B0 spike (compose live editing on the
-user's branch + self-diff-vs-main + foreign overlays on one buffer).
+**Milestone B (Suggesting-mode authoring) landed** — bind-to-branch (A1), chosen via a two-approach
+B0 spike and ratified by felt-eval:
+
+- `trackChanges({ main, colour })` (`@dxos/ui-editor`) renders the branch-vs-main self-diff on the live
+  buffer — **character-level** (`computeCharHunks`) insertions as marks, deletions as phantom
+  strikethrough widgets, with an atomic-caret Backspace guard.
+- `suggestions({ base })` + `rebaseHunks` decouple a foreign author's diff base from the editor doc, so
+  every author's suggestion renders against **main** even over a diverged branch; accept/reject live in
+  a non-clipped `hoverTooltip` popover.
+- `MarkdownArticle` Suggesting mode binds the editor to the current user's own `kind:'suggestion'`
+  branch (find-or-create), self via `trackChanges`, others via the rebased overlay (self excluded);
+  the mount is guarded so edits never touch main. Suggesting toolbar option enabled.
+
+**Deferred (own PRs):** author-side accept/reject/un-delete of one's own inline draft (B4); perf —
+incremental diff + hoist `computeCharHunks` (B6); multi-line/block deletions + copy semantics (B6);
+full-stack `CommentsArticle` composition test (in-pane boot timeout); `showComments` consumption.
 
 ## Risks / notes
 

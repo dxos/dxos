@@ -256,21 +256,30 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
         Suggestion accept/reject moved to a hover popover (was an opacity-hidden inline gap). User
         confirmed: insertions clean green, deletions strike correctly, phantom/caret OK — with the
         second-author overlay REMOVED from the story (see B2).
-  - [ ] **B2 — base-decoupling (the crux; fixes every multi-author defect seen in B1 eval).** Give
-        `suggestions()`/`trackChanges` an explicit `main` base decoupled from the editor doc, and
-        rebase foreign authors' hunks from main-coords into branch-coords, so self AND foreign
-        overlays both diff vs main (today foreign diffs vs the branch → strikes the user's own new
-        text, garbles accept). Also render the accept/reject popover in a non-clipped CM tooltip
-        layer (position:absolute is clipped by the scroller — see B1 screenshots).
-  - [ ] **B3 — wire Suggesting mode into MarkdownArticle**: `mode==='suggesting'` binds the editor to
-        the user's `kind:'suggestion'` branch (`Branch.suggestion`) + `trackChanges(self)` + rebased
-        foreign overlays; re-add the Suggesting toolbar option.
-  - [ ] **B4 — accept/reject of own changes** (incl. phantom un-delete) via durable
-        `AcceptChange`/`RejectChange` with the B2 base-decoupling.
-  - [ ] **B5 — integration coverage**: full-stack Suggesting-mode play test + the deferred
-        `CommentsArticle` composition test.
-  - [ ] **B6 — hardening**: incremental diff (perf), multi-line/block deletions, copy semantics.
-  - [ ] **B7 — ship**: DESIGN update, changeset, PR.
+  - [x] **B2 — base-decoupling DONE** (da357354e5 rebase + 0ffebb31ce tooltip + 137767fe3f boundary
+        fix). `suggestions({ base })` diffs foreign sources vs main and `rebaseHunks` maps them into
+        the diverged branch's coords (fixes the strike-your-own-text + garbled-accept defects);
+        accept/reject moved to a non-clipped `hoverTooltip` layer. Opus review caught an adjacency
+        off-by-one → fixed + regression test. 299 ui-editor tests green.
+  - [x] **B3 — Suggesting mode wired into MarkdownArticle DONE** (f2b702c3c6). `mode==='suggesting'`
+        (ambient) binds the editor to the user's own `kind:'suggestion'` branch (find-or-create), self
+        edits render via `trackChanges` vs main, other authors overlay via `suggestions({ base:main })`
+        (self excluded); mount guarded so edits NEVER hit main (opus review verified airtight);
+        Suggesting toolbar option re-enabled. DocumentVersioning 9/9 incl. a Suggesting play test that
+        asserts the edit lands on the branch, not main.
+  - [ ] **B4 — DEFERRED (follow-up, own PR).** Author-side accept/reject/un-delete of one's OWN inline
+        draft changes. Lower value: the reviewer accept/reject round-trip already works via the
+        Editing-mode foreign overlay (A5 + B2); an author revises their own draft by editing. Un-delete
+        of a phantom (re-instate a deleted word) is the one genuinely-missing affordance — track it.
+  - [~] **B5 — integration coverage: substantially met by B3's Suggesting play test** (full UI round
+    trip: toggle → type → branch-scoped edit + foreign overlay vs main). The full-stack
+    `CommentsArticle`↔markdown composition test stays DEFERRED (in-pane 30s boot timeout — flaky;
+    would need a bootable fixture).
+  - [ ] **B6 — DEFERRED (follow-up, own PR).** Perf: `trackChanges` re-diffs the whole doc per
+        keystroke (fine for normal docs; needs incremental diffing for large ones); also `rebaseHunks`
+        recomputes `computeCharHunks` per source (hoist once). Plus multi-line/block deletions + copy
+        semantics. None block normal-size docs.
+  - [x] **B7 — ship**: DESIGN update + changeset + PR (this PR).
 
 ## Landing the suggestions feature (current goal)
 
