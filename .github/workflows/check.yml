@@ -260,12 +260,8 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
-      # TEMPORARY (storybook teardown-hang diagnostic): this branch skips the normal affected/all
-      # storybook steps and instead runs only the two heavy packages that reproduce the teardown
-      # hang (stories-inbox, stories-assistant) — fast enough to finish inside the 30-min job limit,
-      # so their teardown is actually observed. Revert this whole carve-out once the fix has landed.
       - name: Test Storybook Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && steps.extract_branch.outputs.branch != 'claude/storybook-test-failure-h0ar9m' && env.TRUNK_TOKEN != '' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -276,13 +272,8 @@ jobs:
 
       # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
       - name: Test Storybook Affected (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && steps.extract_branch.outputs.branch != 'claude/storybook-test-failure-h0ar9m' && env.TRUNK_TOKEN == '' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
         run: moon run :test-storybook --affected remote -- --no-file-parallelism
-
-      # TEMPORARY branch-only validation of the teardown-hang fix (see comment above).
-      - name: Test Storybook Heavy (teardown-hang validation)
-        if: ${{ steps.extract_branch.outputs.branch == 'claude/storybook-test-failure-h0ar9m' }}
-        run: moon run stories-inbox:test-storybook stories-assistant:test-storybook -- --no-file-parallelism
 
       - name: Test Storybook All
         if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}

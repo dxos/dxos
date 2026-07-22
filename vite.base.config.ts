@@ -685,10 +685,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   if (xmlReport) {
     return {
       passWithNoTests: true,
-      // TEMPORARY (storybook teardown-hang diagnostic): `hanging-process` prints the open handles
-      // keeping the process alive when close times out, so CI reveals what leaks. Remove once the
-      // storybook teardown leak is root-caused and fixed.
-      reporters: [['junit', { addFileAttribute: true }], 'verbose', 'hanging-process', moonRerunReporter],
+      reporters: [['junit', { addFileAttribute: true }], 'verbose', moonRerunReporter],
       outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,
