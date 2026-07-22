@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Atom } from '@effect-atom/atom-react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
-import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
+import { getParentId, isLinkedSegment, useViewStateManager } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import {
@@ -20,14 +20,15 @@ import {
   type MessageOptions,
   buildExtractActions,
   keyOf,
+  messageViewModeAspect,
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, type Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { orderThreadItems } from '../../util';
 
-/** Used when the inbox Settings capability isn't installed, so the view options are still readable. */
-const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false, viewMode: 'html' });
+/** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
+const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
 
 /**
  * `subject` is either a single message or its whole conversation (thread). The companion graph node
@@ -108,23 +109,28 @@ export const MessageArticle = ({
     [extractors, invoker],
   );
 
-  // View options shared across the thread (render mode + image loading), both persisted in the inbox
-  // Settings capability (localStorage). Seed the thread-local options atom once, then mirror edits back.
+  // The thread toolbar reads/writes one `MessageOptions` atom, but its two fields live in different
+  // durable stores: `viewMode` is per-context UI state (ViewState, keyed by the attendable) and
+  // `loadRemoteImages` is an inbox setting. Project both into a single writable atom — reads combine
+  // them, writes fan back out (view mode through the manager so it persists; the setting through its
+  // self-persisting atom). No seeding, no mirror effect.
+  const viewState = useViewStateManager();
   const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
-  const setSettings = useAtomSet(settingsAtom);
-  const settings = useAtomValue(settingsAtom);
+  const viewModeAtom = useMemo(
+    () => viewState.atom(messageViewModeAspect, toolbarAttendableId ?? 'default'),
+    [viewState, toolbarAttendableId],
+  );
   const optionsAtom = useMemo(
     () =>
-      Atom.make<MessageOptions>({
-        viewMode: settings.viewMode ?? 'html',
-        loadRemoteImages: settings.loadRemoteImages ?? false,
-      }),
-    [],
+      Atom.writable<MessageOptions, MessageOptions>(
+        (get) => ({ viewMode: get(viewModeAtom), loadRemoteImages: get(settingsAtom).loadRemoteImages ?? false }),
+        (ctx, next) => {
+          viewState.set(messageViewModeAspect, toolbarAttendableId ?? 'default', next.viewMode);
+          ctx.set(settingsAtom, { ...ctx.get(settingsAtom), loadRemoteImages: next.loadRemoteImages });
+        },
+      ),
+    [viewModeAtom, settingsAtom, viewState, toolbarAttendableId],
   );
-  const options = useAtomValue(optionsAtom);
-  useEffect(() => {
-    setSettings((prev) => ({ ...prev, viewMode: options.viewMode, loadRemoteImages: options.loadRemoteImages }));
-  }, [options, setSettings]);
 
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {

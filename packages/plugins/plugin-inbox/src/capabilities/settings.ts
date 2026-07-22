@@ -19,7 +19,6 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({
         conversations: true,
         loadRemoteImages: false,
-        viewMode: 'html' as const,
       }),
     });
 

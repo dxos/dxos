@@ -24,12 +24,5 @@ export const Settings = Schema.Struct({
       description: 'Render remote images inline. When off, image links are shown as plain links.',
     }),
   ),
-  /** How message bodies are rendered (see the toolbar view selector). Persisted per device. */
-  viewMode: Schema.optional(
-    Schema.Literal('html', 'markdown', 'plain').annotations({
-      title: 'View mode',
-      description: 'How message bodies are rendered: HTML, Markdown, or plain text.',
-    }),
-  ),
 }).pipe(Schema.mutable);
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}
