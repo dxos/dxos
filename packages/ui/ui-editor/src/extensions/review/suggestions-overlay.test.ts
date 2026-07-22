@@ -1,12 +1,12 @@
 //
 // Copyright 2026 DXOS.org
 //
-// @vitest-environment happy-dom
 
+import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { EditorView, type SuggestionSource, decorationSetToArray } from '@dxos/ui-editor';
-
+import { decorationSetToArray } from '../../util';
+import { type SuggestionSource } from './suggest';
 import { suggestionsOverlay } from './suggestions-overlay';
 
 const ORIGINAL = 'The quick brown fox jumps over the lazy dog.';

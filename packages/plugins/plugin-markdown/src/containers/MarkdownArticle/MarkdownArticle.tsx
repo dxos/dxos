@@ -29,7 +29,7 @@ import {
   isToolbarAction,
 } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
-import { type DiffHunk, type SuggestionSource, diffView, suggestChanges, suggestions } from '@dxos/ui-editor';
+import { type DiffHunk, type SuggestionSource, diffView, suggestChanges, suggestionsOverlay } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
 import {
@@ -61,11 +61,6 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
 // reconfigures the live editor rather than remounting it (which would rebind automerge and lose
 // scroll/selection). The branch binding is unchanged while comparing, so only the overlay moves.
 const compareCompartment = new Compartment();
-
-// The ambient multi-author suggestion overlay lives in its own compartment, reconfigured live as the
-// resolved sources or the review mode change — like `compareCompartment`, it must never remount the
-// editor (which would rebind automerge and lose scroll/selection).
-const suggestionsCompartment = new Compartment();
 
 export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   (
@@ -289,6 +284,15 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const [suggestionSources, setSuggestionSources] = useState<SuggestionSource[]>([]);
     const [SuggestionSourcesProvider] = useCapabilities(MarkdownCapabilities.SuggestionSourcesProvider);
 
+    // The ambient multi-author suggestion overlay (shared with plugin-comments via `@dxos/ui-editor`,
+    // the leaf both depend on) lives in its own compartment, reconfigured live as the resolved sources
+    // or the review mode change — like `compareCompartment`, it must never remount the editor (which
+    // would rebind automerge and lose scroll/selection).
+    const overlay = useMemo(
+      () => suggestionsOverlay(handleAmbientAccept, handleAmbientReject),
+      [handleAmbientAccept, handleAmbientReject],
+    );
+
     // The suggestion author's palette colour — the same colour as their banner tag and avatar — so
     // the inline markers attribute the change by colour. Resolved against the space members.
     const members = useMembers(getSpace(object)?.id);
@@ -297,12 +301,29 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       [activeBranch, members],
     );
 
+    // Author palette hues for every active suggestion branch, keyed by creator DID — passed to the
+    // ambient provider so each author's overlay colour matches their avatar/banner hue (the same
+    // helpers as the single-branch path above) instead of falling back to a hash.
+    const suggestionAuthorBranches =
+      document?.history?.branches.filter((branch) => branch.status === 'active' && branch.kind === 'suggestion') ?? [];
+    const authorHuesKey = suggestionAuthorBranches.map((branch) => `${branch.id}:${branch.creator ?? ''}`).join(',');
+    const authorHues = useMemo(() => {
+      const record: Record<string, string> = {};
+      for (const branch of suggestionAuthorBranches) {
+        if (branch.creator) {
+          record[branch.creator] = hueColour(authorHue(branch, members));
+        }
+      }
+      return record;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authorHuesKey, members]);
+
     // The compare overlay lives in a compartment (reconfigured live, see `compareCompartment`), so it
     // is intentionally absent here — its config changing must not alter this array, which would make
     // `useTextEditor` recreate the view. The suggest overlay stays baked in: it rebinds the editor to
     // the parent and so already remounts via `editorKey`.
     const combinedExtensions = useMemo<Extension[]>(() => {
-      const list = [...extensions, mergeConflicts(), compareCompartment.of([]), suggestionsCompartment.of([])];
+      const list = [...extensions, mergeConflicts(), compareCompartment.of([]), overlay.extension];
       if (suggestActive && branchText) {
         // Editor is bound to the parent; the branch content is the proposal. Accept cherry-picks the
         // hunk into the parent (AcceptChange); reject reverts it on the author's branch (RejectChange).
@@ -316,7 +337,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         );
       }
       return list;
-    }, [extensions, suggestActive, branchText, suggestColour, handleAcceptChange, handleRejectChange]);
+    }, [extensions, overlay, suggestActive, branchText, suggestColour, handleAcceptChange, handleRejectChange]);
 
     // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants use
     // the custom versionDiff decorations; sideBySide uses the richer editable unified merge overlay
@@ -398,44 +419,50 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           ),
         ];
 
-        // Per-user review mode toggle (ambient path): Editing / Suggesting / Viewing. Suggesting is
-        // authoring, gated behind the later spike (Milestone B) — exposed but disabled so the control
-        // ships whole.
+        // Per-user review mode toggle — only meaningful on the ambient path (`selection.kind ===
+        // 'current'`): viewing an explicit branch/checkpoint/fork already pins its own read/write
+        // behaviour, so `setMode` would have no visible effect there. Editing / Suggesting / Viewing;
+        // Suggesting is authoring, gated behind the later spike (Milestone B) — exposed but disabled
+        // so the control ships whole.
         const modeGroupId = 'review-mode';
-        const modeGroup = createMenuItemGroup(modeGroupId, {
-          label: ['review-mode.title', { ns: meta.profile.key }],
-          icon: 'ph--eye--regular',
-          iconOnly: true,
-          variant: 'dropdownMenu',
-          applyActive: false,
-          selectCardinality: 'single',
-        } satisfies ToolbarMenuActionGroupProperties);
-        const modeActions = [
-          createMenuAction('review-mode--editing', () => setMode('editing'), {
-            label: ['review-mode.editing.label', { ns: meta.profile.key }],
-            icon: 'ph--pencil-simple-line--regular',
-            checked: mode === 'editing',
-          }),
-          createMenuAction('review-mode--suggesting', () => {}, {
-            label: ['review-mode.suggesting.label', { ns: meta.profile.key }],
-            icon: 'ph--pencil-simple--regular',
-            checked: mode === 'suggesting',
-            disabled: true,
-          }),
-          createMenuAction('review-mode--viewing', () => setMode('viewing'), {
-            label: ['review-mode.viewing.label', { ns: meta.profile.key }],
-            icon: 'ph--eye--regular',
-            checked: mode === 'viewing',
-          }),
-        ];
+        const modeGroup = ambient
+          ? createMenuItemGroup(modeGroupId, {
+              label: ['review-mode.title', { ns: meta.profile.key }],
+              icon: 'ph--eye--regular',
+              iconOnly: true,
+              variant: 'dropdownMenu',
+              applyActive: false,
+              selectCardinality: 'single',
+            } satisfies ToolbarMenuActionGroupProperties)
+          : undefined;
+        const modeActions = ambient
+          ? [
+              createMenuAction('review-mode--editing', () => setMode('editing'), {
+                label: ['review-mode.editing.label', { ns: meta.profile.key }],
+                icon: 'ph--pencil-simple-line--regular',
+                checked: mode === 'editing',
+              }),
+              createMenuAction('review-mode--suggesting', () => {}, {
+                label: ['review-mode.suggesting.label', { ns: meta.profile.key }],
+                icon: 'ph--pencil-simple--regular',
+                checked: mode === 'suggesting',
+                disabled: true,
+              }),
+              createMenuAction('review-mode--viewing', () => setMode('viewing'), {
+                label: ['review-mode.viewing.label', { ns: meta.profile.key }],
+                icon: 'ph--eye--regular',
+                checked: mode === 'viewing',
+              }),
+            ]
+          : [];
 
         return {
-          nodes: [...base.nodes, group, ...actions, modeGroup, ...modeActions],
+          nodes: [...base.nodes, group, ...actions, ...(modeGroup ? [modeGroup] : []), ...modeActions],
           edges: [
             ...base.edges,
             { source: 'root', target: groupId, relation: 'child' as const },
             ...actions.map((action) => ({ source: groupId, target: action.id, relation: 'child' as const })),
-            { source: 'root', target: modeGroupId, relation: 'child' as const },
+            ...(modeGroup ? [{ source: 'root', target: modeGroupId, relation: 'child' as const }] : []),
             ...modeActions.map((action) => ({ source: modeGroupId, target: action.id, relation: 'child' as const })),
           ],
         };
@@ -448,6 +475,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       branchesKey,
       activeBranch?.id,
       activeVersion?.id,
+      ambient,
       mode,
       setMode,
       setSelection,
@@ -513,13 +541,12 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
             {/* Ambient review: enumerate every author's suggestion branches (invisible bridge) and
                 overlay them live; both are no-ops off the ambient path or when no provider exists. */}
             {ambient && document && SuggestionSourcesProvider && (
-              <SuggestionSourcesProvider document={document} onSources={setSuggestionSources} />
+              <SuggestionSourcesProvider document={document} authorHues={authorHues} onSources={setSuggestionSources} />
             )}
             <SuggestionsOverlay
+              overlay={overlay}
               sources={suggestionSources}
               enabled={ambient && policy.showSuggestions}
-              onAccept={handleAmbientAccept}
-              onReject={handleAmbientReject}
             />
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
@@ -577,33 +604,26 @@ const CompareOverlay = ({ overlay }: { overlay?: Extension }) => {
 };
 
 /**
- * Reconfigures the ambient multi-author suggestion overlay on the live editor as the resolved sources
- * or review mode change — no remount (see {@link suggestionsCompartment}). Renders the `suggestions`
- * extension only when enabled and non-empty; otherwise clears the compartment. Must render inside
- * `Editor.Root`.
+ * Reconfigures the ambient multi-author suggestion overlay (the shared `@dxos/ui-editor` factory) on
+ * the live editor as the resolved sources or review mode change — no remount (see
+ * {@link suggestionsOverlay}). Must render inside `Editor.Root`.
  */
 const SuggestionsOverlay = ({
+  overlay,
   sources,
   enabled,
-  onAccept,
-  onReject,
 }: {
+  overlay: ReturnType<typeof suggestionsOverlay>;
   sources: SuggestionSource[];
   enabled: boolean;
-  onAccept: (hunk: DiffHunk, author: string) => void;
-  onReject: (hunk: DiffHunk, author: string) => void;
 }) => {
   const { controller } = useEditorContext('MarkdownArticle.SuggestionsOverlay');
   const view = controller?.view;
   useEffect(() => {
     if (view) {
-      view.dispatch({
-        effects: suggestionsCompartment.reconfigure(
-          enabled && sources.length > 0 ? suggestions({ sources, onAccept, onReject }) : [],
-        ),
-      });
+      overlay.reconfigure(view, sources, enabled);
     }
-  }, [view, sources, enabled, onAccept, onReject]);
+  }, [view, overlay, sources, enabled]);
 
   return null;
 };

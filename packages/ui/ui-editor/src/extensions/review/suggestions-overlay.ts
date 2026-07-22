@@ -5,7 +5,8 @@
 import { Compartment, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { type DiffHunk, type SuggestionSource, suggestions } from '@dxos/ui-editor';
+import { type DiffHunk } from './diff';
+import { type SuggestionSource, suggestions } from './suggest';
 
 export type SuggestionsOverlay = {
   /** Initially empty; install once alongside the editor's other extensions. */
@@ -23,8 +24,8 @@ export type SuggestionsOverlay = {
  * scroll/selection).
  */
 export const suggestionsOverlay = (
-  onAccept?: (hunk: DiffHunk) => void,
-  onReject?: (hunk: DiffHunk) => void,
+  onAccept?: (hunk: DiffHunk, author: string) => void,
+  onReject?: (hunk: DiffHunk, author: string) => void,
 ): SuggestionsOverlay => {
   const compartment = new Compartment();
   return {
