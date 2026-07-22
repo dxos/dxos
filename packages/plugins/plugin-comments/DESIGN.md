@@ -470,10 +470,16 @@ B0 spike and ratified by felt-eval:
 - `MarkdownArticle` Suggesting mode binds the editor to the current user's own `kind:'suggestion'`
   branch (find-or-create), self via `trackChanges`, others via the rebased overlay (self excluded);
   the mount is guarded so edits never touch main. Suggesting toolbar option enabled.
+- **Accept/reject contract (landed):** any editor accepts/rejects any author's suggestion from the
+  Editing-mode overlay (and the companion cards), routed through the durable
+  `CollaborationOperation.AcceptChange`/`RejectChange` (diffed against main). `showComments` is
+  honoured (a policy can hide comments). Multi-line deletions preserve line breaks; undo re-instates a
+  deletion.
 
-**Deferred (own PRs):** author-side accept/reject/un-delete of one's own inline draft (B4); perf —
-incremental diff + hoist `computeCharHunks` (B6); multi-line/block deletions + copy semantics (B6);
-full-stack `CommentsArticle` composition test (in-pane boot timeout); `showComments` consumption.
+**Deferred (own PRs):** author-side accept/reject/un-delete of one's own inline draft (B4 — the
+reviewer path above is complete); perf — incremental diff + hoist `computeCharHunks` (B6); block-level
+deletion polish + copy semantics (B6); full-stack `CommentsArticle` composition test (in-pane boot
+timeout).
 
 ## Risks / notes
 
