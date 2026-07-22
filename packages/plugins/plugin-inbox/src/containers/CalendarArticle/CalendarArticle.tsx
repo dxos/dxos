@@ -13,7 +13,7 @@ import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { useArticleKeyboardNavigation, useSelection, Attention } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
   Menu,
@@ -122,7 +122,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
       void showItem({
         contextId: id,
         selectionId: eventId,
-        companion: linkedSegment('event'),
+        companion: Attention.linkedSegment('event'),
         path: db ? getCalendarEventPath(db.spaceId, calendar.id, eventId) : undefined,
       });
     },

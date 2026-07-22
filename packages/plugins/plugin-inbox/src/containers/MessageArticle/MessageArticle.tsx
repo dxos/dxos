@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
-import { getParentId, isLinkedSegment, useViewStateManager } from '@dxos/react-ui-attention';
+import { useViewStateManager, Attention } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import {
@@ -60,7 +60,8 @@ export const MessageArticle = ({
   mailbox: mailboxProp,
   testId,
 }: MessageArticleProps) => {
-  const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
+  const toolbarAttendableId =
+    attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
   // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).

@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { VersioningCapabilities } from '#types';
@@ -33,7 +33,7 @@ export default Capability.makeModule(
       connector: () =>
         Effect.succeed([
           AppNode.makeCompanion({
-            id: linkedSegment('history'),
+            id: Attention.linkedSegment('history'),
             label: ['history-panel.title', { ns: meta.profile.key }],
             icon: 'ph--git-branch--regular',
             data: 'history',

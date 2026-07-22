@@ -14,7 +14,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
-import { Selection, ViewState, linkedSegment } from '@dxos/react-ui-attention';
+import { Selection, ViewState, Attention } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -68,7 +68,7 @@ export default Capability.makeModule(
         }
         return Effect.succeed([
           AppNode.makeCompanion({
-            id: linkedSegment('segment'),
+            id: Attention.linkedSegment('segment'),
             label: ['segment.companion.label', { ns: meta.profile.key }],
             icon: 'ph--ticket--regular',
             data: segment ?? 'segment',

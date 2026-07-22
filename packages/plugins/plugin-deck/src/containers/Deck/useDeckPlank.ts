@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner, useActions, useNode } from '@dxos/plugin-graph';
-import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
+import { useAttention, Attention } from '@dxos/react-ui-attention';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
 import { meta } from '#meta';
@@ -139,7 +139,7 @@ export const useDeckPlank = ({
     return () => cancelAnimationFrame(frame);
   }, [graph, node]);
 
-  const variant = isCompanionNode ? getLinkedVariant(id) : undefined;
+  const variant = isCompanionNode ? Attention.getLinkedVariant(id) : undefined;
   const sigilActions = useMemo<AttentionSigilAction[][] | undefined>(() => {
     if (!node) {
       return undefined;

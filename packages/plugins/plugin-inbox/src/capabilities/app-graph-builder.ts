@@ -18,7 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Selection, getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
+import { Selection, Attention } from '@dxos/react-ui-attention';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
@@ -75,12 +75,12 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
     match: () => Option.none(),
     resolver: (qualifiedId, get) =>
       Effect.gen(function* () {
-        if (!isLinkedSegment(qualifiedId)) {
+        if (!Attention.isLinkedSegment(qualifiedId)) {
           return null;
         }
 
         const segments = qualifiedId.split('/');
-        const childId = getLinkedVariant(qualifiedId);
+        const childId = Attention.getLinkedVariant(qualifiedId);
         const spaceId = Paths.getSpaceIdFromPath(qualifiedId);
         const segmentName = config.parentSegmentName ?? Type.getTypename(config.parentType);
         const segmentIdx = segments.indexOf(segmentName);
@@ -362,7 +362,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('message'),
+              id: Attention.linkedSegment('message'),
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
               data: thread.length > 0 ? thread : 'message',
@@ -443,7 +443,7 @@ export default Capability.makeModule(
           const event = fromFeed ?? fromDb;
           const nodes = [
             AppNode.makeCompanion({
-              id: linkedSegment('event'),
+              id: Attention.linkedSegment('event'),
               label: ['event.label', { ns: meta.profile.key }],
               icon: 'ph--calendar-dot--regular',
               data: event ?? 'event',
@@ -455,7 +455,7 @@ export default Capability.makeModule(
             // regardless of whether the event has been navigated to.
             nodes.push(
               Node.make({
-                id: linkedSegment(event.id),
+                id: Attention.linkedSegment(event.id),
                 type: Type.getTypename(Event.Event),
                 data: event,
                 properties: {

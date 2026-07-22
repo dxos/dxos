@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { MapInline } from '@dxos/plugin-map';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { useArticleKeyboardNavigation, useSelection, Attention } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -97,7 +97,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           void showItem({
             contextId: id,
             selectionId: action.segmentId,
-            companion: linkedSegment('segment'),
+            companion: Attention.linkedSegment('segment'),
             path: Paths.getObjectPathFromObject(subject),
           });
           break;
@@ -131,7 +131,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       void showItem({
         contextId: id,
         selectionId: segmentId,
-        companion: linkedSegment('segment'),
+        companion: Attention.linkedSegment('segment'),
         path: Paths.getObjectPathFromObject(subject),
       });
     },

@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { DeckCapabilities } from '../types';
 import { COMPANION_VIEW_STATE_CONTEXT, companionVariantAspect } from '../util';
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         // The selected variant is global view state (shared with the split point), not deck state.
         const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
         viewState.set(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT, {
-          variant: getLinkedVariant(input.subject),
+          variant: Attention.getLinkedVariant(input.subject),
         });
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { companionOpen: true }),

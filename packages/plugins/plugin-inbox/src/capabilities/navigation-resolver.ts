@@ -10,7 +10,7 @@ import { AppCapabilities, type AppCapabilities as AppCaps, Paths, TypeSection } 
 import { Database, Key, Type } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
-import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
@@ -25,7 +25,7 @@ import { getMailboxesSectionId, getMailboxPath } from '../paths';
 const createFeedObjectPathResolver =
   (parentSegmentName: string): AppCaps.NavigationPathResolver =>
   (qualifiedPath) => {
-    if (!isLinkedSegment(qualifiedPath)) {
+    if (!Attention.isLinkedSegment(qualifiedPath)) {
       return Effect.succeed(Option.none());
     }
     const segments = qualifiedPath.split('/');
@@ -35,7 +35,7 @@ const createFeedObjectPathResolver =
     if (!spaceId || !parentId || !Key.EntityId.isValid(parentId)) {
       return Effect.succeed(Option.none());
     }
-    const childId = getLinkedVariant(qualifiedPath);
+    const childId = Attention.getLinkedVariant(qualifiedPath);
     if (!Key.EntityId.isValid(childId)) {
       return Effect.succeed(Option.none());
     }
@@ -81,7 +81,7 @@ export default Capability.makeModule(
     // Resolves plain mailbox paths (root/<spaceId>/mailboxes/<mailboxId>/...) to the mailbox EID.
     // Linked-segment message paths are handled separately by createFeedObjectPathResolver below.
     const mailboxPathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
-      if (isLinkedSegment(qualifiedPath)) {
+      if (Attention.isLinkedSegment(qualifiedPath)) {
         return Effect.succeed(Option.none());
       }
       const segments = qualifiedPath.split('/');

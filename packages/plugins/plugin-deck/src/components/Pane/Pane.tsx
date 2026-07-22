@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { DensityProvider, IconButton, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
-import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
+import { useAttention, Attention } from '@dxos/react-ui-attention';
 import { iconSize, mx } from '@dxos/ui-theme';
 import type { Merge } from '@dxos/util';
 
@@ -84,7 +84,7 @@ PaneContent.displayName = 'Pane.Content';
 // Title
 //
 
-type PaneTitleProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
+type PaneTitleProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & Attention.AttendableId & Attention.Related;
 
 /** Attention-aware plank title; colors to the accent when the plank (or a related companion) is attended. */
 const PaneTitle = forwardRef<HTMLHeadingElement, PaneTitleProps>(
@@ -125,8 +125,8 @@ type PaneTabsProps = Merge<
     /** Collapse inactive tabs to icon-only once the tab count exceeds this. */
     maxTabs?: number;
   }>,
-  AttendableId,
-  Related
+  Attention.AttendableId,
+  Attention.Related
 >;
 
 /** Full-height tab strip for a companion plank's toolbar; selects among available companions. */

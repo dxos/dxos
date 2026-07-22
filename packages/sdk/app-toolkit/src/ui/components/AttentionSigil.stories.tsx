@@ -43,7 +43,7 @@ const sampleActions: AttentionSigilAction[][] = [
   ],
 ];
 
-const meta = {
+const meta: Meta<typeof AttentionSigil> = {
   title: 'sdk/app-toolkit/components/AttentionSigil',
   component: AttentionSigil,
   decorators: [withTheme(), withAttention()],
@@ -53,7 +53,7 @@ const meta = {
     triggerLabel: 'Document actions',
     onAction: fn(),
   },
-} satisfies Meta<typeof AttentionSigil>;
+};
 
 export default meta;
 

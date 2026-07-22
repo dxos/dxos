@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { Selection, linkedSegment } from '@dxos/react-ui-attention';
+import { Selection, Attention } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 import { createComment } from '@dxos/ui-editor';
 import { Position } from '@dxos/util';
@@ -49,7 +49,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('comments'),
+              id: Attention.linkedSegment('comments'),
               label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: 'comments',

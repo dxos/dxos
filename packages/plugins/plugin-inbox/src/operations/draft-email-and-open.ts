@@ -8,7 +8,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention/types';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { DraftMessage } from '@dxos/types';
 
 import { getMailboxDraftsPath } from '../paths';
@@ -38,7 +38,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
           subject: { mode: 'single', id: draft.id },
         });
         yield* Operation.invoke(LayoutOperation.Open, { subject: [draftsPath] });
-        yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: linkedSegment('message') });
+        yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: Attention.linkedSegment('message') });
       }
     }),
   ),

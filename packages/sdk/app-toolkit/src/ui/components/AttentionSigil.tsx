@@ -7,7 +7,7 @@ import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'r
 import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
+import { useAttention, Attention } from '@dxos/react-ui-attention';
 import { mx, osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -29,8 +29,8 @@ const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
 };
 
 export type AttentionSigilButtonProps = Omit<ButtonProps, 'variant'> &
-  AttendableId &
-  Related & {
+  Attention.AttendableId &
+  Attention.Related & {
     isMenu?: boolean;
     /** Button dimensions: `md` (32px) or `lg` (40px, default). */
     size?: AttentionSigilButtonSize;
@@ -82,7 +82,7 @@ export type AttentionSigilProps = PropsWithChildren<
     /** Button dimensions: `md` (32px) or `lg` (40px, default). */
     size?: AttentionSigilButtonSize;
     onAction?: (action: AttentionSigilAction) => void;
-  } & Related
+  } & Attention.Related
 >;
 
 /**

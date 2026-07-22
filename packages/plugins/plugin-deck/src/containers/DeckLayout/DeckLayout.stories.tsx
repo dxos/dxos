@@ -18,7 +18,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -243,14 +243,14 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           connector: (node) =>
             Effect.succeed([
               AppNode.makeCompanion({
-                id: linkedSegment('alpha'),
+                id: Attention.linkedSegment('alpha'),
                 label: 'Companion Alpha',
                 icon: 'ph--sidebar--regular',
                 data: { variant: 'alpha', parentId: node.id },
                 position: Position.first,
               }),
               AppNode.makeCompanion({
-                id: linkedSegment('beta'),
+                id: Attention.linkedSegment('beta'),
                 label: 'Companion Beta',
                 icon: 'ph--chat-circle--regular',
                 data: { variant: 'beta', parentId: node.id },

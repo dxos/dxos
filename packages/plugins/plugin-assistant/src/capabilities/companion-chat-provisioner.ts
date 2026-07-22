@@ -20,7 +20,7 @@ import {
   type StoredDeckState,
   companionVariantAspect,
 } from '@dxos/plugin-deck';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
@@ -170,11 +170,11 @@ const resolveEffectiveVariant = (
   }
 
   if (preferredVariant) {
-    const preferred = companions.find((companion) => getLinkedVariant(companion.id) === preferredVariant);
+    const preferred = companions.find((companion) => Attention.getLinkedVariant(companion.id) === preferredVariant);
     if (preferred) {
-      return getLinkedVariant(preferred.id);
+      return Attention.getLinkedVariant(preferred.id);
     }
   }
 
-  return getLinkedVariant(companions[0].id);
+  return Attention.getLinkedVariant(companions[0].id);
 };

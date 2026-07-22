@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionManager, ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
+import { ViewState, createDefaultBackends, Attention } from '@dxos/react-ui-attention';
 
 import { Keyboard, OperationHandler, ReactContext } from '#capabilities';
 import { meta } from '#meta';
@@ -22,7 +22,7 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
     activate: () =>
       Effect.gen(function* () {
         const registry = yield* Capability.get(Capabilities.AtomRegistry);
-        const attention = new AttentionManager(registry);
+        const attention = new Attention.AttentionManager(registry);
         const viewState = new ViewState.ViewStateManager({ registry, backends: createDefaultBackends(registry) });
         setupDevtools(attention);
         return [
@@ -42,7 +42,7 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
   Plugin.make,
 );
 
-const setupDevtools = (attention: AttentionManager) => {
+const setupDevtools = (attention: Attention.AttentionManager) => {
   (globalThis as any).composer ??= {};
 
   (globalThis as any).composer.attention = {
