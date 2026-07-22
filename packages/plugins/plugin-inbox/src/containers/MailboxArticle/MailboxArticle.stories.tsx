@@ -260,10 +260,10 @@ export const SearchFilter: Story = {
     // Typing the term routes through the query and narrows the list to a smaller, non-empty subset —
     // that wiring is all this story verifies.
     await waitFor(
-      () => {
+      async () => {
         const matchedCount = getTileCount();
-        expect(matchedCount).toBeGreaterThan(0);
-        expect(matchedCount).toBeLessThan(initialCount);
+        await expect(matchedCount).toBeGreaterThan(0);
+        await expect(matchedCount).toBeLessThan(initialCount);
       },
       { timeout: 5_000 },
     );

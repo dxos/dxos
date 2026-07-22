@@ -99,8 +99,8 @@ export const extractText = (message: Message): string => {
  */
 export const ensureThreadId = <T extends Message>(message: T): T => {
   if (message.threadId == null) {
-    Obj.update(message, (mutable) => {
-      mutable.threadId = message.id;
+    Obj.update(message, (message) => {
+      message.threadId = message.id;
     });
   }
   return message;

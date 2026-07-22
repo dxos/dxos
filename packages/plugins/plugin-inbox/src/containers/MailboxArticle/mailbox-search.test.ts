@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj, Query, Scope } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { QueryBuilder } from '@dxos/echo-query';
 import { EffectEx } from '@dxos/effect';
