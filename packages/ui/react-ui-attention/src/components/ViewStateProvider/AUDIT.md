@@ -81,7 +81,7 @@ write the same state.
 
 ```ts
 // In a capability module or operation (Effect):
-const manager = yield* Capability.get(AttentionCapabilities.ViewState);
+const manager = yield * Capability.get(AttentionCapabilities.ViewState);
 const value = manager.get(aspect, contextId);
 manager.set(aspect, contextId, next);
 
@@ -94,9 +94,9 @@ export const createEditorViewStateStore = (manager: ViewStateManager): EditorSta
 
 - Live examples:
   [`plugin-markdown/capabilities/state.ts`](../../../../../plugins/plugin-markdown/src/capabilities/state.ts)
-  + [`editor-view-state.ts`](../../../../../plugins/plugin-markdown/src/capabilities/editor-view-state.ts),
-  [`plugin-attention/operations/select.ts`](../../../../../plugins/plugin-attention/src/operations/select.ts),
-  [`plugin-inbox/capabilities/app-graph-builder.ts`](../../../../../plugins/plugin-inbox/src/capabilities/app-graph-builder.ts).
+  - [`editor-view-state.ts`](../../../../../plugins/plugin-markdown/src/capabilities/editor-view-state.ts),
+    [`plugin-attention/operations/select.ts`](../../../../../plugins/plugin-attention/src/operations/select.ts),
+    [`plugin-inbox/capabilities/app-graph-builder.ts`](../../../../../plugins/plugin-inbox/src/capabilities/app-graph-builder.ts).
 
 **In practice today:** React code (components _and_ containers) uses Pattern A; non-React code
 (operations, capability modules, app-graph builders) uses Pattern B. The two often appear in the same
@@ -109,15 +109,15 @@ same aspect through the capability.
 
 These are **different mechanisms** and must not be conflated.
 
-|                | **ViewState**                                        | **Settings store**                                             |
-| -------------- | ---------------------------------------------------- | -------------------------------------------------------------- |
-| Purpose        | per-context, durable **UI state**                    | plugin-wide **configuration / user preferences**               |
-| Keyed by       | `(aspect, contextId)` — the object/surface           | plugin id (`meta.profile.key`)                                 |
-| Granularity    | one value per context (per document, tab, selection) | one settings blob per plugin                                   |
+|                | **ViewState**                                        | **Settings store**                                               |
+| -------------- | ---------------------------------------------------- | ---------------------------------------------------------------- |
+| Purpose        | per-context, durable **UI state**                    | plugin-wide **configuration / user preferences**                 |
+| Keyed by       | `(aspect, contextId)` — the object/surface           | plugin id (`meta.profile.key`)                                   |
+| Granularity    | one value per context (per document, tab, selection) | one settings blob per plugin                                     |
 | Built with     | `defineViewState` + `ViewStateManager`               | [`createKvsStore`](../../../../../common/effect/src/atom-kvs.ts) |
-| Accessed via   | Pattern A hooks / Pattern B capability               | `useAtomCapabilityState(XCapabilities.Settings)`               |
-| Surfaced in UI | no                                                   | yes — `AppCapabilities.Settings` renders it in Settings        |
-| Example        | companion tab, editor caret, view mode               | `loadRemoteImages`, `conversations`                            |
+| Accessed via   | Pattern A hooks / Pattern B capability               | `useAtomCapabilityState(XCapabilities.Settings)`                 |
+| Surfaced in UI | no                                                   | yes — `AppCapabilities.Settings` renders it in Settings          |
+| Example        | companion tab, editor caret, view mode               | `loadRemoteImages`, `conversations`                              |
 
 **Decision rule (sharpened):**
 
@@ -192,14 +192,14 @@ The composer-ui skill's **State management** section references both.
 
 ### Every ViewState aspect (`defineViewState`) — all genuinely per-context
 
-| Aspect                   | Package              | key                       | backend  | state                          |
-| ------------------------ | -------------------- | ------------------------- | -------- | ------------------------------ |
-| `selectionAspect`        | `react-ui-attention` | `selection`               | `memory` | current selection set          |
-| `companionVariantAspect` | `plugin-deck`        | `deck-companion-variant`  | `local`  | selected companion tab         |
-| `companionSplitAspect`   | `plugin-deck`        | `deck-companion-split`    | `local`  | companion split ratio          |
-| `editorViewStateAspect`  | `plugin-markdown`    | `editor`                  | `local`  | per-document scroll/caret      |
-| `tableSortAspect`        | `react-ui-table`     | `table-sort`              | `local`  | column sort                    |
-| `messageViewModeAspect`  | `plugin-inbox`       | `inbox-message-view-mode` | `local`  | message body view mode         |
+| Aspect                   | Package              | key                       | backend  | state                     |
+| ------------------------ | -------------------- | ------------------------- | -------- | ------------------------- |
+| `selectionAspect`        | `react-ui-attention` | `selection`               | `memory` | current selection set     |
+| `companionVariantAspect` | `plugin-deck`        | `deck-companion-variant`  | `local`  | selected companion tab    |
+| `companionSplitAspect`   | `plugin-deck`        | `deck-companion-split`    | `local`  | companion split ratio     |
+| `editorViewStateAspect`  | `plugin-markdown`    | `editor`                  | `local`  | per-document scroll/caret |
+| `tableSortAspect`        | `react-ui-table`     | `table-sort`              | `local`  | column sort               |
+| `messageViewModeAspect`  | `plugin-inbox`       | `inbox-message-view-mode` | `local`  | message body view mode    |
 
 **Access — consistent:** Pattern A (hooks) in `plugin-deck`, `plugin-map`, `plugin-trip`,
 `plugin-commerce`, `plugin-space`, `plugin-ibkr`, `plugin-video`, `plugin-magazine`, `plugin-inbox`
