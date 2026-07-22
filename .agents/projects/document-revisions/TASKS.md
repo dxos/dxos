@@ -227,6 +227,14 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
   [`agents/superpowers/plans/2026-07-21-ambient-review-model.md`](../../../agents/superpowers/plans/2026-07-21-ambient-review-model.md)
   (Milestone A: modes + policy + Editing/Viewing ambient overlay + review — fully specified;
   Milestone B: Suggesting-mode authoring — spike-gated, tasks appended after Task B0).
+- [x] **Milestone A LANDED (2026-07-21)** via subagent-driven execution — tasks A1–A6 complete,
+      each spec+quality reviewed, all fix loops closed. Commits: A1 f7f0027e09, A2 2b61901677,
+      A3 40618ca277 (+4846834552,+46142dd6e9), A4 50211bfca2 (+928921e411), A5 b7ba37fa49 (+1a42697ac1).
+      Ambient Editing/Viewing overlay + mode toggle + `ReviewRenderPolicy` + `SuggestionSources`
+      slot + `suggestionsOverlay` in `@dxos/ui-editor`. Build/lint/unit + play tests green across
+      ui-editor/plugin-space/plugin-comments/plugin-markdown. Minor deferred to final review: no
+      `useVersioning` hook-test harness (A1). NOTE: user merged `tabs-props-button-iconbutton` mid-run.
+- [ ] **Milestone B — Suggesting-mode authoring**: begins with Task B0 spike (see plan).
 
 ## Landing the suggestions feature (current goal)
 
@@ -237,7 +245,7 @@ Polish + fixes required before landing the suggestion-review flow.
 - [ ] Show the history companion below the comments companion in `CommentsArticle.stories.tsx`
       (right column split into equal rows: comments top, `subject:'history'` companion bottom).
 - [x] BUG: selecting a branch then adding a comment throws `RangeError: Cannot getCursorPosition:
-      cursor <id> is invalid`. **Root cause:** in Branch view the editor binds to the branch doc, so
+    cursor <id> is invalid`. **Root cause:** in Branch view the editor binds to the branch doc, so
       comment cursors are branch-doc cursors, but `threads.ts getName` always resolves against
       `doc.content.target` (main) → invalid. **Fixed (2026-07-21, ontology-driven):** `getName`
       resolves against the editor-bound Text (branch doc in Branch view, main otherwise) + defensive

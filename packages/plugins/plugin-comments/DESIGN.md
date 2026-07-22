@@ -446,6 +446,21 @@ compartment).
 One cohesive plan — mode toggle + render policy + ambient default overlay — layered on the untouched
 advanced path, with the Suggesting-mode composition as a spike-first sub-milestone.
 
+#### Status (2026-07-21)
+
+**Milestone A landed** (per-doc `mode`, `ReviewRenderPolicy`, ambient Editing/Viewing overlay + review):
+`VersioningState.mode` + `useVersioning` mode/setMode; `SpaceCapabilities.ReviewRenderPolicy`
+(GDocs-parity default); `SuggestionSources` headless enumerator (render-prop, synchronous on doc
+swap) + `MarkdownCapabilities.SuggestionSourcesProvider` slot (contributed by plugin-comments,
+consumed by markdown — no dependency cycle); `suggestionsOverlay` compartment factory in
+`@dxos/ui-editor`; MarkdownArticle ambient wiring (Editing overlays all suggestions + comments;
+Viewing hides suggestions, read-only, comments retained) + a Review-mode toolbar toggle
+(Suggesting disabled). Comment visibility is policy-threaded (`showComments`, default true).
+Build/lint/unit + `AmbientReview` and `DocumentVersioning` play tests green.
+
+**Milestone B (Suggesting-mode authoring) pending** the Task-B0 spike (compose live editing on the
+user's branch + self-diff-vs-main + foreign overlays on one buffer).
+
 ## Risks / notes
 
 - Anchors depend on parent history retention; automerge retains full history today, but
