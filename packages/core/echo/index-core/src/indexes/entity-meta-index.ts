@@ -16,8 +16,8 @@ import type { Index } from './interface';
 
 /**
  * Normalizes an echo: EID to the local (unqualified) form so SQL comparisons are consistent.
- * DB rows always store `echo:/<entityId>`; a space-qualified `echo://<space>/<entityId>` would
- * otherwise miss every row for that type.
+ * Rows are indexed in the canonical `echo:///<entityId>` form; a space-qualified
+ * `echo://<space>/<entityId>` would otherwise miss every row for that type.
  */
 const _normalizeTypeUri = (typeDXN: string): string => {
   if (!typeDXN.startsWith('echo:')) {
@@ -29,6 +29,18 @@ const _normalizeTypeUri = (typeDXN: string): string => {
   }
   const entityId = EID.getEntityId(eid);
   return entityId ? EID.make({ entityId }) : typeDXN;
+};
+
+/**
+ * Every stored `typeDXN` form equivalent to a normalized type identifier. Rows written before
+ * `echo:///<id>` became the canonical local EID hold the single-slash `echo:/<id>` form; both
+ * address the same stored schema, so queries must match either without requiring a reindex.
+ */
+const _typeUriEquivalents = (normalized: string): string[] => {
+  if (normalized.startsWith('echo:///')) {
+    return [normalized, `echo:/${normalized.slice('echo:///'.length)}`];
+  }
+  return [normalized];
 };
 
 const _escapeLikePrefix = (prefix: string) => {
@@ -150,13 +162,12 @@ export class EntityMetaIndex implements Index {
         const normalizedTypeDXN = _normalizeTypeUri(query.typeDXN);
         const parsedDxn = DXN.isDXN(normalizedTypeDXN) ? normalizedTypeDXN : undefined;
         const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
+        const exactMatch = sql.or(_typeUriEquivalents(normalizedTypeDXN).map((form) => sql`typeDXN = ${form}`));
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows = hasNoVersion
-          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
-              normalizedTypeDXN
-            } OR typeDXN LIKE ${_escapeLikePrefix(normalizedTypeDXN)} ESCAPE '\\')`
-          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDXN = ${normalizedTypeDXN}`;
+          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${exactMatch} OR typeDXN LIKE ${_escapeLikePrefix(normalizedTypeDXN)} ESCAPE '\\')`
+          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND ${exactMatch}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -229,7 +240,7 @@ export class EntityMetaIndex implements Index {
             const normalized = _normalizeTypeUri(typeDXN);
             const parsedDxn = DXN.isDXN(normalized) ? normalized : undefined;
             const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-            const exactMatch = sql`typeDXN = ${normalized}`;
+            const exactMatch = sql.or(_typeUriEquivalents(normalized).map((form) => sql`typeDXN = ${form}`));
             return hasNoVersion
               ? sql.or([exactMatch, sql`typeDXN LIKE ${_escapeLikePrefix(normalized)} ESCAPE '\\'`])
               : exactMatch;
@@ -309,8 +320,10 @@ export class EntityMetaIndex implements Index {
               // Extract metadata.
               const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
               // Type identifier as stored on `system.type`: a typename DXN for static schemas,
-              // an `echo:` EID for stored (dynamic) schemas.
-              const typeDXN = URI.make(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type');
+              // an `echo:` EID for stored (dynamic) schemas. Normalize the EID form so the indexed
+              // value matches the normalized value the query path compares against (legacy
+              // single-slash `echo:/<id>` and canonical `echo:///<id>` address the same schema).
+              const typeDXN = URI.make(_normalizeTypeUri(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type'));
               const deleted = castData[ATTR_DELETED] ? 1 : 0;
               // Relations.
               const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
