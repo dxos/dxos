@@ -1,22 +1,25 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **the G1 migration is now fully complete** — all 6 scenarios ported to scored evals (all
-passing live at 100%, planning's haiku-quality criterion backed by a real LLM-judge), and the 6
-corresponding `src/testing/*.test.ts` files are **deleted** (their memoized-replay fixtures were
-already gone, so keeping them was pure duplication of a strictly weaker self-reported check). PR
-#12307 is functionally verified end-to-end — next is to mark it ready for review. Uncommitted:
-none, pushed to `claude/ai-testing-strategy-9ctzjt` through commit `f476c5097a`, CI green. Last:
-deleted the 6 redundant test files; added `TODO(wittjosiah): migrate to an eval` to the 3 files
-that remain (`inbox-enable` — blocked on a real inbox-skill registry bug; `local-ai` — needs an
-`inferenceProvider` option on `createEvalRunner`; `sandbox` — needs `randomEntityIds`/`sandbox`/
-`clientTypes` options, plus a live external service); updated `TESTING.md`'s G1 sections and the
-package `README.md` to reflect the migration as done rather than planned. Earlier this session:
-built `src/judge.ts` (native LLM-judge via `@dxos/ai`'s `LanguageModel.generateObject`, not
-autoevals' OpenAI-coupled classifiers), wired into `planning.eval.ts` with a demonstrated failure
-case; confirmed by direct experiment that the two-vitest-config split can't be collapsed into one
-`projects`-based config (silently drops root-level `plugins`/`testTimeout`, reopening the
-registry-sync race); renamed the `agent-e2e-tests` skill to `agent-eval-tests`, refocused on the
-eval-writing pattern with a "Legacy" section for the (now much smaller) gated-test surface._
+_Resume: **the G1 migration is fully complete**, and evals now have real quality signal beyond
+existence checks. Pushed to `claude/ai-testing-strategy-9ctzjt` through commit `d8859314f1`, CI
+running (green on every completed run this session). Uncommitted: none. Last: **skill-blindness
+experiment** — tried removing the "Enable the X skill using the skill manager" instruction from
+every eval that had one (live-run, reviewed before any commit): `planning`/`markdown` scored 100%
+with no explicit mention and the change was kept permanently; `crm-mailbox`/`web-search` were
+reverted after review, since their point losses were scorer artifacts unrelated to skill discovery
+(both actually self-discovered correctly) — tracked as a Phase 2 follow-up below, with the exact
+scorer fix needed for each. **Then:** added a 5th scorer to `crm-mailbox.eval.ts` —
+`crm-data-accurate`, an LLM judge comparing the created Person/Organization/Employer-role against
+the source email for correctness, not just existence — plus a same-file negative case proving it
+fails on misrepresented data. Live-verified across two separate runs: one scored 100%, the other
+60-67% because the agent added an unstated "Product Manager" title that run and the new judge (plus
+the existing exact-match checker, independently) correctly caught it — expected live-model
+variance, not a bug. Earlier this session: built `src/judge.ts` (native LLM-judge via `@dxos/ai`'s
+`LanguageModel.generateObject`, not autoevals' OpenAI-coupled classifiers); confirmed by direct
+experiment that the two-vitest-config split can't collapse into one `projects`-based config;
+renamed the `agent-e2e-tests` skill to `agent-eval-tests`; deleted the 6 memoized test files now
+superseded by evals, added `TODO(wittjosiah): migrate to an eval` to the 3 that remain. NEXT: mark
+PR #12307 ready for review._
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
