@@ -36,7 +36,7 @@ const meta = {
     withPluginManager({
       plugins: [...corePlugins()],
       capabilities: [
-        Capability.contributes(
+        Capability.provide(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(
             Operation.withHandler(SheetOperation.DropAxis, ({ model, axis, axisIndex }) =>

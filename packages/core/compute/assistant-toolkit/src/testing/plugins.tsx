@@ -32,8 +32,8 @@ declare global {
   }
 }
 
-export const capabilities: Capability.Any[] = [
-  Capability.contributes(
+export const capabilities: Capability.AnyContribution[] = [
+  Capability.provide(
     Capabilities.ReactSurface,
     Surface.create({
       id: 'pluginDefault',

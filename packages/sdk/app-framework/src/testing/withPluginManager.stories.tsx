@@ -33,7 +33,7 @@ const meta = {
     withTheme(),
     withPluginManager({
       capabilities: [
-        Capability.contributes(
+        Capability.provide(
           Capabilities.ReactSurface,
           Surface.create({
             id: 'test',

@@ -38,7 +38,9 @@ export const setupPluginManager = ({
   });
 
   if (capabilities) {
-    getProviderValue(capabilities, pluginManager.capabilities).forEach((capability) => {
+    // Fixtures hand us `Contribution`s (from `Capability.provide`); expand them to the raw
+    // interface/implementation entries the manager ingests — the same path module activation uses.
+    Capability.expandContributions(getProviderValue(capabilities, pluginManager.capabilities)).forEach((capability) => {
       pluginManager.capabilities.contribute({
         interface: capability.interface,
         implementation: capability.implementation,
@@ -60,7 +62,7 @@ type ManagedPluginManagerState = {
 
 export type WithPluginManagerOptions = UseAppOptions & {
   /** @deprecated */
-  capabilities?: MaybeProvider<Capability.Any[], CapabilityManager.CapabilityManager>;
+  capabilities?: MaybeProvider<Capability.AnyContribution[], CapabilityManager.CapabilityManager>;
   /** @deprecated */
   fireEvents?: (ActivationEvent.ActivationEvent | string)[];
 };
@@ -82,13 +84,16 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
     // Storybook replaces the full context object often, so key manager ownership by story id.
     useEffect(() => {
       const pluginManager = setupPluginManager(options);
-      const capability = Capability.contributes(Capabilities.ReactRoot, {
-        id: storyId,
-        root: () => <Story />,
-      });
+      const [capability] = Capability.expandContributions([
+        Capability.provide(Capabilities.ReactRoot, {
+          id: storyId,
+          root: () => <Story />,
+        }),
+      ]);
 
       pluginManager.capabilities.contribute({
-        ...capability,
+        interface: capability.interface,
+        implementation: capability.implementation,
         module: 'org.dxos.app-framework.with-plugin-manager',
       });
 

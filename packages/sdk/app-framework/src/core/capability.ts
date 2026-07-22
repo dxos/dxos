@@ -307,24 +307,6 @@ export type Any = Capability<any>;
  */
 export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]] | readonly [Any, ...Any[]];
 
-/**
- * Builds a raw capability entry for direct manager injection (test/story fixtures) — see
- * {@link ModuleReturn}. Authored modules return {@link provide}/{@link provideAll} instead.
- * Returns the opaque base type so callers cannot discriminate on capability kind,
- * keeping d.ts emit portable across packages.
- */
-export const contributes = <I extends InterfaceDef<any>>(
-  interfaceDef: I,
-  implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],
-  deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
-): Any => {
-  return {
-    interface: interfaceDef,
-    implementation,
-    deactivate,
-  } satisfies Capability<I>;
-};
-
 //
 // Contributions (typed activate returns)
 //

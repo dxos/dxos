@@ -57,12 +57,12 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
-        Capability.contributes(AppCapabilities.Translations, translations),
+        Capability.provide(AppCapabilities.Translations, translations),
         // Registered types feed SpaceHomeRecent's type filter (normally via addSchemaModule).
-        Capability.contributes(AppCapabilities.Schema, [Task, Note]),
+        Capability.provide(AppCapabilities.Schema, [Task, Note]),
         // Home-content contributors normally wired by the plugin's react-surface capability,
         // including the per-section visibility gate + close affordance.
-        Capability.contributes(Capabilities.ReactSurface, [
+        Capability.provide(Capabilities.ReactSurface, [
           Surface.create({
             id: 'story.spaceHomeRecent',
             filter: Surface.makeFilter(SpaceHomeContent),

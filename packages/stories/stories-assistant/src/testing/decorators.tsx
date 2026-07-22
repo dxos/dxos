@@ -214,13 +214,16 @@ const PluginManagerHost = ({
   }, [options]);
 
   useEffect(() => {
-    const capability = Capability.contributes(Capabilities.ReactRoot, {
-      id: contextId,
-      root: () => <>{children}</>,
-    });
+    const [capability] = Capability.expandContributions([
+      Capability.provide(Capabilities.ReactRoot, {
+        id: contextId,
+        root: () => <>{children}</>,
+      }),
+    ]);
 
     manager.capabilities.contribute({
-      ...capability,
+      interface: capability.interface,
+      implementation: capability.implementation,
       module: 'org.dxos.app-framework.with-plugin-manager.lazy',
     });
 

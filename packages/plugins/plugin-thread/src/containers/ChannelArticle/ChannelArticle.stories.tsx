@@ -50,7 +50,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       capabilities: [
-        Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message]),
+        Capability.provide(AppCapabilities.Schema, [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message]),
       ],
       plugins: [
         ...corePlugins(),

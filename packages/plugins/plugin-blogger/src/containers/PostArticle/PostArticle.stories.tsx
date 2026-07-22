@@ -52,8 +52,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
-        Capability.contributes(AppCapabilities.Translations, translations),
-        Capability.contributes(Capabilities.OperationHandler, BloggerOperationHandlerSet),
+        Capability.provide(AppCapabilities.Translations, translations),
+        Capability.provide(Capabilities.OperationHandler, BloggerOperationHandlerSet),
       ],
       plugins: [
         ...corePlugins(),

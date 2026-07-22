@@ -32,7 +32,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.make,
 );
 
-const TestExtension = Capability.contributes(
+const TestExtension = Capability.provide(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'storyArticle',

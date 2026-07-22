@@ -130,7 +130,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.contributes(Connector, testConnectors)],
+      capabilities: [Capability.provide(Connector, testConnectors)],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

@@ -61,7 +61,7 @@ const meta = {
     withPluginManager({
       plugins: corePlugins(),
       capabilities: [
-        Capability.contributes(
+        Capability.provide(
           Capabilities.ReactSurface,
           Surface.create({
             id: 'test',

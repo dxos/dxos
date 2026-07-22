@@ -56,7 +56,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen', classNames: 'p-4' }),
     withPluginManager({
-      capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
+      capabilities: [Capability.provide(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

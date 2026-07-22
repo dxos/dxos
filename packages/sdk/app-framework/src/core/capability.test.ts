@@ -52,10 +52,6 @@ describe('Capability tags', () => {
     const multi = Capability.make<Example>()('org.dxos.test.multi');
     const defs: Capability.InterfaceDef<Example>[] = [single, multi];
     expect(defs.map((def) => def.identifier)).toEqual([single.identifier, multi.identifier]);
-
-    // Legacy contributes accepts both arities during the migration window.
-    const legacy = Capability.contributes(single, { example: 'value' });
-    expect(legacy.interface).toBe(single);
   });
 
   describe('provide', () => {
@@ -63,7 +59,8 @@ describe('Capability tags', () => {
       const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
       const contribution = Capability.provide(single, { example: 'value' });
       expect(Capability.isContribution(contribution)).toBe(true);
-      expect(Capability.isContribution(Capability.contributes(single, { example: 'value' }))).toBe(false);
+      // A raw capability entry (what `expandContributions` yields for the manager) is not a Contribution.
+      expect(Capability.isContribution({ interface: single, implementation: { example: 'value' } })).toBe(false);
       expect(contribution.capability).toBe(single);
       expect(contribution.values).toEqual([{ example: 'value' }]);
     });

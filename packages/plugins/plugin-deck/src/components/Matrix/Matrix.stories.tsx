@@ -82,7 +82,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
   );
 };
 
-const TestExtension = Capability.contributes(
+const TestExtension = Capability.provide(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'storyArticle',
