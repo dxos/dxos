@@ -269,7 +269,7 @@ export type ResolveHorizonOptions = {
 export const resolveHorizon = ({
   now,
   syncBackDays,
-  defaultSyncBackDays = 365 * 2, // 2 years
+  defaultSyncBackDays = 30, // TODO(burdon): Should be 90
 }: ResolveHorizonOptions): Date => addCalendarDays(now, -(syncBackDays ?? defaultSyncBackDays));
 
 /** The two halves of a bidirectional run; either may be absent (nothing to do on that side). */
