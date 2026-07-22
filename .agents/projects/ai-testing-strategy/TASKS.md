@@ -1,17 +1,13 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **first live-scored `database.eval.ts` result obtained: 100%.** PR #12307 is now
-functionally verified end-to-end — next is to mark it ready for review (holding only in case more
-polish is wanted) and continue Phase 2 (port `web-search.test.ts`). Uncommitted: none, pushed to
-`claude/ai-testing-strategy-9ctzjt` through commit `8d0f95d`, CI running. Last: two blocking bugs
-found and fixed in this session — (1) the evalite-specific `plugin-routine` registry-sync race
-(config fix, see Follow-ups), and (2) `createEvalRunner` defaulted `skills` to `[]` instead of
-`getDefaultSkills()` like `harness.ts`'s `agentTest()`, so the agent had no database tools at all
-("No tools available to complete the task") — fixed by extracting `getDefaultSkills` into a shared
-`src/skills.ts` and defaulting to it in `runner.ts`. With both fixed and a real
-`DX_ANTHROPIC_API_KEY` (via `op run --account braneframe --env-file=.config/.env.1password`),
-`database.eval.ts` scores 100%. Verified: assistant-evals build/lint/test green, `oxfmt --check`
-clean._
+_Resume: **all 6 G1 scenarios are now ported to scored evals, all passing live (100%):**
+`database`, `smoke`, `markdown`, `crm-mailbox`, `web-search`, `planning`. PR #12307 is functionally
+verified end-to-end across the full former-G1 surface — next is to mark it ready for review.
+Uncommitted: none, pushed to `claude/ai-testing-strategy-9ctzjt` through commit `bee8fe5`, CI
+running (green on every completed run this session). Last: ported the remaining 5 scenarios
+easiest→hardest in one session, each verified live via
+`op run --account braneframe --env-file=.config/.env.1password -- npx evalite run <file>` with a
+real `DX_ANTHROPIC_API_KEY`, then committed individually — see Phase 2 below for what each needed._
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -172,15 +168,61 @@ as primary coverage.
       task" — fixed by extracting `getDefaultSkills` into a shared `src/skills.ts`. With a real
       `DX_ANTHROPIC_API_KEY` (pulled from the CI Vault via 1Password's `op run`),
       `database.eval.ts` now scores **100%**. PR #12307 is functionally verified end-to-end,
-      still draft pending a final ready-for-review
-      pass.
-- [ ] Port `web-search.test.ts` next as the first tool-match scorer case (checks only the
-      `web-search` tool fired), reusing the same `dbQuery`-style hook pattern generalized to
-      tool-invocation records rather than DB queries.
-- [ ] More scorers: schema-validity, LLM-judge; datasets for comprehension / tool-selection.
+      still draft pending a final ready-for-review pass.
+- [x] **Ported the remaining 5 G1 scenarios, easiest → hardest, each verified live and committed
+      individually:**
+  - [x] `smoke.eval.ts` — trivial (no DB, no skills); needed one new `createEvalRunner` option,
+        `expect: 'failure'` (`Effect.runPromiseExit` instead of `runAndForwardErrors`, resolving
+        `{ failed: boolean }` so a scorer can grade an intentional failure as a pass — previously
+        any failure just threw out of the eval task before a scorer ran). Also hit an evalite
+        storage bug: with no output requested, `completeJob` resolves `agentOutput` to `undefined`,
+        and evalite's SQLite storage rejects storing an undefined/null task result — coerced to
+        `{}` in the eval file rather than widening runner.ts's general contract. Both scored 100%.
+  - [x] `markdown.eval.ts` — pure DB-state (doc exists; exact final content after an Update-op
+        append), same `dbQuery`/`objectExists` pattern as `database.eval.ts`. Added `findObject`
+        (same query, returns the match instead of a boolean) to `assertions.ts` to load the found
+        doc's `content` ref. "draft a document"'s free-form title/content narrows the check to "a
+        doc exists" — the process criteria (which skill/tool was used) aren't checkable without
+        tool-invocation tracking. Both scored 100%.
+  - [x] `crm-mailbox.eval.ts` — all 4 criteria are DB/relation state (Person, Organization, Employer
+        relation + role field); `Employer.Employer` was already in `runner.ts`'s default
+        `ClientPlugin` types, so no new plumbing needed — `Relation.getSource`/`getTarget` resolve
+        the relation's endpoints directly. Incidentally fixed an unrelated timeout: evalite defaults
+        to a 30s per-eval timeout unless vitest config overrides it
+        (`config.test.testTimeout ??= 30_000` in evalite's `run-evalite.js`); this scenario's
+        multi-tool research (web search + CRM tools + image attach) routinely exceeds that — raised
+        `vitest.config.ts`'s `testTimeout` to `360_000` (benefits every eval in the file). Scored
+        100% in ~95s.
+  - [x] `web-search.eval.ts` — the first tool-match scorer (Phase 2 item below). Built the
+        tool-invocation tracking flagged as a follow-up when this project resumed:
+        `assertions.ts` gains `completedBlocks()` (reads every `CompleteBlock` event off the
+        space's trace feed — durable, already produced by `RunInstructions` via `RoutinePlugin`'s
+        `FeedTraceSinkSpec` with zero wiring changes) and `toolInvocations()` (pairs
+        `toolCall`/`toolResult` blocks by `toolCallId`). Required adding `@dxos/compute-runtime` as
+        a workspace dependency (for `FeedTraceSink`). "Capital of France returned" grades a plain
+        string match on the assistant's chat text (no LLM judge needed); "only web-search used"
+        grades that exactly one non-`completeJob` tool fired. First attempt matched the literal
+        string `'web_search'` and scored 50% — the actual recorded tool name is `'AnthropicWebSearch'`
+        (the toolkit name, not the provider name), found by inspecting
+        `node_modules/.evalite/cache.sqlite`'s `results` table directly. Fixed to a normalized
+        substring match; scored 100%.
+  - [x] `planning.eval.ts` — hardest: required new `sessionChat` support in `createEvalRunner`
+        (planning's `update-tasks` operation hard-requires a bound `Chat` via
+        `Chat.getFromContext`; the plan lives at `Chat.plan`) mirroring `harness.ts`'s
+        `agentTest({ sessionChat: true })`. Enriched `ToolInvocation` with `operationKey` (the
+        stable `dxn:org.dxos.function.*` key backing an Operation-invoked call, vs. `name`, a
+        display name that varies — per web-search's surprise). Graded: exactly 3 tasks exist and
+        all done (`findObject(Plan.Plan, ...)`), `update-tasks` was actually invoked (≥3 times,
+        matched on `operationKey`), the plan was never written via a raw `objectCreate`/
+        `objectUpdate` call (the "did not manipulate objects directly" criterion). First attempt
+        scored 80% — matched the bare operation key; the actual key has a `dxn:` prefix, found the
+        same cache.sqlite-inspection way as web-search's mismatch. One criterion narrowed rather
+        than fully replicated: "3-line haiku per topic" grades as "topic mentioned in the
+        response" — haiku quality/line-count is a content judgment, still pending an LLM-judge
+        scorer (below). Scored 100%.
+- [ ] More scorers: schema-validity, LLM-judge (needed for planning's haiku-quality criterion);
+      datasets for comprehension / tool-selection.
 - [ ] Pin model versions; pass-rate thresholds; scheduled (nightly/on-demand) run distinct from PR CI.
-- [ ] Port remaining highest-value former-G1 scenarios (crm-mailbox, planning, markdown) as H
-      integration cases (real model, real ops), non-gating.
 
 ## Phase 3 — finish migration & reduce machinery
 
