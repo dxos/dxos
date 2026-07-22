@@ -476,13 +476,24 @@ export const DeckPlanks = () => {
     });
   }, []);
 
-  // Scroll a folded plank back into view (reveal it just past the left pile).
-  const scrollToPlank = useCallback((id: string, index: number) => {
+  // Scroll a folded plank back into view (reveal it just past the left pile of `index` spines). A plank's
+  // natural offset can't come from `offsetLeft`: the tiles are position:sticky and their offsetParent
+  // doesn't scroll, so offsetLeft reports the pinned position (clustered for planks in a pile). Sum the
+  // actual plank widths + gaps instead, so the scroll distance tracks plank size for any index.
+  const scrollToPlank = useCallback((_id: string, index: number) => {
     const viewport = viewportRef.current;
-    const tile = viewport?.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
-    if (viewport && tile) {
-      viewport.scrollTo({ left: Math.max(0, tile.offsetLeft - index * SPINE_PX), behavior: 'smooth' });
+    const tiles = viewport && Array.from(viewport.querySelectorAll<HTMLElement>('[role="listitem"]'));
+    const stack = tiles?.[0]?.parentElement;
+    if (!viewport || !tiles || !stack) {
+      return;
     }
+    const styles = getComputedStyle(stack);
+    const gap = parseFloat(styles.columnGap) || 0;
+    let naturalLeft = parseFloat(styles.paddingLeft) || 0;
+    for (let plank = 0; plank < index; plank++) {
+      naturalLeft += tiles[plank].offsetWidth + gap;
+    }
+    viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
   }, []);
 
   // Fold detection (experiment): pinning is entirely native CSS `sticky` (see the tile style), so this
