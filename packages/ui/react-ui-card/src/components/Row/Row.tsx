@@ -7,7 +7,6 @@ import React, { type MouseEvent, useCallback, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import { DxAvatar } from '@dxos/lit-ui/react';
 import {
   Card,
   DxAnchorActivate,
@@ -20,16 +19,14 @@ import {
 } from '@dxos/react-ui';
 import { type Actor, type Message } from '@dxos/types';
 import { toHue } from '@dxos/ui-theme';
-import { toHue as hashToHue } from '@dxos/util';
 
-import { useActorContact } from '#hooks';
-import { meta } from '#meta';
-
-import { hashString } from '../../util';
+import { useActorContact } from '../../hooks';
+import { translationKey } from '../../translations';
+import { Avatar, avatarName } from '../Avatar';
 
 /**
  * Shared Card-row primitives rendered inside a `Card.Body`. These are the single source for the
- * person/date/tags/ref/star rows used across the inbox tiles (`EventStack`/`MessageStack`), the preview
+ * person/date/tags/ref/star rows used across the inbox tiles (`EventStack`/`InboxStack`), the preview
  * cards (`EventCard`/`MessageCard`), and the article headers — so a row of each kind is defined exactly
  * once and every surface composes from it.
  */
@@ -185,29 +182,17 @@ type RowPersonProps = {
   onClick?: (event: MouseEvent) => void;
 };
 
-const displayName = (actor: Actor.Actor): string => actor.contact?.target?.fullName ?? actor.name ?? actor.email ?? '';
-
 /**
  * Static avatar variant — no contact resolution. Suitable for virtualized list tiles.
  */
-const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onClick'>) => {
-  const name = displayName(actor);
-  return (
-    <Card.Row>
-      <Card.Block>
-        <DxAvatar
-          hue={hashToHue(hashString(name))}
-          hueVariant='surface'
-          variant='circle'
-          size={6}
-          fallback={name}
-          onClick={onClick}
-        />
-      </Card.Block>
-      <Card.Text>{name || actor.email}</Card.Text>
-    </Card.Row>
-  );
-};
+const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onClick'>) => (
+  <Card.Row>
+    <Card.Block>
+      <Avatar actor={actor} onClick={onClick} />
+    </Card.Block>
+    <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
+  </Card.Row>
+);
 
 /**
  * Interactive variant — resolves the contact to a card-preview anchor, with a create-contact fallback.
@@ -219,8 +204,9 @@ const PersonAnchorRow = ({
   onContactCreate,
   onRemove,
 }: Omit<RowPersonProps, 'avatar' | 'onClick'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = useTranslation(translationKey);
   const contactDXN = useActorContact(db, actor);
+
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
   // TODO(burdon): Reconcile with Avatar if space member.

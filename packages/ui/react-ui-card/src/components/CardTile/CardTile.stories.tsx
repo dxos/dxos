@@ -10,13 +10,13 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Tile } from './Tile';
+import { CardTile } from './CardTile';
 
-// Tile.Header standalone inside Card chrome; Tile.Root's mosaic shell is exercised by the
-// EventStack / MessageStack stories (it requires a Mosaic.Container ancestor).
+// CardTile.Header standalone inside Card chrome; CardTile.Root's mosaic shell is exercised by the
+// EventStack / InboxStack stories (it requires a Mosaic.Container ancestor).
 const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) => (
   <Card.Root fullWidth border={false} classNames='p-1'>
-    <Tile.Header
+    <CardTile.Header
       menu={menu}
       starred={starred}
       onToggleStar={() => {}}
@@ -36,7 +36,7 @@ const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) 
 );
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/Tile',
+  title: 'ui/react-ui-card/CardTile',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

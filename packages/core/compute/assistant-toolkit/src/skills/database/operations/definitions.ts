@@ -53,7 +53,7 @@ export const Query = Operation.make({
 
       <example description="Emails from specific mailboxes">
         {
-          "in": [{"/" : "echo:/YYYYYY"}, {"/" : "echo:/XXXXXXX"}],
+          "in": [{"/" : "echo:///YYYYYY"}, {"/" : "echo:///XXXXXXX"}],
           "typename": "org.dxos.type.email",
           "includeContent": true,
           "limit": 20
@@ -135,7 +135,7 @@ export const ObjectCreate = Operation.make({
       Creates a new object and adds it to the current space.
       Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
       References are provided in the following format: { "/": "echo:..." }.
-      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({
@@ -157,7 +157,7 @@ export const ObjectUpdate = Operation.make({
     description: trim`
       Updates the object properties.
       References are provided in the following format: { "/": "echo:..." }.
-      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({

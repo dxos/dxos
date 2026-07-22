@@ -206,3 +206,39 @@ can be recorded there without a schema change. The Gmail sync mapper
 
 - Draft-reply benchmark + illocution (speech-act) classification: `packages/stories/stories-brain` (`pipelines/draft.ts`, `pipelines/questions.ts`).
 - Sync stats + body-part coverage: `operations/google/gmail/sync.ts`.
+
+## Refactoring
+
+See [`AUDIT.md`](AUDIT.md) for the full decomposition plan (mail stays as plugin-inbox;
+calendar + contacts move out; provider + apis split; shared card-focused `@dxos/react-ui-card`).
+
+- [x] Rename `GooglePeople` => `GoogleContacts` (namespace/dir alias only; internal `Person` /
+      `batchGetPeople` kept — they mirror Google's real People API). Aligns with `contacts/` ops +
+      `GOOGLE_CONTACTS_CONNECTOR_ID`.
+- [x] Rename the two Stack forms to match the conceptual model (`src/components/AUDIT.md`):
+      `MessageStack` => `InboxStack`, `MessageThread` (API in the `ConversationStack/` dir) =>
+      `ConversationStack`. Both are Stack forms with different (Card vs ad-hoc) grid Tiles.
+- [x] Move `useInjectedMailboxActions` + `useMailboxExtractorActions` from
+      `components/Mailbox/` to `hooks/` (they're capability-fed hooks, not components).
+- [x] Unify the avatar: one shared `Avatar` primitive (`components/Avatar/`, actor/name → single
+      `nameToHue`), routed through `Row.Person` + the 3 hand-rolled sites; dropped `getMessageProps.hue`.
+      **No `MessageSummary` composite** — the four layouts are deliberately distinct.
+- [x] Extract `@dxos/react-ui-card` — the shared low-level card vocabulary (`Row`, `CardTile`,
+      `Avatar`) + `useActorContact` + `hashString` + its own i18n namespace. plugin-inbox depends on
+      it (`workspace:*`) and registers its translations. Reuses react-ui's `Card.Menu` /
+      `SystemIconButton.Star`. **TODO:** visual storybook pass (Row/Avatar/CardTile) not yet run.
+- [ ] Move `Toolbar` (`openGroup`/`deleteGroup`/`deleteAction`) → `@dxos/react-ui-menu` — generic
+      open/delete action builders, deps-only on react-ui-menu types (AUDIT §4d).
+- [ ] Move `ViewMode` (`viewModeGroup` + type/icons) → `@dxos/react-ui-menu` (with the `toolbar.ts`
+      helpers) — semantic menu builder; its 3 label keys move into react-ui-menu's translations,
+      dropping the `ns` param (AUDIT §4d).
+- [ ] Drop `Header` from the shared set — stale "shared" claim; only `Event` uses it now. Inline into
+      `Event` or keep calendar-local; do NOT put in `react-ui-card` (AUDIT §4d).
+- [ ] (Deferred) Generalize `HtmlViewer` core → `@dxos/react-ui-components` (inject cid/image + color
+      callbacks); 1 consumer today, wait for a second (AUDIT §4d).
+- [ ] Hoist shared sync infra (`findBindingForTarget`/`createSyncRoutine`/`syncTarget`) from `util/` to
+      `@dxos/plugin-connector` — used by both mail + calendar sync (AUDIT §3.7, Plan step 5).
+- [ ] **Provider-first split** (AUDIT §7): extract headless `@dxos/plugin-google` + `@dxos/plugin-jmap`
+      (connector + services + apis + sync ops, no UI) **before** the domain split — leaf plugins with a
+      single upstream `plugin-inbox` dep (defer the §3.1 connector-id inversion).
+- [ ] Different form layout for `EditMessage` (`components/EditMessage/`).

@@ -17,7 +17,7 @@ describe('insertReferences', () => {
     };
 
     expect(insertReferences('This is a computational irreducibility test.', quotes)).toBe(
-      'This is a [computational irreducibility](echo:/01JTG9JW11XGWJZ32AW8ET93D1) test.',
+      'This is a [computational irreducibility](echo:///01JTG9JW11XGWJZ32AW8ET93D1) test.',
     );
     expect(
       insertReferences(
@@ -25,7 +25,7 @@ describe('insertReferences', () => {
         quotes,
       ),
     ).toBe(
-      "And what I'd like to talk today about is Steven Wolfram's concept of a [computational irreducibility](echo:/01JTG9JW11XGWJZ32AW8ET93D1).",
+      "And what I'd like to talk today about is Steven Wolfram's concept of a [computational irreducibility](echo:///01JTG9JW11XGWJZ32AW8ET93D1).",
     );
   });
 
@@ -40,7 +40,7 @@ describe('insertReferences', () => {
     // "Sarah Johnson" is linked as a whole (processed first); the standalone "Sarah" is linked
     // separately; the "Sarah" inside the first link is left untouched (no nested `[[..](..)](..)`).
     expect(insertReferences('Sarah Johnson spoke. Later Sarah left.', quotes)).toBe(
-      '[Sarah Johnson](echo:/01JTG9JW11XGWJZ32AW8ET93D1) spoke. Later [Sarah](echo:/01JTG9JW11XGWJZ32AW8ET93D1) left.',
+      '[Sarah Johnson](echo:///01JTG9JW11XGWJZ32AW8ET93D1) spoke. Later [Sarah](echo:///01JTG9JW11XGWJZ32AW8ET93D1) left.',
     );
   });
 
@@ -48,7 +48,7 @@ describe('insertReferences', () => {
     const quotes = { references: [{ quote: 'Amco', id: '01JTG9JW11XGWJZ32AW8ET93D1' }] };
 
     expect(insertReferences('Amco and Amco again.', quotes)).toBe(
-      '[Amco](echo:/01JTG9JW11XGWJZ32AW8ET93D1) and [Amco](echo:/01JTG9JW11XGWJZ32AW8ET93D1) again.',
+      '[Amco](echo:///01JTG9JW11XGWJZ32AW8ET93D1) and [Amco](echo:///01JTG9JW11XGWJZ32AW8ET93D1) again.',
     );
   });
 });

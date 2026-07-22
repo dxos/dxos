@@ -8,7 +8,7 @@ import { type Capabilities } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type InboxCapabilities, type Mailbox } from '../../types';
+import { type InboxCapabilities, type Mailbox } from '../types';
 import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions';
 
 /**

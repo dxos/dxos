@@ -8,13 +8,12 @@ import React, { useCallback, useRef } from 'react';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Card, Icon, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
+import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import { Row } from '../Row';
 
 export type EventEditorProps = {
   event: EventType.Event;

@@ -4,6 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as cardTranslations } from '@dxos/react-ui-card/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { Message } from '@dxos/types';
 
@@ -71,9 +72,6 @@ export const translations = [
         'sync-contacts-error.title': 'Failed to sync contacts',
         'sync-contacts-success.title': 'Contacts sync complete',
 
-        'show-contact.label': 'Show contact',
-        'create-contact.label': 'Create contact',
-        'remove-attendee.label': 'Remove attendee',
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
         'mailbox-account.label': 'Account',
@@ -180,5 +178,6 @@ export const translations = [
       },
     },
   },
+  ...cardTranslations,
   ...componentsTranslations,
 ] as const satisfies Resource[];

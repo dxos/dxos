@@ -19,9 +19,9 @@ import { Message } from '@dxos/types';
 import { Builder, MessagesOptions } from '#testing';
 import { Mailbox } from '#types';
 
-import { MessageStack, type MessageStackItem, MessageStackProps } from './MessageStack';
+import { InboxStack, type InboxStackItem, InboxStackProps } from './InboxStack';
 
-type DefaultStoryProps = MessageStackProps & {
+type DefaultStoryProps = InboxStackProps & {
   count?: number;
   options?: MessagesOptions;
   /** Group the generated messages by thread id, mirroring the mailbox's conversation query. */
@@ -29,7 +29,7 @@ type DefaultStoryProps = MessageStackProps & {
 };
 
 const DefaultStory = ({ count = 0, options, groupByThread, ...props }: DefaultStoryProps) => {
-  const [items] = useState<MessageStackItem[] | undefined>(() => {
+  const [items] = useState<InboxStackItem[] | undefined>(() => {
     if (!count) {
       return undefined;
     }
@@ -60,7 +60,7 @@ const DefaultStory = ({ count = 0, options, groupByThread, ...props }: DefaultSt
     });
   });
 
-  return <MessageStack {...props} items={items} />;
+  return <InboxStack {...props} items={items} />;
 };
 
 const CompanionStory = () => {
@@ -97,7 +97,7 @@ const CompanionStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/MessageStack',
+  title: 'plugins/plugin-inbox/components/InboxStack',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {

@@ -19,14 +19,14 @@ import { initializeMailbox } from '#testing';
 import { translations } from '#translations';
 import { Mailbox } from '#types';
 
-import { MessageThread } from './ConversationStack';
+import { ConversationStack } from './ConversationStack';
 
 type StoryArgs = {
   length?: number;
 };
 
 /**
- * Renders the seeded mailbox's one thread through `MessageThread` in isolation. The whole-thread
+ * Renders the seeded mailbox's one thread through `ConversationStack` in isolation. The whole-thread
  * toolbar (view controls, collapse-all) belongs to `MessageArticle`, not the stack, so it is left out
  * here to keep the component's own surface — the message tiles and their per-message toolbars — clear.
  * Starts with every message collapsed; expand one by clicking its summary. (Deciding which message is
@@ -64,7 +64,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <MessageThread.Root
+    <ConversationStack.Root
       attendableId='story'
       items={messages}
       mailbox={mailbox}
@@ -76,16 +76,16 @@ const DefaultStory = () => {
       <Dnd.Root>
         <Panel.Root role='article'>
           <Panel.Content asChild>
-            <MessageThread.Content />
+            <ConversationStack.Content />
           </Panel.Content>
         </Panel.Root>
       </Dnd.Root>
-    </MessageThread.Root>
+    </ConversationStack.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/MessageThread',
+  title: 'plugins/plugin-inbox/components/ConversationStack',
   render: DefaultStory,
   decorators: [
     withTheme(),
