@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { type AspectDef, type ViewStateManager, defineViewState } from '../view-state';
+import { type AspectDef, type ViewStateManager, defineViewState } from '../ViewState';
 
 export type SelectionMode = 'single' | 'multi' | 'range' | 'multi-range';
 

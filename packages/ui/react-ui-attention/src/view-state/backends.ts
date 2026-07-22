@@ -5,7 +5,7 @@
 import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
-import { type AspectDef, type BackendName, type ViewStateBackend } from './view-state';
+import { type AspectDef, type BackendName, type ViewStateBackend } from './ViewState';
 
 // Only the stable `key` string is needed to form the map key; avoids variance issues with AspectDef<T>.
 const cacheKey = (aspect: { key: string }, contextId: string) => `${aspect.key}:${contextId}`;

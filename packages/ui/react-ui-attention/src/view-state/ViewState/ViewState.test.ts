@@ -6,8 +6,8 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { createDefaultBackends } from './backends';
-import { ViewStateManager, defineViewState } from './view-state';
+import { createDefaultBackends } from '../backends';
+import { ViewStateManager, defineViewState } from './ViewState';
 
 const Counter = defineViewState({
   key: 'counter',

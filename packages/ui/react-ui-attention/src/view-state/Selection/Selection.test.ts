@@ -6,7 +6,7 @@ import { Registry } from '@effect-atom/atom-react';
 import { describe, test } from 'vitest';
 
 import { createDefaultBackends } from '../backends';
-import { ViewStateManager } from '../view-state';
+import { ViewStateManager } from '../ViewState';
 import { getSelectionSet, resolveSelection, selectionAspect, toggleSelection } from './Selection';
 
 describe('selection helpers', () => {

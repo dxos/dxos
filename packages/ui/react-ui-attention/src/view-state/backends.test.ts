@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, describe, test } from 'vitest';
 
 import { LocalBackend } from './backends';
-import { ViewStateManager, defineViewState } from './view-state';
+import { ViewStateManager, defineViewState } from './ViewState';
 
 const Editor = defineViewState({
   key: 'editor',
