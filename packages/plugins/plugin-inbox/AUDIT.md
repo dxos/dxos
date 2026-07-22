@@ -266,19 +266,27 @@ flags as the one real code change (vs. mechanical file moves).
    `CardTile` + a consolidated `Avatar` (§4c); avatar/hue unified across the four
    summary sites. Unblocks calendar's move without a plugin→plugin UI dep. _(Done —
    PR #12300; `ViewMode`/`Toolbar` submodule still to follow, §4d.)_
-4. **Invert the connector-id coupling** (§3.1): stop `types/Mailbox|Calendar`
-   importing connector ids; contribute the connector list to the schema
-   annotation at registration. Unblocks the domain/provider separation.
+4. **Split the headless provider plugins first — `@dxos/plugin-google` /
+   `@dxos/plugin-jmap`** (§8). They're pure sync/connector logic (no React), so they
+   extract cleanly as **leaf** plugins that depend only on plugin-inbox (still holding
+   all domain types + the sync harness). Defer the §3.1 connector-id inversion: keep
+   the ids in plugin-inbox `constants.ts` and have the providers import them (an
+   upstream dep, the correct provider→domain direction). Doing this before the domain
+   split means each provider carries **one** plugin-inbox dep that later fans out to
+   plugin-mail/calendar/contacts.
 5. **Hoist shared sync infra to `@dxos/plugin-connector`** (§3.7):
    `findBindingForTarget` / `createSyncRoutine` / `syncTarget` from `util/`. Lets
    calendar/contacts/provider plugins share sync plumbing without depending on
    plugin-inbox.
-6. **Split provider ops into `@dxos/plugin-google` / `@dxos/plugin-jmap`.**
+6. **Invert the connector-id coupling** (§3.1): stop `types/Mailbox|Calendar`
+   importing connector ids; contribute the connector list to the schema
+   annotation at registration. Cleanup once providers own their connectors.
 7. **Move Calendar out → `@dxos/plugin-calendar`** (`Calendar` type,
    calendar/event surfaces + containers + graph nodes + `calendar` skill +
-   draft-event ops). Update the ~4 consumers importing `Calendar`/`CalendarSkill`.
+   draft-event ops). Repoint `plugin-google`'s calendar dep from plugin-inbox to
+   plugin-calendar. Update the ~4 consumers importing `Calendar`/`CalendarSkill`.
 8. **Move Contacts out → `@dxos/plugin-contacts`** (related surfaces;
-   `useActorContact` now in `react-ui-card`; provider sync now in `plugin-google`).
+   `useActorContact` now in `react-ui-card`; provider sync in `plugin-google`).
 9. `plugin-inbox` remains the **Mail plugin** — keeps `Mailbox`, message UI, the
    AI layer, mail sync. Consumers importing `Mailbox`/`InboxOperation`/`InboxSkill`
    are unaffected; only `Calendar`/`Contacts` importers repoint (no shims).
@@ -308,3 +316,67 @@ Each new package is `"private": true` and uses `workspace:*` for in-repo deps
 3. **Sync-provider contract location** — the `MailSyncProvider` interface lives in
    plugin-inbox; does `plugin-calendar` define its own calendar-sync contract, or
    is there a shared `plugin-connector`-level sync abstraction to promote?
+
+## 8. Provider-first split — `@dxos/plugin-google` / `@dxos/plugin-jmap` (headless)
+
+**Extract these before the domain (mail/calendar/contacts) split.** Both trees are
+**fully headless** — no `react`, no `@dxos/react-ui*` (verified by import scan). They
+are pure sync/connector logic, so they extract as **leaf** plugins whose only in-repo
+plugin dependency is `plugin-inbox` (still holding every domain type + the sync
+harness). One dep now; it fans out to plugin-mail/calendar/contacts when the domains
+split later.
+
+### What relocates into each provider plugin
+
+- **`plugin-google`** — `apis/google/*`, `services/google-*`,
+  `operations/{mail,calendar,contacts}/google/*`, the three Google `Connector`
+  contributions (Gmail / Google Calendar / Google Contacts, split out of
+  `capabilities/connector.ts`), the Google constants, `GoogleApiError`.
+- **`plugin-jmap`** — `apis/jmap/*`, `services/jmap-*`, `operations/mail/jmap/*`,
+  `capabilities/jmap-credential-form.ts` (a schema form def, not React), the JMAP
+  `Connector`, the JMAP constants, `JmapApiError`.
+
+### Upstream deps
+
+**External `@dxos` packages** (counts = import sites in the moved trees):
+
+| Package                                                                                                                                      | google | jmap | Role                                                   |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- | ------------------------------------------------------ |
+| `@dxos/echo`                                                                                                                                 | 21     | 8    | Obj/Query/Database over synced objects                 |
+| `@dxos/compute`                                                                                                                              | 20     | 5    | `Operation` / `Trigger` / services                     |
+| `@dxos/link`                                                                                                                                 | 9      | 5    | `Cursor` / `AccessToken`                               |
+| `@dxos/types`                                                                                                                                | 10     | 4    | `Message` / `Event` / `Person` (shared domain objects) |
+| `@dxos/log`                                                                                                                                  | 12     | 5    | logging                                                |
+| `@dxos/compute-runtime`                                                                                                                      | 6      | 2    | `withAuthorization`, runtime                           |
+| `@dxos/extractor(-lib)`                                                                                                                      | 9      | 5    | body/entity extraction in mappers                      |
+| `@dxos/pipeline(-email)`                                                                                                                     | 4      | 2    | email parsing stages                                   |
+| `@dxos/plugin-connector`                                                                                                                     | 2      | 2    | `Connector` contract, `isCursorForTarget`              |
+| `@dxos/echo-client`, `@dxos/effect`, `@dxos/schema`, `@dxos/app-toolkit`                                                                     | ✓      | ✓    | client, effect helpers, schema, progress constants     |
+| `@dxos/markdown`, `@dxos/protocols`, `@dxos/edge-compute`, `@dxos/client`, `@dxos/config`, `@dxos/context`, `@dxos/async`, `@dxos/invariant` | ✓      | —    | google-only (OAuth, config, edge, markdown bodies)     |
+
+Plus `@dxos/app-framework` for each plugin's `Connector` capability module
+(`Capability.makeModule`, today in the shared `capabilities/connector.ts`).
+
+**On `plugin-inbox`** (the seam that repoints at the domain split):
+
+| Depends on                                                                                               | For                                                                                                                  | Fate at domain split                                                            |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `#types` (`Mailbox`, `Calendar`, `SystemTags`, `InboxOperation` defs, `SyncOptions`, `SyncStreamConfig`) | materialize targets + the op definitions the connector references (`MaterializeGmailTarget`, `GoogleMailSync`, …)    | repoints to plugin-mail / plugin-calendar / plugin-contacts                     |
+| `operations/mail/mail-sync.ts` (`MailSyncProvider`, `MailSyncError`)                                     | the provider-agnostic sync harness each handler supplies a layer to                                                  | stays with **mail** (or promote the contract to `plugin-connector`, §7 open Q3) |
+| `constants.ts`                                                                                           | connector ids + FK sources (`GOOGLE_INTEGRATION_SOURCE`, `GMAIL_SOURCE`, `JMAP_MESSAGE_SOURCE`, `JMAP_DEFAULT_HOST`) | keep in plugin-inbox for now (deferred §3.1 inversion)                          |
+| `errors.ts`                                                                                              | shared `MailSyncError` (provider-specific `GoogleApiError`/`JmapApiError` move with the provider)                    | split shared vs provider-specific                                               |
+| `testing/*` (`gmail-fixtures`, `jmap-fixtures`, `sync-fixture`, `otel-harness`)                          | test fixtures                                                                                                        | move with the provider or a shared `#testing`                                   |
+
+### Decisions this forces
+
+- **Operation definitions vs handlers.** The connector references op _definitions_
+  (`InboxOperation.GoogleMailSync`, …) that currently live in `#types`. Cleanest:
+  move each provider's op definitions **with** its handlers into the provider plugin,
+  leaving only the provider-agnostic `MailSyncProvider` contract + target schemas in
+  plugin-inbox. Simpler first cut: leave the defs in `#types` and depend upward.
+- **Connector-id inversion deferred** (§3.1): providers import ids from plugin-inbox
+  `constants.ts` — an upstream dep in the right direction — so the schema-names-its-
+  providers cleanup is not a blocker for this step.
+- **`MailSyncProvider` home** (§7 open Q3): if calendar/contacts sync should share
+  the harness, promote the contract to `@dxos/plugin-connector` alongside the §3.7
+  sync-infra hoist; otherwise it stays mail-side and calendar defines its own.
