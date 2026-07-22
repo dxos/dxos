@@ -8,8 +8,8 @@ PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 [#12297](https://github.com/dxos/dxos/pull/12297) (revised plan — gate G1 in place instead of
 deleting it, remove all committed conversation fixtures, switch the gating mechanism to native
 `describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED);
-[#12305](https://github.com/dxos/dxos/pull/12305) (draft, watching Check — leaner package-level
-`AiRequest.test.ts` D-tier tests + `operationServiceLayerNoop`).
+[#12305](https://github.com/dxos/dxos/pull/12305) (ready for review, CodeRabbit + Check green,
+landing next — leaner package-level `AiRequest.test.ts` D-tier tests + `operationServiceLayerNoop`).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
