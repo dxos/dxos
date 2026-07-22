@@ -4,6 +4,7 @@
 
 export * from './ConversationStack';
 export * from './EditMessage';
+export * from './Editor';
 export * from './Event';
 export * from './EventStack';
 export * from './Header';
