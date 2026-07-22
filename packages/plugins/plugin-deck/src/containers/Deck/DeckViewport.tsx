@@ -426,6 +426,8 @@ const TilingSplitter = ({
 
   return (
     <div className='relative flex-none w-(--main-spacing)'>
+      {/* Persistent hairline divider between the tiled planks, matching the solo+companion split. */}
+      <div className='absolute inset-y-0 start-1/2 w-px -translate-x-1/2 bg-subdued-separator' />
       <button
         aria-label='Resize'
         onPointerDown={handlePointerDown}
