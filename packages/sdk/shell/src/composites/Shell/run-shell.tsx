@@ -64,9 +64,13 @@ const Fallback = ({ onClose }: { onClose?: () => void }) => {
       <Dialog.Overlay>
         <Dialog.Content>
           <Dialog.Title>{t('shell-fallback.title')}</Dialog.Title>
-          <Dialog.Close asChild onClick={() => onClose?.()}>
-            <Button variant='primary'>{t('close.label')}</Button>
-          </Dialog.Close>
+          <Dialog.ActionBar>
+            <Dialog.Close asChild onClick={() => onClose?.()}>
+              <Button variant='primary' classNames='w-full'>
+                {t('close.label')}
+              </Button>
+            </Dialog.Close>
+          </Dialog.ActionBar>
         </Dialog.Content>
       </Dialog.Overlay>
     </Dialog.Root>

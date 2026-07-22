@@ -360,7 +360,7 @@ export const MailboxArticle = ({
   });
 
   return (
-    <Panel.Root>
+    <Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
           <Panel.Toolbar asChild>

@@ -56,70 +56,81 @@ export const useMessageActions = ({
                 {
                   label: ['message-toolbar-reply-all.menu', { ns: meta.profile.key }],
                   icon: 'ph--arrow-bend-double-up-left--regular',
+                  testId: 'inbox.message.replyAll',
                 },
                 onReplyAll,
               )),
         )
         // Overflow menu grouped into sections (reply · extract · open/plugin · delete) separated by
         // dividers. Each divider is guarded on its section having content so no stray dividers appear.
-        .menu('more', (builder) => {
-          // Reply / Forward / AI reply.
-          if (onReply) {
-            builder.action(
-              'reply',
-              {
-                label: ['message-toolbar-reply.menu', { ns: meta.profile.key }],
-                icon: 'ph--arrow-bend-up-left--regular',
-              },
-              onReply,
-            );
-          }
-          if (onForward) {
-            builder.action(
-              'forward',
-              {
-                label: ['message-toolbar-forward.menu', { ns: meta.profile.key }],
-                icon: 'ph--arrow-bend-up-right--regular',
-              },
-              onForward,
-            );
-          }
-          if (onAiReply) {
-            builder.action(
-              'ai-reply',
-              { label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }], icon: 'ph--sparkle--regular' },
-              onAiReply,
-            );
-          }
-
-          // Extraction actions (trips, people, …) contributed for this message.
-          if (extractActions.length > 0) {
-            builder.separator('line');
-            for (const item of extractActions) {
+        .menu(
+          'more',
+          (builder) => {
+            // Reply / Forward / AI reply.
+            if (onReply) {
               builder.action(
-                `extract-${item.id}`,
+                'reply',
                 {
-                  label: item.label,
-                  icon: 'ph--magic-wand--regular',
+                  label: ['message-toolbar-reply.menu', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-bend-up-left--regular',
+                  testId: 'inbox.message.reply',
                 },
-                item.onSelect,
+                onReply,
               );
             }
-          }
+            if (onForward) {
+              builder.action(
+                'forward',
+                {
+                  label: ['message-toolbar-forward.menu', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-bend-up-right--regular',
+                  testId: 'inbox.message.forward',
+                },
+                onForward,
+              );
+            }
+            if (onAiReply) {
+              builder.action(
+                'ai-reply',
+                {
+                  label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }],
+                  icon: 'ph--sparkle--regular',
+                  testId: 'inbox.message.aiReply',
+                },
+                onAiReply,
+              );
+            }
 
-          // Open, plus actions contributed by other plugins.
-          if (onOpen) {
-            builder.separator('line');
-            openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen })(builder);
-          }
-          builder.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
+            // Extraction actions (trips, people, …) contributed for this message.
+            if (extractActions.length > 0) {
+              builder.separator('line');
+              for (const item of extractActions) {
+                builder.action(
+                  `extract-${item.id}`,
+                  {
+                    label: item.label,
+                    icon: 'ph--magic-wand--regular',
+                  },
+                  item.onSelect,
+                );
+              }
+            }
 
-          // Destructive.
-          if (onDelete) {
-            builder.separator('line');
-            deleteAction(builder, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
-          }
-        })
+            // Open, plus actions contributed by other plugins.
+            if (onOpen) {
+              builder.separator('line');
+              openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen })(builder);
+            }
+            builder.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
+
+            // Destructive.
+            if (onDelete) {
+              builder.separator('line');
+              deleteAction(builder, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
+            }
+          },
+          'inbox.message.more',
+        )
         .build(),
     [graph, nodeId, extractActions, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete],
   );

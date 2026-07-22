@@ -28,6 +28,17 @@ projects:
     prs: [12174]
     resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
 
+  - name: inbox-test-suite
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-13
+    summary: Layered test suite enforcing plugin-inbox PLUGIN.mdl (unit→storybook→harness→agent-e2e→browser-e2e→bench→live); current branch delivers Tier 4 Playwright browser-e2e (task #7).
+    tasks: packages/plugins/plugin-inbox/TASKS.md
+    design: packages/plugins/plugin-inbox/PLUGIN.mdl
+    prs: [12197]
+    resume: 'PR #12197: task #7 (JMAP e2e) done, 3/3 green — survived two upstream refactors (connector-auth schema-annotation rewrite; vite+rolldown build + conversation-mosaic-toolbar redesign) and a code-review fix round (PLUGIN.mdl draftEmailAndOpen/jmapSync accuracy, http-mock Jmap.MethodCall/Filter reuse + validated parsing). Latest merge (origin/main, 29 commits) needed zero fixes. Committed but not pushed: http-mock export-path fix, reply e2e simplified to Reply All, latest merge. Next: push, then Gmail suite (#7e, DX_E2E-gated connection bridge + provider adapter) or #6/#8-#11 per user priority.'
+
   - name: composer-search
     status: active
     user: burdon

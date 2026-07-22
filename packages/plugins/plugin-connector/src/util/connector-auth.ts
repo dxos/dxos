@@ -84,6 +84,7 @@ export const connectorAuthActions = ({
       // The graph action label schema has no interpolation slots (unlike `t()`), so use a plain string.
       label: `Connect ${connector.label ?? connector.id}`,
       icon: CONNECT_ICON,
+      testId: `connectorPlugin.connect.${connector.id}`,
       data: () =>
         Effect.gen(function* () {
           const coordinator = yield* Capability.get(ConnectorCoordinator);
@@ -125,6 +126,7 @@ export const connectorAuthActions = ({
       icon: CONNECT_ICON,
       // Show the "Connect" label next to the icon rather than icon-only.
       iconOnly: false,
+      testId: 'connectorPlugin.connect',
       actions: [
         ...connections.map(reuseAction),
         ...(connections.length > 0 && offered.length > 0

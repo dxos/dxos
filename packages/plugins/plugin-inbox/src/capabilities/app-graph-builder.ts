@@ -589,6 +589,7 @@ export default Capability.makeModule(
                   // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  testId: 'inbox.mailbox.sync',
                 },
               },
             ];
