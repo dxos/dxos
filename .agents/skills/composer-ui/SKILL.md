@@ -235,8 +235,8 @@ persistence lives in `manager.set`. To hand ViewState down as one atom (e.g. com
 field), use a writable derived atom whose write calls `manager.set` (see `MessageArticle`'s
 `optionsAtom`).
 
-Factor each state concern into a small **file-local hook** (`useMessageExpansion`,
-`useThreadViewActions`) that returns `{ value, on*Change }`, so the container body reads as a sequence
+Consider factoring each state concern into a small **file-local hook** (e.g., `useMessageExpansion`,
+`useThreadViewActions`) so the container body reads as a sequence
 of named concerns instead of an inline wall.
 
 ## Forms
