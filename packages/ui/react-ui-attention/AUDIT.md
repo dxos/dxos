@@ -110,24 +110,24 @@ same aspect through the capability.
 
 These are **different mechanisms** and must not be conflated.
 
-|                | **ViewState**                                        | **Settings store**                                               |
-| -------------- | ---------------------------------------------------- | ---------------------------------------------------------------- |
-| Purpose        | per-context, durable **UI state**                    | plugin-wide **configuration / user preferences**                 |
-| Keyed by       | `(aspect, contextId)` — the object/surface           | plugin id (`meta.profile.key`)                                   |
-| Granularity    | one value per context (per document, tab, selection) | one settings blob per plugin                                     |
-| Built with     | `defineViewState` + `ViewStateManager`               | [`createKvsStore`](../../../../../common/effect/src/atom-kvs.ts) |
-| Accessed via   | Pattern A hooks / Pattern B capability               | `useAtomCapabilityState(XCapabilities.Settings)`                 |
-| Surfaced in UI | no                                                   | yes — `AppCapabilities.Settings` renders it in Settings          |
-| Example        | companion tab, editor caret, view mode               | `loadRemoteImages`, `conversations`                              |
+|                | **ViewState**                                                     | **Settings store**                                               |
+| -------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Purpose        | per-context **UI state** (reload durability is backend-dependent) | plugin-wide **configuration / user preferences**                 |
+| Keyed by       | `(aspect, contextId)` — the object/surface                        | plugin id (`meta.profile.key`)                                   |
+| Granularity    | one value per context (per document, tab, selection)              | one settings blob per plugin                                     |
+| Built with     | `defineViewState` + `ViewStateManager`                            | [`createKvsStore`](../../../../../common/effect/src/atom-kvs.ts) |
+| Accessed via   | Pattern A hooks / Pattern B capability                            | `useAtomCapabilityState(XCapabilities.Settings)`                 |
+| Surfaced in UI | no                                                                | yes — `AppCapabilities.Settings` renders it in Settings          |
+| Example        | companion tab, editor caret, view mode                            | `loadRemoteImages`, `conversations`                              |
 
 **Decision rule (sharpened):**
 
 - **Settings store** — a **user preference, set infrequently**, that applies globally and is
   surfaced in the Settings UI (e.g. `loadRemoteImages`, `conversations`).
-- **ViewState** — the **current, sticky UI state that must persist across navigation** (and reloads):
-  which tab/variant is selected, scroll/caret position, a split ratio, a selection set, the view mode
-  of the surface you're on. Changes constantly as the user works; keyed by context, not shown in
-  Settings.
+- **ViewState** — the **current, sticky UI state that must persist across navigation** (and, for
+  `backend: 'local'`, across reloads; `memory` aspects are session-only): which tab/variant is
+  selected, scroll/caret position, a split ratio, a selection set, the view mode of the surface you're
+  on. Changes constantly as the user works; keyed by context, not shown in Settings.
 
 The tell: if the user _configures_ it once and forgets it → Settings; if it _tracks what they are
 currently doing_ and should still be there when they come back → ViewState.

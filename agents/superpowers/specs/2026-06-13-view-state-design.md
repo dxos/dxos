@@ -190,9 +190,9 @@ const editorViewStateAspect = defineViewState({
 Everything lives in `react-ui-attention` (selection/attention already co-locate here). New
 files (suggested):
 
-- `src/view-state.ts` — `defineViewState`, `AspectDef`, `ViewStateManager`, backend
-  implementations (or split backends into `src/view-state/`).
-- `src/selection.ts` — reduced to the `selectionAspect` + helpers, re-using `Selection`.
+- `src/view-state/ViewState.ts` — `defineViewState`, `Aspect`, `ViewStateManager`, with backend
+  implementations in `src/view-state/backends.ts`.
+- `src/view-state/Selection.ts` — reduced to the `selectionAspect` + helpers, re-using `Selection`.
 - `src/components/ViewStateProvider/` — replaces `SelectionProvider`.
 
 The package's UI-free `./types` entry point continues to re-export the non-DOM pieces

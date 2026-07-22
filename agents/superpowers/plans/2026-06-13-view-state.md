@@ -488,7 +488,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ## File structure (Phase 2)
 
-- Modify `packages/ui/react-ui-attention/src/selection.ts` — keep `SelectionMode`/`Selection`/`SelectionResult`/`Selection`/`defaultSelection`; add `selectionAspect` + pure helpers (`resolveSelection`, `toggleSelection`); reimplement `getSelectionSet` against `ViewStateManager`; **remove the `SelectionManager` class**.
+- Modify `packages/ui/react-ui-attention/src/view-state/Selection.ts` — keep `SelectionMode`/`Selection`/`SelectionResult`/`defaultSelection`; add `selectionAspect` + pure helpers (`resolveSelection`, `toggleSelection`); reimplement `getSelectionSet` against `ViewStateManager`; **remove the `SelectionManager` class**.
 - Rename dir `components/SelectionProvider/` → `components/ViewStateProvider/`; file `ViewStateProvider.tsx` exporting `ViewStateProvider`, `useViewStateManager`, `useViewState`, `useViewStateActions`, `useSelection`, `useSelectionActions`.
 - Update `components/index.ts`, `src/index.ts`, `src/types/index.ts`.
 - Migrate all consumers (Tasks 5–8).
@@ -550,7 +550,7 @@ Expected: FAIL — `selectionAspect` / `resolveSelection` / `toggleSelection` no
 
 - [ ] **Step 3: Rewrite `selection.ts`**
 
-Keep the existing `SelectionMode`, `Selection`, `Selection`, `defaultSelection`, `SelectionResult` (lines 11–52 of the current file) unchanged. Replace `getSelectionSet` and the entire `SelectionManager` class (current lines 54–228) with:
+Keep the existing `SelectionMode`, `Selection`, `defaultSelection`, `SelectionResult` (top of `view-state/Selection.ts`) unchanged. Replace `getSelectionSet` and the entire `SelectionManager` class with:
 
 ```ts
 import { defineViewState } from './view-state';
