@@ -479,6 +479,16 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
+   * Cancels the current run of a cron trigger on the EDGE dispatcher — its in-flight execution and
+   * `runAgain` continuation chain. The trigger stays enabled, so its schedule keeps firing.
+   */
+  public async cancelTriggerRun(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/cancel`, this.baseUrl), {
+      method: 'POST',
+    });
+  }
+
+  /**
    * Returns the full list of triggers registered on a space's EDGE dispatcher, with per-trigger
    * runtime status. Polled by the remote trigger monitor to surface edge trigger state.
    *

@@ -3,6 +3,7 @@
 //
 
 import { Trace } from '@dxos/compute';
+import { EID } from '@dxos/keys';
 
 import type * as AppCapabilities from './AppCapabilities';
 
@@ -18,14 +19,39 @@ export const PROGRESS_STATUS_CANCELLED = 'Cancelled';
 type StatusPayload = Trace.PayloadType<typeof Trace.StatusUpdate>;
 type ProgressMonitor = ReturnType<AppCapabilities.ProgressRegistry['register']>;
 
+/**
+ * Identifies the process/trigger that emits a monitor's progress, carried from the trace message's
+ * {@link Trace.Meta} so a cancel can be routed to the right runtime — a local process (`pid`) or an
+ * edge trigger (`trigger` + `space`, when `runtimeName` is an edge runtime).
+ */
+export type CancelTarget = {
+  pid?: string;
+  space?: string;
+  runtimeName?: Trace.RuntimeName;
+  trigger?: Trace.Meta['trigger'];
+};
+
+/**
+ * The trigger's object id from a {@link CancelTarget}, parsed from the trigger ref's `echo:` URI — the
+ * key an edge trigger cancel is addressed by. Undefined when there is no trigger or it is not an echo
+ * reference (e.g. a type ref).
+ */
+export const resolveTriggerId = (target: CancelTarget): string | undefined => {
+  if (!target.trigger) {
+    return undefined;
+  }
+  const eid = EID.tryParse(target.trigger.uri);
+  return eid ? EID.getEntityId(eid) : undefined;
+};
+
 type MonitorEntry = {
   handle: ProgressMonitor;
-  pid?: string;
+  target: CancelTarget;
 };
 
 export type ProgressTraceSinkOptions = {
-  /** Terminates the process that emitted progress for a keyed monitor (wired from the process manager). */
-  terminateProcess?: (pid: string) => void;
+  /** Cancels the process/trigger that emitted progress for a keyed monitor (wired from the process manager). */
+  cancelProcess?: (target: CancelTarget) => void;
 };
 
 /**
@@ -69,24 +95,31 @@ export const createProgressTraceSink = (
     dropMonitor(key);
   };
 
-  const makeOnCancel = (key: string, pid: string) => () => {
-    options.terminateProcess?.(pid);
+  const makeOnCancel = (key: string, target: CancelTarget) => () => {
+    options.cancelProcess?.(target);
     cancelMonitor(key);
   };
 
-  const monitorFor = (registry: AppCapabilities.ProgressRegistry, key: string, label?: string, pid?: string) => {
+  const monitorFor = (
+    registry: AppCapabilities.ProgressRegistry,
+    key: string,
+    label: string | undefined,
+    target: CancelTarget,
+  ) => {
     const existing = monitors.get(key);
-    if (existing && existing.pid === pid) {
+    if (existing && existing.target.pid === target.pid) {
       return existing.handle;
     }
 
-    const onCancel = pid && options.terminateProcess ? makeOnCancel(key, pid) : undefined;
+    // Cancellable when a handler is wired and there is something to address — a local process (pid) or
+    // an edge trigger (trigger); the handler routes local vs edge by runtime.
+    const onCancel = options.cancelProcess && (target.pid || target.trigger) ? makeOnCancel(key, target) : undefined;
     const handle = registry.register(key, { label, onCancel });
-    monitors.set(key, { handle, pid });
+    monitors.set(key, { handle, target });
     return handle;
   };
 
-  const applyStatusUpdate = (data: StatusPayload, pid?: string) => {
+  const applyStatusUpdate = (data: StatusPayload, target: CancelTarget) => {
     const key = data.progress?.key;
     if (!key) {
       return;
@@ -97,7 +130,7 @@ export const createProgressTraceSink = (
       return;
     }
 
-    const handle = monitorFor(registry, key, data.message, pid);
+    const handle = monitorFor(registry, key, data.message, target);
 
     if (data.message === PROGRESS_STATUS_FAILED) {
       handle.fail(PROGRESS_STATUS_FAILED);
@@ -131,10 +164,11 @@ export const createProgressTraceSink = (
 
   return {
     write: (message) => {
-      const pid = message.meta.pid;
+      const { pid, space, runtimeName, trigger } = message.meta;
+      const target: CancelTarget = { pid, space, runtimeName, trigger };
       for (const event of Trace.flatten(message)) {
         if (Trace.isOfType(Trace.StatusUpdate, event)) {
-          applyStatusUpdate(event.data, pid);
+          applyStatusUpdate(event.data, target);
         }
       }
     },

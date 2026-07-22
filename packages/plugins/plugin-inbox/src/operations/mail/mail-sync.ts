@@ -5,11 +5,12 @@
 import { format } from 'date-fns';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
-import { Operation, Trace } from '@dxos/compute';
+import { Cancellation, Operation, Trace } from '@dxos/compute';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { Cursor } from '@dxos/link';
@@ -295,9 +296,15 @@ export const runMailSync = (
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // Cooperative cancellation: the progress trace sink wires the meter's cancel control to
-    // `ProcessManager.terminate()`; the pipeline also observes this signal for in-process abort.
-    const controller = new AbortController();
+    // Cooperative cancellation: an optional Cancellation service (provided by the runtime able to
+    // cancel an in-flight run — e.g. EDGE, driven by a client cancel) exposes the AbortSignal the
+    // pipeline observes. Absent locally, where cancellation arrives as fiber interruption (also
+    // caught by `Pipeline.abortWith`), so fall back to a signal that never fires.
+    const cancellation = yield* Effect.serviceOption(Cancellation.Cancellation);
+    const signal = Option.match(cancellation, {
+      onNone: () => new AbortController().signal,
+      onSome: (service) => service.signal,
+    });
 
     // Live sync status via trace `status.update` events. The progress trace sink projects these into
     // the runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
@@ -489,7 +496,7 @@ export const runMailSync = (
         }),
       ),
       Pipeline.abortWith(
-        controller.signal,
+        signal,
         // TODO(wittjosiah): Could this note+remove pairing be upstreamed into abortWith itself?
         Effect.sync(() => {
           log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
@@ -528,7 +535,7 @@ export const runMailSync = (
       senders: senders.size,
       attachments: attachmentCount,
       extent,
-      aborted: controller.signal.aborted,
+      aborted: signal.aborted,
     });
 
     // Final stats publish (disabled — see the TODO above) recorded the committed `newMessages` count and
@@ -538,7 +545,7 @@ export const runMailSync = (
     // publishStats();
 
     // On cancel, only the status event differs; the completed path also has cursor post-run work.
-    if (controller.signal.aborted) {
+    if (signal.aborted) {
       reportStatus({ message: PROGRESS_STATUS_CANCELLED });
     } else {
       reportStatus({ message: PROGRESS_STATUS_COMPLETE });
@@ -583,7 +590,7 @@ export const runMailSync = (
     log('sync complete', {
       provider: provider.name,
       newMessages: stats.newMessages,
-      cancelled: controller.signal.aborted,
+      cancelled: signal.aborted,
       taken,
     });
     return { newMessages: stats.newMessages };
