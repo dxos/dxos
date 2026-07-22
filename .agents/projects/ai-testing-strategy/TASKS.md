@@ -250,6 +250,25 @@ as primary coverage.
 - [ ] More scorers: schema-validity; datasets for comprehension / tool-selection.
 - [ ] Pin model versions; pass-rate thresholds; scheduled (nightly/on-demand) run distinct from PR
       CI — **explicitly deferred for now, per direct instruction.**
+- [ ] **Stop naming the exact skill(s) to enable in eval prompts — write realistic user prompts and
+      let the agent self-discover, for every eval, not just the two already switched.** An
+      experiment this session (uncommitted edits, live-run, then reverted/kept per direct review)
+      removed the "Enable the X skill using the skill manager" instruction from all 4 evals that
+      had one, to see whether the agent could still find and enable the right skill on its own:
+  - `planning.eval.ts` and `markdown.eval.ts` scored **100%** with no explicit skill mention — kept
+    permanently.
+  - `crm-mailbox.eval.ts` (75%) and `web-search.eval.ts` (50%) were **reverted** — not because the
+    agent failed to self-discover (in both cases it correctly found and enabled every skill it
+    needed, unprompted), but because the point losses were **scorer artifacts** unrelated to
+    discovery: `crm-mailbox`'s `employerRoleCorrect` does an exact string match on `role ===
+'Founding Engineer'`, and the agent wrote `'Founding Engineer & Product Manager'` (more
+    complete, not wrong); `web-search`'s `onlyWebSearchUsed` assumes zero discovery overhead, but
+    self-discovery costs real extra tool calls (list/enable-skills) the check never accounted
+    for. **Before re-attempting these two:** loosen `employerRoleCorrect` to a substring/contains
+    check instead of exact equality, and change `onlyWebSearchUsed` to allow skill-management
+    tool calls (`enable-skills`, `query-skills`, etc.) alongside `web-search`, only failing if a
+    _different task_ tool was used. Once those scorers are fixed, drop the explicit skill
+    mentions from both prompts the same way and re-verify live.
 
 ## Phase 3 — finish migration & reduce machinery
 

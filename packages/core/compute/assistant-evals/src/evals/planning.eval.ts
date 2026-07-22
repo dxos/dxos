@@ -40,8 +40,6 @@ const HAIKU_JUDGE_RUBRIC = trim`
 const task = createEvalRunner({
   sessionChat: true,
   instructions: trim`
-    Enable the planning skill (key: org.dxos.skill.planning) using the skill manager.
-
     Create exactly 3 plan tasks with update-tasks for writing a short haiku (3 lines) on these topics:
     1. spring rain
     2. ocean waves

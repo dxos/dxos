@@ -43,7 +43,6 @@ evalite('Markdown — draft a document', {
 const appendTask = createEvalRunner({
   instructions: trim`
     The database starts empty.
-    Enable the markdown skill (key: org.dxos.skill.markdown) using the skill manager.
     Create a new markdown document named "Empty Notes" with empty content (no body text).
     Open the document and confirm its content is empty.
 
