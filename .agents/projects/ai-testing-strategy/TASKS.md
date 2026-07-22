@@ -170,9 +170,9 @@ as primary coverage.
       `skills` to `[]` instead of `getDefaultSkills()` (harness.ts's `agentTest()` convention),
       so the agent had no database tools and failed with "No tools available to complete the
       task" — fixed by extracting `getDefaultSkills` into a shared `src/skills.ts`. With a real
-      `DX_ANTHROPIC_API_KEY` (`op run --account braneframe --env-file=.config/.env.1password --
-  npx evalite run src/evals/database.eval.ts`), `database.eval.ts` now scores **100%**.
-      PR #12307 is functionally verified end-to-end; still draft pending a final ready-for-review
+      `DX_ANTHROPIC_API_KEY` (pulled from the CI Vault via 1Password's `op run`),
+      `database.eval.ts` now scores **100%**. PR #12307 is functionally verified end-to-end,
+      still draft pending a final ready-for-review
       pass.
 - [ ] Port `web-search.test.ts` next as the first tool-match scorer case (checks only the
       `web-search` tool fired), reusing the same `dbQuery`-style hook pattern generalized to
