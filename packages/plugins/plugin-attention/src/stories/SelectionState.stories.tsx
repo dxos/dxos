@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { ViewState, useSelection, useSelectionActions, useManager } from '@dxos/react-ui-attention';
+import { ViewState, useManager, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { OrderedList } from '@dxos/react-ui-list';

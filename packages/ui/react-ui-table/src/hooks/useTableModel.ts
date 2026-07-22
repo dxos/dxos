@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { useSelection, useSelectionActions, useManagerOptional } from '@dxos/react-ui-attention';
+import { useManagerOptional, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
 
 import {
