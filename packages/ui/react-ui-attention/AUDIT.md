@@ -199,14 +199,17 @@ The composer-ui skill's **State management** section references both.
 
 ### Every ViewState aspect (`define`) — all genuinely per-context
 
-| Aspect                   | Package              | key                       | backend  | state                     |
-| ------------------------ | -------------------- | ------------------------- | -------- | ------------------------- |
-| `aspect`                 | `react-ui-attention` | `selection`               | `memory` | current selection set     |
-| `companionVariantAspect` | `plugin-deck`        | `deck-companion-variant`  | `local`  | selected companion tab    |
-| `companionSplitAspect`   | `plugin-deck`        | `deck-companion-split`    | `local`  | companion split ratio     |
-| `editorViewStateAspect`  | `plugin-markdown`    | `editor`                  | `local`  | per-document scroll/caret |
-| `tableSortAspect`        | `react-ui-table`     | `table-sort`              | `local`  | column sort               |
-| `messageViewModeAspect`  | `plugin-inbox`       | `inbox-message-view-mode` | `local`  | message body view mode    |
+| Aspect                  | Package              | key                       | backend  | state                                |
+| ----------------------- | -------------------- | ------------------------- | -------- | ------------------------------------ |
+| `aspect`                | `react-ui-attention` | `selection`               | `memory` | current selection set                |
+| `companionAspect`       | `plugin-deck`        | `deck-companion`          | `local`  | selected companion tab + split ratio |
+| `editorViewStateAspect` | `plugin-markdown`    | `editor`                  | `local`  | per-document scroll/caret            |
+| `editorViewModeAspect`  | `plugin-markdown`    | `editor-view-mode`        | `local`  | per-document view mode               |
+| `tableSortAspect`       | `react-ui-table`     | `table-sort`              | `local`  | column sort                          |
+| `messageViewModeAspect` | `plugin-inbox`       | `inbox-message-view-mode` | `local`  | message body view mode               |
+| `commentsViewAspect`    | `plugin-comments`    | `comments-view`           | `memory` | per-subject show-resolved-threads    |
+| `viewAspect`            | `plugin-versioning`  | `versioning-view`         | `memory` | per-object selection / view / mode   |
+| `navTreeOpenAspect`     | `plugin-navtree`     | `navtree-open`            | `local`  | per-path tree expansion              |
 
 **Access — consistent:** Pattern A (hooks) in `plugin-deck`, `plugin-map`, `plugin-trip`,
 `plugin-commerce`, `plugin-space`, `plugin-ibkr`, `plugin-video`, `plugin-magazine`, `plugin-inbox`
@@ -238,9 +241,10 @@ is the common case of this; the fuller rule is context-scope first.
   dead `SetViewMode` operation were removed — the operation would have forced the headless `./plugin`
   entry to pull `@dxos/react-ui` (a ViewState write from a workerd-safe operation needs a headless
   capability entry, which `@dxos/plugin-attention` does not yet expose).
-- ℹ️ **`plugin-deck` has two companion aspects** (`deck-companion-variant`, `deck-companion-split`) under
-  one concern; consolidation candidate (a single `{ variant, splitSize }` aspect — one ViewState object
-  per aspect).
+- ✅ **`plugin-deck` companion aspects — consolidated.** `deck-companion-variant` and
+  `deck-companion-split` are now one `companionAspect` (`{ variant?, horizontal?, vertical? }`, `local`,
+  keyed by the shared companion context). Writers merge (`update`) so a variant change preserves the
+  split; the assistant provisioner projects variant-only so a resize no longer re-fires provisioning.
 
 ## `state.ts` sweep (2026-07-22)
 
@@ -249,19 +253,19 @@ Every `capabilities/state.ts` was classified. The four plugins originally flagge
 guesses — the genuine per-context `Record<contextId, …>` view state lives in **comments**,
 **versioning**, and **navtree** instead.
 
-| Plugin                             | Store shape                                                                 | Per-context view state?                             | Recommendation                                                                                      |
-| ---------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `plugin-comments`                  | `ViewStore = Record<SubjectId, ViewState>` (its own `ViewState` capability) | **yes** — per-subject (`showResolvedThreads`)       | **migrate** → a `memory` (or `local`) aspect keyed by subject id; drop the bespoke capability       |
-| `plugin-versioning`                | `{ selection, view, mode }`, each `Record<objectId, …>`, in-memory          | **yes** — per-object, self-described per-session    | **migrate** → three `memory` aspects (or one `{ selection, view, mode }` aspect) keyed by object id |
-| `plugin-navtree`                   | per-path `{ open }` via hand-rolled `localStorage` + atom family            | **yes** — per-path, already device-local            | **migrate** → a `local` aspect keyed by path (`current` stays ephemeral)                            |
-| `plugin-assistant`                 | `currentChat` / `pendingPrompts`, each `Record<key, string>` (KVS)          | partial — id-keyed, but values are chat/prompt refs | leave for now (serialization/hydration TODO already noted in the store)                             |
-| `plugin-comments`                  | `CommentState.toolbar: Record<id, boolean>`                                 | borderline — per-object toolbar toggle              | fold into the comments aspect migration if done                                                     |
-| `plugin-space`                     | `spaceNames: Record<spaceId, string>`                                       | no — a name/label data cache, not viewing state     | keep in KVS                                                                                         |
-| `plugin-deck`                      | `decks` / `previousMode` keyed by deck id                                   | no — workspace/app-global layout                    | keep in KVS (already classified app-global)                                                         |
-| `plugin-map`                       | `{ type }`                                                                  | no — config                                         | keep                                                                                                |
-| `plugin-observability`             | `{ group }`                                                                 | no — telemetry config                               | keep                                                                                                |
-| `plugin-meeting`                   | `MeetingState` (mutable runtime store)                                      | no — ephemeral active-meeting runtime               | keep                                                                                                |
-| `plugin-sheet` / `plugin-markdown` | grid/editor-view `Map` registries                                           | no — runtime instance handles, not persisted state  | keep                                                                                                |
+| Plugin                             | Store shape                                                                 | Per-context view state?                             | Recommendation                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `plugin-comments`                  | `ViewStore = Record<SubjectId, ViewState>` (its own `ViewState` capability) | **yes** — per-subject (`showResolvedThreads`)       | ✅ **migrated** → `commentsViewAspect` (`memory`, keyed by subject); bespoke capability dropped |
+| `plugin-versioning`                | `{ selection, view, mode }`, each `Record<objectId, …>`, in-memory          | **yes** — per-object, self-described per-session    | ✅ **migrated** → `viewAspect` (`memory`, one `{ selection, view, mode }` per object)           |
+| `plugin-navtree`                   | per-path `{ open }` via hand-rolled `localStorage` + atom family            | **yes** — per-path, already device-local            | ✅ **migrated** → `navTreeOpenAspect` (`local`, keyed by path; `current` stays ephemeral)       |
+| `plugin-assistant`                 | `currentChat` / `pendingPrompts`, each `Record<key, string>` (KVS)          | partial — id-keyed, but values are chat/prompt refs | leave for now (serialization/hydration TODO already noted in the store)                         |
+| `plugin-comments`                  | `CommentState.toolbar: Record<id, boolean>`                                 | borderline — per-object toolbar toggle              | fold into the comments aspect migration if done                                                 |
+| `plugin-space`                     | `spaceNames: Record<spaceId, string>`                                       | no — a name/label data cache, not viewing state     | keep in KVS                                                                                     |
+| `plugin-deck`                      | `decks` / `previousMode` keyed by deck id                                   | no — workspace/app-global layout                    | keep in KVS (already classified app-global)                                                     |
+| `plugin-map`                       | `{ type }`                                                                  | no — config                                         | keep                                                                                            |
+| `plugin-observability`             | `{ group }`                                                                 | no — telemetry config                               | keep                                                                                            |
+| `plugin-meeting`                   | `MeetingState` (mutable runtime store)                                      | no — ephemeral active-meeting runtime               | keep                                                                                            |
+| `plugin-sheet` / `plugin-markdown` | grid/editor-view `Map` registries                                           | no — runtime instance handles, not persisted state  | keep                                                                                            |
 
 **Tell used:** a field is a ViewState candidate when it is a `Record` keyed by an object/surface id
 holding _how that thing is being viewed_ (selection, mode, expansion, toggle). It is **not** when the
@@ -277,6 +281,9 @@ runtime handle (editor/grid instances).
 3. ✅ Add the `@idiom` markers (`viewState` on `define`, `kvsStore` on `createKvsStore`).
 4. ✅ Migrate `plugin-markdown`'s per-document `viewMode` Record to a ViewState aspect.
 5. ✅ Sweep every `state.ts` store for per-context `Record` fields (table above).
-6. Migrate the three confirmed candidates — `plugin-comments` (`ViewStore`), `plugin-versioning`
-   (`selection`/`view`/`mode`), `plugin-navtree` (per-path `open`) — each its own change with tests.
-7. Consolidate deck's two companion aspects into one.
+6. ✅ Migrate the three confirmed candidates — `plugin-comments` (`commentsViewAspect`),
+   `plugin-versioning` (`viewAspect`), `plugin-navtree` (`navTreeOpenAspect`) — each its own change
+   with tests.
+7. ✅ Consolidate deck's two companion aspects into one (`companionAspect`).
+8. Optional follow-ups: fold `plugin-comments` `toolbar` toggles into `commentsViewAspect`;
+   revisit `plugin-assistant` `currentChat`/`pendingPrompts` once their serialization TODO is resolved.
