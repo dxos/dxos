@@ -24,7 +24,7 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { VersioningCapabilities } from '@dxos/plugin-versioning';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
@@ -34,12 +34,11 @@ import { hexToHue } from '@dxos/util';
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
-import { CommentCapabilities, type ViewState } from '#types';
+import { CommentCapabilities } from '#types';
 
+import { commentsViewAspect } from '../../capabilities/comments-view-state';
 import { type SuggestionGroup, useStatus } from '../../hooks';
 import { getMessageMetadata } from '../../util';
-
-const initialViewState: ViewState = { showResolvedThreads: false };
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -154,21 +153,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const stateAtom = useCapability(CommentCapabilities.State);
-  const viewStoreAtom = useCapability(CommentCapabilities.ViewState);
   const state = useAtomValue(stateAtom);
-  const viewStore = useAtomValue(viewStoreAtom);
   const drafts = state.drafts[subjectId];
 
-  // Get or initialize view state for this subject.
-  const viewState = useMemo(() => {
-    if (!viewStore[subjectId]) {
-      registry.set(viewStoreAtom, { ...viewStore, [subjectId]: { ...initialViewState } });
-      return initialViewState;
-    }
-
-    return viewStore[subjectId];
-  }, [viewStore, subjectId, registry, viewStoreAtom]);
-  const { showResolvedThreads } = viewState;
+  // Per-subject view state (session-only), read/written through the ViewState aspect.
+  const { showResolvedThreads } = useViewState(commentsViewAspect, subjectId);
+  const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
   const commentConfigs = useCapabilities(AppCapabilities.CommentConfig);
   const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
@@ -214,12 +204,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleChangeViewState = useCallback(
     (nextValue: string) => {
-      registry.set(viewStoreAtom, {
-        ...registry.get(viewStoreAtom),
-        [subjectId]: { ...registry.get(viewStoreAtom)[subjectId], showResolvedThreads: nextValue === 'all' },
-      });
+      setCommentsView({ showResolvedThreads: nextValue === 'all' });
     },
-    [registry, viewStoreAtom, subjectId],
+    [setCommentsView],
   );
 
   const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
