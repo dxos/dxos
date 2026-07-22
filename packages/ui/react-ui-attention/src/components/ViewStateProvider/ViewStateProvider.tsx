@@ -9,14 +9,14 @@ import React, { type PropsWithChildren, useContext, useEffect, useMemo, useState
 import { invariant } from '@dxos/invariant';
 import { useDefaultValue } from '@dxos/react-hooks';
 
+import { type AspectDef, ViewStateManager, createDefaultBackends } from '../../view-state';
 import {
   type SelectionMode,
   type SelectionResult,
   resolveSelection,
   selectionAspect,
   toggleSelection,
-} from '../../selection';
-import { type AspectDef, ViewStateManager, createDefaultBackends } from '../../view-state';
+} from '../../view-state/selection';
 
 const VIEW_STATE_NAME = 'ViewState';
 

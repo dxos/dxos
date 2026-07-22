@@ -3,4 +3,5 @@
 //
 
 export * from './backends';
+export * from './selection';
 export * from './view-state';

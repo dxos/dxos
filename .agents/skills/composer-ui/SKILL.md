@@ -213,7 +213,7 @@ need any of this — keep `useObject` at the container boundary where the ECHO o
 ## State management
 
 Two durable stores — don't conflate them (full detail:
-`packages/ui/react-ui-attention/src/components/ViewStateProvider/AUDIT.md`):
+`packages/ui/react-ui-attention/AUDIT.md`):
 
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
   Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);

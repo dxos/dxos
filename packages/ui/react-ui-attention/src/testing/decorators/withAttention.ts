@@ -6,7 +6,7 @@ import { Registry, RegistryContext } from '@effect-atom/atom-react';
 import { type Decorator } from '@storybook/react';
 import { createElement, useMemo } from 'react';
 
-import { AttentionManager } from '../../attention';
+import { AttentionManager } from '../../attention/attention';
 import { RootAttentionProvider, ViewStateProvider } from '../../components';
 
 /**
