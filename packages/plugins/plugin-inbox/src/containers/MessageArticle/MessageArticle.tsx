@@ -15,9 +15,9 @@ import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import {
+  ConversationStack,
   type MessageHeaderProps,
   type MessageOptions,
-  MessageThread,
   type ViewMode,
   buildExtractActions,
   keyOf,
@@ -50,7 +50,7 @@ export type MessageArticleProps = AppSurface.ArticleProps<
 
 /**
  * Message/conversation detail view. Renders the opened conversation as a Mosaic stack (see
- * {@link MessageThread}) — one tile per message, each with its own toolbar so reply/forward/delete
+ * {@link ConversationStack}) — one tile per message, each with its own toolbar so reply/forward/delete
  * act on that specific message. This container owns the thread-wide state (body view mode, which
  * messages are expanded) and surfaces it through the top {@link ConversationToolbar}. Only the most
  * recent message is expanded by default; the rest start collapsed.
@@ -103,7 +103,7 @@ export const MessageArticle = ({
   const db = Obj.getDatabase(messages[0]);
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only
-  // `MessageThread` — components must not call capability hooks (they throw without a PluginManager).
+  // `ConversationStack` — components must not call capability hooks (they throw without a PluginManager).
   const invoker = useOperationInvoker();
   const runtime = useProcessManagerRuntime();
   const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
@@ -137,7 +137,7 @@ export const MessageArticle = ({
     [db, invoker],
   );
 
-  // Per-message invoker-backed actions, built here so the MessageThread tiles stay invoker-free.
+  // Per-message invoker-backed actions, built here so the ConversationStack tiles stay invoker-free.
   const handleDelete = useCallback(
     (message: MessageType.Message) => {
       if (mailbox) {
@@ -187,7 +187,7 @@ export const MessageArticle = ({
   );
 
   return (
-    <MessageThread.Root
+    <ConversationStack.Root
       attendableId={toolbarAttendableId}
       items={orderedMessages}
       mailbox={mailbox}
@@ -207,13 +207,13 @@ export const MessageArticle = ({
     >
       <Panel.Root role={role} data-testid={testId}>
         <Panel.Toolbar asChild>
-          <MessageThread.Toolbar />
+          <ConversationStack.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <MessageThread.Content />
+          <ConversationStack.Content />
         </Panel.Content>
       </Panel.Root>
-    </MessageThread.Root>
+    </ConversationStack.Root>
   );
 };
 

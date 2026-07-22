@@ -146,6 +146,7 @@
       "@dxos/react-ui-canvas",
       "@dxos/react-ui-canvas-compute",
       "@dxos/react-ui-canvas-editor",
+      "@dxos/react-ui-card",
       "@dxos/react-ui-chat",
       "@dxos/react-ui-components",
       "@dxos/react-ui-dashboard",

@@ -6,6 +6,7 @@ import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, 
 
 import { Card, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { CardTile } from '@dxos/react-ui-card';
 import {
   Focus,
   Mosaic,
@@ -18,7 +19,6 @@ import { type Event } from '@dxos/types';
 import { meta } from '#meta';
 
 import { EventDetails } from '../Event';
-import { Tile } from '../Tile';
 
 export type EventStackAction =
   | { type: 'current'; eventId: string }
@@ -133,7 +133,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
   const handleToggleStar = useCallback(() => onAction?.({ type: 'star', eventId: event.id }), [onAction, event.id]);
 
   return (
-    <Tile.Root
+    <CardTile.Root
       ref={forwardedRef}
       id={event.id}
       data={data}
@@ -141,7 +141,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
       current={current}
       onCurrentChange={handleCurrentChange}
     >
-      <Tile.Header
+      <CardTile.Header
         starred={starred}
         onToggleStar={onAction ? handleToggleStar : undefined}
         title={<span className='grow truncate font-medium'>{event.title ?? t('event-untitled.label')}</span>}
@@ -149,7 +149,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
       <Card.Body>
         <EventDetails event={event} title={false} maxAttendees={8} />
       </Card.Body>
-    </Tile.Root>
+    </CardTile.Root>
   );
 });
 
