@@ -215,15 +215,15 @@ and `CardTile`→`react-ui-mosaic` (split by dep), which scatters the vocabulary
 
 Verified by import tracing after the `react-ui-card` extraction:
 
-- **`ViewMode`** (`viewModeGroup` + type/icons) — a general **content view-mode
-  toggle** (html/markdown/plain), not a card primitive and not domain-specific
-  (parameterized by `modes`; calendar passes `['markdown','plain']`, mail adds
-  `html`). → move to **`@dxos/react-ui-components`** (the home for general-purpose UI
-  helpers). Add a `@dxos/react-ui-menu` dep there (no cycle) and move the 3 label
-  keys into react-ui-components' translations; `viewModeGroup` then uses that
-  namespace and drops its `ns` param. **Bonus:** plugin-inbox already registers
-  `@dxos/react-ui-components/translations`, so the labels resolve with no new wiring,
-  and both mail + calendar import it without a plugin→plugin dep.
+- **`ViewMode`** (`viewModeGroup` + type/icons) — a general content view-mode toggle
+  (html/markdown/plain), parameterized by `modes` (calendar passes
+  `['markdown','plain']`, mail adds `html`). → move to **`@dxos/react-ui-menu`**,
+  next to `MenuBuilder` and the `toolbar.ts` helpers above — a **semantic menu
+  builder**, the `SystemIconButton`-in-`react-ui` pattern (base package hosts common
+  semantic wrappers, not just raw primitives). react-ui-menu already has a
+  translations namespace, so the 3 label keys move there and `viewModeGroup` drops
+  its `ns` param. Better than `react-ui-components`: same package as the other menu
+  builders, its own i18n, and no `@dxos/ai`/`assistant` weight.
 - **`Toolbar` (`toolbar.ts`)** — `openGroup` / `deleteGroup` / `deleteAction` are
   **generic** open/delete action builders (universal toolbar actions, not
   inbox-specific), depending only on react-ui-menu's `ActionGroupBuilder(Fn)` types.
