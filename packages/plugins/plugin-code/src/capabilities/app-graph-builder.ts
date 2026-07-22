@@ -30,7 +30,7 @@ export default Capability.makeModule(
     // asset module is already contributed by the time this module runs.
     // Subscribe to the reactive asset atom so the connector re-runs when a
     // plugin enabled later in the session contributes (or removes) its spec.
-    const pluginAssetsAtom = (yield* AppCapabilities.PluginAsset).atom;
+    const pluginAssetsAtom = yield* Capability.atom(AppCapabilities.PluginAsset);
 
     const extensions = yield* Effect.all([
       // Per-plugin `spec` child node, attached to the registry's

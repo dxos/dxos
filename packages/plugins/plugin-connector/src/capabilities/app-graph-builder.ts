@@ -61,7 +61,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Hoisted so the connector-reading extensions below establish a reactive dependency instead of
     // reading the capability manager synchronously (graph-extension bodies must never sync-get).
-    const connectorAtom = (yield* Connector).atom;
+    const connectorAtom = yield* Capability.atom(Connector);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({

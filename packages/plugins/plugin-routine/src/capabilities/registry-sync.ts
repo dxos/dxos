@@ -35,7 +35,7 @@ export default Capability.makeModule(
     // Skill registration.
     //
 
-    const skillDefinitionsAtom = (yield* AppCapabilities.SkillDefinition).atom;
+    const skillDefinitionsAtom = yield* Capability.atom(AppCapabilities.SkillDefinition);
     const prevSkillKeys = new Set<string>();
 
     atomRegistry.subscribe(
@@ -59,7 +59,7 @@ export default Capability.makeModule(
     // Operation registration.
     //
 
-    const operationHandlersAtom = (yield* Capabilities.OperationHandler).atom;
+    const operationHandlersAtom = yield* Capability.atom(Capabilities.OperationHandler);
     const prevOperationKeys = new Set<string>();
 
     atomRegistry.subscribe(

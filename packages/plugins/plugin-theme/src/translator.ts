@@ -25,7 +25,7 @@ export type TranslatorModuleOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ appName, resourceExtensions = [] }: TranslatorModuleOptions = {}) {
     const registry = yield* Capabilities.AtomRegistry;
-    const translationsAtom = (yield* AppCapabilities.Translations).atom;
+    const translationsAtom = yield* Capability.atom(AppCapabilities.Translations);
 
     // Static resources owned by the theme plugin and the embedding app.
     addResources([
