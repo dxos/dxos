@@ -25,14 +25,14 @@ jobs:
     steps:
       # Only the config is needed (not a full checkout) to resolve the `main` env's Worker name + bindings.
       - name: Checkout wrangler config
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
         with:
           sparse-checkout: |
             packages/apps/composer-app/wrangler.jsonc
           sparse-checkout-cone-mode: false
 
       - name: Download preview bundle
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5
         with:
           name: composer-preview-bundle
           path: preview
