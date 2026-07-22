@@ -127,6 +127,35 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
   return groups;
 };
 
+/**
+ * Re-anchors {@link DiffHunk}s computed against `base` into `doc` coordinates, so a foreign author's
+ * proposal (diffed `base` vs proposal) can be decorated over a `doc` that has itself diverged from
+ * `base` (the user's own branch edits). Each hunk offset is mapped through the character-level
+ * `base`↔`doc` diff ({@link computeCharHunks}): a position in an unchanged region shifts by the net
+ * length of edits before it; a position inside a doc-edited region clamps to that region's edge (the
+ * `from` to its start, the `to` to its end). Without this, a proposal diffed against `base` would
+ * render at stale offsets over the diverged `doc`.
+ */
+export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffHunk[] => {
+  const charHunks = computeCharHunks(base, doc);
+  const mapPos = (pos: number, side: -1 | 1): number => {
+    let delta = 0;
+    for (const hunk of charHunks) {
+      if (pos < hunk.fromA) {
+        break;
+      }
+      if (pos < hunk.toA) {
+        // Inside a doc-edited region: clamp to its edge so the offset stays a valid doc position.
+        return side < 0 ? hunk.fromB : hunk.toB;
+      }
+      // Past this region: `toB - toA` is the net offset shift it contributes.
+      delta = hunk.toB - hunk.toA;
+    }
+    return pos + delta;
+  };
+  return hunks.map((hunk) => ({ ...hunk, from: mapPos(hunk.from, -1), to: mapPos(hunk.to, 1) }));
+};
+
 /** A changed hunk between two documents as character ranges in each (A = original, B = modified). */
 export type Hunk = { fromA: number; toA: number; fromB: number; toB: number };
 

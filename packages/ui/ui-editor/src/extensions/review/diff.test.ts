@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, groupHunks, revertHunk } from './diff';
+import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, groupHunks, rebaseHunks, revertHunk } from './diff';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');
@@ -135,6 +135,35 @@ describe('diffHunks', () => {
   test('handles empty inputs', ({ expect }) => {
     expect(diffHunks('', '')).toEqual([]);
     expect(diffHunks('same', 'same')).toEqual([]);
+  });
+});
+
+describe('rebaseHunks', () => {
+  test('maps hunks 1:1 when the doc equals the base', ({ expect }) => {
+    const base = 'The quick brown fox.';
+    const hunks = diffHunks(base, 'The slow brown fox.');
+    expect(rebaseHunks(base, base, hunks)).toEqual(hunks);
+  });
+
+  test('shifts a hunk after a doc insertion by the inserted length', ({ expect }) => {
+    const base = 'The quick brown fox.';
+    // The doc (branch) inserted "very " before "quick"; base offsets after it shift right by 5.
+    const doc = 'The very quick brown fox.';
+    const hunks = diffHunks(base, 'The quick brown cat.'); // fox -> cat, anchored in base.
+    const [hunk] = hunks;
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    // The rebased hunk lands on "fox" in the diverged doc, not on the user's inserted "very".
+    expect(rebased.from).toBe(hunk.from + 'very '.length);
+    expect(doc.slice(rebased.from, rebased.to)).toBe(hunk.removed);
+  });
+
+  test('leaves a base hunk before a later doc insertion unshifted', ({ expect }) => {
+    const base = 'The quick brown fox.';
+    const doc = 'The quick brown fox. More text.'; // appended after the change region.
+    const hunks = diffHunks(base, 'The slow brown fox.'); // quick -> slow near the start.
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    expect(rebased.from).toBe(hunks[0].from);
+    expect(doc.slice(rebased.from, rebased.to)).toBe(hunks[0].removed);
   });
 });
 
