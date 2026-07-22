@@ -220,7 +220,7 @@ Two state stores — don't conflate them (full detail:
   read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
 - **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
   view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
-  `defineViewState({ key, backend, schema, defaultValue })`; the `backend` sets durability —
+  `define({ key, backend, schema, defaultValue })`; the `backend` sets durability —
   `'local'` persists across reloads (best-effort; degrades to memory when storage is blocked),
   `'memory'` is session-only. Read/write via `useViewState` / `useViewStateActions` (React), or
   `Capability.get(AttentionCapabilities.ViewState)` (operations / graph-builders). Idiom

@@ -28,7 +28,7 @@ export type CompanionSplit = Schema.Schema.Type<typeof CompanionSplitSchema>;
  * between side-by-side and stacked restores that orientation's last split point. Stored in the `local`
  * backend (localStorage, persisted across reloads) via react-ui-attention view state.
  */
-export const companionSplitAspect: ViewState.Aspect<CompanionSplit> = ViewState.defineViewState<CompanionSplit>({
+export const companionSplitAspect: ViewState.Aspect<CompanionSplit> = ViewState.define<CompanionSplit>({
   key: 'deck-companion-split',
   backend: 'local',
   schema: CompanionSplitSchema,

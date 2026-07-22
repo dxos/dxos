@@ -1,9 +1,7 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-// UI-free re-exports of @dxos/react-ui-attention. Importing from here does not
-// pull in React components, so it is safe to use from operations, schemas, and
-// other non-DOM code that only needs the data model and pure helpers.
-export * from '../attention';
-export * from '../view-state';
+export * as Attention from './attention';
+export * as Selection from './Selection';
+export * as ViewState from './ViewState';

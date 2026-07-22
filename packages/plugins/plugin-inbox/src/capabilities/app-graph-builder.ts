@@ -136,10 +136,10 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-    // Derive a single-mode selected id per context from the ViewState.ViewStateManager selection slice.
+    // Derive a single-mode selected id per context from the ViewState.Manager selection slice.
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(Selection.selectionAspect, nodeId));
+        const selection = get(viewState.atom(Selection.aspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );

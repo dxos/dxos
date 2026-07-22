@@ -58,7 +58,7 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   {
     id: string;
     settings: Markdown.Settings;
-    viewState?: ViewState.ViewStateManager;
+    viewState?: ViewState.Manager;
   } & Pick<MarkdownPluginState, 'extensionProviders'> &
     Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
     Pick<MarkdownEditorContentProps, 'editorStateStore'>

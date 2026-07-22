@@ -10,7 +10,7 @@ import { EditorSelectionStateSchema, type EditorStateStore } from '@dxos/ui-edit
 import { EditorViewMode } from '@dxos/ui-editor/types';
 
 /** Per-document editor scroll/caret state, persisted to localStorage on this device. */
-export const editorViewStateAspect = ViewState.defineViewState({
+export const editorViewStateAspect = ViewState.define({
   key: 'editor',
   backend: 'local',
   schema: EditorSelectionStateSchema,
@@ -22,7 +22,7 @@ export const editorViewStateAspect = ViewState.defineViewState({
  * per document and restored across navigation/reloads (best-effort). `undefined` = no per-document
  * override, so the caller falls back to the `defaultViewMode` setting.
  */
-export const editorViewModeAspect: ViewState.Aspect<EditorViewMode | undefined> = ViewState.defineViewState<
+export const editorViewModeAspect: ViewState.Aspect<EditorViewMode | undefined> = ViewState.define<
   EditorViewMode | undefined
 >({
   key: 'editor-view-mode',
@@ -32,7 +32,7 @@ export const editorViewModeAspect: ViewState.Aspect<EditorViewMode | undefined> 
 });
 
 /** Adapts the imperative editor store seam onto the ViewState manager (local backend). */
-export const createEditorViewStateStore = (manager: ViewState.ViewStateManager): EditorStateStore => ({
+export const createEditorViewStateStore = (manager: ViewState.Manager): EditorStateStore => ({
   getState: (id) => {
     // Guard against an unset document id, which would key state under a literal "undefined".
     invariant(id);

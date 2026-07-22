@@ -96,7 +96,7 @@ export default Capability.makeModule(
                 // Fallback (non-editor objects): anchor to the current selection, or create an
                 // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
                 // placeholder is not a cursor range and would throw in `getAnchorLabel`.
-                const selection = viewState.get(Selection.selectionAspect, objectUri);
+                const selection = viewState.get(Selection.aspect, objectUri);
                 const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
                 yield* Operation.invoke(CommentOperation.Create, {
                   anchor: cursorAnchor ?? Date.now().toString(),

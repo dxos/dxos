@@ -34,7 +34,7 @@ const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => 
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Resolve ViewStateManager contributed by plugin-attention (guaranteed available because this
+    // Resolve Manager contributed by plugin-attention (guaranteed available because this
     // module activates only after AttentionEvents.AttentionReady fires — see MarkdownPlugin.tsx).
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
     const editorState = createEditorViewStateStore(viewState);

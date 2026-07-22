@@ -23,7 +23,7 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
       Effect.gen(function* () {
         const registry = yield* Capability.get(Capabilities.AtomRegistry);
         const attention = new Attention.AttentionManager(registry);
-        const viewState = new ViewState.ViewStateManager({ registry, backends: createDefaultBackends(registry) });
+        const viewState = new ViewState.Manager({ registry, backends: createDefaultBackends(registry) });
         setupDevtools(attention);
         return [
           Capability.contributes(AttentionCapabilities.Attention, attention),

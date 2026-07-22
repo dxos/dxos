@@ -23,7 +23,7 @@ import { useDefaultValue } from '@dxos/react-hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type Attention, AttentionManager, getAttendables } from '../../attention/attention';
+import { type Attention, AttentionManager, getAttendables } from '../../types/attention';
 
 const ATTENTION_NAME = 'Attention';
 const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';

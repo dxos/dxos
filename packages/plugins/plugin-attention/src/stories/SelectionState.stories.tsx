@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { ViewState, useSelection, useSelectionActions, useViewStateManager } from '@dxos/react-ui-attention';
+import { ViewState, useSelection, useSelectionActions, useManager } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { OrderedList } from '@dxos/react-ui-list';
@@ -28,14 +28,14 @@ import { mx } from '@dxos/ui-theme';
 // plugin-attention does not depend on plugin-markdown.
 //
 
-const editorViewStateAspect = ViewState.defineViewState({
+const editorViewStateAspect = ViewState.define({
   key: 'story-editor',
   backend: 'local',
   schema: EditorSelectionStateSchema,
   defaultValue: () => ({}),
 });
 
-const makeEditorStore = (manager: ViewState.ViewStateManager): EditorStateStore => ({
+const makeEditorStore = (manager: ViewState.Manager): EditorStateStore => ({
   getState: (id) => manager.get(editorViewStateAspect, id),
   setState: (id, state) => manager.set(editorViewStateAspect, id, state),
 });
@@ -120,7 +120,7 @@ const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
 //
 
 const SelectionStateStory = () => {
-  const manager = useViewStateManager();
+  const manager = useManager();
   const editorStore = useMemo(() => makeEditorStore(manager), [manager]);
 
   const selectedId = useSelection(LIST_CONTEXT, 'single');

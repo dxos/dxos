@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
-import { Attention, useViewStateManager } from '@dxos/react-ui-attention';
+import { Attention, useManager } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import {
@@ -80,7 +80,7 @@ export const MessageArticle = ({
 
   // Settings + view state.
   const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
-  const viewState = useViewStateManager();
+  const viewState = useManager();
   const viewModeAtom = useMemo(
     () => viewState.atom(messageViewModeAspect, toolbarAttendableId ?? 'default'),
     [viewState, toolbarAttendableId],

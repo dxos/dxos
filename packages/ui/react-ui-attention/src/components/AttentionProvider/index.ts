@@ -3,4 +3,3 @@
 //
 
 export * from './AttentionProvider';
-export * from './useArticleKeyboardNavigation';

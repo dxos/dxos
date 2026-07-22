@@ -22,7 +22,7 @@ export type FieldSortType = Schema.Schema.Type<typeof FieldSortSchema>;
  * viewer's chosen sort survives remounts and reloads without writing to the shared view query
  * (which `TableModel.saveView` does explicitly).
  */
-export const tableSortAspect = ViewState.defineViewState<FieldSortType | undefined>({
+export const tableSortAspect = ViewState.define<FieldSortType | undefined>({
   key: 'table-sort',
   backend: 'local',
   schema: Schema.UndefinedOr(FieldSortSchema),

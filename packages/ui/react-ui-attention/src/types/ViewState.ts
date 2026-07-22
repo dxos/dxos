@@ -24,7 +24,7 @@ export interface Aspect<T, Encoded = T> {
 /**
  * Identity helper that pins the value type from the schema while keeping the literal `key`/`backend`.
  * Declares an aspect of per-context UI state (selection, scroll, view mode, split) read/written via
- * {@link ViewStateManager} — through `useViewState`/`useViewStateActions` in React or the
+ * {@link Manager} — through `useViewState`/`useViewStateActions` in React or the
  * `AttentionCapabilities.ViewState` capability in operations. Durability is the `backend`'s: `local`
  * survives reloads (best-effort — degrades to in-memory when storage is blocked), `memory` is
  * session-only.
@@ -32,17 +32,17 @@ export interface Aspect<T, Encoded = T> {
  * @idiom org.dxos.react-ui-attention.viewState
  *   applies: Holding per-context UI state (selection, view mode, scroll, split) that survives navigation (and reloads with the `local` backend)
  *   instead-of: ad-hoc `useState` that resets on remount, or stuffing per-context state into the plugin Settings store
- *   uses: {@link defineViewState}, {@link ViewStateManager}
+ *   uses: {@link define}, {@link Manager}
  *   related: org.dxos.effect.kvsStore
  */
-export const defineViewState = <T, Encoded = T>(def: Aspect<T, Encoded>): Aspect<T, Encoded> => def;
+export const define = <T, Encoded = T>(def: Aspect<T, Encoded>): Aspect<T, Encoded> => def;
 
 /**
  * A backend produces a reactive, writable atom for each `(aspect, contextId)` pair. Backends may
  * hydrate asynchronously (an ECHO backend would), yielding `aspect.defaultValue()` until loaded;
  * the memory and local backends resolve synchronously.
  */
-export interface ViewStateBackend {
+export interface Backend {
   /** Stable atom for the pair; created (and seeded) on first access, cached thereafter. */
   atom: <T, Encoded>(aspect: Aspect<T, Encoded>, contextId: string) => Atom.Writable<T>;
   /** Persist a value after the atom is updated. No-op for in-memory backends. */
@@ -53,20 +53,20 @@ export interface ViewStateBackend {
   dispose?: () => void;
 }
 
-export interface ViewStateManagerOptions {
+export interface ManagerOptions {
   readonly registry: Registry.Registry;
-  readonly backends: Record<BackendName, ViewStateBackend>;
+  readonly backends: Record<BackendName, Backend>;
 }
 
 /**
  * Routes per-context UI state to the backend declared by each aspect. Reads/writes go through the
  * effect-atom registry so React hooks and graph atoms observe changes uniformly.
  */
-export class ViewStateManager {
+export class Manager {
   readonly #registry: Registry.Registry;
-  readonly #backends: Record<BackendName, ViewStateBackend>;
+  readonly #backends: Record<BackendName, Backend>;
 
-  constructor({ registry, backends }: ViewStateManagerOptions) {
+  constructor({ registry, backends }: ManagerOptions) {
     this.#registry = registry;
     this.#backends = backends;
   }

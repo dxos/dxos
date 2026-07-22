@@ -137,7 +137,7 @@ describe('TableModel sort view state', () => {
       const registry = Registry.make();
       const local = new LocalBackend({ registry, storage });
       disposables.push(local);
-      const viewState = new ViewState.ViewStateManager({ registry, backends: { memory: new MemoryBackend(), local } });
+      const viewState = new ViewState.Manager({ registry, backends: { memory: new MemoryBackend(), local } });
       const projection = new ProjectionModel({
         registry,
         view,

@@ -6,10 +6,10 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { afterEach, describe, test } from 'vitest';
 
+import { ViewState } from '../types';
 import { LocalBackend } from './backends';
-import { ViewStateManager, defineViewState } from './ViewState';
 
-const Editor = defineViewState({
+const Editor = ViewState.define({
   key: 'editor',
   backend: 'local',
   schema: Schema.Struct({ scrollTo: Schema.optional(Schema.Number) }).pipe(Schema.mutable),
@@ -43,7 +43,7 @@ describe('LocalBackend', () => {
     const storage = fakeStorage();
     const local = new LocalBackend({ registry, storage });
     disposables.push(local);
-    const manager = new ViewStateManager({ registry, backends: { memory: local, local } });
+    const manager = new ViewState.Manager({ registry, backends: { memory: local, local } });
     return { manager, storage };
   };
 
@@ -87,7 +87,7 @@ describe('LocalBackend', () => {
     const registry = Registry.make();
     const storage = fakeStorage();
     const local = new LocalBackend({ registry, storage });
-    const manager = new ViewStateManager({ registry, backends: { memory: local, local } });
+    const manager = new ViewState.Manager({ registry, backends: { memory: local, local } });
 
     // Touch the context so its atom is registered and observed by the storage listener.
     const key = 'dxos:view-state:editor:doc-4';

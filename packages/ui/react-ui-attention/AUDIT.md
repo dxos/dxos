@@ -14,16 +14,16 @@ plugin **Settings** store. Tracked by PR #12304.
 
 ## The one mechanism
 
-One `ViewStateManager` is created once and shared everywhere. It routes each `(aspect, contextId)`
+One `Manager` is created once and shared everywhere. It routes each `(aspect, contextId)`
 pair to the backend the aspect declares, through the effect-atom registry so React hooks and Effect
 code observe the same values.
 
 - **Aspect** — a typed kind of UI state, defined once with
-  [`defineViewState`](../../view-state/view-state.ts): `{ key, backend, schema, defaultValue }`.
+  [`define`](../../view-state/view-state.ts): `{ key, backend, schema, defaultValue }`.
 - **Backends** ([`createDefaultBackends`](../../view-state/backends.ts)): `memory` (ephemeral) and
   `local` (localStorage — seeds from storage, persists on set, syncs across tabs, degrades to memory
   when storage is blocked). `personal` (ECHO / cross-device) is reserved.
-- **Manager** ([`ViewStateManager`](../../view-state/view-state.ts)): `atom` / `get` / `set` /
+- **Manager** ([`Manager`](../../view-state/view-state.ts)): `atom` / `get` / `set` /
   `update` / `subscribe` / `contexts`.
 
 ### The bridge (why every caller sees the same state)
@@ -32,7 +32,7 @@ code observe the same values.
 boundary:
 
 - **As a capability** — [`AttentionPlugin.ts`](../../../../../plugins/plugin-attention/src/AttentionPlugin.ts)
-  `new ViewStateManager(...)` → `Capability.contributes(AttentionCapabilities.ViewState, …)`.
+  `new Manager(...)` → `Capability.contributes(AttentionCapabilities.ViewState, …)`.
 - **As a React context** — [`react-context.tsx`](../../../../../plugins/plugin-attention/src/capabilities/react-context.tsx)
   mounts `<ViewStateProvider manager={useCapability(AttentionCapabilities.ViewState)}>` — the _same_
   instance.
@@ -53,7 +53,7 @@ present, so stories work without wiring.
 
 ```ts
 // Define the aspect once (co-located with the feature).
-export const companionVariantAspect = defineViewState<CompanionSelection>({
+export const companionVariantAspect = define<CompanionSelection>({
   key: 'deck-companion-variant',
   backend: 'local',
   schema: CompanionSelection,
@@ -68,7 +68,7 @@ const { set, update, clear } = useViewStateActions(companionVariantAspect, COMPA
 ```
 
 - Hooks: [`useViewState`](./ViewStateProvider.tsx), [`useViewStateActions`](./ViewStateProvider.tsx)
-  (`{ set, update, clear }`), [`useViewStateManagerOptional`](./ViewStateProvider.tsx) for direct
+  (`{ set, update, clear }`), [`useManagerOptional`](./ViewStateProvider.tsx) for direct
   access, and the selection helpers [`useSelection`](./ViewStateProvider.tsx) /
   [`useSelectionActions`](./ViewStateProvider.tsx) built on top.
 - Live examples:
@@ -87,7 +87,7 @@ const value = manager.get(aspect, contextId);
 manager.set(aspect, contextId, next);
 
 // Imperative seam wrapped as a store (adapts the manager onto a getState/setState interface):
-export const createEditorViewStateStore = (manager: ViewStateManager): EditorStateStore => ({
+export const createEditorViewStateStore = (manager: Manager): EditorStateStore => ({
   getState: (id) => manager.get(editorViewStateAspect, id),
   setState: (id, state) => manager.set(editorViewStateAspect, id, state),
 });
@@ -115,7 +115,7 @@ These are **different mechanisms** and must not be conflated.
 | Purpose        | per-context **UI state** (reload durability is backend-dependent) | plugin-wide **configuration / user preferences**                 |
 | Keyed by       | `(aspect, contextId)` — the object/surface                        | plugin id (`meta.profile.key`)                                   |
 | Granularity    | one value per context (per document, tab, selection)              | one settings blob per plugin                                     |
-| Built with     | `defineViewState` + `ViewStateManager`                            | [`createKvsStore`](../../../../../common/effect/src/atom-kvs.ts) |
+| Built with     | `define` + `Manager`                                              | [`createKvsStore`](../../../../../common/effect/src/atom-kvs.ts) |
 | Accessed via   | Pattern A hooks / Pattern B capability                            | `useAtomCapabilityState(XCapabilities.Settings)`                 |
 | Surfaced in UI | no                                                                | yes — `AppCapabilities.Settings` renders it in Settings          |
 | Example        | companion tab, editor caret, view mode                            | `loadRemoteImages`, `conversations`                              |
@@ -181,7 +181,7 @@ stick. Two correct shapes:
 
 Each store is named by one idiom (NSID slug), pinned to its canonical artifact:
 
-- **`org.dxos.react-ui-attention.viewState`** → on `defineViewState` (`view-state/view-state.ts`).
+- **`org.dxos.react-ui-attention.viewState`** → on `define` (`view-state/view-state.ts`).
 - **`org.dxos.effect.kvsStore`** → on `createKvsStore` (`common/effect/src/atom-kvs.ts`), the Settings
   store, cross-referenced as `related`.
 
@@ -191,11 +191,11 @@ The composer-ui skill's **State management** section references both.
 
 ## Inventory (2026-07-22)
 
-### Every ViewState aspect (`defineViewState`) — all genuinely per-context
+### Every ViewState aspect (`define`) — all genuinely per-context
 
 | Aspect                   | Package              | key                       | backend  | state                     |
 | ------------------------ | -------------------- | ------------------------- | -------- | ------------------------- |
-| `selectionAspect`        | `react-ui-attention` | `selection`               | `memory` | current selection set     |
+| `aspect`                 | `react-ui-attention` | `selection`               | `memory` | current selection set     |
 | `companionVariantAspect` | `plugin-deck`        | `deck-companion-variant`  | `local`  | selected companion tab    |
 | `companionSplitAspect`   | `plugin-deck`        | `deck-companion-split`    | `local`  | companion split ratio     |
 | `editorViewStateAspect`  | `plugin-markdown`    | `editor`                  | `local`  | per-document scroll/caret |
@@ -222,7 +222,7 @@ is the common case of this; the fuller rule is context-scope first.
 
 ## Consistency findings
 
-- ✅ Every `defineViewState` aspect stores genuinely per-context state through the right backend and
+- ✅ Every `define` aspect stores genuinely per-context state through the right backend and
   access path. No global preference is misfiled as a ViewState aspect.
 - ✅ **`plugin-markdown` per-document view mode — migrated.** Was a hand-rolled
   `Record<documentId, EditorViewMode>` in the app-global `state.ts` KVS store; now the
@@ -244,6 +244,6 @@ is the common case of this; the fuller rule is context-scope first.
 
 1. ✅ Document the two patterns + the Settings/KVS distinction (this file).
 2. ✅ Move the inbox message view mode from the Settings store to a ViewState aspect (Pattern A).
-3. ✅ Add the `@idiom` markers (`viewState` on `defineViewState`, `kvsStore` on `createKvsStore`).
+3. ✅ Add the `@idiom` markers (`viewState` on `define`, `kvsStore` on `createKvsStore`).
 4. ✅ Migrate `plugin-markdown`'s per-document `viewMode` Record to a ViewState aspect.
 5. Sweep the other `state.ts` stores for per-context `Record` fields; consolidate deck's two aspects.

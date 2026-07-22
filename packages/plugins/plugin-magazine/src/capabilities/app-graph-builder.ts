@@ -26,7 +26,7 @@ export default Capability.makeModule(
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(Selection.selectionAspect, nodeId));
+        const selection = get(viewState.atom(Selection.aspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );

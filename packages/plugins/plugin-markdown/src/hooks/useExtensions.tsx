@@ -60,7 +60,7 @@ export type ExtensionsOptions = {
   compact?: boolean;
   viewMode?: EditorViewMode;
   editable?: boolean;
-  viewState?: ViewState.ViewStateManager;
+  viewState?: ViewState.Manager;
   editorStateStore?: EditorStateStore;
   setWidgets?: (widgets: XmlWidgetState[]) => void;
   platform?: 'mobile' | 'desktop';
@@ -233,7 +233,7 @@ const createBaseExtensions = ({
   return extensions;
 };
 
-const selectionChange = (viewState: ViewState.ViewStateManager) => {
+const selectionChange = (viewState: ViewState.Manager) => {
   const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
     const id = update.state.facet(documentId);
     const cursorConverter = update.state.facet(Cursor.converter);
@@ -251,7 +251,7 @@ const selectionChange = (viewState: ViewState.ViewStateManager) => {
         to: cursorConverter.toCursor(range.to),
       }));
 
-    viewState.set(Selection.selectionAspect, id, { mode: 'multi-range', ranges });
+    viewState.set(Selection.aspect, id, { mode: 'multi-range', ranges });
   }, 100);
 
   return EditorView.updateListener.of((update: ViewUpdate) => {
