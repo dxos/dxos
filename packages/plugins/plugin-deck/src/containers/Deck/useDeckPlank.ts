@@ -33,7 +33,7 @@ export type UseDeckPlankOptions = {
   part: ResolvedPart;
   /** Whether the deck currently shows a single active plank (fullbleed look). */
   soloLook: boolean;
-  /** Ordered active planks (multi mode); enables increment/close-range semantics. */
+  /** Ordered active planks (multi mode); enables the increment affordances. */
   active?: string[];
 };
 
@@ -125,18 +125,13 @@ export const useDeckPlank = ({ id, part, soloLook, active }: UseDeckPlankOptions
         if (part === 'complementary') {
           return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         }
-        if (active) {
-          // Close the plank and everything to its right (stack pop).
-          const closeIndex = active.indexOf(id);
-          const toClose = closeIndex !== -1 ? active.slice(closeIndex) : [id];
-          return invokePromise(LayoutOperation.Close, { subject: toClose });
-        }
+        // Close only this plank — desktop decks are not dependency chains, so no cascade.
         return invokePromise(LayoutOperation.Close, { subject: [id] });
       }
 
       return invokePromise(DeckOperation.Adjust, { type, id });
     },
-    [invokePromise, part, active, id],
+    [invokePromise, part, id],
   );
 
   const onResize = useCallback(

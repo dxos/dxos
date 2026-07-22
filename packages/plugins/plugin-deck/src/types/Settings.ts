@@ -19,12 +19,5 @@ export const Settings = Schema.Struct({
       description: 'Redirect supported URLs to the native desktop application.',
     }),
   ),
-  navigationDefault: Schema.optional(
-    Schema.Literal('replace', 'new-plank').annotations({
-      title: 'Navigation behavior',
-      description:
-        'Whether opening an item replaces the current panel or opens it in a new panel beside it. Shift-click does the opposite.',
-    }),
-  ),
 }).pipe(Schema.mutable);
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

@@ -24,9 +24,16 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Types
 
-There is a single deck mode: presentation is derived from plank count rather than stored. A singleton
-`active` renders `fullbleed`; two or more render `sliding`. Fullscreen is a transient overlay
-(`EphemeralDeckState.fullscreen`), not a mode.
+There is a single deck mode: presentation is derived from plank count and breakpoint rather than
+stored. On desktop a singleton `active` renders `fullbleed`, exactly two planks render `tiling`
+(flush proportional split), and three or more render `sliding`; below the `md` breakpoint the deck
+is always `sliding` with full-viewport-width scroll-snapped planks. Fullscreen is a transient
+overlay (`EphemeralDeckState.fullscreen`), not a mode.
+
+```mdl
+type DeckPresentation
+  literals: fullbleed | tiling | sliding
+```
 
 ```mdl
 type PartAdjustment
@@ -36,9 +43,10 @@ type PartAdjustment
 ```mdl
 type DeckState
   fields:
-    active: string[]              # item IDs of the deck's planks; fullbleed when length 1, sliding when 2+
+    active: string[]              # item IDs of the deck's planks; presentation derives from length + breakpoint
     inactive: string[]            # item IDs that have been closed; persisted for reopening
     plankSizing: Record<string, number>   # persisted plank widths in rem, keyed by item ID (sliding presentation only)
+    tilingSizing?: number[]       # relative widths of tiled planks keyed by position (tiling split ratio); absent/empty means equal
     companionOpen: boolean        # whether the companion pane is visible
     companionFrameSizing: Record<string, number>  # companion frame widths in rem
     # NOTE: the selected companion variant and per-orientation split size live in react-ui-attention
@@ -80,7 +88,6 @@ type EphemeralDeckState
 ```mdl
 type DeckSettings
   fields:
-    navigationDefault?: replace | new-plank  # whether opening an item replaces the attended plank or opens a new one beside it; shift-click inverts
     showHints?: boolean           # show keyboard shortcut hints in the UI
     enableNativeRedirect?: boolean  # redirect supported URLs to the native desktop app
 ```
@@ -91,15 +98,20 @@ type DeckSettings
 component Matrix
   desc: |
     The primary workspace canvas. Renders `active` planks through a single Mosaic.Stack pipeline,
-    styled by the presentation derived from plank count: fullbleed for one plank, sliding
-    (resizable, horizontally scrollable) for two or more. Fullscreen is a transient overlay that
-    replaces the whole stack with one plank, headless. Manages plank-resize handles and the
-    companion pane alongside the attended plank.
+    styled by the presentation derived from plank count and breakpoint: fullbleed for one plank;
+    tiling for exactly two (flush proportional split, hairline divider matching the solo companion
+    splitter, draggable ratio); sliding for three or more (resizable, horizontally scrollable, a
+    fixed inter-plank gap and edge shadow so planks read as stacked). Below the `md` breakpoint the
+    deck is always sliding with full-viewport-width, non-resizable, scroll-snapped planks. In the
+    sliding presentation planks pin to the viewport edges as slivers when scrolled past, and fold
+    to a labeled vertical spine below the fold threshold; clicking a spine scrolls the plank back
+    into view. Fullscreen is a transient overlay that replaces the whole stack with one plank,
+    headless. Manages plank-resize handles and the companion pane alongside the attended plank.
   props:
     state: StoredDeckState        # persisted layout state atom
     ephemeral: EphemeralDeckState # transient state atom
   state:
-    presentation: fullbleed | sliding   # derived from active.length, not stored
+    presentation: DeckPresentation   # derived from active.length + breakpoint, not stored
   actions:
     openPlank(id: string)
     closePlank(id: string)
@@ -131,16 +143,19 @@ component DeckSettings
 op Open
   desc: |
     Opens one or more subjects (item IDs or navigation paths) in the deck.
-    `disposition` resolves how they're placed: 'new-plank' uses stack semantics (truncates the
-    deck after the pivot then appends); 'replace' splices the subjects in at the pivot/attended-plank
-    index. 'default'/'inverse' (the default when omitted) resolve against the navigationDefault
-    setting — 'inverse' flips it, e.g. for shift-click.
-    Validates each target against the app graph and redirects to a 404 node if not found.
-    Fires ScrollIntoView, Expose, and an observability event for each newly opened item.
+    `disposition` places them (see F-7): 'solo' — the default — navigates, so the deck becomes just
+    the opened subjects, unless they are all already open (the existing plank scrolls into view);
+    'add' inserts them as new planks, immediately after `pivotId` when provided (in-plank navigation
+    anchors at its origin), else at the end of the deck; 'auto' follows the deck — it adds beside the
+    origin (`pivotId`, falling back to the attended plank) when already sliding, and navigates solo
+    otherwise, so in-plank/card navigation grows a sliding deck but replaces a solo one. `key`
+    replaces an existing plank sharing the key prefix in place. Validates each target against the app
+    graph and redirects to a 404 node if not found. Fires ScrollIntoView, Expose, and an
+    observability event for each newly opened item.
   input:
     subject: string[]             # item IDs or navigation paths to open
-    disposition?: default | inverse | replace | new-plank
-    pivotId?: string              # truncate deck after this item before appending (new-plank only)
+    disposition?: solo | add | auto  # solo (default) navigates; add inserts new planks; auto follows the deck
+    pivotId?: string              # insert opened items immediately after this plank (add/auto)
     key?: string                  # replace an existing plank whose ID shares this key prefix
     workspace?: string            # switch to this workspace before opening
     navigation?: immediate        # skip validation; expand path only
@@ -242,6 +257,7 @@ op AdjustPlank
   output: void
   effects: [layout:state]
   requires: [DeckCapabilities]
+  note: increment-start/increment-end remain implemented but their plank controls are hidden pending a reordering UX revisit.
 ```
 
 ```mdl
@@ -250,6 +266,18 @@ op UpdatePlankSize
   input:
     id: string
     size: number
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op UpdateTilingSize
+  desc: |
+    Persist the tiling split ratio as relative plank widths keyed by position (not plank ID), so
+    swapping which plank occupies a slot keeps the layout.
+  input:
+    weights: number[]
   output: void
   effects: [layout:state]
   requires: [DeckCapabilities]
@@ -299,24 +327,53 @@ op RevertWorkspace
 ## Features
 
 ```mdl
-feat F-1: Sliding-Deck Presentation
+feat F-1: Deck Presentations
 
   req F-1.1:
-    when: two or more planks are active
-    then: deck renders them side by side in a scrollable, resizable row (the sliding presentation);
-          a single active plank instead renders fullbleed
+    when: the active deck changes length or the breakpoint changes
+    then: presentation is derived, never stored — desktop renders fullbleed (1 plank), tiling (2),
+          or sliding (3+); below the `md` breakpoint the deck is always sliding
 
   req F-1.2:
-    when: user opens a new subject with disposition 'new-plank' and a pivot
-    then: deck is truncated after the pivot and the new subject is appended
+    when: presentation is sliding on desktop
+    then: planks render side by side in a horizontally scrollable row, separated by a fixed
+          inter-plank gap (a code constant, not a setting) with an edge shadow so planks read as
+          stacked; each plank is user-resizable and its width is persisted in plankSizing
 
   req F-1.3:
+    when: a sliding plank's width would exceed the viewport minus the space reserved for the other
+          planks' spines
+    then: its width is capped so its controls are never hidden behind pinned spines
+
+  req F-1.4:
+    when: a sliding plank is scrolled past a viewport edge
+    then: it pins there as a sliver; once the visible sliver narrows below the fold threshold (one
+          spine width plus the inter-plank gap) it folds to a vertical spine showing the plank's
+          sigil and localized node label, animating in the plank's own travel direction
+
+  req F-1.5:
+    when: a folded spine is clicked
+    then: the plank scrolls smoothly back into view and unfolds
+
+  req F-1.6:
+    when: presentation is tiling
+    then: planks split the viewport width proportionally with no horizontal overflow or inter-plank
+          gap, separated by a hairline divider matching the solo companion splitter; the ratio is
+          draggable and persisted by position via UpdateTilingSize
+
+  req F-1.7:
+    when: the breakpoint is below `md` (mobile)
+    then: planks are fixed full-viewport-width scroll-snap points, not user-resizable; the deck
+          snaps one-to-next
+
+  req F-1.8:
     when: subject is already present in the active deck
     then: deck is unchanged and the existing plank scrolls into view
 
-  req F-1.4:
-    when: user resizes a plank
-    then: new width is persisted in plankSizing and restored on next load (sliding presentation only)
+  req F-1.9:
+    when: viewing plank controls
+    then: the reordering controls (increment-start / increment-end) are hidden pending a
+          reordering UX revisit
 ```
 
 ```mdl
@@ -367,16 +424,32 @@ feat F-4: Dialog & Popover Overlay
 ```mdl
 feat F-5: URL Navigation & Deep Linking
 
+  desc: |
+    The URL is a pair chain (`/w/<workspace>/<key>/<id>/…`) with one pair per plank path segment;
+    id-less keys (singletons like `settings`, `members`) consume no id segment. Mapping is fully
+    explicit: a graph node is URL-addressable only if its builder extension declares a `urlKey`
+    plus either a static `urlPath` template (fixed-depth dynamic segments are `+`-encoded into the
+    id) or a `resolve` effect for variable-depth subtrees (collections, native filesystem). There
+    is no search fallback.
+
   req F-5.1:
-    when: app loads with a URL referencing an item
-    then: DeckPlugin resolves the path and opens the item in the deck
+    when: app loads with a URL referencing items
+    then: DeckPlugin resolves each pair against the declared url mappings and opens the items in
+          the deck
 
   req F-5.2:
-    when: active deck changes
-    then: browser URL is updated to reflect the current plank state
+    when: the active deck, attention, or companion selection changes
+    then: browser URL is re-serialized from deck.active, appending the attended plank's open
+          companion as `companion/<variant>`; attention itself is never serialized — on load it
+          defaults to the last plank in the chain
 
   req F-5.3:
-    when: a navigation target is not found in the app graph
+    when: an active plank's node declares no url mapping
+    then: it is omitted from the URL and a warning is logged; no fallback representation is
+          attempted
+
+  req F-5.4:
+    when: a navigation target cannot be resolved (unknown key, failed resolver, or missing node)
     then: Open operation redirects to a 404 node
 ```
 
@@ -392,25 +465,81 @@ feat F-6: Toast Notifications
     then: a toast with an undo action is shown; invoking it executes the linked undo operation
 ```
 
+```mdl
+feat F-7: Navigation Model
+
+  desc: |
+    Interaction model replacing the former `navigationDefault` setting and replace-the-attended-plank
+    behavior. Principle: stack semantics require a spatial anchor. On mobile the anchor is always
+    the single visible plank, so all navigation is a journey stack. On desktop a nav-tree click has
+    no anchor, so it gets browser semantics (plain click = navigate solo); stack semantics apply
+    only where the origin is self-evident (links followed inside a plank). None of this is a
+    user-facing mode: every rule keys off the gesture and the breakpoint, never off accumulated
+    deck state, so behavior is identical whether one plank or many are open.
+    STATUS: the desktop rules (F-7.1–F-7.4, F-7.7) are implemented; the mobile journey-stack rules
+    (F-7.5, F-7.6) are a proposed design that remains unimplemented until the deck is fully mobile
+    compliant — mobile currently shares the desktop behavior.
+
+  req F-7.1:
+    when: desktop — user plain-clicks an item in the nav tree
+    then: the deck becomes just that plank (fullbleed), unless the item is already open — then the
+          deck is unchanged and the existing plank scrolls into view; the previous arrangement is
+          recoverable via browser history (deck state is pushed per change)
+
+  req F-7.2:
+    when: desktop — user modifier-clicks (or drags) an item from the nav tree
+    then: the item is appended to the deck (or inserted at the drop position), scrolled into view,
+          and attended; plain click retains its navigate-solo meaning regardless of deck size
+
+  req F-7.3:
+    when: desktop — user navigates to an object from inside a plank (an inline reference, its hover
+          card, or a card's Open menu action / title)
+    then: navigation follows the deck (Open with disposition 'auto', origin as pivotId or the
+          attended plank) — when the deck is already sliding the target opens beside the originating
+          plank; when the deck is solo it replaces the current plank; holding shift (where a
+          modifier is available, e.g. the inline reference and hover card) always adds a new plank
+
+  req F-7.4:
+    when: desktop — user closes a plank
+    then: only that plank closes (no cascade); closing the last plank shows the empty state
+
+  req F-7.5:
+    when: mobile (PROPOSED, unimplemented) — user navigates from any plank (nav drawer or in-plank link)
+    then: the target is pushed after the current plank and slid into view; navigating from
+          mid-stack first pops every plank after the current one
+
+  req F-7.6:
+    when: mobile (PROPOSED, unimplemented) — user closes a plank
+    then: the plank and every plank after it are popped (the journey stack unwinds)
+
+  req F-7.7:
+    when: the attended plank folds to a spine (or leaves the viewport entirely, in the mobile snap
+          presentation where planks are not pinned)
+    then: attention moves to the unfolded plank nearest the viewport center; while the attended
+          plank remains visibly usable, attention never changes on scroll (hysteresis — attention
+          always points at something the user can see)
+```
+
 ## Acceptance
 
 ```mdl
 test T-1: Open subject beside an active plank
-  given: deck has planks A and B active (sliding presentation)
-  when: Open({ subject: ['C'], disposition: 'new-plank' }) is dispatched
+  given: deck has planks A and B active (tiling presentation, desktop)
+  when: Open({ subject: ['C'], disposition: 'add' }) is dispatched
   then:
     - plank C is appended to the right of plank B
+    - presentation becomes sliding (three planks)
     - browser URL reflects the new deck state
     - plank C is scrolled into view
 ```
 
 ```mdl
-test T-2: Open with pivot truncation
+test T-2: Open with pivot insertion
   given: deck has planks [A, B, C] active
-  when: Open({ subject: ['D'], disposition: 'new-plank', pivotId: 'A' }) is dispatched
+  when: Open({ subject: ['D'], disposition: 'add', pivotId: 'A' }) is dispatched
   then:
-    - active deck becomes [A, D]
-    - planks B and C are moved to inactive
+    - active deck becomes [A, D, B, C]
+    - no planks are closed
 ```
 
 ```mdl
@@ -458,6 +587,78 @@ test T-7: Toast is shown and dismissed
   then:
     - toast appears in the UI
     - toast is removed after 3 seconds
+```
+
+```mdl
+test T-8: Two planks render tiling with a persisted split ratio
+  given: deck has plank A active (fullbleed presentation, desktop)
+  when: Open({ subject: ['B'], disposition: 'new-plank' }) is dispatched and the user drags the divider
+  then:
+    - presentation becomes tiling — A and B split the viewport with a hairline divider and no
+      horizontal overflow
+    - the new ratio is persisted in tilingSizing keyed by position via UpdateTilingSize
+```
+
+```mdl
+test T-9: Sliding plank folds to a spine
+  given: deck has planks [A, B, C] active (sliding presentation, desktop)
+  when: user scrolls until plank A's visible sliver is narrower than the fold threshold
+  then:
+    - plank A folds to a vertical spine showing its sigil and localized node label
+    - clicking the spine scrolls plank A back into view and unfolds it
+```
+
+```mdl
+test T-10: Desktop nav-tree click navigates solo
+  tags: [F-7]
+  given: deck has planks [A, B, C] active (desktop)
+  when: user plain-clicks item D in the nav tree
+  then:
+    - active deck becomes [D] (fullbleed presentation)
+    - the previous arrangement [A, B, C] is restorable via browser back
+```
+
+```mdl
+test T-11: Desktop modifier-click appends
+  tags: [F-7]
+  given: deck has planks [A, B] active (desktop)
+  when: user modifier-clicks item C in the nav tree
+  then:
+    - active deck becomes [A, B, C]
+    - plank C is scrolled into view and attended
+
+test T-11a: In-plank card navigation follows the deck (auto)
+  tags: [F-7]
+  given: a card navigation dispatches Open({ subject: ['C'], disposition: 'auto', pivotId: 'A' })
+  when: the deck is solo [A]
+  then:
+    - active deck becomes [C] (replace — solo navigation)
+  when: the deck is sliding [A, B]
+  then:
+    - active deck becomes [A, C, B] (added beside the origin A)
+  when: shift is held (disposition 'add') from solo [A]
+  then:
+    - active deck becomes [A, C] (a new plank, never replacing)
+```
+
+```mdl
+test T-12: Mobile branch from mid-stack pops forward
+  tags: [F-7, proposed]
+  given: deck has planks [A, B, C] active (mobile), B is the current plank
+  when: user navigates to D from B
+  then:
+    - active deck becomes [A, B, D]
+    - plank D slides into view
+```
+
+```mdl
+test T-13: Attention follows scroll with hysteresis
+  tags: [F-7]
+  given: deck has planks [A, B, C] active (sliding presentation, desktop), A is attended
+  when: user scrolls until plank A folds to a spine
+  then:
+    - attention moves to the unfolded plank nearest the viewport center
+    - scrolling back so plank A unfolds does not move attention again
 ```
 
 ---

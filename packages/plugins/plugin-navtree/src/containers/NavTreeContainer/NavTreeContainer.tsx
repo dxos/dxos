@@ -102,7 +102,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            void invokePromise(LayoutOperation.Open, { subject: [item.id], disposition: 'default' });
+            void invokePromise(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
@@ -140,10 +140,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
+          // Plain click navigates (the deck becomes this item); shift-click adds it as a new plank.
           void invokePromise(LayoutOperation.Open, {
             subject: [node.id],
             key: node.properties.key,
-            disposition: shift ? 'inverse' : 'default',
+            disposition: shift ? 'add' : 'solo',
           });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });

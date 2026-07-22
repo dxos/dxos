@@ -93,13 +93,13 @@ export class AttentionManager {
 
   /**
    * Update the currently attended element.
-   * Takes the array of qualified IDs collected from the DOM; the first element is the primary attended item.
+   * Takes an array of qualified IDs — normally collected from the DOM on focus, but callers may also
+   * invoke this programmatically (e.g. the deck's attention-follows-scroll hysteresis); the first
+   * element is the primary attended item.
    * Ancestry is derived from the progressive prefixes of the primary ID.
    * Relatedness is derived from the segment ID: any tracked key whose last `/` segment matches the
    * attended ID's segment ID is marked `isRelated`. Additionally, if the primary ID is a linked segment
    * (starts with `~`), its immediate parent gets `isRelated` alongside `isAncestor`.
-   *
-   * @internal
    */
   update(nextIds: string[]): void {
     const primaryId = nextIds[0];

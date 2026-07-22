@@ -14,7 +14,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { openSubjectsOnActiveDeck, replaceSubjectsOnActiveDeck, resolveDisposition } from '../layout';
+import { addSubjectsToActiveDeck } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
@@ -80,7 +80,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // Dedup subjects against the active deck using EID identity.
       // The same object can appear under different graph paths (e.g., via collections vs types).
       // Resolve each subject's EID and, if it matches an already-open deck item, remap the
-      // subject to the existing deck entry so that openEntry's exact-match check succeeds.
+      // subject to the existing deck entry so the already-open check matches by identity.
       {
         const deck = yield* DeckCapabilities.getDeck();
         const active = deck.active;
@@ -111,29 +111,34 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
       }
 
-      // Compute the next active deck state and apply it. The resolved disposition decides whether
-      // subjects are pushed (openSubjectsOnActiveDeck) or spliced in place (replaceSubjectsOnActiveDeck)
-      // at the pivot/attended plank.
+      // Compute the next active deck state and apply it. Dispositions:
+      // - 'solo' (default): navigate — the deck becomes just the subjects, unless they are all already
+      //   open (scroll-into-view only).
+      // - 'add': insert the subjects as new planks, immediately after `pivotId` when provided, else at
+      //   the end.
+      // - 'auto': follow the deck — add beside the origin (`pivotId`, falling back to the attended
+      //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank/card navigation
+      //   uses this so it grows a sliding deck but replaces a solo one.
+      const navigateSolo = (active: readonly string[]): string[] =>
+        input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
+
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(deck.active);
 
-        const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
-        const disposition = resolveDisposition(settings?.navigationDefault ?? 'replace', input.disposition);
+        const sliding = deck.active.length >= 2;
+        const addBesideOrigin = input.disposition === 'add' || (input.disposition === 'auto' && sliding);
 
         let next: string[];
-        if (disposition === 'new-plank') {
-          next = openSubjectsOnActiveDeck(deck.active, input.subject, {
-            pivotId: input.pivotId,
-            key: input.key,
-          });
+        if (addBesideOrigin) {
+          // For 'auto', anchor at the attended plank when the caller gave no explicit pivot; plain 'add'
+          // appends at the end when no pivot is provided (nav-tree shift-click).
+          const [attendedId] = input.disposition === 'auto' ? attention.getCurrent() : [];
+          const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
+          next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, key: input.key });
         } else {
-          const pivotIndex = input.pivotId ? deck.active.findIndex((id) => id === input.pivotId) : -1;
-          const [attendedId] = Array.from(attention.getCurrent());
-          const attendedIndex = attendedId ? deck.active.findIndex((id) => id === attendedId) : -1;
-          const index = pivotIndex !== -1 ? pivotIndex : attendedIndex !== -1 ? attendedIndex : 0;
-          next = replaceSubjectsOnActiveDeck(deck.active, input.subject, { index });
+          next = navigateSolo(deck.active);
         }
 
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention });

@@ -79,7 +79,7 @@ Capability‑driven `ButtonGroup`: solo/fullscreen, increment‑start/end, close
 
 - **`DeckViewport`** — sets CSS vars (`--main-spacing`, sidebar widths); `Main.Content`.
 - **`DeckContentEmpty`** — first‑run surface.
-- **`DeckPlanks`** — single-mode replacement for the old `DeckSoloMode`/`DeckMultiMode` split. Renders `deck.active` through one `Mosaic.Container > ScrollArea > Mosaic.Stack` pipeline; each `DeckPlankTile` is styled by the presentation derived from plank count (`useDeckPresentation`) — fullbleed for a singleton deck, resizable sliding tiles for two or more, always sliding and scroll-snapped below `md`. Planks stay mounted across 1↔2 transitions. Fullscreen is a transient overlay keyed off `EphemeralDeckState.fullscreen` (a plank id): when set, it renders only that plank headless in place of the whole stack; Escape and the exit button both toggle it via `DeckOperation.Adjust({ type: 'fullscreen' })`. Saves/restores `scrollLeft` across fullbleed↔sliding transitions.
+- **`DeckPlanks`** — single-mode replacement for the old `DeckSoloMode`/`DeckMultiMode` split. Renders `deck.active` through one `Mosaic.Container > ScrollArea > Mosaic.Stack` pipeline; each `DeckPlankTile` is styled by the presentation derived from plank count and breakpoint (`useDeckPresentation`) — fullbleed for a singleton deck, a flush tiling split for exactly two, resizable sliding tiles for three or more, always sliding with full-width scroll-snap planks below `md`. Planks stay mounted across 1↔2 transitions. Fullscreen is a transient overlay keyed off `EphemeralDeckState.fullscreen` (a plank id): when set, it renders only that plank headless in place of the whole stack; Escape and the exit button both toggle it via `DeckOperation.Adjust({ type: 'fullscreen' })`. Saves/restores `scrollLeft` across fullbleed↔sliding transitions.
 - **`DeckPlankTile`** — the `Mosaic.Stack` tile wrapping `DeckPlank`; for sliding tiles wires `size`/`onSizeChange` to `plankSizing`/`DeckOperation.UpdatePlankSize`.
 - **`DeckPlank`** (`useDeckPlank` hook) — the bridge, replacing the legacy `PlankContainer`/`PlankComponent`/`PlankHeading` tree. Resolves graph/node/companions (`useAppGraph`, `useNode`, `useCompanions`, `useSelectedCompanion`), reads deck state, gets `useOperationInvoker`, and builds a `Splitter.Root > Plank (+ companion Companion)` tree. Maps callbacks to operations:
   - `onAdjust`: close → `LayoutOperation.Close`/`UpdateComplementary`; fullscreen → `DeckOperation.Adjust({ type: 'fullscreen' })`; increment‑start/end → `DeckOperation.Adjust`; companion → `LayoutOperation.UpdateCompanion`.
@@ -91,13 +91,15 @@ Capability‑driven `ButtonGroup`: solo/fullscreen, increment‑start/end, close
 
 ## 3. Deck state & operations (`src/capabilities`, `schema.ts`)
 
-There is a single deck mode: presentation is derived from plank count rather than stored.
+There is a single deck mode: presentation is derived from plank count and breakpoint rather than
+stored (fullbleed for 1, tiling for 2, sliding for 3+; always sliding below `md`).
 
 ```ts
 type DeckState = {
-  active: string[]; // fullbleed when length === 1; sliding deck when length >= 2
+  active: string[]; // presentation derives from length + breakpoint
   inactive: string[];
   plankSizing: Record<string, number>; // rem widths keyed by plank id; sliding presentation only
+  tilingSizing?: number[]; // tiling split ratio, relative widths keyed by position
   companionOpen: boolean;
   companionFrameSizing: Record<string, number>;
 };
@@ -119,10 +121,12 @@ Operations relevant to layout:
 - `LayoutOperation.ScrollIntoView({ subject? })` → `ephemeral.scrollIntoView`.
 - `LayoutOperation.UpdateCompanion({ subject })` → toggles `companionOpen`; the selected variant is read
   from view state, not stored on `DeckState`.
-- `LayoutOperation.Open({ subject, disposition? })` — `disposition` (`'default' | 'inverse' | 'replace' |
-'new-plank'`) resolves against the `navigationDefault` setting via `resolveDisposition` (`layout.ts`):
-  `'new-plank'` pushes onto `active` (`openSubjectsOnActiveDeck`); `'replace'` splices at the
-  pivot/attended-plank index (`replaceSubjectsOnActiveDeck`). Shift-click passes `'inverse'`.
+- `LayoutOperation.Open({ subject, disposition? })` — `disposition` (`'solo' | 'add' | 'auto'`):
+  `'solo'` (the default) navigates — the deck becomes just the subjects, unless already open; `'add'`
+  inserts new planks after `pivotId` or at the end (`addSubjectsToActiveDeck` in `layout.ts`); `'auto'`
+  follows the deck — adds beside the origin (`pivotId` ?? attended plank) when sliding, else navigates
+  solo. Nav-tree plain click passes `'solo'` (shift → `'add'`); in-plank links/cards pass `'auto'`
+  (shift → `'add'`). See `PLUGIN.mdl` F-7 for the navigation model.
 - Companion nodes resolved via graph children of type `PLANK_COMPANION_TYPE`.
 
 ### URL sync

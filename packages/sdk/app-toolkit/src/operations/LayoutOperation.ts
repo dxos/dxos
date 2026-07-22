@@ -335,11 +335,14 @@ export const Open = Operation.make({
       ),
     ),
     disposition: Schema.optional(
-      Schema.Literal('default', 'inverse', 'replace', 'new-plank').annotations({
+      Schema.Literal('solo', 'add', 'auto').annotations({
         description:
-          'How the deck should place the opened items. `default`/`inverse` resolve against the ' +
-          "user's navigation setting (`inverse` is used when a modifier key is held); `replace`/`new-plank` " +
-          'are explicit overrides that ignore the setting.',
+          'How the deck should place the opened items. `solo` (the default) navigates: the deck becomes ' +
+          'just the opened items, unless they are all already open (the existing plank scrolls into view). ' +
+          '`add` inserts the items as new planks — immediately after `pivotId` when provided (in-plank ' +
+          'navigation anchors at its origin), else at the end of the deck. `auto` follows the deck: ' +
+          'when already sliding (2+ planks) it adds beside its origin (`pivotId`, falling back to the ' +
+          'attended plank); when solo it navigates.',
       }),
     ),
   }),

@@ -371,7 +371,7 @@ export const ManyPlanks: Story = {
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
       await invokePromise(LayoutOperation.Open, {
         subject: [STORY_ITEMS[1].id],
-        disposition: 'new-plank',
+        disposition: 'add',
         navigation: 'immediate',
       });
     });

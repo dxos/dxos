@@ -32,7 +32,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
-import { isLinkedSegment } from '@dxos/react-ui-attention';
+import { isLinkedSegment, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
@@ -544,6 +544,7 @@ export const DeckPlanks = () => {
   // effect never repositions anything — it only reads the already-pinned rects to decide when a plank has
   // collapsed to a sliver, then shows its spine on the edge it pinned to. Reading stable positions means
   // the spines never lag or flicker during a scroll.
+  const { attention } = useAttentionContext(DECK_VIEWPORT_NAME);
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport || !isSliding) {
@@ -553,7 +554,7 @@ export const DeckPlanks = () => {
       const tiles = getPlankTiles();
       const vpRect = viewport.getBoundingClientRect();
       const rects = tiles.map((tile) => tile.getBoundingClientRect());
-      tiles.forEach((tile, index) => {
+      const folded = tiles.map((tile, index) => {
         // In both piles a plank is covered on its right by the next plank (which stacks above it), so its
         // spine is the sliver from its own left edge to the next plank's left edge. Fold once that sliver
         // is narrow enough that the header no longer fits. The last plank has no cover, so use its own
@@ -561,11 +562,43 @@ export const DeckPlanks = () => {
         const rect = rects[index];
         const coverLeft = rects[index + 1]?.left ?? Math.min(rect.right, vpRect.right);
         const uncovered = coverLeft - rect.left;
-        tile.toggleAttribute('data-folded', uncovered > 0 && uncovered < FOLD_THRESHOLD_PX);
+        const isFolded = uncovered > 0 && uncovered < FOLD_THRESHOLD_PX;
+        tile.toggleAttribute('data-folded', isFolded);
         // Which pile the plank pinned to, so the fold animation can travel in the plank's own direction:
         // `start` for the left pile (moving toward the start), `end` for the right pile.
         tile.setAttribute('data-fold-side', rect.left - vpRect.left < vpRect.width / 2 ? 'start' : 'end');
+        return isFolded;
       });
+
+      // Attention hysteresis: attention must always point at a plank the user can see. It moves only
+      // when the attended plank has folded to a spine (or left the viewport entirely — the mobile snap
+      // case, where tiles are not sticky), and then to the unfolded plank nearest the viewport center,
+      // so focus never twitches while the attended plank remains visible.
+      const [attendedId] = attention?.getCurrent() ?? [];
+      const offscreen = (rect: DOMRect) => rect.right <= vpRect.left || rect.left >= vpRect.right;
+      const attendedIndex = attendedId
+        ? tiles.findIndex((tile) => {
+            const id = tile.getAttribute('data-object-id');
+            return !!id && (attendedId === id || attendedId.startsWith(`${id}/`));
+          })
+        : -1;
+      if (attendedIndex !== -1 && (folded[attendedIndex] || offscreen(rects[attendedIndex]))) {
+        const vpCenter = vpRect.left + vpRect.width / 2;
+        let best: { id: string; distance: number } | undefined;
+        tiles.forEach((tile, index) => {
+          const id = tile.getAttribute('data-object-id');
+          if (!id || folded[index] || offscreen(rects[index])) {
+            return;
+          }
+          const distance = Math.abs((rects[index].left + rects[index].right) / 2 - vpCenter);
+          if (!best || distance < best.distance) {
+            best = { id, distance };
+          }
+        });
+        if (best) {
+          attention.update([best.id]);
+        }
+      }
     };
     update();
     const offScroll = addEventListener(viewport, 'scroll', update);
@@ -576,7 +609,7 @@ export const DeckPlanks = () => {
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [isSliding, rendered.length, maxPlankWidthPx, getPlankTiles]);
+  }, [isSliding, rendered.length, maxPlankWidthPx, getPlankTiles, attention]);
 
   // Cap the plank width to the viewport so the current plank's trailing controls never hide behind the
   // piled spines: reserve a spine (plus the stack gap) for every other plank, then subtract the stack
