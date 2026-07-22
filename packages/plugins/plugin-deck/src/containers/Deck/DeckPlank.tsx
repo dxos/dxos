@@ -42,6 +42,7 @@ export const DeckPlank = memo(
     const rootRef = useRef<HTMLDivElement>(null);
     const {
       node,
+      breadcrumbs,
       companions,
       resolvedCompanionId,
       hasCompanion,
@@ -51,6 +52,7 @@ export const DeckPlank = memo(
       popoverAnchorId,
       scrollIntoView,
       onAction,
+      onNavigate,
       onAdjust,
       onScrollIntoView,
       onUpdateCompanion,
@@ -149,10 +151,12 @@ export const DeckPlank = memo(
           <Plank
             ref={rootRef}
             node={node}
+            breadcrumbs={breadcrumbs}
             attendableId={id}
             related={part === 'complementary'}
             actions={sigilActions}
             onAction={onAction}
+            onNavigate={onNavigate}
             popoverAnchorId={popoverAnchorId}
             articleData={articleData}
             controls={controls}

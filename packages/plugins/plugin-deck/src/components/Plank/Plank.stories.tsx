@@ -18,6 +18,7 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
@@ -85,6 +86,41 @@ const DefaultStory = () => {
   );
 };
 
+// A plank whose toolbar renders an ancestor breadcrumb trail; click a crumb to navigate.
+const BreadcrumbsStory = () => {
+  const [organization] = useMemo(() => [Organization.make({ name: random.company.name() })], []);
+  const organizationNode = useNode(organization, 'ph--building-office--regular');
+  const breadcrumbs = useMemo<Node.Node[]>(
+    () => [
+      {
+        id: 'root/registry',
+        type: 'test',
+        data: null,
+        properties: { label: 'Plugins', icon: 'ph--squares-four--regular' },
+      },
+      {
+        id: 'root/registry/companies',
+        type: 'test',
+        data: null,
+        properties: { label: 'Companies', icon: 'ph--buildings--regular' },
+      },
+      organizationNode,
+    ],
+    [organizationNode],
+  );
+
+  return (
+    <div className='flex h-full gap-3 p-3 bg-deck-surface'>
+      <Plank
+        node={organizationNode}
+        breadcrumbs={breadcrumbs}
+        onNavigate={(id) => console.log('navigate', id)}
+        classNames={mx(PLANK_CLASSNAMES, 'is-[40rem]')}
+      />
+    </div>
+  );
+};
+
 const meta: Meta = {
   title: 'plugins/plugin-deck/components/Plank',
   decorators: [
@@ -101,3 +137,5 @@ export default meta;
 type Story = StoryObj;
 
 export const Default: Story = { render: () => <DefaultStory /> };
+
+export const Breadcrumbs: Story = { render: () => <BreadcrumbsStory /> };
