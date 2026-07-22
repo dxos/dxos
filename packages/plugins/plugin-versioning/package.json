@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-versioning",
   "version": "0.10.0",
-  "private": true,
   "description": "DXOS plugin providing a generic version/review layer (history timeline, branches, checkpoints, review modes).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
