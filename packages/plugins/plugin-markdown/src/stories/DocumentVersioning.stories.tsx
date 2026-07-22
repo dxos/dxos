@@ -51,7 +51,7 @@ import { Branch } from '@dxos/versioning';
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
-import { MarkdownPlugin } from '../../MarkdownPlugin';
+import { MarkdownPlugin } from '../MarkdownPlugin';
 
 const concat = (...lines: string[]) => lines.join('\n');
 
