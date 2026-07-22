@@ -171,7 +171,7 @@ as primary coverage.
       so the agent had no database tools and failed with "No tools available to complete the
       task" — fixed by extracting `getDefaultSkills` into a shared `src/skills.ts`. With a real
       `DX_ANTHROPIC_API_KEY` (`op run --account braneframe --env-file=.config/.env.1password --
-    npx evalite run src/evals/database.eval.ts`), `database.eval.ts` now scores **100%**.
+  npx evalite run src/evals/database.eval.ts`), `database.eval.ts` now scores **100%**.
       PR #12307 is functionally verified end-to-end; still draft pending a final ready-for-review
       pass.
 - [ ] Port `web-search.test.ts` next as the first tool-match scorer case (checks only the
