@@ -7,7 +7,9 @@ PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 (`test`+context-`expect`, helpers below `describe`); MERGED);
 [#12297](https://github.com/dxos/dxos/pull/12297) (revised plan — gate G1 in place instead of
 deleting it, remove all committed conversation fixtures, switch the gating mechanism to native
-`describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED).
+`describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED);
+[#12305](https://github.com/dxos/dxos/pull/12305) (draft, watching Check — leaner package-level
+`AiRequest.test.ts` D-tier tests + `operationServiceLayerNoop`).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -46,6 +48,22 @@ as primary coverage.
       magazine, AssistantPlugin ×3 tests, AiSummarizer; G3: functions, AgentService, request,
       xml-response). Left running: `memoization.test.ts` (tests the machinery itself), G1
       `assistant-e2e` (own harness — deleted in a later step, not de-gated here).
+- [x] **PR #12305 (draft):** added a leaner, package-level companion to the harness (D) tests below
+      — `assistant/src/request/AiRequest.test.ts` drives `AiRequest.Request.run` directly (no
+      `AssistantTestLayer`/`ProcessManager`/`AgentServiceRuntime`/`AiService` model-resolution),
+      using `ScriptedLanguageModel.scriptedLanguageModelLayer` as `LanguageModel.LanguageModel`
+      directly + only the services `RunRequirements` is typed to need, most of which are noop/
+      in-memory (`TestDatabaseLayer`, `registryLayerNoop`, new `operationServiceLayerNoop` in
+      `@dxos/compute/testing` mirroring `registryLayerNoop`, `ToolExecutionService.layerEmpty`,
+      `ToolResolverService.layerEmpty`) since `run()` never yields them on this path (no bound
+      objects/skills; tool calls go through the passed-in toolkit, not the operation resolver).
+      **Not a replacement** for `scripted-loop.test.ts` — that one additionally exercises the
+      `AiService` model-resolution indirection and the full `ProcessManager`/`AgentServiceRuntime`/
+      `ServiceResolver` composition boot (closest thing left to G1's unique "full composition
+      boots" coverage); this one isolates the loop itself for a faster, narrower-blast-radius
+      failure signal. Keep both. Verified: `assistant:build`/`lint` green, `assistant:test` 39
+      passed/5 skipped incl. the 3 new tests. Tool-error / malformed-output branches still
+      deferred (same gap as the agent-runtime version — do in one place, not both).
 - [x] **Revised plan (superseded "delete G1" below), PR #12297:** rather than deleting
       `assistant-e2e`, extended the same gate to it — cheaper, reversible, and keeps the suites
       runnable locally as live/eval tests + design inspiration, per direct guidance. Gated all 6
