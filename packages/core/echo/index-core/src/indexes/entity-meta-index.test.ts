@@ -86,7 +86,7 @@ describe('EntityMetaIndex', () => {
         updatedAt: Date.now(),
         data: {
           id: objectId,
-          [ATTR_TYPE]: `echo:/${schemaId}`,
+          [ATTR_TYPE]: URI.make(`echo:/${schemaId}`),
           [ATTR_DELETED]: false,
         },
       };
