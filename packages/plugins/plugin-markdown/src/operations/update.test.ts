@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { AssistantTestLayer, runMemoizedTests } from '@dxos/agent-runtime/testing';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation, Skill } from '@dxos/compute';
@@ -34,7 +34,7 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-describe('update', () => {
+describe.skipIf(!runMemoizedTests())('update', () => {
   it.effect(
     'call a function to update a markdown document',
     Effect.fnUntraced(

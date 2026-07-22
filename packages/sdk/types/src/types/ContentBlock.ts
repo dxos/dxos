@@ -374,6 +374,21 @@ export const Suggestion = Schema.TaggedStruct('suggestion', {
 
 export type Suggestion = Schema.Schema.Type<typeof Suggestion>;
 /**
+ * A suggested edit to a document: replace `before` with `after` at an anchored range. Rendered as a
+ * review tile (struck original → proposed text) with Accept/Reject; the surrounding container maps it
+ * back to the author's suggestion branch (see plugin-comments / `@dxos/versioning`).
+ */
+export const Change = Schema.TaggedStruct('change', {
+  /** The original text being replaced (empty for a pure insertion). */
+  before: Schema.String,
+  /** The proposed replacement (empty for a pure deletion). */
+  after: Schema.String,
+
+  ...Base.fields,
+});
+
+export type Change = Schema.Schema.Type<typeof Change>;
+/**
  * Multiple choice selection.
  * Usually an answer to assistant's question.
  */
@@ -464,6 +479,7 @@ export const Json = Schema.TaggedStruct('json', {
 export type Json = Schema.Schema.Type<typeof Json>;
 export const Any = Schema.Union(
   Anchor,
+  Change,
   File,
   Image,
   Json,

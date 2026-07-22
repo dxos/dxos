@@ -17,5 +17,6 @@ export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./restore-text'),
   () => import('./scroll-to-anchor'),
   () => import('./set-view-mode'),
+  () => import('./suggest-edit'),
   () => import('./update-markdown'),
 );

@@ -105,13 +105,24 @@ deterministic code through a frozen LLM recording.
   branch: tool-call → result → continue, clean stop, max-iterations, tool error propagation,
   malformed-output handling, persistence to the feed. The scripted-model primitive already exists
   in reduced form inside `MemoizedLanguageModel` — extract it (see plan).
-- **E — context-assembly tests.** Snapshot the assembled prompt (system + skill instructions +
-  bound objects) for representative inputs. Pure function of inputs; no model.
+- **E — context-assembly tests.** Assert that the prompt the model would see — system prompt +
+  skill instructions + bound objects + tool descriptions, in order — is exactly what the assembly
+  code (`formatSystemPrompt`, `AiPreprocessor.preprocessPrompt`) produces for representative inputs.
+  It is a pure function of its inputs, so snapshot it: the assembled prompt is precisely the signal
+  the memoized path buried inside a full recorded conversation. Catches skill/instruction wiring
+  regressions — a skill silently dropped from the system prompt, objects not bound, tool blocks
+  reordered — that never surface as a tool call and so are invisible to the A/B/D tiers. No model.
 - **F — schema round-trip tests.** Assert tool JSON-schema generation and arg/result
   encode↔decode for each toolkit. Catches the "LLM emits args the handler can't decode" class
   without invoking the LLM.
-- **G — code-side oracle.** Express completion as **assertions over observable effects** (ECHO
-  database state, which tools were invoked, returned shapes), not a frozen LLM boolean.
+- **G — code-side oracle.** Express completion as **assertions over observable effects** — ECHO
+  database state, which tools were invoked and with what args, returned shapes — never a frozen LLM
+  boolean. The oracle is **plain deterministic code**, and that is the point: pointed at a
+  scripted-model run (C/D) its verdict is fully reproducible; pointed at a live-model run (A/B/H)
+  the _same_ helper is still deterministic code but its input is not, so there it grades a
+  distribution (pass-rate ≥ threshold) rather than asserting once. Ship the checks as shared
+  assertion helpers (DB-effect, tool-invocation) usable from both tiers. Keeping the verdict out of
+  the model is what stops a test from certifying itself.
 
 ### Non-deterministic tiers (graded, model-pinned, out-of-band, non-gating)
 
@@ -199,8 +210,15 @@ deterministic tiers that make it safe.
    redundant with G2/G3.
 5. **Operation (C) unit tests**: begin converting G2 to deterministic mocked unit tests; introduce
    the golden-args fixture convention. Delete each G2 fixture only once its unit test lands.
-6. **Context-assembly (E) and schema round-trip (F) tests.**
-7. **Code-side oracle (G):** add DB-state / tool-invocation assertion helpers to the test harness.
+6. **Context-assembly (E) and schema round-trip (F) tests.** E: snapshot the assembled prompt
+   (system + skill instructions + bound objects + tool descriptions) for representative inputs — a
+   pure function of inputs, no model — so skill/instruction wiring regressions surface as a prompt
+   diff instead of a buried cache miss. F: assert tool JSON-schema generation and arg/result
+   encode↔decode per toolkit, catching the "LLM emits args the handler can't decode" class offline.
+7. **Code-side oracle (G):** shared, deterministic DB-state / tool-invocation assertion helpers,
+   used by the C/D tiers for a reproducible pass/fail and reused as **scorers** over the eval tier
+   (graded across runs, not asserted once). The verdict is always code, never an LLM output — a
+   single helper, deterministic wherever its inputs are.
 
 ### Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 

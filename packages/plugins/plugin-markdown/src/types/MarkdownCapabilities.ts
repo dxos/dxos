@@ -7,9 +7,10 @@
 import { type EditorView } from '@codemirror/view';
 import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
+import { type ComponentType } from 'react';
 
 import { Capability } from '@dxos/app-framework';
-import { type EditorStateStore } from '@dxos/ui-editor';
+import { type EditorStateStore, type SuggestionSource } from '@dxos/ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { meta } from '#meta';
@@ -52,4 +53,23 @@ export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.profile.k
 // TODO(burdon): Move to ./types (external API)?
 export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(
   `${meta.profile.key}.capability.extensions`,
+);
+
+export type SuggestionSourcesProviderProps = {
+  /** The versioned document whose active `kind:'suggestion'` branches are enumerated. */
+  document?: Markdown.Document;
+  /** Author palette hues keyed by DID, forwarded so each source keeps its author's colour. */
+  authorHues?: Record<string, string>;
+  /** Emits the aggregated per-author suggestion sources whenever the resolved set changes. */
+  onSources: (sources: SuggestionSource[]) => void;
+};
+
+/**
+ * Slot for a headless component that enumerates a document's active suggestion branches and emits
+ * their aggregated {@link SuggestionSource}s for the ambient review overlay. Contributed by
+ * plugin-comments (which owns branch resolution) and consumed here — the inverted dependency
+ * (comments → markdown) is bridged through this capability rather than a direct import.
+ */
+export const SuggestionSourcesProvider = Capability.make<ComponentType<SuggestionSourcesProviderProps>>(
+  `${meta.profile.key}.capability.suggestion-sources-provider`,
 );

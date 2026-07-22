@@ -513,6 +513,7 @@ export const makeToolbarActionGroup = ({
   label,
   icon,
   iconOnly = true,
+  testId,
   actions,
 }: {
   id: string;
@@ -521,6 +522,8 @@ export const makeToolbarActionGroup = ({
   /** Render the trigger as icon-only (label becomes tooltip/aria). Defaults to `true` for compact
    * toolbars; set `false` to show the label text next to the icon. */
   iconOnly?: boolean;
+  /** Test id for the group's dropdown trigger. */
+  testId?: string;
   actions: Node.NodeArg<Node.ActionData<any>>[];
 }): Node.NodeArg<typeof Node.actionGroupSymbol> =>
   Node.makeActionGroup({
@@ -535,6 +538,7 @@ export const makeToolbarActionGroup = ({
       iconOnly,
       disposition: TOOLBAR_DISPOSITION,
       ...(icon !== undefined && { icon }),
+      ...(testId !== undefined && { testId }),
     },
   });
 

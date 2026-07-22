@@ -92,6 +92,11 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
 - **Commit nothing silently.** Before any commit/push, `git status` and account
   for every modified/untracked file — including the user's own edits in the
   shared worktree. Commit them or explicitly confirm exclusion.
+- **Format before every commit and PR.** Run `pnpm format` (oxfmt) and stage the
+  result before committing — do NOT rely on formatting files one at a time as you
+  edit. CI's `check` job runs `oxfmt --check` and a **single** unformatted file
+  fails the entire workflow (build/test/storybook included via the shared graph),
+  wasting a full CI cycle. Never push a branch you have not formatted.
 
 ## Build, test, lint
 
@@ -169,6 +174,10 @@ Deeper conventions:
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, land, …).
+- **Flaky test quarantining** — investigating a flaky/red CI run or setting up
+  Trunk test uploads → `trunk-quarantine` skill
+  (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
+  `REPOSITORY_GUIDE.md`.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

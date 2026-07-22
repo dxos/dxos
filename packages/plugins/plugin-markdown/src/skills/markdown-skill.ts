@@ -18,6 +18,8 @@ const make = () =>
         MarkdownOperation.Open,
         MarkdownOperation.Update,
         MarkdownOperation.CreateBranch,
+        // SuggestEdit is intentionally NOT exposed yet: without the runtime providing an
+        // AgentIdentity (deferred), it would die for lack of a creator. Add it back with that wiring.
         MarkdownOperation.MergeBranch,
         MarkdownOperation.CreateCheckpoint,
       ],

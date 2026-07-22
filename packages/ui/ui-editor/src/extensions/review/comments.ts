@@ -60,6 +60,11 @@ export type CommentsOptions = {
    */
   reviewBranch?: string;
   /**
+   * Prohibit creating new comments (e.g. on a per-user suggestion branch). Existing comments still
+   * render; the create command becomes a no-op.
+   */
+  readonly?: boolean;
+  /**
    * Called to create a new thread and return the thread id.
    */
   onCreate?: (params: { cursor: string; from: number; location?: Rect | null; branch?: string }) => void;
@@ -527,6 +532,11 @@ const optionsFacet = singleValueFacet<CommentsOptions>();
  */
 export const createComment: Command = (view) => {
   const options = view.state.facet(optionsFacet);
+  // Comment creation is prohibited on this surface (e.g. a suggestion branch).
+  if (options.readonly) {
+    return false;
+  }
+
   let { from, to } = view.state.selection.main;
 
   // Snap to the largest logical region so commenting never depends on a precise selection. Inside a

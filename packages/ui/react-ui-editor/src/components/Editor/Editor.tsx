@@ -115,7 +115,6 @@ type EditorContentProps = ThemedClassName<PropsWithChildren<{}>>;
 /**
  * Content component that wraps the toolbar and editor view area.
  */
-// TODO(burdon): Use Panel.
 const EditorContent = ({ classNames, children }: EditorContentProps) => {
   return <div className={mx('grid grid-rows-[min-content_1fr] h-full overflow-hidden', classNames)}>{children}</div>;
 };

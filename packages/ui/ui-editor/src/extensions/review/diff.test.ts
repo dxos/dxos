@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, groupHunks, revertHunk } from './diff';
+import { type DiffHunk, cherryPickHunk, computeHunks, diffHunks, groupHunks, rebaseHunks, revertHunk } from './diff';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');
@@ -20,32 +20,34 @@ describe('diff hunks', () => {
     }
   });
 
-  test('cherryPickHunk applies the compare (A) version of the hunk overlapping the range', ({ expect }) => {
-    // Range over "Line one CHANGED." in the modified (current) text.
-    const start = modified.indexOf('Line one');
-    const splice = cherryPickHunk(modified, original, { start, end: start + 4 });
+  test('cherryPickHunk resolves only the anchored word hunk, not the whole line or other changes', ({ expect }) => {
+    // Range over the changed word "CHANGED" in the modified (current) text.
+    const start = modified.indexOf('CHANGED');
+    const splice = cherryPickHunk(modified, original, { start, end: start + 'CHANGED'.length });
     expect(splice).toBeDefined();
     if (!splice) {
       return;
     }
-    // Applying the splice to `modified` yields a string where that hunk matches `original`.
+    // Applying the splice to `modified` reverts that hunk to `original`.
     const applied = modified.slice(0, splice.from) + splice.insert + modified.slice(splice.from + splice.del);
     expect(applied).toContain('Line one.');
-    expect(applied).not.toContain('Line one CHANGED.');
+    expect(applied).not.toContain('CHANGED');
+    // Word-level: the separate change on another line is untouched (would break with line granularity).
+    expect(applied).toContain('Line three ADDED.');
   });
 
   test('reflects the latest compare text, not a snapshot', ({ expect }) => {
-    const start = modified.indexOf('Line one');
-    const range = { start, end: start + 4 };
+    const start = modified.indexOf('CHANGED');
+    const range = { start, end: start + 'CHANGED'.length };
 
-    // First compare version.
+    // First compare version does not carry the later edit.
     const v1 = cherryPickHunk(modified, original, range);
-    expect(v1?.insert).toContain('Line one.');
+    expect(v1?.insert).not.toContain('EDITED AGAIN');
 
     // Compare text edited further; cherry-pick now yields the NEWER version.
     const originalV2 = ['# Title', '', 'Line one EDITED AGAIN.', 'Line two.', ''].join('\n');
     const v2 = cherryPickHunk(modified, originalV2, range);
-    expect(v2?.insert).toContain('Line one EDITED AGAIN.');
+    expect(v2?.insert).toContain('EDITED AGAIN');
   });
 
   test('returns undefined when the range is not on a changed hunk', ({ expect }) => {
@@ -133,6 +135,45 @@ describe('diffHunks', () => {
   test('handles empty inputs', ({ expect }) => {
     expect(diffHunks('', '')).toEqual([]);
     expect(diffHunks('same', 'same')).toEqual([]);
+  });
+});
+
+describe('rebaseHunks', () => {
+  test('maps hunks 1:1 when the doc equals the base', ({ expect }) => {
+    const base = 'The quick brown fox.';
+    const hunks = diffHunks(base, 'The slow brown fox.');
+    expect(rebaseHunks(base, base, hunks)).toEqual(hunks);
+  });
+
+  test('shifts a hunk after a doc insertion by the inserted length', ({ expect }) => {
+    const base = 'The quick brown fox.';
+    // The doc (branch) inserted "very " before "quick"; base offsets after it shift right by 5.
+    const doc = 'The very quick brown fox.';
+    const hunks = diffHunks(base, 'The quick brown cat.'); // fox -> cat, anchored in base.
+    const [hunk] = hunks;
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    // The rebased hunk lands on "fox" in the diverged doc, not on the user's inserted "very".
+    expect(rebased.from).toBe(hunk.from + 'very '.length);
+    expect(doc.slice(rebased.from, rebased.to)).toBe(hunk.removed);
+  });
+
+  test('leaves a base hunk before a later doc insertion unshifted', ({ expect }) => {
+    const base = 'The quick brown fox.';
+    const doc = 'The quick brown fox. More text.'; // appended after the change region.
+    const hunks = diffHunks(base, 'The slow brown fox.'); // quick -> slow near the start.
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    expect(rebased.from).toBe(hunks[0].from);
+    expect(doc.slice(rebased.from, rebased.to)).toBe(hunks[0].removed);
+  });
+
+  test('a foreign hunk ending exactly where a doc edit begins does not absorb the user text', ({ expect }) => {
+    // Bob deletes "one " (base offsets [0,4)); the user inserts "X" at offset 4, immediately after.
+    // The rebased strike must cover only "one ", never "one X" (the user's own adjacent character).
+    const base = 'one two';
+    const doc = 'one Xtwo';
+    const hunks = diffHunks(base, 'two'); // Bob removes the leading "one ".
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    expect(doc.slice(rebased.from, rebased.to)).toBe('one ');
   });
 });
 

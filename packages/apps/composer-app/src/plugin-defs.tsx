@@ -93,6 +93,7 @@ import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
 import { TypefullyPlugin } from '@dxos/plugin-typefully/plugin';
+import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
 import { VideoPlugin } from '@dxos/plugin-video/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
@@ -274,6 +275,7 @@ export const getPlugins = ({
       observability: true,
       shareableLinkOrigin: origin,
     }),
+    VersioningPlugin(),
     CodePlugin(),
     StackPlugin(),
     StatusBarPlugin(),

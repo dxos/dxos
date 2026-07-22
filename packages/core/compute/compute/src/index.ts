@@ -5,6 +5,7 @@
 export * from './errors';
 export * from './types';
 
+export * as AgentIdentity from './AgentIdentity';
 export * as AgentService from './AgentService';
 export * as Credential from './Credential';
 export * as Header from './Header';

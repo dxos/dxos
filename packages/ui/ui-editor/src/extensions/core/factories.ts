@@ -215,7 +215,7 @@ export type ThemeExtensionsOptions = {
 
 export const grow: ThemeExtensionsOptions['slots'] = {
   editor: {
-    className: 'h-full w-full',
+    className: 'w-full h-full',
   },
 } as const;
 
@@ -225,7 +225,7 @@ export const fullWidth: ThemeExtensionsOptions['slots'] = {
   },
 } as const;
 
-export const defaultThemeSlots = grow;
+export const defaultThemeSlots = fullWidth;
 
 export const defaultStyles = {
   dark: vscodeDarkStyle,

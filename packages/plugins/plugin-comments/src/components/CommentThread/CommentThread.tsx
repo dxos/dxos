@@ -6,32 +6,18 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useIdentity, useMembers } from '@dxos/halo-react';
-import { getSpace } from '@dxos/react-client/echo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
-import { Message as MessageComponent, Thread, type ThreadComponents } from '@dxos/react-ui-thread';
+import {
+  Message as MessageComponent,
+  type MessageMetadata,
+  Thread,
+  type ThreadComponents,
+  ThreadStatusProps,
+} from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
-import { useStatus } from '#hooks';
 import { meta } from '#meta';
-
-import { getMessageMetadata } from '../../util';
-
-export type CommentThreadProps = {
-  anchor: AnchoredTo.AnchoredTo;
-  /** Injected renderers (e.g. the Surface-backed object tile) supplied by the container. */
-  components: ThreadComponents;
-  current?: boolean;
-  onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
-  onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
-  onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
-  /** Apply the change this (branch-review) thread is anchored to and resolve it; shown while diffing. */
-  onAcceptChange?: (anchor: AnchoredTo.AnchoredTo) => void;
-};
 
 // TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
 // relation changes. The try/catch should not be necessary — Relation.getSource should
@@ -44,14 +30,39 @@ const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.So
   }
 };
 
+export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
+  anchor: AnchoredTo.AnchoredTo;
+  /** Injected renderers (e.g. the Surface-backed object tile) supplied by the container. */
+  components: ThreadComponents;
+  /** The local author's metadata for the reply composer. */
+  authorMetadata: MessageMetadata;
+  /** The local identity DID (decides message editability). */
+  identityDid?: string;
+  current?: boolean;
+  /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
+  getMetadata: (message: Message.Message) => MessageMetadata;
+  onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
+  onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  /** Apply the change this (branch-review) thread is anchored to and resolve it; shown while diffing. */
+  onAcceptChange?: (anchor: AnchoredTo.AnchoredTo) => void;
+};
+
 /**
  * A single anchored comment thread, rendered on the `@dxos/react-ui-thread`
  * primitives (`Thread.*` / `Message.Tile`).
  */
 export const CommentThread = ({
+  activity,
   anchor,
   components,
+  authorMetadata,
+  identityDid,
   current,
+  getMetadata,
   onAttend,
   onComment,
   onResolve,
@@ -61,34 +72,13 @@ export const CommentThread = ({
   onAcceptChange,
 }: CommentThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const identity = useIdentity();
-  const space = getSpace(anchor);
-  const members = useMembers(space?.id);
   const detached = !anchor.anchor;
   const source = useRelationSource(anchor);
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
   const threadUri = thread ? Obj.getURI(thread) : undefined;
-  const [messages] = useObject(thread, 'messages');
-  // Subscribe to `status` so resolving/unresolving the thread re-renders its controls and the
-  // accept-change affordance (the `messages` subscription alone does not observe status changes).
   const [status] = useObject(thread, 'status');
-  const activity = useStatus(space, threadUri);
+  const [messages] = useObject(thread, 'messages');
 
-  const getMetadata = useCallback(
-    (message: Message.Message) => {
-      const senderIdentity = members.find(
-        (member) =>
-          (message.sender.identityDid && member.did === message.sender.identityDid) ||
-          (message.sender.identityKey && member.identityKey === message.sender.identityKey),
-      );
-      return getMessageMetadata(Obj.getURI(message), senderIdentity, message.sender);
-    },
-    [members],
-  );
-  const textboxMetadata = useMemo(
-    () => getMessageMetadata(threadUri ?? '', identity ?? undefined),
-    [threadUri, identity],
-  );
   const loadedMessages = useMemo(
     () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
     [messages],
@@ -172,10 +162,10 @@ export const CommentThread = ({
 
   return (
     <Thread.Root
-      getMetadata={getMetadata}
-      components={components}
-      identityDid={identity?.did}
       editable
+      components={components}
+      identityDid={identityDid}
+      getMetadata={getMetadata}
       onMessageDelete={onMessageDelete ? handleMessageDelete : undefined}
       onAcceptProposal={onAcceptProposal ? handleAcceptProposal : undefined}
     >
@@ -203,7 +193,7 @@ export const CommentThread = ({
           focus, so multiple active threads no longer fight for focus.
         */}
         <Thread.Textbox
-          {...textboxMetadata}
+          {...authorMetadata}
           placeholder={t('message.placeholder')}
           autoFocus={status === 'staged'}
           onSend={handleComment}

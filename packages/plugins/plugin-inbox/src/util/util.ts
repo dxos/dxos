@@ -6,7 +6,6 @@ import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fn
 
 import { Obj } from '@dxos/echo';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
-import { toHue } from '@dxos/util';
 
 import { type Mailbox } from '#types';
 
@@ -171,16 +170,6 @@ export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: 
   });
 };
 
-/**
- * Hashes a string into a number
- * @param str String to hash
- * @returns A non-negative number hash
- */
-// TODO(burdon): Factor out.
-export const hashString = (str?: string): number => {
-  return str ? Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0)) : 0;
-};
-
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =
   <T, K extends Extract<keyof T, string>>(prop: K, descending = false) =>
@@ -216,7 +205,6 @@ type MessageProps = {
   email?: string;
   subject: string;
   snippet: string;
-  hue: string;
 };
 
 /**
@@ -272,8 +260,7 @@ export const getMessageProps = (
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? getMessageBodyText(message);
-  const hue = toHue(hashString(from));
-  return { id, text, date, from, to, email, subject, snippet, hue };
+  return { id, text, date, from, to, email, subject, snippet };
 };
 
 /**

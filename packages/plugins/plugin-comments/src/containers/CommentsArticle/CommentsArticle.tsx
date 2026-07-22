@@ -16,23 +16,43 @@ import {
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
-import { useIdentity } from '@dxos/halo-react';
+import { toCursorRange } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
+import { useObject, useQuery } from '@dxos/echo-react';
+import { useIdentity, useMembers } from '@dxos/halo-react';
 import { Markdown } from '@dxos/plugin-markdown';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { VersioningCapabilities } from '@dxos/plugin-versioning';
+import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { type ObjectTileComponent } from '@dxos/react-ui-thread';
-import { AnchoredTo, Thread } from '@dxos/types';
-import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
+import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
+import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
+import { hexToHue } from '@dxos/util';
 
-import { CommentThread } from '#components';
+import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
 import { CommentCapabilities, type ViewState } from '#types';
 
+import { type SuggestionGroup, useStatus } from '../../hooks';
+import { getMessageMetadata } from '../../util';
+
 const initialViewState: ViewState = { showResolvedThreads: false };
+
+/**
+ * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
+ * stays free of a space/client dependency (it renders purely from injected metadata + callbacks).
+ */
+const CommentThreadItem = ({
+  space,
+  threadUri,
+  ...props
+}: { space?: Space; threadUri: string } & Omit<CommentThreadProps, 'activity'>) => {
+  const activity = useStatus(space, threadUri);
+  return <CommentThread activity={activity} {...props} />;
+};
 
 /**
  * Reads a best-effort string label off an untyped ECHO object for the object-tile fallback.
@@ -61,6 +81,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
     [subject],
   );
   const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
+
   return (
     <Card.Root className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
       <Surface.Surface
@@ -85,9 +106,52 @@ export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
+  const registry = useCapability(Capabilities.AtomRegistry);
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
-  const registry = useCapability(Capabilities.AtomRegistry);
+
+  // Space-derived presentation, supplied to the (space-agnostic) CommentThread:
+  // author metadata resolved against members, and the local author's composer metadata.
+  const space = getSpace(subject);
+  const members = useMembers(space?.id);
+  const getMetadata = useCallback(
+    (message: MessageType.Message) => {
+      const senderIdentity = members.find(
+        (member) =>
+          (message.sender.identityDid && member.did === message.sender.identityDid) ||
+          (message.sender.identityKey && member.identityKey === message.sender.identityKey),
+      );
+
+      return getMessageMetadata(Obj.getURI(message), senderIdentity, message.sender);
+    },
+    [members],
+  );
+  const authorMetadata = useMemo<MessageMetadata>(
+    () => getMessageMetadata(subjectId, identity ?? undefined),
+    [subjectId, identity],
+  );
+  // Author display names for suggestion tiles, keyed by DID; absent ⇒ the tile falls back to the DID.
+  const authorLabels = useMemo(
+    () =>
+      Object.fromEntries(members.flatMap((member) => (member.displayName ? [[member.did, member.displayName]] : []))),
+    [members],
+  );
+  // Author palette hues keyed by DID: the identity's chosen hue, else derived from the (hex) identity
+  // key so a suggestion's colour matches the author's avatar/tag and the inline markers.
+  const authorHues = useMemo(
+    () =>
+      Object.fromEntries(
+        members.flatMap((member) => {
+          if (!member.did) {
+            return [];
+          }
+          const chosen = typeof member.data?.hue === 'string' ? toHue(member.data.hue) : 'neutral';
+          const hue = chosen !== 'neutral' ? chosen : member.identityKey ? hexToHue(member.identityKey) : undefined;
+          return hue ? [[member.did, hue]] : [];
+        }),
+      ),
+    [members],
+  );
 
   const stateAtom = useCapability(CommentCapabilities.State);
   const viewStoreAtom = useCapability(CommentCapabilities.ViewState);
@@ -116,7 +180,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // The active review branch: the core branch the local user is currently viewing for this subject
   // (per-object version selection, shared with the editor surface). `undefined` = main/unbranched.
   // Comments are scoped to it so the companion shows only the branch under review's threads.
-  const [versioningState] = useAtomCapabilityState(SpaceCapabilities.VersioningState);
+  const [versioningState] = useAtomCapabilityState(VersioningCapabilities.VersioningState);
   const markdownDoc = Obj.instanceOf(Markdown.Document, subject) ? subject : undefined;
   const reviewBranch = useMemo(() => {
     const selection = versioningState.selection[subject.id];
@@ -267,6 +331,38 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [invokePromise, subject, reviewBranch],
   );
 
+  // Suggestion review: the document's `kind:'suggestion'` branches overlaid as change-block tiles
+  // alongside comment threads. Accept/Reject route through the same durable ops as branch review.
+  const mainText = markdownDoc?.content.target;
+  const [base = ''] = useObject(markdownDoc?.content, 'content');
+
+  const routeSuggestion = useCallback(
+    async (
+      operation: typeof CollaborationOperation.AcceptChange | typeof CollaborationOperation.RejectChange,
+      group: SuggestionGroup,
+    ) => {
+      // Resolve the author's suggestion branch and anchor the change by its base offsets.
+      const branch = markdownDoc?.history?.branches.find(
+        (candidate) =>
+          candidate.status === 'active' && candidate.kind === 'suggestion' && candidate.creator === group.author,
+      )?.key;
+      if (!mainText || !branch) {
+        return;
+      }
+      const anchor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
+      await invokePromise(operation, { subject, anchor, branch });
+    },
+    [markdownDoc, mainText, invokePromise, subject],
+  );
+  const handleAcceptSuggestion = useCallback(
+    (group: SuggestionGroup) => routeSuggestion(CollaborationOperation.AcceptChange, group),
+    [routeSuggestion],
+  );
+  const handleRejectSuggestion = useCallback(
+    (group: SuggestionGroup) => routeSuggestion(CollaborationOperation.RejectChange, group),
+    [routeSuggestion],
+  );
+
   // Scroll the current thread into view when it changes.
   useEffect(() => {
     if (currentId) {
@@ -281,35 +377,27 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return thread && thread.status !== 'resolved';
       });
 
+  // Hide the empty-state prompt once there is either a comment thread or a suggestion to review.
+  const hasSuggestions = !!markdownDoc?.history?.branches.some(
+    (branch) => branch.status === 'active' && branch.kind === 'suggestion',
+  );
+
   const comments =
-    filteredAnchors.length === 0 ? (
-      <div className='p-form-padding'>
-        <Message.Root>
-          <Message.Content>
-            <span>
-              <Trans
-                {...{
-                  t,
-                  i18nKey: 'no-comments.message',
-                  components: {
-                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                  },
-                }}
-              />
-            </span>
-          </Message.Content>
-        </Message.Root>
-      </div>
-    ) : (
+    filteredAnchors.length > 0 ? (
       <div>
         {filteredAnchors.map((anchor) => {
           const thread = Relation.getSource(anchor) as Thread.Thread;
           const threadId = Obj.getURI(thread);
           return (
-            <CommentThread
+            <CommentThreadItem
               key={threadId}
+              space={space}
+              threadUri={threadId}
               anchor={anchor}
               components={threadComponents}
+              getMetadata={getMetadata}
+              authorMetadata={authorMetadata}
+              identityDid={identity?.did}
               current={currentId === threadId}
               onAttend={handleAttend}
               onComment={handleComment}
@@ -321,6 +409,25 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             />
           );
         })}
+      </div>
+    ) : hasSuggestions ? null : (
+      <div className='p-form-padding'>
+        <Message.Root>
+          <Message.Content>
+            <span>
+              <Trans
+                {...{
+                  t,
+                  i18nKey: 'no-comments.message',
+                  components: {
+                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
+                    versionsIcon: <Icon icon='ph--git-branch--regular' size={4} classNames='dx-icon-inline' />,
+                  },
+                }}
+              />
+            </span>
+          </Message.Content>
+        </Message.Root>
       </div>
     );
 
@@ -334,18 +441,26 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
-              <Tabs.Tab classNames='text-sm' value='unresolved'>
+              <Tabs.Button classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
-              </Tabs.Tab>
-              <Tabs.Tab classNames='text-sm' value='all'>
+              </Tabs.Button>
+              <Tabs.Button classNames='text-sm' value='all'>
                 {t('show-all.label')}
-              </Tabs.Tab>
+              </Tabs.Button>
             </Tabs.Tablist>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ScrollArea.Root thin>
             <ScrollArea.Viewport>
+              <Suggestions
+                document={markdownDoc}
+                base={base}
+                authorLabels={authorLabels}
+                authorHues={authorHues}
+                onAccept={handleAcceptSuggestion}
+                onReject={handleRejectSuggestion}
+              />
               <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
               <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
             </ScrollArea.Viewport>

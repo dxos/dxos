@@ -11,23 +11,47 @@ import { getTextInRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown';
+import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments } from '@dxos/ui-editor';
 
 import { CommentOperation } from '#types';
 import { type CommentState } from '#types';
 
+// Resolve the anchor snippet against the document the editor produced the cursor from: the branch
+// content Text in Branch view, else main. Resolving a branch-doc cursor against main throws (the
+// automerge op is absent), so a stale/foreign cursor is tolerated rather than crashing.
 // TODO(burdon): Factor out.
-const getName = (doc: Markdown.Document, anchor: string): string | undefined => {
-  if (doc.content) {
-    const [start, end] = anchor.split(':');
-    return getTextInRange(Doc.createAccessor(doc.content.target!, ['content']), start, end);
+const getName = (text: Text.Text | undefined, anchor: string): string | undefined => {
+  if (!text) {
+    return undefined;
+  }
+  const [start, end] = anchor.split(':');
+  try {
+    return getTextInRange(Doc.createAccessor(text, ['content']), start, end);
+  } catch {
+    return undefined;
   }
 };
 
 export type ThreadStore = {
   registry: Registry.Registry;
   stateAtom: Atom.Writable<CommentState>;
+};
+
+export type ThreadsOptions = {
+  // The active review branch (the core branch the editor is showing); undefined = main. Threaded from
+  // the markdown editor (which resolves it from the per-object version selection) rather than read
+  // from core `getCurrentBranch`, which stays 'main' under this branch's per-surface binding model.
+  reviewBranch?: string;
+  // The branch content Text the editor is bound to in Branch view; undefined on main/diff. Comment
+  // anchors resolve against it.
+  branchText?: Text.Text;
+  // The active branch is a per-user suggestion branch: inline comment creation is prohibited.
+  suggestionBranch?: boolean;
+  // Whether comment marks/creation render at all (per the review policy); `false` hides comments
+  // entirely (e.g. a distraction-free reading mode). Defaults to shown.
+  showComments?: boolean;
 };
 
 /**
@@ -37,17 +61,19 @@ export const threads = (
   store: ThreadStore,
   doc?: Markdown.Document,
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
-  // The active review branch (the core branch the editor is showing); undefined = main. Threaded from
-  // the markdown editor (which resolves it from the per-object version selection) rather than read
-  // from core `getCurrentBranch`, which stays 'main' under this branch's per-surface binding model.
-  reviewBranch?: string,
+  options: ThreadsOptions = {},
 ): Extension => {
+  const { reviewBranch, branchText, suggestionBranch, showComments = true } = options;
   const db = doc && Obj.getDatabase(doc);
-  if (!doc || !db || !invokePromise) {
-    // Include no-op comments extension here to ensure that the facets are always present when they are expected.
-    // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
+  // The no-op keeps the comment facets present (so the editor never errors on their absence) while
+  // rendering nothing — used both when comments are unavailable and when the policy hides them.
+  if (!doc || !db || !invokePromise || !showComments) {
     return [comments({ id: 'noop' })];
   }
+
+  // Anchors are cursors within whichever document the editor is bound to: the branch content in
+  // Branch view, else main.
+  const contentText = branchText ?? doc.content.target ?? undefined;
 
   const { registry, stateAtom } = store;
   const objectId = Obj.getURI(doc);
@@ -71,7 +97,7 @@ export const threads = (
           if (anchor.anchor) {
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
-            const name = getName(doc, anchor.anchor);
+            const name = getName(contentText, anchor.anchor);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             if (name && name !== thread.name) {
               Obj.update(thread, (thread) => {
@@ -87,6 +113,8 @@ export const threads = (
       id: objectId,
       // Tag new comments with the review branch so they scope to the branch under review; main stays untagged.
       reviewBranch,
+      // Suggestion branches prohibit inline comments; existing comments still render.
+      readonly: suggestionBranch,
       // `getAnchors()` is already branch-scoped, so selection-style highlights show only the review
       // branch's comments.
       getComments: () =>
@@ -106,7 +134,7 @@ export const threads = (
         };
       },
       onCreate: ({ cursor, branch }) => {
-        const name = getName(doc, cursor);
+        const name = getName(contentText, cursor);
         void invokePromise(CommentOperation.Create, {
           anchor: cursor,
           name,
@@ -142,7 +170,7 @@ export const threads = (
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.update(thread, (thread) => {
-            thread.name = getName(doc, cursor);
+            thread.name = getName(contentText, cursor);
           });
           Relation.update(draft, (draft) => {
             draft.anchor = cursor;
@@ -154,7 +182,7 @@ export const threads = (
           const thread = Relation.getSource(relation);
           if (Obj.instanceOf(Thread.Thread, thread)) {
             Obj.update(thread, (thread) => {
-              thread.name = getName(doc, cursor);
+              thread.name = getName(contentText, cursor);
             });
             Relation.update(relation, (relation) => {
               relation.anchor = cursor;

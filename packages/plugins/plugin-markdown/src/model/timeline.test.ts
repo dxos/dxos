@@ -16,7 +16,7 @@ import {
   NOW_COMMIT_ID,
   commitToSelection,
   createTimelineModel,
-} from '@dxos/plugin-space';
+} from '@dxos/plugin-versioning';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { Branch, Version } from '@dxos/versioning';

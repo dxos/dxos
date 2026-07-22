@@ -75,6 +75,15 @@ export interface Query<T> {
   'select'(props: Filter.Props<T>): Query<T>;
 
   /**
+   * Project the query's results to a single scalar property, for use as a membership set in
+   * `Filter.in(query.project('col'))` — an uncorrelated `col IN (SELECT property FROM ...)`
+   * semi-join. The subquery is resolved once at execution time. A projection is a terminal
+   * value, not a `Query`, so it cannot be chained further.
+   * @param property - Property path to project.
+   */
+  'project'<K extends RefPropKey<T>>(property: K): Projection<T[K]>;
+
+  /**
    * Traverse an outgoing reference.
    * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
@@ -163,16 +172,18 @@ export interface Query<T> {
    * {@link Order.property}.
    *
    * Groups are ordered by the first occurrence of their key in the incoming stream, so a preceding
-   * `orderBy` controls group order too. For example, message threads ordered by their most recent
+   * `orderBy` controls group order in the absence of a following one. {@link Aggregate.items}'s own
+   * `order` option is a separate, explicit per-group member ordering — pass it there rather than
+   * relying on a preceding `orderBy`, whose only well-defined job once `aggregate` follows is
+   * establishing initial group order. For example, message threads ordered by their most recent
    * message, each retaining up to 20 members newest-first:
    *
    * ```ts
    * Query.type(Message)
-   *   .orderBy(Order.property('created', 'desc'))
    *   .aggregate({
    *     threadId: Aggregate.group('threadId'),
    *     lastMessageAt: Aggregate.max('created'),
-   *     items: Aggregate.items({ limit: 20 }),
+   *     items: Aggregate.items({ limit: 20, order: [Order.property('created', 'desc')] }),
    *   })
    *   .orderBy(Order.property('lastMessageAt', 'desc'));
    * ```
@@ -293,6 +304,18 @@ export type Any = Query<any>;
 
 export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
+/**
+ * A query projected to a single scalar property (see {@link Query.project}).
+ */
+export type Projection<V = unknown> = internal.Projection<V>;
+
+/**
+ * Brand key for {@link Projection}. Re-exported (like {@link QueryTypeId}) so the sandboxed
+ * `query-lite` mirror can declare its own local constant with the same string literal and
+ * construct structurally-compatible projections without importing this module's runtime.
+ */
+export type ProjectionTypeId = internal.ProjectionTypeId;
+
 class QueryClass implements Any {
   private static 'variance': Any[QueryTypeId] = {} as Any[QueryTypeId];
 
@@ -314,6 +337,10 @@ class QueryClass implements Any {
         filter: Filter.props(filter).ast,
       });
     }
+  }
+
+  project(property: string): Projection<any> {
+    return internal.makeProjection(this.ast, property);
   }
 
   reference(key: string): Any {
@@ -626,6 +653,16 @@ export const type: {
     filter: Filter.type(type, predicates).ast,
   });
 };
+
+/**
+ * Project a query's results to a single scalar property, for use as a membership set in
+ * `Filter.in(Query.project(query, 'col'))`.
+ * @param query - Query to project.
+ * @param property - Property path to project.
+ * @returns Projection for use in `Filter.in`.
+ */
+export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K): Projection<T[K]> =>
+  internal.makeProjection<T[K]>(query.ast, property);
 
 /**
  * Combine results of multiple queries.

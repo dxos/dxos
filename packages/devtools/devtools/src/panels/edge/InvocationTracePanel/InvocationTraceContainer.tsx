@@ -216,12 +216,12 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     <Tabs.Root asChild orientation='horizontal' value={activeTab} onValueChange={setActiveTab}>
       <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'>
         <Tabs.Tablist classNames='border-b border-separator'>
-          <Tabs.Tab value='input'>Input</Tabs.Tab>
-          {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='errors'>Error logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
-          {span.error && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
-          {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
+          <Tabs.Button value='input'>Input</Tabs.Button>
+          {isLogQueue && <Tabs.Button value='logs'>Logs</Tabs.Button>}
+          {isLogQueue && <Tabs.Button value='errors'>Error logs</Tabs.Button>}
+          {isLogQueue && <Tabs.Button value='raw'>Raw</Tabs.Button>}
+          {span.error && <Tabs.Button value='failure'>Failure</Tabs.Button>}
+          {contents === 'execution-graph' && <Tabs.Button value='execution-graph'>Execution Graph</Tabs.Button>}
         </Tabs.Tablist>
         <Tabs.Panel value='input' classNames='min-h-0 min-w-0 w-full overflow-auto'>
           <JsonHighlighter data={span.input} />

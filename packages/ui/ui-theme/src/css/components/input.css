@@ -1,0 +1,17 @@
+@layer dx-components {
+  /*
+   * Shared input-box treatment — the hairline-bordered surface used by text inputs and by CodeMirror
+   * editors styled to match them (`Input` default variant, `MarkdownField`, `RefEditor`, the inbox
+   * composer `Editor`). Bundles the surface + border + radius + focus-within colour shift; the focus
+   * RING is intentionally left to the caller (`dx-focus-ring` for a focusable element, or
+   * `focus-within:ring-*` for a wrapper around an inner focusable such as a CodeMirror contenteditable).
+   * `:focus-within` also matches a focused leaf `<input>`, so this serves both the element and wrapper cases.
+   */
+  .dx-input {
+    @apply transition-colors bg-input-surface border border-input-separator rounded-xs;
+
+    &:focus-within {
+      @apply bg-focus-surface border-separator;
+    }
+  }
+}
