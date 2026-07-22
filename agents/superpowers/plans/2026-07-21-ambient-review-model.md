@@ -369,11 +369,13 @@ against `main`. B2 fixes it; B3+ build on it.
 ### Task B2: Base-decoupling + non-clipped accept/reject popover
 
 **Files:**
+
 - Modify + Test: `packages/ui/ui-editor/src/extensions/review/suggest.ts` (+ `suggest.test.ts`)
 - Modify: `packages/ui/ui-editor/src/extensions/review/diff.ts` (add a coordinate-rebase helper)
 - Test: `packages/ui/react-ui-editor/src/stories/Suggest.stories.tsx` (multi-author-over-edited-branch case)
 
 **Interfaces:**
+
 - Produces: `suggestions({ sources, base?, group?, onAccept?, onReject? })` — new optional `base`; when
   given, each source is diffed against `base` (not the editor doc) and its hunks are rebased into doc
   coordinates via `rebaseHunks`. Produces `rebaseHunks(base: string, doc: string, hunks: DiffHunk[]): DiffHunk[]`
@@ -382,17 +384,17 @@ against `main`. B2 fixes it; B3+ build on it.
   clipped by `.cm-scroller` overflow.
 
 - [ ] Step 1: Failing unit test in `suggest.test.ts` — `suggestions({ sources:[bob], base })` over a doc
-  that has diverged from `base` renders bob's change at the correct doc offset and does NOT strike the
-  doc's own added text. (Build a headless `EditorView`; assert decoration positions.)
+      that has diverged from `base` renders bob's change at the correct doc offset and does NOT strike the
+      doc's own added text. (Build a headless `EditorView`; assert decoration positions.)
 - [ ] Step 2: Run → FAIL.
 - [ ] Step 3: Implement `rebaseHunks` in diff.ts + thread `base` through `suggestions()` (default
-  `base = doc` preserves current callers). Diff each source vs `base`, rebase hunk offsets into doc coords.
+      `base = doc` preserves current callers). Diff each source vs `base`, rebase hunk offsets into doc coords.
 - [ ] Step 4: Run → PASS.
 - [ ] Step 5: Move the accept/reject controls into a non-clipped tooltip layer (replace the
-  `position:absolute` popover). Prefer `hoverTooltip` keyed to a suggestion hunk range; keep `.cm-suggest-accept`/`reject`
-  test hooks. Verify `Suggest.stories` accept/reject still pass + not clipped (assert the tooltip mounts under `.cm-tooltip`).
+      `position:absolute` popover). Prefer `hoverTooltip` keyed to a suggestion hunk range; keep `.cm-suggest-accept`/`reject`
+      test hooks. Verify `Suggest.stories` accept/reject still pass + not clipped (assert the tooltip mounts under `.cm-tooltip`).
 - [ ] Step 6: Re-add the second author to `TrackChanges.stories.tsx` using `base: MAIN`; add a play case:
-  type in the branch, assert the user's new text is NOT struck and bob's change still renders vs main.
+      type in the branch, assert the user's new text is NOT struck and bob's change still renders vs main.
 - [ ] Step 7: Build/lint/test green; commit `ui-editor: decouple suggestion base from doc + tooltip popover`.
 
 ### Task B3: Wire Suggesting mode into MarkdownArticle
@@ -401,9 +403,9 @@ against `main`. B2 fixes it; B3+ build on it.
 Test `DocumentVersioning.stories.tsx` (+ a Suggesting play case).
 
 - [ ] `mode==='suggesting'` (ambient path): bind the editor to the current user's `kind:'suggestion'`
-  branch (find-or-create via `Branch.suggestion`), apply `trackChanges({ main, colour: self })`, and
-  overlay other authors via `suggestions({ base: main, sources })` (rebased, from `SuggestionSourcesProvider`,
-  excluding self). Editable.
+      branch (find-or-create via `Branch.suggestion`), apply `trackChanges({ main, colour: self })`, and
+      overlay other authors via `suggestions({ base: main, sources })` (rebased, from `SuggestionSourcesProvider`,
+      excluding self). Editable.
 - [ ] Re-add the **Suggesting** toolbar option (remove the hide from the earlier landing polish); wire `setMode('suggesting')`.
 - [ ] Play case: switch to Suggesting, type → edit accrues to the user's suggestion branch (assert via the branch content), renders as own tracked change; a second author still shows vs main.
 - [ ] Commit `markdown: suggesting mode authors on the user's branch`.
@@ -413,7 +415,7 @@ Test `DocumentVersioning.stories.tsx` (+ a Suggesting play case).
 **Files:** MarkdownArticle handlers + `plugin-markdown` ops wiring; reuse `AcceptChange`/`RejectChange`.
 
 - [ ] Accepting the user's own insertion/deletion (incl. phantom un-delete) routes through the durable
-  ops with the B2 base (`revertHunk`/`cherryPickHunk` against `main`). Reject on a phantom re-inserts main's text into the branch.
+      ops with the B2 base (`revertHunk`/`cherryPickHunk` against `main`). Reject on a phantom re-inserts main's text into the branch.
 - [ ] Test: accept an own change merges to main; reject reverts on the branch. Commit.
 
 ### Task B5: Integration coverage
