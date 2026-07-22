@@ -1,0 +1,124 @@
+{
+  "name": "@dxos/plugin-versioning",
+  "version": "0.10.0",
+  "private": true,
+  "description": "DXOS plugin providing a generic version/review layer (history timeline, branches, checkpoints, review modes).",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/capabilities.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "workerd": "./src/VersioningPlugin.workerd.ts",
+        "node": "./src/VersioningPlugin.node.ts",
+        "default": "./src/VersioningPlugin.tsx"
+      },
+      "types": "./dist/types/src/VersioningPlugin.d.ts",
+      "workerd": "./dist/lib/VersioningPlugin.workerd.mjs",
+      "node": "./dist/lib/VersioningPlugin.node.mjs",
+      "default": "./dist/lib/VersioningPlugin.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "import": "./dist/lib/containers.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@dxos/versioning": "workspace:*",
+    "@effect-atom/atom-react": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "@effect-atom/atom-react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

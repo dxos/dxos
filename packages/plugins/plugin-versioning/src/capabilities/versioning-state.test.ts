@@ -5,10 +5,11 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import { describe, test } from 'vitest';
 
-import { type SpaceCapabilities } from '#types';
+import { type VersioningCapabilities } from '#types';
 
 describe('VersioningState mode', () => {
-  const makeVersioningAtom = () => Atom.make<SpaceCapabilities.VersioningState>({ selection: {}, view: {}, mode: {} });
+  const makeVersioningAtom = () =>
+    Atom.make<VersioningCapabilities.VersioningState>({ selection: {}, view: {}, mode: {} });
 
   test('mode defaults to an empty map', ({ expect }) => {
     const registry = Registry.make();
@@ -19,7 +20,7 @@ describe('VersioningState mode', () => {
   test('setting mode round-trips per document id', ({ expect }) => {
     const registry = Registry.make();
     const atom = makeVersioningAtom();
-    const next: SpaceCapabilities.ReviewMode = 'viewing';
+    const next: VersioningCapabilities.ReviewMode = 'viewing';
 
     registry.update(atom, (current) => ({ ...current, mode: { ...current.mode, doc1: next } }));
 

@@ -311,6 +311,7 @@
       "@dxos/plugin-trello",
       "@dxos/plugin-trip",
       "@dxos/plugin-typefully",
+      "@dxos/plugin-versioning",
       "@dxos/plugin-video",
       "@dxos/plugin-voxel",
       "@dxos/plugin-wnfs",

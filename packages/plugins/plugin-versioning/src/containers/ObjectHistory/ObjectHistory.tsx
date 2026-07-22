@@ -14,7 +14,7 @@ import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
-import { SpaceCapabilities } from '#types';
+import { VersioningCapabilities } from '#types';
 
 import { MAIN_BRANCH, commitToSelection, createTimelineModel } from '../../model';
 
@@ -23,21 +23,21 @@ export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.Versioned
 /**
  * Companion panel: git-graph timeline of an object's checkpoints, branch forks, and merges.
  * Clicking a checkpoint time-travels the object's surfaces; clicking a branch fork switches to it.
- * Gated per-type by a `SpaceCapabilities.HistoryProvider` contribution.
+ * Gated per-type by a `VersioningCapabilities.HistoryProvider` contribution.
  */
 export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role, subject }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
-  const providers = useCapabilities(SpaceCapabilities.HistoryProvider);
+  const providers = useCapabilities(VersioningCapabilities.HistoryProvider);
   const provider = providers.find(({ id }) => id === Obj.getTypename(subject));
   const [naming, setNaming] = useState<'checkpoint' | 'branch' | undefined>(undefined);
   useObject(subject, 'history');
 
   // Selection is session-local: collaborators each view their own version.
-  const [state, setState] = useAtomCapabilityState(SpaceCapabilities.VersioningState);
+  const [state, setState] = useAtomCapabilityState(VersioningCapabilities.VersioningState);
   const objectId = subject.id;
   const selection = state.selection[objectId] || { kind: 'current' as const };
   const setSelection = useCallback(
-    (next: SpaceCapabilities.VersionSelection) => {
+    (next: VersioningCapabilities.VersionSelection) => {
       setState((current) => ({ ...current, selection: { ...current.selection, [objectId]: next } }));
     },
     [objectId, setState],
