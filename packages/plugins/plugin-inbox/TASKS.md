@@ -227,4 +227,12 @@ calendar + contacts move out; provider + apis split; shared card-focused `@dxos/
       `Avatar`) + `useActorContact` + `hashString` + its own i18n namespace. plugin-inbox depends on
       it (`workspace:*`) and registers its translations. Reuses react-ui's `Card.Menu` /
       `SystemIconButton.Star`. **TODO:** visual storybook pass (Row/Avatar/CardTile) not yet run.
+- [ ] Move `ViewMode` (`viewModeGroup`) + `Toolbar` (`openGroup`/`deleteGroup`/`deleteAction`) into
+      `@dxos/react-ui-card` as a `menu`/`toolbar` submodule — shared mail+calendar menu helpers (AUDIT §4d).
+- [ ] Drop `Header` from the shared set — stale "shared" claim; only `Event` uses it now. Inline into
+      `Event` or keep calendar-local; do NOT put in `react-ui-card` (AUDIT §4d).
+- [ ] (Deferred) Generalize `HtmlViewer` core → `@dxos/react-ui-components` (inject cid/image + color
+      callbacks); 1 consumer today, wait for a second (AUDIT §4d).
+- [ ] Hoist shared sync infra (`findBindingForTarget`/`createSyncRoutine`/`syncTarget`) from `util/` to
+      `@dxos/plugin-connector` — used by both mail + calendar sync (AUDIT §3.7, §6 step 5).
 - [ ] Different form layout for `EditMessage` (`components/EditMessage/`).

@@ -81,6 +81,18 @@ The hard seams already exist; this is a lift, not a redesign.
 6. **`services/` bridges `apis/` → Effect/`@dxos/compute`.** They import the
    plugin's `apis` and `errors`. On a provider-plugin split these move _with_ the
    provider.
+7. **`util/` is mostly mail, but hides shared sync-target infrastructure.**
+   `util.ts` (message formatting), `mailbox-sync.ts`, `match-filter.ts` are cleanly
+   mail and stay. But `find-binding.ts` (`findBindingForTarget`),
+   `sync-routine.ts` (`createSyncRoutine`), `sync-target.ts` (`syncTarget`) operate
+   on **any** sync target — their own docs say _"the given object (mailbox,
+   calendar, …)"_ — dealing with `Cursor` / `Connection` / `Routine` / timer-trigger
+   plumbing, consumed by `capabilities/connector.ts` and `app-graph-builder.ts` for
+   both mailbox and calendar sync (and the provider plugins will need them too).
+   They belong to no single domain; promote the three to **`@dxos/plugin-connector`**
+   (which already owns `Cursor` / `Connection` / `ConnectorAuthAnnotation` /
+   bindings), else calendar/contacts would depend on plugin-inbox just for sync
+   plumbing — the same plugin→plugin coupling `react-ui-card` avoids.
 
 ## 4. Proposed target topology
 
@@ -185,10 +197,11 @@ type) and the `CardTile.Header` menu-item shape — small, and shared once calen
 Options: move `useActorContact` + `hashString` into the package (they only need
 `@dxos/echo-react`), and give the package its own translations namespace.
 
-- **Stay put:** `containers/*` (surface-bound), `Initialize*`, `HtmlViewer`,
-  `MarkdownViewer`, `ViewMode`, `Header`, `ObjectArticle`, and the domain tiles
-  themselves (`InboxStack`, `ConversationStack`, `EventStack`, `Event/*`) — these
-  keep their distinct layouts (see §4c rationale) and move with their plugin.
+- **Stay put:** `containers/*` (surface-bound), `Initialize*`, `MarkdownViewer`,
+  `ObjectArticle`, and the domain tiles themselves (`InboxStack`,
+  `ConversationStack`, `EventStack`, `Event/*`) — these keep their distinct layouts
+  (see §4c rationale) and move with their plugin. `ViewMode` / `Toolbar` / `Header`
+  / `HtmlViewer` are reclassified in §4d.
 - **Not a home:** `@dxos/react-ui-components` is a grab-bag of unrelated widgets
   (Waveform, Minimap, Spinner…); don't dump card primitives there.
 
@@ -197,6 +210,33 @@ Options: move `useActorContact` + `hashString` into the package (they only need
 `react-ui`. A `react-ui-card` depending on `react-ui` + `react-ui-mosaic` is a
 reasonable home for `Row` + `CardTile` + `Avatar`; the alternative is `Row`→`react-ui`
 and `CardTile`→`react-ui-mosaic` (split by dep), which scatters the vocabulary.
+
+### 4d. Remaining shared components — where each lands (2026-07-21)
+
+Verified by import tracing after the `react-ui-card` extraction:
+
+- **`ViewMode`** (`viewModeGroup` + type/icons) — a **menu-builder helper**, not a
+  card primitive (deps: `@dxos/react-ui-menu` only; takes the i18n `ns` as a param).
+  Shared by `ConversationStack` (mail) + `Event/useToolbar` (calendar). → move to
+  `@dxos/react-ui-card` as a **`menu`/`toolbar` submodule** (not with the Card
+  components). Slightly email-leaning (`html` mode is messages-only) but events pass
+  a reduced `modes` list, so it's genuinely shared.
+- **`Toolbar` (`toolbar.ts`)** — `openGroup` / `deleteGroup` / `deleteAction`, the
+  DRY source for identical open/delete actions across the Message and Event
+  toolbars. Two consumers: `ConversationStack/useToolbar` + `Event/useToolbar`. Not
+  dead. → moves with `ViewMode` to `react-ui-card`'s toolbar submodule.
+- **`Header`** — a 20-line borderless-Card + bottom-rule wrapper (`Header.Root`).
+  Its doc claims "Event and Message article headers," but that is **stale**: the
+  Message header (`ConversationStack`) now hand-rolls its own subgrid, so the **only**
+  consumer is `Event/Event.tsx` (calendar). → **drop from the shared set**; inline
+  into `Event` or keep as a calendar-local helper. Do NOT put in `react-ui-card`.
+- **`HtmlViewer`** — feasible to generalize into `@dxos/react-ui-components`, but
+  email-coupled today (`attachments`/`db` resolve `cid:` images against message
+  Blobs; `isPersonal`; `processEmailColors`). Split = generic sandboxed-iframe +
+  DOMPurify + theme-color core → `react-ui-components`, with image-resolution +
+  color-processing injected as callbacks; email glue stays in plugin-inbox.
+  **Only one consumer** (`ConversationStack`), so **defer** until a second wants a
+  sandboxed HTML viewer.
 
 ## 5. Dependency direction (the rule that keeps it clean)
 
@@ -217,19 +257,24 @@ flags as the one real code change (vs. mechanical file moves).
 1. **Rename `GooglePeople` → `GoogleContacts`** (tracked). Pure rename, no move.
 2. **Extract `apis/` → `@dxos/google-apis` + `@dxos/jmap-apis`** (framework-free;
    they already are). Lowest risk, no consumer churn (internal imports only).
-3. **Extract `@dxos/react-ui-card`** — the shared low-level vocabulary `Row` +
-   `CardTile` + a consolidated `Avatar` (§4c); first unify the avatar/hue across the
-   four summary sites. Unblocks calendar's move without a plugin→plugin UI dep.
+3. ✅ **Extract `@dxos/react-ui-card`** — the shared low-level vocabulary `Row` +
+   `CardTile` + a consolidated `Avatar` (§4c); avatar/hue unified across the four
+   summary sites. Unblocks calendar's move without a plugin→plugin UI dep. _(Done —
+   PR #12300; `ViewMode`/`Toolbar` submodule still to follow, §4d.)_
 4. **Invert the connector-id coupling** (§3.1): stop `types/Mailbox|Calendar`
    importing connector ids; contribute the connector list to the schema
    annotation at registration. Unblocks the domain/provider separation.
-5. **Split provider ops into `@dxos/plugin-google` / `@dxos/plugin-jmap`.**
-6. **Move Calendar out → `@dxos/plugin-calendar`** (`Calendar` type,
+5. **Hoist shared sync infra to `@dxos/plugin-connector`** (§3.7):
+   `findBindingForTarget` / `createSyncRoutine` / `syncTarget` from `util/`. Lets
+   calendar/contacts/provider plugins share sync plumbing without depending on
+   plugin-inbox.
+6. **Split provider ops into `@dxos/plugin-google` / `@dxos/plugin-jmap`.**
+7. **Move Calendar out → `@dxos/plugin-calendar`** (`Calendar` type,
    calendar/event surfaces + containers + graph nodes + `calendar` skill +
    draft-event ops). Update the ~4 consumers importing `Calendar`/`CalendarSkill`.
-7. **Move Contacts out → `@dxos/plugin-contacts`** (related surfaces +
-   `useActorContact`; provider sync now in `plugin-google`).
-8. `plugin-inbox` remains the **Mail plugin** — keeps `Mailbox`, message UI, the
+8. **Move Contacts out → `@dxos/plugin-contacts`** (related surfaces;
+   `useActorContact` now in `react-ui-card`; provider sync now in `plugin-google`).
+9. `plugin-inbox` remains the **Mail plugin** — keeps `Mailbox`, message UI, the
    AI layer, mail sync. Consumers importing `Mailbox`/`InboxOperation`/`InboxSkill`
    are unaffected; only `Calendar`/`Contacts` importers repoint (no shims).
 
