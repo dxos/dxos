@@ -7,11 +7,13 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { isSpace } from '@dxos/client/echo';
+import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
@@ -94,14 +96,15 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    // Root collection objects under the Collections virtual node. Shares the `collection` urlKey with
-    // the nested-collection `objects` connector below so a space's root-collection children are
-    // addressed the same way as objects nested deeper in the tree (see path-resolution's key table).
-    // Its shape is fixed (`root/<space>/content/collections/<id>`), so it declares a static `urlPath`
-    // for deterministic forward resolution; the recursive `objects` connector below cannot.
+    // Root collection objects under the Collections virtual node. Shares the `object` urlKey with the
+    // nested-collection `objects` connector below so an object is addressed the same way wherever it
+    // sits in the collection tree (the key names the *collection subgraph*, not the container's type;
+    // the database subgraph addresses the same object under `db`). Its shape is fixed
+    // (`root/<space>/content/collections/<id>`), so it declares a static `urlPath` for deterministic
+    // forward resolution; the recursive `objects` connector below resolves dynamically instead.
     GraphBuilder.createExtension({
       id: 'collections',
-      urlKey: 'collection',
+      urlKey: 'object',
       urlPath: [Paths.GroupSegments.content, Paths.Segments.collections],
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -151,9 +154,38 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Children of Collection.Collection nodes.
     GraphBuilder.createExtension({
       id: 'objects',
-      // Recursive over nested collections at any depth, so `collection/<id>` addresses any object
-      // reachable through a space's collection tree, not just the root collection's direct children.
-      urlKey: 'collection',
+      // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
+      // through a space's collection tree, not just the root collection's direct children. The shape is
+      // data-dependent (the object's collection ancestry), so instead of a static `urlPath` it resolves
+      // dynamically: walk incoming `Collection.objects` refs up to the space root collection.
+      urlKey: 'object',
+      resolve: ({ id, workspace }) =>
+        Effect.gen(function* () {
+          if (!SpaceId.isValid(workspace)) {
+            return null;
+          }
+          // Look the Client up lazily (at resolve time) rather than at graph-setup time — it is not yet
+          // available when the AppGraphBuilder activates, and forward resolution only runs much later.
+          const client = capabilities.get(ClientCapabilities.Client);
+          const space = client.spaces.get(workspace);
+          if (!space) {
+            return null;
+          }
+          const rootRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+            Option.getOrUndefined,
+          );
+          if (!rootRef) {
+            return null;
+          }
+          const rootCollection = yield* Database.load(rootRef).pipe(Effect.orElseSucceed(() => undefined));
+          if (!rootCollection) {
+            return null;
+          }
+          const chain = yield* Effect.promise(() =>
+            walkCollectionChainToRoot({ space, objectId: id, rootId: rootCollection.id }),
+          );
+          return chain ? Paths.getCollectionsPath(workspace, ...chain, id) : null;
+        }),
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
@@ -269,6 +301,51 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 //
 // Helpers
 //
+
+/** Depth cap for the collection-ancestry walk; the composer nav tree is shallow, this only guards bad data. */
+const COLLECTION_WALK_MAX_DEPTH = 32;
+
+/**
+ * Depth-first walk up a space's collection tree from `objectId` to the root collection, following
+ * incoming `Collection.objects` references. The composer ontology guarantees a tree (an object lives in
+ * one collection, no cycles), but a visited-set and depth cap keep bad data — multi-containment or a
+ * cycle — from looping; the first branch that reaches the root wins. Returns the intermediate collection
+ * ids in root→leaf order (excluding the root collection, whose objects sit directly under
+ * `content/collections`), or null if no path to the root exists.
+ */
+const walkCollectionChainToRoot = async ({
+  space,
+  objectId,
+  rootId,
+}: {
+  space: Space;
+  objectId: string;
+  rootId: string;
+}): Promise<string[] | null> => {
+  const visited = new Set<string>([objectId]);
+  const stack: Array<{ id: string; chain: string[] }> = [{ id: objectId, chain: [] }];
+  while (stack.length > 0) {
+    const entry = stack.pop();
+    if (!entry) {
+      break;
+    }
+    const parents = await space.db
+      .query(Query.select(Filter.id(entry.id)).referencedBy(Collection.Collection, 'objects'))
+      .run();
+    for (const parent of parents) {
+      if (parent.id === rootId) {
+        // `chain` is leaf→root as built on the way up; the node id wants root→leaf.
+        return [...entry.chain].reverse();
+      }
+      if (visited.has(parent.id) || entry.chain.length >= COLLECTION_WALK_MAX_DEPTH) {
+        continue;
+      }
+      visited.add(parent.id);
+      stack.push({ id: parent.id, chain: [...entry.chain, parent.id] });
+    }
+  }
+  return null;
+};
 
 /** Builds the action list for an ECHO object node. */
 const constructObjectActions = ({

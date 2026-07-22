@@ -49,8 +49,10 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       id: 'spaceHome',
       position: Position.first,
       urlKey: 'home',
-      // Home is a fixed singleton per space (no variable id), so its URL pair never consumes an id.
+      // Home is a fixed singleton per space (no variable id), so its URL pair never consumes an id; it
+      // resolves to `root/<space>/home` (the key is the terminal segment) — no ancestor segments.
       urlKeyHasId: false,
+      urlPath: [],
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([

@@ -74,6 +74,13 @@ export const createTypeSectionExtension = (
      */
     match?: (node: Node.Node) => Option.Option<Space>;
     /**
+     * Group segment the section nests under (e.g. `Paths.GroupSegments.ai`), when `match` places it
+     * beneath a navtree group rather than directly under the space. Included in the forward-resolution
+     * `urlPath` so section objects at `root/<space>/<groupSegment>/<typename>/<id>` resolve
+     * deterministically. Omit for a space-direct section (`root/<space>/<typename>/<id>`).
+     */
+    groupSegment?: string;
+    /**
      * If provided, a "+" action is added to the section header that runs this effect when clicked.
      * The action label is resolved from `add-object.label` in the type's i18n namespace.
      */
@@ -112,11 +119,11 @@ export const createTypeSectionExtension = (
   const sectionExtension = GraphBuilder.createExtension({
     id: typename,
     urlKey,
-    // With the default whenSpace match the section is a direct child of the space, so its objects
-    // live at the fixed path `root/<space>/<typename>/<id>` — declare it for deterministic forward
-    // resolution. A custom `match` (e.g. under a group node) changes the shape, so skip the template
-    // there and let resolution fall back to a search.
-    urlPath: options?.match ? undefined : [typename],
+    // Section objects are inline children of the section node, so this key/path govern them. A
+    // space-direct section (default match) sits at `root/<space>/<typename>`; a grouped section
+    // (custom match + `groupSegment`) sits at `root/<space>/<groupSegment>/<typename>`. Declare the
+    // matching static `urlPath` either way for deterministic forward resolution.
+    urlPath: options?.groupSegment ? [options.groupSegment, typename] : [typename],
     match: options?.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];

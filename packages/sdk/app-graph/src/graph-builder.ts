@@ -69,13 +69,37 @@ export type BuilderExtension = Readonly<{
    * Fixed ancestor node-id segments between the workspace base and this connector's leaf nodes, when
    * the shape is static (independent of runtime data). Enables deterministic forward URL resolution —
    * the node id is `${Node.RootId}/<workspace>/<...urlPath>/<id>` — so `path-resolution.ts` can expand
-   * that exact path instead of falling back to a guided breadth-first search. Omit for recursive or
-   * data-dependent shapes (e.g. nested collections at arbitrary depth), which cannot be derived from
-   * `(key, id)` alone and resolve via the search fallback.
+   * that exact path. Every keyed extension declares either a `urlPath` (preferred) or a {@link resolve}
+   * for data-dependent shapes (e.g. nested collections at arbitrary depth); a key with neither is not
+   * forward-resolvable.
    */
   urlPath?: string[];
+  /**
+   * Dynamic forward URL resolver, for keys whose node-id shape is data-dependent and so cannot declare
+   * a static {@link urlPath} (the only case today is nested collections). See {@link PathResolver}.
+   */
+  resolve?: PathResolver;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 }>;
+
+/** Params passed to a {@link PathResolver} for a single `(key, id)` URL pair. */
+export type PathResolveParams = {
+  /** The id segment from the `(key, id)` pair. */
+  id: string;
+  /** The workspace segment from the URL. */
+  workspace: string;
+  /** Qualified id of the workspace base node (`${Node.RootId}/<workspace>`). */
+  workspaceBaseId: string;
+};
+
+/**
+ * Dynamic forward URL resolver for an extension whose node-id shape is data-dependent and so cannot
+ * declare a static {@link BuilderExtension.urlPath}. Returns the candidate qualified node id —
+ * `path-resolution.ts` then materializes its ancestors and verifies it — or `null` if the id can't be
+ * located. Must be self-contained (the declaring plugin closes over any services it needs), so
+ * `@dxos/app-graph` stays free of service dependencies.
+ */
+export type PathResolver = (params: PathResolveParams) => Effect.Effect<string | null>;
 
 export type BuilderExtensions = BuilderExtension | BuilderExtension[] | BuilderExtensions[];
 
@@ -561,6 +585,7 @@ export type CreateExtensionRawOptions = {
   urlKey?: string;
   urlKeyHasId?: boolean;
   urlPath?: string[];
+  resolve?: PathResolver;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
   actionGroups?: ActionGroupsExtension;
@@ -633,6 +658,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
           urlKey,
           urlKeyHasId,
           urlPath: extension.urlPath,
+          resolve: extension.resolve,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -714,6 +740,8 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   urlKeyHasId?: boolean;
   /** Fixed ancestor node-id segments for deterministic forward URL resolution; see {@link BuilderExtension.urlPath}. */
   urlPath?: string[];
+  /** Dynamic forward URL resolver for data-dependent shapes; see {@link BuilderExtension.resolve}. */
+  resolve?: PathResolver;
 };
 
 /**
@@ -746,7 +774,8 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   options: CreateExtensionOptions<TMatched, R>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
-    const { id, match, actions, actionGroups, connector, relation, position, urlKey, urlKeyHasId, urlPath } = options;
+    const { id, match, actions, actionGroups, connector, relation, position, urlKey, urlKeyHasId, urlPath, resolve } =
+      options;
 
     const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
@@ -794,6 +823,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
       urlKey,
       urlKeyHasId,
       urlPath,
+      resolve,
       connector: connectorExtension,
       actions: actionsExtension,
       actionGroups: actionGroupsExtension,

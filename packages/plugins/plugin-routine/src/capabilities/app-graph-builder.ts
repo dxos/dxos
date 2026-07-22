@@ -26,6 +26,7 @@ export default Capability.makeModule(
         // schema serialized in LLM prompts (memoized assistant conversations).
         urlKey: 'routine',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+        groupSegment: Paths.GroupSegments.ai,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,

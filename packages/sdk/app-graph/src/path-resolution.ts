@@ -8,6 +8,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 
+import { EffectEx } from '@dxos/effect';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
@@ -52,6 +53,13 @@ const LINKED_PREFIX = '~';
 /** The single well-known URL key for every plank companion: `companion/<variant>`, resolved against the
  * preceding plank. Not registered by any extension; mirrored in `UrlPath`'s reserved-key set. */
 const COMPANION_KEY = 'companion';
+
+/**
+ * Separator joining the node-id segments *between* a key's static `urlPath` and the object id into a
+ * single URL id, so a fixed-depth nested shape (e.g. a database object `…/database/<slug>/<id>` →
+ * `db/<slug>+<id>`) needs no resolver. Chosen because it never appears in an entity id or a type slug.
+ */
+const TAIL_SEPARATOR = '+';
 
 /** Reserved words that can never be registered as a `urlKey`, duplicated from `UrlPath.isReservedKey`
  * (rather than imported) to keep app-graph free of an app-toolkit dependency. */
@@ -143,28 +151,6 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
 };
 
 /**
- * Per-builder cache of `urlKey -> ancestor path template` (the segments between the workspace base
- * and a resolved node, excluding the final id segment), learned as `resolveUrl` finds nodes. A hit
- * lets subsequent lookups for the same key skip straight to a candidate id instead of re-running the
- * full BFS. Keyed by builder identity (a `WeakMap`) so it doesn't leak past the builder's lifetime and
- * doesn't need explicit invalidation — a shape that stops matching just falls back to BFS.
- */
-const shapeCaches = new WeakMap<GraphBuilder.GraphBuilder, Map<string, string[]>>();
-
-const getShapeCache = (builder: GraphBuilder.GraphBuilder): Map<string, string[]> => {
-  const existing = shapeCaches.get(builder);
-  if (existing) {
-    return existing;
-  }
-  const cache = new Map<string, string[]>();
-  shapeCaches.set(builder, cache);
-  return cache;
-};
-
-/** Depth limit for the guided BFS fallback, per the design's fixed bound. */
-const BFS_DEPTH_LIMIT = 6;
-
-/**
  * Expand every ancestor prefix of a qualified node id (including the id itself), then flush once.
  * Mirrors `@dxos/app-toolkit`'s `NotFound.expandPath` technique, reimplemented locally so app-graph
  * doesn't depend on app-toolkit.
@@ -177,108 +163,69 @@ const expandAncestors = async (builder: GraphBuilder.GraphBuilder, qualifiedId: 
   await GraphBuilder.flush(builder);
 };
 
+/** An extension registered for a URL key: its static path template and/or dynamic resolver. */
+type KeyedExtension = { id: string; urlPath?: string[]; resolve?: GraphBuilder.PathResolver };
+
 /**
- * Guided breadth-first search from the workspace base for a node produced by `extensionId` whose
- * last id segment equals `id`. Expands one level at a time (batching all frontier expands into a
- * single flush per level) and inspects each newly-known node's provenance — connectors remain the
- * only thing that constructs nodes; this only finds/expands. Bounded by `BFS_DEPTH_LIMIT`.
+ * Materialize a candidate qualified node id and confirm it exists: expand its ancestors, then check
+ * the node is known. Returns the id on success, `null` otherwise.
  */
-const bfsResolve = async (
+const materializeCandidate = async (
   builder: GraphBuilder.GraphBuilder,
-  workspaceBaseId: string,
-  extensionIds: ReadonlySet<string>,
-  id: string,
+  candidateId: string,
 ): Promise<string | null> => {
-  const graph = builder.graph;
-
-  // The workspace node itself is root's child; make sure it's materialized before expanding it.
-  Graph.expand(graph, Node.RootId, 'child');
-  await GraphBuilder.flush(builder);
-
-  let frontier = [workspaceBaseId];
-  const visited = new Set<string>(frontier);
-
-  for (let depth = 0; depth < BFS_DEPTH_LIMIT; depth++) {
-    for (const nodeId of frontier) {
-      Graph.expand(graph, nodeId, 'child');
-    }
-    await GraphBuilder.flush(builder);
-
-    const nextFrontier: string[] = [];
-    for (const nodeId of frontier) {
-      for (const child of Graph.getConnections(graph, nodeId, 'child')) {
-        if (visited.has(child.id)) {
-          continue;
-        }
-        visited.add(child.id);
-        nextFrontier.push(child.id);
-
-        const childExtensionId = builder.getNodeExtensionId(child.id);
-        if (childExtensionId && extensionIds.has(childExtensionId)) {
-          const lastSegment = child.id.slice(child.id.lastIndexOf('/') + 1);
-          if (lastSegment === id) {
-            return child.id;
-          }
-        }
-      }
-    }
-
-    if (nextFrontier.length === 0) {
-      return null;
-    }
-    frontier = nextFrontier;
-  }
-
-  return null;
+  await expandAncestors(builder, candidateId);
+  return Option.isSome(Graph.getNode(builder.graph, candidateId)) ? candidateId : null;
 };
 
-/** An extension registered for a URL key: its id (for provenance matching) and optional static path. */
-type KeyedExtension = { id: string; urlPath?: string[] };
-
 /**
- * Resolve a single `(key, id)` pair to a qualified node id, anchored at the workspace base. Tries the
- * cheapest deterministic route first and only escalates on a miss:
- *   1. A declared static `urlPath` (fixed-shape extension) — an exact candidate, no search.
- *   2. The memoized runtime shape (a candidate built from the last-learned ancestor template).
- *   3. A guided BFS, recording the shape it finds so subsequent lookups skip straight to step 2.
+ * Resolve a single `(key, id)` pair to a qualified node id, anchored at the workspace base. Resolution
+ * is fully explicit — no search:
+ *   1. A declared static `urlPath` (the preferred, deterministic case): the id is the `+`-joined node
+ *      segments *after* `urlPath`, so a fixed-depth nested shape (e.g. `db/<slug>+<id>`) resolves with
+ *      no resolver — split the id back into segments and expand the exact path.
+ *   2. A declared dynamic `resolve` Effect (recursive/mutable shapes, i.e. nested collections), whose
+ *      candidate is materialized and verified the same way.
+ * A key with neither yields `null` (the caller routes that to a not-found page).
  */
 const resolveKeyId = async (
   builder: GraphBuilder.GraphBuilder,
   workspaceBaseId: string,
-  key: string,
+  workspace: string,
   extensions: ReadonlyArray<KeyedExtension>,
   id: string,
 ): Promise<string | null> => {
-  // 1. Deterministic: an extension that declares a static ancestor template gives an exact candidate
-  // with no search — the common case (type sections, root-collection children, database objects).
+  // 1. Static template: an exact candidate, no search (type sections, database/inbox objects, etc.).
+  const idSegments = id.split(TAIL_SEPARATOR);
   for (const extension of extensions) {
-    if (extension.urlPath) {
-      const candidateId = [workspaceBaseId, ...extension.urlPath, id].join('/');
-      await expandAncestors(builder, candidateId);
-      if (Option.isSome(Graph.getNode(builder.graph, candidateId))) {
-        return candidateId;
+    if (extension.urlPath !== undefined) {
+      const resolved = await materializeCandidate(
+        builder,
+        [workspaceBaseId, ...extension.urlPath, ...idSegments].join('/'),
+      );
+      if (resolved) {
+        return resolved;
       }
     }
   }
 
-  const shapeCache = getShapeCache(builder);
-  const template = shapeCache.get(key);
-  if (template) {
-    const candidateId = [workspaceBaseId, ...template, id].join('/');
-    await expandAncestors(builder, candidateId);
-    if (Option.isSome(Graph.getNode(builder.graph, candidateId))) {
-      return candidateId;
+  // 2. Dynamic resolver: the extension computes the candidate id from runtime data (self-contained
+  // Effect; a defect degrades to no candidate rather than crashing resolution).
+  for (const extension of extensions) {
+    if (extension.resolve) {
+      const candidateId = await EffectEx.runPromise(
+        extension.resolve({ id, workspace, workspaceBaseId }).pipe(Effect.catchAllDefect(() => Effect.succeed(null))),
+      );
+      if (candidateId) {
+        const resolved = await materializeCandidate(builder, candidateId);
+        if (resolved) {
+          return resolved;
+        }
+      }
     }
-    // Learned shape no longer matches this id; fall through to a full BFS below.
   }
 
-  const extensionIds = new Set(extensions.map((extension) => extension.id));
-  const found = await bfsResolve(builder, workspaceBaseId, extensionIds, id);
-  if (found) {
-    const relative = found.slice(workspaceBaseId.length + 1).split('/');
-    shapeCache.set(key, relative.slice(0, -1));
-  }
-  return found;
+  return null;
 };
 
 /**
@@ -334,22 +281,17 @@ const resolveUrlAsync = async (
       continue;
     }
 
-    if (pair.id === undefined) {
-      // Only the reserved `companion` key is id-less-by-attachment; every other key addresses a plank
-      // by id. An id-less non-companion pair is unresolvable.
-      log.warn('id-less non-companion URL pair', { key: pair.key });
-      results.push(null);
-      lastPlankNodeId = undefined;
-      continue;
-    }
-
     const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
     const allExtensions = builder.getExtensions();
     const extensions: KeyedExtension[] = extensionIdList.map((extensionId) => ({
       id: extensionId,
       urlPath: allExtensions[extensionId]?.urlPath,
+      resolve: allExtensions[extensionId]?.resolve,
     }));
-    const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.key, extensions, pair.id);
+    // A normal key addresses a node by id; an id-less non-companion key (`urlKeyHasId: false`, e.g.
+    // `home`) addresses a fixed node whose terminal segment IS the key — resolve it the same way with
+    // the key standing in for the id (`root/<ws>/<...urlPath>/<key>`).
+    const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.workspace, extensions, pair.id ?? pair.key);
     results.push(nodeId ? { pairIndex, nodeId } : null);
     lastPlankNodeId = nodeId ?? undefined;
   }
@@ -358,12 +300,12 @@ const resolveUrlAsync = async (
 };
 
 /**
- * Resolve a parsed URL's pair chain to graph node ids, walking left to right. Each pair is resolved
- * independently against the graph builder's connectors — no per-extension resolve function exists
- * anywhere; resolution is entirely derived from `urlKey` declarations, node-id structure, and the
- * provenance the builder already tracks (see `GraphBuilder.getNodeExtensionId`).
+ * Resolve a parsed URL's pair chain to graph node ids, walking left to right. Resolution is fully
+ * explicit — each keyed extension declares either a static `urlPath` template (preferred) or a dynamic
+ * `resolve` Effect (data-dependent shapes); there is no generic search. Reverse mapping still uses the
+ * provenance the builder tracks (see `GraphBuilder.getNodeExtensionId`).
  *
- * An unknown key, or a key whose extension has no matching node, yields `null` at that index;
+ * An unknown key, or a key whose extension produces no matching node, yields `null` at that index;
  * callers route a `null` to a not-found page. A companion (id-less) pair resolves against the
  * *preceding plank's* node, not the raw preceding pair.
  */
@@ -399,10 +341,25 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
   if (!extensionId) {
     return Option.none();
   }
-  const key = builder.getExtensions()[extensionId]?.urlKey;
+  const extension = builder.getExtensions()[extensionId];
+  const key = extension?.urlKey;
   if (!key) {
     return Option.none();
   }
 
-  return Option.some({ key, id: lastSegment, workspace });
+  // Id-less fixed node (`urlKeyHasId: false`, e.g. `home`): the key is the terminal segment, no id.
+  if (extension?.urlKeyHasId === false) {
+    return Option.some({ key, workspace });
+  }
+
+  // A resolver-backed key keeps the URL minimal — just the object id — because its ancestry is
+  // reconstructed at resolve time (nested collections, whose objects move). Every other key encodes the
+  // node segments *between* its `urlPath` and the id, `+`-joined, so a fixed-depth shape round-trips
+  // without a resolver (the inverse of `resolveKeyId`'s `id.split(TAIL_SEPARATOR)`).
+  if (extension?.resolve) {
+    return Option.some({ key, id: lastSegment, workspace });
+  }
+  const urlPath = extension?.urlPath ?? [];
+  const id = segments.slice(2 + urlPath.length).join(TAIL_SEPARATOR);
+  return Option.some({ key, id, workspace });
 };

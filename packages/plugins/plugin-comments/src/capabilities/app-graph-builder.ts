@@ -38,9 +38,8 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'commentsCompanion',
-        urlKey: 'comments',
-        // A companion pair attaches to the preceding plank's node; it never carries its own id segment.
-        urlKeyHasId: false,
+        // No urlKey: companions are addressed through the reserved `companion/<variant>` grammar (the
+        // `~<variant>` node segment), independent of any per-extension key.
         match: (node, get) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();

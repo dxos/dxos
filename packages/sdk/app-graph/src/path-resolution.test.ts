@@ -25,6 +25,11 @@ const SECTIONED_TYPE = 'test.sectioned';
 const INLINE_SECTION_TYPE = 'test.inline-section';
 const INLINE_SECTION_ID = 'inlineSection';
 const INLINE_DOC_TYPE = 'test.inline-doc';
+const SUBGROUP_TYPE = 'test.subgroup';
+const SUBGROUP_ID = 'subgroup';
+const NESTED_TYPE = 'test.nested';
+const HOME_TYPE = 'test.home';
+const HOME_SEGMENT = 'home';
 
 const WORKSPACE_A = 'workspaceA';
 const WORKSPACE_B = 'workspaceB';
@@ -54,6 +59,8 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'docs',
       urlKey: 'doc',
+      // Direct children of the workspace base: an empty static template (`root/<ws>/<id>`).
+      urlPath: [],
       match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: (workspaceNode) =>
         Effect.succeed(
@@ -83,6 +90,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'sharedKeyDocs',
       urlKey: 'doc',
+      urlPath: [],
       match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () => Effect.succeed([{ id: 'sharedDoc', type: OTHER_DOC_TYPE }]),
     }),
@@ -116,6 +124,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'inlineDocs',
       urlKey: 'inline',
+      urlPath: [INLINE_SECTION_ID],
       match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () =>
         Effect.succeed([
@@ -124,7 +133,66 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     }),
   );
 
-  GraphBuilder.addExtension(builder, [workspaces, docs, comments, sharedKeyDocs, group, sectionedDocs, inlineDocs]);
+  // A data-dependent shape that declares no static `urlPath`; forward resolution runs its `resolve`
+  // Effect, which computes the candidate node id (here a fixed shape, but in production e.g. a nested
+  // collection walked via the database). path-resolution then materializes and verifies the candidate.
+  const dynamicDocs = Effect.runSync(
+    GraphBuilder.createExtension({
+      id: 'dynamicDocs',
+      urlKey: 'dyn',
+      resolve: ({ id, workspaceBaseId }) => Effect.succeed(`${workspaceBaseId}/${GROUP_ID}/${id}`),
+      match: NodeMatcher.whenNodeType(GROUP_TYPE),
+      connector: () => Effect.succeed([{ id: 'dynDocA', type: SECTIONED_TYPE }]),
+    }),
+  );
+
+  // A fixed-depth nested shape (a subgroup under the group, docs under that). The `nested` key declares
+  // `urlPath: [GROUP_ID]`, so the remaining segments (`subgroup`, `<id>`) are `+`-encoded into the pair
+  // id — a static path with no resolver, exercising the multi-segment tail.
+  const subGroup = Effect.runSync(
+    GraphBuilder.createExtension({
+      id: 'subGroup',
+      match: NodeMatcher.whenNodeType(GROUP_TYPE),
+      connector: () => Effect.succeed([{ id: SUBGROUP_ID, type: SUBGROUP_TYPE }]),
+    }),
+  );
+
+  const nestedDocs = Effect.runSync(
+    GraphBuilder.createExtension({
+      id: 'nestedDocs',
+      urlKey: 'nested',
+      urlPath: [GROUP_ID],
+      match: NodeMatcher.whenNodeType(SUBGROUP_TYPE),
+      connector: () => Effect.succeed([{ id: 'nestedDocA', type: NESTED_TYPE }]),
+    }),
+  );
+
+  // An id-less fixed node: `urlKeyHasId: false`, addressed as a bare `home` pair (the key is the
+  // terminal segment `root/<ws>/home`).
+  const homes = Effect.runSync(
+    GraphBuilder.createExtension({
+      id: 'homes',
+      urlKey: 'home',
+      urlKeyHasId: false,
+      urlPath: [],
+      match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
+      connector: () => Effect.succeed([{ id: HOME_SEGMENT, type: HOME_TYPE }]),
+    }),
+  );
+
+  GraphBuilder.addExtension(builder, [
+    workspaces,
+    docs,
+    comments,
+    sharedKeyDocs,
+    group,
+    sectionedDocs,
+    inlineDocs,
+    dynamicDocs,
+    subGroup,
+    nestedDocs,
+    homes,
+  ]);
   return builder;
 };
 
@@ -238,6 +306,82 @@ describe('path-resolution', () => {
       expect(results).toEqual([
         { pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${INLINE_SECTION_ID}/inlineDocA` },
       ]);
+    });
+
+    test('resolves a fixed-depth nested node via a `+`-encoded tail id', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'nested', id: `${SUBGROUP_ID}+nestedDocA`, workspace: WORKSPACE_A }],
+        }),
+      );
+      expect(results).toEqual([
+        { pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA` },
+      ]);
+    });
+
+    test('round-trips a `+`-encoded tail node back to its key/id', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'nested', id: `${SUBGROUP_ID}+nestedDocA`, workspace: WORKSPACE_A }],
+        }),
+      );
+      invariant(resolved, 'expected the pair to resolve');
+      const represented = PathResolution.representNode(builder, resolved.nodeId);
+      expect(Option.getOrThrow(represented)).toEqual({
+        key: 'nested',
+        id: `${SUBGROUP_ID}+nestedDocA`,
+        workspace: WORKSPACE_A,
+      });
+    });
+
+    test('resolves an id-less fixed node (urlKeyHasId: false)', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'home', workspace: WORKSPACE_A }],
+        }),
+      );
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}` }]);
+    });
+
+    test('round-trips an id-less fixed node to a bare (id-less) pair', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'home', workspace: WORKSPACE_A }],
+        }),
+      );
+      invariant(resolved, 'expected the id-less pair to resolve');
+      const represented = PathResolution.representNode(builder, resolved.nodeId);
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'home', workspace: WORKSPACE_A });
+    });
+
+    test('resolves a data-dependent node via a declared resolve Effect', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'dyn', id: 'dynDocA', workspace: WORKSPACE_A }],
+        }),
+      );
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/dynDocA` }]);
+    });
+
+    test('a resolver candidate that does not exist resolves to null', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'dyn', id: 'missing', workspace: WORKSPACE_A }],
+        }),
+      );
+      expect(results).toEqual([null]);
     });
 
     test('a key shared by two extensions resolves nodes produced by either', async ({ expect }) => {

@@ -26,6 +26,7 @@ export default Capability.makeModule(
       // `AppAnnotation.UrlPrefixAnnotation` without a cycle, so the key is set explicitly here.
       urlKey: 'topic',
       match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+      groupSegment: Paths.GroupSegments.ai,
       createObject: (space) =>
         Operation.invoke(SpaceOperation.OpenCreateObject, {
           target: space.db,

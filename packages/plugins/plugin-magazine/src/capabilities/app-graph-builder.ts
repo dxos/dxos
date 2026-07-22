@@ -38,6 +38,7 @@ export default Capability.makeModule(
         // schema serialized in LLM prompts (memoized assistant conversations).
         urlKey: 'magazine',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+        groupSegment: Paths.GroupSegments.content,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,

@@ -36,9 +36,8 @@ export const createCompanionExtensions: (
     // Object settings plank companion.
     GraphBuilder.createExtension({
       id: 'settings',
-      urlKey: 'settings',
-      // A companion pair attaches to the preceding plank's node; it never carries its own id segment.
-      urlKeyHasId: false,
+      // No urlKey: companions are addressed through the reserved `companion/<variant>` grammar (the
+      // `~<variant>` node segment), independent of any per-extension key.
       match: NodeMatcher.whenEchoObjectMatches,
       connector: (node) =>
         Effect.succeed([

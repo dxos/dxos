@@ -30,6 +30,7 @@ export default Capability.makeModule(
         // `AppAnnotation.UrlPrefixAnnotation` without a cycle, so the key is set explicitly here.
         urlKey: 'channel',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
+        groupSegment: Paths.GroupSegments.communications,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,

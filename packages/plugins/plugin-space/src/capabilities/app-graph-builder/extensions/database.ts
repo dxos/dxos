@@ -150,7 +150,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
       id: 'schemaChildren',
-      urlKey: 'database',
+      urlKey: 'view',
+      // View objects sit at `…/system/database/<typeSlug>/<id>`; the type slug is data-dependent but of
+      // fixed depth, so it is encoded into the pair id (`view/<slug>+<id>`) rather than searched.
+      urlPath: [Paths.GroupSegments.system, Paths.Segments.database],
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         // Scoped to the Database section's own type nodes (both static and database schemas — see
@@ -187,13 +190,17 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     }),
 
     // Every object of a type — not just its views — as a hidden child of its type node, so
-    // `…/database/<slug>/<objectId>` resolves via the generic `obj` key even when the type has no
+    // `…/database/<slug>/<objectId>` resolves via the generic `db` key even when the type has no
     // dedicated section of its own. Disjoint from `schemaChildren`'s view nodes (`viewIndex.isView`
     // excludes them) so the two connectors never emit a node with the same id under the same parent.
-    // The generic key that guarantees every ECHO object a URL (see the design's "Unmapped nodes").
+    // The `db` key names the database subgraph — the generic key that guarantees every ECHO object a
+    // URL (see the design's "Unmapped nodes"); `object` addresses the same object via the collection
+    // subgraph. The type-slug segment is data-dependent but fixed-depth, so it is encoded into the pair
+    // id (`db/<slug>+<id>`) via the shared `urlPath` rather than searched.
     GraphBuilder.createExtension({
       id: 'databaseObjects',
-      urlKey: 'obj',
+      urlKey: 'db',
+      urlPath: [Paths.GroupSegments.system, Paths.Segments.database],
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)

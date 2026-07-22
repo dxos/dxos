@@ -78,6 +78,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'mailboxListing',
         urlKey: 'mail',
+        urlPath: [Paths.GroupSegments.communications, getMailboxesSectionId()],
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -286,6 +287,9 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'mailboxMessages',
         urlKey: 'message',
+        // Messages nest under their mailbox: `…/mailboxes/<mailboxId>/<messageId>`. The mailbox id is a
+        // fixed-depth data-dependent segment, so it is `+`-encoded into the pair id after this urlPath.
+        urlPath: [Paths.GroupSegments.communications, getMailboxesSectionId()],
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
@@ -347,6 +351,7 @@ export default Capability.makeModule(
         // schema serialized in LLM prompts (memoized assistant conversations).
         urlKey: 'calendar',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
+        groupSegment: Paths.GroupSegments.communications,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,
@@ -412,6 +417,9 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'calendarEvents',
         urlKey: 'event',
+        // Events nest under their calendar: `…/<calendarTypename>/<calendarId>/<eventId>`. The calendar
+        // id is a fixed-depth data-dependent segment, so it is `+`-encoded into the pair id.
+        urlPath: [Paths.GroupSegments.communications, calendarTypename],
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (calendar, get) => {
           const db = Obj.getDatabase(calendar);
