@@ -159,8 +159,8 @@ const StorySuggestionSourcesProvider = ({
 /**
  * Comment-highlight extension for the story: seeds one comment over the word "Hello" on mount,
  * dispatching `setComments` directly (bypassing a comments store) so a `.cm-comment` mark is present
- * regardless of the review mode. Mirrors what plugin-comments' `threads` extension renders. A
- * `ViewPlugin` (not an `updateListener`) so it fires without waiting for a document change.
+ * regardless of the review mode. Mirrors what plugin-comments' `threads` extension renders.
+ * A `ViewPlugin` (not an `updateListener`) so it fires without waiting for a document change.
  */
 const storyCommentsExtension = (): Extension => [
   comments({ id: 'story-comment', readonly: true }),
@@ -348,6 +348,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Baseline:
+ * - Plain document on main, no branches or checkpoints.
+ * - The versioning affordances are present but inactive.
+ */
 export const Default: Story = {
   args: {
     content: '# Hello World\n',
@@ -355,7 +360,10 @@ export const Default: Story = {
 };
 
 /**
- * Edit the document, create multiple checkpoints, then time-travel back and forward.
+ * Time travel across checkpoints:
+ * - Edits the doc and creates three named revisions (v1–v3) via the panel.
+ * - Selecting each revision renders its pinned content read-only.
+ * - "Now" returns to the editable tip and clears the checkpoint banner.
  */
 export const TimeTravel: Story = {
   args: {
@@ -400,10 +408,12 @@ export const TimeTravel: Story = {
 };
 
 /**
- * Case 2 (navigation): revisions ON a branch, then time-travel among them and back to the branch
- * TIP. Reproduces the reported bug: after creating a revision on a branch you must be able to (a)
- * select that revision (it renders the branch's historical content, not empty), and (b) return to
- * the editable branch tip — the timeline's per-branch `Tip` node, not main's `Now`.
+ * Revisions on a branch, then navigation (reported-bug regression):
+ * - Forks a `draft` branch; "New branch" is disabled while on a branch (no sub-branching).
+ * - Two edit→revision cycles checkpoint the branch's own heads/lane.
+ * - Selecting a branch revision renders that historical branch content (not empty, not the parent).
+ * - The per-branch `Tip` node returns to the editable branch tip.
+ * - Clicking a branch revision highlights THAT revision, not the main-lane fork node.
  */
 export const BranchRevisions: Story = {
   args: {
@@ -463,10 +473,11 @@ export const BranchRevisions: Story = {
 };
 
 /**
- * Edit the document, branch it, then make SEVERAL edit→revision cycles ON the branch: each revision
- * is a checkpoint created through the panel while the branch is in view. A branch revision must
- * record the branch's heads and lane on the branch (not the parent) — the bug this guards. Then a
- * concurrent parent edit and a merge: every branch edit plus the parent edit survive the CRDT merge.
+ * Branch revisions + CRDT merge:
+ * - Forks `draft`; three edit→revision cycles, each checkpointing the branch (heads/lane on the branch).
+ * - A concurrent parent edit stays isolated from the branch view.
+ * - Merge folds every branch edit AND the parent edit onto main; the editor returns to main.
+ * - A `merge: draft` node appears; post-merge revisions resolve read-only against the root doc.
  */
 export const BranchMerge: Story = {
   args: {
@@ -536,11 +547,11 @@ export const BranchMerge: Story = {
 };
 
 /**
- * Case 3: a CHAIN of branches and merges. Fork a branch off main and merge it; then fork a second
- * branch off the (now-updated) main and merge that too. Each merge folds its branch into main and
- * leaves a `merge:` node, so main accumulates every branch's edits and the timeline records both
- * merges. (True nested branch-of-branch — a branch forked off another branch's tip — is a follow-up;
- * the core branch registry is flat, keyed by the root object. See DESIGN.md.)
+ * Chained fork→merge sequences:
+ * - Forks `first` off main, edits, merges back (leaves a `merge: first` node).
+ * - Forks `second` off the now-updated main, edits, merges back.
+ * - Main accumulates both branches' edits; both merges are recorded in the timeline.
+ * - True nested branch-of-branch is a follow-up — the core registry is flat, keyed by the root. See DESIGN.md.
  */
 export const ChainedBranches: Story = {
   args: {
@@ -577,10 +588,10 @@ export const ChainedBranches: Story = {
 };
 
 /**
- * Case 4 (auto-resolve): concurrent edits to the SAME line on a branch and its parent. Core branches
- * share fork ancestry, so `A.merge` interleaves both sides at character level — both survive with NO
- * conflict markers. This is the default (conflict-free) merge behaviour; the marker path below is
- * only for legacy/external content.
+ * Conflict-free merge (default):
+ * - Branch and parent edit the SAME line concurrently.
+ * - Core branches share fork ancestry, so `A.merge` interleaves both sides at character level.
+ * - Both edits survive with NO conflict markers.
  */
 export const ConflictAutoResolve: Story = {
   args: {
@@ -610,10 +621,11 @@ export const ConflictAutoResolve: Story = {
 };
 
 /**
- * Case 4 (markers): the inline conflict-marker resolution UI. Core branches CRDT-merge without
- * conflicts (see ConflictAutoResolve), so git-style markers arise only from legacy content-copy
- * merges or externally-imported content — seeded directly here. Marker blocks render with inline
- * resolution buttons (and must not be styled as blockquotes).
+ * Inline conflict-marker resolution (legacy/imported content only):
+ * - Seeds a git-style conflict block, as a legacy textual merge or an external import would.
+ * - The block renders with markers + both sides, and is NOT styled as a blockquote.
+ * - "Accept branch" resolves it: the branch side wins and the markers disappear.
+ * - (Core branches CRDT-merge without markers — see ConflictAutoResolve.)
  */
 export const ConflictResolution: Story = {
   args: {
@@ -667,11 +679,12 @@ const selectReviewMode = async (canvasElement: HTMLElement, label: string) => {
 };
 
 /**
- * Case A5 (ambient review): the default view stays on main and overlays EVERY author's suggestions
- * plus comments, governed by the per-user review mode. Editing overlays both authors' suggestions and
- * shows the comment highlight (editor editable); switching to Viewing hides the suggestions but keeps
- * the comment and makes the editor read-only. Suggestion resolution + comments here are stood in by
- * story-local `@dxos/ui-editor` fixtures (plugin-markdown cannot depend on plugin-comments).
+ * Ambient review (Milestone A) — the default view, governed by the per-user review mode:
+ * - Stays on main and overlays EVERY author's suggestions plus comments (no branch selection).
+ * - Editing: both authors' suggestions overlay inline and the comment highlight shows; editor editable.
+ * - Viewing: suggestions hide, the comment stays, the editor goes read-only.
+ * - Suggestion sources + comments are stood in by story-local `@dxos/ui-editor` fixtures
+ *   (plugin-markdown cannot depend on plugin-comments).
  */
 export const AmbientReview: Story = {
   args: {

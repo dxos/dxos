@@ -76,8 +76,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Two agent-authored suggestion branches resolve reactively — asserts `onResolved` eventually reports
- * both authors with their proposed content (deterministic; no LLM).
+ * Reactive enumeration of a document's suggestion branches:
+ * - Seeds two agent-authored `kind:'suggestion'` branches (deterministic; no LLM).
+ * - The headless component binds each and resolves its live content.
+ * - Asserts `onResolved` eventually reports both authors with their proposed content.
  */
 export const Default: Story = {
   args: { onResolved: fn() },
@@ -181,11 +183,13 @@ const StorySwap = () => {
 };
 
 /**
- * Regression test for the render-prop's core guarantee: swapping `document` on an already-mounted
- * instance must never paint a frame that shows the PREVIOUS document's resolved sources (the bug the
- * `onResolved`-only, `useState`-in-parent design had — that update lands post-commit, so the parent's
- * first render after a swap used stale state). The render-prop computes `resolved` from the current
- * `document` in its own render, so the very next render after the swap is synchronously correct.
+ * Regression test for the render-prop's core guarantee — no stale frame on document swap:
+ * - Swapping `document` on an already-mounted instance must never paint a frame showing the PREVIOUS
+ *   document's resolved sources.
+ * - The old `onResolved`-only + `useState`-in-parent design had this bug (the update lands post-commit,
+ *   so the parent's first render after a swap used stale state).
+ * - The render-prop computes `resolved` from the current `document` in its own render, so the very
+ *   next render after the swap is synchronously correct.
  */
 export const SwapDocument: Story = {
   render: () => <StorySwap />,

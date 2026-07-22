@@ -365,11 +365,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Baseline:
+ * - Document article on the left, the comments companion on the right (history companion below it).
+ * - No seeded comments or suggestions; empty-state review surface.
+ */
 export const Default: Story = {};
 
 /**
- * Thread opted in to the AI agent in `mention` mode.
- * Type `@Kai …` in the comment input to trigger the stub runner; plain messages are ignored.
+ * AI comment agent in `mention` mode:
+ * - The thread is opted into the agent.
+ * - Type `@Kai …` in the comment input to trigger the stub runner.
+ * - Plain (non-mention) messages are ignored.
  */
 export const WithMentionAgent: Story = {
   args: {
@@ -378,8 +385,10 @@ export const WithMentionAgent: Story = {
 };
 
 /**
- * Thread opted in to the AI agent in `auto` mode.
- * Each user message triggers the stub runner, which appends a canned echo reply.
+ * AI comment agent in `auto` mode:
+ * - The thread is opted into the agent.
+ * - Every user message triggers the stub runner.
+ * - The runner appends a canned echo reply.
  */
 export const WithAutoAgent: Story = {
   args: {
@@ -388,9 +397,10 @@ export const WithAutoAgent: Story = {
 };
 
 /**
- * A larger, multi-paragraph document seeded with three existing comment threads
- * anchored to ranges in the text — exercises snippet rendering and the
- * companion ↔ editor selection sync.
+ * Existing comment threads:
+ * - A larger, multi-paragraph document seeded with three anchored comment threads.
+ * - Exercises snippet rendering in the companion.
+ * - Exercises the companion ↔ editor selection sync.
  */
 export const WithComments: Story = {
   args: {
@@ -399,10 +409,11 @@ export const WithComments: Story = {
 };
 
 /**
- * The companion showing suggestions authored by two agents ("Kai" and "Nova"), seeded
- * deterministically — no LLM. Each agent's per-author `kind:'suggestion'` branch proposes reworded
- * sentences, overlaid against the base as accept/reject change-block cards — one card per grouped
- * change, and each card's avatar tinted with its author's hue.
+ * Integrated ambient review demo (two agent authors, deterministic — no LLM):
+ * - Each of "Kai" and "Nova" has a per-author `kind:'suggestion'` branch proposing reworded sentences.
+ * - Editor (main): both authors' changes overlay inline, colour-coded per author.
+ * - Right column: comments companion (top) + history companion (below).
+ * - Companion: one accept/reject change-block card per grouped change, avatar tinted by author hue.
  */
 export const WithAgentSuggestions: Story = {
   args: {
