@@ -387,6 +387,11 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
+    // A single-pass `vitest run` never needs HMR, but vite still starts a chokidar file watcher whose
+    // FSEVENTWRAP + open file handles are not released on close — for a heavy package (many story files)
+    // teardown then exceeds the timeout and vitest force-exits non-zero despite all tests passing. Null
+    // disables the watcher entirely, so the process exits cleanly.
+    server: { watch: null },
     resolve: {
       alias: { ...TIKTOKEN_ALIAS },
     },
