@@ -77,10 +77,11 @@ const DropdownMenuRoot = ({
       event.stopPropagation();
       // TODO(thure): Why does Dialog's modal-ness cause issues if we don't explicitly close the menu here?
       setOptionsMenuOpen(false);
+      const params = { parent: group, caller, modifiers: { shift: event.shiftKey } };
       if (onAction) {
-        onAction(action, { parent: group, caller });
+        onAction(action, params);
       } else {
-        void executeMenuAction(action, { parent: group, caller });
+        void executeMenuAction(action, params);
       }
     },
     [group, caller, onAction],

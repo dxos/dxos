@@ -69,10 +69,14 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
     return [
       createMenuAction(
         'navigate',
-        () => {
+        (params) => {
           // A card lives inside a plank; navigation follows the deck (add beside the origin when
-          // sliding, replace when solo).
-          void invokePromise(LayoutOperation.Open, { subject: [subjectPath], disposition: 'auto' });
+          // sliding, replace when solo). Shift-clicking the item forces a new plank (add).
+          void invokePromise(LayoutOperation.Open, {
+            subject: [subjectPath],
+            disposition: 'auto',
+            modifiers: params?.modifiers,
+          });
         },
         {
           label: t('open.label'),

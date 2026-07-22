@@ -115,6 +115,9 @@ export type InvokeProps = {
   path?: string[];
 
   caller?: string;
+
+  /** Input modifiers held during the gesture that triggered the action (e.g. shift-clicking a menu item). */
+  modifiers?: { shift?: boolean };
 };
 
 /**
