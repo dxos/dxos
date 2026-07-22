@@ -86,7 +86,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
     const registry = yield* Capabilities.AtomRegistry;
     const settingsAtom = yield* DebugCapabilities.Settings;
-    const fileUploader = (yield* AppCapabilities.FileUploader).get()[0];
+    const fileUploader = (yield* Capability.getAll(AppCapabilities.FileUploader))[0];
 
     return Capability.provide(Capabilities.ReactSurface, [
       Surface.create({

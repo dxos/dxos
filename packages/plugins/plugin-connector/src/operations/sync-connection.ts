@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       }
 
       const connection = yield* Database.load(connectionRef).pipe(Effect.provide(Database.layer(db)));
-      const connectors = (yield* Capability.Service).getAll(Connector).flat();
+      const connectors = (yield* Capability.getAll(Connector)).flat();
       const connector = connectors.find((entry) => entry.id === connection.connectorId);
       if (!connector?.sync) {
         return { synced: 0 };

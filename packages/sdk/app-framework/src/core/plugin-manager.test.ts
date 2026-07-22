@@ -720,7 +720,7 @@ describe('PluginManager', () => {
           requires: [MultiNumber],
           provides: [Total],
           activate: Effect.fnUntraced(function* () {
-            const numbers = (yield* MultiNumber).get();
+            const numbers = yield* Capability.getAll(MultiNumber);
             state.total = numbers.reduce((acc, n) => acc + n.number, 0);
             return [Capability.provide(Total, state)];
           }),
