@@ -1,5 +1,12 @@
 # AI Testing Strategy — Tasks
 
+_Resume: get a real machine/CI to attempt `database.eval.ts` — see if the evalite-specific
+`plugin-routine` registry-sync race (below, PR #12307 entry) reproduces there; if not, deliver the
+live scored result; if so, root-cause it. Then mark PR #12307 ready for review. Uncommitted: none
+(all pushed to `claude/ai-testing-strategy-9ctzjt` through commit `530a2c98`). Last: fixed two
+rounds of `oxfmt` CI failures on PR #12307 (TASKS.md formatting) and confirmed `oxfmt --check`
+clean repo-wide._
+
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 [#12291](https://github.com/dxos/dxos/pull/12291) (Phase 1 steps 1-3 — de-gate G2/G3 + scripted
