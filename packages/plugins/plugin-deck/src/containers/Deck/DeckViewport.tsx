@@ -467,10 +467,20 @@ export const DeckPlanks = () => {
   const fullscreen = !!fullscreenId;
   const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
   const isSliding = presentation === 'sliding';
   // Viewport-derived cap on a sliding plank's width (see the measuring layout effect below); consumed by
   // tiles via `MaxPlankWidthContext` and by the fold effect so folds track the capped width.
   const [maxPlankWidthPx, setMaxPlankWidthPx] = useState(Number.POSITIVE_INFINITY);
+
+  // The deck's own plank tiles are the *direct* children of the Mosaic stack. Scoping to them keeps
+  // nested `role="listitem"` content (CRM lists, markdown bullets, embedded mosaics) out of the fold and
+  // scroll geometry — otherwise a plank whose content contains list items measures wrong, folds
+  // spuriously, and sticks as a spine.
+  const getPlankTiles = useCallback(
+    () => Array.from(stackRef.current?.querySelectorAll<HTMLElement>(':scope > [role="listitem"]') ?? []),
+    [],
+  );
 
   // Preserve horizontal scroll position across fullbleed↔sliding transitions; a window resize
   // invalidates it.
@@ -503,21 +513,24 @@ export const DeckPlanks = () => {
   // natural offset can't come from `offsetLeft`: the tiles are position:sticky and their offsetParent
   // doesn't scroll, so offsetLeft reports the pinned position (clustered for planks in a pile). Sum the
   // actual plank widths + gaps instead, so the scroll distance tracks plank size for any index.
-  const scrollToPlank = useCallback((_id: string, index: number) => {
-    const viewport = viewportRef.current;
-    const tiles = viewport && Array.from(viewport.querySelectorAll<HTMLElement>('[role="listitem"]'));
-    const stack = tiles?.[0]?.parentElement;
-    if (!viewport || !tiles || !stack) {
-      return;
-    }
-    const styles = getComputedStyle(stack);
-    const gap = parseFloat(styles.columnGap) || 0;
-    let naturalLeft = parseFloat(styles.paddingLeft) || 0;
-    for (let plank = 0; plank < index; plank++) {
-      naturalLeft += tiles[plank].offsetWidth + gap;
-    }
-    viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
-  }, []);
+  const scrollToPlank = useCallback(
+    (_id: string, index: number) => {
+      const viewport = viewportRef.current;
+      const stack = stackRef.current;
+      const tiles = getPlankTiles();
+      if (!viewport || !stack || tiles.length === 0) {
+        return;
+      }
+      const styles = getComputedStyle(stack);
+      const gap = parseFloat(styles.columnGap) || 0;
+      let naturalLeft = parseFloat(styles.paddingLeft) || 0;
+      for (let plank = 0; plank < index; plank++) {
+        naturalLeft += tiles[plank].offsetWidth + gap;
+      }
+      viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
+    },
+    [getPlankTiles],
+  );
 
   // Fold detection (experiment): pinning is entirely native CSS `sticky` (see the tile style), so this
   // effect never repositions anything — it only reads the already-pinned rects to decide when a plank has
@@ -529,7 +542,7 @@ export const DeckPlanks = () => {
       return;
     }
     const update = () => {
-      const tiles = Array.from(viewport.querySelectorAll<HTMLElement>('[role="listitem"]'));
+      const tiles = getPlankTiles();
       const vpRect = viewport.getBoundingClientRect();
       const rects = tiles.map((tile) => tile.getBoundingClientRect());
       tiles.forEach((tile, index) => {
@@ -555,7 +568,7 @@ export const DeckPlanks = () => {
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [isSliding, rendered.length, maxPlankWidthPx]);
+  }, [isSliding, rendered.length, maxPlankWidthPx, getPlankTiles]);
 
   // Cap the plank width to the viewport so the current plank's trailing controls never hide behind the
   // piled spines: reserve a spine (plus the stack gap) for every other plank, then subtract the stack
@@ -568,7 +581,7 @@ export const DeckPlanks = () => {
       return;
     }
     const measure = () => {
-      const stack = viewport.querySelector<HTMLElement>('[role="listitem"]')?.parentElement;
+      const stack = stackRef.current;
       const styles = stack && getComputedStyle(stack);
       const gap = styles ? parseFloat(styles.columnGap) || 0 : 0;
       const padding = styles
@@ -592,7 +605,7 @@ export const DeckPlanks = () => {
       return;
     }
 
-    const tile = viewport.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
+    const tile = stackRef.current?.querySelector<HTMLElement>(`:scope > [data-object-id="${CSS.escape(id)}"]`);
     if (tile) {
       const offset = tile.getBoundingClientRect().left - viewport.getBoundingClientRect().left + viewport.scrollLeft;
       viewport.scrollTo({ left: offset, behavior: 'smooth' });
@@ -657,6 +670,7 @@ export const DeckPlanks = () => {
               <ScrollArea.Root orientation='horizontal' classNames='size-full'>
                 <ScrollArea.Viewport ref={viewportRef} classNames={breakpoint === 'mobile' && 'snap-x snap-mandatory'}>
                   <Mosaic.Stack
+                    ref={stackRef}
                     orientation='horizontal'
                     // Mobile pins the stack to the viewport width (`w-full`) so each plank's `w-full`
                     // resolves to one screen — the planks overflow the scroll viewport and snap one-to-next
