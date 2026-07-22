@@ -230,11 +230,9 @@ export const Empty: Story = {
 };
 
 // Integration test only: proves the search box is wired to the message query so that typing narrows
-// the list. The query behaviors themselves (whole-thread expansion, thread-of-one retention, and the
-// HTML-only exclusion) are covered headlessly in `mailbox-search.test.ts`; this story deliberately does
-// not re-assert those variants.
-// TODO(inbox): add a `messageMatchesQuery` unit test for the HTML-only exclusion (bugs 2 & 3), then this
-//   story stays purely the search-box→query integration check.
+// the list. The query behaviors themselves are covered headlessly — the whole-thread semi-join and
+// thread-of-one retention in `mailbox-search.test.ts`, and the HTML-only exclusion (bugs 2 & 3) by the
+// `messageMatchesQuery` tests in `util.test.ts` — so this story does not re-assert those variants.
 export const SearchFilter: Story = {
   args: {
     conversations: true,
