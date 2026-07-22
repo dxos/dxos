@@ -37,10 +37,12 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ObjectHistory } from '@dxos/plugin-space/containers';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { ObjectHistory } from '@dxos/plugin-versioning/containers';
+import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
+import { translations as versioningTranslations } from '@dxos/plugin-versioning/translations';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -333,6 +335,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
+        VersioningPlugin(),
         MarkdownPlugin(),
       ],
     })),
@@ -340,7 +343,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...spaceTranslations],
+    translations: [...translations, ...spaceTranslations, ...versioningTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

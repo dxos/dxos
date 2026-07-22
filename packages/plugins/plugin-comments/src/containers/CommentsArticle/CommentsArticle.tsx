@@ -21,7 +21,7 @@ import { Doc } from '@dxos/echo-doc';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { Markdown } from '@dxos/plugin-markdown';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { VersioningCapabilities } from '@dxos/plugin-versioning';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -180,7 +180,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // The active review branch: the core branch the local user is currently viewing for this subject
   // (per-object version selection, shared with the editor surface). `undefined` = main/unbranched.
   // Comments are scoped to it so the companion shows only the branch under review's threads.
-  const [versioningState] = useAtomCapabilityState(SpaceCapabilities.VersioningState);
+  const [versioningState] = useAtomCapabilityState(VersioningCapabilities.VersioningState);
   const markdownDoc = Obj.instanceOf(Markdown.Document, subject) ? subject : undefined;
   const reviewBranch = useMemo(() => {
     const selection = versioningState.selection[subject.id];

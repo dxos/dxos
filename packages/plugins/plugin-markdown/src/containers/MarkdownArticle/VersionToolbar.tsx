@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { type SpaceCapabilities } from '@dxos/plugin-space';
+import { type VersioningCapabilities } from '@dxos/plugin-versioning';
 import { getSpace } from '@dxos/react-client/echo';
 import { Branch, Version } from '@dxos/versioning';
 
@@ -53,7 +53,7 @@ export const VersionToolbar = ({ versioning }: VersionToolbarProps) => {
       ? document?.history?.branches.find((branch) => branch.key === branchKey && branch.status === 'active')
       : undefined;
   }, [document, activeVersion]);
-  const tipSelection = useCallback((): SpaceCapabilities.VersionSelection => {
+  const tipSelection = useCallback((): VersioningCapabilities.VersionSelection => {
     const branch = branchOfActiveVersion();
     return branch ? { kind: 'branch', branchId: branch.id } : { kind: 'current' };
   }, [branchOfActiveVersion]);

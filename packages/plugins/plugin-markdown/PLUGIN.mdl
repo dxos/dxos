@@ -29,8 +29,8 @@ The review model composes primitives owned elsewhere:
 
 - `Version`, `Branch`, `History`, `BranchBinding` (`@dxos/versioning`) — named checkpoints, per-object
   branches (`kind: 'draft' | 'suggestion'`), CRDT merge, and the writable per-surface branch binding.
-- `SpaceCapabilities.VersioningState` / `ReviewMode` / `ReviewRenderPolicy` / `HistoryProvider`
-  (`@dxos/plugin-space`) — the per-user selection + review-mode state, the mode→visibility policy, and
+- `VersioningCapabilities.VersioningState` / `ReviewMode` / `ReviewRenderPolicy` / `HistoryProvider`
+  (`@dxos/plugin-versioning`) — the per-user selection + review-mode state, the mode→visibility policy, and
   the generic history-companion gate. This plugin contributes a `HistoryProvider` and consumes the rest.
 - `trackChanges`, `suggestions({ base })`, `suggestionsOverlay`, `rebaseHunks`, `diffView`,
   `mergeConflicts` (`@dxos/ui-editor`) — the inline tracked-change / diff / overlay extensions.
@@ -81,8 +81,8 @@ type Settings
 ```mdl
 service HistoryProvider
   desc: |
-    Contributes SpaceCapabilities.HistoryProvider for Markdown.Document, so plugin-space renders the
-    generic version-history companion (timeline of checkpoints/branches/merges) for markdown docs.
+    Contributes VersioningCapabilities.HistoryProvider for Markdown.Document, so plugin-versioning
+    renders the generic version-history companion (timeline of checkpoints/branches/merges) for markdown docs.
     Resolves the versioned root Text from a document.
   methods:
     getTarget(object: Obj.Unknown) -> Text?
@@ -268,7 +268,7 @@ feat F-8: Versioning (checkpoints, branches, merge)
 
   req F-8.1: The plugin MUST support named checkpoints (CreateCheckpoint), per-object branches
     (CreateBranch), and CRDT merge-back (MergeBranch) over Document.history (@dxos/versioning).
-  req F-8.2: The plugin MUST contribute a HistoryProvider for Markdown.Document so plugin-space
+  req F-8.2: The plugin MUST contribute a HistoryProvider for Markdown.Document so plugin-versioning
     renders the generic history companion (checkpoint/branch/merge timeline).
   req F-8.3: The VersionToolbar MUST let the user select main / a branch / a checkpoint / a fork,
     with a Base/Diff/Branch view selector for a selected branch (default Diff on toolbar switch).

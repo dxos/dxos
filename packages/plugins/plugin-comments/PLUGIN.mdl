@@ -45,7 +45,7 @@ redefining them:
   branch-vs-main tracked-change rendering live in the editor; this plugin feeds and reviews them.
 - `MarkdownCapabilities.ExtensionProvider` / `MarkdownCapabilities.SuggestionSourcesProvider`
   (`@dxos/plugin-markdown`) — the slots this plugin contributes to.
-- `ReviewRenderPolicy` / `ReviewMode` (`@dxos/plugin-space`) — the per-user Editing/Suggesting/Viewing
+- `ReviewRenderPolicy` / `ReviewMode` (`@dxos/plugin-versioning`) — the per-user Editing/Suggesting/Viewing
   policy that drives comment/suggestion visibility (`showComments`, `showSuggestions`) in the editor.
 - `CollaborationOperation.AcceptChange` / `RejectChange` / `AcceptProposal` (`@dxos/app-toolkit`) —
   the durable cherry-pick/revert ops the review surfaces route accept/reject through.

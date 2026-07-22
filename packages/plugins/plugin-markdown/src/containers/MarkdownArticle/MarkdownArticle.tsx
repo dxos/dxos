@@ -16,7 +16,7 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { VersioningCapabilities } from '@dxos/plugin-versioning';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ViewStateManager } from '@dxos/react-ui-attention';
@@ -122,8 +122,8 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     // selection (branch/checkpoint/fork) keeps the advanced behaviour below untouched — the policy is
     // consulted only on the ambient path. The policy capability is contributed by plugin-space (A2);
     // absent (e.g. a bare story host) ⇒ the GDocs-parity default.
-    const [reviewRenderPolicy] = useCapabilities(SpaceCapabilities.ReviewRenderPolicy);
-    const renderPolicy = reviewRenderPolicy ?? SpaceCapabilities.defaultReviewRenderPolicy;
+    const [reviewRenderPolicy] = useCapabilities(VersioningCapabilities.ReviewRenderPolicy);
+    const renderPolicy = reviewRenderPolicy ?? VersioningCapabilities.defaultReviewRenderPolicy;
     const ambient = selection.kind === 'current';
     const policy = renderPolicy(mode);
     const ambientEditable = ambient ? policy.editable : true;
