@@ -188,29 +188,58 @@ The composer-ui skill's **State management** section references both.
 
 ---
 
-## Consistency inventory (2026-07-22)
+## Inventory (2026-07-22)
 
-**Pattern A (hooks) — correct:** `plugin-deck` (companion variant, split), `plugin-map`, `plugin-trip`,
-`plugin-commerce`, `plugin-space` (object-card-stack, type-article), `plugin-ibkr`, `plugin-video`,
-`plugin-magazine`, `plugin-inbox` (mailbox, calendar), `react-ui-table`, `react-ui-form`.
+### Every ViewState aspect (`defineViewState`) — all genuinely per-context
 
-**Pattern B (capability) — correct:** `plugin-markdown` (editor state), `plugin-attention` (select),
-`plugin-deck` (update-companion), and the `*/capabilities/app-graph-builder.ts` of `plugin-inbox`,
-`plugin-trip`, `plugin-comments`, `plugin-ibkr`, `plugin-magazine`, `plugin-assistant`.
+| Aspect                   | Package              | key                       | backend  | state                          |
+| ------------------------ | -------------------- | ------------------------- | -------- | ------------------------------ |
+| `selectionAspect`        | `react-ui-attention` | `selection`               | `memory` | current selection set          |
+| `companionVariantAspect` | `plugin-deck`        | `deck-companion-variant`  | `local`  | selected companion tab         |
+| `companionSplitAspect`   | `plugin-deck`        | `deck-companion-split`    | `local`  | companion split ratio          |
+| `editorViewStateAspect`  | `plugin-markdown`    | `editor`                  | `local`  | per-document scroll/caret      |
+| `tableSortAspect`        | `react-ui-table`     | `table-sort`              | `local`  | column sort                    |
+| `messageViewModeAspect`  | `plugin-inbox`       | `inbox-message-view-mode` | `local`  | message body view mode         |
 
-**Gaps to resolve (this PR):**
+**Access — consistent:** Pattern A (hooks) in `plugin-deck`, `plugin-map`, `plugin-trip`,
+`plugin-commerce`, `plugin-space`, `plugin-ibkr`, `plugin-video`, `plugin-magazine`, `plugin-inbox`
+(mailbox/calendar), `react-ui-table`, `react-ui-form`. Pattern B (capability) in `plugin-markdown`,
+`plugin-attention` (`select`), `plugin-deck` (`update-companion`), and the `app-graph-builder`s of
+`plugin-inbox`/`plugin-trip`/`plugin-comments`/`plugin-ibkr`/`plugin-magazine`/`plugin-assistant`.
 
-1. ✅ **`plugin-inbox` message view mode** — moved from the Settings store to a ViewState aspect
-   (`messageViewModeAspect`, keyed by attendable); `MessageArticle` projects it + `loadRemoteImages`
-   into one writable derived atom for `ConversationStack`.
-2. **No `@idiom` marker yet** — add the single marker above.
-3. **Confirm no other per-context UI state is misfiled in a Settings store** across plugins.
+### The KVS store (`createKvsStore`) actually backs **two** non-ViewState roles
+
+- **Settings** (`capabilities/settings.ts` → `AppCapabilities.Settings`, shown in the Settings UI) —
+  user preferences. ~35 plugins.
+- **Internal app-global state** (`capabilities/state.ts`, its own capability, _not_ in the UI) —
+  sticky **global** UI state, e.g. deck `sidebarState` / `scrollIntoView`. In `plugin-deck`,
+  `plugin-markdown`, `plugin-space`, `plugin-map`, `plugin-observability`, `plugin-assistant`.
+
+So the real axis is **per-context → ViewState; app-global → KVS** (and within KVS, a user-facing
+preference goes in `settings.ts`/Settings UI, internal state in `state.ts`). "Settings vs ViewState"
+is the common case of this; the fuller rule is context-scope first.
+
+## Consistency findings
+
+- ✅ Every `defineViewState` aspect stores genuinely per-context state through the right backend and
+  access path. No global preference is misfiled as a ViewState aspect.
+- ⚠️ **`plugin-markdown` per-document view mode is misfiled.** `MarkdownState.viewMode` is a hand-rolled
+  `Record<documentId, EditorViewMode>` in the app-global `state.ts` KVS store
+  ([`MarkdownCapabilities.ts`](../../../../../plugins/plugin-markdown/src/types/MarkdownCapabilities.ts)).
+  That is per-context durable UI state and should be a ViewState aspect keyed by document id — exactly
+  like the `editorViewStateAspect` sitting beside it, and the inbox fix. **Migrate it.**
+- ℹ️ **`plugin-deck` has two companion aspects** (`deck-companion-variant`, `deck-companion-split`) under
+  one concern; consolidation candidate (a single `{ variant, splitSize }` aspect — one ViewState object
+  per aspect).
+- ↗️ **Sweep the remaining `state.ts` KVS stores** (`plugin-space`, `plugin-map`, `plugin-observability`,
+  `plugin-assistant`) for `Record<contextId, …>` fields that are really per-context ViewState.
 
 ---
 
 ## Next steps
 
-1. ✅ Document the two patterns + the Settings distinction (this file).
+1. ✅ Document the two patterns + the Settings/KVS distinction (this file).
 2. ✅ Move the inbox message view mode from the Settings store to a ViewState aspect (Pattern A).
 3. ✅ Add the `@idiom` markers (`viewState` on `defineViewState`, `kvsStore` on `createKvsStore`).
-4. Sweep for other misfiled per-context state and align it.
+4. Migrate `plugin-markdown`'s per-document `viewMode` Record to a ViewState aspect.
+5. Sweep the other `state.ts` stores for per-context `Record` fields; consolidate deck's two aspects.
