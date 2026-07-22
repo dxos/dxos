@@ -215,16 +215,17 @@ and `CardTile`→`react-ui-mosaic` (split by dep), which scatters the vocabulary
 
 Verified by import tracing after the `react-ui-card` extraction:
 
-- **`ViewMode`** (`viewModeGroup` + type/icons) — a **menu-builder helper**, not a
-  card primitive (deps: `@dxos/react-ui-menu` only; takes the i18n `ns` as a param).
-  Shared by `ConversationStack` (mail) + `Event/useToolbar` (calendar). → move to
-  `@dxos/react-ui-card` as a **`menu`/`toolbar` submodule** (not with the Card
-  components). Slightly email-leaning (`html` mode is messages-only) but events pass
-  a reduced `modes` list, so it's genuinely shared.
-- **`Toolbar` (`toolbar.ts`)** — `openGroup` / `deleteGroup` / `deleteAction`, the
-  DRY source for identical open/delete actions across the Message and Event
-  toolbars. Two consumers: `ConversationStack/useToolbar` + `Event/useToolbar`. Not
-  dead. → moves with `ViewMode` to `react-ui-card`'s toolbar submodule.
+- **`ViewMode`** (`viewModeGroup` + type/icons) — a **menu-builder helper**, NOT a
+  card primitive → **does not belong in `react-ui-card`.** It's ~40 lines of sugar
+  over react-ui-menu's `MenuBuilder.group({ selectCardinality: 'single' })`, which
+  already exists. And the two usages already diverge: calendar passes
+  `modes: ['markdown', 'plain']`; mail adds the email-only `html` mode. → **don't
+  extract** — keep the mail version in plugin-inbox; when calendar splits it defines
+  its own trivial markdown/plain toggle. Not worth a shared package.
+- **`Toolbar` (`toolbar.ts`)** — `openGroup` / `deleteGroup` / `deleteAction` are
+  one-line `MenuBuilder.action` wrappers shared by the Message + Event toolbars.
+  Same verdict as `ViewMode`: too thin to extract. Keep domain-side; calendar gets
+  its own (or duplicate the ~5 lines) on split. Not `react-ui-card`.
 - **`Header`** — a 20-line borderless-Card + bottom-rule wrapper (`Header.Root`).
   Its doc claims "Event and Message article headers," but that is **stale**: the
   Message header (`ConversationStack`) now hand-rolls its own subgrid, so the **only**
