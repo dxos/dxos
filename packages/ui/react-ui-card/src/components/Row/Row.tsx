@@ -206,6 +206,7 @@ const PersonAnchorRow = ({
 }: Omit<RowPersonProps, 'avatar' | 'onClick'>) => {
   const { t } = useTranslation(translationKey);
   const contactDXN = useActorContact(db, actor);
+
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
   // TODO(burdon): Reconcile with Avatar if space member.
