@@ -5,17 +5,16 @@
 import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { Surface, useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useAsyncEffect } from '@dxos/react-hooks';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
 import { OperationHandler } from '#capabilities';
@@ -194,29 +193,32 @@ const DefaultStory = ({ count = 0, foldAnimation = 'slide' }: DefaultStoryProps)
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
   const { state, deck, updateState } = useDeckState();
-  const { invokePromise } = useOperationInvoker();
 
   // Subscribe to the root's children so the `whenRoot` connector runs and materializes the story
   // nodes; without this each plank's `useNode` never resolves and the deck stays in the loading state.
-  // The graph qualifies connector node ids with their parent path (e.g. `root/story-item-1`), so planks
-  // must be opened by the materialized id rather than the bare `STORY_ITEMS` id.
+  // The graph qualifies connector node ids with their parent path (e.g. `root/story-item-1`), so the
+  // seeded `active` list holds the materialized ids rather than the bare `STORY_ITEMS` ids.
   const rootChildren = useConnections(graph, Node.RootId, 'child');
   const items = useMemo(() => rootChildren.filter((node) => node.type === 'story-item'), [rootChildren]);
 
-  const opened = useRef(false);
-  useAsyncEffect(async () => {
-    if (opened.current || (count > 0 && items.length < count)) {
+  // Seed the deck's active planks in one shot rather than opening them one by one: each `Open` schedules
+  // its own scroll-into-view, so a multi-plank deck would visibly page from plank to plank on load.
+  // Seeding `active` directly mounts every plank in place with no scrolling.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current || (count > 0 && items.length < count)) {
       return;
     }
-    opened.current = true;
-    for (const [index, item] of items.slice(0, count).entries()) {
-      await invokePromise(LayoutOperation.Open, {
-        subject: [item.id],
-        navigation: 'immediate',
-        ...(index > 0 ? { disposition: 'new-plank' as const } : {}),
-      });
-    }
-  }, [items, count]);
+    seeded.current = true;
+    const active = items.slice(0, count).map((item) => item.id);
+    updateState((current) => ({
+      ...current,
+      decks: {
+        ...current.decks,
+        [current.activeDeck]: { ...current.decks[current.activeDeck], active },
+      },
+    }));
+  }, [items, count, updateState]);
 
   // `display: contents` so the wrapper carries `data-fold-anim` for the scoped CSS without affecting the
   // fullscreen layout of the deck beneath it.

@@ -602,11 +602,17 @@ export const DeckPlanks = () => {
               <ScrollArea.Viewport ref={viewportRef} classNames={breakpoint === 'mobile' && 'snap-x snap-mandatory'}>
                 <Mosaic.Stack
                   orientation='horizontal'
-                  // Fullbleed and mobile are edge-to-edge by design; the `--main-spacing` gap/padding
-                  // (which encapsulates each plank in its own container) only applies to the desktop
-                  // sliding deck, matching today's multi-mode look.
+                  // Mobile pins the stack to the viewport width (`w-full`) so each plank's `w-full`
+                  // resolves to one screen — the planks overflow the scroll viewport and snap one-to-next
+                  // rather than the stack shrink-wrapping to their intrinsic width. The `--main-spacing`
+                  // gap/padding (which encapsulates each plank in its own container) only applies to the
+                  // desktop sliding deck, matching today's multi-mode look.
                   classNames={
-                    isSliding && breakpoint !== 'mobile' ? 'h-full gap-(--main-spacing) px-(--main-spacing)' : 'h-full'
+                    breakpoint === 'mobile'
+                      ? 'h-full w-full'
+                      : isSliding
+                        ? 'h-full gap-(--main-spacing) px-(--main-spacing)'
+                        : 'h-full'
                   }
                   getId={getPlankId}
                   items={rendered}
