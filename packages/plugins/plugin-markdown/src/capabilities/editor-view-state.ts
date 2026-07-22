@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
-import { type Aspect, type ViewStateManager, defineViewState } from '@dxos/react-ui-attention';
+import { type Aspect, type ViewStateManager, defineViewState } from '@dxos/react-ui-attention/types';
 import { EditorSelectionStateSchema, type EditorStateStore } from '@dxos/ui-editor';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 

@@ -133,7 +133,7 @@ export class LocalBackend implements ViewStateBackend {
     try {
       return Schema.decodeUnknownSync(aspect.schema)(JSON.parse(raw));
     } catch {
-      // Tolerate stale/corrupt entries (e.g. a prior schema shape) by falling back to the default.
+      // Tolerate stale/corrupt entries (e.g., a prior schema shape) by falling back to the default.
       return aspect.defaultValue();
     }
   }

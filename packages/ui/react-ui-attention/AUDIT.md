@@ -227,9 +227,11 @@ is the common case of this; the fuller rule is context-scope first.
 - ✅ **`plugin-markdown` per-document view mode — migrated.** Was a hand-rolled
   `Record<documentId, EditorViewMode>` in the app-global `state.ts` KVS store; now the
   `editorViewModeAspect` ViewState aspect (`local`, keyed by document id, beside `editorViewStateAspect`).
-  The `SetViewMode` operation writes it via the capability (Pattern B); `react-surface` reads/writes via
-  the hooks (Pattern A), falling back to the `defaultViewMode` setting when there's no per-doc override.
-  The now-empty `MarkdownCapabilities.State` KVS store was removed.
+  `react-surface` reads/writes it via the hooks (Pattern A), falling back to the `defaultViewMode`
+  setting when there's no per-doc override. The now-empty `MarkdownCapabilities.State` KVS store and the
+  dead `SetViewMode` operation were removed — the operation would have forced the headless `./plugin`
+  entry to pull `@dxos/react-ui` (a ViewState write from a workerd-safe operation needs a headless
+  capability entry, which `@dxos/plugin-attention` does not yet expose).
 - ℹ️ **`plugin-deck` has two companion aspects** (`deck-companion-variant`, `deck-companion-split`) under
   one concern; consolidation candidate (a single `{ variant, splitSize }` aspect — one ViewState object
   per aspect).
