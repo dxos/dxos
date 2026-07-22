@@ -103,7 +103,7 @@ describe('EntityMetaIndex', () => {
 
       // A canonical-form query must still resolve the legacy row without a reindex.
       const results = yield* index.query({ spaceId, typeDXN: EID.make({ entityId: schemaId }) });
-      expect(results.map((_) => _.objectId)).toEqual([objectId]);
+      expect(results.map((meta) => meta.objectId)).toEqual([objectId]);
     }).pipe(Effect.provide(TestLayer)),
   );
 

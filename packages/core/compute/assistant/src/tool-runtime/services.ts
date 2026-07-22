@@ -173,7 +173,11 @@ const makeToolName = (name: string) => {
 };
 
 // TODO(dmaretskyi): Factor out.
-// Exported for testing (the LLM-facing tool-parameter projection).
+/**
+ * Projects an operation input struct into the LLM-facing tool parameter fields, mapping each
+ * property through {@link mapSchemaTypeForLLM} (so refs become the model-friendly `RefFromLLM`).
+ * Exported for testing.
+ */
 export const createStructFieldsFromSchema = (
   schema: Schema.Schema<any, any>,
 ): Record<string, Schema.Schema<any, any>> => {

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
@@ -24,7 +24,7 @@ describe('createStructFieldsFromSchema', () => {
   // An LLM-supplied ref URI string must coerce to a valid local EID. Refs nested inside an optional
   // field surface as a `T | undefined` union; the projection must still route them through the
   // LLM-friendly coercion so a qualified URI does not become a malformed `echo:////…`.
-  test('coerces refs passed as qualified URI strings inside an optional array', () => {
+  test('coerces refs passed as qualified URI strings inside an optional array', ({ expect }) => {
     const refs = decodeIn(Schema.Struct({ in: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))) }), [
       `echo://${SPACE}/${OBJECT}`,
     ]);
@@ -33,7 +33,7 @@ describe('createStructFieldsFromSchema', () => {
     expect(refs[0].uri).toBe(`echo:///${OBJECT}`);
   });
 
-  test('coerces refs passed as qualified URI strings inside a required array', () => {
+  test('coerces refs passed as qualified URI strings inside a required array', ({ expect }) => {
     const refs = decodeIn(Schema.Struct({ in: Schema.Array(Ref.Ref(Obj.Unknown)) }), [`echo://${SPACE}/${OBJECT}`]);
     expect(refs).toHaveLength(1);
     expect(refs[0].uri).toBe(`echo:///${OBJECT}`);
