@@ -20,10 +20,10 @@ const __dirname = dirname(__filename);
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
-// Single-pass `vitest run` (never `vitest watch`), detected from the CLI invocation because vitest's
-// `VITEST_MODE` signal is worker-only. Used to drop the story builder's file watcher, which vite
-// leaks on close and otherwise hangs the storybook test teardown. Watch mode keeps the watcher.
-const isVitestRun = isTrue(process.env.VITEST) && (process.argv.includes('run') || process.argv.includes('--run'));
+// Single-pass `vitest run` (not `vitest watch`); `VITEST` is set in both and `VITEST_MODE` is
+// worker-only, so read the run subcommand (first positional token, not any `run`-named filter).
+const vitestSubcommand = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
+const isVitestRun = isTrue(process.env.VITEST) && (vitestSubcommand === 'run' || process.argv.includes('--run'));
 
 // Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
 // transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
@@ -271,11 +271,8 @@ export const createConfig = ({
             // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
             overlay: false,
           },
-          // Under `vitest run` the story builder serves in a single pass and never needs the file
-          // watcher, but vite leaves its FSEVENTWRAP + file handles open on close, so teardown of a
-          // heavy package exceeds the timeout and vitest force-exits non-zero despite all tests
-          // passing. Disable the watcher only in that single-pass run (see `IS_VITEST_RUN`); interactive
-          // `storybook dev` (local + e2e) and `vitest watch` keep HMR.
+          // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it
+          // in run mode only, so interactive `storybook dev` (local + e2e) and `vitest watch` keep HMR.
           ...(isVitestRun ? { watch: null } : {}),
         },
         optimizeDeps: {

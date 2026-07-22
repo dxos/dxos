@@ -364,12 +364,10 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   };
 };
 
-// Vitest sets `VITEST=true` for both `vitest run` and `vitest watch`, and its `VITEST_MODE` signal
-// is only exposed to pool workers (never the main process where these configs evaluate). Watch mode
-// needs the file watcher, so detect single-pass `run` mode from the CLI invocation instead: this is
-// true in the vitest process that serves the story builder in-process, and false in a watch-mode
-// `storybook dev` child (whose argv is storybook's, not vitest's), so both keep their watcher then.
-const IS_VITEST_RUN = process.env.VITEST === 'true' && (process.argv.includes('run') || process.argv.includes('--run'));
+// `VITEST` is set in watch mode too and `VITEST_MODE` is worker-only, so read the run subcommand
+// (first positional token, not any `run`-named filter) from argv to detect single-pass mode.
+const VITEST_SUBCOMMAND = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
+const IS_VITEST_RUN = process.env.VITEST === 'true' && (VITEST_SUBCOMMAND === 'run' || process.argv.includes('--run'));
 
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
@@ -394,11 +392,8 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
-    // A storybook `vitest run` spins up two vite servers (this browser-test server and the in-process
-    // story builder, see `.storybook/main.ts`); neither needs a file watcher for a single pass, and
-    // vite leaks the watcher's FSEVENTWRAP + file handles on close, hanging teardown until vitest
-    // force-exits non-zero. Disable this server's watcher in run mode only (watch mode needs it); the
-    // builder's is disabled the same way in `main.ts`.
+    // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it in run
+    // mode only (watch needs it). The story builder's watcher is disabled the same way in `main.ts`.
     ...(IS_VITEST_RUN ? { server: { watch: null } } : {}),
     resolve: {
       alias: { ...TIKTOKEN_ALIAS },
@@ -815,9 +810,8 @@ const buildTestConfig = (
   return {
     ...resolveReporterConfig(dirname),
     tags: TEST_TAGS,
-    // NOTE: Never set `dangerouslyIgnoreUnhandledErrors` here. Unhandled errors/rejections must
-    // surface and be fixed at the source, not suppressed (a suppressed teardown race hides real
-    // failures). See the `code-style` skill.
+    // Never set `dangerouslyIgnoreUnhandledErrors`: suppressing unhandled rejections hides real
+    // teardown failures — surface and fix them at the source. See the `code-style` skill.
     projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
       (project): project is UserWorkspaceConfig => project !== undefined,
     ),
