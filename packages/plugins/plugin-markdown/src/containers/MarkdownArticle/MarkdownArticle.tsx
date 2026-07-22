@@ -311,7 +311,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
       const record: Record<string, string> = {};
       for (const branch of suggestionAuthorBranches) {
         if (branch.creator) {
-          record[branch.creator] = hueColour(authorHue(branch, members));
+          // Pass the bare hue name: the ambient overlay resolves it via `suggestionHue` (which matches
+          // against the palette names), so a `var(--color-…)` string would never match and fall back to
+          // a hash. Matches the form `CommentsArticle` passes.
+          record[branch.creator] = authorHue(branch, members);
         }
       }
       return record;
