@@ -4,12 +4,19 @@ name: CommentsPlugin
 version: 0.1.0
 ---
 
-CommentsPlugin renders comment threads anchored to ECHO objects (primarily Markdown documents).
-It contributes the in-editor comment extension (`MarkdownCapabilities.ExtensionProvider`), a
-companion surface listing a subject's threads, and the per-thread AI agent that responds to
-user comments and may propose document edits. It is fully self-contained and depends on no other
-plugin: shared message/thread UI comes from `@dxos/react-ui-thread`, and the `Thread`/`Message`/
-`AnchoredTo` schema comes from `@dxos/types`.
+CommentsPlugin is the **review layer** over ECHO objects (primarily Markdown documents). It renders
+two kinds of anchored, attributed annotations and the surfaces that review them:
+
+- **Comment threads** — anchored discussions, with an optional per-thread AI agent that answers and
+  may propose document edits.
+- **Suggestions** — Google-Docs-style proposed changes authored on per-user branches, surfaced as
+  reviewable change-block cards (accept/reject) alongside the comment threads.
+
+It contributes the in-editor comment extension and the suggestion-sources bridge (both
+`MarkdownCapabilities.*`), a companion surface listing a subject's threads and suggestions, and the
+per-thread agent. It depends on no other plugin: message/thread UI comes from `@dxos/react-ui-thread`,
+review/diff primitives from `@dxos/ui-editor`, branch machinery from `@dxos/versioning`, and the
+`Thread`/`Message`/`AnchoredTo` schema from `@dxos/types`.
 
 ## Extensions
 
@@ -23,6 +30,25 @@ The following extension dialects are used in this document.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
+
+## External types & capabilities
+
+The suggestion layer composes primitives owned elsewhere; the plugin binds to them rather than
+redefining them:
+
+- `Thread`, `Message`, `AnchoredTo` (`@dxos/types`) — the anchored-annotation schema. `AnchoredTo`
+  carries an optional `branch` tag scoping an annotation to a review branch (undefined = main).
+- `Branch` (`@dxos/versioning`) — a per-user suggestion branch is a `Branch` with `kind: 'suggestion'`
+  keyed by author `creator` (DID); `Branch.suggestion`/`Branch.bind` find-or-create and bind it.
+- `SuggestionSource`, `trackChanges`, `suggestions({ base })`, `rebaseHunks`, `DiffHunk`, `GroupPolicy`
+  (`@dxos/ui-editor`) — the inline diff/overlay primitives. The multi-author overlay and the
+  branch-vs-main tracked-change rendering live in the editor; this plugin feeds and reviews them.
+- `MarkdownCapabilities.ExtensionProvider` / `MarkdownCapabilities.SuggestionSourcesProvider`
+  (`@dxos/plugin-markdown`) — the slots this plugin contributes to.
+- `ReviewRenderPolicy` / `ReviewMode` (`@dxos/plugin-versioning`) — the per-user Editing/Suggesting/Viewing
+  policy that drives comment/suggestion visibility (`showComments`, `showSuggestions`) in the editor.
+- `CollaborationOperation.AcceptChange` / `RejectChange` / `AcceptProposal` (`@dxos/app-toolkit`) —
+  the durable cherry-pick/revert ops the review surfaces route accept/reject through.
 
 ## Types
 
@@ -45,9 +71,10 @@ type AgentConfig
 ```mdl
 type AgentIdentity
   desc: |
-    Effect Context.Tag resolved at runtime (not stored on threads). The default layer
-    reads from plugin Settings; tests/stories provide static layers. Sole source of the
-    agent's display name and @mention token.
+    Effect/Capability identity of the comment-thread agent, resolved at runtime (not stored on
+    threads). The default reads from plugin Settings; tests/stories provide static values. Sole
+    source of the agent's display name and @mention token. NOTE: distinct from @dxos/compute's
+    `AgentIdentity` service (the suggestion-author DID) — see the naming-collision follow-up.
   fields:
     name: String
     identityDid?: String
@@ -71,6 +98,28 @@ type CommentsState
     current?: String                  # currently-selected thread URI
 ```
 
+```mdl
+type ResolvedSuggestionBranch
+  desc: |
+    A resolved `kind:'suggestion'` branch: its author (identity DID) and current content, read live
+    from the bound branch doc. The unit the review layer diffs against main.
+  fields:
+    author: String        # identity DID (Branch.creator)
+    content: String       # live branch content
+    hue?: String          # the author's palette hue, when known
+```
+
+```mdl
+type SuggestionGroup
+  desc: |
+    One reviewable suggestion card: a grouped DiffHunk (via ui-editor `groupHunks`) from a single
+    author, anchored in the base (main) text and tinted with the author's colour.
+  extends: DiffHunk
+  fields:
+    author: String
+    colour: String
+```
+
 ## Services
 
 ```mdl
@@ -87,9 +136,22 @@ service AgentRunner
 service ExtensionProvider
   desc: |
     Implements MarkdownCapabilities.ExtensionProvider (defined by @dxos/plugin-markdown).
-    Returns CodeMirror extensions that sync anchored comment threads with editor ranges,
-    track selection/comment overlap into CommentsState.toolbar, and open the comments
-    companion when a comment marker is clicked.
+    Returns CodeMirror extensions that: sync anchored comment threads with editor ranges,
+    scope visible comments to the active review branch (AnchoredTo.branch), track
+    selection/comment overlap into CommentsState.toolbar, open the comments companion on
+    marker click, honour the review policy (`showComments` hides them; a `suggestionBranch`
+    prohibits inline comment creation), and resolve anchors against the editor-bound Text
+    (main or the branch doc in Branch view).
+```
+
+```mdl
+service SuggestionSourcesProvider
+  desc: |
+    Implements MarkdownCapabilities.SuggestionSourcesProvider. A headless React component that
+    enumerates a document's active `kind:'suggestion'` branches, binds each to read its live
+    content, and reports the resolved `SuggestionSource[]` up to the markdown editor's ambient
+    overlay — so the editor renders every author's suggestions without importing plugin-comments
+    (the dependency runs the other way). Backs both the editor overlay and the review companion.
 ```
 
 ## Operations
@@ -98,7 +160,7 @@ service ExtensionProvider
 op Create
   key: org.dxos.plugin.comments.operation.create
   desc: Create a (staged) comment thread anchored to a subject; seeds CommentsState.drafts.
-  input: { subject: Obj.Any, anchor?: String, name?: String }
+  input: { subject: Obj.Any, anchor?: String, name?: String, branch?: String }
 
 op AddMessage
   key: org.dxos.plugin.comments.operation.add-message
@@ -153,34 +215,69 @@ op CreateProposals
   key: org.dxos.plugin.comments.operation.create-proposals
   desc: |
     Materialise assistant-proposed document edits as NEW proposal-block comment
-    threads, one per diff, each anchored to the document at the diff's cursor
-    range (no pre-existing target thread is required).
+    threads, one per diff, each anchored to the document at the diff's cursor range.
   input: { doc: Ref<Markdown.Document>, diffs: String[] }
 ```
+
+> Accept/reject of suggestions and proposals is NOT a plugin-comments operation: the review surfaces
+> route them through the durable `CollaborationOperation.AcceptChange` / `RejectChange` /
+> `AcceptProposal` ops (`@dxos/app-toolkit`), which cherry-pick/revert the hunk against the author's
+> branch and main. A comment left on the base while reviewing resolves its target branch from
+> `AnchoredTo.branch ?? reviewBranch`.
 
 ## Components
 
 ```mdl
 component CommentsArticle
   desc: |
-    Companion surface (role 'article', linkedSegment 'comments') listing the comment threads
-    anchored to a host object (e.g. a Markdown.Document). Threads are discovered via an
-    AnchoredTo query and combined with in-memory drafts. Tabs switch unresolved / all.
-    Each thread renders via @dxos/react-ui-thread Thread.* with an injected Object tile.
-    Was CommentsCompanion in plugin-thread.
+    Companion surface (role 'article', linkedSegment 'comments') for a host object. Lists comment
+    threads (via an AnchoredTo query + in-memory drafts) AND the suggestion review cards
+    (via Suggestions). Tabs switch unresolved / all. Comment threads render via @dxos/react-ui-thread
+    Thread.* with an injected Object tile; a comment's Accept-change routes through the durable
+    CollaborationOperation.AcceptChange.
   props:
     attendableId?: String
     subject: Obj.Any
-  layout: |
-    ┌───────────────────────────────┐
-    │ [ Unresolved ] [ All ]        │  ← Panel.Toolbar / Tabs
-    ├───────────────────────────────┤
-    │ Thread (anchor #1)            │
-    │   message · message · …       │
-    │   ▸ composer                  │
-    │ ───────────────────────────── │
-    │ Thread (anchor #2) …          │
-    └───────────────────────────────┘
+
+component Suggestions
+  desc: |
+    Review companion for a document's `kind:'suggestion'` branches. Renders SuggestionSources
+    (headless, one bound probe per active suggestion branch) to resolve live content, builds
+    per-author SuggestionSource[] (buildSuggestionSources), and renders SuggestionThread cards.
+    Reactive: a card appears/updates as its author edits and disappears when accepted/rejected
+    empties the branch. Routes accept/reject to the durable ops (services: []).
+  props:
+    document?: VersionedObject
+    base: String                      # main content each suggestion is diffed against
+    group?: GroupPolicy
+    authorLabels?: Map<String, String>
+    authorHues?: Map<String, String>
+  emits:
+    accept: { group: SuggestionGroup }
+    reject: { group: SuggestionGroup }
+
+component SuggestionThread
+  desc: |
+    Renders one author's grouped changes as change-block tiles (before/after) with hover
+    Accept/Reject, tinted with the author's hue. Built on @dxos/react-ui-thread Message.* with a
+    ContentBlock.Change tile; renders nothing when empty.
+  props:
+    base: String
+    sources: SuggestionSource[]
+    group?: GroupPolicy
+    authorLabels?: Map<String, String>
+    authorHues?: Map<String, String>
+
+component SuggestionSources
+  desc: |
+    Headless enumerator (render-prop + onResolved callback). Renders one invisible probe per active
+    `kind:'suggestion'` branch, binds it, and reports the resolved ResolvedSuggestionBranch[] both
+    synchronously (children render-prop, correct on document swap) and post-commit (onResolved, for
+    the editor overlay bridge). Contributed to markdown as SuggestionSourcesProvider.
+  props:
+    document: VersionedObject
+    authorHues?: Map<String, String>
+    onResolved?: (resolved: ResolvedSuggestionBranch[]) -> void
 
 component AgentToggle
   desc: |
@@ -221,8 +318,8 @@ feat F-2: Per-thread agent configuration
   req F-2.1: Thread schema's optional `agent: AgentConfig` field MUST gate AI involvement;
     absent/disabled means none. No migration required for existing threads.
 
-  req F-2.2: The AgentIdentity Effect service MUST be the sole source of the agent's display
-    name. The plugin MUST contribute a default AgentIdentity at activation; hosts override by
+  req F-2.2: The AgentIdentity service MUST be the sole source of the agent's display name.
+    The plugin MUST contribute a default AgentIdentity at activation; hosts override by
     contributing their own earlier in plugin order.
 
 feat F-3: Trigger gate
@@ -258,19 +355,50 @@ feat F-4: Agent runner
 
 feat F-5: Presentation via react-ui-thread
 
-  req F-5.1: Comment threads MUST render with @dxos/react-ui-thread Thread.* / Message.*;
-    the plugin MUST NOT re-implement message tiles or the composer.
+  req F-5.1: Comment threads and suggestion cards MUST render with @dxos/react-ui-thread
+    Thread.* / Message.*; the plugin MUST NOT re-implement message tiles or the composer.
 
-  req F-5.2: Object/reference message blocks MUST be rendered by an Object tile the plugin
-    injects into Thread.Root (Surface, type AppSurface.CardContent). react-ui-thread MUST stay free
-    of @dxos/app-framework.
+  req F-5.2: Object/reference and change (before/after) message blocks MUST be rendered by tiles
+    injected into Thread.Root (Surface, type AppSurface.CardContent). react-ui-thread MUST stay
+    free of @dxos/app-framework.
 
 feat F-6: Independence
 
-  req F-6.1: plugin-comments MUST NOT import @dxos/plugin-thread (no plugin → plugin deps).
+  req F-6.1: plugin-comments MUST NOT import @dxos/plugin-thread or @dxos/plugin-markdown source
+    (no plugin → plugin deps); cross-plugin wiring is via capabilities only.
 
   req F-6.2: Storybook sample data MUST use the real @dxos/types Message schema generated via
     @dxos/schema/testing, not bespoke message-entity types.
+
+feat F-7: Suggestion review companion
+
+  req F-7.1: The plugin MUST contribute SuggestionSourcesProvider to
+    MarkdownCapabilities.SuggestionSourcesProvider, enumerating a document's active
+    `kind:'suggestion'` branches and reporting each branch's live content as a SuggestionSource.
+
+  req F-7.2: Suggestions MUST render one reviewable card per grouped change per author
+    (suggestionGroups), reactively appearing/updating as authors edit and disappearing when a
+    branch's diff vs main becomes empty.
+
+  req F-7.3: Accept/reject on a card MUST route through the durable
+    CollaborationOperation.AcceptChange / RejectChange (services: []) — Accept cherry-picks the
+    hunk from the author's branch into main; Reject reverts it on the author's branch. The card
+    MUST NOT splice the document directly.
+
+  req F-7.4: Each author's suggestions MUST be tinted with a stable per-author colour
+    (suggestionColour): the author's identity hue when known, else a hash of the author DID —
+    the same colour used for the author's avatar/tag and the inline editor markers.
+
+feat F-8: Comment / suggestion coexistence
+
+  req F-8.1: Comments MUST be scoped to the active review branch via AnchoredTo.branch: a comment
+    tagged with a branch is visible only while that branch is under review (undefined = main).
+
+  req F-8.2: Inline comment creation MUST be prohibited while the editor is bound to a per-user
+    suggestion branch (comments live on main / draft branches, not on suggestion drafts).
+
+  req F-8.3: Comment marks/creation MUST honour the review policy's `showComments`: when false the
+    comment extension renders nothing and creates nothing.
 ```
 
 ## Acceptance
@@ -324,12 +452,32 @@ test T-8: Runner errors do not lose the user message
     - The user message persists in the thread
     - A `comments.agent.failed` observability event is emitted
     - No assistant message is appended
+
+test T-9: Multi-author suggestion cards
+  given: A document with two active suggestion branches (authors A and B)
+  when: Suggestions renders
+  then:
+    - One card per grouped change per author is shown
+    - Each card is tinted with its author's colour
+    - A branch whose diff vs main is empty shows no card
+
+test T-10: Accept routes through the durable op
+  given: A suggestion card for author A's change
+  when: The card's Accept is clicked
+  then:
+    - CollaborationOperation.AcceptChange is invoked with A's branch
+    - The card is dismissed and the document is not spliced directly
+
+test T-11: SuggestionSources resolves reactively without a stale frame
+  given: SuggestionSources mounted on document D1 with two suggestion branches
+  when: The document prop swaps to D2
+  then: onResolved / the render-prop never reports D1's sources for D2 (no stale frame)
+
+test T-12: Comment scoping + prohibition
+  given: A document under review of a `kind:'suggestion'` branch
+  when: The comment extension renders
+  then:
+    - Only comments tagged with that branch (or main) are shown
+    - Inline comment creation is prohibited on the suggestion branch
+    - With policy.showComments = false, no comment marks render
 ```
-
-## Out of Scope (v1)
-
-- Renaming the donor plugin (plugin-thread → plugin-chat) — tracked separately.
-- Moving Message/Thread/AnchoredTo schema out of @dxos/types.
-- UI to rename the agent within Composer (lives in plugin settings).
-- Streaming / "thinking…" indicator, in-flight turn cancellation, multi-user trigger dedup,
-  token-budget caps — all unchanged from the current implementation.

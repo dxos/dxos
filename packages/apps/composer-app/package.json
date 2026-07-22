@@ -136,6 +136,7 @@
     "@dxos/plugin-trello": "workspace:*",
     "@dxos/plugin-trip": "workspace:*",
     "@dxos/plugin-typefully": "workspace:*",
+    "@dxos/plugin-versioning": "workspace:*",
     "@dxos/plugin-video": "workspace:*",
     "@dxos/plugin-voxel": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",

@@ -13,10 +13,12 @@ import { Text as EchoText, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ObjectHistory } from '@dxos/plugin-space/containers';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { ObjectHistory } from '@dxos/plugin-versioning/containers';
+import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
+import { translations as versioningTranslations } from '@dxos/plugin-versioning/translations';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -25,7 +27,7 @@ import { Branch, Version } from '@dxos/versioning';
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
-import { MarkdownPlugin } from '../../MarkdownPlugin';
+import { MarkdownPlugin } from '../MarkdownPlugin';
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define(
@@ -94,6 +96,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
+        VersioningPlugin(),
         MarkdownPlugin(),
       ],
     })),
@@ -101,7 +104,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...spaceTranslations],
+    translations: [...translations, ...spaceTranslations, ...versioningTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

@@ -604,6 +604,9 @@
       "path": "packages/plugins/plugin-typefully/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-versioning/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {

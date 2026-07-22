@@ -227,6 +227,8 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
   [`agents/superpowers/plans/2026-07-21-ambient-review-model.md`](../../../agents/superpowers/plans/2026-07-21-ambient-review-model.md)
   (Milestone A: modes + policy + Editing/Viewing ambient overlay + review — fully specified;
   Milestone B: Suggesting-mode authoring — spike-gated, tasks appended after Task B0).
+- [x] **PR #12301 MERGED (2026-07-22 02:53Z)** — Milestone A shipped. Preview:
+      https://pr-12301-composer-main.dxos.workers.dev
 - [x] **Milestone A LANDED (2026-07-21)** via subagent-driven execution — tasks A1–A6 complete,
       each spec+quality reviewed, all fix loops closed. Commits: A1 f7f0027e09, A2 2b61901677,
       A3 40618ca277 (+4846834552,+46142dd6e9), A4 50211bfca2 (+928921e411), A5 b7ba37fa49 (+1a42697ac1).
@@ -245,8 +247,40 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
       comments-top/history-bottom layout); each half is unit-tested, but the full-stack boot times out
       in-pane, so an automated assertion is deferred to avoid a flaky test. `showComments` consumption
       and the `useVersioning` hook-test harness also deferred.
-- [ ] **Milestone B — Suggesting-mode authoring**: begins with Task B0 spike (see plan). Re-add the
-      Suggesting mode option to the toolbar when it lands.
+- [~] **Milestone B — Suggesting-mode authoring** (A1 bind-to-branch) — **CORE LANDED in PR #12302**
+  (B0–B3, B7); B4/B6 deferred to own PRs, B5 substantially met. Sub-item status below.
+  - [x] **B0 spike** (2026-07-22, two parallel Opus agents): A1 bind-to-branch chosen over A2
+        bind-to-main. Reports: `.superpowers/sdd/spike-*.md`.
+  - [x] **B1 `trackChanges` extension + eval story — A1 RATIFIED by user felt-eval (2026-07-22).**
+        `computeCharHunks` (character-level) so live typing marks only changed chars (word-level
+        struck even a newline); phantom-deletion widgets + atomic caret guard; `TrackChanges` story.
+        Suggestion accept/reject moved to a hover popover (was an opacity-hidden inline gap). User
+        confirmed: insertions clean green, deletions strike correctly, phantom/caret OK — with the
+        second-author overlay REMOVED from the story (see B2).
+  - [x] **B2 — base-decoupling DONE** (da357354e5 rebase + 0ffebb31ce tooltip + 137767fe3f boundary
+        fix). `suggestions({ base })` diffs foreign sources vs main and `rebaseHunks` maps them into
+        the diverged branch's coords (fixes the strike-your-own-text + garbled-accept defects);
+        accept/reject moved to a non-clipped `hoverTooltip` layer. Opus review caught an adjacency
+        off-by-one → fixed + regression test. 299 ui-editor tests green.
+  - [x] **B3 — Suggesting mode wired into MarkdownArticle DONE** (f2b702c3c6). `mode==='suggesting'`
+        (ambient) binds the editor to the user's own `kind:'suggestion'` branch (find-or-create), self
+        edits render via `trackChanges` vs main, other authors overlay via `suggestions({ base:main })`
+        (self excluded); mount guarded so edits NEVER hit main (opus review verified airtight);
+        Suggesting toolbar option re-enabled. DocumentVersioning 9/9 incl. a Suggesting play test that
+        asserts the edit lands on the branch, not main.
+  - [ ] **B4 — DEFERRED (follow-up, own PR).** Author-side accept/reject/un-delete of one's OWN inline
+        draft changes. Lower value: the reviewer accept/reject round-trip already works via the
+        Editing-mode foreign overlay (A5 + B2); an author revises their own draft by editing. Un-delete
+        of a phantom (re-instate a deleted word) is the one genuinely-missing affordance — track it.
+  - [~] **B5 — integration coverage: substantially met by B3's Suggesting play test** (full UI round
+    trip: toggle → type → branch-scoped edit + foreign overlay vs main). The full-stack
+    `CommentsArticle`↔markdown composition test stays DEFERRED (in-pane 30s boot timeout — flaky;
+    would need a bootable fixture).
+  - [ ] **B6 — DEFERRED (follow-up, own PR).** Perf: `trackChanges` re-diffs the whole doc per
+        keystroke (fine for normal docs; needs incremental diffing for large ones); also `rebaseHunks`
+        recomputes `computeCharHunks` per source (hoist once). Plus multi-line/block deletions + copy
+        semantics. None block normal-size docs.
+  - [x] **B7 — ship**: DESIGN update + changeset + PR (this PR).
 
 ## Landing the suggestions feature (current goal)
 
