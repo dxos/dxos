@@ -128,10 +128,27 @@ as primary coverage.
 
 ## Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-- [ ] Scorers: tool-match, schema-validity, DB-effect, LLM-judge; datasets for comprehension /
-      tool-selection (former G1 scenarios).
+- [x] First DB-effect scorer + first ported G1 scenario: `assistant-evals/src/oracle.ts`
+      (`objectExists(type, predicate)` — dimension-G code-side oracle, queries the DB directly
+      rather than trusting the agent's `completedCriteria` self-report) and
+      `assistant-evals/src/evals/database.eval.ts` (ported from the gated
+      `assistant-e2e/src/testing/database.test.ts` `create and query` case). `runner.ts`'s
+      `createEvalRunner` gained an optional `dbQuery` hook (overloaded: omit it and the task
+      returns the bare agent output unchanged, as before; pass it and the task returns
+      `{ agentOutput, dbQuery }` so a scorer can grade the DB effect). Manual-run only for now
+      (`DX_ANTHROPIC_API_KEY` + `moon run assistant-evals:evals`) — no CI/schedule yet. Verified:
+      `assistant-evals:lint` clean, `tsc -b packages/core/compute/assistant-evals` clean (every
+      other error printed is pre-existing and unrelated — `react-ui-mosaic`/`react-ui-list`
+      missing exports, a missing `cli-observability-secrets.json`, generated chess assets —
+      confirmed via `grep -n "assistant-evals/src"` returning nothing). Not run against the live
+      model yet (no API key in this sandbox) — do that before trusting the scorer logic itself.
+- [ ] Port `web-search.test.ts` next as the first tool-match scorer case (checks only the
+      `web-search` tool fired), reusing the same `dbQuery`-style hook pattern generalized to
+      tool-invocation records rather than DB queries.
+- [ ] More scorers: schema-validity, LLM-judge; datasets for comprehension / tool-selection.
 - [ ] Pin model versions; pass-rate thresholds; scheduled (nightly/on-demand) run distinct from PR CI.
-- [ ] Port highest-value former-G1 scenarios as H integration cases (real model, real ops), non-gating.
+- [ ] Port remaining highest-value former-G1 scenarios (crm-mailbox, planning, markdown) as H
+      integration cases (real model, real ops), non-gating.
 
 ## Phase 3 — finish migration & reduce machinery
 

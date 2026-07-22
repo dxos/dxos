@@ -100,6 +100,9 @@ export interface CreateEvalRunnerOptions<I, O> {
   plugins?: Plugin.Plugin[];
 }
 
+/** A code-side oracle run against DB state after the agent completes, before the harness is disposed. */
+export type DbQuery<I, D> = (input: I, spaceId: SpaceId) => Effect.Effect<D, unknown, Database.Service>;
+
 export type VariantConfig =
   | undefined
   | {
@@ -115,8 +118,19 @@ export type VariantConfig =
  * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runInstructions` with the
  * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
+ *
+ * Pass `dbQuery` to additionally run a deterministic assertion against DB state (dimension G's
+ * code-side oracle) while the space is still open; the task then returns
+ * `{ agentOutput, dbQuery }` instead of the bare agent output, so a scorer can grade the real
+ * effect rather than the model's own self-reported completion.
  */
-export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig> => {
+export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
+export function createEvalRunner<I, O, D>(
+  options: CreateEvalRunnerOptions<I, O> & { dbQuery: DbQuery<I, D> },
+): Evalite.Task<I, { agentOutput: O; dbQuery: D }, VariantConfig>;
+export function createEvalRunner<I, O, D>(
+  options: CreateEvalRunnerOptions<I, O> & { dbQuery?: DbQuery<I, D> },
+): Evalite.Task<I, O | { agentOutput: O; dbQuery: D }, VariantConfig> {
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
 
@@ -143,9 +157,26 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
             EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
           );
 
-          return yield* Effect.promise(() => runInstructions(harness, instructions, model, personalSpace.id, input));
+          const agentOutput = yield* Effect.promise(() =>
+            runInstructions(harness, instructions, model, personalSpace.id, input),
+          );
+
+          const dbQueryFn = options.dbQuery;
+          if (!dbQueryFn) {
+            return agentOutput;
+          }
+
+          const dbQuery = yield* Effect.promise(() =>
+            harness.runPromise(
+              dbQueryFn(input, personalSpace.id).pipe(
+                Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service)),
+              ),
+            ),
+          );
+
+          return { agentOutput, dbQuery };
         }),
       ),
     );
   };
-};
+}
