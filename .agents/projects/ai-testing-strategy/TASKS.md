@@ -1,13 +1,17 @@
 # AI Testing Strategy — Tasks
 
-_Resume: with the evalite registry-sync race fixed, get a real `DX_ANTHROPIC_API_KEY` (this sandbox
-has none) to obtain the first live scored result from `database.eval.ts`; then mark PR #12307 ready
-for review. Uncommitted: none (pushed to `claude/ai-testing-strategy-evals-81cbfc`). Last: root-caused
-and fixed the evalite-specific `plugin-routine` registry-sync race (see Follow-ups) — reproduced
-deterministically on a fresh machine/worktree (not sandbox-specific), then fixed with a one-line
-config change; verified: assistant-evals build/lint/test green, `oxfmt --check` clean, and both
-`database.eval.ts` + `basic.eval.ts` now progress past the crash to a real (401, no key here)
-Anthropic API call instead of failing before any model call._
+_Resume: **first live-scored `database.eval.ts` result obtained: 100%.** PR #12307 is now
+functionally verified end-to-end — next is to mark it ready for review (holding only in case more
+polish is wanted) and continue Phase 2 (port `web-search.test.ts`). Uncommitted: none, pushed to
+`claude/ai-testing-strategy-9ctzjt` through commit `8d0f95d`, CI running. Last: two blocking bugs
+found and fixed in this session — (1) the evalite-specific `plugin-routine` registry-sync race
+(config fix, see Follow-ups), and (2) `createEvalRunner` defaulted `skills` to `[]` instead of
+`getDefaultSkills()` like `harness.ts`'s `agentTest()`, so the agent had no database tools at all
+("No tools available to complete the task") — fixed by extracting `getDefaultSkills` into a shared
+`src/skills.ts` and defaulting to it in `runner.ts`. With both fixed and a real
+`DX_ANTHROPIC_API_KEY` (via `op run --account braneframe --env-file=.config/.env.1password`),
+`database.eval.ts` scores 100%. Verified: assistant-evals build/lint/test green, `oxfmt --check`
+clean._
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -161,10 +165,15 @@ as primary coverage.
       Verified: `moon run assistant-evals:build assistant-evals:lint assistant-evals:test --force`
       green (9 gated e2e files, all correctly skipped without `DX_RUN_LLM_TESTS=1`);
       `evalite run src/evals` and `evalite run src/evals/database.eval.ts` correctly discover
-      files. **Blocking registry-sync race root-caused and fixed** (see Follow-ups) — both
-      `database.eval.ts` and `basic.eval.ts` now reach a real Anthropic API call. **Still not yet
-      obtained a live scored result**: this sandbox has no `DX_ANTHROPIC_API_KEY`, so the call
-      fails on 401 rather than scoring — needs a real key to finish verifying PR #12307.
+      files. **Two blocking bugs found and fixed, first live scored result obtained:**
+      (1) the evalite registry-sync race (see Follow-ups); (2) `createEvalRunner` defaulted
+      `skills` to `[]` instead of `getDefaultSkills()` (harness.ts's `agentTest()` convention),
+      so the agent had no database tools and failed with "No tools available to complete the
+      task" — fixed by extracting `getDefaultSkills` into a shared `src/skills.ts`. With a real
+      `DX_ANTHROPIC_API_KEY` (`op run --account braneframe --env-file=.config/.env.1password --
+    npx evalite run src/evals/database.eval.ts`), `database.eval.ts` now scores **100%**.
+      PR #12307 is functionally verified end-to-end; still draft pending a final ready-for-review
+      pass.
 - [ ] Port `web-search.test.ts` next as the first tool-match scorer case (checks only the
       `web-search` tool fired), reusing the same `dbQuery`-style hook pattern generalized to
       tool-invocation records rather than DB queries.
