@@ -245,10 +245,10 @@ agent's first job.
       Mirrors plugin-connector/plugin-routine.
 - [x] VALIDATE (2026-07-21): `moon run app-framework:build` green; `moon run app-framework:test`
       green (201/201, 16 files — overload resolution had no fallout); `moon run
-    plugin-assistant:build` green (workerd `#capabilities`→`workerd.ts` resolution +
+plugin-assistant:build` green (workerd `#capabilities`→`workerd.ts` resolution +
       check-module-structure gate passed); `moon exec --on-failure continue --quiet :build`
       full-repo green (exit 0, no failures); `moon run app-framework:lint
-    plugin-assistant:lint` clean; `pnpm format` reformatted 5 files whose line widths shifted
+plugin-assistant:lint` clean; `pnpm format` reformatted 5 files whose line widths shifted
       after the `addLazyModule`→`addModule` rename (pure whitespace, no semantic change) —
       committed alongside.
 - [x] No overload-resolution regressions found — all 167 swept call sites compiled and passed
@@ -272,7 +272,7 @@ own `Context.Tag`/`Effect.Service`, whose requirement identity is a nominal toke
 class), never the structural service shape.
 
 - [x] `capability.ts`: `CapabilityIdentifier<Id extends string, A>` (was `<T, A>`); `Tag<T, S =
-      any>`/`MultiTag<T, S = any>` (default `any` — `Context.Tag` is invariant in its identifier, so
+  any>`/`MultiTag<T, S = any>` (default `any` — `Context.Tag` is invariant in its identifier, so
       a bare `Tag<Example>` annotation must accept every concrete `Tag<Example, "the.actual.nsid">`,
       which `S = string` would reject under invariance). `make`/`makeSingleton` are dual-form:
       curried `make<T>()(nsid)` captures the NSID as a literal (precise, portable — the
@@ -301,7 +301,7 @@ class), never the structural service shape.
       phantom import. ~30 files restored for this reason (the ~88 `operation-handler.ts`/
       `skill-definition.ts` bodies providing `Capabilities.OperationHandler`/
       `AppCapabilities.SkillDefinition`, plus a handful of `provide()`-ing barrels). Also applies at
-      **tag *definition* sites** whose own service type is structurally non-portable (e.g.
+      **tag _definition_ sites** whose own service type is structurally non-portable (e.g.
       `plugin-client/types/capabilities.ts`'s `IdentityService`/`SpaceService` embedding
       `Identity.Service`/`Space.Service` → `@dxos/halo`'s `Invitation.Flow`/`ShareOptions`) — the
       definition's own exported `Tag<T, S>` still names `T` directly, identifier branding aside.
@@ -328,3 +328,48 @@ per-capability requires-check** only applies where the tag is curried (~all 63 d
 after this pass). The **provides-side leak** (`Contribution<C>` embedding `T`) and the
 **definition-site leak** (a tag's own `Tag<T,S>` naming `T`) are real, separate, still-open
 problems — flagged above, not fixed this pass.
+
+### Third reopened addendum — close the two residual leaks (Issue 1 + 2b) (2026-07-21)
+
+User asked to close both residual leaks. Both landed and validated.
+
+**Issue 1 — brand `Contribution` by the capability identifier, not the tag.** `provide(tag, value)`
+returned `Contribution<C>` (the full tag, service type included), leaking `T` into every consuming
+body's return type. Fixed:
+
+- [x] `Contribution<Id = CapabilityIdentifier<string, Arity>>` (was `<C extends AnyTag>`); `capability`
+      field type erased to `AnyTag` (real tag still present at runtime — `isContribution` checks
+      presence only). Bound left off `Id` because `Context.Tag.Identifier<C>` is opaque to the checker
+      for a generic tag.
+- [x] New `IdentifierOf<C>` extractor over our own `Tag`/`MultiTag` `S` param — **not** Effect's
+      `Context.Tag.Identifier`, which (confirmed by probe) resolves correctly for a *concrete* tag but,
+      for a *generic* `C` inside `provide`'s overload, falls through to its `TagClassShape` branch and
+      yields the raw tag (re-leaking `T`). `provide`/`provideAll` overload **and** impl return
+      `Contribution<IdentifierOf<C>>`; `ProvidedIds`/`CoveredBy`/`EnsureProvides` (capability.ts) +
+      `ValidateModuleOptions` (plugin.ts) compare identifiers. Value-type safety unchanged (checked at
+      the `provide` call, where `T` is in scope). Two explicit `Contribution<typeof tag>` annotations in
+      `edge-model-resolver.ts` switched to `Contribution<IdentifierOf<typeof tag>>`.
+
+**Issue 2 (2b) — name the HALO service shapes.** Extracted `Identity.Service`/`Space.Service`'s inline
+`Context.Tag` shapes into exported named `ServiceApi` interfaces in `@dxos/halo`; plugin-client's
+`IdentityService`/`SpaceService` now use `Identity.ServiceApi`/`Space.ServiceApi` and dropped the
+phantom `Invitation` import. Consumers name the interface (structural expansion with `Invitation.Flow`
+stays inside `@dxos/halo`, which imports `Invitation`). Spike had already confirmed `export * as` does
+not defeat portable naming of a *named member*.
+
+- [x] Removed the ~30 provides-side + ~2 definition-site phantom-import workarounds the two fixes make
+      dead. Method: re-swept ALL workaround files, full-repo build, restored only what TS2883 still
+      flagged (dependency-masking again surfaced them one layer at a time — 5 build iterations). What
+      resurfaced were exactly the **unrelated** category (Schema classes, `Operation.withHandler` defs,
+      React context, a `react-floater`/`type-fest` TS2742 in plugin-support) — restored as legitimate,
+      non-capability imports.
+- [x] Net workaround-file count: **139 → 24**; all 24 remaining are legitimately-needed non-capability
+      TS2883/TS2742 imports (Schema/Operation/context types), which neither fix targets.
+- [x] Gate: full-repo build green; app-framework 201 / app-toolkit 89 / plugin-client green; full-repo
+      lint clean; `pnpm format` clean. (`makeSingleton` etc. call-site count and the completeness-check
+      `@ts-expect-error` tests in `capability.test.ts`/`plugin-manager.test.ts` all pass under the
+      identifier-branded `Contribution`.)
+
+Remaining open (unchanged): the 24 unrelated TS2883/TS2742 imports (out of scope — not the capability
+system); startup-deferral (composer-app/AUDIT.md §12); one `Plugin.addModule<void>` anchor in a
+plugin-magazine story; the pre-existing `plugin-assistant` "can run memoized instructions" failure.

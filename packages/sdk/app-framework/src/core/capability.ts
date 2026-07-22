@@ -333,17 +333,40 @@ export const ContributionTypeId: unique symbol = Symbol.for('@dxos/app-framework
 export type ContributionTypeId = typeof ContributionTypeId;
 
 /**
- * A single typed contribution returned from a module's activate, branded by the capability
- * it satisfies. Carries one value for a singleton capability, n values for a multi capability.
+ * A single typed contribution returned from a module's activate, branded by the capability's
+ * identifier (NSID + arity) rather than its full tag — so a module body's inferred return type
+ * names only local string literals, never the (possibly non-portable) service type `T`, keeping
+ * declaration emit portable. The value-type safety is enforced at the {@link provide} call, where
+ * `T` is naturally in scope; downstream only the capability identity matters (completeness check).
+ * Carries one value for a singleton capability, n values for a multi capability.
  */
-export interface Contribution<C extends AnyTag> {
-  readonly [ContributionTypeId]: C;
-  readonly capability: C;
+// `Id` is a capability identifier (`CapabilityIdentifier<S, A>`) — left unconstrained because
+// `Context.Tag.Identifier<C>` is opaque to the checker for a generic tag `C` and wouldn't satisfy
+// an explicit bound; the default documents the intended shape.
+export interface Contribution<Id = CapabilityIdentifier<string, Arity>> {
+  readonly [ContributionTypeId]: Id;
+  // Erased to the base tag union in the type (the real tag is present at runtime): a precise `C`
+  // here would re-leak its service type into every consuming body's declaration emit.
+  readonly capability: AnyTag;
   readonly values: readonly unknown[];
   readonly deactivate?: () => Effect.Effect<void, Error>;
 }
 
-export type AnyContribution = Contribution<AnyTag>;
+export type AnyContribution = Contribution;
+
+/**
+ * The capability identifier (NSID + arity) of a tag. Extracted from our own {@link Tag}/
+ * {@link MultiTag} `S` parameter rather than via Effect's `Context.Tag.Identifier`, which — for a
+ * generic tag parameter — falls through to its `TagClassShape` branch and yields the raw tag
+ * (leaking the service type again). Singleton checked first; a singleton never matches the multi
+ * arm and vice versa (the arity brand differs).
+ */
+export type IdentifierOf<C> =
+  C extends Tag<any, infer S>
+    ? CapabilityIdentifier<S, 'single'>
+    : C extends MultiTag<any, infer S>
+      ? CapabilityIdentifier<S, 'multi'>
+      : never;
 
 /**
  * Type guard to check if a value is a {@link Contribution}.
@@ -394,18 +417,20 @@ export const provide: {
     capability: C,
     implementation: C extends Tag<infer T, any> ? T : never,
     deactivate?: () => Effect.Effect<void, Error>,
-  ): Contribution<C>;
+  ): Contribution<IdentifierOf<C>>;
   <C extends MultiTag<any, any>>(
     capability: C,
     implementation: C extends MultiTag<infer T, any> ? T : never,
     deactivate?: () => Effect.Effect<void, Error>,
-  ): Contribution<C>;
+  ): Contribution<IdentifierOf<C>>;
 } = <C extends AnyTag>(
   capability: C,
   implementation: unknown,
   deactivate?: () => Effect.Effect<void, Error>,
-): Contribution<C> => ({
-  [ContributionTypeId]: capability,
+): Contribution<IdentifierOf<C>> => ({
+  // Controlled brand cast: `[ContributionTypeId]` is a type-only identifier brand; at runtime it
+  // holds the tag (isContribution checks presence only).
+  [ContributionTypeId]: capability as unknown as IdentifierOf<C>,
   capability,
   values: [implementation],
   deactivate,
@@ -418,8 +443,9 @@ export const provideAll = <C extends MultiTag<any, any>>(
   capability: C,
   implementations: C extends MultiTag<infer T, any> ? readonly T[] : never,
   deactivate?: () => Effect.Effect<void, Error>,
-): Contribution<C> => ({
-  [ContributionTypeId]: capability,
+): Contribution<IdentifierOf<C>> => ({
+  // Controlled brand cast: see {@link provide}.
+  [ContributionTypeId]: capability as unknown as IdentifierOf<C>,
   capability,
   values: implementations,
   deactivate,
@@ -433,10 +459,17 @@ export const provideAll = <C extends MultiTag<any, any>>(
  */
 export type ProvidesReturn<Provides extends readonly AnyTag[]> = Provides extends readonly []
   ? void | ReadonlyArray<never>
-  : ReadonlyArray<Contribution<Provides[number]>>;
+  : ReadonlyArray<Contribution<ProvidedIds<Provides>>>;
 
 /**
- * The capability union covered by an inferred activate return type.
+ * The capability identifiers of a provides tuple — the provides-side parallel to
+ * {@link Requirements}. Contributions and the completeness check compare identities by these
+ * (NSID + arity) rather than by the full tag, so neither leaks the service type.
+ */
+export type ProvidedIds<Provides extends readonly AnyTag[]> = IdentifierOf<Provides[number]>;
+
+/**
+ * The capability identifiers covered by an inferred activate return type.
  * The `never` element guard keeps an empty-array return (inferred as `never[]`) from
  * covering every capability via unconstrained inference.
  */
@@ -444,19 +477,19 @@ export type CoveredBy<Ret> =
   Ret extends ReadonlyArray<infer Item>
     ? [Item] extends [never]
       ? never
-      : Item extends Contribution<infer C>
-        ? C
+      : Item extends Contribution<infer Id>
+        ? Id
         : never
     : never;
 
 /**
  * Completeness constraint for a module's activate: evaluates to `unknown` (no-op) when every
  * declared capability is covered by the return type, otherwise to an unconstructible branded
- * type naming the missing capabilities.
+ * type naming the missing capability identifiers.
  */
-export type EnsureProvides<Ret, Provides extends readonly AnyTag[]> = [Provides[number]] extends [CoveredBy<Ret>]
+export type EnsureProvides<Ret, Provides extends readonly AnyTag[]> = [ProvidedIds<Provides>] extends [CoveredBy<Ret>]
   ? unknown
-  : { readonly 'Missing declared capabilities in activate return': Exclude<Provides[number], CoveredBy<Ret>> };
+  : { readonly 'Missing declared capabilities in activate return': Exclude<ProvidedIds<Provides>, CoveredBy<Ret>> };
 
 /**
  * The Effect environment available to a module's activate for a declared requires tuple.

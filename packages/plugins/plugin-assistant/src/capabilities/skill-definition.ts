@@ -32,10 +32,6 @@ import {
   WebSearchSkill,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet, Skill } from '@dxos/compute';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 
 import { AssistantSkill } from '#skills';

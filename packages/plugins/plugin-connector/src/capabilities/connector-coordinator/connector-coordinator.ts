@@ -15,10 +15,6 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';

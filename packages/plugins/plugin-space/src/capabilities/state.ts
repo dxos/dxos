@@ -6,10 +6,6 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { PluginManager } from '@dxos/app-framework';
 import { createKvsStore } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';

@@ -185,18 +185,18 @@ export type ValidateModuleOptions<Opts extends TypedModuleOptions> = Opts extend
     ? [R] extends [Capability.Requirements<OptRequires<Opts>>]
       ? [E] extends [Error]
         ? [A] extends [Capability.ProvidesReturn<OptProvides<Opts>>]
-          ? [OptProvides<Opts>[number]] extends [Capability.CoveredBy<A>]
+          ? [Capability.ProvidedIds<OptProvides<Opts>>] extends [Capability.CoveredBy<A>]
             ? true
             : {
                 readonly 'activate return misses declared capabilities': Exclude<
-                  OptProvides<Opts>[number],
+                  Capability.ProvidedIds<OptProvides<Opts>>,
                   Capability.CoveredBy<A>
                 >;
               }
           : {
               readonly 'activate return includes undeclared capabilities': Exclude<
                 Capability.CoveredBy<A>,
-                OptProvides<Opts>[number]
+                Capability.ProvidedIds<OptProvides<Opts>>
               >;
             }
         : { readonly 'activate error channel must extend Error': E }

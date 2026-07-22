@@ -7,10 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
-// Explicit imports so the emitted `.d.ts` references the package via its public alias
-// instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Identity, Invitation, Space } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
 

@@ -10,10 +10,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationInvoker } from '@dxos/operation';
 import { HaloServicesLayer } from '@dxos/plugin-client';
 
 import { SpaceOperation } from '../../operations';

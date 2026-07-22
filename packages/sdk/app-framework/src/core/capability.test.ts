@@ -95,8 +95,12 @@ describe('Capability tags', () => {
       const b = Capability.make<Example>()('org.dxos.test.b');
 
       type Provides = readonly [typeof a, typeof b];
-      type CompleteReturn = Array<Capability.Contribution<typeof a> | Capability.Contribution<typeof b>>;
-      type IncompleteReturn = Array<Capability.Contribution<typeof a>>;
+      // Contributions are branded by the capability identifier (what `provide` returns), not the tag.
+      type CompleteReturn = Array<
+        | Capability.Contribution<Capability.IdentifierOf<typeof a>>
+        | Capability.Contribution<Capability.IdentifierOf<typeof b>>
+      >;
+      type IncompleteReturn = Array<Capability.Contribution<Capability.IdentifierOf<typeof a>>>;
 
       const complete: Capability.EnsureProvides<CompleteReturn, Provides> = 'anything passes when covered';
       // @ts-expect-error the branded error type is unconstructible from a string.

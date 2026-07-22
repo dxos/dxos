@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { Operation, type OperationHandlerSet, Skill } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 

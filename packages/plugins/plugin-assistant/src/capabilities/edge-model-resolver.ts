@@ -7,16 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type AiModelResolver } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
-// Explicit import so the emitted `.d.ts` references the package via its public
-// alias instead of a relative `node_modules` path (TS2883).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type Credential, Header } from '@dxos/compute';
+import { Header } from '@dxos/compute';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -25,7 +20,9 @@ import { ANTHROPIC_SOURCE } from '../constants';
 
 // Named alias so the module's inferred type stays portable (avoids TS2883 leaking the internal
 // `@dxos/ai/AiModelResolver` Layer type into the emitted declarations).
-export type EdgeModelResolverCapabilities = Capability.Contribution<typeof AppCapabilities.AiModelResolver>[];
+export type EdgeModelResolverCapabilities = Capability.Contribution<
+  Capability.IdentifierOf<typeof AppCapabilities.AiModelResolver>
+>[];
 
 const edgeModelResolver = Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -65,11 +62,10 @@ const edgeModelResolver = Capability.makeModule(
     const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://edge.internal' }).pipe(Layer.provide(httpClient));
     const anthropicResolverLayer = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
 
-    const contribution: Capability.Contribution<typeof AppCapabilities.AiModelResolver> = Capability.provide(
-      AppCapabilities.AiModelResolver,
-      anthropicResolverLayer,
-      () => Effect.sync(() => identitySubscription?.unsubscribe()),
-    );
+    const contribution: Capability.Contribution<Capability.IdentifierOf<typeof AppCapabilities.AiModelResolver>> =
+      Capability.provide(AppCapabilities.AiModelResolver, anthropicResolverLayer, () =>
+        Effect.sync(() => identitySubscription?.unsubscribe()),
+      );
 
     return [contribution];
   }),
