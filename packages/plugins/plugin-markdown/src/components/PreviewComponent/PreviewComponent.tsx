@@ -156,7 +156,8 @@ export const PreviewComponent = ({
     [view, range, dxn, remSize],
   );
 
-  // Open the referenced object: defer to the caller's handler when provided, else navigate to it.
+  // Open the referenced object: defer to the caller's handler when provided, else follow the deck
+  // (`auto`) — add beside the current plank when sliding, replace it when solo; shift-hold always adds.
   const handleOpen = useCallback(
     (event: MouseEvent) => {
       if (!uri || !object) {
@@ -168,7 +169,8 @@ export const PreviewComponent = ({
       } else {
         void invokePromise?.(LayoutOperation.Open, {
           subject: [Paths.getObjectPathFromObject(object)],
-          disposition: event.shiftKey ? 'inverse' : 'default',
+          disposition: 'auto',
+          modifiers: { shift: event.shiftKey },
           navigation: 'immediate',
         });
       }

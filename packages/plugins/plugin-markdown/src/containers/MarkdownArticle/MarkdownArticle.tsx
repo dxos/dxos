@@ -276,10 +276,13 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         if (onSelectObject) {
           onSelectObject(targetId);
         } else {
+          // In-plank navigation follows the deck (`auto`): beside this document when sliding, replacing
+          // it when solo; shift forces an add (resolved in the Open handler). Anchored at this document.
           void invokePromise?.(LayoutOperation.Open, {
             subject: [targetId],
             pivotId: attendableId,
-            disposition: modifiers?.shift ? 'inverse' : 'default',
+            disposition: 'auto',
+            modifiers: { shift: modifiers?.shift },
             // TODO(wittjosiah): This should probably pre-validate.
             navigation: 'immediate',
           });

@@ -342,7 +342,16 @@ export const Open = Operation.make({
           '`add` inserts the items as new planks — immediately after `pivotId` when provided (in-plank ' +
           'navigation anchors at its origin), else at the end of the deck. `auto` follows the deck: ' +
           'when already sliding (2+ planks) it adds beside its origin (`pivotId`, falling back to the ' +
-          'attended plank); when solo it navigates.',
+          'attended plank); when solo it navigates. Holding shift (via `modifiers`) forces any ' +
+          'disposition into `add`.',
+      }),
+    ),
+    modifiers: Schema.optional(
+      Schema.Struct({
+        shift: Schema.optional(Schema.Boolean),
+      }).annotations({
+        description:
+          'Input modifiers held during the navigation gesture; shift forces the opened items into new planks.',
       }),
     ),
   }),

@@ -140,11 +140,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
-          // Plain click navigates (the deck becomes this item); shift-click adds it as a new plank.
+          // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
+          // handler, which upgrades any disposition to add when shift is held).
           void invokePromise(LayoutOperation.Open, {
             subject: [node.id],
             key: node.properties.key,
-            disposition: shift ? 'add' : 'solo',
+            disposition: 'solo',
+            modifiers: { shift },
           });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });

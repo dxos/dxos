@@ -119,6 +119,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // - 'auto': follow the deck — add beside the origin (`pivotId`, falling back to the attended
       //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank/card navigation
       //   uses this so it grows a sliding deck but replaces a solo one.
+      // Holding shift forces any disposition into an add (callers forward the raw modifier rather than
+      // encoding the policy). Only 'auto' anchors at the origin, so a forced add from an in-plank
+      // navigation inserts beside the attended plank, while a forced add from the nav-tree appends.
       const navigateSolo = (active: readonly string[]): string[] =>
         input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
 
@@ -127,14 +130,15 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const deck = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(deck.active);
 
+        const disposition = input.disposition ?? 'solo';
+        const shift = !!input.modifiers?.shift;
         const sliding = deck.active.length >= 2;
-        const addBesideOrigin = input.disposition === 'add' || (input.disposition === 'auto' && sliding);
+        const anchorToOrigin = disposition === 'auto';
+        const addBesideOrigin = shift || disposition === 'add' || (anchorToOrigin && sliding);
 
         let next: string[];
         if (addBesideOrigin) {
-          // For 'auto', anchor at the attended plank when the caller gave no explicit pivot; plain 'add'
-          // appends at the end when no pivot is provided (nav-tree shift-click).
-          const [attendedId] = input.disposition === 'auto' ? attention.getCurrent() : [];
+          const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
           next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, key: input.key });
         } else {

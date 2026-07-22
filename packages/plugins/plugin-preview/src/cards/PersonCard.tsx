@@ -29,6 +29,8 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       yield* invoke(LayoutOperation.Open, {
         subject: [organizationPath],
+        // Navigation from a card follows the deck: add beside the origin when sliding, replace when solo.
+        disposition: 'auto',
         workspace: db ? Paths.getSpacePath(db.spaceId) : undefined,
       });
     }).pipe(EffectEx.runAndForwardErrors);

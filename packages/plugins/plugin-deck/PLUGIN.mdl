@@ -148,13 +148,16 @@ op Open
     'add' inserts them as new planks, immediately after `pivotId` when provided (in-plank navigation
     anchors at its origin), else at the end of the deck; 'auto' follows the deck — it adds beside the
     origin (`pivotId`, falling back to the attended plank) when already sliding, and navigates solo
-    otherwise, so in-plank/card navigation grows a sliding deck but replaces a solo one. `key`
+    otherwise, so in-plank/card navigation grows a sliding deck but replaces a solo one. Holding
+    shift (forwarded as `modifiers.shift`) forces any disposition into an add — callers pass the raw
+    modifier rather than encoding the policy, so the shift-forces-add rule lives only here. `key`
     replaces an existing plank sharing the key prefix in place. Validates each target against the app
     graph and redirects to a 404 node if not found. Fires ScrollIntoView, Expose, and an
     observability event for each newly opened item.
   input:
     subject: string[]             # item IDs or navigation paths to open
     disposition?: solo | add | auto  # solo (default) navigates; add inserts new planks; auto follows the deck
+    modifiers?: { shift?: boolean }  # gesture modifiers; shift forces any disposition into an add
     pivotId?: string              # insert opened items immediately after this plank (add/auto)
     key?: string                  # replace an existing plank whose ID shares this key prefix
     workspace?: string            # switch to this workspace before opening

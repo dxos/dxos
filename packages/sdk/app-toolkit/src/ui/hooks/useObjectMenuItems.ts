@@ -33,6 +33,8 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
 /**
  * Returns an onClick handler that opens the subject in the layout, or undefined if the subject is not navigable
  * (e.g. not an Echo object or has hidden annotation). Use with Card.Title for object cards.
+ * Navigation follows the deck (`auto`): a card lives inside a plank, so opening its object adds a plank
+ * beside that origin when sliding and replaces it when solo.
  */
 export const useObjectNavigate = (subject: unknown): (() => void) | undefined => {
   const { invokePromise } = useOperationInvoker();
@@ -44,7 +46,7 @@ export const useObjectNavigate = (subject: unknown): (() => void) | undefined =>
 
     const subjectPath = Paths.getObjectPathFromObject(subject);
     return () => {
-      void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
+      void invokePromise(LayoutOperation.Open, { subject: [subjectPath], disposition: 'auto' });
     };
   }, [subject, invokePromise]);
 };
@@ -68,7 +70,9 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
       createMenuAction(
         'navigate',
         () => {
-          void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
+          // A card lives inside a plank; navigation follows the deck (add beside the origin when
+          // sliding, replace when solo).
+          void invokePromise(LayoutOperation.Open, { subject: [subjectPath], disposition: 'auto' });
         },
         {
           label: t('open.label'),
