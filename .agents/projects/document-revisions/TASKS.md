@@ -1,6 +1,6 @@
 # Document Revisions & Branches — Tasks
 
-Design: [`packages/plugins/plugin-markdown/DESIGN.md`](../../../packages/plugins/plugin-markdown/DESIGN.md).
+Design: [`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md).
 Convergence plan (+ resolved decisions):
 [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md).
 PRs: [#12237](https://github.com/dxos/dxos/pull/12237) (landed 2026-07-16); stage 1 on branch
@@ -186,6 +186,21 @@ Deferred from the CodeRabbit round (stage 3/4):
         provision — until agents actually author suggestions there is nothing to display.
   - [ ] Future: swap synthetic provider for real HALO identity in `Agent.did`; no `creator` re-key
         (already `IdentityDid` format); drop the agent-author seeding once agents are members.
+  - [ ] **Unify the comment-bot identity with the compute author DID.** plugin-comments defines its
+        OWN `AgentIdentity` — an app-framework `Capability` (`{ name, identityDid?, avatar? }`,
+        default `{ name: 'Kai' }`, [types/AgentIdentity.ts](../../../packages/plugins/plugin-comments/src/types/AgentIdentity.ts))
+        naming the comment-thread `@mention` bot + stamping sender metadata — distinct from the
+        `@dxos/compute` `AgentIdentity` `Context.Tag` (`{ did, name?, hue? }`) that item 2 injects as
+        the suggestion `creator`. The comment bot already carries an unused-for-authorship
+        `identityDid?`; when the compute resolver lands, route the comment-bot's DID through the same
+        `resolveAuthor` path so a bot reply and a bot suggestion share one author/colour, and the two
+        `AgentIdentity` concepts don't drift. Verify the shared-name collision doesn't confuse
+        `Capability.get` vs `serviceOption` call sites.
+- [ ] **Naming collision — two `AgentIdentity`s.** plugin-comments' `AgentIdentity` (app-framework
+      `Capability`, the comment-bot "Kai") vs `@dxos/compute`'s `AgentIdentity` (`Context.Tag`, the
+      suggestion author DID). Unrelated today; no code path bridges them. Risk of confusion once the
+      compute resolver lands near comment code — resolution/unification tracked in the item-2 block
+      above ("Unify the comment-bot identity with the compute author DID").
 - [ ] Reconcile comments view vs suggestions view — split them into different tabs (today the
       `Suggestions` companion and comment threads share one surface in `CommentsArticle`; give
       suggestions their own tab alongside the unresolved/all comment tabs).
@@ -195,6 +210,75 @@ Deferred from the CodeRabbit round (stage 3/4):
       edit on the suggestion branch → accept/reject in the companion), which stories to exercise
       (`SuggestionThread`, `Message/WithChange`, `VersionBanner`, integrated `CommentsArticle`), and
       an end-to-end narration for recording.
+
+## Ambient review model (Google-Docs-style) — in design (brainstorming 2026-07-21)
+
+Pivot: user does NOT actively manage branches. Default view = main + comments + all user
+suggestions overlaid. Decisions so far: (1) per-user mode toggle Editing/Suggesting/Viewing (local
+pref, persisted per doc); (2) GDocs-parity rendering as a **product-level `ReviewRenderPolicy`
+config**; (3) additive — keep the explicit branch switcher / Base-Diff-Branch selector / banner as
+an advanced/history path (reached via explicit selection); ambient overlay is the default
+`selection.kind==='current'` experience; (4) accept/reject by any editor, inline + companion.
+
+- [ ] **Maintain the precise ambient-review spec in `packages/plugins/plugin-comments/DESIGN.md`**
+      (the plugin design file), not a separate superpowers spec. (tracked 2026-07-21)
+- Spec: [`plugin-comments/DESIGN.md` § Ambient review model](../../../packages/plugins/plugin-comments/DESIGN.md).
+  Implementation plan:
+  [`agents/superpowers/plans/2026-07-21-ambient-review-model.md`](../../../agents/superpowers/plans/2026-07-21-ambient-review-model.md)
+  (Milestone A: modes + policy + Editing/Viewing ambient overlay + review — fully specified;
+  Milestone B: Suggesting-mode authoring — spike-gated, tasks appended after Task B0).
+- [x] **Milestone A LANDED (2026-07-21)** via subagent-driven execution — tasks A1–A6 complete,
+      each spec+quality reviewed, all fix loops closed. Commits: A1 f7f0027e09, A2 2b61901677,
+      A3 40618ca277 (+4846834552,+46142dd6e9), A4 50211bfca2 (+928921e411), A5 b7ba37fa49 (+1a42697ac1).
+      Ambient Editing/Viewing overlay + mode toggle + `ReviewRenderPolicy` + `SuggestionSources`
+      slot + `suggestionsOverlay` in `@dxos/ui-editor`. Build/lint/unit + play tests green across
+      ui-editor/plugin-space/plugin-comments/plugin-markdown. Minor deferred to final review: no
+      `useVersioning` hook-test harness (A1). NOTE: user merged `tabs-props-button-iconbutton` mid-run.
+- [x] **Milestone A landing polish (2026-07-21):** final-review hue-seam fix (ce0552512d); merged
+      origin/main incl. Tabs rename (6b68f1450b, resolved Welcome.tsx → Tabs.Button); story JSDocs
+      converted to bullets (6e789cdee4); AmbientReview rests in Editing so suggestions stay visible
+      (toggle round-trip); **Suggesting mode option hidden** until Milestone B (no dead "coming soon"
+      control — label/state plumbing retained). Post-merge build green.
+- [ ] **Deferred (final-review, non-blocking):** full-stack `CommentsArticle`↔markdown composition
+      play test (editor overlay + right-column comments/history companions). The demo already exists
+      via `CommentsArticle → WithAgentSuggestions` (real seeded suggestions + the committed
+      comments-top/history-bottom layout); each half is unit-tested, but the full-stack boot times out
+      in-pane, so an automated assertion is deferred to avoid a flaky test. `showComments` consumption
+      and the `useVersioning` hook-test harness also deferred.
+- [ ] **Milestone B — Suggesting-mode authoring**: begins with Task B0 spike (see plan). Re-add the
+      Suggesting mode option to the toolbar when it lands.
+
+## Landing the suggestions feature (current goal)
+
+Polish + fixes required before landing the suggestion-review flow.
+
+- [x] When switching to a branch via the toolbar, default the view to **Diff** (not Base/Branch).
+      Done: toolbar branch-switch action calls `setView('diff')` (MarkdownArticle.tsx).
+- [ ] Show the history companion below the comments companion in `CommentsArticle.stories.tsx`
+      (right column split into equal rows: comments top, `subject:'history'` companion bottom).
+- [x] BUG: selecting a branch then adding a comment throws `RangeError: Cannot getCursorPosition:
+cursor <id> is invalid`. **Root cause:** in Branch view the editor binds to the branch doc, so
+      comment cursors are branch-doc cursors, but `threads.ts getName` always resolves against
+      `doc.content.target` (main) → invalid. **Fixed (2026-07-21, ontology-driven):** `getName`
+      resolves against the editor-bound Text (branch doc in Branch view, main otherwise) + defensive
+      try/catch; new `readonly` option on the `comments()` editor extension no-ops `createComment` on
+      suggestion branches. Plumbing: `MarkdownExtensionProvider` gains `branchText` + `suggestionBranch`;
+      `MarkdownArticle` passes the editor-bound branch Text (undefined in diff/suggest) + kind flag;
+      `threads()` takes an options bag. ui-editor `createComment` readonly unit test; build+lint+tests
+      green. FULL switch-to-branch-then-comment manual flow still blocked in-pane by the 30s
+      full-stack boot timeout — verify manually once bootable. **Decision (2026-07-21, ontology-driven):**
+  - Branch ontology: (1) **main**; (2) per-user **suggestion** branches (`kind:'suggestion'`); (3)
+    private **draft** branches (regular; public today, private under Keyhive ACLs later).
+  - **Comments allowed on any branch EXCEPT suggestion branches.** So: fix cursor resolution to use
+    the editor-bound doc (main in Diff/suggest view; branch doc in Branch view), enabling comments on
+    main + draft branches; and **prohibit** comment creation while the active branch is a suggestion
+    branch (`activeBranch.kind === 'suggestion'`).
+  - Plumbing: thread the editor-bound branch Text + a "comments prohibited" flag from
+    `MarkdownArticle` → `MarkdownExtensionProvider` props → `threads()`; `getName` resolves against
+    the branch Text; the `comments()` extension suppresses the create affordance when prohibited.
+- [ ] Storybook with a real LLM making suggestions; a play function where suggestions are created by
+      a mock agent and dismissed by the user. (tracked 2026-07-21)
+- [ ] BUG: creating a comment — after pressing Enter the comment flashes. (tracked 2026-07-21)
 
 ## Future
 

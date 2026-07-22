@@ -3,7 +3,7 @@
 Approved 2026-07-16 after brainstorm (mocks in `.superpowers/brainstorm/`).
 
 The canonical design lives with the code:
-**[`packages/plugins/plugin-markdown/DESIGN.md`](../../../packages/plugins/plugin-markdown/DESIGN.md)**
+**[`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md)**
 
 Scope summary:
 

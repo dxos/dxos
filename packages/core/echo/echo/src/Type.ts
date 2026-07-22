@@ -505,7 +505,7 @@ export const getVersion = (input: AnyEntity): string => {
 };
 
 /**
- * Strip URI prefixes (`dxn:`, `echo:/`, `echo://`) from a typename string.
+ * Strip URI prefixes (`dxn:`, `echo:/`, `echo://`, `echo:///`) from a typename string.
  * Typename is a bare identifier — callers reading from meta or from a
  * caller-supplied seed value shouldn't propagate URI prefixes downstream.
  */
@@ -513,11 +513,10 @@ const stripTypenamePrefix = (value: string): string => {
   if (value.startsWith('dxn:')) {
     return value.slice('dxn:'.length);
   }
-  if (value.startsWith('echo://')) {
-    return value.slice('echo://'.length);
-  }
-  if (value.startsWith('echo:/')) {
-    return value.slice('echo:/'.length);
+  // Strip the `echo:` scheme along with any leading slashes so every local form
+  // (`echo:/<id>`, `echo:///<id>`) and the qualified `echo://<space>/<id>` collapse consistently.
+  if (value.startsWith('echo:')) {
+    return value.slice('echo:'.length).replace(/^\/+/, '');
   }
   return value;
 };

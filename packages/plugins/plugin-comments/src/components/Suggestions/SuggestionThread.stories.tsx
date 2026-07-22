@@ -68,12 +68,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Two authors' suggestions over one document, each a change-block tile with Accept/Reject. */
+/**
+ * Multi-author suggestion cards:
+ * - Two authors' suggestions over one document.
+ * - Each renders as a change-block tile with Accept/Reject controls.
+ */
 export const Default: Story = {};
 
 /**
- * Accept merges a change into the document (and re-diffs the rest); Reject hides a suggestion without
- * altering the document. Deterministic — no AI, so it runs in CI.
+ * Accept/Reject semantics (deterministic — no AI, runs in CI):
+ * - Accept merges a change into the document and re-diffs the rest (overlapping edits re-express).
+ * - Reject hides a suggestion without altering the document.
  */
 export const AcceptReject: Story = {
   play: async ({ canvasElement }) => {

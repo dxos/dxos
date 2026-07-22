@@ -58,7 +58,7 @@ describe('EchoSchema', () => {
         typename: 'com.example.type.test',
         version: '0.1.0',
       } satisfies TypeAnnotation,
-      [TypeIdentifierAnnotationId]: `echo:/${instanceWithSchemaRef.schema?.target?.id}`,
+      [TypeIdentifierAnnotationId]: `echo:///${instanceWithSchemaRef.schema?.target?.id}`,
     });
     const storedSchema = instanceWithSchemaRef.schema?.target && Type.getSchema(instanceWithSchemaRef.schema.target);
     expect(storedSchema?.ast).to.deep.eq(schemaWithId.ast);
@@ -130,7 +130,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const schema = await db.addType(TestEmpty);
     const uri = Type.getURI(schema)!;
-    // Stored schemas resolve to their schema-as-object EID (echo:/<id>) so the
+    // Stored schemas resolve to their schema-as-object EID (echo:///<id>) so the
     // schema rides along with loaded objects as a strong dependency.
     expect(uri).to.match(/^echo:\//);
     // The typename + version live in `EntityMeta` (the canonical registry-
@@ -167,7 +167,7 @@ describe('EchoSchema', () => {
   test('schema id stays as echo URI for stored schemas', async () => {
     const { db } = await setupTest();
     const schema = await db.addType(TestEmpty);
-    // Stored schemas use the canonical EID form (echo:/<id>) for their type identifier.
+    // Stored schemas use the canonical EID form (echo:///<id>) for their type identifier.
     expect(getTypeIdentifierAnnotation(Type.getSchema(schema))).to.match(/^echo:\//);
   });
 

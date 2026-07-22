@@ -13,6 +13,7 @@ import { type EditorState, commentClickedEffect, commentsState, documentId, over
 
 import { CommentCapabilities, CommentOperation } from '#types';
 
+import { SuggestionSourcesProvider } from '../components';
 import { threads } from '../extensions';
 
 export default Capability.makeModule(
@@ -20,12 +21,19 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc, reviewBranch }) => {
+    // Bridge the ambient suggestion overlay: markdown consumes this slot to enumerate every author's
+    // active suggestion branches without importing plugin-comments (which depends on it).
+    const suggestionSources = Capability.contributes(
+      MarkdownCapabilities.SuggestionSourcesProvider,
+      SuggestionSourcesProvider,
+    );
+
+    const extensions = Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+      ({ document: doc, reviewBranch, branchText, suggestionBranch }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
-        return threads({ registry, stateAtom }, doc, invokePromise, reviewBranch);
+        return threads({ registry, stateAtom }, doc, invokePromise, { reviewBranch, branchText, suggestionBranch });
       },
       ({ document: doc }) => {
         if (!doc) {
@@ -68,6 +76,8 @@ export default Capability.makeModule(
         });
       },
     ]);
+
+    return [extensions, suggestionSources];
   }),
 );
 

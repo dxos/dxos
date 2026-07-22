@@ -66,16 +66,41 @@ export namespace SpaceCapabilities {
    */
   export type BranchView = 'base' | 'diff' | 'branch';
 
+  /** Per-user editing posture for a document (Google-Docs-style). Local UI preference, never replicated. */
+  export type ReviewMode = 'editing' | 'suggesting' | 'viewing';
+
   export type VersioningState = {
     /** Selection keyed by object id. Missing entry = current. */
     selection: Record<string, VersionSelection>;
     /** Active branch view keyed by object id. Missing entry = `branch` (the editable draft). */
     view: Record<string, BranchView>;
+    /** Review mode keyed by object id. Missing entry = `editing`. */
+    mode: Record<string, ReviewMode>;
   };
 
   /** In-memory (per-session) version selection state. */
   export const VersioningState = Capability.make<Atom.Writable<VersioningState>>(
     `${meta.profile.key}.capability.versioning-state`,
+  );
+
+  /** What the editor should render for a given review mode. */
+  export type ReviewRenderConfig = { showSuggestions: boolean; showComments: boolean; editable: boolean };
+
+  /** Maps a per-document review mode to the editor's render config. */
+  export type ReviewRenderPolicyFn = (mode: ReviewMode) => ReviewRenderConfig;
+
+  /**
+   * GDocs parity: Editing/Suggesting overlay suggestions + comments and are editable; Viewing is a
+   * clean, read-only read (comments still shown). Override by contributing a stronger capability
+   * earlier in plugin order.
+   */
+  export const defaultReviewRenderPolicy: ReviewRenderPolicyFn = (mode) =>
+    mode === 'viewing'
+      ? { showSuggestions: false, showComments: true, editable: false }
+      : { showSuggestions: true, showComments: true, editable: true };
+
+  export const ReviewRenderPolicy = Capability.make<ReviewRenderPolicyFn>(
+    `${meta.profile.key}.capability.review-render-policy`,
   );
 
   /**
