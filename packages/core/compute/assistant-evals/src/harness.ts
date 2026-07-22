@@ -16,9 +16,9 @@ import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/a
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
-import { Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
+import { Instructions, Operation, ServiceResolver } from '@dxos/compute';
 import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -35,15 +35,12 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { getDefaultSkills } from './skills';
+
 export const DEFAULT_TEST_TIMEOUT = 360_000;
 // Memoized replays still initialize the test harness and process conversations — allow enough
 // headroom for slow CI nodes without enabling full LLM generation.
 const MEMOIZED_TEST_TIMEOUT = 60_000;
-
-export const getDefaultSkills = (): Ref.Ref<Skill.Skill>[] => [
-  Ref.make(SkillManagerSkill.make()),
-  Ref.make(DatabaseSkill.make()),
-];
 
 const INSTRUCTIONS = trim`
   You are running within a test environment.

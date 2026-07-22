@@ -27,6 +27,8 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { getDefaultSkills } from './skills';
+
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
 
 const SYSTEM_INSTRUCTIONS = trim`
@@ -136,7 +138,7 @@ export function createEvalRunner<I, O, D>(
 
     const instructions = Instructions.make({
       text: options.instructions,
-      skills: options.skills ?? [],
+      skills: options.skills ?? getDefaultSkills(),
     });
 
     return EffectEx.runAndForwardErrors(
