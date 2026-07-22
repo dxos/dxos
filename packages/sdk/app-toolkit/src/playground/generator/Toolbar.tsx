@@ -50,7 +50,7 @@ export const Toolbar = () => {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(
       Capabilities.ReactSurface,
       Surface.create({
@@ -59,5 +59,5 @@ export default Capability.makeModule(() =>
         component: Toolbar,
       }),
     ),
-  ]),
+  ),
 );

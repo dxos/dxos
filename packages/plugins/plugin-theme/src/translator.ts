@@ -40,6 +40,6 @@ export default Capability.makeModule(
     register();
     const unsubscribe = registry.subscribe(translationsAtom, register);
 
-    return [Capability.provide(AppCapabilities.Translator, translator, () => Effect.sync(() => unsubscribe()))];
+    return Capability.provide(AppCapabilities.Translator, translator, () => Effect.sync(() => unsubscribe()));
   }),
 );

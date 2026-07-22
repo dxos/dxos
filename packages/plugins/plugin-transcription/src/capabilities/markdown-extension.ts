@@ -12,6 +12,6 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Every Markdown editor receives the pending-text extension so the transcription driver can
     // inject live text into it (the driver resolves the editor via `MarkdownCapabilities.EditorViews`).
-    return [Capability.provide(MarkdownCapabilities.ExtensionProvider, [() => pendingText()])];
+    return Capability.provide(MarkdownCapabilities.ExtensionProvider, [() => pendingText()]);
   }),
 );

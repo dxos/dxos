@@ -9,5 +9,5 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { WebSearchToolkitOpaque } from '@dxos/assistant-toolkit';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([Capability.provide(AppCapabilities.Toolkit, WebSearchToolkitOpaque)]),
+  Effect.succeed(Capability.provide(AppCapabilities.Toolkit, WebSearchToolkitOpaque)),
 );

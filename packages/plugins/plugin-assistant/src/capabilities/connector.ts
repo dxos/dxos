@@ -69,15 +69,13 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenFor
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(Connector, [
-        {
-          id: ANTHROPIC_PROVIDER_ID,
-          source: ANTHROPIC_SOURCE,
-          label: 'Anthropic',
-          credentialForm,
-        },
-      ]),
-    ];
+    return Capability.provide(Connector, [
+      {
+        id: ANTHROPIC_PROVIDER_ID,
+        source: ANTHROPIC_SOURCE,
+        label: 'Anthropic',
+        credentialForm,
+      },
+    ]);
   }),
 );

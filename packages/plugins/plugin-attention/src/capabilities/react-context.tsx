@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { AttentionCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: (props: PropsWithChildren) => {
@@ -35,5 +35,5 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-  ]),
+  ),
 );

@@ -10,6 +10,6 @@ import { CommentOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, CommentOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, CommentOperationHandlerSet);
   }),
 );

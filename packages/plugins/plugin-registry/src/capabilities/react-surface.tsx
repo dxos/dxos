@@ -24,7 +24,7 @@ import { type PluginPredicate, getCategoryPredicate } from '../categories';
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bundled',
@@ -89,7 +89,7 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => <RegistrySettingsContainer subject={subject} />,
       }),
     ]),
-  ]),
+  ),
 );
 
 /**

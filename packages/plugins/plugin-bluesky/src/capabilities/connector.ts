@@ -86,27 +86,25 @@ const testConnection: TestConnection = ({ connection, client }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(Connector, [
-        {
-          id: BLUESKY_PROVIDER_ID,
-          source: BLUESKY_SOURCE,
-          label: 'Bluesky',
-          oauth: {
-            provider: OAuthProvider.ATPROTO,
-            scopes: [...BSKY_OAUTH_SCOPES],
-            // bsky.social nullifies window.opener, so popup + postMessage
-            // can't be used; rely on Edge redirecting to `/redirect/oauth`.
-            useRedirectFlow: true,
-          },
-          credentialForm,
-          optionsSchema: BlueskyTargetOptions,
-          materializeTarget: BlueskyOperation.MaterializeBlueskyTarget,
-          getSyncTargets: BlueskyOperation.GetBlueskyTargets,
-          sync: BlueskyOperation.SyncBlueskyTargets,
-          testConnection,
+    return Capability.provide(Connector, [
+      {
+        id: BLUESKY_PROVIDER_ID,
+        source: BLUESKY_SOURCE,
+        label: 'Bluesky',
+        oauth: {
+          provider: OAuthProvider.ATPROTO,
+          scopes: [...BSKY_OAUTH_SCOPES],
+          // bsky.social nullifies window.opener, so popup + postMessage
+          // can't be used; rely on Edge redirecting to `/redirect/oauth`.
+          useRedirectFlow: true,
         },
-      ]),
-    ];
+        credentialForm,
+        optionsSchema: BlueskyTargetOptions,
+        materializeTarget: BlueskyOperation.MaterializeBlueskyTarget,
+        getSyncTargets: BlueskyOperation.GetBlueskyTargets,
+        sync: BlueskyOperation.SyncBlueskyTargets,
+        testConnection,
+      },
+    ]);
   }),
 );

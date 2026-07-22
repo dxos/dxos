@@ -21,7 +21,7 @@ const isCallData = (data: unknown): data is CallRoomData => {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'activeCallCompanion',
@@ -44,5 +44,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <CallArticle roomId={data.subject.roomId} attendableId={data.attendableId} />,
       }),
     ]),
-  ]),
+  ),
 );

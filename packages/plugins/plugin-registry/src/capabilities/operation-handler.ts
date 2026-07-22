@@ -10,6 +10,6 @@ import { RegistryOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, RegistryOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, RegistryOperationHandlerSet);
   }),
 );

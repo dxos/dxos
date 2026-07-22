@@ -396,3 +396,24 @@ type surface so the ergonomic single return type-checks and satisfies the comple
       no leaked Layer type.
 - [x] Gate: app-framework build + 203 tests green; plugin-assistant build green; full-repo build green;
       app-framework/plugin-assistant lint clean; `pnpm format` clean.
+
+## Fifth reopened addendum (2026-07-22) — three ergonomics follow-ups
+
+User Q1/Q2/Q3 after the single-return landing. Q3 (factor `CreateObjectEntry` into app-toolkit)
+investigated and **declined for now** — layering-clean and cycle-free, but the real coupling is
+`SpaceOperation.AddObject` (used by ~33 of 35 consumers) and no consumer fully sheds `@dxos/plugin-space`
+regardless, so it doesn't meet the "reduce dependency" goal. Left as-is.
+
+- [x] **Q2 — removed the dead `Null` capability** (`org.dxos.app-framework.capability.null`). Zero
+      consumers repo-wide; its only role (a deactivate hook on a provides-nothing contribution) was
+      replaced by Scope finalizers in phases 1–9. (Committed separately, `bf27210b`.)
+- [x] **Q1 — swept single-element-array module returns to single returns.** Now that a module may
+      return a lone `Contribution`, converted every `return [x]` (and `Effect.succeed([x])` /
+      `Effect.sync(() => [x])`) that wraps exactly one contribution to `return x`. **306 sites across
+      304 files** (303 real modules + the 3 `makeModule` JSDoc `@example` blocks; 307th form was a
+      single-variable return, 1 was `provideAll`). Method: brace/string/comment-aware transformer keyed
+      off the survey (an agent enumerated 309 candidates; 3 were a phantom `capability.d.ts` and dropped).
+      Guard against ASI — a multi-line `return [` must not become a bare `return;` — by pulling the
+      element up adjacent to `return`; verified zero `return;`/lone-`return` regressions post-sweep.
+- [x] Gate: full-repo build rc=0 (zero `error TS`); app-framework 203 tests green; full-repo lint (298
+      tasks) clean; `pnpm format` clean.

@@ -20,7 +20,7 @@ import {
 import { Ibkr } from '../types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'portfolioArticle',
@@ -62,5 +62,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <InstrumentCard role={role} subject={data.subject} />,
       }),
     ]),
-  ]),
+  ),
 );

@@ -15,7 +15,7 @@ import { ObservabilityOperation } from '#types';
 import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'root',
@@ -31,5 +31,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ]),
+  ),
 );

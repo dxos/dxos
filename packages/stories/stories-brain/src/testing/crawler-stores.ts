@@ -43,7 +43,7 @@ export const CrawlerStores = Capability.makeSingleton<CrawlerStoresRuntime>()('o
 const CrawlerStoresModule = Capability.makeModule(
   Effect.fnUntraced(function* () {
     const runtime = ManagedRuntime.make(crawlerStoresLayer());
-    return [Capability.provide(CrawlerStores, runtime)];
+    return Capability.provide(CrawlerStores, runtime);
   }),
 );
 

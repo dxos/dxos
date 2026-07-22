@@ -15,7 +15,7 @@ import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocume
 import { COMMANDS_DIALOG } from '#meta';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: COMMANDS_DIALOG,
@@ -43,5 +43,5 @@ export default Capability.makeModule(() =>
         component: () => <CommandsTrigger />,
       }),
     ]),
-  ]),
+  ),
 );

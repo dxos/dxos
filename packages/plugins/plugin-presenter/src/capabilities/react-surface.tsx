@@ -16,7 +16,7 @@ import { CollectionArticle, DocumentArticle, SlideArticle } from '#containers';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'document',
@@ -54,5 +54,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SlideArticle {...data} />,
       }),
     ]),
-  ]),
+  ),
 );

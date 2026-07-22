@@ -91,16 +91,14 @@ export default Capability.makeModule(
       createWnfsBlobBackend({ client, blockstore, instances }),
     );
 
-    return [
-      Capability.provide(
-        FileCapabilities.Backend,
-        {
-          name: 'WNFS',
-          description: 'Decentralized, end-to-end encrypted storage via Web Native File System.',
-          storage: WnfsCapabilities.WNFS_BACKEND,
-        },
-        () => Effect.sync(() => cleanup()),
-      ),
-    ];
+    return Capability.provide(
+      FileCapabilities.Backend,
+      {
+        name: 'WNFS',
+        description: 'Decentralized, end-to-end encrypted storage via Web Native File System.',
+        storage: WnfsCapabilities.WNFS_BACKEND,
+      },
+      () => Effect.sync(() => cleanup()),
+    );
   }),
 );

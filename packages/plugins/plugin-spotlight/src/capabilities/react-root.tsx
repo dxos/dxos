@@ -11,10 +11,10 @@ import { SpotlightLayout } from '#components';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => <SpotlightLayout />,
     }),
-  ]),
+  ),
 );

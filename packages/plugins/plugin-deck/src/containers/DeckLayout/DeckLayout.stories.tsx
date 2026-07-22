@@ -54,7 +54,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
-    return [Capability.provide(DeckCapabilities.Settings, settingsAtom)];
+    return Capability.provide(DeckCapabilities.Settings, settingsAtom);
   }),
 );
 

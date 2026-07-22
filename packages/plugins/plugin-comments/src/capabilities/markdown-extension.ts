@@ -20,56 +20,54 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return [
-      Capability.provide(MarkdownCapabilities.ExtensionProvider, [
-        ({ document: doc, reviewBranch }) => {
-          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-          const registry = capabilities.get(Capabilities.AtomRegistry);
-          const stateAtom = capabilities.get(CommentCapabilities.State);
-          return threads({ registry, stateAtom }, doc, invokePromise, reviewBranch);
-        },
-        ({ document: doc }) => {
-          if (!doc) {
-            return [];
-          }
-          const registry = capabilities.get(Capabilities.AtomRegistry);
-          const stateAtom = capabilities.get(CommentCapabilities.State);
+    return Capability.provide(MarkdownCapabilities.ExtensionProvider, [
+      ({ document: doc, reviewBranch }) => {
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+        const registry = capabilities.get(Capabilities.AtomRegistry);
+        const stateAtom = capabilities.get(CommentCapabilities.State);
+        return threads({ registry, stateAtom }, doc, invokePromise, reviewBranch);
+      },
+      ({ document: doc }) => {
+        if (!doc) {
+          return [];
+        }
+        const registry = capabilities.get(Capabilities.AtomRegistry);
+        const stateAtom = capabilities.get(CommentCapabilities.State);
 
-          return EditorView.updateListener.of((update) => {
-            if (update.docChanged || update.selectionSet) {
-              const id = update.state.facet(documentId);
-              const overlaps = selectionOverlapsComment(update.state);
-              const current = registry.get(stateAtom);
-              registry.set(stateAtom, {
-                ...current,
-                toolbar: { ...current.toolbar, [id]: overlaps },
-              });
-            }
-          });
-        },
-        ({ document: doc }) => {
-          if (!doc) {
-            return [];
+        return EditorView.updateListener.of((update) => {
+          if (update.docChanged || update.selectionSet) {
+            const id = update.state.facet(documentId);
+            const overlaps = selectionOverlapsComment(update.state);
+            const current = registry.get(stateAtom);
+            registry.set(stateAtom, {
+              ...current,
+              toolbar: { ...current.toolbar, [id]: overlaps },
+            });
           }
-          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+        });
+      },
+      ({ document: doc }) => {
+        if (!doc) {
+          return [];
+        }
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
-          return EditorView.updateListener.of((update) => {
-            update.transactions.forEach((transaction) => {
-              transaction.effects.forEach((effect) => {
-                if (effect.is(commentClickedEffect)) {
-                  // Select the clicked comment's thread (its id is the thread URI) so
-                  // the companion highlights and scrolls to it, then open the companion.
-                  void invokePromise(CommentOperation.Select, { current: effect.value });
-                  void invokePromise(LayoutOperation.UpdateCompanion, {
-                    subject: linkedSegment('comments'),
-                  });
-                }
-              });
+        return EditorView.updateListener.of((update) => {
+          update.transactions.forEach((transaction) => {
+            transaction.effects.forEach((effect) => {
+              if (effect.is(commentClickedEffect)) {
+                // Select the clicked comment's thread (its id is the thread URI) so
+                // the companion highlights and scrolls to it, then open the companion.
+                void invokePromise(CommentOperation.Select, { current: effect.value });
+                void invokePromise(LayoutOperation.UpdateCompanion, {
+                  subject: linkedSegment('comments'),
+                });
+              }
             });
           });
-        },
-      ]),
-    ];
+        });
+      },
+    ]);
   }),
 );
 

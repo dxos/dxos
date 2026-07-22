@@ -17,17 +17,15 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return [
-      Capability.provide(MarkdownCapabilities.ExtensionProvider, [
-        ({ document: doc }) => {
-          const computeGraphRegistry = capabilities.get(SheetCapabilities.ComputeGraphRegistry);
-          const space = getSpace(doc);
-          if (space) {
-            const computeGraph = computeGraphRegistry.getOrCreateGraph(space);
-            return computeGraphFacet.of(computeGraph);
-          }
-        },
-      ]),
-    ];
+    return Capability.provide(MarkdownCapabilities.ExtensionProvider, [
+      ({ document: doc }) => {
+        const computeGraphRegistry = capabilities.get(SheetCapabilities.ComputeGraphRegistry);
+        const space = getSpace(doc);
+        if (space) {
+          const computeGraph = computeGraphRegistry.getOrCreateGraph(space);
+          return computeGraphFacet.of(computeGraph);
+        }
+      },
+    ]);
   }),
 );

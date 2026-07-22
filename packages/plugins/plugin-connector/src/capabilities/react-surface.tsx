@@ -24,7 +24,7 @@ import { Connection, Connector, ConnectorAnnotationId } from '#types';
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'connectionsSectionArticle',
@@ -75,5 +75,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ]),
+  ),
 );

@@ -16,6 +16,6 @@ export default Capability.makeModule(
       connector: () => Effect.succeed([AppNode.makeNotFound()]),
     });
 
-    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
+    return Capability.provide(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

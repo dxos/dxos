@@ -10,11 +10,9 @@ import { Channel } from '@dxos/types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(
-        AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Channel.Channel, { groupId: Paths.GroupSegments.communications }),
-      ),
-    ];
+    return Capability.provide(
+      AppCapabilities.NavigationPathResolver,
+      TypeSection.createTypeSectionPathResolver(Channel.Channel, { groupId: Paths.GroupSegments.communications }),
+    );
   }),
 );

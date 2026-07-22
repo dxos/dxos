@@ -9,5 +9,5 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { StudioOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([Capability.provide(Capabilities.OperationHandler, StudioOperationHandlerSet)]),
+  Effect.succeed(Capability.provide(Capabilities.OperationHandler, StudioOperationHandlerSet)),
 );

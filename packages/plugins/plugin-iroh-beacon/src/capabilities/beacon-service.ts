@@ -56,6 +56,6 @@ export default Capability.makeModule(
       void service.open();
     }
 
-    return [Capability.provide(BeaconCapabilities.State, stateAtom)];
+    return Capability.provide(BeaconCapabilities.State, stateAtom);
   }),
 );

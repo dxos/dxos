@@ -10,6 +10,6 @@ import { InboxOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, InboxOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, InboxOperationHandlerSet);
   }),
 );

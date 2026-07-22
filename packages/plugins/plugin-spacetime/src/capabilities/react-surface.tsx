@@ -13,7 +13,7 @@ import { SpacetimeArticle } from '#containers';
 import { Scene } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'scene',
@@ -26,5 +26,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ]),
+  ),
 );

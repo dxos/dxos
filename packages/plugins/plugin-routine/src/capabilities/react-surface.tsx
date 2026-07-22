@@ -15,7 +15,7 @@ import { meta } from '#meta';
 import { Routine } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'spaceSettingsAutomation',
@@ -62,5 +62,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ]),
+  ),
 );

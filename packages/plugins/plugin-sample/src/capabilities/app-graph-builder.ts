@@ -173,6 +173,6 @@ export default Capability.makeModule(
     ]);
 
     // All extensions are flattened and contributed as a single array.
-    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions.flat())];
+    return Capability.provide(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

@@ -29,41 +29,39 @@ export default Capability.makeModule(
 
     const store = yield* MeetingCapabilities.State;
 
-    return [
-      Capability.provide(CallsCapabilities.EventHandler, {
-        onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
-          const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
-          const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
-          invariant(identity);
+    return Capability.provide(CallsCapabilities.EventHandler, {
+      onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
+        const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
+        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
+        invariant(identity);
 
-          // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-          const transcriptionManager = await capabilities
-            .get(TranscriptionCapabilities.TranscriptionManagerProvider)({})
-            .open();
-          store.updateState((current) => ({ ...current, transcriptionManager }));
-        },
-        onLeave: async () => {
-          const { transcriptionManager } = store.state;
-          await transcriptionManager?.close();
-          store.updateState(() => ({}));
-        },
-        onCallStateUpdated: async (callState: CallState) => {
-          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-          const typename = Type.getTypename(Meeting.Meeting);
-          const activity = typename ? callState.activities?.[typename] : undefined;
-          if (!activity?.payload) {
-            return;
-          }
+        // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
+        const transcriptionManager = await capabilities
+          .get(TranscriptionCapabilities.TranscriptionManagerProvider)({})
+          .open();
+        store.updateState((current) => ({ ...current, transcriptionManager }));
+      },
+      onLeave: async () => {
+        const { transcriptionManager } = store.state;
+        await transcriptionManager?.close();
+        store.updateState(() => ({}));
+      },
+      onCallStateUpdated: async (callState: CallState) => {
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+        const typename = Type.getTypename(Meeting.Meeting);
+        const activity = typename ? callState.activities?.[typename] : undefined;
+        if (!activity?.payload) {
+          return;
+        }
 
-          const payload: MeetingPayload = activity.payload;
-          await invokePromise(MeetingOperation.HandlePayload, payload);
-        },
-        onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
-          const { transcriptionManager } = store.state;
-          void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
-          void transcriptionManager?.setRecording(isSpeaking);
-        },
-      }),
-    ];
+        const payload: MeetingPayload = activity.payload;
+        await invokePromise(MeetingOperation.HandlePayload, payload);
+      },
+      onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
+        const { transcriptionManager } = store.state;
+        void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
+        void transcriptionManager?.setRecording(isSpeaking);
+      },
+    });
   }),
 );

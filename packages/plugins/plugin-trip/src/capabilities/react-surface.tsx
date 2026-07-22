@@ -13,7 +13,7 @@ import { SegmentArticle, TripArticle } from '#containers';
 import { Segment, Trip } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.trip',
@@ -48,5 +48,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ]),
+  ),
 );

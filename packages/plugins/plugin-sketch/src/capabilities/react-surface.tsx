@@ -13,7 +13,7 @@ import { SketchArticle, SketchCard } from '#containers';
 import { Sketch, SketchCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'sketch',
@@ -42,5 +42,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <SketchCard role={role} subject={data.subject} editable={data.editable} />,
       }),
     ]),
-  ]),
+  ),
 );

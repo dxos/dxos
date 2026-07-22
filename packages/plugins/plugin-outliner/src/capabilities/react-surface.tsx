@@ -14,7 +14,7 @@ import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal, Outline } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article.journal',
@@ -49,5 +49,5 @@ export default Capability.makeModule(() =>
         component: () => <QuickEntryDialog />,
       }),
     ]),
-  ]),
+  ),
 );

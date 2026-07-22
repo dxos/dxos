@@ -13,7 +13,7 @@ import { BookmarkArticle, BookmarkCard } from '#containers';
 import { Bookmark } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bookmarkArticle',
@@ -28,5 +28,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <BookmarkCard role={role} subject={data.subject} />,
       }),
     ]),
-  ]),
+  ),
 );

@@ -10,6 +10,6 @@ import { RoutineOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, RoutineOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, RoutineOperationHandlerSet);
   }),
 );

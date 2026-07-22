@@ -14,7 +14,7 @@ import { GameArticle, GameCard } from '#containers';
 import { Game } from '../types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'game',
@@ -32,5 +32,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <GameCard role={role} subject={data.subject} />,
       }),
     ]),
-  ]),
+  ),
 );

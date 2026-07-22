@@ -10,6 +10,6 @@ import { MapOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, MapOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, MapOperationHandlerSet);
   }),
 );

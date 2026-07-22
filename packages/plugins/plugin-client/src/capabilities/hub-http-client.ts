@@ -16,6 +16,6 @@ export default Capability.makeModule(
     if (!hubUrl) {
       return [];
     }
-    return [Capability.provide(ClientCapabilities.HubHttpClient, new HubHttpClient(hubUrl))];
+    return Capability.provide(ClientCapabilities.HubHttpClient, new HubHttpClient(hubUrl));
   }),
 );

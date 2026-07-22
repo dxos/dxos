@@ -52,16 +52,14 @@ export const StoryAiPlugin = Plugin.define(
     provides: [Capabilities.LayerSpec],
     activate: Capability.makeModule(
       Effect.fnUntraced(function* () {
-        return [
-          Capability.provide(
-            Capabilities.LayerSpec,
-            LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
-              // `orDie`: a layer-construction ConfigError is a story setup fault, not a recoverable
-              // operation error, and `LayerSpec` requires an empty error channel.
-              AiServiceTestingPreset('ollama').pipe(Layer.orDie),
-            ),
+        return Capability.provide(
+          Capabilities.LayerSpec,
+          LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
+            // `orDie`: a layer-construction ConfigError is a story setup fault, not a recoverable
+            // operation error, and `LayerSpec` requires an empty error channel.
+            AiServiceTestingPreset('ollama').pipe(Layer.orDie),
           ),
-        ];
+        );
       }),
     ),
   }),

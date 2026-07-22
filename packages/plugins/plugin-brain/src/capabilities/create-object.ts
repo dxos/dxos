@@ -32,30 +32,24 @@ const CreateTopicSchema = Schema.Struct({
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Topic.Topic),
-        inputSchema: CreateTopicSchema,
-        createObject: ({ name }: Schema.Schema.Type<typeof CreateTopicSchema>, options) =>
-          Effect.gen(function* () {
-            const topic = Topic.make({ name: name ?? '' });
-            const instructions = Instructions.make({ text: DEFAULT_TOPIC_INSTRUCTIONS });
-            Obj.setParent(instructions, topic);
-            Obj.update(topic, (topic) => {
-              topic.instructions = Ref.make(instructions);
-            });
+    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      id: Type.getTypename(Topic.Topic),
+      inputSchema: CreateTopicSchema,
+      createObject: ({ name }: Schema.Schema.Type<typeof CreateTopicSchema>, options) =>
+        Effect.gen(function* () {
+          const topic = Topic.make({ name: name ?? '' });
+          const instructions = Instructions.make({ text: DEFAULT_TOPIC_INSTRUCTIONS });
+          Obj.setParent(instructions, topic);
+          Obj.update(topic, (topic) => {
+            topic.instructions = Ref.make(instructions);
+          });
 
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object: topic,
-              target: options.target,
-              targetNodeId: Paths.getSpacePath(
-                options.db.spaceId,
-                Paths.GroupSegments.ai,
-                Type.getTypename(Topic.Topic),
-              ),
-            });
-          }),
-      }),
-    ];
+          return yield* Operation.invoke(SpaceOperation.AddObject, {
+            object: topic,
+            target: options.target,
+            targetNodeId: Paths.getSpacePath(options.db.spaceId, Paths.GroupSegments.ai, Type.getTypename(Topic.Topic)),
+          });
+        }),
+    });
   }),
 );

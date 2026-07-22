@@ -16,7 +16,7 @@ import { DefaultSettings } from '#containers';
 // plugin-specific surface (matching by prefix) always wins under the settings
 // article's `limit={1}` dispatch.
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'defaultPluginSettings',
@@ -25,5 +25,5 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => <DefaultSettings subject={subject} />,
       }),
     ]),
-  ]),
+  ),
 );

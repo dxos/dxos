@@ -13,7 +13,7 @@ import { Collection } from '@dxos/echo';
 import { StackArticle } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(
       Capabilities.ReactSurface,
       Surface.create({
@@ -24,5 +24,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ),
-  ]),
+  ),
 );

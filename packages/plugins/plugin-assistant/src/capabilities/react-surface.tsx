@@ -37,7 +37,7 @@ import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
 import { type Assistant, ChatSurface } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
@@ -176,5 +176,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ]),
+  ),
 );

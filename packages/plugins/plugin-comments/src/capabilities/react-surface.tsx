@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { CommentsArticle } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'comments',
@@ -23,5 +23,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <CommentsArticle attendableId={data.attendableId} subject={data.companionTo} />,
       }),
     ]),
-  ]),
+  ),
 );

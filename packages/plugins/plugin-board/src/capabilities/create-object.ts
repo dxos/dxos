@@ -14,19 +14,17 @@ import { Board } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Board.Board),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Board.makeBoard(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-    ];
+    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      id: Type.getTypename(Board.Board),
+      createObject: (props, options) =>
+        Effect.gen(function* () {
+          const object = Board.makeBoard(props);
+          return yield* Operation.invoke(SpaceOperation.AddObject, {
+            object,
+            target: options.target,
+            targetNodeId: options.targetNodeId,
+          });
+        }),
+    });
   }),
 );

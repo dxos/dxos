@@ -31,6 +31,6 @@ export default Capability.makeModule(
       createCompanionExtensions({ getHistoryProvider }),
     ]);
 
-    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions.flat())];
+    return Capability.provide(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

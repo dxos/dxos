@@ -55,22 +55,20 @@ export default Capability.makeModule(
       }
     };
 
-    return [
-      Capability.provide(AppCapabilities.StatsPanel, {
-        statsAtom,
-        get: (pluginKey) => registry.get(statsAtom)[pluginKey],
-        compartment: (pluginKey) => ({
-          set: (stats) => {
-            registry.set(statsAtom, { ...registry.get(statsAtom), [pluginKey]: stats });
-            save();
-          },
-          clear: () => {
-            const { [pluginKey]: _removed, ...rest } = registry.get(statsAtom);
-            registry.set(statsAtom, rest);
-            save();
-          },
-        }),
+    return Capability.provide(AppCapabilities.StatsPanel, {
+      statsAtom,
+      get: (pluginKey) => registry.get(statsAtom)[pluginKey],
+      compartment: (pluginKey) => ({
+        set: (stats) => {
+          registry.set(statsAtom, { ...registry.get(statsAtom), [pluginKey]: stats });
+          save();
+        },
+        clear: () => {
+          const { [pluginKey]: _removed, ...rest } = registry.get(statsAtom);
+          registry.set(statsAtom, rest);
+          save();
+        },
       }),
-    ];
+    });
   }),
 );

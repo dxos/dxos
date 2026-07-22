@@ -15,7 +15,7 @@ import { MeetingArticle, MeetingsList } from '#containers';
 import { Meeting } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'meeting',
@@ -41,5 +41,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ]),
+  ),
 );

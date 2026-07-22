@@ -20,6 +20,6 @@ export default Capability.makeModule(() =>
       }),
     });
 
-    return [Capability.provide(MapCapabilities.State, stateAtom)];
+    return Capability.provide(MapCapabilities.State, stateAtom);
   }),
 );

@@ -10,6 +10,6 @@ import { VideoOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, VideoOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, VideoOperationHandlerSet);
   }),
 );

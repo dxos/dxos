@@ -13,7 +13,7 @@ import { VoxelArticle, VoxelCard } from '#containers';
 import { Voxel } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'world',
@@ -32,5 +32,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <VoxelCard role={role} subject={data.subject} />,
       }),
     ]),
-  ]),
+  ),
 );

@@ -23,7 +23,7 @@ import { ExemplarSettings } from '../containers';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
@@ -51,5 +51,5 @@ export default Capability.makeModule(() =>
         component: () => <AboutDialog />,
       }),
     ]),
-  ]),
+  ),
 );

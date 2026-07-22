@@ -12,7 +12,7 @@ import { DevtoolsContextProvider } from '@dxos/devtools';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }) => (
@@ -21,5 +21,5 @@ export default Capability.makeModule(() =>
         </Surface.ProfilerProvider>
       ),
     }),
-  ]),
+  ),
 );

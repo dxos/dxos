@@ -14,7 +14,7 @@ import { ProviderArticle, ResultCard, SearchArticle, SearchProperties } from '..
 import { Provider, Result, Search } from '../types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'resultCard',
@@ -43,5 +43,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ]),
+  ),
 );

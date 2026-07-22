@@ -547,23 +547,21 @@ export default Capability.makeModule(
         return yield* reconcileCursors({ invoker, db, connection, connector, selected, existingTarget });
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
-    return [
-      Capability.provide(
-        ConnectorCoordinator,
-        {
-          createConnection,
-          reauthenticate,
-          createCustomConnection,
-          finalizeRedirectFlow,
-          submitCredentialForm,
-          setCursors,
-        },
-        () =>
-          Effect.sync(() => {
-            window.removeEventListener('message', handleMessage);
-            pending.clear();
-          }),
-      ),
-    ];
+    return Capability.provide(
+      ConnectorCoordinator,
+      {
+        createConnection,
+        reauthenticate,
+        createCustomConnection,
+        finalizeRedirectFlow,
+        submitCredentialForm,
+        setCursors,
+      },
+      () =>
+        Effect.sync(() => {
+          window.removeEventListener('message', handleMessage);
+          pending.clear();
+        }),
+    );
   }),
 );

@@ -11,7 +11,7 @@ import { Relation, Type } from '@dxos/echo';
 import { Sheet, compareIndexPositions } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(AppCapabilities.AnchorSort, {
       key: Type.getTypename(Sheet.Sheet),
       sort: (anchorA, anchorB) => {
@@ -23,5 +23,5 @@ export default Capability.makeModule(() =>
         return !anchorA.anchor || !anchorB.anchor ? 0 : compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
       },
     }),
-  ]),
+  ),
 );

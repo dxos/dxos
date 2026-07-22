@@ -13,7 +13,7 @@ import { Table } from '@dxos/react-ui-table/types';
 import { TableArticle, TableCard } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'table',
@@ -33,5 +33,5 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,
       }),
     ]),
-  ]),
+  ),
 );

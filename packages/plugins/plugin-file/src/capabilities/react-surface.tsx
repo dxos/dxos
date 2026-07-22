@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { File, FileAction, type Settings } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article',
@@ -57,5 +57,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ]),
+  ),
 );

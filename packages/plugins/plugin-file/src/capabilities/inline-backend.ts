@@ -19,6 +19,4 @@ export const inlineBackend: FileCapabilities.Backend = {
   storage: Blob.Storage.inline,
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed([Capability.provide(FileCapabilities.Backend, inlineBackend)]),
-);
+export default Capability.makeModule(() => Effect.succeed(Capability.provide(FileCapabilities.Backend, inlineBackend)));

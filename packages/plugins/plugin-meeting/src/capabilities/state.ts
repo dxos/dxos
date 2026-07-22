@@ -18,14 +18,12 @@ export default Capability.makeModule(
       registry.set(stateAtom, updater(registry.get(stateAtom)));
     };
 
-    return [
-      Capability.provide(MeetingCapabilities.State, {
-        stateAtom,
-        get state() {
-          return registry.get(stateAtom);
-        },
-        updateState,
-      }),
-    ];
+    return Capability.provide(MeetingCapabilities.State, {
+      stateAtom,
+      get state() {
+        return registry.get(stateAtom);
+      },
+      updateState,
+    });
   }),
 );

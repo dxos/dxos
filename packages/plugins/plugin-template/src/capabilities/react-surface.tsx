@@ -13,7 +13,7 @@ import { TemplatePanel } from '#components';
 import { Template } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(
       Capabilities.ReactSurface,
       Surface.create({
@@ -24,5 +24,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ),
-  ]),
+  ),
 );

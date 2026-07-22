@@ -18,4 +18,4 @@ import { type LayerSpec } from '@dxos/compute';
 // Annotated so the contributed `LayerSpec` type is nameable in the emitted declaration.
 const harnessSpec: LayerSpec.LayerSpec = Harness.layerSpec;
 
-export default Capability.makeModule(() => Effect.succeed([Capability.provide(Capabilities.LayerSpec, harnessSpec)]));
+export default Capability.makeModule(() => Effect.succeed(Capability.provide(Capabilities.LayerSpec, harnessSpec)));

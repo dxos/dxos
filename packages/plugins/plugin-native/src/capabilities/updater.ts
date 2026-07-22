@@ -188,6 +188,6 @@ export default Capability.makeModule(
     // so the finalizer returns the interruption effect directly.
     yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
 
-    return [managerContribution];
+    return managerContribution;
   }),
 );

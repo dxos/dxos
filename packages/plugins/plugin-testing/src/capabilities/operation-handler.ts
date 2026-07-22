@@ -10,6 +10,6 @@ import { TestingOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, TestingOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, TestingOperationHandlerSet);
   }),
 );

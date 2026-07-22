@@ -13,7 +13,7 @@ import { ChessGameArticle } from '#containers';
 import { ChessComAccount } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'chessGameArticle',
@@ -26,5 +26,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ]),
+  ),
 );

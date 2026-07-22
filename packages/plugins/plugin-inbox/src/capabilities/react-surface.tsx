@@ -42,7 +42,7 @@ const isMessageOrThread = (subject: unknown): subject is Message.Message | Messa
     : isNonDraftMessage(subject);
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'subscriptions',
@@ -182,5 +182,5 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
       }),
     ]),
-  ]),
+  ),
 );

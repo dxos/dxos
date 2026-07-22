@@ -14,19 +14,17 @@ import { Dream } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Dream.Dream),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Dream.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-    ];
+    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      id: Type.getTypename(Dream.Dream),
+      createObject: (props, options) =>
+        Effect.gen(function* () {
+          const object = Dream.make(props);
+          return yield* Operation.invoke(SpaceOperation.AddObject, {
+            object,
+            target: options.target,
+            targetNodeId: options.targetNodeId,
+          });
+        }),
+    });
   }),
 );

@@ -14,7 +14,7 @@ import { Channel, Thread } from '@dxos/types';
 import { ChannelArticle, ThreadArticle } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'channel',
@@ -45,5 +45,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ]),
+  ),
 );

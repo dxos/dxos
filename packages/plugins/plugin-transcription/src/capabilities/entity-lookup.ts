@@ -27,6 +27,6 @@ export default Capability.makeModule(
       }
       return makeDatabaseLookup(space.db)(noun, context);
     };
-    return [Capability.provide(TranscriptionCapabilities.EntityLookup, lookup)];
+    return Capability.provide(TranscriptionCapabilities.EntityLookup, lookup);
   }),
 );

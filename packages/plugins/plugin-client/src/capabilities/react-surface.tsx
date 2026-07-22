@@ -32,62 +32,57 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl, onReset }: ReactSurfaceOptions) {
     const capabilityManager = yield* Capability.Service;
 
-    return [
-      Capability.provide(Capabilities.ReactSurface, [
-        Surface.create({
-          id: Account.Profile,
-          filter: AppSurface.literal(AppSurface.Article, Account.Profile),
-          component: () => <ProfileContainer />,
-        }),
-        Surface.create({
-          id: Account.Devices,
-          filter: AppSurface.literal(AppSurface.Article, Account.Devices),
-          component: () => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
-        }),
-        Surface.create({
-          id: Account.Security,
-          filter: AppSurface.literal(AppSurface.Article, Account.Security),
-          component: () => <RecoveryCredentialsContainer />,
-        }),
-        Surface.create({
-          id: Account.Account,
-          filter: AppSurface.literal(AppSurface.Article, Account.Account),
-          component: () => <AccountContainer />,
-        }),
-        Surface.create({
-          id: Account.Invitations,
-          filter: AppSurface.literal(AppSurface.Article, Account.Invitations),
-          component: () => <InvitationsContainer />,
-        }),
-        Surface.create({
-          id: Account.Usage,
-          filter: AppSurface.literal(AppSurface.Article, Account.Usage),
-          component: () => <UsageContainer />,
-        }),
-        Surface.create({
-          id: JOIN_DIALOG,
-          filter: AppSurface.component<ComponentProps<typeof JoinDialog>>(AppSurface.Dialog, JOIN_DIALOG),
-          component: ({ data }) => <JoinDialog {...data.props} />,
-        }),
-        Surface.create({
-          id: RECOVERY_CODE_DIALOG,
-          filter: AppSurface.component<ComponentProps<typeof RecoveryCodeDialog>>(
-            AppSurface.Dialog,
-            RECOVERY_CODE_DIALOG,
-          ),
-          component: ({ data }) => <RecoveryCodeDialog {...data.props} />,
-        }),
-        Surface.create({
-          id: RESET_DIALOG,
-          filter: AppSurface.component<Pick<ComponentProps<typeof ResetDialog>, 'mode'>>(
-            AppSurface.Dialog,
-            RESET_DIALOG,
-          ),
-          component: ({ data }) => (
-            <ResetDialog {...data.props} onReset={onReset} capabilityManager={capabilityManager} />
-          ),
-        }),
-      ]),
-    ];
+    return Capability.provide(Capabilities.ReactSurface, [
+      Surface.create({
+        id: Account.Profile,
+        filter: AppSurface.literal(AppSurface.Article, Account.Profile),
+        component: () => <ProfileContainer />,
+      }),
+      Surface.create({
+        id: Account.Devices,
+        filter: AppSurface.literal(AppSurface.Article, Account.Devices),
+        component: () => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
+      }),
+      Surface.create({
+        id: Account.Security,
+        filter: AppSurface.literal(AppSurface.Article, Account.Security),
+        component: () => <RecoveryCredentialsContainer />,
+      }),
+      Surface.create({
+        id: Account.Account,
+        filter: AppSurface.literal(AppSurface.Article, Account.Account),
+        component: () => <AccountContainer />,
+      }),
+      Surface.create({
+        id: Account.Invitations,
+        filter: AppSurface.literal(AppSurface.Article, Account.Invitations),
+        component: () => <InvitationsContainer />,
+      }),
+      Surface.create({
+        id: Account.Usage,
+        filter: AppSurface.literal(AppSurface.Article, Account.Usage),
+        component: () => <UsageContainer />,
+      }),
+      Surface.create({
+        id: JOIN_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof JoinDialog>>(AppSurface.Dialog, JOIN_DIALOG),
+        component: ({ data }) => <JoinDialog {...data.props} />,
+      }),
+      Surface.create({
+        id: RECOVERY_CODE_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof RecoveryCodeDialog>>(
+          AppSurface.Dialog,
+          RECOVERY_CODE_DIALOG,
+        ),
+        component: ({ data }) => <RecoveryCodeDialog {...data.props} />,
+      }),
+      Surface.create({
+        id: RESET_DIALOG,
+        filter: AppSurface.component<Pick<ComponentProps<typeof ResetDialog>, 'mode'>>(AppSurface.Dialog, RESET_DIALOG),
+        component: ({ data }) => (
+          <ResetDialog {...data.props} onReset={onReset} capabilityManager={capabilityManager} />
+        ),
+      }),
+    ]);
   }),
 );

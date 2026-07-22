@@ -16,26 +16,24 @@ import { TableOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Table.Table),
-        inputSchema: TableOperation.CreateTableSchema,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = yield* Effect.promise(async () => {
-              const { view, jsonSchema } = await ViewModel.makeFromDatabase({
-                db: options.db,
-                typename: props.typename,
-              });
-              return Table.make({ name: props.name, view, jsonSchema });
+    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      id: Type.getTypename(Table.Table),
+      inputSchema: TableOperation.CreateTableSchema,
+      createObject: (props, options) =>
+        Effect.gen(function* () {
+          const object = yield* Effect.promise(async () => {
+            const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+              db: options.db,
+              typename: props.typename,
             });
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-    ];
+            return Table.make({ name: props.name, view, jsonSchema });
+          });
+          return yield* Operation.invoke(SpaceOperation.AddObject, {
+            object,
+            target: options.target,
+            targetNodeId: options.targetNodeId,
+          });
+        }),
+    });
   }),
 );

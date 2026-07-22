@@ -691,7 +691,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* () {
  *     const client = yield* ClientCapabilities.Client;
- *     return [Capability.provide(Capabilities.SettingsStore, store)];
+ *     return Capability.provide(Capabilities.SettingsStore, store);
  *   })
  * );
  *
@@ -709,7 +709,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* (props: { observability: boolean }) {
  *     const invoker = yield* Capabilities.OperationInvoker;
- *     return [Capability.provide(Capabilities.OperationHandler, ...)];
+ *     return Capability.provide(Capabilities.OperationHandler, ...);
  *   })
  * );
  *
@@ -718,7 +718,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *   Effect.fnUntraced(function* () {
  *     const scope = yield* Scope.Scope;
  *     yield* Scope.addFinalizer(scope, Effect.sync(() => cleanup()));
- *     return [Capability.provide(Capabilities.MyCapability, implementation)];
+ *     return Capability.provide(Capabilities.MyCapability, implementation);
  *   })
  * );
  * ```

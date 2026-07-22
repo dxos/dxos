@@ -127,6 +127,6 @@ export default Capability.makeModule(
         }).pipe(Effect.orDie),
     });
 
-    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
+    return Capability.provide(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

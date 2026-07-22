@@ -18,6 +18,6 @@ export default Capability.makeModule(
     const statusAtom = Atom.make<{ phase: TranscriptionCapabilities.PipelinePhase }>({ phase: 'idle' }).pipe(
       Atom.keepAlive,
     );
-    return [Capability.provide(TranscriptionCapabilities.PipelineStatus, statusAtom)];
+    return Capability.provide(TranscriptionCapabilities.PipelineStatus, statusAtom);
   }),
 );

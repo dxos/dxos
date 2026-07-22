@@ -19,12 +19,10 @@ export default Capability.makeModule(
     const callManager = new CallManager(client, registry, haloIdentity);
     yield* Effect.tryPromise(() => callManager.open());
 
-    return [
-      Capability.provide(CallsCapabilities.Manager, callManager, () =>
-        Effect.sync(() => {
-          void callManager.close();
-        }),
-      ),
-    ];
+    return Capability.provide(CallsCapabilities.Manager, callManager, () =>
+      Effect.sync(() => {
+        void callManager.close();
+      }),
+    );
   }),
 );

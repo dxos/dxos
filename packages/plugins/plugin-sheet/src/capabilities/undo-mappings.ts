@@ -10,7 +10,7 @@ import { meta } from '#meta';
 import { SheetOperation } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.UndoMapping, [
       UndoMapping.make({
         operation: SheetOperation.DropAxis,
@@ -26,5 +26,5 @@ export default Capability.makeModule(() =>
         message: ['axis-dropped.label', { ns: meta.profile.key }],
       }),
     ]),
-  ]),
+  ),
 );

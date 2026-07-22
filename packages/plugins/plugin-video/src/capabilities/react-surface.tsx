@@ -22,7 +22,7 @@ const isVideoPart = (data: unknown, part: string): boolean => {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article.video',
@@ -65,5 +65,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SummarySection subject={data.subject} attendableId={data.attendableId} />,
       }),
     ]),
-  ]),
+  ),
 );

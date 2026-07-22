@@ -16,7 +16,7 @@ import { Position } from '@dxos/util';
 import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       //
       // Specific schema types.
@@ -146,5 +146,5 @@ export default Capability.makeModule(() =>
       //   },
       // }),
     ]),
-  ]),
+  ),
 );

@@ -23,6 +23,6 @@ const migrations = [
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(ClientCapabilities.Migration, migrations)];
+    return Capability.provide(ClientCapabilities.Migration, migrations);
   }),
 );

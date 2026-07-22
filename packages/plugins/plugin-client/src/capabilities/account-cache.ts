@@ -10,7 +10,7 @@ import { createKvsStore } from '@dxos/effect';
 import { AccountCache, ClientCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(
       ClientCapabilities.AccountCache,
       createKvsStore<AccountCache>({
@@ -19,5 +19,5 @@ export default Capability.makeModule(() =>
         defaultValue: () => ({}),
       }),
     ),
-  ]),
+  ),
 );

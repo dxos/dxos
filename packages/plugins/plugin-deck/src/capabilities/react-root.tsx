@@ -12,7 +12,7 @@ import { useDeckState } from '#hooks';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
@@ -48,5 +48,5 @@ export default Capability.makeModule(() =>
         return <DeckLayout onDismissToast={handleDismissToast} />;
       },
     }),
-  ]),
+  ),
 );

@@ -118,7 +118,7 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
 /** Contributes the read-only ATProto channel backend. */
 export const ChannelBackend = Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(ThreadCapabilities.ChannelBackend, blueskyChannelBackend)];
+    return Capability.provide(ThreadCapabilities.ChannelBackend, blueskyChannelBackend);
   }),
 );
 

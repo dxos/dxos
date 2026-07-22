@@ -12,5 +12,5 @@ import { makeOsrmRoutingService } from '#services';
 export default Capability.makeModule(() => {
   // Explicit type keeps the emitted declaration portable (TS2883).
   const service: Routing.RoutingService = makeOsrmRoutingService();
-  return Effect.succeed([Capability.provide(TripCapabilities.RoutingService, service)]);
+  return Effect.succeed(Capability.provide(TripCapabilities.RoutingService, service));
 });

@@ -13,7 +13,7 @@ import { BoardArticle } from '#containers';
 import { Board } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'root',
@@ -27,5 +27,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ]),
+  ),
 );

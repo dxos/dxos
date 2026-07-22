@@ -69,7 +69,7 @@ export const Main = () => {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(
       Capabilities.ReactSurface,
       Surface.create({
@@ -78,5 +78,5 @@ export default Capability.makeModule(() =>
         component: Main,
       }),
     ),
-  ]),
+  ),
 );

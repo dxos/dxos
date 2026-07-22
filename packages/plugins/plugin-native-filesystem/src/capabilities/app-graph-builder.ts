@@ -225,7 +225,7 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return [Capability.provide(AppCapabilities.AppGraphBuilder, [...extensions.flat(), ...filesystemEntryExtensions])];
+    return Capability.provide(AppCapabilities.AppGraphBuilder, [...extensions.flat(), ...filesystemEntryExtensions]);
   }),
 );
 

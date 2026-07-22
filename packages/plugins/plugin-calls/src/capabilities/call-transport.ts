@@ -17,25 +17,23 @@ export default Capability.makeModule(
     // manager's activation ordering.
     const capabilities = yield* Capability.Service;
 
-    return [
-      Capability.provide(CallsCapabilities.CallTransportProvider, {
-        kind: CLOUDFLARE_TRANSPORT_KIND,
-        label: 'Cloudflare',
-        join: async (roomId) => {
-          const callManager = capabilities.get(CallsCapabilities.Manager);
-          // Joining is exclusive — the swarm rejects a second join (and `setRoomId` is ignored while
-          // joined), so leave any in-progress call before switching rooms.
-          if (callManager.joined) {
-            await callManager.leave();
-          }
-          callManager.setRoomId(roomId);
-          await callManager.join();
-        },
-        leave: async () => {
-          const callManager = capabilities.get(CallsCapabilities.Manager);
+    return Capability.provide(CallsCapabilities.CallTransportProvider, {
+      kind: CLOUDFLARE_TRANSPORT_KIND,
+      label: 'Cloudflare',
+      join: async (roomId) => {
+        const callManager = capabilities.get(CallsCapabilities.Manager);
+        // Joining is exclusive — the swarm rejects a second join (and `setRoomId` is ignored while
+        // joined), so leave any in-progress call before switching rooms.
+        if (callManager.joined) {
           await callManager.leave();
-        },
-      }),
-    ];
+        }
+        callManager.setRoomId(roomId);
+        await callManager.join();
+      },
+      leave: async () => {
+        const callManager = capabilities.get(CallsCapabilities.Manager);
+        await callManager.leave();
+      },
+    });
   }),
 );

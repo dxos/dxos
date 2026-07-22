@@ -10,6 +10,6 @@ import { ConnectorOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, ConnectorOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, ConnectorOperationHandlerSet);
   }),
 );

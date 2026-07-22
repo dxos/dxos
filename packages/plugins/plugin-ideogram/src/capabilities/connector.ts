@@ -55,6 +55,6 @@ export const createIdeogramConnectorEntry = () => ({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Connector, [createIdeogramConnectorEntry()])];
+    return Capability.provide(Connector, [createIdeogramConnectorEntry()]);
   }),
 );

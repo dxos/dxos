@@ -10,6 +10,6 @@ import { LinearOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, LinearOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, LinearOperationHandlerSet);
   }),
 );

@@ -15,7 +15,7 @@ import { PostArticle, PublicationArticle } from '#containers';
 import { Blog } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'blogger.publication',
@@ -45,5 +45,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <CommentsArticle subject={data.subject} attendableId={data.attendableId} />,
       }),
     ]),
-  ]),
+  ),
 );

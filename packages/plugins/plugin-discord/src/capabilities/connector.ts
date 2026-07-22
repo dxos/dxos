@@ -167,35 +167,33 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(Connector, [
-        {
-          id: DISCORD_PROVIDER_ID,
-          source: DISCORD_SOURCE,
-          label: DISCORD_BOT_LABEL,
-          credentialForm,
-          optionsSchema: DiscordTargetOptions,
-          getSyncTargets: DiscordOperation.GetDiscordChannels,
-          materializeTarget: DiscordOperation.MaterializeDiscordTarget,
-          sync: DiscordOperation.SyncDiscordChannel,
-          onTokenCreated,
+    return Capability.provide(Connector, [
+      {
+        id: DISCORD_PROVIDER_ID,
+        source: DISCORD_SOURCE,
+        label: DISCORD_BOT_LABEL,
+        credentialForm,
+        optionsSchema: DiscordTargetOptions,
+        getSyncTargets: DiscordOperation.GetDiscordChannels,
+        materializeTarget: DiscordOperation.MaterializeDiscordTarget,
+        sync: DiscordOperation.SyncDiscordChannel,
+        onTokenCreated,
+      },
+      {
+        id: DISCORD_USER_PROVIDER_ID,
+        source: DISCORD_SOURCE,
+        label: DISCORD_USER_LABEL,
+        oauth: {
+          provider: OAuthProvider.DISCORD,
+          scopes: ['identify', 'guilds'],
         },
-        {
-          id: DISCORD_USER_PROVIDER_ID,
-          source: DISCORD_SOURCE,
-          label: DISCORD_USER_LABEL,
-          oauth: {
-            provider: OAuthProvider.DISCORD,
-            scopes: ['identify', 'guilds'],
-          },
-          optionsSchema: DiscordTargetOptions,
-          getSyncTargets: DiscordOperation.GetDiscordChannels,
-          materializeTarget: DiscordOperation.MaterializeDiscordTarget,
-          sync: DiscordOperation.SyncDiscordChannel,
-          onTokenCreated: userOnTokenCreated,
-          testConnection: userTestConnection,
-        },
-      ]),
-    ];
+        optionsSchema: DiscordTargetOptions,
+        getSyncTargets: DiscordOperation.GetDiscordChannels,
+        materializeTarget: DiscordOperation.MaterializeDiscordTarget,
+        sync: DiscordOperation.SyncDiscordChannel,
+        onTokenCreated: userOnTokenCreated,
+        testConnection: userTestConnection,
+      },
+    ]);
   }),
 );

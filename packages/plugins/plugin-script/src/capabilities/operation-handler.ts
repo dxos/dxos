@@ -13,11 +13,9 @@ import { ScriptHandlers } from '../skills/functions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(
-        Capabilities.OperationHandler,
-        OperationHandlerSet.merge(ScriptOperationHandlerSet, ScriptHandlers),
-      ),
-    ];
+    return Capability.provide(
+      Capabilities.OperationHandler,
+      OperationHandlerSet.merge(ScriptOperationHandlerSet, ScriptHandlers),
+    );
   }),
 );

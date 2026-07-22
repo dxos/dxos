@@ -17,22 +17,20 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invoke } = yield* Capabilities.OperationInvoker;
 
-    return [
-      Capability.provide(AppCapabilities.FileUploader, (db, file) => {
-        const program = Effect.gen(function* () {
-          const { object } = yield* invoke(FileOperation.Create, { db, file });
-          yield* invoke(SpaceOperation.AddObject, { target: db, object });
-          const blob = yield* Database.load(object.data);
-          const urlOption = yield* Blob.url(blob).pipe(Effect.provide(Database.layer(db)));
-          return {
-            name: object.name ?? file.name,
-            type: blob.type ?? 'application/octet-stream',
-            ...(Option.isSome(urlOption) ? { url: urlOption.value } : {}),
-          };
-        });
+    return Capability.provide(AppCapabilities.FileUploader, (db, file) => {
+      const program = Effect.gen(function* () {
+        const { object } = yield* invoke(FileOperation.Create, { db, file });
+        yield* invoke(SpaceOperation.AddObject, { target: db, object });
+        const blob = yield* Database.load(object.data);
+        const urlOption = yield* Blob.url(blob).pipe(Effect.provide(Database.layer(db)));
+        return {
+          name: object.name ?? file.name,
+          type: blob.type ?? 'application/octet-stream',
+          ...(Option.isSome(urlOption) ? { url: urlOption.value } : {}),
+        };
+      });
 
-        return EffectEx.runAndForwardErrors(program);
-      }),
-    ];
+      return EffectEx.runAndForwardErrors(program);
+    });
   }),
 );

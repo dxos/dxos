@@ -13,7 +13,7 @@ import { Pipeline } from '@dxos/types';
 import { PipelineArticle, PipelineProperties } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'root',
@@ -28,5 +28,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <PipelineProperties subject={data.subject} />,
       }),
     ]),
-  ]),
+  ),
 );

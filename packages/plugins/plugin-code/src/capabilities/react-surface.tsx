@@ -16,7 +16,7 @@ import { CodeProject, Settings, Spec } from '#types';
 import { isPluginSpecSubject } from '../plugin-spec';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSpec',
@@ -57,5 +57,5 @@ export default Capability.makeModule(() =>
         },
       }),
     ]),
-  ]),
+  ),
 );

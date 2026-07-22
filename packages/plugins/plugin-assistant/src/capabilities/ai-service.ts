@@ -46,6 +46,6 @@ export default Capability.makeModule(
       () => aiServiceLayer,
     );
 
-    return [Capability.provide(Capabilities.LayerSpec, aiServiceSpec)];
+    return Capability.provide(Capabilities.LayerSpec, aiServiceSpec);
   }),
 );

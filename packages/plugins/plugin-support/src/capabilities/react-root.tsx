@@ -14,25 +14,23 @@ import { HelpCapabilities, type Tour } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (steps?: Tour.Step[]) {
-    return [
-      Capability.provide(Capabilities.ReactRoot, {
-        id: meta.profile.key,
-        root: () => {
-          const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
-          return (
-            <WelcomeTour
-              steps={steps ?? []}
-              running={state.running}
-              onRunningChanged={(newState) => {
-                updateState((s) => ({ ...s, running: newState }));
-                if (!newState) {
-                  updateState((s) => ({ ...s, showHints: false }));
-                }
-              }}
-            />
-          );
-        },
-      }),
-    ];
+    return Capability.provide(Capabilities.ReactRoot, {
+      id: meta.profile.key,
+      root: () => {
+        const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
+        return (
+          <WelcomeTour
+            steps={steps ?? []}
+            running={state.running}
+            onRunningChanged={(newState) => {
+              updateState((s) => ({ ...s, running: newState }));
+              if (!newState) {
+                updateState((s) => ({ ...s, showHints: false }));
+              }
+            }}
+          />
+        );
+      },
+    });
   }),
 );

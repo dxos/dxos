@@ -8,6 +8,6 @@ import { TableOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.provide(Capabilities.OperationHandler, TableOperationHandlerSet)];
+    return Capability.provide(Capabilities.OperationHandler, TableOperationHandlerSet);
   }),
 );

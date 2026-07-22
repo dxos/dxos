@@ -15,31 +15,29 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    return [
-      Capability.provide(MarkdownCapabilities.ExtensionProvider, [
-        ({ document: doc, viewMode }) => {
-          if (viewMode === 'source') {
-            return undefined;
-          }
+    return Capability.provide(MarkdownCapabilities.ExtensionProvider, [
+      ({ document: doc, viewMode }) => {
+        if (viewMode === 'source') {
+          return undefined;
+        }
 
-          if (!doc) {
-            return undefined;
-          }
+        if (!doc) {
+          return undefined;
+        }
 
-          const db = Obj.getDatabase(doc);
-          if (!db) {
-            return undefined;
-          }
+        const db = Obj.getDatabase(doc);
+        if (!db) {
+          return undefined;
+        }
 
-          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
-          return promptRunExtension({
-            onRun: (promptText) => {
-              void invokePromise(RoutineOperation.RunPromptInNewChat, { db, instructions: promptText });
-            },
-          });
-        },
-      ]),
-    ];
+        return promptRunExtension({
+          onRun: (promptText) => {
+            void invokePromise(RoutineOperation.RunPromptInNewChat, { db, instructions: promptText });
+          },
+        });
+      },
+    ]);
   }),
 );

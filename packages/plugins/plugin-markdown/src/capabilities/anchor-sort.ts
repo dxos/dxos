@@ -14,7 +14,7 @@ import { type AnchoredTo } from '@dxos/types';
 import { Markdown } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(AppCapabilities.AnchorSort, {
       key: Type.getTypename(Markdown.Document),
       sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
@@ -34,5 +34,5 @@ export default Capability.makeModule(() =>
         return posA - posB;
       },
     }),
-  ]),
+  ),
 );

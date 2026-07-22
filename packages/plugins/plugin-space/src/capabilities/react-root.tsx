@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
@@ -21,5 +21,5 @@ export default Capability.makeModule(() =>
         return ephemeral.awaiting ? <AwaitingObject id={ephemeral.awaiting} /> : null;
       },
     }),
-  ]),
+  ),
 );

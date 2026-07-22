@@ -72,34 +72,32 @@ export default Capability.makeModule(
     };
     window.addEventListener('storage', handleStorage);
 
-    return [
-      Capability.provide(
-        Capabilities.ReactContext,
-        {
-          id: meta.profile.key,
-          context: ({ children }: { children?: ReactNode }) => {
-            const { themeMode } = useAtomValue(themeAtom);
-            // Translations are registered in the shared i18next instance by the Translator module; the
-            // theme provider only exposes that instance to React.
-            return (
-              <ThemeProvider {...{ tx: propsTx, themeMode, platform, noCache }}>
-                <Toast.Provider>
-                  <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
-                    {children}
-                  </Tooltip.Provider>
-                  <Toast.Viewport />
-                </Toast.Provider>
-              </ThemeProvider>
-            );
-          },
+    return Capability.provide(
+      Capabilities.ReactContext,
+      {
+        id: meta.profile.key,
+        context: ({ children }: { children?: ReactNode }) => {
+          const { themeMode } = useAtomValue(themeAtom);
+          // Translations are registered in the shared i18next instance by the Translator module; the
+          // theme provider only exposes that instance to React.
+          return (
+            <ThemeProvider {...{ tx: propsTx, themeMode, platform, noCache }}>
+              <Toast.Provider>
+                <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
+                  {children}
+                </Tooltip.Provider>
+                <Toast.Viewport />
+              </Toast.Provider>
+            </ThemeProvider>
+          );
         },
-        () =>
-          Effect.sync(() => {
-            modeQuery.removeEventListener('change', handleModeChange);
-            window.removeEventListener('storage', handleStorage);
-            unsubscribe();
-          }),
-      ),
-    ];
+      },
+      () =>
+        Effect.sync(() => {
+          modeQuery.removeEventListener('change', handleModeChange);
+          window.removeEventListener('storage', handleStorage);
+          unsubscribe();
+        }),
+    );
   }),
 );

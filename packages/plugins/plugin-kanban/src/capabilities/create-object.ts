@@ -15,30 +15,28 @@ import { CreateKanbanSchema, Kanban } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Kanban.Kanban),
-        inputSchema: CreateKanbanSchema,
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = yield* Effect.promise(async () => {
-              if (props.typename) {
-                const { view } = await ViewModel.makeFromDatabase({
-                  db: options.db,
-                  typename: props.typename,
-                  pivotFieldName: props.initialPivotColumn,
-                });
-                return Kanban.make({ name: props.name, view });
-              }
-              return Kanban.makeItems({ name: props.name, pivotField: props.initialPivotColumn ?? '' });
-            });
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-    ];
+    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      id: Type.getTypename(Kanban.Kanban),
+      inputSchema: CreateKanbanSchema,
+      createObject: (props, options) =>
+        Effect.gen(function* () {
+          const object = yield* Effect.promise(async () => {
+            if (props.typename) {
+              const { view } = await ViewModel.makeFromDatabase({
+                db: options.db,
+                typename: props.typename,
+                pivotFieldName: props.initialPivotColumn,
+              });
+              return Kanban.make({ name: props.name, view });
+            }
+            return Kanban.makeItems({ name: props.name, pivotField: props.initialPivotColumn ?? '' });
+          });
+          return yield* Operation.invoke(SpaceOperation.AddObject, {
+            object,
+            target: options.target,
+            targetNodeId: options.targetNodeId,
+          });
+        }),
+    });
   }),
 );

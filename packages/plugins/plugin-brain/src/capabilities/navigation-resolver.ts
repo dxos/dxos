@@ -14,10 +14,10 @@ import { Topic } from '@dxos/compute';
  * topic child node doesn't 404.
  */
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(
       AppCapabilities.NavigationPathResolver,
       TypeSection.createTypeSectionPathResolver(Topic.Topic, { groupId: Paths.GroupSegments.ai }),
     ),
-  ]),
+  ),
 );

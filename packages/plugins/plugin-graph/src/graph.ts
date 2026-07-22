@@ -49,14 +49,12 @@ export default Capability.makeModule(
 
     setupDevtools(builder.graph);
 
-    return [
-      Capability.provide(AppCapabilities.AppGraph, { graph: builder.graph, explore: GraphBuilder.explore }, () =>
-        Effect.sync(() => {
-          // clearInterval(interval);
-          unsubscribe();
-        }),
-      ),
-    ];
+    return Capability.provide(AppCapabilities.AppGraph, { graph: builder.graph, explore: GraphBuilder.explore }, () =>
+      Effect.sync(() => {
+        // clearInterval(interval);
+        unsubscribe();
+      }),
+    );
   }),
 );
 

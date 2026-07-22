@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }: { children?: ReactNode }) => {
@@ -39,5 +39,5 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-  ]),
+  ),
 );

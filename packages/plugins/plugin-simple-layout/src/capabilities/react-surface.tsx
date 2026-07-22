@@ -17,7 +17,7 @@ import { Home, NavBranch } from '#components';
 const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end'];
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
@@ -39,5 +39,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <NavBranch id={data.attendableId} />,
       }),
     ]),
-  ]),
+  ),
 );

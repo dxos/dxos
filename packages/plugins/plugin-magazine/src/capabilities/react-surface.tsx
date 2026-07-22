@@ -14,7 +14,7 @@ import { FeedArticle, FeedProperties, MagazineArticle, PostArticle, PostCard } f
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'magazineArticle',
@@ -49,5 +49,5 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <FeedProperties subject={data.subject} />,
       }),
     ]),
-  ]),
+  ),
 );

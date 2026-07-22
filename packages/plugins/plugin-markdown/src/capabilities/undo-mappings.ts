@@ -11,20 +11,18 @@ import { CollaborationOperation } from '@dxos/app-toolkit';
 // — on the base for accept, on the author's branch for reject.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(Capabilities.UndoMapping, [
-        UndoMapping.make({
-          operation: CollaborationOperation.AcceptChange,
-          inverse: CollaborationOperation.RestoreText,
-          deriveContext: (input, output) => (output.undo ? { subject: input.subject, ...output.undo } : undefined),
-        }),
-        UndoMapping.make({
-          operation: CollaborationOperation.RejectChange,
-          inverse: CollaborationOperation.RestoreText,
-          deriveContext: (input, output) =>
-            output.undo ? { subject: input.subject, branch: input.branch, ...output.undo } : undefined,
-        }),
-      ]),
-    ];
+    return Capability.provide(Capabilities.UndoMapping, [
+      UndoMapping.make({
+        operation: CollaborationOperation.AcceptChange,
+        inverse: CollaborationOperation.RestoreText,
+        deriveContext: (input, output) => (output.undo ? { subject: input.subject, ...output.undo } : undefined),
+      }),
+      UndoMapping.make({
+        operation: CollaborationOperation.RejectChange,
+        inverse: CollaborationOperation.RestoreText,
+        deriveContext: (input, output) =>
+          output.undo ? { subject: input.subject, branch: input.branch, ...output.undo } : undefined,
+      }),
+    ]);
   }),
 );

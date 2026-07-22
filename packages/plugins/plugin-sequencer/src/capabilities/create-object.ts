@@ -13,19 +13,17 @@ import { Score } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Score.Score),
-        createObject: (props: Partial<Parameters<typeof Score.make>[0]> | undefined, options) =>
-          Effect.gen(function* () {
-            const object = Score.make(props ?? {});
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-    ];
+    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      id: Type.getTypename(Score.Score),
+      createObject: (props: Partial<Parameters<typeof Score.make>[0]> | undefined, options) =>
+        Effect.gen(function* () {
+          const object = Score.make(props ?? {});
+          return yield* Operation.invoke(SpaceOperation.AddObject, {
+            object,
+            target: options.target,
+            targetNodeId: options.targetNodeId,
+          });
+        }),
+    });
   }),
 );

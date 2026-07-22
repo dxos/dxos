@@ -8,7 +8,7 @@ import { meta } from '#meta';
 import { KanbanOperation } from '#types';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.UndoMapping, [
       UndoMapping.make({
         operation: KanbanOperation.DeleteCardField,
@@ -30,5 +30,5 @@ export default Capability.makeModule(() =>
         message: ['card-deleted.label', { ns: meta.profile.key }],
       }),
     ]),
-  ]),
+  ),
 );

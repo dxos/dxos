@@ -13,7 +13,7 @@ import { Transcript } from '@dxos/types';
 import { TranscriptionArticle } from '#containers';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article.transcript',
@@ -27,5 +27,5 @@ export default Capability.makeModule(() =>
         ),
       }),
     ]),
-  ]),
+  ),
 );

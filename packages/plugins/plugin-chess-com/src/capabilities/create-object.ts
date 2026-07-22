@@ -15,26 +15,24 @@ import { ChessComAccount, ChessComOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(ChessComAccount.Account),
-        inputSchema: ChessComAccount.CreateAccountSchema,
-        createObject: (props: Schema.Schema.Type<typeof ChessComAccount.CreateAccountSchema>, options) =>
-          Effect.gen(function* () {
-            const object = ChessComAccount.makeAccount({ username: props.username });
-            const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-            yield* Operation.schedule(
-              ChessComOperation.SyncGames,
-              { account: Ref.make(object) },
-              { spaceId: Obj.getDatabase(object)?.spaceId },
-            );
-            return result;
-          }),
-      }),
-    ];
+    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      id: Type.getTypename(ChessComAccount.Account),
+      inputSchema: ChessComAccount.CreateAccountSchema,
+      createObject: (props: Schema.Schema.Type<typeof ChessComAccount.CreateAccountSchema>, options) =>
+        Effect.gen(function* () {
+          const object = ChessComAccount.makeAccount({ username: props.username });
+          const result = yield* Operation.invoke(SpaceOperation.AddObject, {
+            object,
+            target: options.target,
+            targetNodeId: options.targetNodeId,
+          });
+          yield* Operation.schedule(
+            ChessComOperation.SyncGames,
+            { account: Ref.make(object) },
+            { spaceId: Obj.getDatabase(object)?.spaceId },
+          );
+          return result;
+        }),
+    });
   }),
 );

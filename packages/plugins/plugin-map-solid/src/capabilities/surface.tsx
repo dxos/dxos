@@ -13,7 +13,7 @@ import { Map } from '@dxos/plugin-map';
 import { Position } from '@dxos/util';
 
 export default Capability.makeModule(() =>
-  Effect.succeed([
+  Effect.succeed(
     Capability.provide(Capabilities.ReactSurface, [
       Surface.createWeb({
         id: 'surface.map',
@@ -25,5 +25,5 @@ export default Capability.makeModule(() =>
         position: Position.first,
       }),
     ]),
-  ]),
+  ),
 );
