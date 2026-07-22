@@ -8,8 +8,9 @@ PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 [#12297](https://github.com/dxos/dxos/pull/12297) (revised plan — gate G1 in place instead of
 deleting it, remove all committed conversation fixtures, switch the gating mechanism to native
 `describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED);
-[#12305](https://github.com/dxos/dxos/pull/12305) (ready for review, CodeRabbit + Check green,
-landing next — leaner package-level `AiRequest.test.ts` D-tier tests + `operationServiceLayerNoop`).
+[#12305](https://github.com/dxos/dxos/pull/12305) (OPEN, not yet merged — CodeRabbit + Check
+green, but manually removed from the merge queue by wittjosiah; do not re-queue unless asked —
+leaner package-level `AiRequest.test.ts` D-tier tests + `operationServiceLayerNoop`).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -48,7 +49,7 @@ as primary coverage.
       magazine, AssistantPlugin ×3 tests, AiSummarizer; G3: functions, AgentService, request,
       xml-response). Left running: `memoization.test.ts` (tests the machinery itself), G1
       `assistant-e2e` (own harness — deleted in a later step, not de-gated here).
-- [x] **PR #12305 (ready for review, CodeRabbit + Check green, landing next):** added a leaner, package-level companion to the harness (D) tests below
+- [x] **PR #12305 (OPEN, not yet merged):** added a leaner, package-level companion to the harness (D) tests below
       — `assistant/src/request/AiRequest.test.ts` drives `AiRequest.Request.run` directly (no
       `AssistantTestLayer`/`ProcessManager`/`AgentServiceRuntime`/`AiService` model-resolution),
       using `ScriptedLanguageModel.scriptedLanguageModelLayer` as `LanguageModel.LanguageModel`
@@ -78,7 +79,11 @@ as primary coverage.
       Re-verified build/lint/test green after the fix. Per direct feedback, also moved
       `operationServiceLayerNoop` out of `testing/index.ts` into its own
       `testing/operation.ts` (mirrors `registry.ts` in `@dxos/echo/testing`), re-exported via
-      `export * from './operation'`.
+      `export * from './operation'`. Auto-merge was enabled and the PR entered the merge queue,
+      then **manually removed from the queue by wittjosiah** — do not re-enable/re-queue unless
+      asked. **On resume: check PR #12305's state first.** If merged, this entry is historical —
+      proceed to the G2 conversion below. If still open, ask before touching the merge queue
+      again; CI/review are otherwise already green.
 - [x] **Revised plan (superseded "delete G1" below), PR #12297:** rather than deleting
       `assistant-e2e`, extended the same gate to it — cheaper, reversible, and keeps the suites
       runnable locally as live/eval tests + design inspiration, per direct guidance. Gated all 6
