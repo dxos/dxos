@@ -27,6 +27,7 @@ import {
   Main,
   type MainContentProps,
   ScrollArea,
+  toLocalizedString,
   useOnTransition,
   useTranslation,
 } from '@dxos/react-ui';
@@ -199,7 +200,10 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // natively — no per-frame JS repin, so the spines stay stable and opaque. The folded spine's sigil
   // mirrors the plank header's icon; DeckPlanks only toggles the fold state (never the pinning).
   const index = rendered.indexOf(id);
-  const spineLabel = typeof node?.properties.label === 'string' ? node.properties.label : id;
+  // Resolve the node's (possibly localized) label the same way the plank heading does, falling back to
+  // the id only when there is no label at all.
+  const { t } = useTranslation(meta.profile.key);
+  const spineLabel = toLocalizedString(node?.properties?.label ?? '', t) || id;
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   const scrollToPlank = useContext(ScrollToPlankContext);
   // The companion plank keeps one shared width across its variants (a companion id is
