@@ -364,6 +364,13 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   };
 };
 
+// Vitest sets `VITEST=true` for both `vitest run` and `vitest watch`, and its `VITEST_MODE` signal
+// is only exposed to pool workers (never the main process where these configs evaluate). Watch mode
+// needs the file watcher, so detect single-pass `run` mode from the CLI invocation instead: this is
+// true in the vitest process that serves the story builder in-process, and false in a watch-mode
+// `storybook dev` child (whose argv is storybook's, not vitest's), so both keep their watcher then.
+const IS_VITEST_RUN = process.env.VITEST === 'true' && (process.argv.includes('run') || process.argv.includes('--run'));
+
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
@@ -390,8 +397,9 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
     // A storybook `vitest run` spins up two vite servers (this browser-test server and the in-process
     // story builder, see `.storybook/main.ts`); neither needs a file watcher for a single pass, and
     // vite leaks the watcher's FSEVENTWRAP + file handles on close, hanging teardown until vitest
-    // force-exits non-zero. Disable this server's watcher; the builder's is disabled in `main.ts`.
-    server: { watch: null },
+    // force-exits non-zero. Disable this server's watcher in run mode only (watch mode needs it); the
+    // builder's is disabled the same way in `main.ts`.
+    ...(IS_VITEST_RUN ? { server: { watch: null } } : {}),
     resolve: {
       alias: { ...TIKTOKEN_ALIAS },
     },

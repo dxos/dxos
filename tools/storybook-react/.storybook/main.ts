@@ -20,6 +20,11 @@ const __dirname = dirname(__filename);
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
+// Single-pass `vitest run` (never `vitest watch`), detected from the CLI invocation because vitest's
+// `VITEST_MODE` signal is worker-only. Used to drop the story builder's file watcher, which vite
+// leaks on close and otherwise hangs the storybook test teardown. Watch mode keeps the watcher.
+const isVitestRun = isTrue(process.env.VITEST) && (process.argv.includes('run') || process.argv.includes('--run'));
+
 // Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
 // transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
@@ -269,9 +274,9 @@ export const createConfig = ({
           // Under `vitest run` the story builder serves in a single pass and never needs the file
           // watcher, but vite leaves its FSEVENTWRAP + file handles open on close, so teardown of a
           // heavy package exceeds the timeout and vitest force-exits non-zero despite all tests
-          // passing. Disable the watcher for the test builder only; interactive `storybook dev`
-          // (local + e2e, no `VITEST` env) keeps HMR.
-          ...(isTrue(process.env.VITEST) ? { watch: null } : {}),
+          // passing. Disable the watcher only in that single-pass run (see `IS_VITEST_RUN`); interactive
+          // `storybook dev` (local + e2e) and `vitest watch` keep HMR.
+          ...(isVitestRun ? { watch: null } : {}),
         },
         optimizeDeps: {
           // WASM modules.
