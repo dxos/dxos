@@ -145,3 +145,11 @@ export const WithEmail: Story = {
     value: 'someone@example.com ',
   },
 };
+
+export const EmailModeWithValues: Story = {
+  args: {
+    mode: 'email',
+    activateOnTyping: true,
+    value: 'Alice Smith <alice@example.com>, bob@example.com, ',
+  },
+};
