@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
@@ -63,6 +63,42 @@ describe('EntityMetaIndex', () => {
         typeDXN: DXN.make('com.example.type.other'),
       });
       expect(otherTypeResults).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('matches stored-schema type identifiers across legacy and canonical EID forms', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const objectId = EntityId.random();
+      const schemaId = EntityId.random();
+
+      // Legacy persisted rows carry the single-slash local EID (`echo:/<id>`) as the type identifier.
+      const item: IndexerObject = {
+        spaceId,
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: objectId,
+          [ATTR_TYPE]: `echo:/${schemaId}`,
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      yield* index.update([item]);
+
+      // Both the canonical triple-slash form and the legacy single-slash form must resolve the row.
+      const canonical = yield* index.query({ spaceId, typeDXN: EID.make({ entityId: schemaId }) });
+      expect(canonical.map((_) => _.objectId)).toEqual([objectId]);
+
+      const legacy = yield* index.query({ spaceId, typeDXN: URI.make(`echo:/${schemaId}`) });
+      expect(legacy.map((_) => _.objectId)).toEqual([objectId]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
