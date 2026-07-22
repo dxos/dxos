@@ -16,8 +16,8 @@ export default Capability.makeModule(
     const viewState = new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
     setupDevtools(attention);
     return [
-      Capability.provide(AttentionCapabilities.Attention, attention),
-      Capability.provide(AttentionCapabilities.ViewState, viewState),
+      Capability.contribute(AttentionCapabilities.Attention, attention),
+      Capability.contribute(AttentionCapabilities.ViewState, viewState),
     ];
   }),
 );

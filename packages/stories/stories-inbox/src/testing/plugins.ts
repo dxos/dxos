@@ -26,7 +26,7 @@ export const StorySyncPlugin = Plugin.define(
   Plugin.addModule(
     Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
-        Capability.provide(
+        Capability.contribute(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
         ),
@@ -52,7 +52,7 @@ export const StoryAiPlugin = Plugin.define(
     provides: [Capabilities.LayerSpec],
     activate: Capability.makeModule(
       Effect.fnUntraced(function* () {
-        return Capability.provide(
+        return Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
             // `orDie`: a layer-construction ConfigError is a story setup fault, not a recoverable

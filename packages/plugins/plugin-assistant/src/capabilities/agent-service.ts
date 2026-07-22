@@ -36,5 +36,5 @@ const AgentServiceSpec = LayerSpec.make(
 );
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.provide(Capabilities.LayerSpec, AgentServiceSpec)),
+  Effect.succeed(Capability.contribute(Capabilities.LayerSpec, AgentServiceSpec)),
 );

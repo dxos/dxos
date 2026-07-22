@@ -11,7 +11,7 @@ import { Routine } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(
+    return Capability.contribute(
       AppCapabilities.NavigationPathResolver,
       TypeSection.createTypeSectionPathResolver(Routine.Routine, { groupId: Paths.GroupSegments.ai }),
     );

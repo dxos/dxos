@@ -50,13 +50,13 @@ const AgentRuntimePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule<void>(
     Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
-      Effect.succeed([Capability.provide(Capabilities.OperationHandler, AgentHandlers)]),
+      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, AgentHandlers)]),
     ),
   ),
   Plugin.addModule({
     id: 'ai-service',
     provides: [Capabilities.LayerSpec],
-    activate: () => Effect.succeed([Capability.provide(Capabilities.LayerSpec, aiServiceSpec)]),
+    activate: () => Effect.succeed([Capability.contribute(Capabilities.LayerSpec, aiServiceSpec)]),
   }),
   Plugin.make,
 );

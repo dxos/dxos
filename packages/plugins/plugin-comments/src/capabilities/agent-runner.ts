@@ -282,6 +282,6 @@ export default Capability.makeModule(
         }),
     };
 
-    return Capability.provide(CommentCapabilities.AgentRunner, runner);
+    return Capability.contribute(CommentCapabilities.AgentRunner, runner);
   }),
 );

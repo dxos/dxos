@@ -10,6 +10,6 @@ import { SlackOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, SlackOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, SlackOperationHandlerSet);
   }),
 );

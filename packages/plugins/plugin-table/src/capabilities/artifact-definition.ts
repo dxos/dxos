@@ -236,6 +236,6 @@ export default Capability.makeModule(() =>
       ],
     });
 
-    return Capability.provide(Capabilities.ArtifactDefinition, definition);
+    return Capability.contribute(Capabilities.ArtifactDefinition, definition);
   }),
 );

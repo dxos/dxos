@@ -55,7 +55,7 @@ const meta: Meta<typeof StackArticle> = {
     withMosaic(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      capabilities: [Capability.provide(AppCapabilities.Translations, translations)],
+      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

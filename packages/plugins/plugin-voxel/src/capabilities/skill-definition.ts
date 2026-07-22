@@ -9,6 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { VoxelSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.provide(AppCapabilities.SkillDefinition, VoxelSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, VoxelSkill)]);
 
 export default skillDefinition;

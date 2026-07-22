@@ -39,7 +39,7 @@ describe('Plugin module authoring', () => {
             activate: Effect.fnUntraced(function* () {
               const { string } = yield* String;
               const { number } = yield* Number;
-              return [Capability.provide(Total, { total: string.length + number })];
+              return [Capability.contribute(Total, { total: string.length + number })];
             }),
           }),
         ),
@@ -64,7 +64,7 @@ describe('Plugin module authoring', () => {
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
                 const { number } = yield* Number;
-                return [Capability.provide(Total, { total: string.length + number })];
+                return [Capability.contribute(Total, { total: string.length + number })];
               }),
             }),
           ),
@@ -167,7 +167,7 @@ describe('Plugin module authoring', () => {
         Plugin.addModule({
           id: 'excess',
           provides: [],
-          activate: () => Effect.succeed([Capability.provide(Total, { total: 1 })]),
+          activate: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]),
         }),
       );
     });
@@ -196,7 +196,7 @@ describe('Plugin module authoring', () => {
           Promise.resolve({
             default: Effect.fnUntraced(function* () {
               const { number } = yield* Number;
-              return [Capability.provide(Total, { total: number })];
+              return [Capability.contribute(Total, { total: number })];
             }),
           }),
         );
@@ -218,7 +218,7 @@ describe('Plugin module authoring', () => {
     );
 
     it('provideAll expands into one entry per value', () => {
-      const contribution = Capability.provideAll(Multi, [{ entry: 'a' }, { entry: 'b' }]);
+      const contribution = Capability.contributeAll(Multi, [{ entry: 'a' }, { entry: 'b' }]);
       const entries = Capability.expandContributions([contribution]);
       expect(entries).toHaveLength(2);
       expect(entries.map((entry) => entry.implementation)).toEqual([{ entry: 'a' }, { entry: 'b' }]);
@@ -229,7 +229,7 @@ describe('Plugin module authoring', () => {
   describe('inlineModule', () => {
     it('carries its spec with an eager body', () => {
       const Inline = Capability.inlineModule('total', { provides: [Total] }, () =>
-        Effect.succeed([Capability.provide(Total, { total: 1 })]),
+        Effect.succeed([Capability.contribute(Total, { total: 1 })]),
       );
 
       expect(Capability.getModuleTag(Inline)).toEqual('total');
@@ -242,7 +242,7 @@ describe('Plugin module authoring', () => {
     const totalModule = Capability.moduleMaker('Total', Total);
     const loader = () =>
       Promise.resolve({
-        default: () => Effect.succeed([Capability.provide(Total, { total: 1 })]),
+        default: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]),
       });
 
     it('bakes in the default name and provides', () => {
@@ -258,7 +258,7 @@ describe('Plugin module authoring', () => {
           Promise.resolve({
             default: Effect.fnUntraced(function* () {
               const { number } = yield* Number;
-              return [Capability.provide(Total, { total: number }), Capability.provide(Multi, { entry: 'a' })];
+              return [Capability.contribute(Total, { total: number }), Capability.contribute(Multi, { entry: 'a' })];
             }),
           }),
         { name: 'CustomTotal', requires: [Number], provides: [Multi] },
@@ -272,7 +272,7 @@ describe('Plugin module authoring', () => {
   describe('addModule (spec-carrying module)', () => {
     it('derives the module id and spec from the module', () => {
       const Lazy = Capability.lazyModule('Total', { provides: [Total] }, () =>
-        Promise.resolve({ default: () => Effect.succeed([Capability.provide(Total, { total: 1 })]) }),
+        Promise.resolve({ default: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]) }),
       );
       const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
       const [module] = Test().modules;
@@ -293,7 +293,7 @@ describe('Plugin module authoring', () => {
           () =>
             Promise.resolve({
               default: (props: { start: number }) =>
-                Effect.succeed([Capability.provide(Total, { total: props.start })]),
+                Effect.succeed([Capability.contribute(Total, { total: props.start })]),
             }),
         );
         const Test = Plugin.make(Plugin.define<{ offset: number }>(testMeta).pipe(Plugin.addModule(Lazy)));

@@ -51,7 +51,7 @@ export const Toolbar = () => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(
+    Capability.contribute(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.toolbar',

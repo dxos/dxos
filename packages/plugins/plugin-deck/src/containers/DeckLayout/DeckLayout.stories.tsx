@@ -54,7 +54,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
-    return Capability.provide(DeckCapabilities.Settings, settingsAtom);
+    return Capability.contribute(DeckCapabilities.Settings, settingsAtom);
   }),
 );
 
@@ -109,9 +109,9 @@ const storyDeckState = Capability.makeModule(() =>
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.provide(DeckCapabilities.State, stateAtom),
-      Capability.provide(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.provide(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.State, stateAtom),
+      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );
@@ -150,7 +150,7 @@ const toStoryItemNode = (item: Item, index: number, depth: number): Node.NodeArg
 
 const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
   Effect.succeed([
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'storyNavigation',
         filter: Surface.makeFilter(AppSurface.Navigation),
@@ -242,7 +242,7 @@ const storyGraphBuilder = Capability.inlineModule(
           ]),
       }),
     ]);
-    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions.flat())];
+    return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat())];
   }),
 );
 

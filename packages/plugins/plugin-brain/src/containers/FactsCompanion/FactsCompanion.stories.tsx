@@ -48,7 +48,7 @@ const meta = {
     withTheme(),
     withPluginManager({
       // Contribute the seeded registry directly so the companion resolves it without the full FactStore module.
-      capabilities: [Capability.provide(BrainCapabilities.FactStoreRegistry, registry)],
+      capabilities: [Capability.contribute(BrainCapabilities.FactStoreRegistry, registry)],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

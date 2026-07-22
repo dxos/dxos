@@ -76,7 +76,7 @@ export default Capability.makeModule(
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?
       //  Perhaps move to using layer has source of truth and add a getter capability for the client.
-      Capability.provide(ClientCapabilities.Client, client, () =>
+      Capability.contribute(ClientCapabilities.Client, client, () =>
         Effect.gen(function* () {
           log.info('client capability: destroying client');
           // TODO(dmaretskyi): use scope for destroy.
@@ -84,11 +84,11 @@ export default Capability.makeModule(
           yield* Effect.tryPromise(() => client.destroy());
         }),
       ),
-      Capability.provide(Capabilities.Layer, ClientService.fromClient(client)),
+      Capability.contribute(Capabilities.Layer, ClientService.fromClient(client)),
       // HALO service instances for imperative consumers (so plugins read identity/spaces
       // through @dxos/halo instead of the client directly).
-      Capability.provide(ClientCapabilities.IdentityService, makeIdentityService(client)),
-      Capability.provide(ClientCapabilities.SpaceService, makeSpaceService(client)),
+      Capability.contribute(ClientCapabilities.IdentityService, makeIdentityService(client)),
+      Capability.contribute(ClientCapabilities.SpaceService, makeSpaceService(client)),
     ];
   }),
 );

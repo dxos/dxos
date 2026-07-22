@@ -18,7 +18,7 @@ const OperationHandler = Capability.inlineModule(
   { provides: [Capabilities.OperationHandler] },
   () =>
     Effect.succeed([
-      Capability.provide(
+      Capability.contribute(
         Capabilities.OperationHandler,
         OperationHandlerSet.make(
           Operation.withHandler(LogOperation, ({ message }) =>

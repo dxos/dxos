@@ -17,7 +17,7 @@ import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectC
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       //
       // Specific schema types.
       // TODO(burdon): Create helpers and factor out.

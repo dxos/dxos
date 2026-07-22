@@ -17,7 +17,7 @@ import { SpaceCapabilities } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Collection.Collection),
         inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
         createObject: (props, options) =>
@@ -30,7 +30,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Type.Type),
         inputSchema: SpaceOperation.StoredSchemaForm,
         createObject: (props, options) =>
@@ -47,7 +47,7 @@ export default Capability.makeModule(
             };
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Organization.Organization),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -59,7 +59,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Person.Person),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -71,7 +71,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Project.Project),
         inputSchema: Type.getSchema(Project.Project),
         createObject: (props, options) =>
@@ -84,7 +84,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Task.Task),
         inputSchema: Type.getSchema(Task.Task),
         createObject: (props, options) =>

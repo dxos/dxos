@@ -73,6 +73,6 @@ export default Capability.makeModule(
         }),
     });
 
-    return Capability.provide(AppCapabilities.AppGraphBuilder, [extensions, companion]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extensions, companion]);
   }),
 );

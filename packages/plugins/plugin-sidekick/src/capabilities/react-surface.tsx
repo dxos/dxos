@@ -15,7 +15,7 @@ const SidekickArticle = lazy(() => import('#containers'));
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(
+    Capability.contribute(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'sidekickDashboard',

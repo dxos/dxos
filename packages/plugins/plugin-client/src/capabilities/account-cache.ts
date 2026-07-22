@@ -11,7 +11,7 @@ import { AccountCache, ClientCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(
+    Capability.contribute(
       ClientCapabilities.AccountCache,
       createKvsStore<AccountCache>({
         key: 'composer.account',

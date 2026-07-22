@@ -51,9 +51,9 @@ export default Capability.makeModule(
     const editorViews = createEditorViewRegistry();
 
     return [
-      Capability.provide(MarkdownCapabilities.State, stateAtom),
-      Capability.provide(MarkdownCapabilities.EditorState, editorState),
-      Capability.provide(MarkdownCapabilities.EditorViews, editorViews),
+      Capability.contribute(MarkdownCapabilities.State, stateAtom),
+      Capability.contribute(MarkdownCapabilities.EditorState, editorState),
+      Capability.contribute(MarkdownCapabilities.EditorViews, editorViews),
     ];
   }),
 );

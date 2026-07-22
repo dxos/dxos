@@ -37,6 +37,6 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.provide(SheetCapabilities.ComputeGraphRegistry, computeGraphRegistry);
+    return Capability.contribute(SheetCapabilities.ComputeGraphRegistry, computeGraphRegistry);
   }),
 );

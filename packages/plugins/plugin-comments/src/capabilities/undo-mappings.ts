@@ -11,7 +11,7 @@ import { CommentOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.UndoMapping, [
+    return Capability.contribute(Capabilities.UndoMapping, [
       UndoMapping.make({
         operation: CommentOperation.Delete,
         inverse: CommentOperation.Restore,

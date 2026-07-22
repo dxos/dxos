@@ -57,7 +57,7 @@ describe('Capability tags', () => {
   describe('provide', () => {
     it('creates branded contributions', () => {
       const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
-      const contribution = Capability.provide(single, { example: 'value' });
+      const contribution = Capability.contribute(single, { example: 'value' });
       expect(Capability.isContribution(contribution)).toBe(true);
       // A raw capability entry (what `expandContributions` yields for the manager) is not a Contribution.
       expect(Capability.isContribution({ interface: single, implementation: { example: 'value' } })).toBe(false);
@@ -67,7 +67,7 @@ describe('Capability tags', () => {
 
     it('normalizeActivateResult wraps a single contribution and flattens an array', () => {
       const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
-      const contribution = Capability.provide(single, { example: 'value' });
+      const contribution = Capability.contribute(single, { example: 'value' });
 
       // A single (non-array) return is wrapped; an array passes through flattened.
       expect(Capability.normalizeActivateResult(contribution)).toEqual([contribution]);
@@ -77,7 +77,7 @@ describe('Capability tags', () => {
 
     it('provideAll carries multiple values for a multi capability', () => {
       const multi = Capability.make<Example>()('org.dxos.test.multi');
-      const contribution = Capability.provideAll(multi, [{ example: 'one' }, { example: 'two' }]);
+      const contribution = Capability.contributeAll(multi, [{ example: 'one' }, { example: 'two' }]);
       expect(contribution.values).toHaveLength(2);
     });
 
@@ -86,7 +86,7 @@ describe('Capability tags', () => {
       const multi = Capability.make<Example>()('org.dxos.test.multi');
 
       // @ts-expect-error provideAll only accepts multi capabilities.
-      Capability.provideAll(single, [{ example: 'value' }]);
+      Capability.contributeAll(single, [{ example: 'value' }]);
       // Singleton and multi tags are not interchangeable in typed positions (runtime still
       // executes the push; only the type is rejected).
       const singletonOnly: Capability.Tag<Example>[] = [single];

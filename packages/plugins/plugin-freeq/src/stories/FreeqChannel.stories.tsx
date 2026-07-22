@@ -50,7 +50,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.provide(AppCapabilities.Schema, types)],
+      capabilities: [Capability.contribute(AppCapabilities.Schema, types)],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

@@ -18,7 +18,7 @@ const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end'];
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
         filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === Node.RootId),

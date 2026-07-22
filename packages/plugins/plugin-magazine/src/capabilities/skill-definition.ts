@@ -9,6 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { MagazineSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.provide(AppCapabilities.SkillDefinition, MagazineSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, MagazineSkill)]);
 
 export default skillDefinition;

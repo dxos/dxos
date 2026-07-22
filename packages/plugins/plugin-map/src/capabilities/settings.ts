@@ -27,12 +27,12 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.provide(AppCapabilities.Settings, {
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings,
         atom: settingsAtom,
       }),
-      Capability.provide(MapCapabilities.Settings, settingsAtom),
+      Capability.contribute(MapCapabilities.Settings, settingsAtom),
     ];
   }),
 );

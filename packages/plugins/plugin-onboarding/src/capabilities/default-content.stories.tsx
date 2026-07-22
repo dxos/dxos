@@ -44,7 +44,7 @@ const PromptExtensionPlugin = Plugin.define(
     provides: [MarkdownCapabilities.ExtensionProvider],
     activate: () =>
       Effect.succeed([
-        Capability.provide(MarkdownCapabilities.ExtensionProvider, [
+        Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
           () => promptRunExtension({ onRun: (promptText) => console.log('[run prompt]', promptText) }),
         ]),
       ]),

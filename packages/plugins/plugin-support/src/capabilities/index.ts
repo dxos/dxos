@@ -37,7 +37,7 @@ export const OnSpaceCreated = Capability.inlineModule(
   { provides: [SpaceCapabilities.OnCreateSpace], activatesOn: SpaceEvents.SpaceCreated },
   () =>
     Effect.succeed([
-      Capability.provide(SpaceCapabilities.OnCreateSpace, (params) =>
+      Capability.contribute(SpaceCapabilities.OnCreateSpace, (params) =>
         Operation.invoke(SupportOperation.OnCreateSpace, params),
       ),
     ]),

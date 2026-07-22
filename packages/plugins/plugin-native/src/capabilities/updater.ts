@@ -148,7 +148,7 @@ export default Capability.makeModule(
       },
     };
 
-    const managerContribution = Capability.provide(NativeCapabilities.UpdateManager, manager);
+    const managerContribution = Capability.contribute(NativeCapabilities.UpdateManager, manager);
 
     if (!enabled) {
       log.info('updater disabled', { platform, port: window.location.port });

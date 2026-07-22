@@ -9,6 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { IbkrSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.provide(AppCapabilities.SkillDefinition, IbkrSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, IbkrSkill)]);
 
 export default skillDefinition;

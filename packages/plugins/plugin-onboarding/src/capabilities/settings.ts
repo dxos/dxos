@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({}),
     });
 
-    return Capability.provide(AppCapabilities.Settings, {
+    return Capability.contribute(AppCapabilities.Settings, {
       prefix: meta.profile.key,
       schema: Settings,
       atom: settingsAtom,

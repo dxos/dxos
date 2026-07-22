@@ -41,7 +41,9 @@ const StoryObservabilityPlugin = ({ available = true }: { available?: boolean } 
       id: 'observability',
       provides: [ObservabilityCapabilities.Observability],
       activate: () =>
-        Effect.succeed([Capability.provide(ObservabilityCapabilities.Observability, makeObservability({ available }))]),
+        Effect.succeed([
+          Capability.contribute(ObservabilityCapabilities.Observability, makeObservability({ available })),
+        ]),
     }),
     Plugin.make,
   );
@@ -54,7 +56,7 @@ const StoryLogDownloaderPlugin = () =>
       provides: [ObservabilityCapabilities.LogDownloader],
       activate: () =>
         Effect.succeed([
-          Capability.provide(ObservabilityCapabilities.LogDownloader, () => {
+          Capability.contribute(ObservabilityCapabilities.LogDownloader, () => {
             // eslint-disable-next-line no-console
             console.log('[story] download logs clicked');
           }),

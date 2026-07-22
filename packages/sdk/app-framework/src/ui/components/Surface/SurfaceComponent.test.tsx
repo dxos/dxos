@@ -39,7 +39,7 @@ const TestPlugin = Plugin.define(testMeta).pipe(
     provides: [Capabilities.ReactSurface],
     activate: () =>
       Effect.succeed([
-        Capability.provideAll(Capabilities.ReactSurface, [
+        Capability.contributeAll(Capabilities.ReactSurface, [
           create({ id: 'alpha', filter: makeFilter(RoleA), component: () => <span data-testid='a' /> }),
           create({ id: 'beta', filter: makeFilter(RoleB), component: () => <span data-testid='b' /> }),
         ]),
@@ -60,7 +60,7 @@ const InvalidIdPlugin = Plugin.define(invalidIdMeta).pipe(
     provides: [Capabilities.ReactSurface],
     activate: () =>
       Effect.succeed([
-        Capability.provideAll(Capabilities.ReactSurface, [
+        Capability.contributeAll(Capabilities.ReactSurface, [
           create({ id: 'gallery-article', filter: makeFilter(RoleA), component: () => <span data-testid='invalid' /> }),
         ]),
       ]),
@@ -222,7 +222,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
       provides: [Capabilities.ReactSurface],
       activate: () =>
         Effect.succeed([
-          Capability.provideAll(
+          Capability.contributeAll(
             Capabilities.ReactSurface,
             roles.flatMap((role, ri) =>
               Array.from({ length: SURFACES_PER_ROLE }, (_, si) =>

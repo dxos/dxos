@@ -153,7 +153,7 @@ const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => 
   // so the surfaced location is deterministic (first source file walked).
   // Capabilities and operations are intentionally NOT deduped: their `type`
   // field is the slot name (e.g. `Capabilities.OperationHandler`), and
-  // multiple `Capability.provide` calls to the same slot represent
+  // multiple `Capability.contribute` calls to the same slot represent
   // genuinely distinct contributions.
   const dedupedSchemas = dedupeBy(schemas, (s) => `${s.pluginId}|${s.name}`);
 
@@ -316,9 +316,9 @@ type Buckets = {
 };
 
 const SURFACE_CALL = 'Surface.create';
-// Authored contributions are `Capability.provide(tag, …)` / `Capability.provideAll(tag, …)`;
+// Authored contributions are `Capability.contribute(tag, …)` / `Capability.contributeAll(tag, …)`;
 // the capability slot is the first argument in both.
-const CAPABILITY_PROVIDE_CALLS = ['Capability.provide', 'Capability.provideAll'];
+const CAPABILITY_PROVIDE_CALLS = ['Capability.contribute', 'Capability.contributeAll'];
 const SCHEMA_MODULE_CALL = 'AppCapability.schema';
 
 const extractFromFile = (file: SourceFile, rootPath: string, pluginId: PluginId, buckets: Buckets): void => {

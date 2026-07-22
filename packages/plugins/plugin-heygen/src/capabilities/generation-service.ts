@@ -14,5 +14,5 @@ export default Capability.makeModule(() => {
   // Explicit type keeps the emitted declaration portable (TS2883). The provider customizes the
   // avatar/voice fields (populated pickers) via fieldMap; studio renders the rest from the schema.
   const service: GenerationService.GenerationService = { ...makeHeyGenGenerationService(), fieldMap: heyGenFieldMap };
-  return Effect.succeed(Capability.provide(StudioCapabilities.GenerationService, service));
+  return Effect.succeed(Capability.contribute(StudioCapabilities.GenerationService, service));
 });

@@ -44,7 +44,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
   ),
   Plugin.addModule(
     Capability.inlineModule('trip-extractor', { provides: [InboxCapabilities.ObjectExtractor] }, () =>
-      Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
+      Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
     ),
   ),
   Plugin.addModule(MarkerProvider),

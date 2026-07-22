@@ -9,6 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { ChessSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.provide(AppCapabilities.SkillDefinition, ChessSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, ChessSkill)]);
 
 export default skillDefinition;

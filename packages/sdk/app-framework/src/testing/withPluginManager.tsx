@@ -38,7 +38,7 @@ export const setupPluginManager = ({
   });
 
   if (capabilities) {
-    // Fixtures hand us `Contribution`s (from `Capability.provide`); expand them to the raw
+    // Fixtures hand us `Contribution`s (from `Capability.contribute`); expand them to the raw
     // interface/implementation entries the manager ingests — the same path module activation uses.
     Capability.expandContributions(getProviderValue(capabilities, pluginManager.capabilities)).forEach((capability) => {
       pluginManager.capabilities.contribute({
@@ -85,7 +85,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
     useEffect(() => {
       const pluginManager = setupPluginManager(options);
       const [capability] = Capability.expandContributions([
-        Capability.provide(Capabilities.ReactRoot, {
+        Capability.contribute(Capabilities.ReactRoot, {
           id: storyId,
           root: () => <Story />,
         }),

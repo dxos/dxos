@@ -20,7 +20,7 @@ import { Blog } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Blog.Publication),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -32,7 +32,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Blog.Post),
         createObject: (props, options) =>
           Effect.gen(function* () {

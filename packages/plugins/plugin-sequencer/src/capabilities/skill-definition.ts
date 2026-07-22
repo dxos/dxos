@@ -9,6 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { SequencerSkill } from '../skills';
 
-const skillDefinition = () => Effect.succeed([Capability.provide(AppCapabilities.SkillDefinition, SequencerSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, SequencerSkill)]);
 
 export default skillDefinition;

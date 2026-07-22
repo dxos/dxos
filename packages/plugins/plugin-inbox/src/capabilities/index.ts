@@ -27,12 +27,12 @@ export const Connector = Capability.lazyModule(
 export const ContactExtractor = Capability.inlineModule(
   'contact-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
+  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
 );
 export const SummarizeExtractor = Capability.inlineModule(
   'summarize-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
 );
 export const NavigationResolver = AppCapability.navigationResolver(() => import('./navigation-resolver'), {
   requires: [ClientCapabilities.Client],

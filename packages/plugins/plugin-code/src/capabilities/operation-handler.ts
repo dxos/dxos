@@ -10,6 +10,6 @@ import { CodeOperationHandlerSet } from '../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, CodeOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, CodeOperationHandlerSet);
   }),
 );

@@ -122,8 +122,8 @@ export default Capability.makeModule(
     yield* Effect.forEach(currentWorkspaces, directoryWatcher.startWatching, { discard: true });
 
     return [
-      Capability.provide(NativeFilesystemCapabilities.State, stateAtom),
-      Capability.provide(NativeFilesystemCapabilities.FilesystemManager, filesystemManager, () =>
+      Capability.contribute(NativeFilesystemCapabilities.State, stateAtom),
+      Capability.contribute(NativeFilesystemCapabilities.FilesystemManager, filesystemManager, () =>
         directoryWatcher.stopAll(),
       ),
     ];

@@ -11,7 +11,7 @@ import { SheetOperation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.UndoMapping, [
+    Capability.contribute(Capabilities.UndoMapping, [
       UndoMapping.make({
         operation: SheetOperation.DropAxis,
         inverse: SheetOperation.RestoreAxis,

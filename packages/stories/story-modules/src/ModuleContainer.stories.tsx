@@ -50,7 +50,7 @@ const ExampleSurfacesPlugin = Plugin.define(
     provides: [Capabilities.ReactSurface],
     activate: () =>
       Effect.succeed([
-        Capability.provide(Capabilities.ReactSurface, [
+        Capability.contribute(Capabilities.ReactSurface, [
           Surface.create({
             id: 'panelA',
             filter: Surface.makeFilter(PanelA),

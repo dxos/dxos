@@ -32,7 +32,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl, onReset }: ReactSurfaceOptions) {
     const capabilityManager = yield* Capability.Service;
 
-    return Capability.provide(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: Account.Profile,
         filter: AppSurface.literal(AppSurface.Article, Account.Profile),

@@ -21,7 +21,7 @@ import { Ibkr } from '../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'portfolioArticle',
         // Article view for the navigable Portfolio owner; `AppSurface.object` narrows

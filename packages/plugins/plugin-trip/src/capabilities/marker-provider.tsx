@@ -173,5 +173,5 @@ export const tripMarkerProvider: MapCapabilities.MarkerProvider = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.provide(MapCapabilities.MarkerProvider, tripMarkerProvider)),
+  Effect.succeed(Capability.contribute(MapCapabilities.MarkerProvider, tripMarkerProvider)),
 );

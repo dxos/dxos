@@ -88,7 +88,7 @@ export default Capability.makeModule(
     const settingsAtom = yield* DebugCapabilities.Settings;
     const fileUploader = (yield* Capability.getAll(AppCapabilities.FileUploader))[0];
 
-    return Capability.provide(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),

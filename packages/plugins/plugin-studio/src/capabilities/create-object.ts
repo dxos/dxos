@@ -14,7 +14,7 @@ import { Artifact, Lightbox } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Artifact.Artifact),
         createObject: (_props, options) =>
           Effect.gen(function* () {
@@ -26,7 +26,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Lightbox.Lightbox),
         createObject: (_props, options) =>
           Effect.gen(function* () {

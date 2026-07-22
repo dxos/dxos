@@ -23,7 +23,7 @@ export const OnTypeAdded = Capability.inlineModule(
   { provides: [SpaceCapabilities.OnTypeAdded], activatesOn: SpaceEvents.TypeAdded },
   () =>
     Effect.succeed([
-      Capability.provide(SpaceCapabilities.OnTypeAdded, ({ db, type, show }) =>
+      Capability.contribute(SpaceCapabilities.OnTypeAdded, ({ db, type, show }) =>
         Operation.invoke(TableOperation.OnTypeAdded, { db, type, show }),
       ),
     ]),

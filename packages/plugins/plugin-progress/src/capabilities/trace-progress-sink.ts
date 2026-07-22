@@ -43,7 +43,7 @@ export default Capability.inlineModule(
       }).pipe(Effect.provide(runtime), Effect.runFork);
 
     return [
-      Capability.provide(Capabilities.TraceSink, () =>
+      Capability.contribute(Capabilities.TraceSink, () =>
         createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
           terminateProcess,
         }),

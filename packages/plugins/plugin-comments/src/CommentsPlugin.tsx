@@ -56,7 +56,7 @@ export const CommentsPlugin = Plugin.define<CommentsPluginOptions>(meta).pipe(
       ? {
           id: 'agent-runner-override',
           provides: [CommentCapabilities.AgentRunner],
-          activate: () => Effect.succeed([Capability.provide(CommentCapabilities.AgentRunner, agentRunnerOverride)]),
+          activate: () => Effect.succeed([Capability.contribute(CommentCapabilities.AgentRunner, agentRunnerOverride)]),
         }
       : {
           id: Capability.getModuleTag(AgentRunner),

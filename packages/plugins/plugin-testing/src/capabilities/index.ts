@@ -13,7 +13,7 @@ import { StorybookCapabilities } from '#types';
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactContext = Capability.inlineModule('storybook-layout', { provides: [Capabilities.ReactContext] }, () =>
   Effect.succeed([
-    Capability.provide(Capabilities.ReactContext, {
+    Capability.contribute(Capabilities.ReactContext, {
       id: 'storybook-layout',
       context: Layout,
     }),

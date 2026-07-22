@@ -15,7 +15,7 @@ const activate = Effect.fnUntraced(function* () {
   // transcript/summary text require the comment-sync editor extension, which currently only
   // targets Markdown.Document content.
   return [
-    Capability.provide(AppCapabilities.CommentConfig, {
+    Capability.contribute(AppCapabilities.CommentConfig, {
       id: Type.getTypename(Video.Video),
       comments: 'unanchored',
     }),

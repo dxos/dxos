@@ -20,7 +20,7 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.provide(MarkdownCapabilities.ExtensionProvider, [
+    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, reviewBranch }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);

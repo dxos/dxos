@@ -116,7 +116,7 @@ const StoryGraphPlugin = () =>
                   .filter(isNonNullable);
               }),
           });
-          return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
+          return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)];
         }),
       ),
     ),

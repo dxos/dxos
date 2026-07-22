@@ -42,6 +42,6 @@ export default Capability.makeModule(() =>
         operation: CrxOperation.AddNoteFromSnapshot,
       },
     ];
-    return Capability.provide(CrxCapabilities.PageAction, actions);
+    return Capability.contribute(CrxCapabilities.PageAction, actions);
   }),
 );

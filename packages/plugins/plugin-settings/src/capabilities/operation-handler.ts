@@ -10,6 +10,6 @@ import { SettingsOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, SettingsOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, SettingsOperationHandlerSet);
   }),
 );

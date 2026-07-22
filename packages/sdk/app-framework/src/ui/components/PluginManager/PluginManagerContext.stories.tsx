@@ -144,10 +144,10 @@ const CounterPlugin = Plugin.define(
 
       return Effect.succeed([
         // Contribute the state/logic
-        Capability.provide(Counter, counter),
+        Capability.contribute(Counter, counter),
 
         // Contribute the UI
-        Capability.provide(Capabilities.ReactRoot, {
+        Capability.contribute(Capabilities.ReactRoot, {
           id: 'org.dxos.plugin.counter.root',
           root: CounterComponent,
         }),

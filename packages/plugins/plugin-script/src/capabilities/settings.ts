@@ -22,8 +22,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.provide(ScriptCapabilities.Settings, settingsAtom),
-      Capability.provide(AppCapabilities.Settings, {
+      Capability.contribute(ScriptCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

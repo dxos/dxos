@@ -14,7 +14,7 @@ import { Position } from '@dxos/util';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.createWeb({
         id: 'surface.map',
         filter: AppSurface.oneOf(

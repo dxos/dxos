@@ -120,7 +120,7 @@ export const StoryModulesPlugin = Plugin.define(
   Plugin.addModule({
     id: 'inbox-story-modules',
     provides: [Capabilities.ReactSurface],
-    activate: () => Effect.succeed([Capability.provide(Capabilities.ReactSurface, moduleSurfaces)]),
+    activate: () => Effect.succeed([Capability.contribute(Capabilities.ReactSurface, moduleSurfaces)]),
   }),
   Plugin.make,
 );

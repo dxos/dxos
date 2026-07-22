@@ -18,7 +18,7 @@ import { ClientCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactContext, {
+    Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }: { children?: ReactNode }) => {
         const client = useCapability(ClientCapabilities.Client);

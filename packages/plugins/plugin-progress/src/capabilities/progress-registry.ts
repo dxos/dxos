@@ -16,6 +16,6 @@ export default Capability.inlineModule(
   { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.ProgressRegistry] },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
-    return [Capability.provide(AppCapabilities.ProgressRegistry, createProgressRegistry(registry))];
+    return [Capability.contribute(AppCapabilities.ProgressRegistry, createProgressRegistry(registry))];
   }),
 );

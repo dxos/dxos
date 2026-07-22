@@ -122,14 +122,14 @@ export const translations = (
 ) => {
   const value: Translations.Resource[] = Array.isArray(resources) ? resources : [resources];
   return Capability$.inlineModule(options?.name ?? 'translations', { provides: [AppCapabilities.Translations] }, () =>
-    Effect.succeed([Capability$.provide(AppCapabilities.Translations, value)]),
+    Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
   );
 };
 
 /** Module contributing schemas. */
 export const schema = (types: ReadonlyArray<Type.AnyEntity>, options?: { name?: string }) =>
   Capability$.inlineModule(options?.name ?? 'schema', { provides: [AppCapabilities.Schema] }, () =>
-    Effect.succeed([Capability$.provide(AppCapabilities.Schema, types)]),
+    Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
   );
 
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
@@ -139,12 +139,12 @@ export const pluginAsset = (
 ) => {
   const values: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(asset) ? asset : [asset];
   return Capability$.inlineModule(options?.name ?? 'plugin-asset', { provides: [AppCapabilities.PluginAsset] }, () =>
-    Effect.succeed([Capability$.provideAll(AppCapabilities.PluginAsset, values)]),
+    Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
   );
 };
 
 /** Module contributing CLI commands. */
 export const commands = (values: ReadonlyArray<Command$.Command<any, any, any, any>>, options?: { name?: string }) =>
   Capability$.inlineModule(options?.name ?? 'cli-commands', { provides: [Capabilities.Command] }, () =>
-    Effect.succeed([Capability$.provideAll(Capabilities.Command, values)]),
+    Effect.succeed([Capability$.contributeAll(Capabilities.Command, values)]),
   );

@@ -25,8 +25,8 @@ export const settingsAtom = createKvsStore({
 /** Owns the fact-analysis settings and registers them in the settings UI. */
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.provide(BrainCapabilities.Settings, settingsAtom),
-    Capability.provide(AppCapabilities.Settings, {
+    Capability.contribute(BrainCapabilities.Settings, settingsAtom),
+    Capability.contribute(AppCapabilities.Settings, {
       prefix: meta.profile.key,
       schema: BrainSettings.Settings,
       atom: settingsAtom,

@@ -22,6 +22,6 @@ export default Capability.makeModule(() =>
       }),
     });
 
-    return Capability.provide(HelpCapabilities.State, stateAtom);
+    return Capability.contribute(HelpCapabilities.State, stateAtom);
   }),
 );

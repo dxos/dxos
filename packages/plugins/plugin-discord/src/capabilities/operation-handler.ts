@@ -10,6 +10,6 @@ import { DiscordOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, DiscordOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, DiscordOperationHandlerSet);
   }),
 );

@@ -29,7 +29,7 @@ export default Capability.makeModule(
 
     const store = yield* MeetingCapabilities.State;
 
-    return Capability.provide(CallsCapabilities.EventHandler, {
+    return Capability.contribute(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
         const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());

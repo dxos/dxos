@@ -15,7 +15,7 @@ import { Markdown } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(AppCapabilities.AnchorSort, {
+    Capability.contribute(AppCapabilities.AnchorSort, {
       key: Type.getTypename(Markdown.Document),
       sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
         const doc = Relation.getTarget(anchorA) as Markdown.Document;

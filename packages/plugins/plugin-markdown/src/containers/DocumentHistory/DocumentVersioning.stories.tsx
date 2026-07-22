@@ -61,7 +61,7 @@ const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.addModule({
     id: 'extensions',
     provides: [MarkdownCapabilities.ExtensionProvider],
-    activate: () => Effect.succeed([Capability.provide(MarkdownCapabilities.ExtensionProvider, [])]),
+    activate: () => Effect.succeed([Capability.contribute(MarkdownCapabilities.ExtensionProvider, [])]),
   }),
   Plugin.make,
 );

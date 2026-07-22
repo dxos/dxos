@@ -11,8 +11,8 @@ import { ComposerSkill, SupportSkill } from '#skills';
 
 const skillDefinition = () =>
   Effect.succeed([
-    Capability.provide(AppCapabilities.SkillDefinition, SupportSkill),
-    Capability.provide(AppCapabilities.SkillDefinition, ComposerSkill),
+    Capability.contribute(AppCapabilities.SkillDefinition, SupportSkill),
+    Capability.contribute(AppCapabilities.SkillDefinition, ComposerSkill),
   ]);
 
 export default skillDefinition;

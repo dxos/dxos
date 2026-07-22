@@ -167,7 +167,7 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: DISCORD_PROVIDER_ID,
         source: DISCORD_SOURCE,

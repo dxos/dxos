@@ -55,6 +55,6 @@ export const createHeyGenConnectorEntry = () => ({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Connector, [createHeyGenConnectorEntry()]);
+    return Capability.contribute(Connector, [createHeyGenConnectorEntry()]);
   }),
 );

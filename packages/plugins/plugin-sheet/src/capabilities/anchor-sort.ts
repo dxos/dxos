@@ -12,7 +12,7 @@ import { Sheet, compareIndexPositions } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(AppCapabilities.AnchorSort, {
+    Capability.contribute(AppCapabilities.AnchorSort, {
       key: Type.getTypename(Sheet.Sheet),
       sort: (anchorA, anchorB) => {
         const sheet = Relation.getTarget(anchorA) as Sheet.Sheet;

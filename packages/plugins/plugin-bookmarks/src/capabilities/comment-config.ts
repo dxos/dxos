@@ -14,7 +14,7 @@ const activate = Effect.fnUntraced(function* () {
   // Unanchored: comments attach to the bookmark as a whole. Anchored (range) comments require the
   // comment-sync editor extension, which currently only targets Markdown.Document content.
   return [
-    Capability.provide(AppCapabilities.CommentConfig, {
+    Capability.contribute(AppCapabilities.CommentConfig, {
       id: Type.getTypename(Bookmark.Bookmark),
       comments: 'unanchored',
     }),

@@ -38,7 +38,7 @@ describe('useApp cleanup integration', () => {
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
           provides: [String],
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       )();
@@ -95,7 +95,7 @@ describe('useApp cleanup integration', () => {
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
           provides: [String],
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       )();
@@ -135,7 +135,7 @@ describe('useApp cleanup integration', () => {
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
           provides: [String],
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       )();

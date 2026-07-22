@@ -40,6 +40,8 @@ export default Capability.makeModule(
     // wired up in the constructor.
     void manager.initialize().catch((error) => log.catch(error));
 
-    return Capability.provide(OnboardingCapabilities.Onboarding, manager, () => Effect.sync(() => manager.destroy()));
+    return Capability.contribute(OnboardingCapabilities.Onboarding, manager, () =>
+      Effect.sync(() => manager.destroy()),
+    );
   }),
 );

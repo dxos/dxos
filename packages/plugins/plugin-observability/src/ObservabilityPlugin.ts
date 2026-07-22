@@ -36,7 +36,9 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     provides: downloadLogs !== undefined ? [ObservabilityCapabilities.LogDownloader] : [],
     activate: () =>
       Effect.succeed(
-        downloadLogs !== undefined ? [Capability.provide(ObservabilityCapabilities.LogDownloader, downloadLogs)] : [],
+        downloadLogs !== undefined
+          ? [Capability.contribute(ObservabilityCapabilities.LogDownloader, downloadLogs)]
+          : [],
       ),
   })),
   Plugin.addModule(OperationHandler),

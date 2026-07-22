@@ -49,7 +49,7 @@ export default Capability.makeModule(
         Effect.orDie,
       );
 
-    return Capability.provide(AppCapabilities.NavigationHandler, handler);
+    return Capability.contribute(AppCapabilities.NavigationHandler, handler);
   }),
 );
 

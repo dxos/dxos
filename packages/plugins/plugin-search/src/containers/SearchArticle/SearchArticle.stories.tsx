@@ -45,7 +45,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.provide(AppCapabilities.Translations, translations)],
+      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

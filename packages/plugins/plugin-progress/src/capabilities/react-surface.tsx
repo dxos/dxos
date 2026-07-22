@@ -13,7 +13,7 @@ import { ProgressStatusIndicator } from '#components';
 
 export default Capability.inlineModule('ReactSurface', { provides: [Capabilities.ReactSurface] }, () =>
   Effect.succeed([
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'progressStatusIndicator',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),

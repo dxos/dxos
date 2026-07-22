@@ -55,7 +55,7 @@ export default Capability.makeModule(
       }
     };
 
-    return Capability.provide(AppCapabilities.StatsPanel, {
+    return Capability.contribute(AppCapabilities.StatsPanel, {
       statsAtom,
       get: (pluginKey) => registry.get(statsAtom)[pluginKey],
       compartment: (pluginKey) => ({

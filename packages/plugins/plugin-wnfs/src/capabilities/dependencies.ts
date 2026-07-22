@@ -21,8 +21,8 @@ export default Capability.makeModule(
     const instances: WnfsCapabilities.Instances = {};
 
     return [
-      Capability.provide(WnfsCapabilities.Blockstore, blockstore),
-      Capability.provide(WnfsCapabilities.Instances, instances),
+      Capability.contribute(WnfsCapabilities.Blockstore, blockstore),
+      Capability.contribute(WnfsCapabilities.Instances, instances),
     ];
   }),
 );

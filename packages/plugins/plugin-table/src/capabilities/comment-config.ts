@@ -11,7 +11,7 @@ import { Table } from '@dxos/react-ui-table/types';
 
 const activate = Effect.fnUntraced(function* () {
   return [
-    Capability.provide(AppCapabilities.CommentConfig, {
+    Capability.contribute(AppCapabilities.CommentConfig, {
       id: Type.getTypename(Table.Table),
       comments: 'unanchored',
     }),

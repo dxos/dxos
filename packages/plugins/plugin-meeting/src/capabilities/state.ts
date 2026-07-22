@@ -18,7 +18,7 @@ export default Capability.makeModule(
       registry.set(stateAtom, updater(registry.get(stateAtom)));
     };
 
-    return Capability.provide(MeetingCapabilities.State, {
+    return Capability.contribute(MeetingCapabilities.State, {
       stateAtom,
       get state() {
         return registry.get(stateAtom);

@@ -16,7 +16,7 @@ import { BrainSurface } from '#types';
 /** React surfaces contributed by plugin-brain — the per-space facts panel and the Topic detail article. */
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'brain.facts',
         filter: Surface.makeFilter(BrainSurface.Facts),

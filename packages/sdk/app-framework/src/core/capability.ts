@@ -318,7 +318,7 @@ export type ContributionTypeId = typeof ContributionTypeId;
  * A single typed contribution returned from a module's activate, branded by the capability's
  * identifier (NSID + arity) rather than its full tag — so a module body's inferred return type
  * names only local string literals, never the (possibly non-portable) service type `T`, keeping
- * declaration emit portable. The value-type safety is enforced at the {@link provide} call, where
+ * declaration emit portable. The value-type safety is enforced at the {@link contribute} call, where
  * `T` is naturally in scope; downstream only the capability identity matters (completeness check).
  * Carries one value for a singleton capability, n values for a multi capability.
  */
@@ -390,11 +390,11 @@ export const expandContributions = (items: ReadonlyArray<Any | AnyContribution>)
   );
 
 /**
- * Provides an implementation for a declared capability.
+ * Contributes an implementation for a declared capability.
  * Arity-aware: passing a multi capability where a singleton is expected (or vice versa)
  * is rejected by the value parameter type.
  */
-export const provide: {
+export const contribute: {
   <C extends Tag<any, any>>(
     capability: C,
     implementation: C extends Tag<infer T, any> ? T : never,
@@ -419,14 +419,14 @@ export const provide: {
 });
 
 /**
- * Provides multiple entries for a multi capability from a single module.
+ * Contributes multiple entries for a multi capability from a single module.
  */
-export const provideAll = <C extends MultiTag<any, any>>(
+export const contributeAll = <C extends MultiTag<any, any>>(
   capability: C,
   implementations: C extends MultiTag<infer T, any> ? readonly T[] : never,
   deactivate?: () => Effect.Effect<void, Error>,
 ): Contribution<IdentifierOf<C>> => ({
-  // Controlled brand cast: see {@link provide}.
+  // Controlled brand cast: see {@link contribute}.
   [ContributionTypeId]: capability as unknown as IdentifierOf<C>,
   capability,
   values: implementations,
@@ -665,7 +665,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * This helper provides explicit typing for the module activation function,
  * making it clear that the function should:
  * - Access declared `requires` via `yield*` (or the ambient `Capability.Service`/`Plugin.Service`)
- * - Return an array of typed {@link Contribution}s (see {@link provide}/{@link provideAll})
+ * - Return an array of typed {@link Contribution}s (see {@link contribute}/{@link contributeAll})
  *
  * @example
  * ```ts
@@ -673,7 +673,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* () {
  *     const client = yield* ClientCapabilities.Client;
- *     return Capability.provide(Capabilities.SettingsStore, store);
+ *     return Capability.contribute(Capabilities.SettingsStore, store);
  *   })
  * );
  *
@@ -681,8 +681,8 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* () {
  *     return [
- *       Capability.provide(Capabilities.SettingsStore, store),
- *       Capability.provide(Capabilities.Translations, translations),
+ *       Capability.contribute(Capabilities.SettingsStore, store),
+ *       Capability.contribute(Capabilities.Translations, translations),
  *     ];
  *   })
  * );
@@ -691,7 +691,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* (props: { observability: boolean }) {
  *     const invoker = yield* Capabilities.OperationInvoker;
- *     return Capability.provide(Capabilities.OperationHandler, ...);
+ *     return Capability.contribute(Capabilities.OperationHandler, ...);
  *   })
  * );
  *
@@ -700,7 +700,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *   Effect.fnUntraced(function* () {
  *     const scope = yield* Scope.Scope;
  *     yield* Scope.addFinalizer(scope, Effect.sync(() => cleanup()));
- *     return Capability.provide(Capabilities.MyCapability, implementation);
+ *     return Capability.contribute(Capabilities.MyCapability, implementation);
  *   })
  * );
  * ```

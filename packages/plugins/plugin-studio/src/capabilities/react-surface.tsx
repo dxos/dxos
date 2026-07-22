@@ -39,7 +39,7 @@ const isArtifactCollection = (collection?: Collection.Collection): boolean => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'artifactArticle',
         filter: AppSurface.object(AppSurface.Article, Artifact.Artifact),

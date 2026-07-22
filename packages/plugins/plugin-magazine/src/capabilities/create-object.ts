@@ -87,7 +87,7 @@ const CreateSubscriptionSchema = Schema.Union(StandardSiteCreate, RssCreate);
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Subscription.Subscription),
         inputSchema: CreateSubscriptionSchema,
         createObject: (props, options) =>
@@ -109,7 +109,7 @@ export default Capability.makeModule(
             return result;
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Magazine.Magazine),
         inputSchema: Magazine.CreateMagazineSchema,
         createObject: (props, options) =>

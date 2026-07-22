@@ -123,10 +123,10 @@ const SpaceLayerSpec = LayerSpec.make(
 
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.provide(Capabilities.LayerSpec, ClientLayerSpec),
-    Capability.provide(Capabilities.LayerSpec, DatabaseLayerSpec),
-    Capability.provide(Capabilities.LayerSpec, CredentialsLayerSpec),
-    Capability.provide(Capabilities.LayerSpec, IdentityLayerSpec),
-    Capability.provide(Capabilities.LayerSpec, SpaceLayerSpec),
+    Capability.contribute(Capabilities.LayerSpec, ClientLayerSpec),
+    Capability.contribute(Capabilities.LayerSpec, DatabaseLayerSpec),
+    Capability.contribute(Capabilities.LayerSpec, CredentialsLayerSpec),
+    Capability.contribute(Capabilities.LayerSpec, IdentityLayerSpec),
+    Capability.contribute(Capabilities.LayerSpec, SpaceLayerSpec),
   ]),
 );

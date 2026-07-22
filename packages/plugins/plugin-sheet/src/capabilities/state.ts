@@ -24,6 +24,6 @@ const createGridRegistry = (): SheetCapabilities.GridRegistry => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const gridInstances = createGridRegistry();
-    return Capability.provide(SheetCapabilities.GridInstances, gridInstances);
+    return Capability.contribute(SheetCapabilities.GridInstances, gridInstances);
   }),
 );

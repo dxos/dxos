@@ -91,7 +91,7 @@ export default Capability.makeModule(
       createWnfsBlobBackend({ client, blockstore, instances }),
     );
 
-    return Capability.provide(
+    return Capability.contribute(
       FileCapabilities.Backend,
       {
         name: 'WNFS',

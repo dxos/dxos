@@ -86,9 +86,9 @@ export default Capability.makeModule(
     };
 
     return [
-      Capability.provide(AppCapabilities.NavigationTargetResolver, resolver),
-      Capability.provide(AppCapabilities.NavigationPathResolver, pathResolver),
-      Capability.provide(AppCapabilities.NavigationPathResolver, bareEntityPathResolver),
+      Capability.contribute(AppCapabilities.NavigationTargetResolver, resolver),
+      Capability.contribute(AppCapabilities.NavigationPathResolver, pathResolver),
+      Capability.contribute(AppCapabilities.NavigationPathResolver, bareEntityPathResolver),
     ];
   }),
 );

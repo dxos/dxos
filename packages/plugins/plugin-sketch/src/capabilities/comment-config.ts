@@ -12,7 +12,7 @@ import { Sketch } from '#types';
 
 const activate = Effect.fnUntraced(function* () {
   return [
-    Capability.provide(AppCapabilities.CommentConfig, {
+    Capability.contribute(AppCapabilities.CommentConfig, {
       id: Type.getTypename(Sketch.Sketch),
       comments: 'unanchored',
     }),

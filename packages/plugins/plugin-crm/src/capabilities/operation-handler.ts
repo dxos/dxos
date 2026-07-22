@@ -9,5 +9,5 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { CrmOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.provide(Capabilities.OperationHandler, CrmOperationHandlerSet)),
+  Effect.succeed(Capability.contribute(Capabilities.OperationHandler, CrmOperationHandlerSet)),
 );

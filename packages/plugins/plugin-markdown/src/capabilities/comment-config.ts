@@ -28,7 +28,7 @@ const activate = Effect.fnUntraced(function* () {
     },
     scrollToAnchor: MarkdownOperation.ScrollToAnchor,
   };
-  return [Capability.provide(AppCapabilities.CommentConfig, config)];
+  return [Capability.contribute(AppCapabilities.CommentConfig, config)];
 });
 
 export default activate;

@@ -10,6 +10,6 @@ import { BloggerOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, BloggerOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, BloggerOperationHandlerSet);
   }),
 );

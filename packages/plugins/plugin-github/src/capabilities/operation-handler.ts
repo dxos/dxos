@@ -10,6 +10,6 @@ import { GitHubOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, GitHubOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, GitHubOperationHandlerSet);
   }),
 );

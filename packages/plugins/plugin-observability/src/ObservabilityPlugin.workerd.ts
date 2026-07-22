@@ -14,7 +14,7 @@ export const ObservabilityPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(
     Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
-        Capability.provide(
+        Capability.contribute(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
         ),

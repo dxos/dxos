@@ -14,7 +14,7 @@ import { Sketch } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Sketch.Sketch),
       createObject: (props, options) =>
         Effect.gen(function* () {

@@ -10,6 +10,6 @@ import { TrelloOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, TrelloOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, TrelloOperationHandlerSet);
   }),
 );

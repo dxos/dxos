@@ -27,7 +27,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
  */
 const localModelResolver = Capability.makeModule(() =>
   Effect.succeed([
-    Capability.provide(
+    Capability.contribute(
       AppCapabilities.AiModelResolver,
       LMStudioResolver.make().pipe(
         Layer.provide(
@@ -38,7 +38,7 @@ const localModelResolver = Capability.makeModule(() =>
         Layer.provide(FetchHttpClient.layer),
       ),
     ),
-    Capability.provide(
+    Capability.contribute(
       AppCapabilities.AiModelResolver,
       OllamaResolver.make({
         transformClient: HttpClient.withTracerPropagation(false),

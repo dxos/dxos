@@ -60,9 +60,9 @@ export default Capability.makeModule(
     );
 
     return [
-      Capability.provide(SpaceCapabilities.State, stateAtom),
-      Capability.provide(SpaceCapabilities.VersioningState, versioningAtom),
-      Capability.provide(SpaceCapabilities.EphemeralState, ephemeralAtom, () =>
+      Capability.contribute(SpaceCapabilities.State, stateAtom),
+      Capability.contribute(SpaceCapabilities.VersioningState, versioningAtom),
+      Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralAtom, () =>
         Effect.sync(() => {
           unsubscribe();
         }),

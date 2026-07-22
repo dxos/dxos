@@ -12,5 +12,5 @@ import { TypefullyApi } from '#services';
 export default Capability.makeModule(() => {
   // Explicit type keeps the emitted declaration portable (TS2883).
   const service: Publisher.PublisherService = TypefullyApi.makeTypefullyPublisherService();
-  return Effect.succeed(Capability.provide(BloggerCapabilities.PublisherService, service));
+  return Effect.succeed(Capability.contribute(BloggerCapabilities.PublisherService, service));
 });

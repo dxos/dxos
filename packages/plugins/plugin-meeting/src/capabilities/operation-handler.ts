@@ -8,6 +8,6 @@ import { MeetingOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, MeetingOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, MeetingOperationHandlerSet);
   }),
 );

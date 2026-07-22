@@ -19,7 +19,7 @@ import { getChatsPath } from '../paths';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Chat.Chat),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -34,7 +34,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Skill.Skill),
         inputSchema: AssistantOperation.SkillForm,
         createObject: (props, options) =>
@@ -47,7 +47,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Sequence.Sequence),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -59,7 +59,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Agent.Agent),
         createObject: (props, options) =>
           Effect.gen(function* () {

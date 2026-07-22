@@ -49,7 +49,7 @@ const StubBookingPlugin = Plugin.define(
   Plugin.addModule({
     id: 'stub-booking-service',
     provides: [TripCapabilities.BookingService],
-    activate: () => Effect.succeed([Capability.provide(TripCapabilities.BookingService, STUB_SERVICE)]),
+    activate: () => Effect.succeed([Capability.contribute(TripCapabilities.BookingService, STUB_SERVICE)]),
   }),
   Plugin.make,
 );

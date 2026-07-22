@@ -140,7 +140,7 @@ export default Capability.makeModule(
       }
     }).pipe(Effect.forkDaemon);
 
-    return Capability.provide(
+    return Capability.contribute(
       NavTreeCapabilities.State,
       {
         getItem,

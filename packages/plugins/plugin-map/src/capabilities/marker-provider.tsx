@@ -71,5 +71,5 @@ export const viewMarkerProvider: MapCapabilities.MarkerProvider = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.provide(MapCapabilities.MarkerProvider, viewMarkerProvider)),
+  Effect.succeed(Capability.contribute(MapCapabilities.MarkerProvider, viewMarkerProvider)),
 );

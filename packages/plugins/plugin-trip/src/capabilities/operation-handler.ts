@@ -10,6 +10,6 @@ import { TripOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, TripOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, TripOperationHandlerSet);
   }),
 );

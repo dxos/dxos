@@ -15,7 +15,7 @@ import { ChannelArticle, ThreadArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'channel',
         filter: AppSurface.object(AppSurface.Article, Channel.Channel),

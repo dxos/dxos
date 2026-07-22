@@ -47,7 +47,7 @@ const MockDeckOperationsPlugin = Plugin.define(
   Plugin.addModule(
     Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
-        Capability.provide(
+        Capability.contribute(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(
             Operation.withHandler(LayoutOperation.Select, () => Effect.void),
@@ -93,7 +93,8 @@ const ImportantExtractorPlugin = Plugin.define(
   Plugin.addModule({
     id: 'extractor',
     provides: [InboxCapabilities.ObjectExtractor],
-    activate: () => Effect.succeed([Capability.provide(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)]),
+    activate: () =>
+      Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)]),
   }),
   Plugin.make,
 );
@@ -145,7 +146,7 @@ const MockAiServicePlugin = Plugin.define(
     provides: [Capabilities.LayerSpec],
     activate: () =>
       Effect.succeed([
-        Capability.provide(
+        Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             // Mock model: `generateText` returns a static summary (for SummarizeMessageExtractor),

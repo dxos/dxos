@@ -26,7 +26,7 @@ const TestPlugin = Plugin.define<{ error?: boolean }>(
     provides: [Capabilities.ReactRoot],
     activate: () =>
       Effect.succeed([
-        Capability.provide(Capabilities.ReactRoot, {
+        Capability.contribute(Capabilities.ReactRoot, {
           id: 'org.dxos.plugin.test.root',
           root: () => {
             useEffect(() => {

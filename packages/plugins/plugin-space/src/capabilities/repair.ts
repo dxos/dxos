@@ -14,7 +14,7 @@ import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
+    Capability.contribute(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
       await removeQueryCollections(space);
     }),
   ),

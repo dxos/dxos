@@ -27,8 +27,8 @@ export default Capability.makeModule(
     const historyTracker = HistoryTracker.make(invoker as OperationInvoker.OperationInvokerInternal, undoRegistry);
 
     return [
-      Capability.provide(Capabilities.UndoRegistry, undoRegistry),
-      Capability.provide(Capabilities.HistoryTracker, historyTracker),
+      Capability.contribute(Capabilities.UndoRegistry, undoRegistry),
+      Capability.contribute(Capabilities.HistoryTracker, historyTracker),
     ];
   }),
 );

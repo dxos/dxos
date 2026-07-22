@@ -30,6 +30,6 @@ export default Capability.makeModule(
           targetNodeId: Paths.getSpacePath(space.db.spaceId, Paths.GroupSegments.ai, Type.getTypename(Topic.Topic)),
         }),
     });
-    return Capability.provide(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

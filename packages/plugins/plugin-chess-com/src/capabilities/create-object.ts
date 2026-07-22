@@ -15,7 +15,7 @@ import { ChessComAccount, ChessComOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(ChessComAccount.Account),
       inputSchema: ChessComAccount.CreateAccountSchema,
       createObject: (props: Schema.Schema.Type<typeof ChessComAccount.CreateAccountSchema>, options) =>

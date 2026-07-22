@@ -15,7 +15,7 @@ import { Topic } from '@dxos/compute';
  */
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(
+    Capability.contribute(
       AppCapabilities.NavigationPathResolver,
       TypeSection.createTypeSectionPathResolver(Topic.Topic, { groupId: Paths.GroupSegments.ai }),
     ),

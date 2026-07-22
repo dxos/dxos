@@ -13,7 +13,7 @@ import { Message, Transcript } from '@dxos/types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(AppCapabilities.TextContent, {
+    return Capability.contribute(AppCapabilities.TextContent, {
       id: Type.getTypename(Transcript.Transcript),
       getTextContent: async (transcript: Transcript.Transcript) => {
         const space = getSpace(transcript);

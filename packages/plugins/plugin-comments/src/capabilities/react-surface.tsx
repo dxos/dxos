@@ -13,7 +13,7 @@ import { CommentsArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'comments',
         filter: AppSurface.allOf(

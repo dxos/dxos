@@ -72,7 +72,7 @@ export default Capability.makeModule(
     };
     window.addEventListener('storage', handleStorage);
 
-    return Capability.provide(
+    return Capability.contribute(
       Capabilities.ReactContext,
       {
         id: meta.profile.key,

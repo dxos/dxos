@@ -17,7 +17,7 @@ export const AgentIdentityModule = Capability.inlineModule(
     provides: [AgentIdentity],
     props: (options: CommentsPluginOptions) => options.agentIdentity ?? DEFAULT_AGENT_IDENTITY,
   },
-  (identity) => Effect.succeed([Capability.provide(AgentIdentity, identity)]),
+  (identity) => Effect.succeed([Capability.contribute(AgentIdentity, identity)]),
 );
 export const AgentRunner = Capability.lazyModule(
   'AgentRunner',

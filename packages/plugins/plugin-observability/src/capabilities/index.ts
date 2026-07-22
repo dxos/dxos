@@ -45,7 +45,7 @@ export const Namespace = Capability.inlineModule(
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityPluginOptions) => options.namespace,
   },
-  (namespace) => Effect.succeed([Capability.provide(ObservabilityCapabilities.Namespace, namespace)]),
+  (namespace) => Effect.succeed([Capability.contribute(ObservabilityCapabilities.Namespace, namespace)]),
 );
 export const Observability = Capability.inlineModule(
   'observability',
@@ -56,7 +56,7 @@ export const Observability = Capability.inlineModule(
   (observability) =>
     Effect.gen(function* () {
       const obs = yield* Effect.tryPromise(() => observability());
-      return [Capability.provide(ObservabilityCapabilities.Observability, obs, () => obs.close())];
+      return [Capability.contribute(ObservabilityCapabilities.Observability, obs, () => obs.close())];
     }),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

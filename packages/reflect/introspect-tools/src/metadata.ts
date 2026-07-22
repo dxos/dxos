@@ -157,7 +157,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   list_capabilities: {
     title: 'List capability contributions',
     description: trim`
-      List Capability.provide(<key>, ...) calls across the monorepo. Use this to discover which capability
+      List Capability.contribute(<key>, ...) calls across the monorepo. Use this to discover which capability
       keys are produced (or required) by which plugins. Filter by \`id\` (plugin id) to scope to a single plugin.
     `,
     inputSchema: ListCapabilitiesInput,

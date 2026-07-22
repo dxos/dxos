@@ -25,13 +25,13 @@ export default Capability.makeModule(
     const service: BookingSearch.BookingService = makeDuffelBookingService(() => registry.get(settingsAtom).apiKey);
 
     return [
-      Capability.provide(DuffelCapabilities.Settings, settingsAtom),
-      Capability.provide(AppCapabilities.Settings, {
+      Capability.contribute(DuffelCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),
-      Capability.provide(TripCapabilities.BookingService, service),
+      Capability.contribute(TripCapabilities.BookingService, service),
     ];
   }),
 );

@@ -17,7 +17,7 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.provide(MarkdownCapabilities.ExtensionProvider, [
+    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc }) => {
         const computeGraphRegistry = capabilities.get(SheetCapabilities.ComputeGraphRegistry);
         const space = getSpace(doc);

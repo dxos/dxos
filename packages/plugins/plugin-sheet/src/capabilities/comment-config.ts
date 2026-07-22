@@ -17,7 +17,7 @@ const activate = Effect.fnUntraced(function* () {
     comments: 'anchored',
     scrollToAnchor: SheetOperation.ScrollToAnchor,
   };
-  return [Capability.provide(AppCapabilities.CommentConfig, config)];
+  return [Capability.contribute(AppCapabilities.CommentConfig, config)];
 });
 
 export default activate;

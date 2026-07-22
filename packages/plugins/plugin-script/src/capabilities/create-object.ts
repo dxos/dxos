@@ -15,7 +15,7 @@ import { Notebook } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Script.Script),
         inputSchema: ScriptOperation.ScriptProps,
         createObject: (props, options) =>
@@ -28,7 +28,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Notebook.Notebook),
         inputSchema: ScriptOperation.NotebookProps,
         createObject: (props, options) =>

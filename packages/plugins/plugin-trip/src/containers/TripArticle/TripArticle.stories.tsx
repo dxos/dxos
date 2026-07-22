@@ -36,7 +36,7 @@ const RoutingStoryPlugin = (service: Routing.RoutingService) =>
     Plugin.addModule({
       id: 'story-routing',
       provides: [TripCapabilities.RoutingService],
-      activate: () => Effect.succeed([Capability.provide(TripCapabilities.RoutingService, service)]),
+      activate: () => Effect.succeed([Capability.contribute(TripCapabilities.RoutingService, service)]),
     }),
     Plugin.make,
   )();

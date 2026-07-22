@@ -42,6 +42,6 @@ export default Capability.makeModule(
       return transcriptionManager;
     };
 
-    return Capability.provide(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider);
+    return Capability.contribute(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider);
   }),
 );

@@ -31,7 +31,7 @@ export const createNumberPlugin = (id: string) => {
     Plugin.addModule(
       Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
         Effect.succeed([
-          Capability.provide(
+          Capability.contribute(
             Capabilities.OperationHandler,
             OperationHandlerSet.make(
               Operation.withHandler(AlertOperation, () => Effect.sync(() => window.alert(JSON.stringify({ number })))),
@@ -42,7 +42,7 @@ export const createNumberPlugin = (id: string) => {
     ),
     Plugin.addModule(
       Capability.inlineModule('Main', { provides: [Number], activatesOn: CountEvent }, () =>
-        Effect.succeed([Capability.provide(Number, number)]),
+        Effect.succeed([Capability.contribute(Number, number)]),
       ),
     ),
     Plugin.make,

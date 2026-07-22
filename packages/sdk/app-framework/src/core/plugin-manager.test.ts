@@ -123,7 +123,7 @@ describe('PluginManager', () => {
             id: 'Prod',
             activatesOn: ActivationEvents.Startup,
             provides: [MultiString],
-            activate: () => Effect.succeed([Capability.provide(MultiString, { string: 'prod' })]),
+            activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'prod' })]),
           }),
         ),
       )();
@@ -133,7 +133,7 @@ describe('PluginManager', () => {
             id: 'Dev',
             activatesOn: ActivationEvents.Startup,
             provides: [MultiString],
-            activate: () => Effect.succeed([Capability.provide(MultiString, { string: 'dev' })]),
+            activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'dev' })]),
           }),
         ),
       )();
@@ -225,13 +225,13 @@ describe('PluginManager', () => {
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
           provides: [MultiString],
-          activate: () => Effect.succeed([Capability.provide(MultiString, { string: `hello-${options.count}` })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiString, { string: `hello-${options.count}` })]),
         })),
         Plugin.addModule({
           id: 'World',
           activatesOn: ActivationEvents.Startup,
           provides: [MultiString],
-          activate: () => Effect.succeed([Capability.provide(MultiString, { string: 'world' })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'world' })]),
         }),
         Plugin.make,
       );
@@ -255,7 +255,7 @@ describe('PluginManager', () => {
           provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -278,7 +278,7 @@ describe('PluginManager', () => {
           provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -458,7 +458,7 @@ describe('PluginManager', () => {
             provides: [String],
             id: 'Hello',
             activatesOn: ActivationEvents.Startup,
-            activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+            activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
           }),
           Plugin.addModule({
             provides: [],
@@ -534,7 +534,7 @@ describe('PluginManager', () => {
           activatesOn: ActivationEvents.Startup,
           activate: () => {
             count++;
-            return Effect.succeed([Capability.provide(String, { string: 'hello' })]);
+            return Effect.succeed([Capability.contribute(String, { string: 'hello' })]);
           },
         }),
         Plugin.make,
@@ -582,7 +582,7 @@ describe('PluginManager', () => {
           activatesOn: CountEvent,
           id: 'Plugin1',
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 1 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
         }),
         Plugin.make,
       );
@@ -591,7 +591,7 @@ describe('PluginManager', () => {
           activatesOn: CountEvent,
           id: 'Plugin2',
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 2 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 2 })]),
         }),
         Plugin.make,
       );
@@ -600,7 +600,7 @@ describe('PluginManager', () => {
           activatesOn: CountEvent,
           id: 'Plugin3',
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 3 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 3 })]),
         }),
         Plugin.make,
       );
@@ -645,7 +645,7 @@ describe('PluginManager', () => {
           activatesOn: ActivationEvent.allOf(ActivationEvents.Startup, CountEvent),
           id: 'Hello',
           activate: () => {
-            return Effect.succeed([Capability.provide(String, { string: 'hello' })]);
+            return Effect.succeed([Capability.contribute(String, { string: 'hello' })]);
           },
         }),
         Plugin.make,
@@ -679,7 +679,7 @@ describe('PluginManager', () => {
           activatesOn: ActivationEvent.oneOf(ActivationEvents.Startup, CountEvent),
           activate: () => {
             count++;
-            return Effect.succeed([Capability.provide(String, { string: 'hello' })]);
+            return Effect.succeed([Capability.contribute(String, { string: 'hello' })]);
           },
         }),
         Plugin.make,
@@ -722,7 +722,7 @@ describe('PluginManager', () => {
           activate: Effect.fnUntraced(function* () {
             const numbers = yield* Capability.getAll(MultiNumber);
             state.total = numbers.reduce((acc, n) => acc + n.number, 0);
-            return [Capability.provide(Total, state)];
+            return [Capability.contribute(Total, state)];
           }),
         }),
         Plugin.make,
@@ -733,19 +733,19 @@ describe('PluginManager', () => {
           activatesOn: CountEvent,
           id: 'Test1',
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 1 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
         }),
         Plugin.addModule({
           id: 'Test2',
           activatesOn: CountEvent,
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 2 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 2 })]),
         }),
         Plugin.addModule({
           id: 'Test3',
           activatesOn: CountEvent,
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 3 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 3 })]),
         }),
         Plugin.make,
       );
@@ -804,7 +804,7 @@ describe('PluginManager', () => {
           activatesOn: CountEvent,
           id: 'Plugin1',
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 1 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
         }),
         Plugin.make,
       );
@@ -813,7 +813,7 @@ describe('PluginManager', () => {
           activatesOn: CountEvent,
           id: 'Plugin2',
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 2 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 2 })]),
         }),
         Plugin.make,
       );
@@ -822,7 +822,7 @@ describe('PluginManager', () => {
           activatesOn: CountEvent,
           id: 'Plugin3',
           provides: [MultiNumber],
-          activate: () => Effect.succeed([Capability.provide(MultiNumber, { number: 3 })]),
+          activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 3 })]),
         }),
         Plugin.make,
       );
@@ -942,7 +942,7 @@ describe('PluginManager', () => {
           activate: Effect.fnUntraced(function* () {
             // Simulate a slow activation that takes 15 seconds.
             yield* Effect.sleep(Duration.seconds(15));
-            return [Capability.provide(String, { string: 'slow' })];
+            return [Capability.contribute(String, { string: 'slow' })];
           }),
         }),
         Plugin.make,
@@ -997,7 +997,7 @@ describe('PluginManager', () => {
             activateCallCount++;
             // Simulate slow activation to create window for race condition.
             yield* Effect.sleep(Duration.seconds(5));
-            return [Capability.provide(String, { string: 'concurrent' })];
+            return [Capability.contribute(String, { string: 'concurrent' })];
           }),
         }),
         Plugin.make,
@@ -1040,7 +1040,7 @@ describe('PluginManager', () => {
           provides: [String],
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin1',
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -1049,7 +1049,7 @@ describe('PluginManager', () => {
           provides: [Number],
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin2',
-          activate: () => Effect.succeed([Capability.provide(Number, { number: 42 })]),
+          activate: () => Effect.succeed([Capability.contribute(Number, { number: 42 })]),
         }),
         Plugin.make,
       );
@@ -1092,7 +1092,7 @@ describe('PluginManager', () => {
                   scopeClosed = true;
                 }),
               );
-              return [Capability.provide(String, { string: 'hello' })];
+              return [Capability.contribute(String, { string: 'hello' })];
             }),
         }),
         Plugin.make,
@@ -1121,7 +1121,7 @@ describe('PluginManager', () => {
           activatesOn: ActivationEvents.Startup,
           activate: () =>
             Effect.succeed([
-              Capability.provide(String, { string: 'hello' }, () =>
+              Capability.contribute(String, { string: 'hello' }, () =>
                 Effect.sync(() => {
                   deactivated = true;
                 }),
@@ -1154,7 +1154,7 @@ describe('PluginManager', () => {
           id: 'First',
           activate: () =>
             Effect.succeed([
-              Capability.provide(String, { string: 'first' }, () =>
+              Capability.contribute(String, { string: 'first' }, () =>
                 Effect.sync(() => {
                   deactivationOrder.push('First');
                 }),
@@ -1175,7 +1175,7 @@ describe('PluginManager', () => {
           activate: Effect.fnUntraced(function* () {
             yield* String;
             return [
-              Capability.provide(Number, { number: 2 }, () =>
+              Capability.contribute(Number, { number: 2 }, () =>
                 Effect.sync(() => {
                   deactivationOrder.push('Second');
                 }),
@@ -1206,7 +1206,7 @@ describe('PluginManager', () => {
           provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -1239,7 +1239,7 @@ describe('PluginManager', () => {
             Effect.gen(function* () {
               yield* activationStarted.open;
               yield* allowActivationToComplete.await;
-              return [Capability.provide(String, { string: 'hello' })];
+              return [Capability.contribute(String, { string: 'hello' })];
             }),
         }),
         Plugin.make,
@@ -1278,7 +1278,7 @@ describe('PluginManager', () => {
           provides: [String],
           id: 'Hello',
           activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
         }),
         Plugin.make,
       );
@@ -1314,7 +1314,7 @@ describe('PluginManager', () => {
           activatesOn: ActivationEvents.Startup,
           activate: () => {
             activateCount++;
-            return Effect.succeed([Capability.provide(String, { string: 'hello' })]);
+            return Effect.succeed([Capability.contribute(String, { string: 'hello' })]);
           },
         }),
         Plugin.make,
@@ -1369,7 +1369,7 @@ describe('PluginManager', () => {
             provides: [String],
             id: 'Hello',
             activatesOn: ActivationEvents.Startup,
-            activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+            activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
           }),
           Plugin.make,
         );
@@ -1430,7 +1430,7 @@ describe('PluginManager', () => {
               provides: [String],
               id: 'Hello',
               activatesOn: ActivationEvents.Startup,
-              activate: () => Effect.succeed([Capability.provide(String, { string: opts.greeting })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: opts.greeting })]),
             }),
             Plugin.make,
           )(undefined as void);
@@ -1513,7 +1513,7 @@ describe('PluginManager', () => {
                 provides: [String],
                 id: 'Hello',
                 activatesOn: ActivationEvents.Startup,
-                activate: () => Effect.succeed([Capability.provide(String, { string: 'hello' })]),
+                activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
               }),
             ),
           );
@@ -1601,7 +1601,7 @@ describe('PluginManager', () => {
             activatesOn: SlowEvent,
             activate: Effect.fnUntraced(function* () {
               yield* Effect.sleep(Duration.seconds(60));
-              return [Capability.provide(String, { string: 'never' })];
+              return [Capability.contribute(String, { string: 'never' })];
             }),
           }),
           Plugin.make,
@@ -1762,7 +1762,7 @@ describe('PluginManager', () => {
             activate: () =>
               shouldFail
                 ? Effect.fail(new Error('first try'))
-                : Effect.succeed([Capability.provide(String, { string: 'ok' })]),
+                : Effect.succeed([Capability.contribute(String, { string: 'ok' })]),
           }),
           Plugin.make,
         );
@@ -2051,7 +2051,7 @@ describe('PluginManager', () => {
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
                 const { number } = yield* Number;
-                return [Capability.provide(Total, { total: string.length + number })];
+                return [Capability.contribute(Total, { total: string.length + number })];
               }),
             }),
             Plugin.addModule({
@@ -2060,13 +2060,13 @@ describe('PluginManager', () => {
               provides: [Number],
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
-                return [Capability.provide(Number, { number: string.length })];
+                return [Capability.contribute(Number, { number: string.length })];
               }),
             }),
             Plugin.addModule({
               id: 'string',
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'abc' })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'abc' })]),
             }),
           ),
         );
@@ -2096,7 +2096,7 @@ describe('PluginManager', () => {
                 yield* Deferred.succeed(first, undefined);
                 // Completes only if the sibling runs concurrently.
                 yield* Deferred.await(second);
-                return [Capability.provide(String, { string: 'a' })];
+                return [Capability.contribute(String, { string: 'a' })];
               }),
             }),
             Plugin.addModule({
@@ -2105,7 +2105,7 @@ describe('PluginManager', () => {
               activate: Effect.fnUntraced(function* () {
                 yield* Deferred.succeed(second, undefined);
                 yield* Deferred.await(first);
-                return [Capability.provide(Number, { number: 1 })];
+                return [Capability.contribute(Number, { number: 1 })];
               }),
             }),
           ),
@@ -2183,7 +2183,7 @@ describe('PluginManager', () => {
               id: 'gated-provider',
               activatesOn: CountEvent,
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'gated' })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'gated' })]),
             }),
           ),
         );
@@ -2214,7 +2214,7 @@ describe('PluginManager', () => {
               provides: [String],
               activate: Effect.fnUntraced(function* () {
                 yield* Number;
-                return [Capability.provide(String, { string: 'a' })];
+                return [Capability.contribute(String, { string: 'a' })];
               }),
             }),
             Plugin.addModule({
@@ -2223,7 +2223,7 @@ describe('PluginManager', () => {
               provides: [Number],
               activate: Effect.fnUntraced(function* () {
                 yield* String;
-                return [Capability.provide(Number, { number: 1 })];
+                return [Capability.contribute(Number, { number: 1 })];
               }),
             }),
           ),
@@ -2248,12 +2248,12 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'a',
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'a' })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'a' })]),
             }),
             Plugin.addModule({
               id: 'b',
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'b' })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'b' })]),
             }),
           ),
         );
@@ -2275,7 +2275,7 @@ describe('PluginManager', () => {
         const undeclaredEntry: Plugin.ModuleEntry = {
           id: 'undeclared',
           provides: [],
-          activate: () => Effect.succeed([Capability.provide(String, { string: 'sneaky' })]),
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'sneaky' })]),
         };
         const builder = Plugin.define(testMeta);
         builder.addModule(undeclaredEntry);
@@ -2327,7 +2327,8 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [Widget],
-              activate: () => Effect.succeed([Capability.provideAll(Widget, [{ widget: 'one' }, { widget: 'two' }])]),
+              activate: () =>
+                Effect.succeed([Capability.contributeAll(Widget, [{ widget: 'one' }, { widget: 'two' }])]),
             }),
           ),
         );
@@ -2374,7 +2375,7 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'pulled' })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'pulled' })]),
             }),
             Plugin.addModule({
               id: 'listener',
@@ -2384,7 +2385,7 @@ describe('PluginManager', () => {
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
                 received = string;
-                return [Capability.provide(Number, { number: string.length })];
+                return [Capability.contribute(Number, { number: string.length })];
               }),
             }),
           ),
@@ -2412,7 +2413,7 @@ describe('PluginManager', () => {
               id: 'gated-provider',
               activatesOn: CountEvent,
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'gated' })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'gated' })]),
             }),
           ),
         );
@@ -2432,7 +2433,7 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'base' })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'base' })]),
             }),
           ),
         );
@@ -2445,7 +2446,7 @@ describe('PluginManager', () => {
               provides: [Number],
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
-                return [Capability.provide(Number, { number: string.length })];
+                return [Capability.contribute(Number, { number: string.length })];
               }),
             }),
           ),
@@ -2512,7 +2513,7 @@ describe('PluginManager', () => {
               provides: [String],
               activate: () =>
                 Effect.succeed([
-                  Capability.provide(String, { string: 'base' }, () =>
+                  Capability.contribute(String, { string: 'base' }, () =>
                     Effect.sync(() => {
                       deactivations.push('provider');
                     }),
@@ -2530,7 +2531,7 @@ describe('PluginManager', () => {
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
                 return [
-                  Capability.provide(Number, { number: string.length }, () =>
+                  Capability.contribute(Number, { number: string.length }, () =>
                     Effect.sync(() => {
                       deactivations.push('consumer');
                     }),
@@ -2576,7 +2577,7 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'p' }, track('provider'))]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'p' }, track('provider'))]),
             }),
             Plugin.addModule({
               id: 'consumer',
@@ -2584,14 +2585,14 @@ describe('PluginManager', () => {
               provides: [Number],
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
-                return [Capability.provide(Number, { number: string.length }, track('consumer'))];
+                return [Capability.contribute(Number, { number: string.length }, track('consumer'))];
               }),
             }),
             Plugin.addModule({
               id: 'event-root',
               provides: [Total],
               activatesOn: ActivationEvents.Startup,
-              activate: () => Effect.succeed([Capability.provide(Total, { total: 0 }, track('event-root'))]),
+              activate: () => Effect.succeed([Capability.contribute(Total, { total: 0 }, track('event-root'))]),
             }),
           ),
         );
@@ -2616,13 +2617,13 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [String],
-              activate: () => Effect.succeed([Capability.provide(String, { string: 'p' })]),
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'p' })]),
             }),
             Plugin.addModule({
               id: 'event-root',
               provides: [Total],
               activatesOn: ActivationEvents.Startup,
-              activate: () => Effect.succeed([Capability.provide(Total, { total: 0 })]),
+              activate: () => Effect.succeed([Capability.contribute(Total, { total: 0 })]),
             }),
           ),
         );

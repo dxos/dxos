@@ -25,7 +25,7 @@ const TestPlugin = Plugin.define(testMeta).pipe(
     provides: [Capabilities.ReactSurface],
     activate: () =>
       Effect.succeed([
-        Capability.provideAll(Capabilities.ReactSurface, [
+        Capability.contributeAll(Capabilities.ReactSurface, [
           Surface.create<{ message: string }>({
             id: 'greeting',
             filter: Surface.makeFilter(GreetingRole),

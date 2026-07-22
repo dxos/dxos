@@ -33,7 +33,7 @@ export const Debug = () => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(
+    Capability.contribute(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.debug.main',

@@ -41,5 +41,5 @@ const variant: GameVariant = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.provide(GameCapabilities.VariantProvider, variant)),
+  Effect.succeed(Capability.contribute(GameCapabilities.VariantProvider, variant)),
 );

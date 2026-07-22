@@ -30,7 +30,7 @@ export const Layout = () => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactRoot, {
+    Capability.contribute(Capabilities.ReactRoot, {
       id: 'org.dxos.test.layout.root',
       root: Layout,
     }),

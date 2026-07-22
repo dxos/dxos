@@ -156,6 +156,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.provide(AppCapabilities.AppGraphBuilder, [extension, mergeExtension, planTripExtension]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension, mergeExtension, planTripExtension]);
   }),
 );

@@ -14,7 +14,7 @@ import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactRoot, {
+    Capability.contribute(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
         const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);

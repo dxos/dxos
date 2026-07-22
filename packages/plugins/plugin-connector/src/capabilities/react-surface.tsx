@@ -25,7 +25,7 @@ import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } f
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'connectionsSectionArticle',
         filter: AppSurface.literal(AppSurface.Article, CONNECTIONS_SECTION_TYPE),

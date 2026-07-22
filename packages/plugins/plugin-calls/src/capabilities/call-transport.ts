@@ -17,7 +17,7 @@ export default Capability.makeModule(
     // manager's activation ordering.
     const capabilities = yield* Capability.Service;
 
-    return Capability.provide(CallsCapabilities.CallTransportProvider, {
+    return Capability.contribute(CallsCapabilities.CallTransportProvider, {
       kind: CLOUDFLARE_TRANSPORT_KIND,
       label: 'Cloudflare',
       join: async (roomId) => {

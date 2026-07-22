@@ -26,8 +26,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.provide(MarkdownCapabilities.Settings, settingsAtom),
-      Capability.provide(AppCapabilities.Settings, {
+      Capability.contribute(MarkdownCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Markdown.Settings,
         atom: settingsAtom,

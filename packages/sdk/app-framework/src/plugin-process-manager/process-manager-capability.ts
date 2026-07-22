@@ -192,10 +192,10 @@ export default Capability.makeModule(
     );
 
     return [
-      Capability.provide(Capabilities.ProcessManagerRuntime, processManagerRuntime),
-      Capability.provide(Capabilities.ServiceResolver, serviceResolver),
-      Capability.provide(Capabilities.ProcessMonitor, processMonitor),
-      Capability.provide(Capabilities.OperationInvoker, operationInvoker),
+      Capability.contribute(Capabilities.ProcessManagerRuntime, processManagerRuntime),
+      Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
+      Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
+      Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
     ];
   }),
 );

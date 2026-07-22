@@ -152,7 +152,7 @@ const StoryAppGraphBuilder = Capability.inlineModule(
             .filter(isNonNullable);
         }),
     });
-    return [Capability.provide(AppCapabilities.AppGraphBuilder, extensions)];
+    return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );
 
@@ -161,7 +161,7 @@ const StoryOperationHandler = Capability.inlineModule(
   { provides: [Capabilities.OperationHandler] },
   () =>
     Effect.succeed([
-      Capability.provide(
+      Capability.contribute(
         Capabilities.OperationHandler,
         OperationHandlerSet.make(
           Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),

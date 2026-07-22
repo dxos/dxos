@@ -14,7 +14,7 @@ import { CodeProject, Spec } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Spec.Spec),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -26,7 +26,7 @@ export default Capability.makeModule(
             });
           }),
       }),
-      Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+      Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(CodeProject.CodeProject),
         createObject: (props, options) =>
           Effect.gen(function* () {

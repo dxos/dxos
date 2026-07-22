@@ -16,5 +16,5 @@ import { SampleOperationHandlerSet } from '#operations';
 // When the module doesn't need to access other capabilities or perform setup,
 // use `Effect.succeed` directly instead of `Effect.fnUntraced(function* () { ... })`.
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.provide(Capabilities.OperationHandler, SampleOperationHandlerSet)),
+  Effect.succeed(Capability.contribute(Capabilities.OperationHandler, SampleOperationHandlerSet)),
 );

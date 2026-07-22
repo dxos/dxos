@@ -70,7 +70,7 @@ export const Main = () => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(
+    Capability.contribute(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.main',

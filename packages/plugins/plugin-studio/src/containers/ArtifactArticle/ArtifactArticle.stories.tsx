@@ -58,7 +58,7 @@ const MockProviderPlugin = Plugin.define(
   Plugin.addModule({
     id: 'story.studio.mock-provider/module',
     provides: [StudioCapabilities.GenerationService],
-    activate: () => Effect.succeed([Capability.provide(StudioCapabilities.GenerationService, mockService)]),
+    activate: () => Effect.succeed([Capability.contribute(StudioCapabilities.GenerationService, mockService)]),
   }),
   Plugin.make,
 );

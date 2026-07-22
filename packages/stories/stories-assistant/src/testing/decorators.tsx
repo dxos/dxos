@@ -215,7 +215,7 @@ const PluginManagerHost = ({
 
   useEffect(() => {
     const [capability] = Capability.expandContributions([
-      Capability.provide(Capabilities.ReactRoot, {
+      Capability.contribute(Capabilities.ReactRoot, {
         id: contextId,
         root: () => <>{children}</>,
       }),
@@ -325,7 +325,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.surfaces',
     provides: [Capabilities.ReactSurface],
-    activate: () => Effect.succeed([Capability.provide(Capabilities.ReactSurface, moduleSurfaces)]),
+    activate: () => Effect.succeed([Capability.contribute(Capabilities.ReactSurface, moduleSurfaces)]),
   }),
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
@@ -333,14 +333,14 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
-        Capability.provide(AppCapabilities.SkillDefinition, MarkdownSkill),
-        Capability.provide(AppCapabilities.SkillDefinition, PlanningSkill),
-        Capability.provide(AppCapabilities.SkillDefinition, DelegationSkill),
-        Capability.provide(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
-        Capability.provide(Capabilities.OperationHandler, PlanningHandlers),
-        Capability.provide(Capabilities.OperationHandler, DelegationHandlers),
-        Capability.provide(Capabilities.OperationHandler, AgentHandlers),
-        Capability.provide(Capabilities.OperationHandler, ExampleHandlers),
+        Capability.contribute(AppCapabilities.SkillDefinition, MarkdownSkill),
+        Capability.contribute(AppCapabilities.SkillDefinition, PlanningSkill),
+        Capability.contribute(AppCapabilities.SkillDefinition, DelegationSkill),
+        Capability.contribute(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
+        Capability.contribute(Capabilities.OperationHandler, PlanningHandlers),
+        Capability.contribute(Capabilities.OperationHandler, DelegationHandlers),
+        Capability.contribute(Capabilities.OperationHandler, AgentHandlers),
+        Capability.contribute(Capabilities.OperationHandler, ExampleHandlers),
       ]),
   }),
   Plugin.addModule(({ createAgent, onChatCreated }) => ({
@@ -418,7 +418,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       // NOTE: Chat creation is owned by the assistant plugin's `CreateChat` handler; this module
       // only stubs the no-op operations the deck companion surfaces expect.
       return [
-        Capability.provide(
+        Capability.contribute(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
         ),

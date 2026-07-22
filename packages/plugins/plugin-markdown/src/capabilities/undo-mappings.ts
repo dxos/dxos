@@ -11,7 +11,7 @@ import { CollaborationOperation } from '@dxos/app-toolkit';
 // — on the base for accept, on the author's branch for reject.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.UndoMapping, [
+    return Capability.contribute(Capabilities.UndoMapping, [
       UndoMapping.make({
         operation: CollaborationOperation.AcceptChange,
         inverse: CollaborationOperation.RestoreText,

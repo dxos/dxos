@@ -32,6 +32,6 @@ export default Capability.makeModule(
       }
     });
 
-    return Capability.provide(SpaceCapabilities.PersonalSpace, personalSpace);
+    return Capability.contribute(SpaceCapabilities.PersonalSpace, personalSpace);
   }),
 );

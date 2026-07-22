@@ -14,7 +14,7 @@ import { Bookmark } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bookmarkArticle',
         filter: AppSurface.object(AppSurface.Article, Bookmark.Bookmark),

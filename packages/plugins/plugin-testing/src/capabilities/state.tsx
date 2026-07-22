@@ -38,8 +38,8 @@ export default Capability.makeModule(
     });
 
     return [
-      Capability.provide(StorybookCapabilities.LayoutState, stateAtom),
-      Capability.provide(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(StorybookCapabilities.LayoutState, stateAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

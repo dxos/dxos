@@ -131,7 +131,7 @@ export const makeOperationCapture = (
         },
       };
 
-      return [Capability.provide(Capabilities.OperationInvoker, wrapped)];
+      return [Capability.contribute(Capabilities.OperationInvoker, wrapped)];
     },
     getCalls<I, O>(op: Operation.Definition<I, O>): CapturedCall<I>[] {
       const key = String(op.meta.key);

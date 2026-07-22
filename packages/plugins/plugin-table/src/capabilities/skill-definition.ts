@@ -10,6 +10,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { TableSkill } from '#skills';
 
 // TODO(wittjosiah): Remove? All table ops other than resizing columns are more generically handled as schema ops.
-const skillDefinition = () => Effect.succeed([Capability.provide(AppCapabilities.SkillDefinition, TableSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, TableSkill)]);
 
 export default skillDefinition;

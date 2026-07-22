@@ -20,7 +20,7 @@ type UndoMappingsOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl, observability }: UndoMappingsOptions) {
     return [
-      Capability.provide(Capabilities.UndoMapping, [
+      Capability.contribute(Capabilities.UndoMapping, [
         UndoMapping.make({
           operation: SpaceOperation.DeleteField,
           inverse: SpaceOperation.RestoreField,
@@ -49,7 +49,7 @@ export default Capability.makeModule(
           },
         }),
       ]),
-      Capability.provide(SpaceOperationConfig, {
+      Capability.contribute(SpaceOperationConfig, {
         createInvitationUrl,
         observability: observability ?? false,
       }),

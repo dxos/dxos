@@ -137,9 +137,9 @@ const meta = {
       capabilities: () => {
         const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
         return [
-          Capability.provide(StoryState, storyStateAtom),
-          Capability.provide(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
-          Capability.provide(
+          Capability.contribute(StoryState, storyStateAtom),
+          Capability.contribute(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
+          Capability.contribute(
             Capabilities.OperationHandler,
             OperationHandlerSet.make(
               Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>

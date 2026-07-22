@@ -34,9 +34,9 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.provide(AssistantCapabilities.State, stateAtom),
-      Capability.provide(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
-      Capability.provide(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
+      Capability.contribute(AssistantCapabilities.State, stateAtom),
+      Capability.contribute(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
+      Capability.contribute(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
     ];
   }),
 );

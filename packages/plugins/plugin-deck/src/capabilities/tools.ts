@@ -33,7 +33,7 @@ declare global {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.Tools, [
+    Capability.contribute(Capabilities.Tools, [
       createTool(meta.id, {
         name: 'show',
         description: trim`

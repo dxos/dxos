@@ -13,7 +13,7 @@ import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.provide(Capabilities.ReactContext, {
+    Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }) => (
         <Surface.ProfilerProvider>

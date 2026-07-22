@@ -10,6 +10,6 @@ import { MagazineOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, MagazineOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, MagazineOperationHandlerSet);
   }),
 );

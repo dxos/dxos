@@ -54,7 +54,7 @@ const atprotoCredentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPre
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: CUSTOM_PROVIDER_ID,
         // The user enters the source in the dialog; we don't know it ahead of time.

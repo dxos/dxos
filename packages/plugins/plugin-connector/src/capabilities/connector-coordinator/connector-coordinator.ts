@@ -547,7 +547,7 @@ export default Capability.makeModule(
         return yield* reconcileCursors({ invoker, db, connection, connector, selected, existingTarget });
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
-    return Capability.provide(
+    return Capability.contribute(
       ConnectorCoordinator,
       {
         createConnection,

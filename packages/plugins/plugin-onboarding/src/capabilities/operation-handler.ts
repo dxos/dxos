@@ -10,6 +10,6 @@ import { OnboardingOperationHandlerSet } from '../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, OnboardingOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, OnboardingOperationHandlerSet);
   }),
 );

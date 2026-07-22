@@ -15,7 +15,7 @@ const activate = Effect.fnUntraced(function* () {
     id: Type.getTypename(Markdown.Document),
     getTarget: (object) => (Obj.instanceOf(Markdown.Document, object) ? object.content.target : undefined),
   };
-  return [Capability.provide(SpaceCapabilities.HistoryProvider, provider)];
+  return [Capability.contribute(SpaceCapabilities.HistoryProvider, provider)];
 });
 
 export default activate;

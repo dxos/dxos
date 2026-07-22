@@ -13,7 +13,7 @@ import { Score } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Score.Score),
       createObject: (props: Partial<Parameters<typeof Score.make>[0]> | undefined, options) =>
         Effect.gen(function* () {

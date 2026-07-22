@@ -51,7 +51,7 @@ const MockAiServicePlugin = Plugin.define(
     provides: [Capabilities.LayerSpec],
     activate: () =>
       Effect.succeed([
-        Capability.provide(
+        Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             Layer.succeed(AiService.AiService, {

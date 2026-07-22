@@ -10,6 +10,6 @@ import { SandboxHandlers } from '../skills/functions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Capabilities.OperationHandler, SandboxHandlers);
+    return Capability.contribute(Capabilities.OperationHandler, SandboxHandlers);
   }),
 );

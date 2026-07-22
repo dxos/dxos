@@ -217,16 +217,16 @@ const TriggerMonitorSpec = LayerSpec.make(
 
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.provide(Capabilities.LayerSpec, OperationHandlerProviderSpec),
-    Capability.provide(Capabilities.LayerSpec, RegistrySpec),
-    Capability.provide(Capabilities.LayerSpec, OpaqueToolkitSpec),
-    Capability.provide(Capabilities.LayerSpec, OperationsToRegistrySpec),
-    Capability.provide(Capabilities.LayerSpec, TriggerStateStoreSpec),
-    Capability.provide(Capabilities.LayerSpec, FeedTraceSinkSpec),
-    Capability.provide(Capabilities.LayerSpec, TriggerDispatcherSpec),
-    Capability.provide(Capabilities.LayerSpec, RemoteTriggerManagerSpec),
-    Capability.provide(Capabilities.LayerSpec, TriggerMonitorSpec),
-    Capability.provide(Capabilities.LayerSpec, RemoteOperationInvokerSpec),
-    Capability.provide(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
+    Capability.contribute(Capabilities.LayerSpec, OperationHandlerProviderSpec),
+    Capability.contribute(Capabilities.LayerSpec, RegistrySpec),
+    Capability.contribute(Capabilities.LayerSpec, OpaqueToolkitSpec),
+    Capability.contribute(Capabilities.LayerSpec, OperationsToRegistrySpec),
+    Capability.contribute(Capabilities.LayerSpec, TriggerStateStoreSpec),
+    Capability.contribute(Capabilities.LayerSpec, FeedTraceSinkSpec),
+    Capability.contribute(Capabilities.LayerSpec, TriggerDispatcherSpec),
+    Capability.contribute(Capabilities.LayerSpec, RemoteTriggerManagerSpec),
+    Capability.contribute(Capabilities.LayerSpec, TriggerMonitorSpec),
+    Capability.contribute(Capabilities.LayerSpec, RemoteOperationInvokerSpec),
+    Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),
 );

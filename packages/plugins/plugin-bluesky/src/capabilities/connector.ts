@@ -86,7 +86,7 @@ const testConnection: TestConnection = ({ connection, client }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: BLUESKY_PROVIDER_ID,
         source: BLUESKY_SOURCE,

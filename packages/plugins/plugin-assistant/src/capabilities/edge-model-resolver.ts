@@ -57,7 +57,7 @@ const edgeModelResolver = Capability.makeModule(
     const anthropicResolverLayer = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
 
     // A module providing exactly one capability may return the contribution directly.
-    return Capability.provide(AppCapabilities.AiModelResolver, anthropicResolverLayer, () =>
+    return Capability.contribute(AppCapabilities.AiModelResolver, anthropicResolverLayer, () =>
       Effect.sync(() => identitySubscription?.unsubscribe()),
     );
   }),

@@ -24,6 +24,6 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     registry.set(stateAtom, { ...registry.get(stateAtom), group });
 
-    return Capability.provide(ObservabilityCapabilities.State, stateAtom);
+    return Capability.contribute(ObservabilityCapabilities.State, stateAtom);
   }),
 );

@@ -52,7 +52,7 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
 /** Contributes the default feed-backed channel provider. */
 export const ChannelBackendFeed = Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(ThreadCapabilities.ChannelBackend, feedChannelBackend);
+    return Capability.contribute(ThreadCapabilities.ChannelBackend, feedChannelBackend);
   }),
 );
 

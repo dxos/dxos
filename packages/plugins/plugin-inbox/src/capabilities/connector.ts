@@ -133,7 +133,7 @@ const onCursorCreated =
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.provide(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: GMAIL_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
