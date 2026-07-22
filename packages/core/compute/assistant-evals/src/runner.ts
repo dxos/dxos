@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 
@@ -31,6 +33,15 @@ import { trim } from '@dxos/util';
 import { getDefaultSkills } from './skills';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
+
+/** Per-eval fallback; scenarios with more tool round-trips should pass an explicit `timeout`. */
+const DEFAULT_EVAL_TIMEOUT_MILLIS = 60_000;
+
+class EvalTimeoutError extends Error {
+  constructor(millis: number) {
+    super(`Eval exceeded its ${millis}ms timeout`);
+  }
+}
 
 const SYSTEM_INSTRUCTIONS = trim`
   You are running within an evaluation environment.
@@ -124,6 +135,13 @@ export interface CreateEvalRunnerOptions<I, O> {
    * @default 'success'
    */
   expect?: 'success' | 'failure';
+  /**
+   * Milliseconds before the run is aborted. Raise this only for scenarios with more tool
+   * round-trips than a typical single/couple-tool eval (e.g. a multi-step plan, or research across
+   * several tools) — most evals should keep the default.
+   * @default 60_000
+   */
+  timeout?: number;
 }
 
 /** A deterministic DB-state assertion run after the agent completes, before the harness is disposed. */
@@ -152,6 +170,11 @@ export type VariantConfig =
  *
  * Pass `expect: 'failure'` for scenarios that assert the agent correctly fails; the task then
  * returns `{ failed: boolean }` instead of throwing, so a Scorer can grade "failed as instructed".
+ *
+ * The run is aborted after `timeout` (default 60s, see {@link CreateEvalRunnerOptions.timeout}) —
+ * evalite has no per-scenario timeout of its own, so this is what keeps a hung/slow scenario from
+ * eating vitest's shared `testTimeout` budget. A timeout always throws, even under
+ * `expect: 'failure'` (it is not evidence the agent "failed as instructed").
  */
 export function createEvalRunner<I, O>(
   options: CreateEvalRunnerOptions<I, O> & { expect: 'failure' },
@@ -209,11 +232,27 @@ export function createEvalRunner<I, O, D>(
       }),
     );
 
+    const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
+    const timedRun = run.pipe(
+      Effect.timeoutFail({
+        duration: timeoutMillis,
+        onTimeout: () => new EvalTimeoutError(timeoutMillis),
+      }),
+    );
+
     if (options.expect !== 'failure') {
-      return EffectEx.runAndForwardErrors(run);
+      return EffectEx.runAndForwardErrors(timedRun);
     }
 
-    const exit = await Effect.runPromiseExit(run);
+    const exit = await Effect.runPromiseExit(timedRun);
+    if (
+      Exit.isFailure(exit) &&
+      Option.exists(Cause.failureOption(exit.cause), (error) => error instanceof EvalTimeoutError)
+    ) {
+      // A timeout is not "the agent failed as instructed" — it means the run never got far enough
+      // to demonstrate anything, so it must not be scored as a pass.
+      throw new EvalTimeoutError(timeoutMillis);
+    }
     return { failed: Exit.isFailure(exit) };
   };
 }

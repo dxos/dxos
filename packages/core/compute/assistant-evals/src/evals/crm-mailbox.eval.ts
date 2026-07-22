@@ -84,6 +84,8 @@ const task = createEvalRunner({
   input: Schema.Unknown,
   output: Schema.Unknown,
   plugins: [CrmPlugin(), MarkdownPlugin()],
+  // Research (web search) + CRM + markdown tool calls chain across several turns; observed ~95s live.
+  timeout: 150_000,
   dbQuery: () =>
     Effect.gen(function* () {
       const person = yield* findObject(Person.Person, (p) => p.fullName === 'Vishal Sharma');

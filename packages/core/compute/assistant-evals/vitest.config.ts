@@ -11,8 +11,8 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // Default config, auto-discovered by `evalite` (which hardcodes its own `**/*.eval.?(m)ts`
-// include and can't be pointed at `vitest.e2e.config.ts` instead) — must stay flat, not a
-// `projects` workspace, or evalite's file discovery finds nothing.
+// include) — must stay flat, not a `projects` workspace, or evalite's file discovery finds
+// nothing.
 //
 // `#*` must be included (matching `createNodeProject` in vite.base.config.ts) or Node subpath
 // imports (e.g. plugin-routine's `#capabilities`) resolve to the compiled `dist/` bundle instead
@@ -23,10 +23,12 @@ export default defineConfig({
   root: dirname,
   plugins: [PluginImportSource({ include: ['@dxos/**', '#*'] })],
   test: {
-    // evalite defaults to a 30s per-eval timeout (`config.test.testTimeout ??= 30_000` in
-    // evalite's run-evalite.js) unless vitest config overrides it. Multi-tool agent scenarios
-    // (research, web search, several operations) routinely exceed that; match the
-    // DEFAULT_TEST_TIMEOUT used for live-generation gated e2e tests in harness.ts.
-    testTimeout: 360_000,
+    // evalite has no per-scenario timeout of its own (defaults to vitest's global
+    // `testTimeout`, 30s), and no way to override it per eval — `runner.ts`'s `createEvalRunner`
+    // owns per-scenario timeouts instead (default 60s, overridable via its `timeout` option), so
+    // most scenarios time out well before this fires. This is only the outer safety net: the
+    // longest per-eval timeout in use (150s, e.g. `crm-mailbox.eval.ts`) plus margin for harness
+    // teardown.
+    testTimeout: 240_000,
   },
 });

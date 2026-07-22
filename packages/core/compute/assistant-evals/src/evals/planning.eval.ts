@@ -54,6 +54,8 @@ const task = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
+  // Three sequential subtasks, each an update-tasks call + haiku turn, plus a final judge call.
+  timeout: 150_000,
   dbQuery: () =>
     Effect.gen(function* () {
       const plan = yield* findObject(Plan.Plan, () => true);
