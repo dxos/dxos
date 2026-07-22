@@ -5,7 +5,7 @@
 import { Chunk, unifiedMergeView } from '@codemirror/merge';
 import { type Extension, Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { diffWordsWithSpace } from 'diff';
+import { diffChars, diffWordsWithSpace } from 'diff';
 
 export type DiffOptions = {
   /**
@@ -127,6 +127,41 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
   return groups;
 };
 
+/**
+ * Re-anchors {@link DiffHunk}s computed against `base` into `doc` coordinates, so a foreign author's
+ * proposal (diffed `base` vs proposal) can be decorated over a `doc` that has itself diverged from
+ * `base` (the user's own branch edits). Each hunk offset is mapped through the character-level
+ * `base`↔`doc` diff ({@link computeCharHunks}): a position in an unchanged region shifts by the net
+ * length of edits before it; a position inside a doc-edited region clamps to that region's edge (the
+ * `from` to its start, the `to` to its end). Without this, a proposal diffed against `base` would
+ * render at stale offsets over the diverged `doc`.
+ */
+export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffHunk[] => {
+  const charHunks = computeCharHunks(base, doc);
+  const mapPos = (pos: number, side: -1 | 1): number => {
+    let delta = 0;
+    for (const hunk of charHunks) {
+      if (pos < hunk.fromA) {
+        break;
+      }
+      // An exclusive upper edge (`side > 0`) sitting exactly at a doc edit's start belongs to the
+      // region BEFORE the edit, so map it to `fromB` — never across the edit (which would absorb the
+      // user's own adjacent text into a foreign hunk).
+      if (pos === hunk.fromA && side > 0) {
+        return hunk.fromB;
+      }
+      if (pos < hunk.toA) {
+        // Inside a doc-edited region: clamp to its edge so the offset stays a valid doc position.
+        return side < 0 ? hunk.fromB : hunk.toB;
+      }
+      // Past this region: `toB - toA` is the net offset shift it contributes.
+      delta = hunk.toB - hunk.toA;
+    }
+    return pos + delta;
+  };
+  return hunks.map((hunk) => ({ ...hunk, from: mapPos(hunk.from, -1), to: mapPos(hunk.to, 1) }));
+};
+
 /** A changed hunk between two documents as character ranges in each (A = original, B = modified). */
 export type Hunk = { fromA: number; toA: number; fromB: number; toB: number };
 
@@ -161,6 +196,43 @@ export const computeWordHunks = (original: string, modified: string): Hunk[] => 
     }
   };
   for (const change of diffWordsWithSpace(original, modified)) {
+    if (change.added) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionB += change.value.length;
+      pending.toB = positionB;
+    } else if (change.removed) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionA += change.value.length;
+      pending.toA = positionA;
+    } else {
+      flush();
+      positionA += change.value.length;
+      positionB += change.value.length;
+    }
+  }
+  flush();
+  return hunks;
+};
+
+/**
+ * CHARACTER-level changed hunks between `original` (A) and `modified` (B), each carrying both
+ * coordinate ranges. Finer than {@link computeWordHunks}: an in-word or whitespace/newline edit shows
+ * only the changed characters, not a whole-word delete+insert. Used for live "Suggesting mode" tracked
+ * changes (see {@link trackChanges}), where word granularity makes every keystroke read as a struck
+ * word rebuilt beside it.
+ */
+export const computeCharHunks = (original: string, modified: string): Hunk[] => {
+  const hunks: Hunk[] = [];
+  let positionA = 0;
+  let positionB = 0;
+  let pending: Hunk | undefined;
+  const flush = () => {
+    if (pending) {
+      hunks.push(pending);
+      pending = undefined;
+    }
+  };
+  for (const change of diffChars(original, modified)) {
     if (change.added) {
       pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
       positionB += change.value.length;

@@ -24,7 +24,7 @@ export type MarkdownExtensionProvider = (props: {
   suggestionBranch?: boolean;
   /**
    * Whether comment affordances should render, per the active review policy (see
-   * `SpaceCapabilities.ReviewRenderPolicy`). Defaults to `true`; a policy override may hide comments
+   * `VersioningCapabilities.ReviewRenderPolicy`). Defaults to `true`; a policy override may hide comments
    * (e.g. a distraction-free reading mode) without changing the default Viewing behaviour.
    */
   showComments?: boolean;

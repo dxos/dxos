@@ -182,7 +182,7 @@ has landed. The content-copy fork described above is superseded; the current mod
 - **Checkpoints** view via `setTimeTravel` pinning (not snapshot-swap); a checkpoint taken on a
   branch carries `Version.branch` (its heads live in the branch doc) and resolves against it.
 - **Generic history companion.** The git-graph companion lives in plugin-space, gated per-type by
-  `SpaceCapabilities.HistoryProvider`; markdown contributes the provider. Each lane ends in a
+  `VersioningCapabilities.HistoryProvider`; markdown contributes the provider. Each lane ends in a
   synthetic tip node — `Now` on main, `Tip` on each active branch — that reselects the editable
   present of that lane; selecting a branch checkpoint pins the branch-bound Text and closing the
   banner returns to the branch tip (not main).
@@ -264,7 +264,7 @@ margin card** — so the review surface belongs with comments, not markdown:
   object, keyed by the space branch registry.
 - **plugin-markdown** keeps only the document-specific glue (contributing the extension provider +
   `diffView` setting), matching how the history companion already lives in plugin-space gated per
-  type by `SpaceCapabilities.HistoryProvider`. This makes suggestions reusable for any text-bearing
+  type by `VersioningCapabilities.HistoryProvider`. This makes suggestions reusable for any text-bearing
   object, not just markdown.
 
 ### Decisions (resolved 2026-07-19)
@@ -402,7 +402,7 @@ overlay is layered as the new default. Nothing is removed.
 
 #### Architecture
 
-- **Mode state.** Extend `SpaceCapabilities.VersioningState` with per-doc
+- **Mode state.** Extend `VersioningCapabilities.VersioningState` with per-doc
   `mode: 'editing' | 'suggesting' | 'viewing'`; `useVersioning` exposes `mode`/`setMode`. A toolbar
   control sets it (sits with the advanced version affordances).
 - **`useSuggestionSources(doc)`.** Extract the active-`kind:'suggestion'`-branch enumeration +
@@ -449,17 +449,37 @@ advanced path, with the Suggesting-mode composition as a spike-first sub-milesto
 #### Status (2026-07-21)
 
 **Milestone A landed** (per-doc `mode`, `ReviewRenderPolicy`, ambient Editing/Viewing overlay + review):
-`VersioningState.mode` + `useVersioning` mode/setMode; `SpaceCapabilities.ReviewRenderPolicy`
+`VersioningState.mode` + `useVersioning` mode/setMode; `VersioningCapabilities.ReviewRenderPolicy`
 (GDocs-parity default); `SuggestionSources` headless enumerator (render-prop, synchronous on doc
 swap) + `MarkdownCapabilities.SuggestionSourcesProvider` slot (contributed by plugin-comments,
 consumed by markdown — no dependency cycle); `suggestionsOverlay` compartment factory in
 `@dxos/ui-editor`; MarkdownArticle ambient wiring (Editing overlays all suggestions + comments;
-Viewing hides suggestions, read-only, comments retained) + a Review-mode toolbar toggle
-(Suggesting disabled). Comment visibility is policy-threaded (`showComments`, default true).
-Build/lint/unit + `AmbientReview` and `DocumentVersioning` play tests green.
+Viewing hides suggestions, read-only, comments retained). Comment visibility is policy-threaded
+(`showComments`, default true — not yet consumed to hide comments; tracked). Build/lint/unit +
+`AmbientReview` and `DocumentVersioning` play tests green.
 
-**Milestone B (Suggesting-mode authoring) pending** the Task-B0 spike (compose live editing on the
-user's branch + self-diff-vs-main + foreign overlays on one buffer).
+**Milestone B (Suggesting-mode authoring) landed** — bind-to-branch (A1), chosen via a two-approach
+B0 spike and ratified by felt-eval:
+
+- `trackChanges({ main, colour })` (`@dxos/ui-editor`) renders the branch-vs-main self-diff on the live
+  buffer — **character-level** (`computeCharHunks`) insertions as marks, deletions as phantom
+  strikethrough widgets, with an atomic-caret Backspace guard.
+- `suggestions({ base })` + `rebaseHunks` decouple a foreign author's diff base from the editor doc, so
+  every author's suggestion renders against **main** even over a diverged branch; accept/reject live in
+  a non-clipped `hoverTooltip` popover.
+- `MarkdownArticle` Suggesting mode binds the editor to the current user's own `kind:'suggestion'`
+  branch (find-or-create), self via `trackChanges`, others via the rebased overlay (self excluded);
+  the mount is guarded so edits never touch main. Suggesting toolbar option enabled.
+- **Accept/reject contract (landed):** any editor accepts/rejects any author's suggestion from the
+  Editing-mode overlay (and the companion cards), routed through the durable
+  `CollaborationOperation.AcceptChange`/`RejectChange` (diffed against main). `showComments` is
+  honoured (a policy can hide comments). Multi-line deletions preserve line breaks; undo re-instates a
+  deletion.
+
+**Deferred (own PRs):** author-side accept/reject/un-delete of one's own inline draft (B4 — the
+reviewer path above is complete); perf — incremental diff + hoist `computeCharHunks` (B6); block-level
+deletion polish + copy semantics (B6); full-stack `CommentsArticle` composition test (in-pane boot
+timeout).
 
 ## Risks / notes
 

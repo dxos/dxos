@@ -207,128 +207,128 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
     const labelStyles = 'shrink-0 ps-2 pe-2 text-description text-sm';
 
     return (
-      <ScrollArea.Root className='dx-container'>
-        <ScrollArea.Viewport>
-          <Column.Root
-            {...composableProps(props, {
-              // The editor row uses `minmax(8lh,1fr)` (not `1fr`) so its minimum height participates in
-              // layout: when the surface is short the whole form scrolls (outer ScrollArea) instead of
-              // the editor overflowing its cell and overlapping the Send button.
-              classNames: showHeader
-                ? 'grid-rows-[min-content_min-content_minmax(8lh,1fr)_min-content]'
-                : 'grid-rows-[min-content_minmax(8lh,1fr)_min-content]',
-            })}
-            gutter='sm'
-            ref={forwardedRef}
-          >
-            {showHeader && (
-              <Column.Center classNames='flex items-center justify-between pbs-form-gap'>
-                <h2 className='text-lg'>{title}</h2>
-                {onDelete && (
-                  <IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--trash--regular'
-                    label={t('delete-draft-button.label')}
-                    onClick={onDelete}
-                  />
-                )}
-              </Column.Center>
+    <ScrollArea.Root className='dx-container'>
+      <ScrollArea.Viewport>
+        <Column.Root
+          {...composableProps(props, {
+            // The editor row uses `minmax(8lh,1fr)` (not `1fr`) so its minimum height participates in
+            // layout: when the surface is short the whole form scrolls (outer ScrollArea) instead of
+            // the editor overflowing its cell and overlapping the Send button.
+            classNames: showHeader
+              ? 'grid-rows-[min-content_min-content_minmax(8lh,1fr)_min-content]'
+              : 'grid-rows-[min-content_minmax(8lh,1fr)_min-content]',
+          })}
+          gutter='sm'
+          ref={forwardedRef}
+        >
+          {showHeader && (
+            <Column.Center classNames='flex items-center justify-between pbs-form-gap'>
+              <h2 className='text-lg'>{title}</h2>
+              {onDelete && (
+                <IconButton
+                  iconOnly
+                  variant='ghost'
+                  icon='ph--trash--regular'
+                  label={t('delete-draft-button.label')}
+                  onClick={onDelete}
+                />
+              )}
+            </Column.Center>
+          )}
+
+          <Column.Center classNames='flex flex-col' data-testid='edit-email-form'>
+            <div className='flex items-center'>
+              <span className={labelStyles}>{t('draft-to.label')}</span>
+              <RecipientEditor
+                editorRef={toRef}
+                extensions={toNav}
+                db={db}
+                value={message.properties?.to}
+                placeholder={t('draft-to.placeholder')}
+                onChange={(value) => updateField('to', value)}
+              />
+
+              {(!showCc || !showBcc) && (
+                <span className='shrink-0 flex items-center gap-2 pe-2 text-sm text-description'>
+                  {!showCc && (
+                    <button type='button' className='dx-link-hover' onClick={revealCc}>
+                      {t('draft-cc.label')}
+                    </button>
+                  )}
+                  {!showBcc && (
+                    <button type='button' className='dx-link-hover' onClick={revealBcc}>
+                      {t('draft-bcc.label')}
+                    </button>
+                  )}
+                </span>
+              )}
+            </div>
+
+            {showCc && (
+              <div className='flex items-center'>
+                <div className={labelStyles}>{t('draft-cc.label')}</div>
+                <RecipientEditor
+                  editorRef={ccRef}
+                  extensions={ccNav}
+                  db={db}
+                  value={message.properties?.cc}
+                  onChange={(value) => updateField('cc', value)}
+                />
+              </div>
             )}
 
-            <Column.Center classNames='flex flex-col' data-testid='edit-email-form'>
+            {showBcc && (
               <div className='flex items-center'>
-                <span className={labelStyles}>{t('draft-to.label')}</span>
+                <span className={labelStyles}>{t('draft-bcc.label')}</span>
                 <RecipientEditor
-                  editorRef={toRef}
-                  extensions={toNav}
+                  editorRef={bccRef}
+                  extensions={bccNav}
                   db={db}
-                  value={message.properties?.to}
-                  placeholder={t('draft-to.placeholder')}
-                  onChange={(value) => updateField('to', value)}
+                  value={message.properties?.bcc}
+                  onChange={(value) => updateField('bcc', value)}
                 />
-
-                {(!showCc || !showBcc) && (
-                  <span className='shrink-0 flex items-center gap-2 pe-2 text-sm text-description'>
-                    {!showCc && (
-                      <button type='button' className='dx-link-hover' onClick={revealCc}>
-                        {t('draft-cc.label')}
-                      </button>
-                    )}
-                    {!showBcc && (
-                      <button type='button' className='dx-link-hover' onClick={revealBcc}>
-                        {t('draft-bcc.label')}
-                      </button>
-                    )}
-                  </span>
-                )}
               </div>
+            )}
 
-              {showCc && (
-                <div className='flex items-center'>
-                  <div className={labelStyles}>{t('draft-cc.label')}</div>
-                  <RecipientEditor
-                    editorRef={ccRef}
-                    extensions={ccNav}
-                    db={db}
-                    value={message.properties?.cc}
-                    onChange={(value) => updateField('cc', value)}
-                  />
-                </div>
-              )}
-
-              {showBcc && (
-                <div className='flex items-center'>
-                  <span className={labelStyles}>{t('draft-bcc.label')}</span>
-                  <RecipientEditor
-                    editorRef={bccRef}
-                    extensions={bccNav}
-                    db={db}
-                    value={message.properties?.bcc}
-                    onChange={(value) => updateField('bcc', value)}
-                  />
-                </div>
-              )}
-
-              <Input.Root>
-                <Input.Label srOnly>{t('draft-subject.label')}</Input.Label>
-                <Input.TextInput
-                  ref={subjectRef}
-                  variant='subdued'
-                  placeholder={t('draft-subject.placeholder')}
-                  defaultValue={message.properties?.subject}
-                  onChange={(event) => updateField('subject', event.target.value)}
-                  onKeyDown={(event) => {
-                    // Arrow-up returns to the previous recipient field (arrow-down stays in the input).
-                    if (event.key === 'ArrowUp') {
-                      event.preventDefault();
-                      navigate('subject', -1);
-                    }
-                  }}
-                />
-              </Input.Root>
-            </Column.Center>
-
-            <Column.Center classNames='flex flex-col py-3 min-h-0'>
-              <Editor
-                compact
-                classNames='dx-input dx-expander'
-                placeholder={t('message-body.placeholder')}
-                extensions={extensions}
-                value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}
-                onChange={handleBodyChanged}
+            <Input.Root>
+              <Input.Label srOnly>{t('draft-subject.label')}</Input.Label>
+              <Input.TextInput
+                ref={subjectRef}
+                variant='subdued'
+                placeholder={t('draft-subject.placeholder')}
+                defaultValue={message.properties?.subject}
+                onChange={(event) => updateField('subject', event.target.value)}
+                onKeyDown={(event) => {
+                  // Arrow-up returns to the previous recipient field (arrow-down stays in the input).
+                  if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    navigate('subject', -1);
+                  }
+                }}
               />
-            </Column.Center>
+            </Input.Root>
+          </Column.Center>
 
-            <Column.Center classNames='pb-form-padding'>
-              <Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
-                <Icon icon='ph--paper-plane-right--regular' size={5} />
-                <span className='ms-2'>{t('send-email-button.label')}</span>
-              </Button>
-            </Column.Center>
-          </Column.Root>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    );
+          <Column.Center classNames='flex flex-col py-3 min-h-0'>
+            <Editor
+              compact
+              classNames='dx-input dx-expander'
+              placeholder={t('message-body.placeholder')}
+              extensions={extensions}
+              value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}
+              onChange={handleBodyChanged}
+            />
+          </Column.Center>
+
+          <Column.Center classNames='pb-form-padding'>
+            <Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
+              <Icon icon='ph--paper-plane-right--regular' size={5} />
+              <span className='ms-2'>{t('send-email-button.label')}</span>
+            </Button>
+          </Column.Center>
+        </Column.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
   },
 );

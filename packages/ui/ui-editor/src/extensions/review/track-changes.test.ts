@@ -1,0 +1,44 @@
+//
+// Copyright 2026 DXOS.org
+//
+// @vitest-environment happy-dom
+
+import { history, undo } from '@codemirror/commands';
+import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { describe, test } from 'vitest';
+
+import { trackChanges } from './track-changes';
+
+const MAIN = 'alpha\nbravo\ncharlie';
+
+const mount = (doc: string, extensions = [trackChanges({ main: MAIN, colour: 'var(--dx-accent)' })]) =>
+  new EditorView({ state: EditorState.create({ doc, extensions }), parent: document.body });
+
+describe('trackChanges', () => {
+  test('a multi-line (block) deletion renders a single phantom preserving the removed lines', ({ expect }) => {
+    // The branch removed the middle line "bravo\n"; the phantom must show it (with its newline), not
+    // collapse the block away.
+    const view = mount('alpha\ncharlie');
+    const phantoms = view.dom.querySelectorAll('.cm-track-delete');
+    expect(phantoms).toHaveLength(1);
+    // textContent carries the removed block including its line break (pre-wrap renders the break).
+    expect(phantoms[0].textContent).toBe('bravo\n');
+    view.destroy();
+  });
+
+  test('undo re-instates a deletion (un-delete) and clears the phantom', ({ expect }) => {
+    const view = mount(MAIN, [history(), trackChanges({ main: MAIN, colour: 'var(--dx-accent)' })]);
+    // Delete the "bravo\n" block on the branch → a phantom appears.
+    view.dispatch({ changes: { from: 6, to: 12, insert: '' } });
+    expect(view.dom.querySelector('.cm-track-delete')).not.toBeNull();
+    expect(view.state.doc.toString()).toBe('alpha\ncharlie');
+
+    // Native undo restores the deleted text (the deletion is an ordinary branch edit) and the phantom
+    // disappears — so no bespoke "un-delete" affordance is needed.
+    undo(view);
+    expect(view.state.doc.toString()).toBe(MAIN);
+    expect(view.dom.querySelector('.cm-track-delete')).toBeNull();
+    view.destroy();
+  });
+});

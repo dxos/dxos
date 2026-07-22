@@ -355,3 +355,79 @@ In the `customActions` group (next to the branch switcher), add a single-select 
 - **Placeholder scan:** Milestone A steps carry concrete code/commands. Milestone B is explicitly spike-gated (not a placeholder — a declared research task with acceptance criteria), per the spec's "spike first" instruction.
 - **Type consistency:** `ReviewMode`, `ReviewRenderPolicyFn`, `ResolvedSuggestionBranch`, `SuggestionSource`, `suggestionsOverlay().reconfigure` names are used identically across tasks.
 - **Dependency direction:** plugin-comments depends on plugin-markdown; the reverse (MarkdownArticle needing the enumeration) is resolved via a `MarkdownCapabilities.SuggestionSourcesProvider` slot (A5 step 4), not a direct import — no cycle.
+
+---
+
+## Milestone B — Suggesting-mode authoring (A1 bind-to-branch)
+
+A1 ratified by felt-eval (2026-07-22). B0 spike + B1 (`trackChanges` char-level extension + eval
+story + hover popover) landed. Remaining B2–B7 below. Root insight from the B1 eval: every
+multi-author defect (foreign overlay striking the user's own text, garbled accept, clipped popover)
+is the **base-decoupling** problem — overlays diff against the editor doc (the branch) instead of
+against `main`. B2 fixes it; B3+ build on it.
+
+### Task B2: Base-decoupling + non-clipped accept/reject popover — LANDED (PR #12302)
+
+**Files:**
+
+- Modify + Test: `packages/ui/ui-editor/src/extensions/review/suggest.ts` (+ `suggest.test.ts`)
+- Modify: `packages/ui/ui-editor/src/extensions/review/diff.ts` (add a coordinate-rebase helper)
+- Test: `packages/ui/react-ui-editor/src/stories/Suggest.stories.tsx` (multi-author-over-edited-branch case)
+
+**Interfaces:**
+
+- Produces: `suggestions({ sources, base?, group?, onAccept?, onReject? })` — new optional `base`; when
+  given, each source is diffed against `base` (not the editor doc) and its hunks are rebased into doc
+  coordinates via `rebaseHunks`. Produces `rebaseHunks(base: string, doc: string, hunks: DiffHunk[]): DiffHunk[]`
+  in diff.ts — maps a hunk anchored in `base` to the equivalent offset in `doc` using `computeCharHunks(base, doc)`.
+- Popover renders via `EditorView`'s tooltip layer (or a `showTooltip`/`hoverTooltip` facet) so it is not
+  clipped by `.cm-scroller` overflow.
+
+- [ ] Step 1: Failing unit test in `suggest.test.ts` — `suggestions({ sources:[bob], base })` over a doc
+      that has diverged from `base` renders bob's change at the correct doc offset and does NOT strike the
+      doc's own added text. (Build a headless `EditorView`; assert decoration positions.)
+- [ ] Step 2: Run → FAIL.
+- [ ] Step 3: Implement `rebaseHunks` in diff.ts + thread `base` through `suggestions()` (default
+      `base = doc` preserves current callers). Diff each source vs `base`, rebase hunk offsets into doc coords.
+- [ ] Step 4: Run → PASS.
+- [ ] Step 5: Move the accept/reject controls into a non-clipped tooltip layer (replace the
+      `position:absolute` popover). Prefer `hoverTooltip` keyed to a suggestion hunk range; keep `.cm-suggest-accept`/`reject`
+      test hooks. Verify `Suggest.stories` accept/reject still pass + not clipped (assert the tooltip mounts under `.cm-tooltip`).
+- [ ] Step 6: Re-add the second author to `TrackChanges.stories.tsx` using `base: MAIN`; add a play case:
+      type in the branch, assert the user's new text is NOT struck and bob's change still renders vs main.
+- [ ] Step 7: Build/lint/test green; commit `ui-editor: decouple suggestion base from doc + tooltip popover`.
+
+### Task B3: Wire Suggesting mode into MarkdownArticle — LANDED (PR #12302)
+
+**Files:** Modify `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx`;
+Test `DocumentVersioning.stories.tsx` (+ a Suggesting play case).
+
+- [ ] `mode==='suggesting'` (ambient path): bind the editor to the current user's `kind:'suggestion'`
+      branch (find-or-create via `Branch.suggestion`), apply `trackChanges({ main, colour: self })`, and
+      overlay other authors via `suggestions({ base: main, sources })` (rebased, from `SuggestionSourcesProvider`,
+      excluding self). Editable.
+- [ ] Re-add the **Suggesting** toolbar option (remove the hide from the earlier landing polish); wire `setMode('suggesting')`.
+- [ ] Play case: switch to Suggesting, type → edit accrues to the user's suggestion branch (assert via the branch content), renders as own tracked change; a second author still shows vs main.
+- [ ] Commit `markdown: suggesting mode authors on the user's branch`.
+
+### Task B4: Accept/reject of own tracked changes — DEFERRED (own PR; reviewer path already works, un-delete covered by undo)
+
+**Files:** MarkdownArticle handlers + `plugin-markdown` ops wiring; reuse `AcceptChange`/`RejectChange`.
+
+- [ ] Accepting the user's own insertion/deletion (incl. phantom un-delete) routes through the durable
+      ops with the B2 base (`revertHunk`/`cherryPickHunk` against `main`). Reject on a phantom re-inserts main's text into the branch.
+- [ ] Test: accept an own change merges to main; reject reverts on the branch. Commit.
+
+### Task B5: Integration coverage — SUBSTANTIALLY MET by B3 Suggesting play test (full-stack CommentsArticle test deferred: boot timeout)
+
+- [ ] Full-stack Suggesting-mode play test (real branch binding) in `CommentsArticle` or `DocumentVersioning`.
+- [ ] The deferred `CommentsArticle`↔markdown composition test (editor overlay + companions). Commit.
+
+### Task B6: Hardening — DEFERRED (own PR; perf/incremental-diff, block deletions, copy semantics)
+
+- [ ] Incremental diff / decoration reuse in `trackChanges` (avoid full re-diff per keystroke on large docs).
+- [ ] Multi-line/block deletions render sanely; copy excludes phantom text. Tests. Commit.
+
+### Task B7: Ship — LANDED (this PR #12302: DESIGN + changeset)
+
+- [ ] DESIGN.md: mark Suggesting mode landed; changeset (minor, ui-editor/plugin-markdown/plugin-comments/plugin-space); PR.

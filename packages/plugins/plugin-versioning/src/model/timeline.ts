@@ -6,7 +6,7 @@ import { type Commit } from '@dxos/react-ui-components';
 import { type Text } from '@dxos/schema';
 import { Branch, type History, Version, diffSpans, diffStats } from '@dxos/versioning';
 
-import { type SpaceCapabilities } from '#types';
+import { type VersioningCapabilities } from '#types';
 
 export const MAIN_BRANCH = 'main';
 export const NOW_COMMIT_ID = 'now';
@@ -189,7 +189,7 @@ export const createTimelineModel = (
 export const commitToSelection = (
   object: History.VersionedObject,
   commit: Commit,
-): SpaceCapabilities.VersionSelection | undefined => {
+): VersioningCapabilities.VersionSelection | undefined => {
   if (commit.id === NOW_COMMIT_ID) {
     return { kind: 'current' };
   }

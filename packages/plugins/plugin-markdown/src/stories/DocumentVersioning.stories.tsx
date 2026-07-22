@@ -37,10 +37,12 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ObjectHistory } from '@dxos/plugin-space/containers';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { ObjectHistory } from '@dxos/plugin-versioning/containers';
+import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
+import { translations as versioningTranslations } from '@dxos/plugin-versioning/translations';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -51,7 +53,7 @@ import { Branch } from '@dxos/versioning';
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
-import { MarkdownPlugin } from '../../MarkdownPlugin';
+import { MarkdownPlugin } from '../MarkdownPlugin';
 
 const concat = (...lines: string[]) => lines.join('\n');
 
@@ -333,6 +335,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
+        VersioningPlugin(),
         MarkdownPlugin(),
       ],
     })),
@@ -340,7 +343,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...spaceTranslations],
+    translations: [...translations, ...spaceTranslations, ...versioningTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -662,6 +665,41 @@ const suggestInserts = (canvasElement: HTMLElement): string =>
     .map((node) => node.textContent ?? '')
     .join(' ');
 
+/** Concatenated text of the foreign-overlay strikethroughs currently rendered in the editor. */
+const suggestDeletes = (canvasElement: HTMLElement): string =>
+  Array.from(canvasElement.querySelectorAll('.cm-suggest-delete'))
+    .map((node) => node.textContent ?? '')
+    .join(' ');
+
+/** Concatenated text of the self tracked-change insertions (Suggesting mode) rendered in the editor. */
+const trackInserts = (canvasElement: HTMLElement): string =>
+  Array.from(canvasElement.querySelectorAll('.cm-track-insert'))
+    .map((node) => node.textContent ?? '')
+    .join('');
+
+/** The live root (main) content. */
+const rootContent = (): string => {
+  const root = getDoc().content.target;
+  invariant(root, 'root text not loaded');
+  return root.content;
+};
+
+// Read a suggestion branch's live content by binding it (as a second surface would); `excludeCreator`
+// skips a seeded foreign author so this resolves the current user's own suggestion branch.
+const suggestionBranchContent = async (excludeCreator: string): Promise<string> => {
+  const doc = getDoc();
+  const branch = doc.history?.branches.find(
+    (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator !== excludeCreator,
+  );
+  invariant(branch, 'suggestion branch not found');
+  const binding = await Branch.bind(doc, branch);
+  try {
+    return binding.object.content;
+  } finally {
+    binding.dispose();
+  }
+};
+
 // Read the editor's read-only state directly from the CodeMirror view (the review policy drives
 // `EditorState.readOnly`); `contenteditable` is unaffected by `readOnly`, so it cannot be asserted.
 const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
@@ -723,5 +761,56 @@ export const AmbientReview: Story = {
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Alice'), { timeout: 15_000 });
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'));
     await waitFor(() => expect(editorReadOnly(canvasElement)).toBe(false));
+  },
+};
+
+/**
+ * Suggesting mode (Milestone B) — the current user authors on their OWN suggestion branch:
+ * - Switching to Suggesting binds the editor to the user's `kind:'suggestion'` branch (find-or-create),
+ *   so typed edits accrue there rather than mutating main.
+ * - The user's typing renders as a self tracked-change (`.cm-track-insert`), NOT a foreign overlay.
+ * - The edit lands on the user's branch (asserted via the branch content) and main stays unchanged.
+ * - A second author (seeded) still overlays vs main and does NOT strike the user's new text.
+ */
+export const Suggesting: Story = {
+  args: {
+    content: '# Hello World\n',
+  },
+  parameters: {
+    ambientReview: true,
+  },
+  play: async ({ canvasElement }) => {
+    // Wait for the editor (mode defaults to editing, editor bound to main).
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('Hello World'), { timeout: 20_000 });
+
+    // Seed a second author's suggestion branch on main (a pure append Bob proposes).
+    await seedSuggestion('did:bob', '# Hello World\n\nBob: add an example.\n');
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
+
+    // Switch to Suggesting: the editor rebinds to the user's own suggestion branch (starts == main).
+    await selectReviewMode(canvasElement, 'Suggesting');
+    await waitFor(() => expect(editorContent(canvasElement)).toContain('Hello World'), { timeout: 15_000 });
+    // Bob still overlays (diffed vs main, rebased into the user's branch coordinates).
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
+
+    // Type into the editor: the caret lands in the branch document; the keystrokes accrue there.
+    const content = canvasElement.querySelector<HTMLElement>('.cm-content');
+    invariant(content, 'editor content not mounted');
+    content.focus();
+    await userEvent.keyboard('really ');
+
+    // (a) The typed text renders as the user's own tracked change (self), not a foreign overlay.
+    await waitFor(() => expect(trackInserts(canvasElement)).toContain('really'), { timeout: 15_000 });
+
+    // (b) The edit landed on the user's suggestion branch — main (root) is unchanged, the branch has it.
+    await waitFor(() => expect(rootContent()).not.toContain('really'));
+    await waitFor(async () => expect(await suggestionBranchContent('did:bob')).toContain('really'), {
+      timeout: 15_000,
+    });
+
+    // (c) Bob still renders vs main and does NOT strike (or claim) the user's new text.
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'));
+    await expect(suggestInserts(canvasElement)).not.toContain('really');
+    await expect(suggestDeletes(canvasElement)).not.toContain('really');
   },
 };

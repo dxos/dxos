@@ -156,6 +156,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-versioning"
     }
   ]
 }

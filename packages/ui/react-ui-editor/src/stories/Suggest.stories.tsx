@@ -28,6 +28,22 @@ import { Editor, type EditorViewProps } from '../components';
 const ORIGINAL = 'The quick brown fox jumps over the lazy dog.';
 const PROPOSAL = 'The fast brown fox leaps over the sleepy dog.';
 
+/**
+ * Simulate hovering a change to surface its tooltip-layer controls. CodeMirror's `hoverTooltip` reads
+ * pointer coordinates from a bubbling `mousemove`, which `userEvent.hover` does not reliably provide, so
+ * dispatch one at the element's centre.
+ */
+const hoverChange = (element: HTMLElement): void => {
+  const rect = element.getBoundingClientRect();
+  element.dispatchEvent(
+    new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+    }),
+  );
+};
+
 /** The document text (struck-through deletions included), excluding the proposal preview widgets. */
 const documentText = (canvasElement: HTMLElement): string => {
   const content = canvasElement.querySelector('.cm-content');
@@ -114,23 +130,32 @@ export const Default: Story = {};
  */
 export const AcceptReject: Story = {
   play: async ({ canvasElement }) => {
-    const acceptButtons = () => canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-accept');
-    const rejectButtons = () => canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-reject');
+    // Each change carries a strikethrough of the replaced word; its accept/reject controls live in the
+    // (non-clipped) tooltip layer and surface on hover.
+    const deletes = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-delete'));
+    const inserts = () => canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-insert');
+    const acceptButton = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip .cm-suggest-accept');
+    const rejectButton = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip .cm-suggest-reject');
 
     // Three suggestions (quick→fast, jumps→leaps, lazy→sleepy) over the original document.
     await waitFor(() => expect(documentText(canvasElement)).toContain('quick'), { timeout: 15_000 });
-    await waitFor(() => expect(acceptButtons()).toHaveLength(3));
+    await waitFor(() => expect(inserts()).toHaveLength(3));
 
-    // Accept the first change: the document updates to the proposal's wording.
-    await userEvent.click(acceptButtons()[0]);
+    // Hover the first change: its controls mount in the tooltip layer (a `.cm-tooltip`, not clipped by
+    // the scroller). Accept applies that change to the document.
+    hoverChange(deletes()[0]);
+    await waitFor(() => expect(acceptButton()).not.toBeNull());
+    await userEvent.click(acceptButton()!);
     await waitFor(() => expect(documentText(canvasElement)).toContain('fast'));
     await waitFor(() => expect(documentText(canvasElement)).not.toContain('quick'));
-    await waitFor(() => expect(acceptButtons()).toHaveLength(2));
+    await waitFor(() => expect(inserts()).toHaveLength(2));
 
     // Reject the next change: the suggestion disappears, but the document keeps the original.
     const before = documentText(canvasElement);
-    await userEvent.click(rejectButtons()[0]);
-    await waitFor(() => expect(acceptButtons()).toHaveLength(1));
+    hoverChange(deletes()[0]);
+    await waitFor(() => expect(rejectButton()).not.toBeNull());
+    await userEvent.click(rejectButton()!);
+    await waitFor(() => expect(inserts()).toHaveLength(1));
     await waitFor(() => expect(documentText(canvasElement)).toBe(before));
   },
 };
@@ -143,7 +168,8 @@ export const AcceptReject: Story = {
 export const MultipleAuthors: Story = {
   render: MultiAuthorRender,
   play: async ({ canvasElement }) => {
-    const acceptButtons = () => canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-accept');
+    const deletes = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-delete'));
+    const acceptButton = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip .cm-suggest-accept');
     const insertText = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-suggest-insert')).map((node) => node.textContent);
 
@@ -152,19 +178,22 @@ export const MultipleAuthors: Story = {
 
     // Four suggestions total: Alice{fast, sleepy} + Bob{swift, leaps}; "fast"/"swift" overlap on "quick".
     await waitFor(() => expect(documentText(canvasElement)).toContain('quick'), { timeout: 15_000 });
-    await waitFor(() => expect(acceptButtons()).toHaveLength(4));
     await waitFor(() => expect(insertText()).toEqual(expect.arrayContaining(['fast', 'swift', 'sleepy', 'leaps'])));
 
     // Each author's inline markers carry that author's palette colour (Alice lime, Bob violet).
     await waitFor(() => expect(insertColours().some((colour) => colour.includes('lime'))).toBe(true));
     await waitFor(() => expect(insertColours().some((colour) => colour.includes('violet'))).toBe(true));
 
-    // Accept the first (offset then author order ⇒ Alice's "quick"→"fast"): the base takes "fast".
-    // Bob's overlapping "quick"→"swift" re-diffs against the new base and remains as a suggestion.
-    await userEvent.click(acceptButtons()[0]);
-    await waitFor(() => expect(acceptButtons()).toHaveLength(3));
+    // Hover the overlapping "quick" change; offset-then-author order surfaces Alice's "quick"→"fast"
+    // first. Accepting it makes the base take "fast"; Bob's "quick"→"swift" re-diffs and remains.
+    const quick = deletes().find((node) => node.textContent?.includes('quick'));
+    void expect(quick).toBeDefined();
+    hoverChange(quick!);
+    await waitFor(() => expect(acceptButton()).not.toBeNull());
+    await userEvent.click(acceptButton()!);
     await waitFor(() => expect(documentText(canvasElement)).toContain('fast'));
     await waitFor(() => expect(documentText(canvasElement)).not.toContain('quick'));
     await waitFor(() => expect(insertText()).toEqual(expect.arrayContaining(['swift'])));
+    await waitFor(() => expect(insertText()).toHaveLength(3));
   },
 };

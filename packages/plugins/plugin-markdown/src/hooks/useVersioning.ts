@@ -8,7 +8,7 @@ import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { VersioningCapabilities } from '@dxos/plugin-versioning';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
@@ -17,14 +17,14 @@ import { Markdown } from '../types';
 export type UseVersioningResult = {
   document?: Markdown.Document;
   history?: History.History;
-  selection: SpaceCapabilities.VersionSelection;
-  setSelection: (selection: SpaceCapabilities.VersionSelection) => void;
+  selection: VersioningCapabilities.VersionSelection;
+  setSelection: (selection: VersioningCapabilities.VersionSelection) => void;
   /** Active branch view (base parent / diff overlay / branch draft); only meaningful with a branch selected. */
-  view: SpaceCapabilities.BranchView;
-  setView: (view: SpaceCapabilities.BranchView) => void;
+  view: VersioningCapabilities.BranchView;
+  setView: (view: VersioningCapabilities.BranchView) => void;
   /** Per-user editing posture for this document (Google-Docs-style). Missing entry = `editing`. */
-  mode: SpaceCapabilities.ReviewMode;
-  setMode: (mode: SpaceCapabilities.ReviewMode) => void;
+  mode: VersioningCapabilities.ReviewMode;
+  setMode: (mode: VersioningCapabilities.ReviewMode) => void;
   /** The branch being viewed (selection.kind === 'branch'). */
   activeBranch?: Branch.Branch;
   /** The branch whose fork point is being viewed (selection.kind === 'fork'). */
@@ -57,10 +57,10 @@ export type UseVersioningResult = {
  */
 export const useVersioning = (subject?: unknown): UseVersioningResult => {
   const document = Obj.instanceOf(Markdown.Document, subject) ? (subject as Markdown.Document) : undefined;
-  // Versioning state is contributed by plugin-space (the generic history companion). A markdown
+  // Versioning state is contributed by plugin-versioning (the generic history companion). A markdown
   // editor can render standalone without it (e.g. plugin-blogger, cards, previews), so read it
   // tolerantly: absent → no selection, and the version UI simply does not engage.
-  const [state, setState] = useOptionalAtomCapabilityState(SpaceCapabilities.VersioningState);
+  const [state, setState] = useOptionalAtomCapabilityState(VersioningCapabilities.VersioningState);
 
   // Subscribe to history mutations (checkpoints/branches added elsewhere).
   useObject(document, 'history');
@@ -73,7 +73,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   const mode = (documentId && state?.mode[documentId]) || 'editing';
 
   const setSelection = useCallback(
-    (next: SpaceCapabilities.VersionSelection) => {
+    (next: VersioningCapabilities.VersionSelection) => {
       if (!documentId) {
         return;
       }
@@ -83,7 +83,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   );
 
   const setView = useCallback(
-    (next: SpaceCapabilities.BranchView) => {
+    (next: VersioningCapabilities.BranchView) => {
       if (!documentId) {
         return;
       }
@@ -93,7 +93,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   );
 
   const setMode = useCallback(
-    (next: SpaceCapabilities.ReviewMode) => {
+    (next: VersioningCapabilities.ReviewMode) => {
       if (!documentId) {
         return;
       }

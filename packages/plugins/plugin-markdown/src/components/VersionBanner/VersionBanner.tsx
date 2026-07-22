@@ -5,13 +5,13 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/ui';
-import { type SpaceCapabilities } from '@dxos/plugin-space';
+import { type VersioningCapabilities } from '@dxos/plugin-versioning';
 import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-type BranchView = SpaceCapabilities.BranchView;
+type BranchView = VersioningCapabilities.BranchView;
 
 /** The `base`/`diff`/`branch` view options, in banner display order. */
 const BRANCH_VIEWS: BranchView[] = ['base', 'diff', 'branch'];

@@ -25,6 +25,7 @@ import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-mar
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
+import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
 import { random } from '@dxos/random';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -347,6 +348,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
+        VersioningPlugin(),
         MarkdownPlugin(),
         StoryGraphPlugin(),
         StoryStubAgentPlugin(),

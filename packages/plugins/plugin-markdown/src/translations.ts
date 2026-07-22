@@ -46,7 +46,7 @@ export const translations = [
         'suggest-edits.label': 'Suggest edits',
         'review-mode.title': 'Review mode',
         'review-mode.editing.label': 'Editing',
-        'review-mode.suggesting.label': 'Suggesting (coming soon)',
+        'review-mode.suggesting.label': 'Suggesting',
         'review-mode.viewing.label': 'Viewing',
         'branch-view-base.label': 'Base',
         'branch-view-diff.label': 'Diff',
