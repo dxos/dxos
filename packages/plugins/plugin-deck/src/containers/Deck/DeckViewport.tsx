@@ -10,6 +10,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -74,6 +75,10 @@ const REM_PX = 16;
 
 // Scrolls a plank back into view when its folded spine is clicked (see fold behavior below).
 const ScrollToPlankContext = createContext<(id: string, index: number) => void>(() => {});
+
+// Upper bound (px) on a sliding plank's width, measured from the viewport so the current plank's
+// trailing controls never disappear behind the piled spines of the other planks. Infinity until measured.
+const MaxPlankWidthContext = createContext<number>(Number.POSITIVE_INFINITY);
 
 //
 // DeckViewport
@@ -194,7 +199,12 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // The companion plank keeps one shared width across its variants (a companion id is
   // `<plank>/~<variant>`), so switching tabs never resizes it; ordinary planks size per id.
   const sizingKey = isLinkedSegment(id) ? COMPANION_SIZE_KEY : id;
-  const plankWidthPx = (deck.plankSizing[sizingKey] ?? DEFAULT_PLANK_SIZE) * REM_PX;
+  // Clamp the plank to a viewport-derived cap so its trailing controls stay clear of the piled spines;
+  // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
+  const maxPlankWidthPx = useContext(MaxPlankWidthContext);
+  const maxSize = Math.max(MIN_PLANK_SIZE, Math.min(MAX_PLANK_SIZE, maxPlankWidthPx / REM_PX));
+  const plankSize = Math.min(deck.plankSizing[sizingKey] ?? DEFAULT_PLANK_SIZE, maxSize);
+  const plankWidthPx = plankSize * REM_PX;
 
   const handleSizeChange = useCallback<NonNullable<MosaicTileProps['onSizeChange']>>(
     (size) => {
@@ -232,9 +242,9 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     <Mosaic.Tile
       {...props}
       classNames='group/tile relative h-full'
-      size={deck.plankSizing[sizingKey] ?? DEFAULT_PLANK_SIZE}
+      size={plankSize}
       minSize={MIN_PLANK_SIZE}
-      maxSize={MAX_PLANK_SIZE}
+      maxSize={maxSize}
       onSizeChange={handleSizeChange}
       // Native two-edge sticky (the notes.andymatuschak.org pattern): a positive per-index start inset
       // builds the left pile; a *negative* end inset lets the plank slide fully off the right edge and
@@ -448,6 +458,9 @@ export const DeckPlanks = () => {
   const topbar = layoutAppliesTopbar(breakpoint, fullscreen);
   const viewportRef = useRef<HTMLDivElement>(null);
   const isSliding = presentation === 'sliding';
+  // Viewport-derived cap on a sliding plank's width (see the measuring layout effect below); consumed by
+  // tiles via `MaxPlankWidthContext` and by the fold effect so folds track the capped width.
+  const [maxPlankWidthPx, setMaxPlankWidthPx] = useState(Number.POSITIVE_INFINITY);
 
   // Preserve horizontal scroll position across fullbleed↔sliding transitions; a window resize
   // invalidates it.
@@ -527,6 +540,35 @@ export const DeckPlanks = () => {
       offScroll();
       offResize();
     };
+    // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
+    // plank folded against its pre-cap width leaves a spine floating until the next scroll).
+  }, [isSliding, rendered.length, maxPlankWidthPx]);
+
+  // Cap the plank width to the viewport so the current plank's trailing controls never hide behind the
+  // piled spines: reserve a spine (plus the stack gap) for every other plank, then subtract the stack
+  // padding. Recomputed as the viewport resizes (window, sidebar) so the bound tracks the screen size.
+  // A layout effect so the cap lands before first paint — no flash of full-width planks on load.
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || !isSliding) {
+      setMaxPlankWidthPx(Number.POSITIVE_INFINITY);
+      return;
+    }
+    const measure = () => {
+      const stack = viewport.querySelector<HTMLElement>('[role="listitem"]')?.parentElement;
+      const styles = stack && getComputedStyle(stack);
+      const gap = styles ? parseFloat(styles.columnGap) || 0 : 0;
+      const padding = styles
+        ? (parseFloat(styles.paddingInlineStart) || 0) + (parseFloat(styles.paddingInlineEnd) || 0)
+        : 0;
+      const others = Math.max(0, rendered.length - 1);
+      const max = viewport.clientWidth - padding - others * (SPINE_PX + gap);
+      setMaxPlankWidthPx(max > 0 ? max : Number.POSITIVE_INFINITY);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    return () => observer.disconnect();
   }, [isSliding, rendered.length]);
 
   // Scroll the just-navigated plank into view, then clear the one-shot flag.
@@ -571,59 +613,61 @@ export const DeckPlanks = () => {
 
   return (
     <ScrollToPlankContext.Provider value={scrollToPlank}>
-      <div className='relative bg-deck-surface overflow-hidden'>
-        <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
-        {fullscreen && fullscreenId ? (
-          <>
-            <ExitFullscreenButton onExit={toggleFullscreen} />
+      <MaxPlankWidthContext.Provider value={maxPlankWidthPx}>
+        <div className='relative bg-deck-surface overflow-hidden'>
+          <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
+          {fullscreen && fullscreenId ? (
+            <>
+              <ExitFullscreenButton onExit={toggleFullscreen} />
+              <DeckPlank
+                id={fullscreenId}
+                part='main'
+                fullscreen
+                classNames={mx('absolute inset-0', mainIntrinsicSize)}
+              />
+            </>
+          ) : presentation === 'fullbleed' && rendered[0] ? (
+            // A singleton deck renders the plank directly as an absolute-inset child of this filled
+            // container (today's solo look). Routing it through the horizontal Mosaic.Stack/ScrollArea
+            // collapses it — an `absolute inset-0` plank contributes no intrinsic size to a flex tile.
             <DeckPlank
-              id={fullscreenId}
+              id={rendered[0]}
               part='main'
-              fullscreen
+              active={rendered}
+              soloLook
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />
-          </>
-        ) : presentation === 'fullbleed' && rendered[0] ? (
-          // A singleton deck renders the plank directly as an absolute-inset child of this filled
-          // container (today's solo look). Routing it through the horizontal Mosaic.Stack/ScrollArea
-          // collapses it — an `absolute inset-0` plank contributes no intrinsic size to a flex tile.
-          <DeckPlank
-            id={rendered[0]}
-            part='main'
-            active={rendered}
-            soloLook
-            classNames={mx('absolute inset-0', mainIntrinsicSize)}
-          />
-        ) : presentation === 'tiling' ? (
-          <TilingDeck rendered={rendered} active={deck.active} weights={deck.tilingSizing} />
-        ) : (
-          <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
-            <ScrollArea.Root orientation='horizontal' classNames='size-full'>
-              <ScrollArea.Viewport ref={viewportRef} classNames={breakpoint === 'mobile' && 'snap-x snap-mandatory'}>
-                <Mosaic.Stack
-                  orientation='horizontal'
-                  // Mobile pins the stack to the viewport width (`w-full`) so each plank's `w-full`
-                  // resolves to one screen — the planks overflow the scroll viewport and snap one-to-next
-                  // rather than the stack shrink-wrapping to their intrinsic width. The `--main-spacing`
-                  // gap/padding (which encapsulates each plank in its own container) only applies to the
-                  // desktop sliding deck, matching today's multi-mode look.
-                  classNames={
-                    breakpoint === 'mobile'
-                      ? 'h-full w-full'
-                      : isSliding
-                        ? 'h-full gap-(--main-spacing) px-(--main-spacing)'
-                        : 'h-full'
-                  }
-                  getId={getPlankId}
-                  items={rendered}
-                  Tile={DeckPlankTile}
-                  draggable={false}
-                />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        )}
-      </div>
+          ) : presentation === 'tiling' ? (
+            <TilingDeck rendered={rendered} active={deck.active} weights={deck.tilingSizing} />
+          ) : (
+            <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
+              <ScrollArea.Root orientation='horizontal' classNames='size-full'>
+                <ScrollArea.Viewport ref={viewportRef} classNames={breakpoint === 'mobile' && 'snap-x snap-mandatory'}>
+                  <Mosaic.Stack
+                    orientation='horizontal'
+                    // Mobile pins the stack to the viewport width (`w-full`) so each plank's `w-full`
+                    // resolves to one screen — the planks overflow the scroll viewport and snap one-to-next
+                    // rather than the stack shrink-wrapping to their intrinsic width. The `--main-spacing`
+                    // gap/padding (which encapsulates each plank in its own container) only applies to the
+                    // desktop sliding deck, matching today's multi-mode look.
+                    classNames={
+                      breakpoint === 'mobile'
+                        ? 'h-full w-full'
+                        : isSliding
+                          ? 'h-full gap-(--main-spacing) px-(--main-spacing)'
+                          : 'h-full'
+                    }
+                    getId={getPlankId}
+                    items={rendered}
+                    Tile={DeckPlankTile}
+                    draggable={false}
+                  />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          )}
+        </div>
+      </MaxPlankWidthContext.Provider>
     </ScrollToPlankContext.Provider>
   );
 };
