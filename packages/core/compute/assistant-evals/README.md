@@ -1,14 +1,30 @@
 # @dxos/assistant-evals
 
-Cross-plugin assistant testing: gated agent e2e tests (`src/testing/*.test.ts`) and `evalite`-scored
-evals (`src/evals/*.eval.ts`), sharing one harness. Single-plugin/skill scenarios belong in their own
-plugin package instead, importing `createEvalRunner` / assertion helpers from here as a library — see
-`packages/core/compute/ai/TESTING.md` § "Where evals live".
+Cross-plugin assistant testing: `evalite`-scored evals (`src/evals/*.eval.ts`) and a handful of
+legacy gated agent e2e tests (`src/testing/*.test.ts`), sharing one harness. Single-plugin/skill
+scenarios belong in their own plugin package instead, importing `createEvalRunner` / assertion
+helpers from here as a library — see `packages/core/compute/ai/TESTING.md` § "Where evals live".
+Full guide, including the LLM-judge scorer and known gotchas: `.agents/skills/agent-eval-tests`.
 
-## Agent e2e tests (`src/testing/`)
+## Evals (`src/evals/`)
+
+Call the live LLM via `DX_ANTHROPIC_API_KEY` — no conversation cache, scored by real DB/tool-effect
+assertions (`src/assertions.ts`) or an LLM judge (`src/judge.ts`) instead of self-reported
+completion. Shared runner setup is in `src/runner.ts`.
+
+```bash
+export DX_ANTHROPIC_API_KEY=...
+moon run assistant-evals:evals
+
+# Single file (the moon task hardcodes `args: [src/evals]`, so bypass it for one file):
+cd packages/core/compute/assistant-evals && npx evalite run src/evals/database.eval.ts
+```
+
+## Legacy: gated agent e2e tests (`src/testing/`)
 
 Gated behind `runMemoizedTests()` — off by default, so PR CI stays fast; opt in with
-`DX_RUN_LLM_TESTS=1` or `ALLOW_LLM_GENERATION=1` (regenerates memoized conversations).
+`DX_RUN_LLM_TESTS=1` or `ALLOW_LLM_GENERATION=1` (regenerates memoized conversations). New coverage
+should generally be an eval (above), not a new file here — see the skill for the full rationale.
 
 Each test file follows a strict uniform structure. A test consists of **only a prompt** — no setup
 code, assertions, or manual DB manipulation:
@@ -55,16 +71,5 @@ Rules:
 moon run assistant-evals:test
 
 # Live, regenerating conversations (requires credentials)
-ALLOW_LLM_GENERATION=1 moon run assistant-evals:test -- src/testing/database.test.ts
-```
-
-## Evals (`src/evals/`)
-
-Call the live LLM via `DX_ANTHROPIC_API_KEY` — no conversation cache, scored by `evalite`/`autoevals`
-scorers instead of self-reported completion. Shared runner setup is in `src/runner.ts`, DB-state
-assertion helpers in `src/assertions.ts`.
-
-```bash
-export DX_ANTHROPIC_API_KEY=...
-moon run assistant-evals:evals
+ALLOW_LLM_GENERATION=1 moon run assistant-evals:test -- src/testing/sandbox.test.ts
 ```

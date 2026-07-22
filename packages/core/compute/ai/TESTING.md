@@ -189,11 +189,22 @@ the analysis below drives the sequencing. Blast-radius facts:
 
 The consumers fall into three groups:
 
-- **G1 — pure agent e2e (`@dxos/assistant-e2e`):** `database`, `crm-mailbox`, `web-search`,
-  `planning`, `markdown`, `smoke`. Highest cost (~7.5 MB of fixtures; `crm-mailbox` alone 5.4 MB),
-  lowest signal, most redundant — the operations and the `AiSession` loop they touch are also
-  exercised by G2/G3. The **only** unique thing G1 covers is that the **full plugin composition**
-  boots (`ClientPlugin` + `AssistantPlugin` + `InboxPlugin` in `harness.ts`).
+- **G1 — pure agent e2e (formerly `@dxos/assistant-e2e`, merged into `@dxos/assistant-evals`):**
+  `database`, `crm-mailbox`, `web-search`, `planning`, `markdown`, `smoke`. Highest cost (~7.5 MB of
+  fixtures, already deleted; `crm-mailbox` alone was 5.4 MB), lowest signal, most redundant — the
+  operations and the `AiSession` loop they touch are also exercised by G2/G3. The **only** unique
+  thing G1 covered was that the **full plugin composition** boots (`ClientPlugin` +
+  `AssistantPlugin` + `InboxPlugin` in `harness.ts`). **Resolved:** all 6 scenarios now have scored
+  `evalite` evals in `src/evals/*.eval.ts` (same `createComposerTestApp` harness, so the boot/wiring
+  coverage carries over) — the corresponding gated `src/testing/*.test.ts` files were deleted, since
+  their memoized-replay fixtures were already gone and their live-mode value (self-reported
+  completion) is strictly weaker than the eval's deterministic DB/tool-invocation grading. Three
+  `src/testing/*.test.ts` files remain — not part of G1, each testing something an eval doesn't
+  cover yet: `inbox-enable` (`describe.skip`, blocked on a real inbox-skill registry bug),
+  `local-ai` (local Ollama model compatibility — `createEvalRunner` has no `inferenceProvider`
+  option yet), `sandbox` (needs a live external `sandbox-service` worker, and `createEvalRunner` has
+  no `randomEntityIds`/`sandbox`/`clientTypes` options yet). Each is marked with a
+  `TODO(wittjosiah): Migrate to an eval` noting what's missing.
 - **G2 — per-operation / skill (behavioral through the LLM):** `plugin-markdown` create/update,
   `plugin-magazine`, `plugin-assistant`, `assistant-toolkit` `run-instructions` + the `database`/
   `memory`/`planning`/`agent` skills, `AiSummarizer`. Carry **unique operation-level deterministic
@@ -204,9 +215,10 @@ The consumers fall into three groups:
 ### Impact of removing each group
 
 - **A/B/H/G signal:** none lost for any group — already frozen / self-certifying.
-- **G1:** its deterministic C/D signal is almost entirely redundant, so deletion drops no unique
-  coverage. The one genuine loss is the full-plugin **boot/wiring** path, recovered cheaply by a
-  single scripted-model boot-smoke (no fixture). Net: low impact, high relief.
+- **G1:** its deterministic C/D signal was almost entirely redundant, so deletion dropped no unique
+  coverage. The one genuine risk — losing the full-plugin **boot/wiring** path — didn't
+  materialize: the eval ports use the same `createComposerTestApp` harness, so that coverage
+  carries over. **Done** — the 6 corresponding `src/testing/*.test.ts` files are deleted.
 - **G2/G3:** deleting early **would** open real per-operation / per-loop gaps, because that
   deterministic signal is unique. De-gate them from PR CI now to stop the flakiness, then convert
   before deleting.
@@ -232,10 +244,12 @@ deterministic tiers that make it safe.
    This is the substrate for D and for the G1 boot-smoke.
 3. **Harness (D) unit tests** on the scripted model: all loop branches listed above.
 4. ~~Delete G1 (`@dxos/assistant-e2e`) and its fixtures, replace with a scripted-model
-   boot-smoke.~~ **Superseded twice:** #12297 kept G1 gated in place instead of deleting it
-   (cheaper, reversible, doubles as design inspiration); "Where evals live" above further merges
+   boot-smoke.~~ **Superseded three times:** #12297 kept G1 gated in place instead of deleting it
+   (cheaper, reversible, doubles as design inspiration); "Where evals live" above further merged
    `@dxos/assistant-e2e` into `@dxos/assistant-evals` so the cross-plugin scenario surface has one
-   home. Its C/D signal is still redundant with G2/G3, so nothing unique is lost either way.
+   home; **finally done for real, via item 10 below** — every G1 scenario now has a scored eval (the
+   boot-smoke this item originally asked for, just against the real scenario instead of a synthetic
+   one), so the 6 corresponding `src/testing/*.test.ts` files were deleted rather than replaced.
 5. **Operation (C) unit tests**: begin converting G2 to deterministic mocked unit tests; introduce
    the golden-args fixture convention. Delete each G2 fixture only once its unit test lands.
 6. **Context-assembly (E) and schema round-trip (F) tests.** E: snapshot the assembled prompt
@@ -250,12 +264,15 @@ deterministic tiers that make it safe.
 
 ### Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-8. Add scorers (tool-match, schema-validity, DB-effect, LLM-judge) and datasets covering the
-   comprehension / tool-selection scenarios previously implicit in the G1 suite.
+8. **Done:** DB-effect (`objectExists`/`findObject`), tool-invocation (`toolInvocations`, matched on
+   the tool's stable `operationKey`, not its display `name`), and LLM-judge (`judge.ts`, native
+   `@dxos/ai` call — not `autoevals`'s OpenAI-coupled classifiers) scorers all added. Still open:
+   schema-validity scorer; broader datasets for comprehension / tool-selection.
 9. Pin model versions; define pass-rate thresholds; wire a scheduled (nightly / on-demand) run
-   distinct from PR CI.
-10. Port the highest-value former-G1 scenarios into evals as **H** integration cases (real model,
-    real operations), non-gating.
+   distinct from PR CI. **Deferred** — not started yet.
+10. **Done:** all 6 former-G1 scenarios (`database`, `smoke`, `markdown`, `crm-mailbox`,
+    `web-search`, `planning`) ported into `src/evals/*.eval.ts` as **H** integration cases (real
+    model, real operations), non-gating — every one passing live at 100%.
 
 ### Phase 3 — finish migration & reduce the machinery
 
