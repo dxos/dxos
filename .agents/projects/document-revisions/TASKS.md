@@ -247,13 +247,30 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
       comments-top/history-bottom layout); each half is unit-tested, but the full-stack boot times out
       in-pane, so an automated assertion is deferred to avoid a flaky test. `showComments` consumption
       and the `useVersioning` hook-test harness also deferred.
-- [ ] **Milestone B — Suggesting-mode authoring**. **B0 spike DONE (2026-07-22, two parallel Opus
-      agents):** both approaches feasible-with-caveats. **A1 bind-to-branch RECOMMENDED** (~6–9 tasks,
-      native editing preserved; main risk = rebase foreign overlays from doc/branch coords into main
-      coords) over A2 bind-to-main (~8–11 tasks; freezes the buffer → hand-rolled caret/selection/
-      undo/IME). Reports: `.superpowers/sdd/spike-bind-to-branch.md`, `spike-bind-to-main.md`.
-      **Pending user ratification of A1** before authoring B1…Bn (first B task = Storybook prototype
-      for the caret-across-phantom-deletion eyeball). Re-add the Suggesting toolbar option when it lands.
+- [ ] **Milestone B — Suggesting-mode authoring** (A1 bind-to-branch). B0 spike + B1 prototype done.
+  - [x] **B0 spike** (2026-07-22, two parallel Opus agents): A1 bind-to-branch chosen over A2
+        bind-to-main. Reports: `.superpowers/sdd/spike-*.md`.
+  - [x] **B1 `trackChanges` extension + eval story — A1 RATIFIED by user felt-eval (2026-07-22).**
+        `computeCharHunks` (character-level) so live typing marks only changed chars (word-level
+        struck even a newline); phantom-deletion widgets + atomic caret guard; `TrackChanges` story.
+        Suggestion accept/reject moved to a hover popover (was an opacity-hidden inline gap). User
+        confirmed: insertions clean green, deletions strike correctly, phantom/caret OK — with the
+        second-author overlay REMOVED from the story (see B2).
+  - [ ] **B2 — base-decoupling (the crux; fixes every multi-author defect seen in B1 eval).** Give
+        `suggestions()`/`trackChanges` an explicit `main` base decoupled from the editor doc, and
+        rebase foreign authors' hunks from main-coords into branch-coords, so self AND foreign
+        overlays both diff vs main (today foreign diffs vs the branch → strikes the user's own new
+        text, garbles accept). Also render the accept/reject popover in a non-clipped CM tooltip
+        layer (position:absolute is clipped by the scroller — see B1 screenshots).
+  - [ ] **B3 — wire Suggesting mode into MarkdownArticle**: `mode==='suggesting'` binds the editor to
+        the user's `kind:'suggestion'` branch (`Branch.suggestion`) + `trackChanges(self)` + rebased
+        foreign overlays; re-add the Suggesting toolbar option.
+  - [ ] **B4 — accept/reject of own changes** (incl. phantom un-delete) via durable
+        `AcceptChange`/`RejectChange` with the B2 base-decoupling.
+  - [ ] **B5 — integration coverage**: full-stack Suggesting-mode play test + the deferred
+        `CommentsArticle` composition test.
+  - [ ] **B6 — hardening**: incremental diff (perf), multi-line/block deletions, copy semantics.
+  - [ ] **B7 — ship**: DESIGN update, changeset, PR.
 
 ## Landing the suggestions feature (current goal)
 
