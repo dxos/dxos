@@ -241,8 +241,32 @@ is the common case of this; the fuller rule is context-scope first.
 - ℹ️ **`plugin-deck` has two companion aspects** (`deck-companion-variant`, `deck-companion-split`) under
   one concern; consolidation candidate (a single `{ variant, splitSize }` aspect — one ViewState object
   per aspect).
-- ↗️ **Sweep the remaining `state.ts` KVS stores** (`plugin-space`, `plugin-map`, `plugin-observability`,
-  `plugin-assistant`) for `Record<contextId, …>` fields that are really per-context ViewState.
+
+## `state.ts` sweep (2026-07-22)
+
+Every `capabilities/state.ts` was classified. The four plugins originally flagged
+(`plugin-space` / `plugin-map` / `plugin-observability` / `plugin-assistant`) were mostly wrong
+guesses — the genuine per-context `Record<contextId, …>` view state lives in **comments**,
+**versioning**, and **navtree** instead.
+
+| Plugin                             | Store shape                                                                 | Per-context view state?                             | Recommendation                                                                                      |
+| ---------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `plugin-comments`                  | `ViewStore = Record<SubjectId, ViewState>` (its own `ViewState` capability) | **yes** — per-subject (`showResolvedThreads`)       | **migrate** → a `memory` (or `local`) aspect keyed by subject id; drop the bespoke capability       |
+| `plugin-versioning`                | `{ selection, view, mode }`, each `Record<objectId, …>`, in-memory          | **yes** — per-object, self-described per-session    | **migrate** → three `memory` aspects (or one `{ selection, view, mode }` aspect) keyed by object id |
+| `plugin-navtree`                   | per-path `{ open }` via hand-rolled `localStorage` + atom family            | **yes** — per-path, already device-local            | **migrate** → a `local` aspect keyed by path (`current` stays ephemeral)                            |
+| `plugin-assistant`                 | `currentChat` / `pendingPrompts`, each `Record<key, string>` (KVS)          | partial — id-keyed, but values are chat/prompt refs | leave for now (serialization/hydration TODO already noted in the store)                             |
+| `plugin-comments`                  | `CommentState.toolbar: Record<id, boolean>`                                 | borderline — per-object toolbar toggle              | fold into the comments aspect migration if done                                                     |
+| `plugin-space`                     | `spaceNames: Record<spaceId, string>`                                       | no — a name/label data cache, not viewing state     | keep in KVS                                                                                         |
+| `plugin-deck`                      | `decks` / `previousMode` keyed by deck id                                   | no — workspace/app-global layout                    | keep in KVS (already classified app-global)                                                         |
+| `plugin-map`                       | `{ type }`                                                                  | no — config                                         | keep                                                                                                |
+| `plugin-observability`             | `{ group }`                                                                 | no — telemetry config                               | keep                                                                                                |
+| `plugin-meeting`                   | `MeetingState` (mutable runtime store)                                      | no — ephemeral active-meeting runtime               | keep                                                                                                |
+| `plugin-sheet` / `plugin-markdown` | grid/editor-view `Map` registries                                           | no — runtime instance handles, not persisted state  | keep                                                                                                |
+
+**Tell used:** a field is a ViewState candidate when it is a `Record` keyed by an object/surface id
+holding _how that thing is being viewed_ (selection, mode, expansion, toggle). It is **not** when the
+`Record` is a data cache (names), presence (viewers), workspace-global layout (decks), or a live
+runtime handle (editor/grid instances).
 
 ---
 
@@ -252,4 +276,7 @@ is the common case of this; the fuller rule is context-scope first.
 2. ✅ Move the inbox message view mode from the Settings store to a ViewState aspect (Pattern A).
 3. ✅ Add the `@idiom` markers (`viewState` on `define`, `kvsStore` on `createKvsStore`).
 4. ✅ Migrate `plugin-markdown`'s per-document `viewMode` Record to a ViewState aspect.
-5. Sweep the other `state.ts` stores for per-context `Record` fields; consolidate deck's two aspects.
+5. ✅ Sweep every `state.ts` store for per-context `Record` fields (table above).
+6. Migrate the three confirmed candidates — `plugin-comments` (`ViewStore`), `plugin-versioning`
+   (`selection`/`view`/`mode`), `plugin-navtree` (per-path `open`) — each its own change with tests.
+7. Consolidate deck's two companion aspects into one.
