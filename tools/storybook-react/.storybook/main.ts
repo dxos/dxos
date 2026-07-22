@@ -266,6 +266,12 @@ export const createConfig = ({
             // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
             overlay: false,
           },
+          // Under `vitest run` the story builder serves in a single pass and never needs the file
+          // watcher, but vite leaves its FSEVENTWRAP + file handles open on close, so teardown of a
+          // heavy package exceeds the timeout and vitest force-exits non-zero despite all tests
+          // passing. Disable the watcher for the test builder only; interactive `storybook dev`
+          // (local + e2e, no `VITEST` env) keeps HMR.
+          ...(isTrue(process.env.VITEST) ? { watch: null } : {}),
         },
         optimizeDeps: {
           // WASM modules.
