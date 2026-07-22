@@ -81,7 +81,6 @@ type EphemeralDeckState
 type DeckSettings
   fields:
     navigationDefault?: replace | new-plank  # whether opening an item replaces the attended plank or opens a new one beside it; shift-click inverts
-    encapsulatedPlanks?: boolean  # render each plank in an isolated container
     showHints?: boolean           # show keyboard shortcut hints in the UI
     enableNativeRedirect?: boolean  # redirect supported URLs to the native desktop app
 ```

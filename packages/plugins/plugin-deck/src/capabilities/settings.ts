@@ -19,7 +19,6 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({
         showHints: false,
         enableNativeRedirect: false,
-        encapsulatedPlanks: false,
         navigationDefault: 'replace' as const,
       }),
     });

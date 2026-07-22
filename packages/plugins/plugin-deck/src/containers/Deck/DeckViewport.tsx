@@ -61,6 +61,10 @@ const DEFAULT_PLANK_SIZE = 50;
 const MIN_PLANK_SIZE = 20;
 const MAX_PLANK_SIZE = 120;
 
+// Gap/padding that encapsulates each plank in its own container (the `--main-spacing` CSS var); tweak
+// here to change the deck's plank spacing.
+const PLANK_SPACING = '0.75rem';
+
 // The companion plank persists a single shared width (keyed variant-independently) so switching
 // companion tabs does not resize the pane. Not a valid node id, so it never collides with a plank.
 const COMPANION_SIZE_KEY = 'companion';
@@ -92,7 +96,6 @@ export type DeckViewportProps = PropsWithChildren;
 export const DeckViewport = ({ children }: DeckViewportProps) => {
   const {
     state: { sidebarState, complementarySidebarState, fullscreen },
-    settings,
   } = useDeckContext(DECK_VIEWPORT_NAME);
 
   const breakpoint = useBreakpoints();
@@ -108,7 +111,7 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
       ]}
       style={
         {
-          '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
+          '--main-spacing': PLANK_SPACING,
           '--main-sidebar-width':
             sidebarState === 'expanded'
               ? 'var(--dx-nav-sidebar-size)'

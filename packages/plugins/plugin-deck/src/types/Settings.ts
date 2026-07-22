@@ -7,13 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 export const Settings = Schema.Struct({
-  // TODO(burdon): Rename layoutMode? (e.g., bento/encapsulated or floating/compact, etc.)
-  encapsulatedPlanks: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Encapsulated planks',
-      description: 'Render each plank inside its own isolated container.',
-    }),
-  ),
   showHints: Schema.optional(
     Schema.Boolean.annotations({
       title: 'Show hints',
