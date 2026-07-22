@@ -18,7 +18,7 @@ import { SpaceCapabilities } from '#types';
 
 import { MAIN_BRANCH, commitToSelection, createTimelineModel } from '../../model';
 
-export type ObjectHistoryProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
+export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
 
 /**
  * Companion panel: git-graph timeline of an object's checkpoints, branch forks, and merges.
@@ -29,15 +29,12 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
   const { t } = useTranslation(meta.profile.key);
   const providers = useCapabilities(SpaceCapabilities.HistoryProvider);
   const provider = providers.find(({ id }) => id === Obj.getTypename(subject));
-  const object: History.VersionedObject = subject;
   const [naming, setNaming] = useState<'checkpoint' | 'branch' | undefined>(undefined);
-
-  // Subscribe to history mutations (checkpoints/branches added elsewhere).
-  useObject(object, 'history');
+  useObject(subject, 'history');
 
   // Selection is session-local: collaborators each view their own version.
   const [state, setState] = useAtomCapabilityState(SpaceCapabilities.VersioningState);
-  const objectId = object.id;
+  const objectId = subject.id;
   const selection = state.selection[objectId] || { kind: 'current' as const };
   const setSelection = useCallback(
     (next: SpaceCapabilities.VersionSelection) => {
@@ -49,13 +46,13 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
   // The branch being viewed (selection.kind === 'branch').
   const activeBranch =
     selection.kind === 'branch'
-      ? object.history?.branches.find((branch) => branch.id === selection.branchId && branch.status === 'active')
+      ? subject.history?.branches.find((branch) => branch.id === selection.branchId && branch.status === 'active')
       : undefined;
   // The checkpoint being viewed (selection.kind === 'checkpoint'). A new branch created while
   // viewing a checkpoint forks from THAT revision, not the live tip.
   const activeVersion =
     selection.kind === 'checkpoint'
-      ? object.history?.versions.find((version) => version.id === selection.versionId)
+      ? subject.history?.versions.find((version) => version.id === selection.versionId)
       : undefined;
 
   // The lane the current selection sits on. The timeline highlights this branch; it must match the
@@ -71,14 +68,14 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
         ? (() => {
             // The fork node lanes on its branch; highlight that lane so the selection is not snapped
             // onto main's first commit (see the `currentBranch` jump effect in Timeline).
-            const branch = object.history?.branches.find(
+            const branch = subject.history?.branches.find(
               (branch) => branch.id === selection.branchId && branch.status !== 'archived',
             );
             return branch ? Branch.label(branch) : MAIN_BRANCH;
           })()
         : activeVersion?.branch
           ? (() => {
-              const branch = object.history?.branches.find(
+              const branch = subject.history?.branches.find(
                 (branch) => branch.key === activeVersion.branch && branch.status !== 'archived',
               );
               return branch ? Branch.label(branch) : MAIN_BRANCH;
@@ -89,7 +86,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
   // cheap at panel scale (a handful of records).
   const rootText = provider?.getTarget(subject);
   const { commits, branches } = provider
-    ? createTimelineModel(object, rootText, { nowLabel: t('now.label'), branchTipLabel: t('branch-tip.label') })
+    ? createTimelineModel(subject, rootText, { nowLabel: t('now.label'), branchTipLabel: t('branch-tip.label') })
     : { commits: [], branches: [] };
 
   // Branch/checkpoint creation targets the active branch when one is selected, else the root.
@@ -109,17 +106,17 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
         // branch), so bind to it and checkpoint the branch-bound Text; otherwise the revision would
         // record the parent's heads and land on the main lane. Unnamed revisions are allowed.
         if (activeBranch && Branch.isCore(activeBranch)) {
-          Branch.bind(object, activeBranch)
+          Branch.bind(subject, activeBranch)
             .then((binding) => {
               try {
-                Version.create(object, { name: name.trim(), target: binding.object, branch: activeBranch.key });
+                Version.create(subject, { name: name.trim(), target: binding.object, branch: activeBranch.key });
               } finally {
                 binding.dispose();
               }
             })
             .catch((error) => log.catch(error));
         } else {
-          Version.create(object, { name: name.trim(), target: timelineTarget });
+          Version.create(subject, { name: name.trim(), target: timelineTarget });
         }
       } else if (naming === 'branch') {
         // Fork from the viewed checkpoint's revision when one is selected (a base checkpoint's heads
@@ -127,7 +124,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
         // with a branch) is not yet supported here, so it falls back to the tip.
         const forkFrom = activeVersion && !activeVersion.branch ? activeVersion : undefined;
         const parent = forkFrom?.target.target ?? timelineTarget;
-        Branch.create(object, {
+        Branch.create(subject, {
           name: name.trim(),
           parent,
           ...(forkFrom ? { heads: forkFrom.heads } : {}),
@@ -136,7 +133,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
           .catch((error) => log.catch(error));
       }
     },
-    [object, naming, activeBranch, activeVersion, timelineTarget, setSelection],
+    [subject, naming, activeBranch, activeVersion, timelineTarget, setSelection],
   );
 
   const handleSelect = useCallback(
@@ -144,28 +141,28 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
       if (!commit) {
         return;
       }
-      const next = commitToSelection(object, commit);
+      const next = commitToSelection(subject, commit);
       if (next) {
         setSelection(next);
       }
     },
-    [object, setSelection],
+    [subject, setSelection],
   );
 
   const handleMerge = useCallback(() => {
     if (activeBranch) {
-      Branch.merge(object, activeBranch)
+      Branch.merge(subject, activeBranch)
         .then(() => setSelection({ kind: 'current' }))
         .catch((error) => log.catch(error));
     }
-  }, [object, activeBranch, setSelection]);
+  }, [subject, activeBranch, setSelection]);
 
   const handleDiscard = useCallback(() => {
     if (activeBranch) {
-      Branch.discard(object, activeBranch);
+      Branch.discard(subject, activeBranch);
       setSelection({ kind: 'current' });
     }
-  }, [object, activeBranch, setSelection]);
+  }, [subject, activeBranch, setSelection]);
 
   if (!provider) {
     return null;
