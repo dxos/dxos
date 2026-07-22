@@ -52,7 +52,7 @@ export const Inbox = {
     const bodyEditor = page.locator('.cm-content').last();
     await bodyEditor.click();
     await bodyEditor.pressSequentially(body);
-    await page.getByTestId('save-button').click();
+    await page.getByTestId('send-email-button').click();
   },
 };
 
