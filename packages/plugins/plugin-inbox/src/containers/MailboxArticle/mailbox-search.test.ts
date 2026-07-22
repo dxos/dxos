@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Effect } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { Feed, Filter, Obj, Scope } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { QueryBuilder } from '@dxos/echo-query';
+import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
@@ -113,6 +115,91 @@ describe('buildThreadSemiJoin', () => {
       });
     } finally {
       await builder.close();
+    }
+  });
+});
+
+// Live-DB coverage of what the semi-join actually returns. These are the query behaviors the mailbox
+// depends on (whole-thread expansion, thread-of-one retention); previously only exercised through the
+// storybook/e2e integration path.
+describe('buildThreadSemiJoin (results)', () => {
+  const setup = async () => {
+    const builder = await new EchoTestBuilder().open();
+    const { db } = await builder.createDatabase({ types: [Feed.Feed, Message.Message] });
+    const feed = db.add(Feed.make({}));
+    await db.flush();
+    return { builder, db, feed, feedUri: Obj.getURI(feed, { prefer: 'absolute' }) };
+  };
+
+  const message = (text: string, created: string, threadId?: string) =>
+    Message.make({
+      created,
+      sender: { email: 'a@example.com', name: 'A' },
+      blocks: [{ _tag: 'text', text }],
+      threadId,
+    });
+
+  type Fixture = Awaited<ReturnType<typeof setup>>;
+
+  const append = async ({ db, feed }: Fixture, messages: Message.Message[]) => {
+    await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(db))));
+    await db.flush();
+  };
+
+  const runSemiJoin = async ({ db, feedUri }: Fixture, viewFilter: Filter.Any): Promise<string[]> => {
+    const scope = Scope.feed(feedUri);
+    const results = await db.query(buildThreadSemiJoin(viewFilter, scope).from(scope)).run();
+    return results.map((row) => row.id).sort();
+  };
+
+  const ids = (...messages: Message.Message[]) => messages.map((message) => message.id).sort();
+
+  test('a partial match pulls in the whole thread but not unrelated threads', async () => {
+    const fixture = await setup();
+    try {
+      // `a1` and `a2` share a thread; only `a1` matches the filter, yet the whole thread must return.
+      const a1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
+      const a2 = message('two', '2020-01-02T00:00:00.000Z', 'thread-a');
+      const b1 = message('three', '2020-01-03T00:00:00.000Z', 'thread-b');
+      await append(fixture, [a1, a2, b1]);
+
+      // Match `a1` alone (by its unique `created`); the semi-join expands to its whole thread.
+      const viewFilter = Filter.type(Message.Message, { created: a1.created });
+      expect(await runSemiJoin(fixture, viewFilter)).toEqual(ids(a1, a2));
+    } finally {
+      await fixture.builder.close();
+    }
+  });
+
+  test('retains thread-of-one messages (threadId defaulted to own id)', async () => {
+    const fixture = await setup();
+    try {
+      // Two threaded + two standalone; `ensureThreadId` gives the standalones their own id as threadId,
+      // which is exactly what the mail mappers do — the regression guard for the dropped-threadless bug.
+      const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
+      const t2 = message('two', '2020-01-02T00:00:00.000Z', 'thread-a');
+      const s1 = Message.ensureThreadId(message('three', '2020-01-03T00:00:00.000Z'));
+      const s2 = Message.ensureThreadId(message('four', '2020-01-04T00:00:00.000Z'));
+      await append(fixture, [t1, t2, s1, s2]);
+
+      // Blank view matches every message; all four must survive the semi-join (2 in one thread + 2 singletons).
+      expect(await runSemiJoin(fixture, buildMailboxSelection('', undefined))).toEqual(ids(t1, t2, s1, s2));
+    } finally {
+      await fixture.builder.close();
+    }
+  });
+
+  test('a threadless message is dropped without the ensureThreadId invariant (documents the bug)', async () => {
+    const fixture = await setup();
+    try {
+      const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
+      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // no threadId, no ensureThreadId
+      await append(fixture, [t1, standalone]);
+
+      // The `threadId IN (…)` semi-join excludes the null-threadId row — the exact failure this fix prevents.
+      expect(await runSemiJoin(fixture, buildMailboxSelection('', undefined))).toEqual(ids(t1));
+    } finally {
+      await fixture.builder.close();
     }
   });
 });

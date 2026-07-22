@@ -134,6 +134,7 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
 
     blocks,
   });
+  Message.ensureThreadId(echoMessage);
 
   // `keywords` is a `{ [keyword]: true }` set; keep only the keys currently set.
   const keywords = email.keywords

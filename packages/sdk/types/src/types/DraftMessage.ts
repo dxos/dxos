@@ -12,8 +12,13 @@ import * as Message from './Message';
  * property, so only messages created through draft flows match.
  */
 
-/** Creates a draft message. Callers must include `properties.mailbox` for parent-scoped drafts. */
-export const make = (props: Obj.MakeProps<typeof Message.Message>) => Obj.make(Message.Message, props);
+/**
+ * Creates a draft message. Callers must include `properties.mailbox` for parent-scoped drafts. A
+ * compose draft has no thread yet, so its `threadId` defaults to its own id — the mailbox list groups
+ * by `threadId` and would otherwise drop it (see {@link Message.ensureThreadId}).
+ */
+export const make = (props: Obj.MakeProps<typeof Message.Message>) =>
+  Message.ensureThreadId(Obj.make(Message.Message, props));
 
 /** Whether `value` is a Message whose `properties.mailbox` is a valid DXN or EID string (i.e. a draft). */
 export const instanceOf = (value: unknown): value is Message.Message =>
