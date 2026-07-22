@@ -7,16 +7,34 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Relation } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions';
+import { judge } from '../judge';
 import { createEvalRunner } from '../runner';
 
 // Ported from the gated `CRM Mailbox` scenario (../testing/crm-mailbox.test.ts).
-// Grades the DB effect directly instead of the agent's self-reported `completedCriteria`.
+// Grades the DB effect directly instead of the agent's self-reported `completedCriteria`. Existence
+// (dimension G) and accuracy (dimensions A/B/H, via an LLM judge) are graded separately: a record
+// can exist yet still misrepresent the source email, which no deterministic check alone can catch.
+
+const ACCURACY_JUDGE_RUBRIC = trim`
+  You are checking whether CRM records created from a source email are ACCURATE — not just
+  present, but correct — compared against that email.
+
+  Pass only if all of the following hold:
+  - The Person's name matches the sender's name in the email signature.
+  - The Organization's name matches the sender's company in the email signature/domain.
+  - The Employer relation's role reflects what the email signature states for that person (an
+    elaboration or more complete title is fine; a wrong, contradictory, or fabricated role is not).
+
+  Fail if any of the CRM records is missing, or if any field is incorrect, invented, or contradicts
+  the source email.
+`;
 
 const SEED_EMAIL_INPUT = {
   sender: { name: 'Vishal @ SigNoz', email: 'vishal@mail.signoz.io' },
@@ -76,11 +94,24 @@ const task = createEvalRunner({
         return source?.fullName === 'Vishal Sharma' && target?.name === 'SigNoz';
       });
 
+      const accuracyVerdict = yield* judge(
+        ACCURACY_JUDGE_RUBRIC,
+        JSON.stringify({
+          sourceEmail: SEED_EMAIL_INPUT,
+          createdRecords: {
+            person: person ? { fullName: person.fullName } : null,
+            organization: organization ? { name: organization.name } : null,
+            employerRole: employerRelation?.role ?? null,
+          },
+        }),
+      );
+
       return {
         personExists: !!person,
         organizationExists: !!organization,
         employerRelationExists: !!employerRelation,
         employerRoleCorrect: employerRelation?.role === 'Founding Engineer',
+        accuracyVerdict,
       };
     }),
 });
@@ -108,6 +139,38 @@ evalite('CRM Mailbox — processes a mailbox email into CRM profiles and employe
       name: 'employer-role-correct',
       description: 'The Employer relation\'s role is "Founding Engineer", stored as a proper schema field.',
       scorer: ({ output }) => (output.dbQuery.employerRoleCorrect ? 1 : 0),
+    },
+    {
+      name: 'crm-data-accurate',
+      description: 'An LLM judge confirms the CRM records accurately reflect the source email (not just present).',
+      scorer: ({ output }) => ({
+        score: output.dbQuery.accuracyVerdict.pass ? 1 : 0,
+        metadata: { reasoning: output.dbQuery.accuracyVerdict.reasoning },
+      }),
+    },
+  ],
+});
+
+// A judge that only ever passes would be worthless as a scorer — this demonstrates it correctly
+// fails records that exist but misrepresent the source email, on a hand-crafted mismatch rather
+// than a live agent run.
+const INACCURATE_RECORDS = JSON.stringify({
+  sourceEmail: SEED_EMAIL_INPUT,
+  createdRecords: {
+    person: { fullName: 'Victor Sharma' },
+    organization: { name: 'SigNoz' },
+    employerRole: 'Chief Executive Officer',
+  },
+});
+
+evalite('CRM Mailbox — accuracy judge correctly fails misrepresented records', {
+  data: [{ input: { content: INACCURATE_RECORDS } }],
+  task: (input: { content: string }) => EffectEx.runPromise(judge(ACCURACY_JUDGE_RUBRIC, input.content)),
+  scorers: [
+    {
+      name: 'judge-correctly-fails',
+      description: 'The judge fails records with a misspelled name and a fabricated role.',
+      scorer: ({ output }) => (output.pass === false ? 1 : 0),
     },
   ],
 });
