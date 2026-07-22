@@ -9,8 +9,9 @@ import { type AspectDef, defineViewState } from '@dxos/react-ui-attention';
 import { VIEW_MODES, type ViewMode } from './viewMode';
 
 /**
- * The message body view mode as durable, per-context UI state (localStorage): sticky per conversation
- * and restored across navigation and reloads. Keyed by the article's attendable id (the context).
+ * The message body view mode as per-context UI state, sticky per conversation and keyed by the
+ * article's attendable id. The `local` backend persists it to localStorage, so the choice is restored
+ * across navigation and reloads (best-effort — falls back to in-session memory when storage is blocked).
  */
 export const messageViewModeAspect: AspectDef<ViewMode> = defineViewState<ViewMode>({
   key: 'inbox-message-view-mode',

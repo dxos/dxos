@@ -218,11 +218,13 @@ Two durable stores — don't conflate them (full detail:
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
   Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
   read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
-- **ViewState** — the _current, sticky UI state that must persist across navigation_ (selection,
-  scroll, split, view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
-  `defineViewState({ key, backend: 'local', schema, defaultValue })`; read/write via `useViewState` /
-  `useViewStateActions` (React), or `Capability.get(AttentionCapabilities.ViewState)` (operations /
-  graph-builders). Idiom `org.dxos.react-ui-attention.viewState`.
+- **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
+  view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
+  `defineViewState({ key, backend, schema, defaultValue })`; the `backend` sets durability —
+  `'local'` persists across reloads (best-effort; degrades to memory when storage is blocked),
+  `'memory'` is session-only. Read/write via `useViewState` / `useViewStateActions` (React), or
+  `Capability.get(AttentionCapabilities.ViewState)` (operations / graph-builders). Idiom
+  `org.dxos.react-ui-attention.viewState`.
 
 The tell: _configure-once-and-forget_ → Settings; _tracks-what-you're-currently-doing_ → ViewState.
 Keep at most **one Settings object and one ViewState object per aspect** per plugin — widen an

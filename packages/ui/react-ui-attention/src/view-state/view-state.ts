@@ -24,12 +24,14 @@ export interface AspectDef<T> {
 
 /**
  * Identity helper that pins the value type from the schema while keeping the literal `key`/`backend`.
- * Declares an aspect of durable, per-context UI state (selection, scroll, view mode, split) read/written
- * via {@link ViewStateManager} — through `useViewState`/`useViewStateActions` in React or the
- * `AttentionCapabilities.ViewState` capability in operations.
+ * Declares an aspect of per-context UI state (selection, scroll, view mode, split) read/written via
+ * {@link ViewStateManager} — through `useViewState`/`useViewStateActions` in React or the
+ * `AttentionCapabilities.ViewState` capability in operations. Durability is the `backend`'s: `local`
+ * survives reloads (best-effort — degrades to in-memory when storage is blocked), `memory` is
+ * session-only.
  *
  * @idiom org.dxos.react-ui-attention.viewState
- *   applies: Persisting per-context UI state (selection, view mode, scroll, split) across navigation and reloads
+ *   applies: Holding per-context UI state (selection, view mode, scroll, split) that survives navigation (and reloads with the `local` backend)
  *   instead-of: ad-hoc `useState` that resets on remount, or stuffing per-context state into the plugin Settings store
  *   uses: {@link defineViewState}, {@link ViewStateManager}
  *   related: org.dxos.effect.kvsStore

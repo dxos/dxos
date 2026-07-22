@@ -5,9 +5,10 @@ per-context, durable UI state is read and written across the app, and how it dif
 plugin **Settings** store. Tracked by PR #12304.
 
 > **Durable UI state** = state that describes _how a particular surface/object/context is being
-> viewed_ and should survive reloads and navigation — e.g. which companion tab is selected, an
-> editor's scroll/caret, a split ratio, a selection set, a message body's view mode. It is keyed by
-> **context** (what you are looking at), not by the plugin.
+> viewed_ and should survive navigation — e.g. which companion tab is selected, an editor's
+> scroll/caret, a split ratio, a selection set, a message body's view mode. It is keyed by
+> **context** (what you are looking at), not by the plugin. How long it survives is the aspect's
+> **backend**: `local` persists across reloads (best-effort), `memory` lasts only the session.
 
 ---
 
