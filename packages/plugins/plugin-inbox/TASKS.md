@@ -229,8 +229,9 @@ calendar + contacts move out; provider + apis split; shared card-focused `@dxos/
       `SystemIconButton.Star`. **TODO:** visual storybook pass (Row/Avatar/CardTile) not yet run.
 - [ ] Move `Toolbar` (`openGroup`/`deleteGroup`/`deleteAction`) → `@dxos/react-ui-menu` — generic
       open/delete action builders, deps-only on react-ui-menu types (AUDIT §4d).
-- [ ] Do NOT extract `ViewMode` — domain-specific sugar over react-ui-menu's `MenuBuilder`; keep
-      mail-side, calendar defines its own markdown/plain toggle on split (AUDIT §4d).
+- [ ] Move `ViewMode` (`viewModeGroup` + type/icons) → `@dxos/react-ui-components` — general
+      content view-mode toggle; add react-ui-menu dep there + move its 3 label keys into that
+      package's translations (plugin-inbox already registers them) (AUDIT §4d).
 - [ ] Drop `Header` from the shared set — stale "shared" claim; only `Event` uses it now. Inline into
       `Event` or keep calendar-local; do NOT put in `react-ui-card` (AUDIT §4d).
 - [ ] (Deferred) Generalize `HtmlViewer` core → `@dxos/react-ui-components` (inject cid/image + color

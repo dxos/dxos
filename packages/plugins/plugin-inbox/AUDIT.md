@@ -215,13 +215,15 @@ and `CardTile`→`react-ui-mosaic` (split by dep), which scatters the vocabulary
 
 Verified by import tracing after the `react-ui-card` extraction:
 
-- **`ViewMode`** (`viewModeGroup` + type/icons) — a **menu-builder helper**, NOT a
-  card primitive → **does not belong in `react-ui-card`.** It's ~40 lines of sugar
-  over react-ui-menu's `MenuBuilder.group({ selectCardinality: 'single' })`, which
-  already exists. And the two usages already diverge: calendar passes
-  `modes: ['markdown', 'plain']`; mail adds the email-only `html` mode. → **don't
-  extract** — keep the mail version in plugin-inbox; when calendar splits it defines
-  its own trivial markdown/plain toggle. Not worth a shared package.
+- **`ViewMode`** (`viewModeGroup` + type/icons) — a general **content view-mode
+  toggle** (html/markdown/plain), not a card primitive and not domain-specific
+  (parameterized by `modes`; calendar passes `['markdown','plain']`, mail adds
+  `html`). → move to **`@dxos/react-ui-components`** (the home for general-purpose UI
+  helpers). Add a `@dxos/react-ui-menu` dep there (no cycle) and move the 3 label
+  keys into react-ui-components' translations; `viewModeGroup` then uses that
+  namespace and drops its `ns` param. **Bonus:** plugin-inbox already registers
+  `@dxos/react-ui-components/translations`, so the labels resolve with no new wiring,
+  and both mail + calendar import it without a plugin→plugin dep.
 - **`Toolbar` (`toolbar.ts`)** — `openGroup` / `deleteGroup` / `deleteAction` are
   **generic** open/delete action builders (universal toolbar actions, not
   inbox-specific), depending only on react-ui-menu's `ActionGroupBuilder(Fn)` types.
