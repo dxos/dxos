@@ -357,11 +357,6 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
     test: {
       ...resolveReporterConfig(dirname),
       tags: TEST_TAGS,
-      // Closing a storybook project's chromium instance (ECHO/WASM-SQLite teardown, many
-      // mounted components) occasionally exceeds vitest's 10s default, logging "close timed
-      // out" and force-exiting — CI sees this as a failed task despite every test passing.
-      // Give it more real time before giving up.
-      teardownTimeout: 30_000,
       projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
@@ -685,7 +680,10 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   if (xmlReport) {
     return {
       passWithNoTests: true,
-      reporters: [['junit', { addFileAttribute: true }], 'verbose', moonRerunReporter],
+      // TEMPORARY (storybook teardown-hang diagnostic): `hanging-process` prints the open handles
+      // keeping the process alive when close times out, so CI reveals what leaks. Remove once the
+      // storybook teardown leak is root-caused and fixed.
+      reporters: [['junit', { addFileAttribute: true }], 'verbose', 'hanging-process', moonRerunReporter],
       outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,
@@ -812,11 +810,6 @@ const buildTestConfig = (
     // node tests, WebSocket birpc errors from the storybook runner) — these surface as
     // non-zero exits with no actual test failures and turn the entire job red.
     dangerouslyIgnoreUnhandledErrors: true,
-    // Closing a storybook project's chromium instance (ECHO/WASM-SQLite teardown, many
-    // mounted components) occasionally exceeds vitest's 10s default, logging "close timed
-    // out" and force-exiting — CI sees this as a failed task despite every test passing.
-    // Give it more real time before giving up.
-    teardownTimeout: 30_000,
     projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
       (project): project is UserWorkspaceConfig => project !== undefined,
     ),

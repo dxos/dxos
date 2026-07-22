@@ -260,8 +260,11 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
+      # TEMPORARY (storybook teardown-hang diagnostic): treat this branch like `main` so the PR runs
+      # the FULL :test-storybook set (not just affected) and reproduces the stories-inbox teardown
+      # hang without merging. Revert this branch carve-out once the leak is root-caused and fixed.
       - name: Test Storybook Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && steps.extract_branch.outputs.branch != 'claude/storybook-test-failure-h0ar9m' && env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -272,11 +275,11 @@ jobs:
 
       # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
       - name: Test Storybook Affected (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && steps.extract_branch.outputs.branch != 'claude/storybook-test-failure-h0ar9m' && env.TRUNK_TOKEN == '' }}
         run: moon run :test-storybook --affected remote -- --no-file-parallelism
 
       - name: Test Storybook All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
+        if: ${{ (steps.extract_branch.outputs.branch == 'main' || steps.extract_branch.outputs.branch == 'claude/storybook-test-failure-h0ar9m') && env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -287,7 +290,7 @@ jobs:
 
       # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
       - name: Test Storybook All (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
+        if: ${{ (steps.extract_branch.outputs.branch == 'main' || steps.extract_branch.outputs.branch == 'claude/storybook-test-failure-h0ar9m') && env.TRUNK_TOKEN == '' }}
         run: moon exec --on-failure continue :test-storybook -- --no-file-parallelism
 
       - name: Upload Test Results
