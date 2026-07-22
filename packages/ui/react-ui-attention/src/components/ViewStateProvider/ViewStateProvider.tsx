@@ -10,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 import { useDefaultValue } from '@dxos/react-hooks';
 
 import { createDefaultBackends } from '../../view-state/backends';
-import { type Aspect, ViewStateManager } from '../../view-state/ViewState';
 import {
   type SelectionMode,
   type SelectionResult,
@@ -18,6 +17,7 @@ import {
   selectionAspect,
   toggleSelection,
 } from '../../view-state/Selection';
+import { type Aspect, ViewStateManager } from '../../view-state/ViewState';
 
 const VIEW_STATE_NAME = 'ViewState';
 

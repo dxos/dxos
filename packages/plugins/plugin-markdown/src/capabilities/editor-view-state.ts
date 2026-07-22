@@ -22,7 +22,9 @@ export const editorViewStateAspect = ViewState.defineViewState({
  * per document and restored across navigation/reloads (best-effort). `undefined` = no per-document
  * override, so the caller falls back to the `defaultViewMode` setting.
  */
-export const editorViewModeAspect: ViewState.Aspect<EditorViewMode | undefined> = ViewState.defineViewState<EditorViewMode | undefined>({
+export const editorViewModeAspect: ViewState.Aspect<EditorViewMode | undefined> = ViewState.defineViewState<
+  EditorViewMode | undefined
+>({
   key: 'editor-view-mode',
   backend: 'local',
   schema: Schema.UndefinedOr(EditorViewMode),

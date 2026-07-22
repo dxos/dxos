@@ -20,9 +20,10 @@ export type CompanionSelection = Schema.Schema.Type<typeof CompanionSelection>;
  * The globally-selected companion variant, persisted (localStorage) so reopening the companion restores
  * the last-selected tab. Stored via react-ui-attention view state for consistency with the split point.
  */
-export const companionVariantAspect: ViewState.Aspect<CompanionSelection> = ViewState.defineViewState<CompanionSelection>({
-  key: 'deck-companion-variant',
-  backend: 'local',
-  schema: CompanionSelection,
-  defaultValue: () => ({}),
-});
+export const companionVariantAspect: ViewState.Aspect<CompanionSelection> =
+  ViewState.defineViewState<CompanionSelection>({
+    key: 'deck-companion-variant',
+    backend: 'local',
+    schema: CompanionSelection,
+    defaultValue: () => ({}),
+  });
