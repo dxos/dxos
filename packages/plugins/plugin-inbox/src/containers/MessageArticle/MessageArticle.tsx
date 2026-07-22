@@ -5,31 +5,29 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
-import { getParentId, isLinkedSegment, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import {
   ConversationStack,
-  MESSAGE_VIEW_MODE_CONTEXT,
   type MessageHeaderProps,
   type MessageOptions,
   buildExtractActions,
   keyOf,
-  messageViewModeAspect,
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, type Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { orderThreadItems } from '../../util';
 
-/** Used when the inbox Settings capability isn't installed, so image-loading state is still readable. */
-const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
+/** Used when the inbox Settings capability isn't installed, so the view options are still readable. */
+const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false, viewMode: 'html' });
 
 /**
  * `subject` is either a single message or its whole conversation (thread). The companion graph node
@@ -70,7 +68,6 @@ export const MessageArticle = ({
   // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
   // bottom (the connector delivers everything in chronological order).
   const orderedMessages = useMemo(() => orderThreadItems(messages), [messages]);
-
   const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
 
   // The most recent non-draft message is the one worth reading first; expand it by default and leave
@@ -111,26 +108,23 @@ export const MessageArticle = ({
     [extractors, invoker],
   );
 
-  // View options shared across the thread (render mode + image loading). Both are seeded from a
-  // persisted source and mirrored back on change: `viewMode` via react-ui-attention view state
-  // (localStorage, a per-device preference); `loadRemoteImages` via the inbox Settings capability.
-  const settingsAtom = useCapabilities(InboxCapabilities.Settings)[0] ?? FALLBACK_SETTINGS_ATOM;
-  const persistedImages = useAtomValue(settingsAtom).loadRemoteImages ?? false;
+  // View options shared across the thread (render mode + image loading), both persisted in the inbox
+  // Settings capability (localStorage). Seed the thread-local options atom once, then mirror edits back.
+  const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
   const setSettings = useAtomSet(settingsAtom);
-  const persistedViewMode = useViewState(messageViewModeAspect, MESSAGE_VIEW_MODE_CONTEXT);
-  const { set: setPersistedViewMode } = useViewStateActions(messageViewModeAspect, MESSAGE_VIEW_MODE_CONTEXT);
+  const settings = useAtomValue(settingsAtom);
   const optionsAtom = useMemo(
-    // Seed once from the persisted sources; subsequent edits flow back via the effects below.
-    () => Atom.make<MessageOptions>({ viewMode: persistedViewMode, loadRemoteImages: persistedImages }),
+    () =>
+      Atom.make<MessageOptions>({
+        viewMode: settings.viewMode ?? 'html',
+        loadRemoteImages: settings.loadRemoteImages ?? false,
+      }),
     [],
   );
-  const { viewMode, loadRemoteImages = false } = useAtomValue(optionsAtom);
+  const options = useAtomValue(optionsAtom);
   useEffect(() => {
-    setSettings((prev) => ({ ...prev, loadRemoteImages: loadRemoteImages }));
-  }, [loadRemoteImages, setSettings]);
-  useEffect(() => {
-    setPersistedViewMode(viewMode);
-  }, [viewMode, setPersistedViewMode]);
+    setSettings((prev) => ({ ...prev, viewMode: options.viewMode, loadRemoteImages: options.loadRemoteImages }));
+  }, [options, setSettings]);
 
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
