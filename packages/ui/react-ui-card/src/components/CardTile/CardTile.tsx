@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, type ReactNode, forwardRef } from 'react';
+import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
 import { Card, type ThemedClassName } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -14,13 +14,14 @@ import { Row } from '../Row';
 //
 
 type CardTileRootProps = ThemedClassName<
-  Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
-    'id': string;
-    'onCurrentChange': () => void;
-    'onClick'?: (event: MouseEvent) => void;
-    'children'?: ReactNode;
-    'data-testid'?: string;
-  }
+  PropsWithChildren<
+    Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
+      'id': string;
+      'onCurrentChange': () => void;
+      'onClick'?: (event: MouseEvent) => void;
+      'data-testid'?: string;
+    }
+  >
 >;
 
 /**
