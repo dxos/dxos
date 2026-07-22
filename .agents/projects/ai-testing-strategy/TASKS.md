@@ -9,7 +9,9 @@ PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 deleting it, remove all committed conversation fixtures, switch the gating mechanism to native
 `describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED);
 [#12305](https://github.com/dxos/dxos/pull/12305) (leaner package-level `AiRequest.test.ts`
-D-tier tests + `operationServiceLayerNoop`; MERGED).
+D-tier tests + `operationServiceLayerNoop`; MERGED);
+[#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 start — DB-effect oracle + first
+ported eval, `database.eval.ts`; draft).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -128,7 +130,7 @@ as primary coverage.
 
 ## Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-- [x] First DB-effect scorer + first ported G1 scenario: `assistant-evals/src/oracle.ts`
+- [x] **PR #12307 (draft):** first DB-effect scorer + first ported G1 scenario: `assistant-evals/src/oracle.ts`
       (`objectExists(type, predicate)` — dimension-G code-side oracle, queries the DB directly
       rather than trusting the agent's `completedCriteria` self-report) and
       `assistant-evals/src/evals/database.eval.ts` (ported from the gated
