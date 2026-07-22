@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
@@ -45,14 +46,19 @@ export const SwarmTraceModule = ({ space }: ModuleProps) => {
       // A space-scoped filter yields a coarse `space:<id>` swarm subscription, so every remote
       // trace message for this space is delivered and re-filtered client-side.
       monitor.subscribeToTraceMessages({ space: space.id }).pipe(
-        Stream.runForEach((message) =>
+        // Batch bursts (bulk sync broadcasts ~15 msg/s) so render cost is per-window rather than
+        // per-message — an unbatched backlog otherwise drains at render speed for minutes.
+        Stream.groupedWithin(64, '250 millis'),
+        Stream.runForEach((messages) =>
           Effect.sync(() => {
             const receivedAt = Date.now();
-            const incoming = Trace.flatten(message).map((event) => ({
-              ...event,
-              seq: seqRef.current++,
-              receivedAt,
-            }));
+            const incoming = Chunk.toReadonlyArray(messages).flatMap((message) =>
+              Trace.flatten(message).map((event) => ({
+                ...event,
+                seq: seqRef.current++,
+                receivedAt,
+              })),
+            );
             setEvents((prev) => [...prev, ...incoming].slice(-MAX_EVENTS));
           }),
         ),
@@ -113,19 +119,26 @@ const EventList = ({ events }: { events: readonly ReceivedEvent[] }) => {
   return (
     <div ref={scrollRef} onScroll={handleScroll} className='flex flex-col gap-1 p-2 text-sm overflow-auto h-full'>
       {events.map((event) => (
-        <div key={event.seq} className='flex flex-col gap-1 rounded border border-separator p-2'>
-          <div className='flex items-center gap-2 text-xs'>
-            <span className='text-description tabular-nums'>{formatTime(event.receivedAt)}</span>
-            <span className='font-mono truncate'>{event.type}</span>
-            {event.meta.runtimeName && <span className='text-description truncate'>{event.meta.runtimeName}</span>}
-            {event.meta.pid && <span className='text-description font-mono truncate'>pid:{event.meta.pid}</span>}
-          </div>
-          {event.data != null && <JsonHighlighter data={event.data} />}
-        </div>
+        <EventRow key={event.seq} event={event} />
       ))}
     </div>
   );
 };
+
+/** Memoized so appending a batch re-renders only the appended rows (JsonHighlighter is costly). */
+const EventRow = memo(({ event }: { event: ReceivedEvent }) => (
+  <div className='flex flex-col gap-1 rounded border border-separator p-2'>
+    <div className='flex items-center gap-2 text-xs'>
+      <span className='text-description tabular-nums'>{formatTime(event.receivedAt)}</span>
+      <span className='font-mono truncate'>{event.type}</span>
+      {event.meta.runtimeName && <span className='text-description truncate'>{event.meta.runtimeName}</span>}
+      {event.meta.pid && <span className='text-description font-mono truncate'>pid:{event.meta.pid}</span>}
+    </div>
+    {event.data != null && <JsonHighlighter data={event.data} />}
+  </div>
+));
+
+EventRow.displayName = 'EventRow';
 
 const formatTime = (timestamp: number): string =>
   new Date(timestamp).toLocaleTimeString(undefined, { hour12: false }) +
