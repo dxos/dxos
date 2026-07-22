@@ -11,24 +11,22 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
-import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
+import { getParentId, isLinkedSegment, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import {
   ConversationStack,
+  MESSAGE_VIEW_MODE_CONTEXT,
   type MessageHeaderProps,
   type MessageOptions,
-  type ViewMode,
   buildExtractActions,
   keyOf,
+  messageViewModeAspect,
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, type Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { orderThreadItems } from '../../util';
-
-/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
-const DEFAULT_VIEW_MODE: ViewMode = 'html';
 
 /** Used when the inbox Settings capability isn't installed, so image-loading state is still readable. */
 const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
@@ -113,20 +111,26 @@ export const MessageArticle = ({
     [extractors, invoker],
   );
 
-  // View options shared across the thread (render mode + image loading). `viewMode` is ephemeral;
-  // `loadRemoteImages` is seeded from and mirrored back to the persisted inbox setting.
+  // View options shared across the thread (render mode + image loading). Both are seeded from a
+  // persisted source and mirrored back on change: `viewMode` via react-ui-attention view state
+  // (localStorage, a per-device preference); `loadRemoteImages` via the inbox Settings capability.
   const settingsAtom = useCapabilities(InboxCapabilities.Settings)[0] ?? FALLBACK_SETTINGS_ATOM;
   const persistedImages = useAtomValue(settingsAtom).loadRemoteImages ?? false;
   const setSettings = useAtomSet(settingsAtom);
+  const persistedViewMode = useViewState(messageViewModeAspect, MESSAGE_VIEW_MODE_CONTEXT);
+  const { set: setPersistedViewMode } = useViewStateActions(messageViewModeAspect, MESSAGE_VIEW_MODE_CONTEXT);
   const optionsAtom = useMemo(
-    // Seed once from the persisted setting; subsequent edits flow back via the effect below.
-    () => Atom.make<MessageOptions>({ viewMode: DEFAULT_VIEW_MODE, loadRemoteImages: persistedImages }),
+    // Seed once from the persisted sources; subsequent edits flow back via the effects below.
+    () => Atom.make<MessageOptions>({ viewMode: persistedViewMode, loadRemoteImages: persistedImages }),
     [],
   );
-  const loadRemoteImages = useAtomValue(optionsAtom).loadRemoteImages ?? false;
+  const { viewMode, loadRemoteImages = false } = useAtomValue(optionsAtom);
   useEffect(() => {
     setSettings((prev) => ({ ...prev, loadRemoteImages: loadRemoteImages }));
   }, [loadRemoteImages, setSettings]);
+  useEffect(() => {
+    setPersistedViewMode(viewMode);
+  }, [viewMode, setPersistedViewMode]);
 
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
