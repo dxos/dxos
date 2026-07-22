@@ -91,17 +91,3 @@ export const make = ({
 export const extractText = (message: Message): string => {
   return message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n');
 };
-
-/**
- * Defaults a message with no external thread to a thread of one, keyed on its own id. Mailbox-style
- * consumers group by `threadId` (e.g. a `threadId IN (…)` whole-thread semi-join) and drop rows
- * without one, so every message they store must carry it. Mutates and returns the message.
- */
-export const ensureThreadId = <T extends Message>(message: T): T => {
-  if (message.threadId == null) {
-    Obj.update(message, (message) => {
-      message.threadId = message.id;
-    });
-  }
-  return message;
-};

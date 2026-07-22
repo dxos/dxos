@@ -171,15 +171,15 @@ describe('buildThreadSemiJoin (results)', () => {
     }
   });
 
-  test('retains thread-of-one messages (threadId defaulted to own id)', async () => {
+  test('retains thread-of-one messages (each keyed on its own threadId)', async () => {
     const fixture = await setup();
     try {
-      // Two threaded + two standalone; `ensureThreadId` gives the standalones their own id as threadId,
-      // which is exactly what the mail mappers do — the regression guard for the dropped-threadless bug.
+      // Two messages share a thread; two are singletons keyed on a unique threadId of their own — the
+      // shape the JMAP mapper produces for threadless mail. All four must survive the semi-join.
       const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
       const t2 = message('two', '2020-01-02T00:00:00.000Z', 'thread-a');
-      const s1 = Message.ensureThreadId(message('three', '2020-01-03T00:00:00.000Z'));
-      const s2 = Message.ensureThreadId(message('four', '2020-01-04T00:00:00.000Z'));
+      const s1 = message('three', '2020-01-03T00:00:00.000Z', 'thread-of-one-1');
+      const s2 = message('four', '2020-01-04T00:00:00.000Z', 'thread-of-one-2');
       await append(fixture, [t1, t2, s1, s2]);
 
       // Blank view matches every message; all four must survive the semi-join (2 in one thread + 2 singletons).
@@ -189,11 +189,11 @@ describe('buildThreadSemiJoin (results)', () => {
     }
   });
 
-  test('a threadless message is dropped without the ensureThreadId invariant (documents the bug)', async () => {
+  test('a message with no threadId is dropped by the semi-join (documents the bug the mapper prevents)', async () => {
     const fixture = await setup();
     try {
       const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
-      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // no threadId, no ensureThreadId
+      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // no threadId — the shape the mapper normalizes away
       await append(fixture, [t1, standalone]);
 
       // The `threadId IN (…)` semi-join excludes the null-threadId row — the exact failure this fix prevents.

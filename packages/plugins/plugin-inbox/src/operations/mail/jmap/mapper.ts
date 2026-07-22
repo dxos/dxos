@@ -134,7 +134,13 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
 
     blocks,
   });
-  Message.ensureThreadId(echoMessage);
+  // JMAP's threadId is optional, so a message can arrive with none; treat it as a thread of one keyed
+  // on its own id, since the mailbox groups by `threadId` and drops rows without one.
+  if (echoMessage.threadId == null) {
+    Obj.update(echoMessage, (echoMessage) => {
+      echoMessage.threadId = echoMessage.id;
+    });
+  }
 
   // `keywords` is a `{ [keyword]: true }` set; keep only the keys currently set.
   const keywords = email.keywords

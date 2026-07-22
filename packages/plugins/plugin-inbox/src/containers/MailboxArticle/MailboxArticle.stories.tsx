@@ -126,41 +126,38 @@ const meta = {
                 const mailbox = personalSpace.db.add(Mailbox.make());
                 const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
                 if (feed) {
-                  // Synced mail always carries a `threadId` (the mappers default a threadless message to
-                  // its own id via `ensureThreadId`); mirror that here so standalone messages seed as
-                  // thread-of-one, matching production.
-                  const messages = SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }) =>
-                    Message.ensureThreadId(
-                      Message.make({
-                        created: subDays(new Date(), daysAgo ?? 0).toISOString(),
-                        sender: { email: from.email, name: from.name },
-                        blocks: [{ _tag: 'text', text: body }],
-                        properties: { subject, snippet: body.slice(0, 120) },
-                        ...(threadId ? { threadId } : {}),
-                      }),
-                    ),
+                  // Synced mail always carries a `threadId` (the mapper defaults a threadless message to
+                  // its own id); mirror that here by giving standalone samples a unique thread so they seed
+                  // as thread-of-one, matching production.
+                  const messages = SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }, index) =>
+                    Message.make({
+                      created: subDays(new Date(), daysAgo ?? 0).toISOString(),
+                      sender: { email: from.email, name: from.name },
+                      blocks: [{ _tag: 'text', text: body }],
+                      properties: { subject, snippet: body.slice(0, 120) },
+                      threadId: threadId ?? `thread-of-one-${index}`,
+                    }),
                   );
                   // A message whose ONLY occurrence of `HTML_ONLY_TERM` is inside a `text/html` block —
                   // absent from the plain/markdown body and the subject — so a search for that term must
                   // yield no matching card (bugs 2 & 3: HTML-only matches must not surface or blank-render).
-                  const htmlOnlyMessage = Message.ensureThreadId(
-                    Message.make({
-                      created: new Date().toISOString(),
-                      sender: { email: 'notifications@example.com', name: 'Notifications' },
-                      blocks: [
-                        { _tag: 'text', text: `<div><span>${HTML_ONLY_TERM}</span></div>`, mimeType: 'text/html' },
-                        {
-                          _tag: 'text',
-                          text: 'This is a routine notification with no special terms.',
-                          mimeType: 'text/plain',
-                        },
-                      ],
-                      properties: {
-                        subject: 'Routine notification',
-                        snippet: 'This is a routine notification with no special terms.',
+                  const htmlOnlyMessage = Message.make({
+                    created: new Date().toISOString(),
+                    sender: { email: 'notifications@example.com', name: 'Notifications' },
+                    blocks: [
+                      { _tag: 'text', text: `<div><span>${HTML_ONLY_TERM}</span></div>`, mimeType: 'text/html' },
+                      {
+                        _tag: 'text',
+                        text: 'This is a routine notification with no special terms.',
+                        mimeType: 'text/plain',
                       },
-                    }),
-                  );
+                    ],
+                    properties: {
+                      subject: 'Routine notification',
+                      snippet: 'This is a routine notification with no special terms.',
+                    },
+                    threadId: 'notification-thread',
+                  });
                   yield* Feed.append(feed, [...messages, htmlOnlyMessage]).pipe(
                     Effect.provide(Database.layer(personalSpace.db)),
                   );

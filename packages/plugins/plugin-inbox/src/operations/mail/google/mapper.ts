@@ -198,7 +198,6 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
 
     blocks,
   });
-  Message.ensureThreadId(echoMessage);
 
   return { message: echoMessage, labelIds: raw.labelIds ?? [] };
 };
