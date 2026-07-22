@@ -15,18 +15,18 @@ _Analysis of how `@dxos/plugin-inbox` could be split into focused domain plugins
 contacts) across **two providers** (Google, JMAP), plus the AI extraction /
 draft layer. Rough size by area:
 
-| Area                | LOC   | What it is                                                        |
-| ------------------- | ----- | ----------------------------------------------------------------- |
-| `operations/`       | ~9100 | mail/calendar/contacts sync + send + extractor + analyze ops      |
-| `components/`       | ~5500 | presentational React (Message/Event stacks, tiles, viewers, rows) |
-| `containers/`       | ~3300 | surface-bound articles/cards (Mailbox, Calendar, Event, Message)  |
-| `apis/`             | ~2400 | raw provider wrappers: `google/{Mail,Calendar,Contacts}`, `jmap/*`  |
-| `types/`            | ~1700 | `Mailbox`, `Calendar`, schemas, `SystemTags`, `Settings`          |
-| `capabilities/`     | ~1500 | plugin wiring (surfaces, graph, connectors, skills, settings)     |
-| `util/` + `hooks/`  | ~1900 | sync routine, match-filter, mailbox-sync, React hooks             |
-| `services/`         | ~700  | Effect services wrapping the api wrappers (swappable for tests)   |
-| `extensions/`       | ~550  | CodeMirror email-rendering extensions                             |
-| `skills/`           | ~140  | inbox / inbox-send / calendar assistant skills                    |
+| Area               | LOC   | What it is                                                         |
+| ------------------ | ----- | ------------------------------------------------------------------ |
+| `operations/`      | ~9100 | mail/calendar/contacts sync + send + extractor + analyze ops       |
+| `components/`      | ~5500 | presentational React (Message/Event stacks, tiles, viewers, rows)  |
+| `containers/`      | ~3300 | surface-bound articles/cards (Mailbox, Calendar, Event, Message)   |
+| `apis/`            | ~2400 | raw provider wrappers: `google/{Mail,Calendar,Contacts}`, `jmap/*` |
+| `types/`           | ~1700 | `Mailbox`, `Calendar`, schemas, `SystemTags`, `Settings`           |
+| `capabilities/`    | ~1500 | plugin wiring (surfaces, graph, connectors, skills, settings)      |
+| `util/` + `hooks/` | ~1900 | sync routine, match-filter, mailbox-sync, React hooks              |
+| `services/`        | ~700  | Effect services wrapping the api wrappers (swappable for tests)    |
+| `extensions/`      | ~550  | CodeMirror email-rendering extensions                              |
+| `skills/`          | ~140  | inbox / inbox-send / calendar assistant skills                     |
 
 **Consumers** (17 packages import `@dxos/plugin-inbox`) pull mostly types:
 `Mailbox` (28×), `InboxOperation` (6×), `Calendar` (4×), `ExtractedFrom` (3×),
@@ -159,11 +159,11 @@ is mail-specific.
 
 Verified by import tracing:
 
-| Primitive              | Message axis                                     | Event axis                          | Notes |
-| ---------------------- | ------------------------------------------------ | ----------------------------------- | ----- |
-| **`Row.*`**            | `InboxStack`, `ConversationStack`, `MessageCard` | `Event/EventDetails`, `EventEditor` | Namespace: `Person`, `Date`, `Ref`, `Tags`, `Attachments`, `Star`. The core shared block. |
-| **`CardTile`**             | `InboxStack`                                     | `EventStack`                        | `CardTile.Root` (Mosaic tile shell) + `CardTile.Header` (`Row.Star` · title · `Card.Menu`). Already domain-agnostic (`data: unknown`). |
-| **`Avatar`** (to add)  | 3× hand-rolled `DxAvatar` + `Row.Person`         | `Row.Person`                        | No shared primitive today — 3 sites hand-roll `DxAvatar`. Consolidate into one (actor/name → single hue). |
+| Primitive             | Message axis                                     | Event axis                          | Notes                                                                                                                                  |
+| --------------------- | ------------------------------------------------ | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **`Row.*`**           | `InboxStack`, `ConversationStack`, `MessageCard` | `Event/EventDetails`, `EventEditor` | Namespace: `Person`, `Date`, `Ref`, `Tags`, `Attachments`, `Star`. The core shared block.                                              |
+| **`CardTile`**        | `InboxStack`                                     | `EventStack`                        | `CardTile.Root` (Mosaic tile shell) + `CardTile.Header` (`Row.Star` · title · `Card.Menu`). Already domain-agnostic (`data: unknown`). |
+| **`Avatar`** (to add) | 3× hand-rolled `DxAvatar` + `Row.Person`         | `Row.Person`                        | No shared primitive today — 3 sites hand-roll `DxAvatar`. Consolidate into one (actor/name → single hue).                              |
 
 **Already in `@dxos/react-ui` / `-menu` — reuse, don't re-extract:**
 
