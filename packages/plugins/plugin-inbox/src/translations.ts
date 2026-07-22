@@ -167,6 +167,10 @@ export const translations = [
         'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 
+        'draft-to.label': 'To',
+        'draft-to.placeholder': 'Recipients',
+        'draft-cc.label': 'Cc',
+        'draft-bcc.label': 'Bcc',
         'draft-subject.label': 'Subject',
         'draft-subject.placeholder': 'Message subject',
         'draft-body.label': 'Body',

@@ -9,6 +9,7 @@ import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
   PropsWithChildren,
+  type ReactNode,
   forwardRef,
   useCallback,
   useEffect,
@@ -281,11 +282,28 @@ type AutoFillProps = {
   noAutoFill?: boolean;
 };
 
-type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps;
+type AdornmentProps = {
+  /** Content rendered inside the input container before the field (icon or text). */
+  start?: ReactNode;
+  /** Content rendered inside the input container after the field (icon, text, or button). */
+  end?: ReactNode;
+};
+
+type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps & AdornmentProps;
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
   (
-    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, noAutoFill, ...props },
+    {
+      __inputScope,
+      classNames,
+      density: densityProp,
+      elevation: elevationProp,
+      variant,
+      noAutoFill,
+      start,
+      end,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { hasIosKeyboard } = useThemeContext();
@@ -293,8 +311,9 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const adorned = start != null || end != null;
 
-    return (
+    const field = (
       <TextInputPrimitive
         {...props}
         // TODO(wittjosiah): Factor out autofill properies.
@@ -302,17 +321,33 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
         className={tx(
           'input.input',
           {
-            variant,
+            // When adorned the surrounding container owns the surface/border/focus, so the field is
+            // rendered "bare" (subdued) regardless of the requested variant.
+            variant: adorned ? 'subdued' : variant,
             disabled: props.disabled,
             density,
             elevation,
             validationValence,
           },
-          classNames,
+          adorned ? undefined : classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         ref={forwardedRef}
       />
+    );
+
+    if (!adorned) {
+      return field;
+    }
+
+    return (
+      <div
+        className={tx('input.container', { variant, disabled: props.disabled, density, validationValence }, classNames)}
+      >
+        {start != null && <span className={tx('input.adornment', { side: 'start' })}>{start}</span>}
+        {field}
+        {end != null && <span className={tx('input.adornment', { side: 'end' })}>{end}</span>}
+      </div>
     );
   },
 );
