@@ -66,49 +66,18 @@ export const MessageArticle = ({
   // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).
   const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
 
+  // Contact extraction targets the conversation's space; any message resolves the same db.
+  const db = Obj.getDatabase(messages[0]);
+
   // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
   // bottom (the connector delivers everything in chronological order).
   const orderedMessages = useMemo(() => orderThreadItems(messages), [messages]);
   const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
 
-  // The most recent non-draft message is the one worth reading first; expand it by default and leave
-  // the rest collapsed. Drafts always render their composer, so they are irrelevant to the anchor.
-  const mostRecentId = useMemo(() => {
-    const recent = [...messages].reverse().find((message) => !DraftMessage.instanceOf(message));
-    return recent ? keyOf(recent) : undefined;
-  }, [messages]);
+  // Expanded state.
+  const { expanded, onExpandedChange, onCollapseAll, onExpandAll } = useMessageExpansion({ messages, messageIds });
 
-  // Expanded state is owned here so the thread toolbar's collapse-all/expand-all can fold or unfold
-  // every message. Default: only the most recent message is expanded.
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(mostRecentId ? [mostRecentId] : []));
-  const handleExpandedChange = useCallback((id: string, isExpanded: boolean) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (isExpanded) {
-        next.add(id);
-      } else {
-        next.delete(id);
-      }
-      return next;
-    });
-  }, []);
-  const handleCollapseAll = useCallback(() => setExpanded(new Set()), []);
-  const handleExpandAll = useCallback(() => setExpanded(new Set(messageIds)), [messageIds]);
-
-  // Contact extraction targets the conversation's space; any message resolves the same db.
-  const db = Obj.getDatabase(messages[0]);
-
-  // Resolve capabilities here (in the container) and thread them into the presentation-only
-  // `ConversationStack` — components must not call capability hooks (they throw without a PluginManager).
-  const invoker = useOperationInvoker();
-  const runtime = useProcessManagerRuntime();
-  const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
-  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
-  const getExtractActions = useCallback(
-    (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
-    [extractors, invoker],
-  );
-
+  // Settings + view state.
   const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
   const viewState = useViewStateManager();
   const viewModeAtom = useMemo(
@@ -119,15 +88,26 @@ export const MessageArticle = ({
     () =>
       Atom.writable<MessageOptions, MessageOptions>(
         (get) => ({
-          viewMode: get(viewModeAtom),
           loadRemoteImages: get(settingsAtom).loadRemoteImages ?? false,
+          viewMode: get(viewModeAtom),
         }),
         (ctx, next) => {
-          viewState.set(messageViewModeAspect, toolbarAttendableId ?? 'default', next.viewMode);
           ctx.set(settingsAtom, { ...ctx.get(settingsAtom), loadRemoteImages: next.loadRemoteImages });
+          viewState.set(messageViewModeAspect, toolbarAttendableId ?? 'default', next.viewMode);
         },
       ),
     [settingsAtom, viewModeAtom, viewState, toolbarAttendableId],
+  );
+
+  // Resolve capabilities here (in the container) and thread them into the presentation-only
+  // `ConversationStack` — components must not call capability hooks (they throw without a PluginManager).
+  const invoker = useOperationInvoker();
+  const runtime = useProcessManagerRuntime();
+  const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
+  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const getExtractActions = useCallback(
+    (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
+    [extractors, invoker],
   );
 
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
@@ -196,9 +176,9 @@ export const MessageArticle = ({
       companion={!!companionTo}
       options={optionsAtom}
       expanded={expanded}
-      onExpandedChange={handleExpandedChange}
-      onCollapseAll={handleCollapseAll}
-      onExpandAll={handleExpandAll}
+      onExpandedChange={onExpandedChange}
+      onCollapseAll={onCollapseAll}
+      onExpandAll={onExpandAll}
       onContactCreate={handleContactCreate}
       onAiReply={mailbox ? handleAiReply : undefined}
       onDelete={mailbox ? handleDelete : undefined}
@@ -220,3 +200,33 @@ export const MessageArticle = ({
 };
 
 MessageArticle.displayName = 'MessageArticle';
+
+type UseMessageExpansionProps = {
+  messages: MessageType.Message[];
+  messageIds: readonly string[];
+};
+
+// Expanded state lives here so the thread toolbar's collapse-all/expand-all can fold or unfold every message.
+const useMessageExpansion = ({ messages, messageIds }: UseMessageExpansionProps) => {
+  const mostRecentId = useMemo(() => {
+    const recent = [...messages].reverse().find((message) => !DraftMessage.instanceOf(message));
+    return recent ? keyOf(recent) : undefined;
+  }, [messages]);
+
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(mostRecentId ? [mostRecentId] : []));
+  const onExpandedChange = useCallback((id: string, isExpanded: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (isExpanded) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+  const onCollapseAll = useCallback(() => setExpanded(new Set()), []);
+  const onExpandAll = useCallback(() => setExpanded(new Set(messageIds)), [messageIds]);
+
+  return { expanded, onExpandedChange, onCollapseAll, onExpandAll };
+};
