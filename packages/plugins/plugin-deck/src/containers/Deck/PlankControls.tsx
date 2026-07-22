@@ -102,6 +102,9 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )}
 
+        {/* Reordering controls (move plank toward start/end) are hidden for now; restore when the deck's
+            reordering UX is revisited. The `increment-start`/`increment-end` adjustments and capabilities
+            remain wired.
         {!soloLook && (
           <>
             <PlankControl
@@ -119,7 +122,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
               onClick={() => onClick?.('increment-end')}
             />
           </>
-        )}
+        )} */}
 
         {close && !soloLook && (
           <PlankControl
