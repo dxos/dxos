@@ -42,7 +42,7 @@ const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: 
 /**
  * Subscribe to the attention state for a qualified graph ID.
  */
-// TODO(burdon): Unify with seleciton and change to contextId?
+// TODO(burdon): Unify with selection state and change to contextId?
 const useAttention = (attendableId?: string): Attention => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
   const [state, setState] = useState<Attention>(UNKNOWN_ATTENDABLE);

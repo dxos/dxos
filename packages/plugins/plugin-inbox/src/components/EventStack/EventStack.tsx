@@ -86,8 +86,8 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered thin>
-            <ScrollArea.Viewport ref={setViewport}>
+          <ScrollArea.Root padding centered>
+            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}
                 items={items}
