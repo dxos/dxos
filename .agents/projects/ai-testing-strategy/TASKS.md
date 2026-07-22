@@ -1,11 +1,13 @@
 # AI Testing Strategy — Tasks
 
-_Resume: get a real machine/CI to attempt `database.eval.ts` — see if the evalite-specific
-`plugin-routine` registry-sync race (below, PR #12307 entry) reproduces there; if not, deliver the
-live scored result; if so, root-cause it. Then mark PR #12307 ready for review. Uncommitted: none
-(all pushed to `claude/ai-testing-strategy-9ctzjt` through commit `530a2c98`). Last: fixed two
-rounds of `oxfmt` CI failures on PR #12307 (TASKS.md formatting) and confirmed `oxfmt --check`
-clean repo-wide._
+_Resume: with the evalite registry-sync race fixed, get a real `DX_ANTHROPIC_API_KEY` (this sandbox
+has none) to obtain the first live scored result from `database.eval.ts`; then mark PR #12307 ready
+for review. Uncommitted: none (pushed to `claude/ai-testing-strategy-evals-81cbfc`). Last: root-caused
+and fixed the evalite-specific `plugin-routine` registry-sync race (see Follow-ups) — reproduced
+deterministically on a fresh machine/worktree (not sandbox-specific), then fixed with a one-line
+config change; verified: assistant-evals build/lint/test green, `oxfmt --check` clean, and both
+`database.eval.ts` + `basic.eval.ts` now progress past the crash to a real (401, no key here)
+Anthropic API call instead of failing before any model call._
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -159,19 +161,10 @@ as primary coverage.
       Verified: `moon run assistant-evals:build assistant-evals:lint assistant-evals:test --force`
       green (9 gated e2e files, all correctly skipped without `DX_RUN_LLM_TESTS=1`);
       `evalite run src/evals` and `evalite run src/evals/database.eval.ts` correctly discover
-      files. **Not yet run end-to-end against a live model with a scored result in this sandbox**
-      — every attempted `evalite run` (both `database.eval.ts` and the pre-existing, unrelated
-      `basic.eval.ts`, predating this PR) fails deterministically before any model call with the
-      `plugin-routine` registry-sync `TypeError: Cannot read properties of undefined (reading
-'meta')` (`registry-sync.ts:74`, handler set read before `.meta` is populated). Notably this
-      is **evalite-specific**: the same harness under the gated vitest `:test` path (e.g.
-      `DX_RUN_LLM_TESTS=1 vitest run src/testing/database.test.ts`) does NOT hit it — it correctly
-      reaches `Operation.invoke` and fails cleanly on "no memoized conversation" instead. Suggests
-      evalite's task-execution scheduling races the `OperationHandlerSet` registration in a way
-      vitest's doesn't. Pre-existing, unrelated to the `dbQuery` code path (never reached). Tracked
-      as a follow-up below — it currently blocks getting _any_ live scored result out of
-      `@dxos/assistant-evals` in this environment; worth trying on a real machine/CI to see if it
-      reproduces there too.
+      files. **Blocking registry-sync race root-caused and fixed** (see Follow-ups) — both
+      `database.eval.ts` and `basic.eval.ts` now reach a real Anthropic API call. **Still not yet
+      obtained a live scored result**: this sandbox has no `DX_ANTHROPIC_API_KEY`, so the call
+      fails on 401 rather than scoring — needs a real key to finish verifying PR #12307.
 - [ ] Port `web-search.test.ts` next as the first tool-match scorer case (checks only the
       `web-search` tool fired), reusing the same `dbQuery`-style hook pattern generalized to
       tool-invocation records rather than DB queries.
@@ -189,12 +182,28 @@ as primary coverage.
 
 ## Follow-ups (out of band)
 
-- [ ] **Blocking evals:** fix the evalite-specific `plugin-routine` registry-sync race
-      (`registry-sync.ts:74`, `handler.meta` read before population — see PR #12307 entry above).
-      Reproduces deterministically for every `evalite run` in this sandbox, on both the new
-      `database.eval.ts` and the pre-existing `basic.eval.ts`; does not reproduce on the equivalent
-      vitest e2e path. Until fixed, `@dxos/assistant-evals` cannot produce a live scored result
-      here — needs reproducing outside this sandbox (real machine/CI) to confirm scope.
+- [x] **Blocking evals — FIXED:** root-caused the evalite-specific `plugin-routine` registry-sync
+      race (`registry-sync.ts:74`, `handler.meta` read before population). Reproduced
+      deterministically on a fresh worktree/machine (not sandbox-specific), then bisected the cause
+      by toggling config: `assistant-evals/vitest.config.ts` (evalite's hardcoded, flat config) calls
+      `PluginImportSource()` with the **default** `include: ['@dxos/**']`, which does not match
+      Node subpath imports (`#capabilities`, `#meta`, `#operations`, `#types`, …) — confirmed via
+      `IMPORT_SOURCE_DEBUG=1` (`#capabilities -> excluded`, etc.). Those resolve through the plain
+      `package.json` "imports" map instead, landing on the compiled `dist/` bundle rather than
+      `src/`. `vitest.e2e.config.ts`'s `createNodeProject` (in `vite.base.config.ts`) already passes
+      `include: ['@dxos/**', '#*']` — the two configs silently diverged. Plugin-routine's
+      `#capabilities` entry bundles five independently-lazy capability modules
+      (`app-graph-builder`, `operation-handler`, `registry-sync`, `templates`,
+      `trigger-runtime-controller`) into one file via esbuild; under `dist/`, they evaluate eagerly
+      together instead of via source's separate `Capability.lazy(() => import(...))` boundaries,
+      reordering operation-handler registration relative to registry-sync's atom subscriber and
+      producing the `handler.meta` undefined race. **Fix:** added `'#*'` to `vitest.config.ts`'s
+      `PluginImportSource` include list, matching `createNodeProject`. Verified by toggling the
+      config back and forth — crash reappears without the fix, gone with it, on both
+      `database.eval.ts` and `basic.eval.ts`; each now progresses past registration to a real
+      `POST https://api.anthropic.com/v1/messages` call, failing only on 401 (no
+      `DX_ANTHROPIC_API_KEY` in this sandbox) instead of crashing pre-model-call. `assistant-evals`
+      build/lint/test green; `oxfmt --check` clean.
 - [ ] Delete the orphaned `.agent/` (singular) directory. Unreferenced by any code, config, or
       tooling (Cursor/VS Code use `.cursor/` → `.agents/` plural); origin PR #10381 example
       workflow/function fixtures, only kept current by mechanical repo-wide refactors. Verify no
