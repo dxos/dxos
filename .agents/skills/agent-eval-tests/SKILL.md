@@ -1,6 +1,6 @@
 ---
 name: agent-eval-tests
-description: Use when writing, editing, or reviewing evalite-scored agent evals in packages/core/compute/assistant-evals/src/evals. Use when creating new eval files, adding deterministic assertions or an LLM-judge scorer, or fixing a failing/mis-scoring eval. Also covers the legacy gated e2e vitest tests in src/testing/.
+description: Use when writing, editing, or reviewing evalite-scored agent evals in packages/core/compute/assistant-evals/src/evals. Use when creating new eval files, adding deterministic assertions or an LLM-judge scorer, or fixing a failing/mis-scoring eval.
 ---
 
 # Agent Eval Tests
@@ -14,9 +14,10 @@ supersedes trusting the agent's own self-reported `completedCriteria`.
 
 Package: `packages/core/compute/assistant-evals`. Library: `src/runner.ts` (`createEvalRunner`),
 `src/assertions.ts` (deterministic helpers), `src/judge.ts` (LLM-judge helper). Evals live in
-`src/evals/*.eval.ts`. See `packages/core/compute/ai/TESTING.md` § "Where evals live" for how this
-package is scoped (cross-plugin scenarios live here; single-plugin scenarios belong in their own
-plugin package, importing this library).
+`src/evals/*.eval.ts`. See `packages/core/compute/ai/TESTING.md` for how this package is scoped
+(cross-plugin scenarios live here; single-plugin scenarios belong in their own plugin package,
+importing this library). The older memoized/live gated agent-e2e harness is a separate, deprecated
+package, `@dxos/assistant-e2e` — not covered by this skill; see its own README.
 
 ## Eval File Structure
 
@@ -150,63 +151,12 @@ op run --account braneframe --env-file=.config/.env.1password -- npx evalite run
 
 ## Gotchas (found the hard way — real debugging sessions, not speculation)
 
-| Symptom                                                                                            | Cause                                                                                                                                                                                                                                                            | Fix                                                                                                                                                                                                   |
-| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TypeError: Cannot read properties of undefined (reading 'meta')` before any model call            | evalite's flat `vitest.config.ts` must include `'#*'` in `PluginImportSource`'s include list (matching `vitest.e2e.config.ts`'s `createNodeProject`), or Node subpath imports resolve to a stale compiled `dist/` bundle instead of `src/`.                      | Keep `PluginImportSource({ include: ['@dxos/**', '#*'] })` in `vitest.config.ts`. Don't remove it.                                                                                                    |
-| `NOT NULL constraint failed: results.output`                                                       | The task returned (or resolved to) `undefined` — e.g. `completeJob` called with no `success` payload when no output schema was requested. evalite's SQLite storage rejects it.                                                                                   | Coerce in the eval file (`(await runner(...)) ?? {}`), not in `runner.ts`'s general contract.                                                                                                         |
-| Eval times out at exactly 30s                                                                      | evalite defaults `config.test.testTimeout ??= 30_000` unless vitest config overrides it. Multi-tool scenarios (research, several operations) routinely exceed this.                                                                                              | `vitest.config.ts`'s `test.testTimeout` (currently `360_000`) already covers this — don't remove it.                                                                                                  |
-| A tool-name/`operationKey` check that should obviously match doesn't                               | Recorded names aren't always what you'd guess: web-search's toolkit name is `'AnthropicWebSearch'`, not `'web_search'`; planning's `operationKey` has a `'dxn:'` prefix.                                                                                         | Don't guess twice — inspect `node_modules/.evalite/cache.sqlite`'s `results` table directly (`SELECT output FROM results ORDER BY id DESC LIMIT 1`) to see the actual recorded value.                 |
-| Considering merging `vitest.config.ts` and `vitest.e2e.config.ts` into one `projects`-based config | Tested directly: defining `test.projects` at all breaks evalite's file discovery unless a project explicitly matches `.eval.?(m)ts`; even then, that project doesn't inherit root-level `plugins`/`testTimeout` — silently reopens the registry-sync race above. | Keep the two-file split. Don't rename `vitest.config.ts` either — evalite has no `--config` flag and relies on vite's default-name config resolution; a renamed file's settings are silently dropped. |
-
-## Legacy: Gated E2E Vitest Tests (`src/testing/*.test.ts`)
-
-The original memoized/live agent-e2e harness (formerly `@dxos/assistant-e2e`, merged into this
-package). Kept gated in place rather than deleted (per `packages/core/compute/ai/TESTING.md`) —
-still a valid opt-in live-test path and design inspiration, but new coverage should generally be an
-eval (above), not a new file here.
-
-Every test file is **only a prompt** — no setup code, no assertions, no manual DB manipulation:
-
-```typescript
-import { describe, it } from '@effect/vitest';
-
-import { runMemoizedTests } from '@dxos/ai/testing';
-import { Obj } from '@dxos/echo';
-import { trim } from '@dxos/util';
-
-import { agentTest, agentTestTimeout, getDefaultSkills } from '../harness';
-
-Obj.ID.dangerouslyDisableRandomness();
-
-describe.skipIf(!runMemoizedTests())('DescriptiveName', () => {
-  it.effect(
-    'short test name',
-    agentTest({
-      instructions: trim`
-        Your prompt here.
-
-        Completion criteria:
-        - Expected outcome 1.
-      `,
-      skills: getDefaultSkills(),
-    }),
-    { timeout: agentTestTimeout() },
-  );
-});
-```
-
-Rules: `Obj.ID.dangerouslyDisableRandomness()` at module scope before `describe`; always
-`{ timeout: agentTestTimeout() }`; the agent starts with an **empty database** — instruct it to
-create any required data; `expect: 'failure'` in the options object to test that the agent
-correctly reports failure.
-
-```bash
-# Replay from memoized conversations
-DX_RUN_LLM_TESTS=1 moon run assistant-evals:test
-
-# Generate new conversations (requires credentials)
-ALLOW_LLM_GENERATION=1 moon run assistant-evals:test -- src/testing/database.test.ts
-```
+| Symptom                                                                                 | Cause                                                                                                                                                                                                                                       | Fix                                                                                                                                                                                   |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TypeError: Cannot read properties of undefined (reading 'meta')` before any model call | evalite's flat `vitest.config.ts` must include `'#*'` in `PluginImportSource`'s include list (matching `vitest.e2e.config.ts`'s `createNodeProject`), or Node subpath imports resolve to a stale compiled `dist/` bundle instead of `src/`. | Keep `PluginImportSource({ include: ['@dxos/**', '#*'] })` in `vitest.config.ts`. Don't remove it.                                                                                    |
+| `NOT NULL constraint failed: results.output`                                            | The task returned (or resolved to) `undefined` — e.g. `completeJob` called with no `success` payload when no output schema was requested. evalite's SQLite storage rejects it.                                                              | Coerce in the eval file (`(await runner(...)) ?? {}`), not in `runner.ts`'s general contract.                                                                                         |
+| Eval times out at exactly 30s                                                           | evalite defaults `config.test.testTimeout ??= 30_000` unless vitest config overrides it. Multi-tool scenarios (research, several operations) routinely exceed this.                                                                         | `vitest.config.ts`'s `test.testTimeout` (currently `360_000`) already covers this — don't remove it.                                                                                  |
+| A tool-name/`operationKey` check that should obviously match doesn't                    | Recorded names aren't always what you'd guess: web-search's toolkit name is `'AnthropicWebSearch'`, not `'web_search'`; planning's `operationKey` has a `'dxn:'` prefix.                                                                    | Don't guess twice — inspect `node_modules/.evalite/cache.sqlite`'s `results` table directly (`SELECT output FROM results ORDER BY id DESC LIMIT 1`) to see the actual recorded value. |
 
 ## Common Mistakes
 

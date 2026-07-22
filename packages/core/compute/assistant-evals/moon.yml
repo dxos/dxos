@@ -3,45 +3,8 @@ language: typescript
 tags:
   - evalite
   - typecheck
-  - memoized-llm
 tasks:
   evals:
     command: evalite
     args:
       - src/evals
-  # Explicit (not the inherited `ts-test` tag task) because the gated e2e suite needs
-  # `vitest.e2e.config.ts` (a workspace config), while the default `vitest.config.ts` must stay
-  # flat for `evalite` to discover `.eval.ts` files — see vitest.config.ts.
-  test:
-    command: bash -c 'pnpm exec dx-killorphans vitest run --config vitest.e2e.config.ts --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}"'
-    deps:
-      - esbuild-plugins:build
-      - node-std:build
-      - vite-plugin-import-source:build
-      - ^:build
-    inputs:
-      - '@group(sources)'
-      - /vitest.base.config.ts
-      - /vitest.tags.ts
-      - /pnpm-lock.yaml
-      - vitest.e2e.config.ts
-      - $NODE_VERSION
-      - $VITEST_COVERAGE
-      - $VITEST_DEBUG
-      - $VITEST_ENV
-      - $VITEST_XML_REPORT
-      - $VITEST_TAGS_FILTER
-      - $ALLOW_LLM_GENERATION
-    outputs:
-      - /coverage/$project/node/**
-      - /test-results/$project/node/**
-    options:
-      timeout: 600
-  test-watch:
-    command: pnpm exec dx-killorphans vitest --config vitest.e2e.config.ts
-    deps:
-      - esbuild-plugins:build
-      - node-std:build
-      - vite-plugin-import-source:build
-      - ^:build
-    preset: server

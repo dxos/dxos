@@ -1,25 +1,16 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **the G1 migration is fully complete**, and evals now have real quality signal beyond
-existence checks. Pushed to `claude/ai-testing-strategy-9ctzjt` through commit `d8859314f1`, CI
-running (green on every completed run this session). Uncommitted: none. Last: **skill-blindness
-experiment** — tried removing the "Enable the X skill using the skill manager" instruction from
-every eval that had one (live-run, reviewed before any commit): `planning`/`markdown` scored 100%
-with no explicit mention and the change was kept permanently; `crm-mailbox`/`web-search` were
-reverted after review, since their point losses were scorer artifacts unrelated to skill discovery
-(both actually self-discovered correctly) — tracked as a Phase 2 follow-up below, with the exact
-scorer fix needed for each. **Then:** added a 5th scorer to `crm-mailbox.eval.ts` —
-`crm-data-accurate`, an LLM judge comparing the created Person/Organization/Employer-role against
-the source email for correctness, not just existence — plus a same-file negative case proving it
-fails on misrepresented data. Live-verified across two separate runs: one scored 100%, the other
-60-67% because the agent added an unstated "Product Manager" title that run and the new judge (plus
-the existing exact-match checker, independently) correctly caught it — expected live-model
-variance, not a bug. Earlier this session: built `src/judge.ts` (native LLM-judge via `@dxos/ai`'s
-`LanguageModel.generateObject`, not autoevals' OpenAI-coupled classifiers); confirmed by direct
-experiment that the two-vitest-config split can't collapse into one `projects`-based config;
-renamed the `agent-e2e-tests` skill to `agent-eval-tests`; deleted the 6 memoized test files now
-superseded by evals, added `TODO(wittjosiah): migrate to an eval` to the 3 that remain. NEXT: mark
-PR #12307 ready for review._
+_Resume: **preparing to land PR #12307.** All 6 G1 scenarios are ported to scored evals with real
+quality signal beyond existence checks (DB-effect assertions + an LLM judge on `crm-mailbox`).
+**Decision reversed:** `@dxos/assistant-e2e` is un-merged back out of `@dxos/assistant-evals` —
+kept as its own deprecated package (holding `harness.ts` + the 3 scenarios not yet portable to an
+eval: `inbox-enable`, `local-ai`, `sandbox`), rather than living inside `assistant-evals`. Repo-wide
+references updated to match: `.changeset/config.json`, `tsconfig.all.json`, `RELEASE-SPEC.md`
+(back-edge row no longer mentions evals — those are out-of-band), the `agent-eval-tests` and
+`regenerate-memoized-llm` skills. `TESTING.md` rewritten to describe only the current state (no
+merge/un-merge narrative — that lives here instead). Pushed to `claude/ai-testing-strategy-9ctzjt`
+through commit `d8859314f1`; the package-split reversal is uncommitted pending
+build/lint/test verification. NEXT: verify, commit, mark PR #12307 ready for review._
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -31,9 +22,9 @@ deleting it, remove all committed conversation fixtures, switch the gating mecha
 `describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED);
 [#12305](https://github.com/dxos/dxos/pull/12305) (leaner package-level `AiRequest.test.ts`
 D-tier tests + `operationServiceLayerNoop`; MERGED);
-[#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 start — DB-effect assertion helper +
-first ported eval, `database.eval.ts`; merges `@dxos/assistant-e2e` into `@dxos/assistant-evals`
-(composition-scoped package layout); draft).
+[#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 — DB-effect/tool-invocation/LLM-judge
+assertion helpers + all 6 G1 scenarios ported to `@dxos/assistant-evals`; `@dxos/assistant-e2e`
+kept as its own deprecated package rather than merged in; draft).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -42,13 +33,12 @@ as primary coverage.
 
 ## Consumer groups (see TESTING.md "Consumer inventory")
 
-- **G1** — pure agent e2e, formerly `@dxos/assistant-e2e`, merged into `@dxos/assistant-evals` in
-  #12307 (see TESTING.md "Where evals live"): database, crm-mailbox, web-search, planning, markdown,
-  smoke. Redundant C/D signal, ~7.5 MB fixtures. **Revised twice, now done for real:** #12297 kept
-  it gated in place instead of deleting it; once every scenario had a scored eval covering the same
-  ground (this session), the gated `src/testing/*.test.ts` files were finally deleted — their
-  memoized-replay fixtures were already gone, so they'd degraded to pure duplication of a weaker
-  (self-reported) check.
+- **G1** — pure agent e2e, `@dxos/assistant-e2e` (deprecated): database, crm-mailbox, web-search,
+  planning, markdown, smoke. All 6 now have a scored eval in `@dxos/assistant-evals` covering the
+  same ground with strictly stronger (deterministic DB/tool-invocation, not self-reported) grading;
+  the corresponding gated `src/testing/*.test.ts` files were deleted. `assistant-e2e` retains
+  `harness.ts` plus 3 scenarios not yet portable to an eval (`inbox-enable`, `local-ai`, `sandbox`)
+  — once those are ported or dropped, the package can be removed entirely.
 - **G2** — per-operation / skill: plugin-markdown create/update, plugin-magazine, plugin-assistant,
   assistant-toolkit run-instructions + database/memory/planning/agent skills, AiSummarizer.
   **Convert to mocked C unit tests before deleting.**
@@ -172,6 +162,10 @@ as primary coverage.
       `assistant-e2e` config — used explicitly by a hand-written `moon.yml` `:test` task for the
       gated e2e suite), updated `.changeset/config.json`, `tsconfig.all.json`, the
       `agent-e2e-tests`/`regenerate-memoized-llm` skills, and `RELEASE-SPEC.md`'s package table.
+      **This merge was later reversed** (see the Resume note at the top): `@dxos/assistant-e2e` is
+      its own deprecated package again, so the file moves / vitest-config split / moon task
+      described here no longer reflect the current layout — only the bugs found and the eval
+      itself (below) still apply.
       Verified: `moon run assistant-evals:build assistant-evals:lint assistant-evals:test --force`
       green (9 gated e2e files, all correctly skipped without `DX_RUN_LLM_TESTS=1`);
       `evalite run src/evals` and `evalite run src/evals/database.eval.ts` correctly discover

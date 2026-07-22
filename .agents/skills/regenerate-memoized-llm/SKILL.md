@@ -56,7 +56,7 @@ If the edge worker returns `overloaded_error`, retry the **same file or package*
 ALLOW_LLM_GENERATION=1 moon run <package-name>:test
 ```
 
-Packages that use memoized-llm (tag in `moon.yml`): `ai`, `assistant`, `assistant-toolkit`, `plugin-markdown`, `plugin-assistant`, `functions-runtime`, `assistant-evals`, and others tagged in `moon.yml`.
+Packages that use memoized-llm (tag in `moon.yml`): `ai`, `assistant`, `assistant-toolkit`, `plugin-markdown`, `plugin-assistant`, `functions-runtime`, `assistant-e2e`, and others tagged in `moon.yml`.
 
 Example for `assistant-toolkit`:
 

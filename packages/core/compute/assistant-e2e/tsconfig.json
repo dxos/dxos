@@ -2,12 +2,10 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
-    {
-      "path": "../../../../tools/vite-plugin-import-source"
-    },
     {
       "path": "../../../common/effect"
     },
@@ -24,16 +22,13 @@
       "path": "../../../plugins/plugin-client"
     },
     {
-      "path": "../../../plugins/plugin-crm"
-    },
-    {
       "path": "../../../plugins/plugin-inbox"
     },
     {
-      "path": "../../../plugins/plugin-markdown"
+      "path": "../../../plugins/plugin-routine"
     },
     {
-      "path": "../../../plugins/plugin-routine"
+      "path": "../../../plugins/plugin-sandbox"
     },
     {
       "path": "../../../plugins/plugin-testing"
@@ -45,25 +40,28 @@
       "path": "../../../sdk/app-toolkit"
     },
     {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {
       "path": "../../echo/echo"
     },
     {
-      "path": "../ai"
+      "path": "../agent-runtime"
     },
     {
-      "path": "../assistant"
+      "path": "../ai"
     },
     {
       "path": "../assistant-toolkit"
     },
     {
       "path": "../compute"
-    },
-    {
-      "path": "../compute-runtime"
     }
   ]
 }
