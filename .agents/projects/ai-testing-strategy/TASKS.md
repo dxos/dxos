@@ -1,19 +1,22 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **all 6 G1 scenarios ported to scored evals, all passing live (100%)**, and planning's one
-remaining self-reported criterion (haiku quality) now has a real LLM-judge scorer instead of a
-keyword-heuristic proxy. PR #12307 is functionally verified end-to-end across the full former-G1
-surface — next is to mark it ready for review. Uncommitted: none, pushed to
-`claude/ai-testing-strategy-9ctzjt` through commit `60ec5449`, CI green. Last: built
-`src/judge.ts` — a native LLM-judge helper using `@dxos/ai`'s own `LanguageModel.generateObject`
-(Anthropic, schema-typed `{pass, reasoning}` verdict) rather than autoevals' OpenAI-coupled
-classifiers (Factuality/ClosedQA/etc. need an OpenAI key or Braintrust's proxy, neither wired up
-here). Wired into `planning.eval.ts`; added a second case in the same file demonstrating the judge
-correctly *fails* a hand-crafted malformed transcript (a judge that only ever passes is worthless).
-Also confirmed via direct experiment (not just trusting the existing comment) that the two-vitest-
-config split can't be collapsed into one `projects`-based config — `test.projects` doesn't inherit
-root-level `plugins`/`testTimeout` into each project, so doing so would silently reopen the
-registry-sync race; reproduced this by literally renaming the file and watching the race return._
+_Resume: **the G1 migration is now fully complete** — all 6 scenarios ported to scored evals (all
+passing live at 100%, planning's haiku-quality criterion backed by a real LLM-judge), and the 6
+corresponding `src/testing/*.test.ts` files are **deleted** (their memoized-replay fixtures were
+already gone, so keeping them was pure duplication of a strictly weaker self-reported check). PR
+#12307 is functionally verified end-to-end — next is to mark it ready for review. Uncommitted:
+none, pushed to `claude/ai-testing-strategy-9ctzjt` through commit `f476c5097a`, CI green. Last:
+deleted the 6 redundant test files; added `TODO(wittjosiah): migrate to an eval` to the 3 files
+that remain (`inbox-enable` — blocked on a real inbox-skill registry bug; `local-ai` — needs an
+`inferenceProvider` option on `createEvalRunner`; `sandbox` — needs `randomEntityIds`/`sandbox`/
+`clientTypes` options, plus a live external service); updated `TESTING.md`'s G1 sections and the
+package `README.md` to reflect the migration as done rather than planned. Earlier this session:
+built `src/judge.ts` (native LLM-judge via `@dxos/ai`'s `LanguageModel.generateObject`, not
+autoevals' OpenAI-coupled classifiers), wired into `planning.eval.ts` with a demonstrated failure
+case; confirmed by direct experiment that the two-vitest-config split can't be collapsed into one
+`projects`-based config (silently drops root-level `plugins`/`testTimeout`, reopening the
+registry-sync race); renamed the `agent-e2e-tests` skill to `agent-eval-tests`, refocused on the
+eval-writing pattern with a "Legacy" section for the (now much smaller) gated-test surface._
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -36,11 +39,13 @@ as primary coverage.
 
 ## Consumer groups (see TESTING.md "Consumer inventory")
 
-- **G1** — pure agent e2e, now living in `@dxos/assistant-evals` (merged from `@dxos/assistant-e2e`
-  in #12307 — see TESTING.md "Where evals live"): database, crm-mailbox, web-search, planning,
-  markdown, smoke. Redundant C/D signal, ~7.5 MB fixtures. **Revised: keep, gate behind
-  `runMemoizedTests()` like G2/G3 (see Phase 1 below) — not deleted.** These stay available as
-  opt-in live/eval-style tests and as design inspiration for later tiers.
+- **G1** — pure agent e2e, formerly `@dxos/assistant-e2e`, merged into `@dxos/assistant-evals` in
+  #12307 (see TESTING.md "Where evals live"): database, crm-mailbox, web-search, planning, markdown,
+  smoke. Redundant C/D signal, ~7.5 MB fixtures. **Revised twice, now done for real:** #12297 kept
+  it gated in place instead of deleting it; once every scenario had a scored eval covering the same
+  ground (this session), the gated `src/testing/*.test.ts` files were finally deleted — their
+  memoized-replay fixtures were already gone, so they'd degraded to pure duplication of a weaker
+  (self-reported) check.
 - **G2** — per-operation / skill: plugin-markdown create/update, plugin-magazine, plugin-assistant,
   assistant-toolkit run-instructions + database/memory/planning/agent skills, AiSummarizer.
   **Convert to mocked C unit tests before deleting.**
