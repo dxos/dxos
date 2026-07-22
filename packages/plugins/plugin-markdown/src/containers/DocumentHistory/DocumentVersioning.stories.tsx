@@ -716,5 +716,12 @@ export const AmbientReview: Story = {
     });
     await waitFor(() => expect(canvasElement.querySelector('.cm-comment')).not.toBeNull(), { timeout: 15_000 });
     await waitFor(() => expect(editorReadOnly(canvasElement)).toBe(true), { timeout: 15_000 });
+
+    // Switch back to Editing so the toggle round-trips AND the story rests showing the suggestions
+    // (Viewing intentionally hides them, which reads as an empty demo at rest).
+    await selectReviewMode(canvasElement, 'Editing');
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Alice'), { timeout: 15_000 });
+    await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'));
+    await waitFor(() => expect(editorReadOnly(canvasElement)).toBe(false));
   },
 };
