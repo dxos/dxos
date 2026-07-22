@@ -179,6 +179,9 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'plugins',
+        // Plugin entries are direct children of the registry workspace (`root/<REGISTRY_ID>/<pluginKey>`).
+        urlKey: 'registry',
+        urlPath: [],
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);

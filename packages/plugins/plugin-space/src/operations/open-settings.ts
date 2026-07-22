@@ -11,7 +11,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenSettings> = Space
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [Paths.getSpacePath(input.space.id, 'settings', 'general')],
+        // The general settings panel node segment is `settings` (id-less `settings` url key), nested
+        // under the space settings section (also `settings`).
+        subject: [Paths.getSpacePath(input.space.id, 'settings', 'settings')],
         workspace: Paths.getSpacePath(input.space.id),
       });
     }),

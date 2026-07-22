@@ -45,6 +45,10 @@ export default Capability.makeModule(
       // the node is absent and the button stays hidden.
       GraphBuilder.createExtension({
         id: 'pluginSpec',
+        // The spec hangs off a registry plugin entry (`root/<REGISTRY_ID>/<pluginKey>/spec`); the
+        // pluginKey is data-dependent but fixed-depth, so it is `+`-encoded into the pair id.
+        urlKey: 'spec',
+        urlPath: [],
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;

@@ -10,6 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
+import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
@@ -36,6 +37,11 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'spaceSettingsAutomation',
+        // Fixed automation panel at `root/<space>/settings/routines`; id-less (`routine` is already the
+        // TypeSection key above, so the panel uses the plural `routines`).
+        urlKey: 'routines',
+        urlKeyHasId: false,
+        urlPath: [SETTINGS_SECTION_ID],
         match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
         connector: () => {
           return Effect.succeed([
