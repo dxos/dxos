@@ -168,8 +168,11 @@ const trackChangesTheme = EditorView.baseTheme({
     textUnderlineOffset: '2px',
   },
   // Deletion: struck through and de-emphasised; the removed base text, rendered as a phantom.
+  // `pre-wrap` preserves newlines in a multi-line/block deletion (a plain span collapses them to a
+  // single space), so a removed paragraph reads with its line breaks intact.
   '& .cm-track-delete': {
     textDecoration: 'line-through',
     opacity: 0.7,
+    whiteSpace: 'pre-wrap',
   },
 });

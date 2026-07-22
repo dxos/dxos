@@ -49,6 +49,9 @@ export type ThreadsOptions = {
   branchText?: Text.Text;
   // The active branch is a per-user suggestion branch: inline comment creation is prohibited.
   suggestionBranch?: boolean;
+  // Whether comment marks/creation render at all (per the review policy); `false` hides comments
+  // entirely (e.g. a distraction-free reading mode). Defaults to shown.
+  showComments?: boolean;
 };
 
 /**
@@ -60,11 +63,11 @@ export const threads = (
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
   options: ThreadsOptions = {},
 ): Extension => {
-  const { reviewBranch, branchText, suggestionBranch } = options;
+  const { reviewBranch, branchText, suggestionBranch, showComments = true } = options;
   const db = doc && Obj.getDatabase(doc);
-  if (!doc || !db || !invokePromise) {
-    // Include no-op comments extension here to ensure that the facets are always present when they are expected.
-    // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
+  // The no-op keeps the comment facets present (so the editor never errors on their absence) while
+  // rendering nothing — used both when comments are unavailable and when the policy hides them.
+  if (!doc || !db || !invokePromise || !showComments) {
     return [comments({ id: 'noop' })];
   }
 

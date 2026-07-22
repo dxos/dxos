@@ -29,11 +29,16 @@ export default Capability.makeModule(
     );
 
     const extensions = Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc, reviewBranch, branchText, suggestionBranch }) => {
+      ({ document: doc, reviewBranch, branchText, suggestionBranch, showComments }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
-        return threads({ registry, stateAtom }, doc, invokePromise, { reviewBranch, branchText, suggestionBranch });
+        return threads({ registry, stateAtom }, doc, invokePromise, {
+          reviewBranch,
+          branchText,
+          suggestionBranch,
+          showComments,
+        });
       },
       ({ document: doc }) => {
         if (!doc) {
