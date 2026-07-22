@@ -5,3 +5,4 @@
 export * from './comments';
 export * from './diff';
 export * from './suggest';
+export * from './suggestions-overlay';

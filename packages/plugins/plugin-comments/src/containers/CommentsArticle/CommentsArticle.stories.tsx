@@ -79,7 +79,8 @@ const NOVA_SUGGESTION = SAMPLE_CONTENT.replace(
   'Select text in the editor to add a new comment, or view existing threads in the companion.',
   'Select text in the editor to add a comment, or open the companion to review threads and suggestions.',
 );
-const STORY_AGENTS = [
+/** Exported for reuse by `SuggestionSources.stories.tsx` (two deterministic synthetic-DID authors). */
+export const STORY_AGENTS = [
   { did: 'did:agent:kai', name: STORY_AGENT_NAME, content: KAI_SUGGESTION },
   { did: 'did:agent:nova', name: 'Nova', content: NOVA_SUGGESTION },
 ];
@@ -128,8 +129,10 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
  * `kind:'suggestion'` branch (via {@link Branch.suggestion}) and edits the content to that agent's
  * proposed revision, so the companion overlays them against the base as agent-authored suggestion
  * cards (multiple authors, each colour-coded by its own hue).
+ *
+ * Exported for reuse by `SuggestionSources.stories.tsx`.
  */
-const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.Text) => {
+export const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.Text) => {
   for (const agent of STORY_AGENTS) {
     const branch = await Branch.suggestion(doc, parent, agent.did);
     const binding = await Branch.bind(doc, branch);
@@ -287,6 +290,14 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
     }),
     [doc, attendableId],
   );
+  const historyData = useMemo(
+    () => ({
+      subject: 'history',
+      companionTo: doc,
+      attendableId: attendableId ?? 'story',
+    }),
+    [doc, attendableId],
+  );
 
   if (!doc) {
     return <Loading data={{ doc: !!doc }} />;
@@ -295,7 +306,10 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   return (
     <div className='dx-container grid grid-cols-[3fr_2fr]' {...attentionAttrs}>
       <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-      <Surface.Surface type={AppSurface.Article} data={companionData} limit={1} />
+      <div className='grid grid-rows-2 min-bs-0'>
+        <Surface.Surface type={AppSurface.Article} data={companionData} limit={1} />
+        <Surface.Surface type={AppSurface.Article} data={historyData} limit={1} />
+      </div>
     </div>
   );
 };
@@ -351,11 +365,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Baseline:
+ * - Document article on the left, the comments companion on the right (history companion below it).
+ * - No seeded comments or suggestions; empty-state review surface.
+ */
 export const Default: Story = {};
 
 /**
- * Thread opted in to the AI agent in `mention` mode.
- * Type `@Kai …` in the comment input to trigger the stub runner; plain messages are ignored.
+ * AI comment agent in `mention` mode:
+ * - The thread is opted into the agent.
+ * - Type `@Kai …` in the comment input to trigger the stub runner.
+ * - Plain (non-mention) messages are ignored.
  */
 export const WithMentionAgent: Story = {
   args: {
@@ -364,8 +385,10 @@ export const WithMentionAgent: Story = {
 };
 
 /**
- * Thread opted in to the AI agent in `auto` mode.
- * Each user message triggers the stub runner, which appends a canned echo reply.
+ * AI comment agent in `auto` mode:
+ * - The thread is opted into the agent.
+ * - Every user message triggers the stub runner.
+ * - The runner appends a canned echo reply.
  */
 export const WithAutoAgent: Story = {
   args: {
@@ -374,9 +397,10 @@ export const WithAutoAgent: Story = {
 };
 
 /**
- * A larger, multi-paragraph document seeded with three existing comment threads
- * anchored to ranges in the text — exercises snippet rendering and the
- * companion ↔ editor selection sync.
+ * Existing comment threads:
+ * - A larger, multi-paragraph document seeded with three anchored comment threads.
+ * - Exercises snippet rendering in the companion.
+ * - Exercises the companion ↔ editor selection sync.
  */
 export const WithComments: Story = {
   args: {
@@ -385,10 +409,11 @@ export const WithComments: Story = {
 };
 
 /**
- * The companion showing suggestions authored by two agents ("Kai" and "Nova"), seeded
- * deterministically — no LLM. Each agent's per-author `kind:'suggestion'` branch proposes reworded
- * sentences, overlaid against the base as accept/reject change-block cards — one card per grouped
- * change, and each card's avatar tinted with its author's hue.
+ * Integrated ambient review demo (two agent authors, deterministic — no LLM):
+ * - Each of "Kai" and "Nova" has a per-author `kind:'suggestion'` branch proposing reworded sentences.
+ * - Editor (main): both authors' changes overlay inline, colour-coded per author.
+ * - Right column: comments companion (top) + history companion (below).
+ * - Companion: one accept/reject change-block card per grouped change, avatar tinted by author hue.
  */
 export const WithAgentSuggestions: Story = {
   args: {

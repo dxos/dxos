@@ -22,6 +22,9 @@ export type UseVersioningResult = {
   /** Active branch view (base parent / diff overlay / branch draft); only meaningful with a branch selected. */
   view: SpaceCapabilities.BranchView;
   setView: (view: SpaceCapabilities.BranchView) => void;
+  /** Per-user editing posture for this document (Google-Docs-style). Missing entry = `editing`. */
+  mode: SpaceCapabilities.ReviewMode;
+  setMode: (mode: SpaceCapabilities.ReviewMode) => void;
   /** The branch being viewed (selection.kind === 'branch'). */
   activeBranch?: Branch.Branch;
   /** The branch whose fork point is being viewed (selection.kind === 'fork'). */
@@ -67,6 +70,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   const documentId = document?.id;
   const selection = (documentId && state?.selection[documentId]) || { kind: 'current' as const };
   const view = (documentId && state?.view[documentId]) || 'branch';
+  const mode = (documentId && state?.mode[documentId]) || 'editing';
 
   const setSelection = useCallback(
     (next: SpaceCapabilities.VersionSelection) => {
@@ -84,6 +88,16 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
         return;
       }
       setState((current) => ({ ...current, view: { ...current.view, [documentId]: next } }));
+    },
+    [documentId, setState],
+  );
+
+  const setMode = useCallback(
+    (next: SpaceCapabilities.ReviewMode) => {
+      if (!documentId) {
+        return;
+      }
+      setState((current) => ({ ...current, mode: { ...current.mode, [documentId]: next } }));
     },
     [documentId, setState],
   );
@@ -196,6 +210,8 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     setSelection,
     view,
     setView,
+    mode,
+    setMode,
     activeBranch,
     activeFork,
     forkContent,

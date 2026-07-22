@@ -35,8 +35,7 @@ const ATMOSPHERE_PROVIDER = 'atproto';
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
-// Underline tab style overriding the react-ui Tabs.Button chrome for the prior look —
-// flat, full-width tabs with a bottom border that highlights the active one.
+// Flat, full-width tabs with a bottom border that highlights the active one.
 const tabClassNames =
   'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
   'border-b-2 border-transparent text-description transition-colors hover:text-white ' +
