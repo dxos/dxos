@@ -100,7 +100,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   plugins?: Plugin.Plugin[];
 }
 
-/** A code-side oracle run against DB state after the agent completes, before the harness is disposed. */
+/** A deterministic DB-state assertion run after the agent completes, before the harness is disposed. */
 export type DbQuery<I, D> = (input: I, spaceId: SpaceId) => Effect.Effect<D, unknown, Database.Service>;
 
 export type VariantConfig =
@@ -119,10 +119,10 @@ export type VariantConfig =
  * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
  *
- * Pass `dbQuery` to additionally run a deterministic assertion against DB state (dimension G's
- * code-side oracle) while the space is still open; the task then returns
- * `{ agentOutput, dbQuery }` instead of the bare agent output, so a scorer can grade the real
- * effect rather than the model's own self-reported completion.
+ * Pass `dbQuery` to additionally run a deterministic DB-state assertion (TESTING.md dimension G)
+ * while the space is still open; the task then returns `{ agentOutput, dbQuery }` instead of the
+ * bare agent output, so a Scorer can grade the real effect rather than the model's own
+ * self-reported completion.
  */
 export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
 export function createEvalRunner<I, O, D>(

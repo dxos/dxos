@@ -8,7 +8,7 @@ import { evalite } from 'evalite';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { objectExists } from '../oracle';
+import { objectExists } from '../assertions';
 import { createEvalRunner } from '../runner';
 
 // Ported from the gated `@dxos/assistant-e2e` `Database > create and query` scenario

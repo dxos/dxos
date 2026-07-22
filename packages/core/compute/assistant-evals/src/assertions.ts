@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Filter, type Type } from '@dxos/echo';
 
 /**
- * Dimension-G code-side oracle: queries the DB for an object of `type` matching `predicate`,
- * rather than trusting the agent's own self-reported completion. Deterministic wherever its
- * input (the DB state) is — reproducible against a scripted run, statistical against a live one.
+ * Deterministic DB-state assertion for a Scorer to check (TESTING.md dimension G) — real DB
+ * state, not the agent's self-reported completion.
  */
 export const objectExists = <T extends Type.AnyEntity>(
   type: T,
