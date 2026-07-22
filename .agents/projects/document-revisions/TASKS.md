@@ -247,8 +247,10 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
       comments-top/history-bottom layout); each half is unit-tested, but the full-stack boot times out
       in-pane, so an automated assertion is deferred to avoid a flaky test. `showComments` consumption
       and the `useVersioning` hook-test harness also deferred.
-- [~] **Milestone B — Suggesting-mode authoring** (A1 bind-to-branch) — **CORE LANDED in PR #12302**
-  (B0–B3, B7); B4/B6 deferred to own PRs, B5 substantially met. Sub-item status below.
+- [x] **Milestone B — Suggesting-mode authoring** (A1 bind-to-branch) — **PR #12302 MERGED
+  (2026-07-22 08:41Z, squash 77fff35b41)** incl. the `@dxos/plugin-versioning` extraction
+  (published 0.10.0, core via `tags:['system']`). B0–B3 + B7 landed; B4/B6 deferred to own PRs,
+  B5 substantially met. Sub-item status below.
   - [x] **B0 spike** (2026-07-22, two parallel Opus agents): A1 bind-to-branch chosen over A2
         bind-to-main. Reports: `.superpowers/sdd/spike-*.md`.
   - [x] **B1 `trackChanges` extension + eval story — A1 RATIFIED by user felt-eval (2026-07-22).**
