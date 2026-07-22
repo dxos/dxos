@@ -5,7 +5,7 @@
 import { Chunk, unifiedMergeView } from '@codemirror/merge';
 import { type Extension, Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { diffWordsWithSpace } from 'diff';
+import { diffChars, diffWordsWithSpace } from 'diff';
 
 export type DiffOptions = {
   /**
@@ -161,6 +161,43 @@ export const computeWordHunks = (original: string, modified: string): Hunk[] => 
     }
   };
   for (const change of diffWordsWithSpace(original, modified)) {
+    if (change.added) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionB += change.value.length;
+      pending.toB = positionB;
+    } else if (change.removed) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      positionA += change.value.length;
+      pending.toA = positionA;
+    } else {
+      flush();
+      positionA += change.value.length;
+      positionB += change.value.length;
+    }
+  }
+  flush();
+  return hunks;
+};
+
+/**
+ * CHARACTER-level changed hunks between `original` (A) and `modified` (B), each carrying both
+ * coordinate ranges. Finer than {@link computeWordHunks}: an in-word or whitespace/newline edit shows
+ * only the changed characters, not a whole-word delete+insert. Used for live "Suggesting mode" tracked
+ * changes (see {@link trackChanges}), where word granularity makes every keystroke read as a struck
+ * word rebuilt beside it.
+ */
+export const computeCharHunks = (original: string, modified: string): Hunk[] => {
+  const hunks: Hunk[] = [];
+  let positionA = 0;
+  let positionB = 0;
+  let pending: Hunk | undefined;
+  const flush = () => {
+    if (pending) {
+      hunks.push(pending);
+      pending = undefined;
+    }
+  };
+  for (const change of diffChars(original, modified)) {
     if (change.added) {
       pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
       positionB += change.value.length;

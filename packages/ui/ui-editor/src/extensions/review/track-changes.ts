@@ -7,7 +7,7 @@ import { Decoration, type DecorationSet, EditorView, WidgetType, keymap } from '
 
 import { Domino } from '@dxos/ui';
 
-import { computeWordHunks } from './diff';
+import { computeCharHunks } from './diff';
 
 export type TrackChangesOptions = {
   /**
@@ -48,7 +48,7 @@ export const trackChanges = ({ main, colour }: TrackChangesOptions): Extension =
     const decorations = [];
     const phantomRanges = [];
     const phantomPositions: number[] = [];
-    for (const hunk of computeWordHunks(base, doc)) {
+    for (const hunk of computeCharHunks(base, doc)) {
       // Deletion: base text absent from the branch. Anchor the phantom at `fromB` with `side: -1` so it
       // renders before a co-located insertion (giving `~~old~~new`).
       if (hunk.toA > hunk.fromA) {

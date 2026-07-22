@@ -86,10 +86,11 @@ type Story = StoryObj<typeof meta>;
  * Interactive "Suggesting mode" (bind-to-branch): the editor is bound to a branch that starts equal to
  * MAIN, so it opens clean. Type to feel the tracked-change ergonomics:
  *
- * - Type new words — they appear as an underlined, cyan insertion (present in the branch, not in main).
- * - Select a word and delete it — the removed text stays visible as a struck-through phantom
- *   (`~~old~~`), because it is absent from the branch but present in main.
- * - Replace a word — you get both at once, `~~old~~new`.
+ * - Type — the added characters appear as an underlined, cyan insertion (character-level, so editing
+ *   inside a word marks only the changed characters, not the whole word).
+ * - Select text and delete it — the removed characters stay visible as a struck-through phantom
+ *   (`~~old~~`), because they are absent from the branch but present in main.
+ * - Replace text — you get both at once, `~~old~~new`, at character granularity.
  * - Move the caret across a phantom with the arrow keys — it is stepped over as one unit.
  * - Press Backspace with the caret just after a phantom — the real branch text behind it is protected
  *   (the keystroke is swallowed rather than eating the hidden character).
@@ -101,34 +102,34 @@ export const Default: Story = {
 
 /**
  * A branch that has already diverged from main, so tracked changes render on mount without typing:
- * `brown → red` (a replacement) and `lazy ` deleted. Deterministic — used for the render smoke test.
+ * `swiftly ` inserted after "jumps" and `lazy ` deleted — both clean whole-word edits so the
+ * character-level diff yields contiguous hunks. Deterministic — used for the render smoke test.
  */
 export const Divergent: Story = {
-  args: { branch: 'The quick red fox jumps over the dog.' },
+  args: { branch: 'The quick brown fox jumps swiftly over the dog.' },
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(canvasElement.querySelector('.cm-content')).not.toBeNull(), { timeout: 15_000 });
 
-    // Insertion mark: the branch's added word.
+    // Insertion mark: the branch's added text.
     const inserts = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-track-insert'));
     await waitFor(() =>
       expect(
         inserts()
           .map((node) => node.textContent)
           .join(''),
-      ).toContain('red'),
+      ).toContain('swiftly'),
     );
 
-    // Phantom deletions: base text absent from the branch, still visible struck through.
+    // Phantom deletion: base text absent from the branch, still visible struck through.
     const deletes = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('.cm-track-delete'));
     await waitFor(() => expect(deletes().length).toBeGreaterThan(0));
     const deletedText = () =>
       deletes()
         .map((node) => node.textContent)
-        .join(' ');
-    await waitFor(() => expect(deletedText()).toContain('brown'));
+        .join('');
     await waitFor(() => expect(deletedText()).toContain('lazy'));
 
     // The phantom text is not part of the document (it is a widget, not doc content).
-    await waitFor(() => expect(documentText(canvasElement)).toContain('red'));
+    await waitFor(() => expect(documentText(canvasElement)).toContain('swiftly'));
   },
 };
