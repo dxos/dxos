@@ -234,7 +234,19 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
       slot + `suggestionsOverlay` in `@dxos/ui-editor`. Build/lint/unit + play tests green across
       ui-editor/plugin-space/plugin-comments/plugin-markdown. Minor deferred to final review: no
       `useVersioning` hook-test harness (A1). NOTE: user merged `tabs-props-button-iconbutton` mid-run.
-- [ ] **Milestone B — Suggesting-mode authoring**: begins with Task B0 spike (see plan).
+- [x] **Milestone A landing polish (2026-07-21):** final-review hue-seam fix (ce0552512d); merged
+      origin/main incl. Tabs rename (6b68f1450b, resolved Welcome.tsx → Tabs.Button); story JSDocs
+      converted to bullets (6e789cdee4); AmbientReview rests in Editing so suggestions stay visible
+      (toggle round-trip); **Suggesting mode option hidden** until Milestone B (no dead "coming soon"
+      control — label/state plumbing retained). Post-merge build green.
+- [ ] **Deferred (final-review, non-blocking):** full-stack `CommentsArticle`↔markdown composition
+      play test (editor overlay + right-column comments/history companions). The demo already exists
+      via `CommentsArticle → WithAgentSuggestions` (real seeded suggestions + the committed
+      comments-top/history-bottom layout); each half is unit-tested, but the full-stack boot times out
+      in-pane, so an automated assertion is deferred to avoid a flaky test. `showComments` consumption
+      and the `useVersioning` hook-test harness also deferred.
+- [ ] **Milestone B — Suggesting-mode authoring**: begins with Task B0 spike (see plan). Re-add the
+      Suggesting mode option to the toolbar when it lands.
 
 ## Landing the suggestions feature (current goal)
 
