@@ -3,5 +3,5 @@
 //
 
 export * from './backends';
-export * from './Selection';
-export * from './ViewState';
+export * as Selection from './Selection';
+export * as ViewState from './ViewState';

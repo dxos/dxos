@@ -18,7 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { Selection, getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
@@ -136,10 +136,10 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-    // Derive a single-mode selected id per context from the ViewStateManager selection slice.
+    // Derive a single-mode selected id per context from the ViewState.ViewStateManager selection slice.
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(selectionAspect, nodeId));
+        const selection = get(viewState.atom(Selection.selectionAspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );

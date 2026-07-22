@@ -461,7 +461,7 @@ export const Select = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     contextId: Schema.String.annotations({ description: 'The id of the attention context.' }),
-    subject: Selection.annotations({ description: 'The selection to apply.' }),
+    subject: Selection.Selection.annotations({ description: 'The selection to apply.' }),
   }),
   output: Schema.Void,
 });

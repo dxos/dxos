@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { Selection, linkedSegment } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 import { createComment } from '@dxos/ui-editor';
 import { Position } from '@dxos/util';
@@ -96,7 +96,7 @@ export default Capability.makeModule(
                 // Fallback (non-editor objects): anchor to the current selection, or create an
                 // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
                 // placeholder is not a cursor range and would throw in `getAnchorLabel`.
-                const selection = viewState.get(selectionAspect, objectUri);
+                const selection = viewState.get(Selection.selectionAspect, objectUri);
                 const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
                 yield* Operation.invoke(CommentOperation.Create, {
                   anchor: cursorAnchor ?? Date.now().toString(),

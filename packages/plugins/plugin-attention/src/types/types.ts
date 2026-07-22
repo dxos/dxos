@@ -14,7 +14,7 @@ export namespace AttentionAction {
   export class Select extends Schema.TaggedClass<Select>()(`${ATTENTION_ACTION}.select`, {
     input: Schema.Struct({
       contextId: Schema.String,
-      selection: Selection,
+      selection: Selection.Selection,
     }),
     output: Schema.Void,
   }) {}

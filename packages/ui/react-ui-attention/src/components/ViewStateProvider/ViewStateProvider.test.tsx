@@ -7,7 +7,8 @@ import { act, renderHook } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, test } from 'vitest';
 
-import { ViewStateManager, createDefaultBackends } from '../../view-state';
+import { createDefaultBackends } from '../../view-state/backends';
+import { ViewStateManager } from '../../view-state/ViewState';
 import { ViewStateProvider, useSelection, useSelectionActions } from './ViewStateProvider';
 
 describe('useSelection / useSelectionActions', () => {

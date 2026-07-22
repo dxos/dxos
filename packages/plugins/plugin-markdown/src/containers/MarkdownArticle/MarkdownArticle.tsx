@@ -19,7 +19,7 @@ import { useActionRunner } from '@dxos/plugin-graph';
 import { VersioningCapabilities } from '@dxos/plugin-versioning';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type ViewStateManager } from '@dxos/react-ui-attention';
+import { ViewState } from '@dxos/react-ui-attention';
 import { Editor, useEditorContext } from '@dxos/react-ui-editor';
 import {
   type ToolbarMenuActionGroupProperties,
@@ -58,7 +58,7 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   {
     id: string;
     settings: Markdown.Settings;
-    viewState?: ViewStateManager;
+    viewState?: ViewState.ViewStateManager;
   } & Pick<MarkdownPluginState, 'extensionProviders'> &
     Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
@@ -80,7 +80,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
     // Version selection: swap the editor's subject to the active branch (a per-surface binding
     // for core branches, the forked Text for legacy ones); viewing a checkpoint pins the live
-    // Text to historical heads (the hook manages the pin). Selection is per-user session state.
+    // Text to historical heads (the hook manages the pin). Selection.Selection is per-user session state.
     const versioning = useVersioning(object);
     const {
       document,

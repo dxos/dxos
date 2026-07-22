@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Aspect, defineViewState } from '@dxos/react-ui-attention';
+import { ViewState } from '@dxos/react-ui-attention';
 
 import { VIEW_MODES, type ViewMode } from './viewMode';
 
@@ -13,7 +13,7 @@ import { VIEW_MODES, type ViewMode } from './viewMode';
  * article's attendable id. The `local` backend persists it to localStorage, so the choice is restored
  * across navigation and reloads (best-effort — falls back to in-session memory when storage is blocked).
  */
-export const messageViewModeAspect: Aspect<ViewMode> = defineViewState<ViewMode>({
+export const messageViewModeAspect: ViewState.Aspect<ViewMode> = ViewState.defineViewState<ViewMode>({
   key: 'inbox-message-view-mode',
   backend: 'local',
   schema: Schema.Literal(...VIEW_MODES),

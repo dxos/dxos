@@ -9,7 +9,8 @@ import React, { type PropsWithChildren, useContext, useEffect, useMemo, useState
 import { invariant } from '@dxos/invariant';
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import { type Aspect, ViewStateManager, createDefaultBackends } from '../../view-state';
+import { createDefaultBackends } from '../../view-state/backends';
+import { type Aspect, ViewStateManager } from '../../view-state/ViewState';
 import {
   type SelectionMode,
   type SelectionResult,

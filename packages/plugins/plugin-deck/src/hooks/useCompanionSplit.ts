@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type SplitterOrientation } from '@dxos/react-ui';
-import { type Aspect, defineViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { ViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
 import { COMPANION_VIEW_STATE_CONTEXT } from '../util';
 
@@ -28,7 +28,7 @@ export type CompanionSplit = Schema.Schema.Type<typeof CompanionSplitSchema>;
  * between side-by-side and stacked restores that orientation's last split point. Stored in the `local`
  * backend (localStorage, persisted across reloads) via react-ui-attention view state.
  */
-export const companionSplitAspect: Aspect<CompanionSplit> = defineViewState<CompanionSplit>({
+export const companionSplitAspect: ViewState.Aspect<CompanionSplit> = ViewState.defineViewState<CompanionSplit>({
   key: 'deck-companion-split',
   backend: 'local',
   schema: CompanionSplitSchema,

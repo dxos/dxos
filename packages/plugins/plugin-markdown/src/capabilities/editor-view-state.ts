@@ -5,12 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
-import { type Aspect, type ViewStateManager, defineViewState } from '@dxos/react-ui-attention/types';
+import { ViewState } from '@dxos/react-ui-attention/types';
 import { EditorSelectionStateSchema, type EditorStateStore } from '@dxos/ui-editor';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 
 /** Per-document editor scroll/caret state, persisted to localStorage on this device. */
-export const editorViewStateAspect = defineViewState({
+export const editorViewStateAspect = ViewState.defineViewState({
   key: 'editor',
   backend: 'local',
   schema: EditorSelectionStateSchema,
@@ -22,7 +22,7 @@ export const editorViewStateAspect = defineViewState({
  * per document and restored across navigation/reloads (best-effort). `undefined` = no per-document
  * override, so the caller falls back to the `defaultViewMode` setting.
  */
-export const editorViewModeAspect: Aspect<EditorViewMode | undefined> = defineViewState<EditorViewMode | undefined>({
+export const editorViewModeAspect: ViewState.Aspect<EditorViewMode | undefined> = ViewState.defineViewState<EditorViewMode | undefined>({
   key: 'editor-view-mode',
   backend: 'local',
   schema: Schema.UndefinedOr(EditorViewMode),
@@ -30,7 +30,7 @@ export const editorViewModeAspect: Aspect<EditorViewMode | undefined> = defineVi
 });
 
 /** Adapts the imperative editor store seam onto the ViewState manager (local backend). */
-export const createEditorViewStateStore = (manager: ViewStateManager): EditorStateStore => ({
+export const createEditorViewStateStore = (manager: ViewState.ViewStateManager): EditorStateStore => ({
   getState: (id) => {
     // Guard against an unset document id, which would key state under a literal "undefined".
     invariant(id);
