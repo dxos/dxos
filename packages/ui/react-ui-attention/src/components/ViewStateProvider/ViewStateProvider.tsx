@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useContext, useEffect, useMemo, useState
 import { invariant } from '@dxos/invariant';
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import { type AspectDef, ViewStateManager, createDefaultBackends } from '../../view-state';
+import { type Aspect, ViewStateManager, createDefaultBackends } from '../../view-state';
 import {
   type SelectionMode,
   type SelectionResult,
@@ -55,7 +55,7 @@ export const useViewStateManagerOptional = (): ViewStateManager | undefined => {
 };
 
 /** Reactive read of an aspect value for a context; yields the aspect default when unset or unprovided. */
-export const useViewState = <T,>(aspect: AspectDef<T>, contextId?: string): T => {
+export const useViewState = <T,>(aspect: Aspect<T>, contextId?: string): T => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   const [value, setValue] = useState<T>(() =>
     contextId && manager ? manager.get(aspect, contextId) : aspect.defaultValue(),
@@ -77,7 +77,7 @@ export type UseViewStateActions<T> = {
   clear: () => void;
 };
 
-export const useViewStateActions = <T,>(aspect: AspectDef<T>, contextId?: string): UseViewStateActions<T> => {
+export const useViewStateActions = <T,>(aspect: Aspect<T>, contextId?: string): UseViewStateActions<T> => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   return useMemo<UseViewStateActions<T>>(
     () => ({

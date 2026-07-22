@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { type AspectDef, type ViewStateManager, defineViewState } from '../ViewState';
+import { type Aspect, type ViewStateManager, defineViewState } from '../ViewState';
 
 export type SelectionMode = 'single' | 'multi' | 'range' | 'multi-range';
 
@@ -51,7 +51,7 @@ export type SelectionResult<T extends SelectionMode> = T extends 'single'
         : never;
 
 /** Selection state for a context, stored in memory (ephemeral, per-device session). */
-export const selectionAspect: AspectDef<Selection> = defineViewState<Selection>({
+export const selectionAspect: Aspect<Selection> = defineViewState<Selection>({
   key: 'selection',
   backend: 'memory',
   schema: Selection,
