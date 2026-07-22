@@ -79,14 +79,14 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
-                    <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconTab value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
-                    <Tabs.IconTab
+                    <Tabs.IconButton value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
+                    <Tabs.IconButton value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
+                    <Tabs.IconButton
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
                       label={t('options.mcp.title')}
                     />
-                    <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
+                    <Tabs.IconButton value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
                   </Tabs.Tablist>
                 </Tabs.Viewport>
               </Tabs.Root>

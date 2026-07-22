@@ -441,12 +441,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
-              <Tabs.Tab classNames='text-sm' value='unresolved'>
+              <Tabs.Button classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
-              </Tabs.Tab>
-              <Tabs.Tab classNames='text-sm' value='all'>
+              </Tabs.Button>
+              <Tabs.Button classNames='text-sm' value='all'>
                 {t('show-all.label')}
-              </Tabs.Tab>
+              </Tabs.Button>
             </Tabs.Tablist>
           </Toolbar.Root>
         </Panel.Toolbar>
