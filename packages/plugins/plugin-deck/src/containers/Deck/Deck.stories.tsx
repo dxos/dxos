@@ -22,13 +22,7 @@ import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import {
-  DeckCapabilities,
-  type EphemeralDeckState,
-  type Settings,
-  type StoredDeckState,
-  defaultDeck,
-} from '#types';
+import { DeckCapabilities, type EphemeralDeckState, type Settings, type StoredDeckState, defaultDeck } from '#types';
 
 import { Deck } from './Deck';
 

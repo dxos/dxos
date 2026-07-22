@@ -6,7 +6,6 @@ _Resume: Phases C+D plus the companion-width single-unit fix and the Tile size-p
 
 Root cause (confirmed via `[DEBUG H4]` logs): `Mosaic.Tile` (`react-ui-mosaic/Tile.tsx`) seeded internal size with `useState(sizeProp)` and never re-synced. A companion opened as the 2nd plank rode the fullbleed→sliding branch switch (or a not-yet-settled breakpoint), so its tile first rendered with no size, locking `internalSize=undefined`; the later real `size` prop was ignored (`sized=false`, no `inlineSize`). As the 3rd plank it mounted directly into an already-sliding deck, so it worked. Fix: `useEffect(() => setInternalSize(sizeProp), [sizeProp])` — prop is the source of truth; a live drag only changes it on commit. Fix `ec9c3df734` + patch changeset for `@dxos/react-ui-mosaic`.
 
-
 ## Phase C: Runtime fixes (manual-e2e findings)
 
 Two bugs surfaced driving the real app: (1) selecting a root-collection object serialized the
