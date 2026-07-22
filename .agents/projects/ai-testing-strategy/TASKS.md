@@ -1,13 +1,19 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **all 6 G1 scenarios are now ported to scored evals, all passing live (100%):**
-`database`, `smoke`, `markdown`, `crm-mailbox`, `web-search`, `planning`. PR #12307 is functionally
-verified end-to-end across the full former-G1 surface — next is to mark it ready for review.
-Uncommitted: none, pushed to `claude/ai-testing-strategy-9ctzjt` through commit `bee8fe5`, CI
-running (green on every completed run this session). Last: ported the remaining 5 scenarios
-easiest→hardest in one session, each verified live via
-`op run --account braneframe --env-file=.config/.env.1password -- npx evalite run <file>` with a
-real `DX_ANTHROPIC_API_KEY`, then committed individually — see Phase 2 below for what each needed._
+_Resume: **all 6 G1 scenarios ported to scored evals, all passing live (100%)**, and planning's one
+remaining self-reported criterion (haiku quality) now has a real LLM-judge scorer instead of a
+keyword-heuristic proxy. PR #12307 is functionally verified end-to-end across the full former-G1
+surface — next is to mark it ready for review. Uncommitted: none, pushed to
+`claude/ai-testing-strategy-9ctzjt` through commit `60ec5449`, CI green. Last: built
+`src/judge.ts` — a native LLM-judge helper using `@dxos/ai`'s own `LanguageModel.generateObject`
+(Anthropic, schema-typed `{pass, reasoning}` verdict) rather than autoevals' OpenAI-coupled
+classifiers (Factuality/ClosedQA/etc. need an OpenAI key or Braintrust's proxy, neither wired up
+here). Wired into `planning.eval.ts`; added a second case in the same file demonstrating the judge
+correctly *fails* a hand-crafted malformed transcript (a judge that only ever passes is worthless).
+Also confirmed via direct experiment (not just trusting the existing comment) that the two-vitest-
+config split can't be collapsed into one `projects`-based config — `test.projects` doesn't inherit
+root-level `plugins`/`testTimeout` into each project, so doing so would silently reopen the
+registry-sync race; reproduced this by literally renaming the file and watching the race return._
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -216,13 +222,29 @@ as primary coverage.
         matched on `operationKey`), the plan was never written via a raw `objectCreate`/
         `objectUpdate` call (the "did not manipulate objects directly" criterion). First attempt
         scored 80% — matched the bare operation key; the actual key has a `dxn:` prefix, found the
-        same cache.sqlite-inspection way as web-search's mismatch. One criterion narrowed rather
-        than fully replicated: "3-line haiku per topic" grades as "topic mentioned in the
-        response" — haiku quality/line-count is a content judgment, still pending an LLM-judge
-        scorer (below). Scored 100%.
-- [ ] More scorers: schema-validity, LLM-judge (needed for planning's haiku-quality criterion);
-      datasets for comprehension / tool-selection.
-- [ ] Pin model versions; pass-rate thresholds; scheduled (nightly/on-demand) run distinct from PR CI.
+        same cache.sqlite-inspection way as web-search's mismatch. Originally narrowed "3-line
+        haiku per topic" to "topic mentioned in the response" pending an LLM judge — **now uses a
+        real judge, see below.** Scored 100%.
+- [x] **Native LLM-judge scorer, `src/judge.ts`:** `judge(rubric, content)` using `@dxos/ai`'s own
+      `LanguageModel.generateObject` (Anthropic, schema-typed `{ pass, reasoning }` verdict) —
+      deliberately not autoevals' built-in classifiers (Factuality/ClosedQA/Battle/etc. are
+      hardcoded to an OpenAI-shaped client; using them here would need a separate OpenAI key or
+      Braintrust's proxy, neither wired up in this repo). Uses `claude-haiku-4-5` (grading is
+      classification, not generation — a fast/cheap model is enough). Wired into
+      `planning.eval.ts`'s haiku-quality check, replacing the keyword-heuristic proxy. Added a
+      second case in the same file (not a separate meta-test file, and not converting other evals
+      to use it — deliberately scoped to this one example per direct guidance) demonstrating the
+      judge correctly _fails_ a hand-crafted malformed transcript against the same rubric — a
+      judge that only ever passes is worthless as a scorer. Verified live: real scenario 100% (5/5
+      criteria), malformed-transcript case correctly fails with substantive reasoning.
+      **Investigated but rejected in the same session:** collapsing the two vitest configs
+      (`vitest.config.ts` for evalite, `vitest.e2e.config.ts` for gated tests) into one
+      `projects`-based file — confirmed by direct experiment (renaming the file, adding a
+      `projects` array) that vitest's `projects` don't inherit root-level `plugins`/`testTimeout`,
+      so this would silently reopen the registry-sync race. Keeping the two-file split.
+- [ ] More scorers: schema-validity; datasets for comprehension / tool-selection.
+- [ ] Pin model versions; pass-rate thresholds; scheduled (nightly/on-demand) run distinct from PR
+      CI — **explicitly deferred for now, per direct instruction.**
 
 ## Phase 3 — finish migration & reduce machinery
 
