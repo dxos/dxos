@@ -109,13 +109,8 @@ export const MessageArticle = ({
     [extractors, invoker],
   );
 
-  // The thread toolbar reads/writes one `MessageOptions` atom, but its two fields live in different
-  // durable stores: `viewMode` is per-context UI state (ViewState, keyed by the attendable) and
-  // `loadRemoteImages` is an inbox setting. Project both into a single writable atom — reads combine
-  // them, writes fan back out (view mode through the manager so it persists; the setting through its
-  // self-persisting atom). No seeding, no mirror effect.
-  const viewState = useViewStateManager();
   const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
+  const viewState = useViewStateManager();
   const viewModeAtom = useMemo(
     () => viewState.atom(messageViewModeAspect, toolbarAttendableId ?? 'default'),
     [viewState, toolbarAttendableId],
@@ -123,13 +118,16 @@ export const MessageArticle = ({
   const optionsAtom = useMemo(
     () =>
       Atom.writable<MessageOptions, MessageOptions>(
-        (get) => ({ viewMode: get(viewModeAtom), loadRemoteImages: get(settingsAtom).loadRemoteImages ?? false }),
+        (get) => ({
+          viewMode: get(viewModeAtom),
+          loadRemoteImages: get(settingsAtom).loadRemoteImages ?? false,
+        }),
         (ctx, next) => {
           viewState.set(messageViewModeAspect, toolbarAttendableId ?? 'default', next.viewMode);
           ctx.set(settingsAtom, { ...ctx.get(settingsAtom), loadRemoteImages: next.loadRemoteImages });
         },
       ),
-    [viewModeAtom, settingsAtom, viewState, toolbarAttendableId],
+    [settingsAtom, viewModeAtom, viewState, toolbarAttendableId],
   );
 
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(

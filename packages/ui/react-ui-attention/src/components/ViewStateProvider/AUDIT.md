@@ -162,6 +162,18 @@ shapes are possible:
 Targeted re-renders (only atom subscribers update) come for free. Use `value` + callback only for a
 single read-mostly leaf where an atom would be overkill.
 
+**Caveat — a ViewState `local` atom does not self-persist.** `manager.atom(aspect, id)` is a plain
+seeded atom; persistence to localStorage happens in `manager.set` → `backend.persist`, **not** on a
+direct `ctx.set`/`useAtomSet` of that atom. (A `createKvsStore` settings atom, by contrast, _does_
+self-persist on set.) So you cannot hand a raw ViewState atom to a component and expect its writes to
+stick. Two correct shapes:
+
+- Write through the manager (`useViewStateActions().set`, or `manager.set` in a container).
+- Or expose a **writable derived atom** whose read tracks `manager.atom(...)` and whose write calls
+  `manager.set(...)`. This is how `plugin-inbox`'s `MessageArticle` hands `ConversationStack` one
+  `options` atom that spans a ViewState field (`viewMode`, persisted via `manager.set`) and a settings
+  field (`loadRemoteImages`, persisted via its self-persisting atom).
+
 ---
 
 ## The `@idiom` marker
@@ -194,9 +206,9 @@ Home: TBD in the follow-up task — either `defineViewState` (the shared contrac
 
 **Gaps to resolve (this PR):**
 
-1. **`plugin-inbox` message view mode** — currently persisted in the **Settings** store
-   (`Settings.viewMode`). It is per-context durable UI state, so it belongs in **ViewState**
-   (Pattern A). This is the change that motivated the audit.
+1. ✅ **`plugin-inbox` message view mode** — moved from the Settings store to a ViewState aspect
+   (`messageViewModeAspect`, keyed by attendable); `MessageArticle` projects it + `loadRemoteImages`
+   into one writable derived atom for `ConversationStack`.
 2. **No `@idiom` marker yet** — add the single marker above.
 3. **Confirm no other per-context UI state is misfiled in a Settings store** across plugins.
 
@@ -205,6 +217,6 @@ Home: TBD in the follow-up task — either `defineViewState` (the shared contrac
 ## Next steps
 
 1. ✅ Document the two patterns + the Settings distinction (this file).
-2. Add the `@idiom org.dxos.react-ui-attention.viewState` marker to the chosen artifact.
-3. Move the inbox message view mode from the Settings store to a ViewState aspect (Pattern A).
+2. ✅ Move the inbox message view mode from the Settings store to a ViewState aspect (Pattern A).
+3. Add the `@idiom org.dxos.react-ui-attention.viewState` marker to the chosen artifact.
 4. Sweep for other misfiled per-context state and align it.
