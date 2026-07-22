@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -18,7 +18,7 @@ import {
   DeckCapabilities,
   PLANK_COMPANION_TYPE,
   type StoredDeckState,
-  companionVariantAspect,
+  companionAspect,
 } from '@dxos/plugin-deck';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
@@ -40,8 +40,9 @@ export default Capability.makeModule(
     const stateAtom = yield* Capability.get(AssistantCapabilities.State);
     // The selected companion variant moved off deck state into a global view-state aspect; read and
     // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
+    // Project just the variant so a companion resize (same aspect) does not re-fire provisioning.
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-    const variantAtom = viewState.atom(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
+    const variantAtom = Atom.make((get) => get(viewState.atom(companionAspect, COMPANION_VIEW_STATE_CONTEXT)).variant);
 
     const plankSubs = new Map<string, () => void>();
 
@@ -102,7 +103,7 @@ export default Capability.makeModule(
         return;
       }
 
-      const companionVariant = registry.get(variantAtom).variant;
+      const companionVariant = registry.get(variantAtom);
       const plankIds = new Set(deck.solo ? [deck.solo] : deck.active);
 
       // Remove subscriptions for planks that are no longer active.
@@ -126,7 +127,7 @@ export default Capability.makeModule(
           plankSubs.set(
             plankId,
             registry.subscribe(graph.connections(plankId, 'child'), () => {
-              if (provisionForPlank(plankId, registry.get(variantAtom).variant)) {
+              if (provisionForPlank(plankId, registry.get(variantAtom))) {
                 unsubPlank(plankId);
               }
             }),
