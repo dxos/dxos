@@ -68,6 +68,16 @@ describe('Capability tags', () => {
       expect(contribution.values).toEqual([{ example: 'value' }]);
     });
 
+    it('normalizeActivateResult wraps a single contribution and flattens an array', () => {
+      const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
+      const contribution = Capability.provide(single, { example: 'value' });
+
+      // A single (non-array) return is wrapped; an array passes through flattened.
+      expect(Capability.normalizeActivateResult(contribution)).toEqual([contribution]);
+      expect(Capability.normalizeActivateResult([contribution])).toEqual([contribution]);
+      expect(Capability.normalizeActivateResult(undefined)).toEqual([]);
+    });
+
     it('provideAll carries multiple values for a multi capability', () => {
       const multi = Capability.make<Example>()('org.dxos.test.multi');
       const contribution = Capability.provideAll(multi, [{ example: 'one' }, { example: 'two' }]);
@@ -107,6 +117,25 @@ describe('Capability tags', () => {
       const incomplete: Capability.EnsureProvides<IncompleteReturn, Provides> = 'missing b';
       expect(complete).toBeDefined();
       expect(incomplete).toBeDefined();
+    });
+
+    it('a single (non-array) contribution covers a single-provide module', () => {
+      const a = Capability.makeSingleton<Example>()('org.dxos.test.a');
+
+      type Provides = readonly [typeof a];
+      // Returning the contribution directly (not wrapped in an array) is the ergonomic form
+      // for a module providing exactly one capability.
+      type SingleReturn = Capability.Contribution<Capability.IdentifierOf<typeof a>>;
+
+      const covered: Capability.EnsureProvides<SingleReturn, Provides> = 'a single return is covered';
+      expect(covered).toBeDefined();
+
+      // A single contribution for the wrong capability leaves the declared one uncovered.
+      const wrong = Capability.makeSingleton<Example>()('org.dxos.test.wrong');
+      type WrongReturn = Capability.Contribution<Capability.IdentifierOf<typeof wrong>>;
+      // @ts-expect-error the branded error type is unconstructible from a string.
+      const uncovered: Capability.EnsureProvides<WrongReturn, Provides> = 'missing a';
+      expect(uncovered).toBeDefined();
     });
 
     it('Requirements exposes the identifiers of the declared requires', () => {

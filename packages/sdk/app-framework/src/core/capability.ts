@@ -380,7 +380,7 @@ export const isContribution = (value: unknown): value is AnyContribution => {
  * typed contributions).
  */
 export const normalizeActivateResult = (
-  result: ModuleReturn | readonly AnyContribution[],
+  result: ModuleReturn | AnyContribution | readonly AnyContribution[],
 ): Array<Any | AnyContribution> => {
   if (result == null) {
     return [];
@@ -452,14 +452,16 @@ export const provideAll = <C extends MultiTag<any, any>>(
 });
 
 /**
- * What a module's activate may return for a declared provides tuple: an unordered array of
- * contributions whose element type rejects undeclared capabilities. Completeness (every
- * declared capability covered) is checked by {@link EnsureProvides}; the plugin manager's
- * runtime validation is authoritative for both.
+ * What a module's activate may return for a declared provides tuple: either a single contribution
+ * or an (unordered) array of them, whose element type rejects undeclared capabilities. A single
+ * contribution is the ergonomic form when a module provides exactly one capability; a module that
+ * declares several `provides` must return the array (else {@link EnsureProvides} reports the
+ * uncovered ones). Completeness is checked by {@link EnsureProvides}; the plugin manager's runtime
+ * validation is authoritative for both (it normalizes a single return via {@link normalizeActivateResult}).
  */
 export type ProvidesReturn<Provides extends readonly AnyTag[]> = Provides extends readonly []
   ? void | ReadonlyArray<never>
-  : ReadonlyArray<Contribution<ProvidedIds<Provides>>>;
+  : Contribution<ProvidedIds<Provides>> | ReadonlyArray<Contribution<ProvidedIds<Provides>>>;
 
 /**
  * The capability identifiers of a provides tuple — the provides-side parallel to
@@ -480,7 +482,9 @@ export type CoveredBy<Ret> =
       : Item extends Contribution<infer Id>
         ? Id
         : never
-    : never;
+    : Ret extends Contribution<infer Id>
+      ? Id
+      : never;
 
 /**
  * Completeness constraint for a module's activate: evaluates to `unknown` (no-op) when every
@@ -721,7 +725,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  */
 export const makeModule = <
   TProps = void,
-  TReturn extends readonly AnyContribution[] = readonly AnyContribution[],
+  TReturn extends AnyContribution | readonly AnyContribution[] = readonly AnyContribution[],
   E extends Error = Error,
   R extends Requirements<readonly AnyTag[]> = Service,
 >(

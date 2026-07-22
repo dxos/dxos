@@ -272,7 +272,7 @@ own `Context.Tag`/`Effect.Service`, whose requirement identity is a nominal toke
 class), never the structural service shape.
 
 - [x] `capability.ts`: `CapabilityIdentifier<Id extends string, A>` (was `<T, A>`); `Tag<T, S =
-  any>`/`MultiTag<T, S = any>` (default `any` — `Context.Tag` is invariant in its identifier, so
+any>`/`MultiTag<T, S = any>` (default `any` — `Context.Tag` is invariant in its identifier, so
       a bare `Tag<Example>` annotation must accept every concrete `Tag<Example, "the.actual.nsid">`,
       which `S = string` would reject under invariance). `make`/`makeSingleton` are dual-form:
       curried `make<T>()(nsid)` captures the NSID as a literal (precise, portable — the
@@ -342,8 +342,8 @@ body's return type. Fixed:
       presence only). Bound left off `Id` because `Context.Tag.Identifier<C>` is opaque to the checker
       for a generic tag.
 - [x] New `IdentifierOf<C>` extractor over our own `Tag`/`MultiTag` `S` param — **not** Effect's
-      `Context.Tag.Identifier`, which (confirmed by probe) resolves correctly for a *concrete* tag but,
-      for a *generic* `C` inside `provide`'s overload, falls through to its `TagClassShape` branch and
+      `Context.Tag.Identifier`, which (confirmed by probe) resolves correctly for a _concrete_ tag but,
+      for a _generic_ `C` inside `provide`'s overload, falls through to its `TagClassShape` branch and
       yields the raw tag (re-leaking `T`). `provide`/`provideAll` overload **and** impl return
       `Contribution<IdentifierOf<C>>`; `ProvidedIds`/`CoveredBy`/`EnsureProvides` (capability.ts) +
       `ValidateModuleOptions` (plugin.ts) compare identifiers. Value-type safety unchanged (checked at
@@ -355,7 +355,7 @@ body's return type. Fixed:
 `IdentityService`/`SpaceService` now use `Identity.ServiceApi`/`Space.ServiceApi` and dropped the
 phantom `Invitation` import. Consumers name the interface (structural expansion with `Invitation.Flow`
 stays inside `@dxos/halo`, which imports `Invitation`). Spike had already confirmed `export * as` does
-not defeat portable naming of a *named member*.
+not defeat portable naming of a _named member_.
 
 - [x] Removed the ~30 provides-side + ~2 definition-site phantom-import workarounds the two fixes make
       dead. Method: re-swept ALL workaround files, full-repo build, restored only what TS2883 still
@@ -373,3 +373,26 @@ not defeat portable naming of a *named member*.
 Remaining open (unchanged): the 24 unrelated TS2883/TS2742 imports (out of scope — not the capability
 system); startup-deferral (composer-app/AUDIT.md §12); one `Plugin.addModule<void>` anchor in a
 plugin-magazine story; the pre-existing `plugin-assistant` "can run memoized instructions" failure.
+
+## Fourth reopened addendum (2026-07-22) — optional single-contribution return
+
+A module providing exactly one capability had to wrap it in an array (`return [contribution]`). The
+runtime already normalized a single value (`normalizeActivateResult` does
+`Array.isArray(result) ? [...result] : [result]`), but the typed path forced an array. Widened the
+type surface so the ergonomic single return type-checks and satisfies the completeness check:
+
+- [x] `ProvidesReturn<Provides>` (non-empty case): `Contribution<ProvidedIds> | ReadonlyArray<...>` —
+      accept either a single contribution or an array.
+- [x] `CoveredBy<Ret>`: added a non-array arm (`Ret extends Contribution<infer Id> ? Id : never`) so a
+      single return covers a single-provide module under `EnsureProvides`.
+- [x] `makeModule` `TReturn` constraint widened to `AnyContribution | readonly AnyContribution[]`;
+      `normalizeActivateResult` param widened to accept a lone `AnyContribution`.
+- [x] Tests (`capability.test.ts`): a single non-array contribution covers a single-provide module
+      (and a wrong-identifier single return stays uncovered); `normalizeActivateResult` wraps a single
+      contribution / flattens an array / maps nullish to `[]`. (10 tests, up from 8.)
+- [x] Consumer proof: `edge-model-resolver.ts` now `return Capability.provide(...)` directly (dropped
+      the `[contribution]` wrapper and the now-dead `EdgeModelResolverCapabilities` array alias). Emit
+      stays portable — `.d.ts` shows `Contribution<CapabilityIdentifier<"…aiModelResolver", "multi">>`,
+      no leaked Layer type.
+- [x] Gate: app-framework build + 203 tests green; plugin-assistant build green; full-repo build green;
+      app-framework/plugin-assistant lint clean; `pnpm format` clean.

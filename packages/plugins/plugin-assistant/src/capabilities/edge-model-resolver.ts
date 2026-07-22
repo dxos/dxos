@@ -18,12 +18,6 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { ANTHROPIC_SOURCE } from '../constants';
 
-// Named alias so the module's inferred type stays portable (avoids TS2883 leaking the internal
-// `@dxos/ai/AiModelResolver` Layer type into the emitted declarations).
-export type EdgeModelResolverCapabilities = Capability.Contribution<
-  Capability.IdentifierOf<typeof AppCapabilities.AiModelResolver>
->[];
-
 const edgeModelResolver = Capability.makeModule(
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;
@@ -62,12 +56,10 @@ const edgeModelResolver = Capability.makeModule(
     const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://edge.internal' }).pipe(Layer.provide(httpClient));
     const anthropicResolverLayer = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
 
-    const contribution: Capability.Contribution<Capability.IdentifierOf<typeof AppCapabilities.AiModelResolver>> =
-      Capability.provide(AppCapabilities.AiModelResolver, anthropicResolverLayer, () =>
-        Effect.sync(() => identitySubscription?.unsubscribe()),
-      );
-
-    return [contribution];
+    // A module providing exactly one capability may return the contribution directly.
+    return Capability.provide(AppCapabilities.AiModelResolver, anthropicResolverLayer, () =>
+      Effect.sync(() => identitySubscription?.unsubscribe()),
+    );
   }),
 );
 

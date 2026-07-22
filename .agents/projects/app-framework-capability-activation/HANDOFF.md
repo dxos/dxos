@@ -204,3 +204,20 @@ of this note — commit + push is the immediate next step, no PR requested.
 Hard-rule reminders that bit this session: **never pipe a gate command through `tail`/`head`**
 (masks exit code) — used `grep -c "error TS"` + a separate `echo "EXIT=$?"` capture instead, since
 TS2883/TS2345 are compile errors that must not be missed in a huge build log.
+
+## RESUME (2026-07-22) — optional single-contribution return
+
+User asked whether a module providing one capability must always return an array (it previously
+could return a single value). The **runtime** already normalized a single value
+(`normalizeActivateResult` wraps non-arrays), but the **typed** path forced an array. Widened four
+type surfaces in `capability.ts` so the ergonomic single return type-checks and satisfies the
+completeness check: `ProvidesReturn` (single | array), `CoveredBy` (added a non-array arm),
+`makeModule`'s `TReturn` constraint, and `normalizeActivateResult`'s parameter. Added type + runtime
+tests (`capability.test.ts`, 10 tests). Converted `edge-model-resolver.ts` as a consumer proof —
+`return Capability.provide(...)` directly, dropping the `[contribution]` wrapper and the now-dead
+`EdgeModelResolverCapabilities` array alias; the emitted `.d.ts` stays portable (single
+`Contribution<CapabilityIdentifier<"…aiModelResolver","multi">>`, no leaked Layer type).
+
+**State**: app-framework build + 203 tests green; plugin-assistant build green; full-repo build green;
+app-framework/plugin-assistant lint clean; `pnpm format` clean. Committed + pushed to
+`claude/resume-app-framework-activation-nfxu2u`, no PR requested.
