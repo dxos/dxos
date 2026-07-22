@@ -10,8 +10,9 @@ deleting it, remove all committed conversation fixtures, switch the gating mecha
 `describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED);
 [#12305](https://github.com/dxos/dxos/pull/12305) (leaner package-level `AiRequest.test.ts`
 D-tier tests + `operationServiceLayerNoop`; MERGED);
-[#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 start — DB-effect oracle + first
-ported eval, `database.eval.ts`; draft).
+[#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 start — DB-effect assertion helper +
+first ported eval, `database.eval.ts`; merges `@dxos/assistant-e2e` into `@dxos/assistant-evals`
+(composition-scoped package layout); draft).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -20,10 +21,11 @@ as primary coverage.
 
 ## Consumer groups (see TESTING.md "Consumer inventory")
 
-- **G1** — pure agent e2e (`@dxos/assistant-e2e`): database, crm-mailbox, web-search, planning,
-  markdown, smoke. Leaf package, redundant C/D signal, ~7.5 MB fixtures. **Revised: keep, gate
-  behind `runMemoizedTests()` like G2/G3 (see Phase 1 below) — not deleted.** These stay available
-  as opt-in live/eval-style tests and as design inspiration for later tiers.
+- **G1** — pure agent e2e, now living in `@dxos/assistant-evals` (merged from `@dxos/assistant-e2e`
+  in #12307 — see TESTING.md "Where evals live"): database, crm-mailbox, web-search, planning,
+  markdown, smoke. Redundant C/D signal, ~7.5 MB fixtures. **Revised: keep, gate behind
+  `runMemoizedTests()` like G2/G3 (see Phase 1 below) — not deleted.** These stay available as
+  opt-in live/eval-style tests and as design inspiration for later tiers.
 - **G2** — per-operation / skill: plugin-markdown create/update, plugin-magazine, plugin-assistant,
   assistant-toolkit run-instructions + database/memory/planning/agent skills, AiSummarizer.
   **Convert to mocked C unit tests before deleting.**
@@ -130,20 +132,39 @@ as primary coverage.
 
 ## Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-- [x] **PR #12307 (draft):** first DB-effect scorer + first ported G1 scenario: `assistant-evals/src/oracle.ts`
-      (`objectExists(type, predicate)` — dimension-G code-side oracle, queries the DB directly
-      rather than trusting the agent's `completedCriteria` self-report) and
-      `assistant-evals/src/evals/database.eval.ts` (ported from the gated
-      `assistant-e2e/src/testing/database.test.ts` `create and query` case). `runner.ts`'s
-      `createEvalRunner` gained an optional `dbQuery` hook (overloaded: omit it and the task
-      returns the bare agent output unchanged, as before; pass it and the task returns
-      `{ agentOutput, dbQuery }` so a scorer can grade the DB effect). Manual-run only for now
-      (`DX_ANTHROPIC_API_KEY` + `moon run assistant-evals:evals`) — no CI/schedule yet. Verified:
-      `assistant-evals:lint` clean, `tsc -b packages/core/compute/assistant-evals` clean (every
-      other error printed is pre-existing and unrelated — `react-ui-mosaic`/`react-ui-list`
-      missing exports, a missing `cli-observability-secrets.json`, generated chess assets —
-      confirmed via `grep -n "assistant-evals/src"` returning nothing). Not run against the live
-      model yet (no API key in this sandbox) — do that before trusting the scorer logic itself.
+- [x] **PR #12307 (draft):** first DB-effect scorer + first ported G1 scenario:
+      `assistant-evals/src/assertions.ts` (`objectExists(type, predicate)` — dimension-G
+      deterministic assertion helper, queries the DB directly rather than trusting the agent's
+      `completedCriteria` self-report) and `assistant-evals/src/evals/database.eval.ts` (ported
+      from the gated `Database > create and query` scenario). `runner.ts`'s `createEvalRunner`
+      gained an optional `dbQuery` hook (overloaded: omit it and the task returns the bare agent
+      output unchanged, as before; pass it and the task returns `{ agentOutput, dbQuery }` so a
+      scorer can grade the DB effect). Manual-run only for now (`DX_ANTHROPIC_API_KEY` +
+      `moon run assistant-evals:evals`) — no CI/schedule yet.
+      **Also merged `@dxos/assistant-e2e` into `@dxos/assistant-evals`** (composition-scoped
+      package layout — see TESTING.md "Where evals live"): moved `harness.ts` +
+      `src/testing/*.test.ts` (the 9 gated e2e files) into `assistant-evals`, deleted the
+      `assistant-e2e` package, split the vitest config (`vitest.config.ts` stays flat for
+      evalite's hardcoded `.eval.ts` discovery; `vitest.e2e.config.ts` — the former
+      `assistant-e2e` config — used explicitly by a hand-written `moon.yml` `:test` task for the
+      gated e2e suite), updated `.changeset/config.json`, `tsconfig.all.json`, the
+      `agent-e2e-tests`/`regenerate-memoized-llm` skills, and `RELEASE-SPEC.md`'s package table.
+      Verified: `moon run assistant-evals:build assistant-evals:lint assistant-evals:test --force`
+      green (9 gated e2e files, all correctly skipped without `DX_RUN_LLM_TESTS=1`);
+      `evalite run src/evals` and `evalite run src/evals/database.eval.ts` correctly discover
+      files. **Not yet run end-to-end against a live model with a scored result in this sandbox**
+      — every attempted `evalite run` (both `database.eval.ts` and the pre-existing, unrelated
+      `basic.eval.ts`, predating this PR) fails deterministically before any model call with the
+      `plugin-routine` registry-sync `TypeError: Cannot read properties of undefined (reading
+    'meta')` (`registry-sync.ts:74`, handler set read before `.meta` is populated). Notably this
+      is **evalite-specific**: the same harness under the gated vitest `:test` path (e.g.
+      `DX_RUN_LLM_TESTS=1 vitest run src/testing/database.test.ts`) does NOT hit it — it correctly
+      reaches `Operation.invoke` and fails cleanly on "no memoized conversation" instead. Suggests
+      evalite's task-execution scheduling races the `OperationHandlerSet` registration in a way
+      vitest's doesn't. Pre-existing, unrelated to the `dbQuery` code path (never reached). Tracked
+      as a follow-up below — it currently blocks getting _any_ live scored result out of
+      `@dxos/assistant-evals` in this environment; worth trying on a real machine/CI to see if it
+      reproduces there too.
 - [ ] Port `web-search.test.ts` next as the first tool-match scorer case (checks only the
       `web-search` tool fired), reusing the same `dbQuery`-style hook pattern generalized to
       tool-invocation records rather than DB queries.
@@ -161,6 +182,12 @@ as primary coverage.
 
 ## Follow-ups (out of band)
 
+- [ ] **Blocking evals:** fix the evalite-specific `plugin-routine` registry-sync race
+      (`registry-sync.ts:74`, `handler.meta` read before population — see PR #12307 entry above).
+      Reproduces deterministically for every `evalite run` in this sandbox, on both the new
+      `database.eval.ts` and the pre-existing `basic.eval.ts`; does not reproduce on the equivalent
+      vitest e2e path. Until fixed, `@dxos/assistant-evals` cannot produce a live scored result
+      here — needs reproducing outside this sandbox (real machine/CI) to confirm scope.
 - [ ] Delete the orphaned `.agent/` (singular) directory. Unreferenced by any code, config, or
       tooling (Cursor/VS Code use `.cursor/` → `.agents/` plural); origin PR #10381 example
       workflow/function fixtures, only kept current by mechanical repo-wide refactors. Verify no
