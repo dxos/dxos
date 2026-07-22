@@ -354,8 +354,10 @@ const TilingDeck = ({
     [invokePromise],
   );
 
+  // Tiling is a flush split view — no `--main-spacing` gap or padding (that spacing is the sliding
+  // deck's encapsulated look); the planks sit edge-to-edge, separated only by the hairline splitter.
   return (
-    <div ref={containerRef} className={mx('absolute inset-0 flex px-(--main-spacing)', mainPaddingTransitions)}>
+    <div ref={containerRef} className={mx('absolute inset-0 flex', mainPaddingTransitions)}>
       {rendered.map((id, index) => (
         <Fragment key={id}>
           <div className='relative h-full min-w-0' style={{ flexGrow: applied[index], flexBasis: '0%' }}>
@@ -434,9 +436,11 @@ const TilingSplitter = ({
   );
 
   return (
-    <div className='relative flex-none w-(--main-spacing)'>
+    // Zero-width so the tiled planks stay flush; the hairline divider and the (wider) drag hit-area
+    // overlay the seam via absolute positioning.
+    <div className='relative flex-none'>
       {/* Persistent hairline divider between the tiled planks, matching the solo+companion split. */}
-      <div className='absolute inset-y-0 start-1/2 w-px -translate-x-1/2 bg-subdued-separator' />
+      <div className='absolute inset-y-0 start-0 w-px -translate-x-1/2 bg-subdued-separator' />
       <button
         aria-label='Resize'
         onPointerDown={handlePointerDown}
