@@ -19,21 +19,27 @@ pair to the backend the aspect declares, through the effect-atom registry so Rea
 code observe the same values.
 
 - **Aspect** — a typed kind of UI state, defined once with
-  [`define`](../../view-state/view-state.ts): `{ key, backend, schema, defaultValue }`.
-- **Backends** ([`createDefaultBackends`](../../view-state/backends.ts)): `memory` (ephemeral) and
+  [`define`](./src/types/ViewState.ts): `{ key, backend, schema, defaultValue }`.
+- **Backends** ([`createDefaultBackends`](./src/core/backends.ts)): `memory` (ephemeral) and
   `local` (localStorage — seeds from storage, persists on set, syncs across tabs, degrades to memory
   when storage is blocked). `personal` (ECHO / cross-device) is reserved.
-- **Manager** ([`Manager`](../../view-state/view-state.ts)): `atom` / `get` / `set` /
+- **Manager** ([`Manager`](./src/types/ViewState.ts)): `atom` / `get` / `set` /
   `update` / `subscribe` / `contexts`.
+
+> **Source layout.** The pure data model — the `Attention`, `Selection`, and `ViewState`
+> namespaces (`define`, `Aspect`, `Manager`, aspect + selection helpers) — lives in `src/types/`
+> (`export * as` barrels); the backends in `src/core/`; the React provider and hooks in
+> `src/components/ViewStateProvider/`. Consumers reach the namespaces through the package entry as
+> `ViewState.Manager`, `ViewState.define`, `Selection.aspect`, `Attention.AttentionManager`.
 
 ### The bridge (why every caller sees the same state)
 
 `plugin-attention` constructs exactly one manager and exposes it on **both** sides of the capability
 boundary:
 
-- **As a capability** — [`AttentionPlugin.ts`](../../../../../plugins/plugin-attention/src/AttentionPlugin.ts)
+- **As a capability** — [`AttentionPlugin.ts`](../../plugins/plugin-attention/src/AttentionPlugin.ts)
   `new Manager(...)` → `Capability.contributes(AttentionCapabilities.ViewState, …)`.
-- **As a React context** — [`react-context.tsx`](../../../../../plugins/plugin-attention/src/capabilities/react-context.tsx)
+- **As a React context** — [`react-context.tsx`](../../plugins/plugin-attention/src/capabilities/react-context.tsx)
   mounts `<ViewStateProvider manager={useCapability(AttentionCapabilities.ViewState)}>` — the _same_
   instance.
 
@@ -67,13 +73,13 @@ const variant = useViewState(companionVariantAspect, COMPANION_VIEW_STATE_CONTEX
 const { set, update, clear } = useViewStateActions(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
 ```
 
-- Hooks: [`useViewState`](./ViewStateProvider.tsx), [`useViewStateActions`](./ViewStateProvider.tsx)
-  (`{ set, update, clear }`), [`useManagerOptional`](./ViewStateProvider.tsx) for direct
-  access, and the selection helpers [`useSelection`](./ViewStateProvider.tsx) /
-  [`useSelectionActions`](./ViewStateProvider.tsx) built on top.
+- Hooks: [`useViewState`](./src/components/ViewStateProvider/ViewStateProvider.tsx), [`useViewStateActions`](./src/components/ViewStateProvider/ViewStateProvider.tsx)
+  (`{ set, update, clear }`), [`useManagerOptional`](./src/components/ViewStateProvider/ViewStateProvider.tsx) for direct
+  access, and the selection helpers [`useSelection`](./src/components/ViewStateProvider/ViewStateProvider.tsx) /
+  [`useSelectionActions`](./src/components/ViewStateProvider/ViewStateProvider.tsx) built on top.
 - Live examples:
-  [`plugin-deck/hooks/useSelectedCompanionVariant.ts`](../../../../../plugins/plugin-deck/src/hooks/useSelectedCompanionVariant.ts),
-  [`plugin-deck/hooks/useCompanionSplit.ts`](../../../../../plugins/plugin-deck/src/hooks/useCompanionSplit.ts).
+  [`plugin-deck/hooks/useSelectedCompanionVariant.ts`](../../plugins/plugin-deck/src/hooks/useSelectedCompanionVariant.ts),
+  [`plugin-deck/hooks/useCompanionSplit.ts`](../../plugins/plugin-deck/src/hooks/useCompanionSplit.ts).
 
 ### Pattern B — Non-React: the capability (operations, capability modules, app-graph builders)
 
@@ -94,10 +100,10 @@ export const createEditorViewStateStore = (manager: Manager): EditorStateStore =
 ```
 
 - Live examples:
-  [`plugin-markdown/capabilities/state.ts`](../../../../../plugins/plugin-markdown/src/capabilities/state.ts)
-  - [`editor-view-state.ts`](../../../../../plugins/plugin-markdown/src/capabilities/editor-view-state.ts),
-    [`plugin-attention/operations/select.ts`](../../../../../plugins/plugin-attention/src/operations/select.ts),
-    [`plugin-inbox/capabilities/app-graph-builder.ts`](../../../../../plugins/plugin-inbox/src/capabilities/app-graph-builder.ts).
+  [`plugin-markdown/capabilities/state.ts`](../../plugins/plugin-markdown/src/capabilities/state.ts)
+  - [`editor-view-state.ts`](../../plugins/plugin-markdown/src/capabilities/editor-view-state.ts),
+    [`plugin-attention/operations/select.ts`](../../plugins/plugin-attention/src/operations/select.ts),
+    [`plugin-inbox/capabilities/app-graph-builder.ts`](../../plugins/plugin-inbox/src/capabilities/app-graph-builder.ts).
 
 **In practice today:** React code (components _and_ containers) uses Pattern A; non-React code
 (operations, capability modules, app-graph builders) uses Pattern B. The two often appear in the same
@@ -110,15 +116,15 @@ same aspect through the capability.
 
 These are **different mechanisms** and must not be conflated.
 
-|                | **ViewState**                                                     | **Settings store**                                               |
-| -------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Purpose        | per-context **UI state** (reload durability is backend-dependent) | plugin-wide **configuration / user preferences**                 |
-| Keyed by       | `(aspect, contextId)` — the object/surface                        | plugin id (`meta.profile.key`)                                   |
-| Granularity    | one value per context (per document, tab, selection)              | one settings blob per plugin                                     |
-| Built with     | `define` + `Manager`                                              | [`createKvsStore`](../../../../../common/effect/src/atom-kvs.ts) |
-| Accessed via   | Pattern A hooks / Pattern B capability                            | `useAtomCapabilityState(XCapabilities.Settings)`                 |
-| Surfaced in UI | no                                                                | yes — `AppCapabilities.Settings` renders it in Settings          |
-| Example        | companion tab, editor caret, view mode                            | `loadRemoteImages`, `conversations`                              |
+|                | **ViewState**                                                     | **Settings store**                                      |
+| -------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
+| Purpose        | per-context **UI state** (reload durability is backend-dependent) | plugin-wide **configuration / user preferences**        |
+| Keyed by       | `(aspect, contextId)` — the object/surface                        | plugin id (`meta.profile.key`)                          |
+| Granularity    | one value per context (per document, tab, selection)              | one settings blob per plugin                            |
+| Built with     | `define` + `Manager`                                              | [`createKvsStore`](../../common/effect/src/atom-kvs.ts) |
+| Accessed via   | Pattern A hooks / Pattern B capability                            | `useAtomCapabilityState(XCapabilities.Settings)`        |
+| Surfaced in UI | no                                                                | yes — `AppCapabilities.Settings` renders it in Settings |
+| Example        | companion tab, editor caret, view mode                            | `loadRemoteImages`, `conversations`                     |
 
 **Decision rule (sharpened):**
 
@@ -181,7 +187,7 @@ stick. Two correct shapes:
 
 Each store is named by one idiom (NSID slug), pinned to its canonical artifact:
 
-- **`org.dxos.react-ui-attention.viewState`** → on `define` (`view-state/view-state.ts`).
+- **`org.dxos.react-ui-attention.viewState`** → on `define` (`src/types/ViewState.ts`).
 - **`org.dxos.effect.kvsStore`** → on `createKvsStore` (`common/effect/src/atom-kvs.ts`), the Settings
   store, cross-referenced as `related`.
 
