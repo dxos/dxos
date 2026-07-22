@@ -36,7 +36,7 @@ const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) 
 );
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/CardTile',
+  title: 'ui/react-ui-card/CardTile',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

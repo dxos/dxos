@@ -80,4 +80,5 @@ see the low-level shared-primitive inventory in the plugin [`AUDIT.md`](../../AU
 - [x] Stage 0 — audit (this file), refreshed to current reality; `MessageSummary` dropped.
 - [x] Stage 1 — one shared `Avatar` primitive (`components/Avatar/`) + single `nameToHue`; all four
       sites routed through it; `getMessageProps.hue` removed.
-- [ ] Stage 2 — extract the shared low-level primitives (`Row`, `CardTile`, `Avatar`) into the card package.
+- [x] Stage 2 — extracted `Row`, `CardTile`, `Avatar` (+ `useActorContact`, `hashString`, 3 i18n keys)
+      into `@dxos/react-ui-card`; plugin-inbox imports them from there.

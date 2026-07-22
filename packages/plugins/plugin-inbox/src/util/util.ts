@@ -170,16 +170,6 @@ export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: 
   });
 };
 
-/**
- * Hashes a string into a number
- * @param str String to hash
- * @returns A non-negative number hash
- */
-// TODO(burdon): Factor out.
-export const hashString = (str?: string): number => {
-  return str ? Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0)) : 0;
-};
-
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =
   <T, K extends Extract<keyof T, string>>(prop: K, descending = false) =>

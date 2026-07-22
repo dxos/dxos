@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useActorContact';
 export * from './useDebouncedValue';
 export * from './useEmailComposerExtensions';
 export * from './useExtractedObjects';

@@ -57,8 +57,8 @@ calendar + contacts move out; provider + apis split; shared card-focused `@dxos/
 - [x] Unify the avatar: one shared `Avatar` primitive (`components/Avatar/`, actor/name → single
       `nameToHue`), routed through `Row.Person` + the 3 hand-rolled sites; dropped `getMessageProps.hue`.
       **No `MessageSummary` composite** — the four layouts are deliberately distinct.
-- [ ] Extract `@dxos/react-ui-card` — the shared low-level card vocabulary (`Row`, `CardTile`,
-      `Avatar`). Blockers: `Row` couples to `#hooks` (`useActorContact`), `#meta` (i18n),
-      `../../util` (`hashString`) — relocate those into the package. Reuse react-ui's
-      `Card.Menu` / `Avatar` / `SystemIconButton.Star` and react-ui-menu; don't re-extract.
+- [x] Extract `@dxos/react-ui-card` — the shared low-level card vocabulary (`Row`, `CardTile`,
+      `Avatar`) + `useActorContact` + `hashString` + its own i18n namespace. plugin-inbox depends on
+      it (`workspace:*`) and registers its translations. Reuses react-ui's `Card.Menu` /
+      `SystemIconButton.Star`. **TODO:** visual storybook pass (Row/Avatar/CardTile) not yet run.
 - [ ] Different form layout for `EditMessage` (`components/EditMessage/`).

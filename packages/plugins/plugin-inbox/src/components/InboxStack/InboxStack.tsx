@@ -9,6 +9,7 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 import type { PaginationResult } from '@dxos/echo-react';
 import { Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { Avatar, CardTile, Row } from '@dxos/react-ui-card';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
 import { type Message } from '@dxos/types';
@@ -16,9 +17,6 @@ import { type Message } from '@dxos/types';
 import { useGmailTags } from '#hooks';
 
 import { getMessageBodyText, getMessageProps } from '../../util';
-import { Avatar } from '../Avatar';
-import { CardTile } from '../CardTile';
-import { Row } from '../Row';
 
 export type InboxStackAction =
   | { type: 'current'; messageId: string }

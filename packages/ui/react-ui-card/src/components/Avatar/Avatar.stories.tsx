@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Avatar } from './Avatar';
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/Avatar',
+  title: 'ui/react-ui-card/Avatar',
   component: Avatar,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
 } satisfies Meta<typeof Avatar>;

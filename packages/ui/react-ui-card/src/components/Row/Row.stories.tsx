@@ -5,9 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { type Database, Ref } from '@dxos/echo';
-import { createObject } from '@dxos/react-client/echo';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { Obj, Ref } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Actor, Person } from '@dxos/types';
@@ -20,31 +18,24 @@ const SENDER: Actor.Actor = { name: 'Alice Avery', email: 'alice@example.com' };
 
 // Exercises each shared Card-row primitive inside the borderless Card chrome the tiles/headers use.
 const DefaultStory = () => {
-  const { space } = useClientStory();
-  const db: Database.Database | undefined = space?.db;
-  const object = useMemo(() => (db ? createObject(Person.make({ fullName: 'Casey Contact' })) : undefined), [db]);
+  const object = useMemo(() => Obj.make(Person.Person, { fullName: 'Casey Contact' }), []);
   // A second stand-in object so the two attachment refs below have distinct URIs (and React keys).
-  const secondObject = useMemo(
-    () => (db ? createObject(Person.make({ fullName: 'Dana Reference' })) : undefined),
-    [db],
-  );
+  const secondObject = useMemo(() => Obj.make(Person.Person, { fullName: 'Dana Reference' }), []);
 
   return (
     <Card.Root border={false} fullWidth classNames='p-1'>
       <Card.Body>
         <Row.Star starred onToggle={() => {}} />
         <Row.Person actor={SENDER} role='from' avatar />
-        <Row.Person actor={SENDER} role='from' db={db} onContactCreate={() => {}} />
+        <Row.Person actor={SENDER} role='from' onContactCreate={() => {}} />
         <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:30:00')} />
-        {object && <Row.Ref object={object} />}
-        {object && secondObject && (
-          <Row.Attachments
-            attachments={[
-              { name: 'invoice.pdf', ref: Ref.make(object) },
-              { name: 'photo.png', ref: Ref.make(secondObject) },
-            ]}
-          />
-        )}
+        <Row.Ref object={object} />
+        <Row.Attachments
+          attachments={[
+            { name: 'invoice.pdf', ref: Ref.make(object) },
+            { name: 'photo.png', ref: Ref.make(secondObject) },
+          ]}
+        />
         <Row.Tags
           tags={[
             { id: 'a', label: 'travel', hue: 'cyan' },
@@ -58,13 +49,9 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/Row',
+  title: 'ui/react-ui-card/Row',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'column' }),
-    withClientProvider({ types: [Person.Person], createIdentity: true, createSpace: true }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

@@ -20,9 +20,8 @@ import {
 import { type Actor, type Message } from '@dxos/types';
 import { toHue } from '@dxos/ui-theme';
 
-import { useActorContact } from '#hooks';
-import { meta } from '#meta';
-
+import { useActorContact } from '../../hooks';
+import { translationKey } from '../../translations';
 import { Avatar, avatarName } from '../Avatar';
 
 /**
@@ -205,7 +204,7 @@ const PersonAnchorRow = ({
   onContactCreate,
   onRemove,
 }: Omit<RowPersonProps, 'avatar' | 'onClick'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = useTranslation(translationKey);
   const contactDXN = useActorContact(db, actor);
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 

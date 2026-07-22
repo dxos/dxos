@@ -6,6 +6,7 @@ import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, 
 
 import { Card, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { CardTile } from '@dxos/react-ui-card';
 import {
   Focus,
   Mosaic,
@@ -17,7 +18,6 @@ import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { CardTile } from '../CardTile';
 import { EventDetails } from '../Event';
 
 export type EventStackAction =

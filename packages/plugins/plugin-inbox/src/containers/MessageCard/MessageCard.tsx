@@ -6,9 +6,8 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
+import { Avatar, Row } from '@dxos/react-ui-card';
 import { type Message } from '@dxos/types';
-
-import { Avatar, Row } from '#components';
 
 import { getMessageProps } from '../../util';
 
