@@ -260,9 +260,10 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
-      # TEMPORARY (storybook teardown-hang diagnostic): treat this branch like `main` so the PR runs
-      # the FULL :test-storybook set (not just affected) and reproduces the stories-inbox teardown
-      # hang without merging. Revert this branch carve-out once the leak is root-caused and fixed.
+      # TEMPORARY (storybook teardown-hang diagnostic): this branch skips the normal affected/all
+      # storybook steps and instead runs only the two heavy packages that reproduce the teardown
+      # hang (stories-inbox, stories-assistant) — fast enough to finish inside the 30-min job limit,
+      # so their teardown is actually observed. Revert this whole carve-out once the fix has landed.
       - name: Test Storybook Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' && steps.extract_branch.outputs.branch != 'claude/storybook-test-failure-h0ar9m' && env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
@@ -278,8 +279,13 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch != 'main' && steps.extract_branch.outputs.branch != 'claude/storybook-test-failure-h0ar9m' && env.TRUNK_TOKEN == '' }}
         run: moon run :test-storybook --affected remote -- --no-file-parallelism
 
+      # TEMPORARY branch-only validation of the teardown-hang fix (see comment above).
+      - name: Test Storybook Heavy (teardown-hang validation)
+        if: ${{ steps.extract_branch.outputs.branch == 'claude/storybook-test-failure-h0ar9m' }}
+        run: moon run stories-inbox:test-storybook stories-assistant:test-storybook -- --no-file-parallelism
+
       - name: Test Storybook All
-        if: ${{ (steps.extract_branch.outputs.branch == 'main' || steps.extract_branch.outputs.branch == 'claude/storybook-test-failure-h0ar9m') && env.TRUNK_TOKEN != '' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -290,7 +296,7 @@ jobs:
 
       # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
       - name: Test Storybook All (no analytics)
-        if: ${{ (steps.extract_branch.outputs.branch == 'main' || steps.extract_branch.outputs.branch == 'claude/storybook-test-failure-h0ar9m') && env.TRUNK_TOKEN == '' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
         run: moon exec --on-failure continue :test-storybook -- --no-file-parallelism
 
       - name: Upload Test Results
