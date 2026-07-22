@@ -22,4 +22,11 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 export default defineConfig({
   root: dirname,
   plugins: [PluginImportSource({ include: ['@dxos/**', '#*'] })],
+  test: {
+    // evalite defaults to a 30s per-eval timeout (`config.test.testTimeout ??= 30_000` in
+    // evalite's run-evalite.js) unless vitest config overrides it. Multi-tool agent scenarios
+    // (research, web search, several operations) routinely exceed that; match the
+    // DEFAULT_TEST_TIMEOUT used for live-generation gated e2e tests in harness.ts.
+    testTimeout: 360_000,
+  },
 });
