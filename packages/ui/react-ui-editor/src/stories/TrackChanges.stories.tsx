@@ -13,7 +13,7 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  suggestions,
+  documentSlots,
   trackChanges,
 } from '@dxos/ui-editor';
 
@@ -22,17 +22,11 @@ import { Editor, type EditorViewProps } from '../components';
 // The accepted base (main). The editor is bound to a *branch* whose live edits are tracked against it.
 const MAIN = 'The quick brown fox jumps over the lazy dog.';
 
-// A second author's proposal, changing one word near the end so it stays clear of where the tester is
-// likely to type.
-//
-// TODO(burdon): `suggestions()` diffs the editor's document (the branch) against each source, so as
-// soon as the tester edits, Bob renders Bob-vs-branch, not Bob-vs-main. At story open (branch === MAIN)
-// the two frames coincide, so this is faithful only until the first edit. Production must decouple the
-// overlay's base from the document (see the bind-to-branch spike's foreign-overlay gotcha).
-const BOB = 'The quick brown fox jumps over the sleepy dog.';
-
+// A second-author overlay is intentionally omitted here. `suggestions()` diffs against the editor's
+// document (the branch), so once the tester types it strikes their new text as "text the other author
+// would remove" and collides with the self-diff. A faithful multi-author overlay needs the base
+// decoupled from the document (Milestone B) — this story evaluates the self-diff alone.
 const SELF_COLOUR = 'var(--color-cyan-text)';
-const BOB_COLOUR = 'var(--color-violet-text)';
 
 /** The document text with phantom deletions folded in, excluding the foreign overlay's controls. */
 const documentText = (canvasElement: HTMLElement): string => {
@@ -52,12 +46,10 @@ const Render = ({ branch, ...args }: RenderProps) => {
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
-      // Self: the branch's own edits, diffed against MAIN and shown as tracked changes.
+      // The branch's own edits, diffed against MAIN and shown as tracked changes (self only).
       trackChanges({ main: MAIN, colour: SELF_COLOUR }),
-      // Foreign: a second author's suggestion, overlaid via the existing accept/reject mechanism.
-      suggestions({ sources: [{ author: 'did:bob', colour: BOB_COLOUR, content: BOB }] }),
     ],
     [themeMode],
   );
@@ -72,7 +64,7 @@ const Render = ({ branch, ...args }: RenderProps) => {
 const meta = {
   title: 'ui/react-ui-editor/TrackChanges',
   render: Render,
-  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention()],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'py-8' }), withAttention()],
   parameters: {
     layout: 'fullscreen',
   },
@@ -94,7 +86,6 @@ type Story = StoryObj<typeof meta>;
  * - Move the caret across a phantom with the arrow keys — it is stepped over as one unit.
  * - Press Backspace with the caret just after a phantom — the real branch text behind it is protected
  *   (the keystroke is swallowed rather than eating the hidden character).
- * - Bob's suggestion (violet, near the end) shows a second author coexisting on the same buffer.
  */
 export const Default: Story = {
   args: { branch: MAIN },
