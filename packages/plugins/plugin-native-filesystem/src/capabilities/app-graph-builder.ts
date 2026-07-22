@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Type } from '@dxos/echo';
@@ -37,13 +37,48 @@ const MARKDOWN_PENDING_TYPE = `${meta.profile.key}.markdown-pending`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
 
+/**
+ * Depth-first walk of a workspace tree from its top-level entries to `targetId`, accumulating the
+ * ancestor directory-id chain (root→leaf, excluding the entry). Returns null if not found. Entry ids are
+ * lossy and the tree has no parent pointers, so the path can only be rebuilt by walking down.
+ */
+const findEntryAncestorChain = (entries: FilesystemEntry[], targetId: string, chain: string[]): string[] | null => {
+  for (const entry of entries) {
+    if (entry.id === targetId) {
+      return chain;
+    }
+    if ('children' in entry) {
+      const found = findEntryAncestorChain(entry.children, targetId, [...chain, entry.id]);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
+};
+
 export const createFilesystemEntryExtensions = (
   stateCapabilitiesAtom: Atom.Atom<Atom.Writable<NativeFilesystemState>[]>,
   filesystemManagerCapabilitiesAtom: Atom.Atom<FilesystemManager.FilesystemManager[]>,
-) =>
-  Effect.all([
+  readState: () => NativeFilesystemState,
+) => {
+  // Files/directories sit at a variable-depth, data-dependent path (`root/<workspace>/<dir>/…/<id>`), so
+  // forward URL resolution walks the current workspace tree to rebuild the node path from the entry id.
+  const resolve: GraphBuilder.PathResolver = ({ id, workspace }) =>
+    Effect.sync(() => {
+      const ws = readState().workspaces.find((item) => item.id === workspace);
+      if (!ws) {
+        return null;
+      }
+      const chain = findEntryAncestorChain(ws.children, id, []);
+      return chain ? [Node.RootId, workspace, ...chain, id].join('/') : null;
+    });
+
+  return Effect.all([
     GraphBuilder.createExtension({
       id: 'workspaceEntries',
+      urlKey: 'file',
+      resolve,
       match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -67,6 +102,8 @@ export const createFilesystemEntryExtensions = (
 
     GraphBuilder.createExtension({
       id: 'directoryEntries',
+      urlKey: 'file',
+      resolve,
       match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -88,6 +125,7 @@ export const createFilesystemEntryExtensions = (
       },
     }),
   ]).pipe(Effect.map((extensions) => extensions.flat()));
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -95,9 +133,14 @@ export default Capability.makeModule(
     const stateCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.State);
     const filesystemManagerCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.FilesystemManager);
     const appGraphCapabilitiesAtom = capabilities.atom(AppCapabilities.AppGraph);
+    // Read the current filesystem tree synchronously at URL-resolve time (the `file` resolver runs long
+    // after activation), the same registry+atom pattern as markdown-extension.
+    const registry = capabilities.get(Capabilities.AtomRegistry);
+    const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
     const filesystemEntryExtensions = yield* createFilesystemEntryExtensions(
       stateCapabilitiesAtom,
       filesystemManagerCapabilitiesAtom,
+      () => registry.get(stateAtom),
     );
 
     const extensions = yield* Effect.all([
