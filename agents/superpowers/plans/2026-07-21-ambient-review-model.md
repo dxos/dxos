@@ -42,11 +42,13 @@ Two milestones. **Milestone A (this plan, fully specified):** mode state + rende
 ### Task A1: Per-document review mode state
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-space/src/types/capabilities.ts` (VersioningState namespace, ~line 55-78)
 - Modify: `packages/plugins/plugin-space/src/capabilities/` (the module that creates the `VersioningState` atom with its initial value — grep `VersioningState` + `Atom.make`)
 - Modify + Test: `packages/plugins/plugin-markdown/src/hooks/useVersioning.ts` (+ co-located `useVersioning.test.ts` if present; else add a state round-trip test in plugin-space)
 
 **Interfaces:**
+
 - Produces: `SpaceCapabilities.ReviewMode = 'editing' | 'suggesting' | 'viewing'`; `VersioningState.mode: Record<string, ReviewMode>`; `useVersioning(...)` return gains `mode: ReviewMode` and `setMode: (mode: ReviewMode) => void`.
 
 - [ ] **Step 1: Add the type + state field**
@@ -117,10 +119,12 @@ Add `mode` and `setMode` to the returned object.
 ### Task A2: `ReviewRenderPolicy` capability + GDocs-parity default
 
 **Files:**
+
 - Modify + Test: `packages/plugins/plugin-space/src/types/capabilities.ts` (+ `capabilities.test.ts` for the default policy)
 - Modify: the plugin-space startup module that contributes default capabilities (grep `Capability.contributes` in `plugin-space/src/capabilities`)
 
 **Interfaces:**
+
 - Produces: `SpaceCapabilities.ReviewRenderPolicy` (capability) of type `ReviewRenderPolicyFn = (mode: ReviewMode) => { showSuggestions: boolean; showComments: boolean; editable: boolean }`; `SpaceCapabilities.defaultReviewRenderPolicy` (the exported GDocs-parity function).
 
 - [ ] **Step 1: Write the failing test for the default policy**
@@ -154,13 +158,15 @@ export const defaultReviewRenderPolicy: ReviewRenderPolicyFn = (mode) =>
     ? { showSuggestions: false, showComments: true, editable: false }
     : { showSuggestions: true, showComments: true, editable: true };
 
-export const ReviewRenderPolicy = Capability.make<ReviewRenderPolicyFn>(`${meta.profile.key}.capability.review-render-policy`);
+export const ReviewRenderPolicy = Capability.make<ReviewRenderPolicyFn>(
+  `${meta.profile.key}.capability.review-render-policy`,
+);
 ```
 
 - [ ] **Step 4: Contribute the default** in the plugin-space startup module:
 
 ```ts
-Capability.contributes(SpaceCapabilities.ReviewRenderPolicy, SpaceCapabilities.defaultReviewRenderPolicy)
+Capability.contributes(SpaceCapabilities.ReviewRenderPolicy, SpaceCapabilities.defaultReviewRenderPolicy);
 ```
 
 - [ ] **Step 5: Run it, expect PASS.** Then `~/.proto/bin/moon run plugin-space:build`.
@@ -172,10 +178,12 @@ Capability.contributes(SpaceCapabilities.ReviewRenderPolicy, SpaceCapabilities.d
 ### Task A3: Extract suggestion enumeration into a reusable headless component
 
 **Files:**
+
 - Create + Test: `packages/plugins/plugin-comments/src/components/Suggestions/SuggestionSources.tsx` (+ `.stories.tsx` play test)
 - Modify: `packages/plugins/plugin-comments/src/components/Suggestions/Suggestions.tsx` (consume the extracted component)
 
 **Interfaces:**
+
 - Produces: `SuggestionSources` — `{ document, authorHues?, onResolved }` where `onResolved: (resolved: ResolvedSuggestionBranch[]) => void`; renders one invisible `BranchContent` probe per active `kind:'suggestion'` branch and calls `onResolved` whenever the resolved set/content changes. `ResolvedSuggestionBranch` already exists in `hooks/suggestion-sources.ts` (`{ author, content, hue? }`).
 
 - [ ] **Step 1: Write the failing play test**
@@ -213,10 +221,12 @@ export const SuggestionSources = ({ document, authorHues, onResolved }: Suggesti
 ### Task A4: Aggregated suggestion overlay extension (reactive sources)
 
 **Files:**
+
 - Create + Test: `packages/plugins/plugin-comments/src/extensions/suggestions-overlay.ts` (+ unit test)
 - Modify: `packages/plugins/plugin-comments/src/extensions/index.ts` (export)
 
 **Interfaces:**
+
 - Consumes: `suggestions({ sources, group, onAccept, onReject })` (ui-editor), `buildSuggestionSources` (hooks), a CM `Compartment`.
 - Produces: `suggestionsOverlay(): { extension: Extension; reconfigure: (view: EditorView, sources: SuggestionSource[], enabled: boolean) => void }` — a compartment-backed overlay whose `reconfigure` swaps the `suggestions({ sources })` extension live (empty extension when `enabled` is false). Mirrors MarkdownArticle's `compareCompartment` usage.
 
@@ -253,10 +263,12 @@ export const suggestionsOverlay = (onAccept?: (h: DiffHunk) => void, onReject?: 
 ### Task A5: Ambient wiring in MarkdownArticle (Editing/Viewing) + mode toggle
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx`
 - Test: `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/DocumentVersioning.stories.tsx` (extend with an ambient play case)
 
 **Interfaces:**
+
 - Consumes: `useVersioning` (`mode`, `setMode`, `selection`), `SpaceCapabilities.ReviewRenderPolicy`, `SuggestionSources` (via a small React bridge that holds `sources` in state), `suggestionsOverlay`, the existing `handleAcceptChange`/`handleRejectChange`.
 
 - [ ] **Step 1: Write the failing play test**
@@ -284,12 +296,14 @@ Fold `ambientEditable` into `effectiveViewMode` (readonly when `!ambientEditable
 Hold `const [suggestionSources, setSuggestionSources] = useState<SuggestionSource[]>([])`. Render (invisible) the bridge only in the ambient path:
 
 ```tsx
-{ambient && document && (
-  <SuggestionSources
-    document={document}
-    onResolved={(resolved) => setSuggestionSources(buildSuggestionSources(resolved))}
-  />
-)}
+{
+  ambient && document && (
+    <SuggestionSources
+      document={document}
+      onResolved={(resolved) => setSuggestionSources(buildSuggestionSources(resolved))}
+    />
+  );
+}
 ```
 
 (If a cross-plugin import is undesirable, expose the bridge through a `MarkdownCapabilities` slot contributed by plugin-comments — decide in review; default is direct import, plugin-comments already depends on plugin-markdown so the reverse import must go through a capability. **Use a capability slot**: add `MarkdownCapabilities.SuggestionSourcesProvider` contributed by plugin-comments, consumed here — avoids the dependency cycle.)
@@ -326,7 +340,7 @@ In the `customActions` group (next to the branch switcher), add a single-select 
 **Goal:** decide how the editor, while in Suggesting mode, (a) accrues the user's typing to their own `kind:'suggestion'` branch, (b) renders the user's edits as tracked changes vs main, and (c) overlays other authors' suggestions — all on one CodeMirror buffer.
 
 - [ ] **Step 1: Prototype two approaches on a throwaway branch/story**
-  - **Approach 1 — self-source injection:** editor bound to main (read-only base); the user's own branch content is added as one more `SuggestionSource` (their author id) in the aggregated overlay; typing is intercepted and applied to the user's branch (not main), so their source re-diffs live. Question: can `suggestions({ sources })` render an *own* source as editable-in-place, and can keystrokes be routed to the branch doc while the buffer shows main?
+  - **Approach 1 — self-source injection:** editor bound to main (read-only base); the user's own branch content is added as one more `SuggestionSource` (their author id) in the aggregated overlay; typing is intercepted and applied to the user's branch (not main), so their source re-diffs live. Question: can `suggestions({ sources })` render an _own_ source as editable-in-place, and can keystrokes be routed to the branch doc while the buffer shows main?
   - **Approach 2 — own-changes compartment:** editor bound to the user's branch (typing accrues natively); a dedicated overlay renders the user-branch-vs-main diff as tracked changes; foreign authors' suggestions overlaid read-only. Question: does binding to the branch doc + overlaying its own diff double-render, and how do foreign cursors resolve against the branch doc?
 - [ ] **Step 2: Record findings** in `plugin-comments/DESIGN.md` (chosen approach + why + the concrete extension/API shape).
 - [ ] **Step 3: Append the detailed B1..Bn TDD tasks** to this plan based on the chosen approach, then implement via the same subagent-driven flow.

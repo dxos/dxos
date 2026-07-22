@@ -257,7 +257,7 @@ Polish + fixes required before landing the suggestion-review flow.
 - [ ] Show the history companion below the comments companion in `CommentsArticle.stories.tsx`
       (right column split into equal rows: comments top, `subject:'history'` companion bottom).
 - [x] BUG: selecting a branch then adding a comment throws `RangeError: Cannot getCursorPosition:
-    cursor <id> is invalid`. **Root cause:** in Branch view the editor binds to the branch doc, so
+  cursor <id> is invalid`. **Root cause:** in Branch view the editor binds to the branch doc, so
       comment cursors are branch-doc cursors, but `threads.ts getName` always resolves against
       `doc.content.target` (main) → invalid. **Fixed (2026-07-21, ontology-driven):** `getName`
       resolves against the editor-bound Text (branch doc in Branch view, main otherwise) + defensive
