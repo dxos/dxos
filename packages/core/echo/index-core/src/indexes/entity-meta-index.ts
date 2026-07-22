@@ -162,11 +162,15 @@ export class EntityMetaIndex implements Index {
         const normalizedTypeDXN = _normalizeTypeUri(query.typeDXN);
         const parsedDxn = DXN.isDXN(normalizedTypeDXN) ? normalizedTypeDXN : undefined;
         const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-        const exactMatch = sql.or(_typeUriEquivalents(normalizedTypeDXN).map((form) => sql`typeDXN = ${form}`));
+        const forms = _typeUriEquivalents(normalizedTypeDXN);
+        const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
+        // Version wildcard must cover every equivalent form so a versionless query still matches
+        // legacy versioned rows written under the single-slash prefix.
+        const likeMatch = sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`));
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows = hasNoVersion
-          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${exactMatch} OR typeDXN LIKE ${_escapeLikePrefix(normalizedTypeDXN)} ESCAPE '\\')`
+          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${exactMatch} OR ${likeMatch})`
           : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND ${exactMatch}`;
         return rows.map((row) => ({
           ...row,
@@ -240,9 +244,10 @@ export class EntityMetaIndex implements Index {
             const normalized = _normalizeTypeUri(typeDXN);
             const parsedDxn = DXN.isDXN(normalized) ? normalized : undefined;
             const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-            const exactMatch = sql.or(_typeUriEquivalents(normalized).map((form) => sql`typeDXN = ${form}`));
+            const forms = _typeUriEquivalents(normalized);
+            const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
             return hasNoVersion
-              ? sql.or([exactMatch, sql`typeDXN LIKE ${_escapeLikePrefix(normalized)} ESCAPE '\\'`])
+              ? sql.or([exactMatch, sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`))])
               : exactMatch;
           }),
         );
