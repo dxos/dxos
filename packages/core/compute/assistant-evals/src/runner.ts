@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 
@@ -100,6 +101,13 @@ export interface CreateEvalRunnerOptions<I, O> {
   skills?: Ref.Ref<Skill.Skill>[];
   model?: DXN.DXN;
   plugins?: Plugin.Plugin[];
+  /**
+   * `'failure'` inverts the run's success semantics: an agent failure resolves the task as
+   * `{ failed: true }` instead of rejecting, so a scorer can grade "failed as instructed" as a
+   * pass. An unexpected success resolves as `{ failed: false }`, gradeable as a miss.
+   * @default 'success'
+   */
+  expect?: 'success' | 'failure';
 }
 
 /** A deterministic DB-state assertion run after the agent completes, before the harness is disposed. */
@@ -125,14 +133,20 @@ export type VariantConfig =
  * while the space is still open; the task then returns `{ agentOutput, dbQuery }` instead of the
  * bare agent output, so a Scorer can grade the real effect rather than the model's own
  * self-reported completion.
+ *
+ * Pass `expect: 'failure'` for scenarios that assert the agent correctly fails; the task then
+ * returns `{ failed: boolean }` instead of throwing, so a Scorer can grade "failed as instructed".
  */
+export function createEvalRunner<I, O>(
+  options: CreateEvalRunnerOptions<I, O> & { expect: 'failure' },
+): Evalite.Task<I, { failed: boolean }, VariantConfig>;
 export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery: DbQuery<I, D> },
 ): Evalite.Task<I, { agentOutput: O; dbQuery: D }, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery?: DbQuery<I, D> },
-): Evalite.Task<I, O | { agentOutput: O; dbQuery: D }, VariantConfig> {
+): Evalite.Task<I, O | { agentOutput: O; dbQuery: D } | { failed: boolean }, VariantConfig> {
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
 
@@ -141,44 +155,49 @@ export function createEvalRunner<I, O, D>(
       skills: options.skills ?? getDefaultSkills(),
     });
 
-    return EffectEx.runAndForwardErrors(
-      Effect.scoped(
-        Effect.gen(function* () {
-          const harness = yield* Effect.acquireRelease(
-            Effect.promise(async () =>
-              createComposerTestApp({
-                plugins: await createDefaultPlugins(options),
-              }),
+    const run = Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* Effect.acquireRelease(
+          Effect.promise(async () =>
+            createComposerTestApp({
+              plugins: await createDefaultPlugins(options),
+            }),
+          ),
+          (testHarness) => Effect.promise(() => testHarness.dispose()),
+        );
+
+        yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
+
+        const { personalSpace } = yield* Effect.promise(() =>
+          EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
+        );
+
+        const agentOutput = yield* Effect.promise(() =>
+          runInstructions(harness, instructions, model, personalSpace.id, input),
+        );
+
+        const dbQueryFn = options.dbQuery;
+        if (!dbQueryFn) {
+          return agentOutput;
+        }
+
+        const dbQuery = yield* Effect.promise(() =>
+          harness.runPromise(
+            dbQueryFn(input, personalSpace.id).pipe(
+              Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service)),
             ),
-            (testHarness) => Effect.promise(() => testHarness.dispose()),
-          );
+          ),
+        );
 
-          yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
-
-          const { personalSpace } = yield* Effect.promise(() =>
-            EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
-          );
-
-          const agentOutput = yield* Effect.promise(() =>
-            runInstructions(harness, instructions, model, personalSpace.id, input),
-          );
-
-          const dbQueryFn = options.dbQuery;
-          if (!dbQueryFn) {
-            return agentOutput;
-          }
-
-          const dbQuery = yield* Effect.promise(() =>
-            harness.runPromise(
-              dbQueryFn(input, personalSpace.id).pipe(
-                Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service)),
-              ),
-            ),
-          );
-
-          return { agentOutput, dbQuery };
-        }),
-      ),
+        return { agentOutput, dbQuery };
+      }),
     );
+
+    if (options.expect !== 'failure') {
+      return EffectEx.runAndForwardErrors(run);
+    }
+
+    const exit = await Effect.runPromiseExit(run);
+    return { failed: Exit.isFailure(exit) };
   };
 }
