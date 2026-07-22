@@ -45,7 +45,8 @@
     "@dxos/plugin-sandbox": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:"
   },
   "devDependencies": {
     "@dxos/vite-plugin-import-source": "workspace:*",
