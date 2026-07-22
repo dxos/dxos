@@ -815,11 +815,9 @@ const buildTestConfig = (
   return {
     ...resolveReporterConfig(dirname),
     tags: TEST_TAGS,
-    // Suppress flaky vitest worker teardown unhandled rejections (e.g.
-    // `EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was pending` from
-    // node tests, WebSocket birpc errors from the storybook runner) — these surface as
-    // non-zero exits with no actual test failures and turn the entire job red.
-    dangerouslyIgnoreUnhandledErrors: true,
+    // NOTE: Never set `dangerouslyIgnoreUnhandledErrors` here. Unhandled errors/rejections must
+    // surface and be fixed at the source, not suppressed (a suppressed teardown race hides real
+    // failures). See the `code-style` skill.
     projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
       (project): project is UserWorkspaceConfig => project !== undefined,
     ),
