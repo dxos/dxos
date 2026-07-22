@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
@@ -61,16 +61,21 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           if (companions.length > 0) {
             const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
             const selected = viewState.get(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
-            const hasSelected =
-              !!selected.variant && companions.some((companion) => getLinkedVariant(companion.id) === selected.variant);
-            if (!hasSelected) {
+            const preferred = selected.variant
+              ? companions.find((companion) => getLinkedVariant(companion.id) === selected.variant)
+              : undefined;
+            const companion = preferred ?? companions[0];
+            if (!preferred) {
               viewState.set(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT, {
-                variant: getLinkedVariant(companions[0].id),
+                variant: getLinkedVariant(companion.id),
               });
             }
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
               updateActiveDeck(state, { companionOpen: true }),
             );
+            // The companion renders as the trailing plank; scroll it into view like any newly opened
+            // plank (otherwise it appears off-screen to the right of the last plank).
+            yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: companion.id });
           }
         }
       }
