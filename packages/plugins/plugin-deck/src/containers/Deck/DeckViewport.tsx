@@ -68,7 +68,8 @@ const COMPANION_SIZE_KEY = 'companion';
 // Each pinned plank reveals a `SPINE_PX`-wide sliver; once a plank's visible width drops below
 // `FOLD_THRESHOLD_PX` (no room for its header) it folds to a vertical spine sigil.
 const SPINE_PX = 44;
-const FOLD_THRESHOLD_PX = 160;
+// A plank folds to its spine once the sliver still showing narrows below this; smaller = fold later.
+const FOLD_THRESHOLD_PX = 96;
 const REM_PX = 16;
 
 // Scrolls a plank back into view when its folded spine is clicked (see fold behavior below).
@@ -246,21 +247,23 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
         zIndex: index + 1,
       }}
     >
-      {/* Hidden while folded so a wide (fixed-width) plank never occludes the plank in view. */}
+      {/* Fades out while folded (crossfading with the spine) so a wide plank never occludes the plank in
+          view. The `dx-fold-content` hook lets stories retime/restyle the transition. */}
       <DeckPlank
         id={id}
         part='main'
         active={deck.active}
         soloLook={soloLook}
-        classNames='size-full group-data-[folded]/tile:invisible'
+        classNames='dx-fold-content size-full transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-none group-data-[folded]/tile:opacity-0'
       />
-      {/* Fold spine: a book-spine sigil (icon + vertical title) shown only while this plank is collapsed.
-          DeckPlanks toggles `data-folded`/`data-fold-side`; it pins to whichever edge stays visible, keeps
-          its icon aligned with the plank toolbar's sigil, and returns the plank to view on click. */}
+      {/* Fold spine: a book-spine sigil (icon + vertical title) that crossfades in as the plank collapses
+          (DeckPlanks toggles `data-folded`). It sits at the plank's leading edge — the sliver that stays
+          visible in either pile — with its icon aligned to the plank toolbar's sigil, and returns the
+          plank to view on click. The `dx-fold-spine` hook lets stories retime/restyle the transition. */}
       <button
         onClick={() => scrollToPlank(id, index)}
         aria-label={spineLabel}
-        className='absolute inset-y-0 left-0 z-[1] hidden w-11 flex-col items-center border-ie border-separator bg-base-surface group-data-[folded]/tile:flex'
+        className='dx-fold-spine absolute inset-y-0 left-0 z-[1] flex w-11 flex-col items-center border-ie border-separator bg-base-surface opacity-0 pointer-events-none transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100'
       >
         {/* Icon box matches the plank toolbar height so the sigil stays put as the plank folds. */}
         <div className='flex h-(--dx-rail-content) shrink-0 items-center justify-center'>

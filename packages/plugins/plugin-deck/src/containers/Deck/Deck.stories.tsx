@@ -167,12 +167,29 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.make,
 );
 
+// Fold-transition variants to compare, selected via the `foldAnimation` control and scoped by a
+// `data-fold-anim` ancestor. `dx-fold-content` / `dx-fold-spine` are the hooks on the plank content and
+// its book-spine sigil (see DeckViewport). `crossfade` is the deck's base (opacity swap on the elements
+// themselves, matching the notes site); `slide` also slides the spine in from the leading edge.
+const FOLD_ANIMATIONS = ['slide', 'crossfade'] as const;
+type FoldAnimation = (typeof FOLD_ANIMATIONS)[number];
+
+const FOLD_ANIMATION_CSS = `
+[data-fold-anim='slide'] .dx-fold-spine {
+  transition: opacity 200ms ease-out, transform 220ms ease-out;
+  transform: translateX(-10px);
+}
+[data-fold-anim='slide'] [data-folded] .dx-fold-spine { transform: translateX(0); }
+`;
+
 type DefaultStoryProps = {
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
+  /** Fold-transition variant to apply (see {@link FOLD_ANIMATIONS}). */
+  foldAnimation?: FoldAnimation;
 };
 
-const DefaultStory = ({ count = 0 }: DefaultStoryProps) => {
+const DefaultStory = ({ count = 0, foldAnimation = 'slide' }: DefaultStoryProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
@@ -201,12 +218,17 @@ const DefaultStory = ({ count = 0 }: DefaultStoryProps) => {
     }
   }, [items, count]);
 
+  // `display: contents` so the wrapper carries `data-fold-anim` for the scoped CSS without affecting the
+  // fullscreen layout of the deck beneath it.
   return (
-    <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
-      <Deck.Content>
-        <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
-      </Deck.Content>
-    </Deck.Root>
+    <div className='contents' data-fold-anim={foldAnimation}>
+      <style>{FOLD_ANIMATION_CSS}</style>
+      <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
+        <Deck.Content>
+          <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
+        </Deck.Content>
+      </Deck.Root>
+    </div>
   );
 };
 
@@ -224,6 +246,9 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
+  argTypes: {
+    foldAnimation: { control: 'inline-radio', options: FOLD_ANIMATIONS },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -239,4 +264,5 @@ export const OnePlank: Story = { args: { count: 1 } };
 export const TwoPlanks: Story = { args: { count: 2 } };
 
 // Six planks exceed the tiling threshold and render as a sliding, horizontally-scrolling deck.
-export const ManyPlanks: Story = { args: { count: 6 } };
+// Use the `foldAnimation` control to compare fold transitions.
+export const ManyPlanks: Story = { args: { count: 6, foldAnimation: 'slide' } };
