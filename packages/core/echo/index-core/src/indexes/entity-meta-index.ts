@@ -247,7 +247,10 @@ export class EntityMetaIndex implements Index {
             const forms = _typeUriEquivalents(normalized);
             const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
             return hasNoVersion
-              ? sql.or([exactMatch, sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`))])
+              ? sql.or([
+                  exactMatch,
+                  sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`)),
+                ])
               : exactMatch;
           }),
         );
