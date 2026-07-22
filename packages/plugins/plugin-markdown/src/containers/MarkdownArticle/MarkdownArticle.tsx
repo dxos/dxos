@@ -51,7 +51,7 @@ import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types
 
 import { mergeConflicts, versionDiff } from '../../extensions';
 import { authorHue, hueColour } from './author-hue';
-import { VersionBanners } from './VersionBanners';
+import { VersionToolbar } from './VersionToolbar';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
@@ -650,7 +650,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
                 </Panel.Toolbar>
               )}
               <Panel.Content classNames='flex flex-col'>
-                <VersionBanners versioning={versioning} />
+                <VersionToolbar versioning={versioning} />
                 <MarkdownEditor.Content initialValue={initialValue} />
                 <Editor.Blocks />
               </Panel.Content>

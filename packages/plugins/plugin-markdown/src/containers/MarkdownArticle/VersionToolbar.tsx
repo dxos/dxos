@@ -15,7 +15,7 @@ import { type UseVersioningResult } from '#hooks';
 
 import { authorHue } from './author-hue';
 
-export type VersionBannersProps = {
+export type VersionToolbarProps = {
   versioning: UseVersioningResult;
 };
 
@@ -24,7 +24,7 @@ export type VersionBannersProps = {
  * active checkpoint / branch / fork (at most one is selected at a time). Owns the selection handlers
  * (restore, branch-from, merge, view-select, close) so the container only wires the versioning state.
  */
-export const VersionBanners = ({ versioning }: VersionBannersProps) => {
+export const VersionToolbar = ({ versioning }: VersionToolbarProps) => {
   const { document, activeVersion, activeBranch, activeFork, checkpointText, view, setSelection, setView } = versioning;
 
   // Resolve a branch's display label. Suggestion branches are named by author DID (`suggestion: <did>`);
