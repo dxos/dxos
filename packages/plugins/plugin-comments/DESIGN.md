@@ -182,7 +182,7 @@ has landed. The content-copy fork described above is superseded; the current mod
 - **Checkpoints** view via `setTimeTravel` pinning (not snapshot-swap); a checkpoint taken on a
   branch carries `Version.branch` (its heads live in the branch doc) and resolves against it.
 - **Generic history companion.** The git-graph companion lives in plugin-space, gated per-type by
-  `SpaceCapabilities.HistoryProvider`; markdown contributes the provider. Each lane ends in a
+  `VersioningCapabilities.HistoryProvider`; markdown contributes the provider. Each lane ends in a
   synthetic tip node — `Now` on main, `Tip` on each active branch — that reselects the editable
   present of that lane; selecting a branch checkpoint pins the branch-bound Text and closing the
   banner returns to the branch tip (not main).
@@ -264,7 +264,7 @@ margin card** — so the review surface belongs with comments, not markdown:
   object, keyed by the space branch registry.
 - **plugin-markdown** keeps only the document-specific glue (contributing the extension provider +
   `diffView` setting), matching how the history companion already lives in plugin-space gated per
-  type by `SpaceCapabilities.HistoryProvider`. This makes suggestions reusable for any text-bearing
+  type by `VersioningCapabilities.HistoryProvider`. This makes suggestions reusable for any text-bearing
   object, not just markdown.
 
 ### Decisions (resolved 2026-07-19)
@@ -402,7 +402,7 @@ overlay is layered as the new default. Nothing is removed.
 
 #### Architecture
 
-- **Mode state.** Extend `SpaceCapabilities.VersioningState` with per-doc
+- **Mode state.** Extend `VersioningCapabilities.VersioningState` with per-doc
   `mode: 'editing' | 'suggesting' | 'viewing'`; `useVersioning` exposes `mode`/`setMode`. A toolbar
   control sets it (sits with the advanced version affordances).
 - **`useSuggestionSources(doc)`.** Extract the active-`kind:'suggestion'`-branch enumeration +
@@ -449,7 +449,7 @@ advanced path, with the Suggesting-mode composition as a spike-first sub-milesto
 #### Status (2026-07-21)
 
 **Milestone A landed** (per-doc `mode`, `ReviewRenderPolicy`, ambient Editing/Viewing overlay + review):
-`VersioningState.mode` + `useVersioning` mode/setMode; `SpaceCapabilities.ReviewRenderPolicy`
+`VersioningState.mode` + `useVersioning` mode/setMode; `VersioningCapabilities.ReviewRenderPolicy`
 (GDocs-parity default); `SuggestionSources` headless enumerator (render-prop, synchronous on doc
 swap) + `MarkdownCapabilities.SuggestionSourcesProvider` slot (contributed by plugin-comments,
 consumed by markdown — no dependency cycle); `suggestionsOverlay` compartment factory in

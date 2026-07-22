@@ -24,6 +24,6 @@ export default Config2.make({
       parity; plugins may override it by contributing a stronger policy earlier in plugin order.
     `,
     icon: { key: 'ph--git-branch--regular', hue: 'amber' },
-    tags: ['labs'],
+    tags: ['system'],
   },
 });
