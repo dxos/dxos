@@ -165,6 +165,16 @@ describe('rebaseHunks', () => {
     expect(rebased.from).toBe(hunks[0].from);
     expect(doc.slice(rebased.from, rebased.to)).toBe(hunks[0].removed);
   });
+
+  test('a foreign hunk ending exactly where a doc edit begins does not absorb the user text', ({ expect }) => {
+    // Bob deletes "one " (base offsets [0,4)); the user inserts "X" at offset 4, immediately after.
+    // The rebased strike must cover only "one ", never "one X" (the user's own adjacent character).
+    const base = 'one two';
+    const doc = 'one Xtwo';
+    const hunks = diffHunks(base, 'two'); // Bob removes the leading "one ".
+    const [rebased] = rebaseHunks(base, doc, hunks);
+    expect(doc.slice(rebased.from, rebased.to)).toBe('one ');
+  });
 });
 
 describe('groupHunks', () => {

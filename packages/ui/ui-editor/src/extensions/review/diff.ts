@@ -144,6 +144,12 @@ export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffH
       if (pos < hunk.fromA) {
         break;
       }
+      // An exclusive upper edge (`side > 0`) sitting exactly at a doc edit's start belongs to the
+      // region BEFORE the edit, so map it to `fromB` — never across the edit (which would absorb the
+      // user's own adjacent text into a foreign hunk).
+      if (pos === hunk.fromA && side > 0) {
+        return hunk.fromB;
+      }
       if (pos < hunk.toA) {
         // Inside a doc-edited region: clamp to its edge so the offset stays a valid doc position.
         return side < 0 ? hunk.fromB : hunk.toB;
