@@ -90,6 +90,7 @@ type DeckSettings
   fields:
     showHints?: boolean           # show keyboard shortcut hints in the UI
     enableNativeRedirect?: boolean  # redirect supported URLs to the native desktop app
+    flatten?: boolean             # render one plank at a time with history as heading breadcrumbs (on by default); off gives the scrolling deck
 ```
 
 ## Components
@@ -110,8 +111,13 @@ component Matrix
   props:
     state: StoredDeckState        # persisted layout state atom
     ephemeral: EphemeralDeckState # transient state atom
+    When the `flatten` setting is on (the default), only the current (last) active plank renders — plus
+    its companion — so the deck stays fullbleed/tiling regardless of stack depth; the earlier active
+    entries are surfaced as breadcrumbs in the plank heading rather than as open planks. Flattening is a
+    pure render toggle over the same `active` stack; navigation builds the stack identically in both
+    modes, and clicking a breadcrumb drops the planks after it (Close), going back.
   state:
-    presentation: DeckPresentation   # derived from active.length + breakpoint, not stored
+    presentation: DeckPresentation   # derived from rendered plank count + breakpoint, not stored
   actions:
     openPlank(id: string)
     closePlank(id: string)
@@ -523,6 +529,36 @@ feat F-7: Navigation Model
           always points at something the user can see)
 ```
 
+```mdl
+feat F-8: Flat Navigation (breadcrumbs)
+
+  desc: |
+    The `flatten` setting (on by default) collapses the scrolling deck into a single-plank view whose
+    navigation history is a breadcrumb trail in the heading. It is a pure render toggle over the same
+    `active` stack — forward navigation builds the stack identically in both modes — so switching the
+    setting reshapes nothing and does not change the URL.
+
+  req F-8.1:
+    when: the flatten setting is on
+    then: only the current (last) active plank renders — plus its companion — so the deck presents as
+          fullbleed (or tiling with the companion), never sliding, regardless of stack depth
+
+  req F-8.2:
+    when: the flatten setting is on and the active stack has more than one plank
+    then: the earlier entries render as breadcrumbs in the current plank's heading, in stack order,
+          each showing the node's icon and localized label
+
+  req F-8.3:
+    when: the flatten setting is on and a breadcrumb is clicked
+    then: the deck goes back to that entry, dropping every plank after it (Close on the trailing
+          range); the clicked entry becomes the current plank
+
+  req F-8.4:
+    when: the flatten setting is off
+    then: the deck renders the full active stack as the scrolling/tiling/fullbleed presentation (F-1),
+          with no breadcrumbs
+```
+
 ## Acceptance
 
 ```mdl
@@ -662,6 +698,26 @@ test T-13: Attention follows scroll with hysteresis
   then:
     - attention moves to the unfolded plank nearest the viewport center
     - scrolling back so plank A unfolds does not move attention again
+```
+
+```mdl
+test T-14: Flatten renders the current plank with breadcrumbs
+  tags: [F-8]
+  given: the flatten setting is on and the active stack is [A, B, C]
+  when: the deck renders
+  then:
+    - only plank C renders (fullbleed), never a sliding deck
+    - the heading shows breadcrumbs A and B in order before C's title
+```
+
+```mdl
+test T-15: Breadcrumb click goes back
+  tags: [F-8]
+  given: the flatten setting is on and the active stack is [A, B, C], C rendered
+  when: the user clicks the breadcrumb for A
+  then:
+    - Close is dispatched for [B, C]
+    - the active stack becomes [A] and plank A renders
 ```
 
 ---

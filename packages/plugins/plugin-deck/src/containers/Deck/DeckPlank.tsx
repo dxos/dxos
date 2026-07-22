@@ -5,12 +5,14 @@
 import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { isLinkedSegment } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
+import { useBreadcrumbs, useDeckSettings } from '#hooks';
 import { type ResolvedPart } from '#types';
 
 import { CompanionPlank } from './CompanionPlank';
@@ -73,6 +75,7 @@ const DeckPlankInner = ({
   classNames,
 }: DeckPlankProps) => {
   const { findFirstFocusable } = useFocusFinders();
+  const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
   // A singleton (fullbleed) deck offers the manual fullscreen toggle and hides the increment/close
   // controls. Derived from the rendered plank count by the parent (so an open companion counts);
@@ -80,6 +83,24 @@ const DeckPlankInner = ({
   const soloLook = soloLookProp ?? (active === undefined || active.length === 1);
   const { node, capabilities, sigilActions, popoverAnchorId, scrollIntoView, onAction, onAdjust, onScrollIntoView } =
     useDeckPlank({ id, part, soloLook, active });
+
+  // In flat mode only the current (last) plank renders; its predecessors in the stack become
+  // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.
+  const { flatten } = useDeckSettings();
+  const breadcrumbIds = useMemo(
+    () => (flatten && part === 'main' && active ? active.slice(0, active.indexOf(id)) : []),
+    [flatten, part, active, id],
+  );
+  const breadcrumbs = useBreadcrumbs(breadcrumbIds);
+  const onSelectBreadcrumb = useCallback(
+    (crumbId: string) => {
+      const index = active?.indexOf(crumbId) ?? -1;
+      if (active && index >= 0 && index < active.length - 1) {
+        void invokePromise(LayoutOperation.Close, { subject: active.slice(index + 1) });
+      }
+    },
+    [invokePromise, active],
+  );
 
   // Newly opened/navigated planks are flagged via `scrollIntoView`; focus the pane so it gains
   // attention, then clear the one-shot flag.
@@ -144,6 +165,8 @@ const DeckPlankInner = ({
       related={part === 'complementary'}
       actions={sigilActions}
       onAction={onAction}
+      breadcrumbs={breadcrumbs}
+      onSelectBreadcrumb={onSelectBreadcrumb}
       popoverAnchorId={popoverAnchorId}
       articleData={articleData}
       controls={controls}

@@ -40,6 +40,7 @@ import {
   useBreakpoints,
   useCompanions,
   useDeckPresentation,
+  useDeckSettings,
   useDeckState,
   useSelectedCompanion,
   useSelectedCompanionVariant,
@@ -161,19 +162,27 @@ export const DeckContentEmpty = () => {
 const getPlankId = (id: string) => id;
 
 /**
- * The planks the deck renders: the real active planks plus, when the companion is open, the derived
- * trailing companion plank of the last plank (`<lastPlank>/~<variant>`). The companion is never stored
- * in `deck.active` — it always follows the current last plank — so it is derived here and rendered as
- * an ordinary plank. `companionId` is the trailing entry, or undefined when no companion is shown.
+ * The planks the deck renders: normally the real active planks plus, when the companion is open, the
+ * derived trailing companion plank of the last plank (`<lastPlank>/~<variant>`). The companion is never
+ * stored in `deck.active` — it always follows the current last plank — so it is derived here and
+ * rendered as an ordinary plank. `companionId` is the trailing entry, or undefined when no companion is
+ * shown.
+ *
+ * When the `flatten` setting is on, only the current (last) active plank renders (plus its companion),
+ * so the deck stays fullbleed/tiling; the earlier active entries are surfaced as `breadcrumbs` in the
+ * plank heading instead of as open planks.
  */
-const useRenderedPlanks = (): { rendered: string[]; companionId: string | undefined } => {
+const useRenderedPlanks = (): { rendered: string[]; companionId: string | undefined; breadcrumbs: string[] } => {
   const { deck } = useDeckContext('useRenderedPlanks');
+  const { flatten } = useDeckSettings();
   const lastPlank = deck.active[deck.active.length - 1];
   const companions = useCompanions(lastPlank ?? '');
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions, selectedVariant);
   const companion = deck.companionOpen && lastPlank ? companionId : undefined;
-  return { rendered: companion ? [...deck.active, companion] : deck.active, companionId: companion };
+  const base = flatten ? (lastPlank ? [lastPlank] : []) : [...deck.active];
+  const breadcrumbs = flatten ? deck.active.slice(0, -1) : [];
+  return { rendered: companion ? [...base, companion] : base, companionId: companion, breadcrumbs };
 };
 
 /**

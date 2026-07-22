@@ -19,5 +19,12 @@ export const Settings = Schema.Struct({
       description: 'Redirect supported URLs to the native desktop application.',
     }),
   ),
+  flatten: Schema.optional(
+    Schema.Boolean.annotations({
+      title: 'Flatten deck',
+      description:
+        'Show one plank at a time with your navigation history as breadcrumbs in the heading, instead of a scrolling deck of open planks.',
+    }),
+  ),
 }).pipe(Schema.mutable);
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

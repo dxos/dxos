@@ -30,6 +30,7 @@ export const translations = [
         'error-fallback.message': 'Unable to open this object',
         'error-fallback.copy.label': 'Copy',
         'plank-heading-fallback.label': 'Untitled',
+        'breadcrumbs.label': 'Navigation history',
         'actions-menu.label': 'Options',
         'pending.heading': 'Loading…',
         'insert-plank.label': 'Open',

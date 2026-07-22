@@ -19,6 +19,7 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({
         showHints: false,
         enableNativeRedirect: false,
+        flatten: true,
       }),
     });
 

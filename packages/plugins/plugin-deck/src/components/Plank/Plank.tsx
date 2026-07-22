@@ -14,7 +14,7 @@ import React, {
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
-import { Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -30,6 +30,9 @@ export type PlankProps = ThemedClassName<{
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
   actions?: AttentionSigilAction[][];
   onAction?: (action: AttentionSigilAction) => void;
+  /** Navigation-history trail rendered before the title (flat mode); clicking one goes back to it. */
+  breadcrumbs?: { id: string; label: string }[];
+  onSelectBreadcrumb?: (id: string) => void;
   /** Toolbar controls rendered after the title (e.g. close/solo/fullscreen). */
   controls?: ReactNode;
   /** Toolbar content rendered between the title and the controls (e.g. a NavbarEnd surface). */
@@ -68,6 +71,8 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       attendableId = node.id,
       actions,
       onAction,
+      breadcrumbs,
+      onSelectBreadcrumb,
       controls,
       navbarEnd,
       sigilFooter,
@@ -124,9 +129,46 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 </Pane.Sigil>
               )}
             </ActionRoot>
-            <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
-              {label}
-            </Pane.Title>
+            {breadcrumbs && breadcrumbs.length > 0 ? (
+              // Flat mode: the navigation history plus the current plank as one Breadcrumb. Root grows to
+              // fill the toolbar (packing the trail + title left, controls right), and its trail links
+              // shrink far faster than the title (shrink-[999]) so breadcrumb labels truncate first.
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='min-w-0 grow shrink gap-1'>
+                <Breadcrumb.List>
+                  {breadcrumbs.map((crumb) => (
+                    <Breadcrumb.ListItem key={crumb.id}>
+                      <Breadcrumb.Link asChild>
+                        <button
+                          type='button'
+                          className='min-w-0 shrink-[999] truncate rounded-sm px-1 text-sm text-description hover:text-baseText'
+                          onClick={() => onSelectBreadcrumb?.(crumb.id)}
+                        >
+                          {crumb.label}
+                        </button>
+                      </Breadcrumb.Link>
+                      <Breadcrumb.Separator />
+                    </Breadcrumb.ListItem>
+                  ))}
+                  <Breadcrumb.ListItem>
+                    <Breadcrumb.Current asChild>
+                      {/* The current plank stays the attention-aware Pane.Title; grow-0 so it keeps its
+                          content width and truncates only once the trail has collapsed. */}
+                      <Pane.Title
+                        attendableId={attendableId}
+                        related={related}
+                        classNames={[pending && 'text-description', 'grow-0 w-auto']}
+                      >
+                        {label}
+                      </Pane.Title>
+                    </Breadcrumb.Current>
+                  </Breadcrumb.ListItem>
+                </Breadcrumb.List>
+              </Breadcrumb.Root>
+            ) : (
+              <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
+                {label}
+              </Pane.Title>
+            )}
             {navbarEnd}
             {controls}
           </Pane.Toolbar>
