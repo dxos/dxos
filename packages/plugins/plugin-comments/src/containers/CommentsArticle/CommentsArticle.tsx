@@ -6,13 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import {
-  Surface,
-  useAtomCapabilityState,
-  useCapabilities,
-  useCapability,
-  useOperationInvoker,
-} from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
@@ -170,18 +164,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // The active review branch: the core branch the local user is currently viewing for this subject
   // (per-object version selection, shared with the editor surface). `undefined` = main/unbranched.
   // Comments are scoped to it so the companion shows only the branch under review's threads.
-  const [versioningState] = useAtomCapabilityState(VersioningCapabilities.VersioningState);
+  const versionSelection = useViewState(VersioningCapabilities.viewAspect, subject.id).selection;
   const markdownDoc = Obj.instanceOf(Markdown.Document, subject) ? subject : undefined;
   const reviewBranch = useMemo(() => {
-    const selection = versioningState.selection[subject.id];
-    if (!markdownDoc || selection?.kind !== 'branch') {
+    if (!markdownDoc || versionSelection?.kind !== 'branch') {
       return undefined;
     }
     const branch = markdownDoc.history?.branches.find(
-      (candidate) => candidate.id === selection.branchId && candidate.status === 'active',
+      (candidate) => candidate.id === versionSelection.branchId && candidate.status === 'active',
     );
     return branch?.key;
-  }, [markdownDoc, versioningState, subject.id]);
+  }, [markdownDoc, versionSelection]);
   const activeBranch = reviewBranch ?? 'main';
 
   const db = Obj.getDatabase(subject);

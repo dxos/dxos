@@ -4,11 +4,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { VersioningCapabilities } from '@dxos/plugin-versioning';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
@@ -57,49 +57,35 @@ export type UseVersioningResult = {
  */
 export const useVersioning = (subject?: unknown): UseVersioningResult => {
   const document = Obj.instanceOf(Markdown.Document, subject) ? (subject as Markdown.Document) : undefined;
-  // Versioning state is contributed by plugin-versioning (the generic history companion). A markdown
-  // editor can render standalone without it (e.g. plugin-blogger, cards, previews), so read it
-  // tolerantly: absent → no selection, and the version UI simply does not engage.
-  const [state, setState] = useOptionalAtomCapabilityState(VersioningCapabilities.VersioningState);
+  // Version view state is a per-object ViewState aspect (contributed by plugin-attention's manager).
+  // A markdown editor can render standalone without a provider (e.g. plugin-blogger, cards, previews),
+  // so the hooks fall back to the aspect default and the version UI simply does not engage.
+  const documentId = document?.id;
+  const perObject = useViewState(VersioningCapabilities.viewAspect, documentId);
+  const { update } = useViewStateActions(VersioningCapabilities.viewAspect, documentId);
 
   // Subscribe to history mutations (checkpoints/branches added elsewhere).
   useObject(document, 'history');
   const [rootText] = [document?.content.target];
   useObject(document?.content);
 
-  const documentId = document?.id;
-  const selection = (documentId && state?.selection[documentId]) || { kind: 'current' as const };
-  const view = (documentId && state?.view[documentId]) || 'branch';
-  const mode = (documentId && state?.mode[documentId]) || 'editing';
+  const selection = perObject.selection ?? { kind: 'current' as const };
+  const view = perObject.view ?? 'branch';
+  const mode = perObject.mode ?? 'editing';
 
   const setSelection = useCallback(
-    (next: VersioningCapabilities.VersionSelection) => {
-      if (!documentId) {
-        return;
-      }
-      setState((current) => ({ ...current, selection: { ...current.selection, [documentId]: next } }));
-    },
-    [documentId, setState],
+    (next: VersioningCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),
+    [update],
   );
 
   const setView = useCallback(
-    (next: VersioningCapabilities.BranchView) => {
-      if (!documentId) {
-        return;
-      }
-      setState((current) => ({ ...current, view: { ...current.view, [documentId]: next } }));
-    },
-    [documentId, setState],
+    (next: VersioningCapabilities.BranchView) => update((prev) => ({ ...prev, view: next })),
+    [update],
   );
 
   const setMode = useCallback(
-    (next: VersioningCapabilities.ReviewMode) => {
-      if (!documentId) {
-        return;
-      }
-      setState((current) => ({ ...current, mode: { ...current.mode, [documentId]: next } }));
-    },
-    [documentId, setState],
+    (next: VersioningCapabilities.ReviewMode) => update((prev) => ({ ...prev, mode: next })),
+    [update],
   );
 
   const history = document?.history;

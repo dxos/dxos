@@ -4,12 +4,13 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { NamePopover, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
+import { NamePopover, useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Branch, type History, Version } from '@dxos/versioning';
 
@@ -33,14 +34,12 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
   useObject(subject, 'history');
 
   // Selection is session-local: collaborators each view their own version.
-  const [state, setState] = useAtomCapabilityState(VersioningCapabilities.VersioningState);
   const objectId = subject.id;
-  const selection = state.selection[objectId] || { kind: 'current' as const };
+  const selection = useViewState(VersioningCapabilities.viewAspect, objectId).selection ?? { kind: 'current' as const };
+  const { update } = useViewStateActions(VersioningCapabilities.viewAspect, objectId);
   const setSelection = useCallback(
-    (next: VersioningCapabilities.VersionSelection) => {
-      setState((current) => ({ ...current, selection: { ...current.selection, [objectId]: next } }));
-    },
-    [objectId, setState],
+    (next: VersioningCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),
+    [update],
   );
 
   // The branch being viewed (selection.kind === 'branch').
