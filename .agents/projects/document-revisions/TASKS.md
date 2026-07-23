@@ -1,8 +1,20 @@
 # Document Revisions & Branches — Tasks
 
-_Resume: pick a deferred follow-up (recommend B4 un-delete phantom, then comment-flash-on-Enter bug). Uncommitted: none. Last: #12302 MERGED 2026-07-22 08:41Z (squash 77fff35b41) — Milestone B + @dxos/plugin-versioning extraction._
+_Resume: PR #12315 OPEN for eval. Morning: run [`TEST-PLAN.md`](TEST-PLAN.md) (storybooks + app script), then DECIDE the §0 open design issue (view-mode↔review-mode coupling: Preview/Read-only map to `viewing` which hides suggestions — the reported "edit disappears" is this; not data loss). Uncommitted: none._
 
 Design: [`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md).
+Test plan + follow-along script: [`TEST-PLAN.md`](TEST-PLAN.md).
+
+## OPEN DECISION (2026-07-23) — view-mode ↔ review-mode coupling (reported "buggy")
+
+User report: in Suggesting, made an edit (visible in own colour), switched to plain-text (Source) then
+back to markdown (Preview) → edit not visible inline, though still in the comments companion; reload
+shows it. **Diagnosed:** NOT data loss — a visibility consequence of the view-mode refactor. Preview and
+Read-only map to review `mode='viewing'`, whose `defaultReviewRenderPolicy` sets `showSuggestions:false`,
+hiding all suggestions (incl. the user's own in-progress one). The edit stays on the suggestion branch;
+`viewAspect` mode is in-memory so reload resets to `editing` and it reappears. Options in TEST-PLAN §0
+(decouple render from posture / viewing-shows-suggestions-readonly / keep-as-is). **Not changed overnight
+— user decides.**
 Convergence plan (+ resolved decisions):
 [`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md).
 PRs: [#12237](https://github.com/dxos/dxos/pull/12237) (landed 2026-07-16); stage 1 on branch
