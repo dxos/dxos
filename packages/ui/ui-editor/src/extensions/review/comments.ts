@@ -383,17 +383,19 @@ const handleCommentClick = EditorView.domEventHandlers({
   click: (event, view) => {
     let target = event.target as HTMLElement;
     const editorRoot = view.dom;
+    console.log(editorRoot, target);
 
     // Traverse up the DOM tree looking for an element with data-comment-id
-    // Stop if we reach the editor root or find the comment id
+    // Stop if we reach the editor root or find the comment id.
     while (target && target !== editorRoot && !target.hasAttribute('data-comment-id')) {
       target = target.parentElement as HTMLElement;
     }
 
-    // Check if we found a comment id and are still within the editor
+    // Check if we found a comment id and are still within the editor.
     if (target && target !== editorRoot) {
       const commentId = target.getAttribute('data-comment-id');
       if (commentId) {
+        console.log(111);
         view.dispatch({ effects: commentClickedEffect.of(commentId) });
         return true;
       }
@@ -688,9 +690,13 @@ const styles = EditorView.theme({
   // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour — visual
   // padding without changing layout. Vertically adjacent line rectangles paint into each other's gap
   // with the same colour, so a multi-line comment stays seamless.
+  // `pointer-events: none` on the rectangles themselves (not only the layer wrapper) so a click over a
+  // comment passes through to the `.cm-comment` mark's `data-comment-id` (and reaches `handleCommentClick`)
+  // instead of landing on a highlight rectangle that carries no id.
   '.cm-comment-highlight': {
     backgroundColor: 'var(--color-teal-bg)',
     boxShadow: '0 0 0 1px var(--color-teal-bg)',
+    pointerEvents: 'none',
   },
   '.cm-comment-highlight-current': {
     backgroundColor: 'var(--color-orange-bg)',
