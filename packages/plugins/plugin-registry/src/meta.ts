@@ -9,13 +9,13 @@ import { DXN } from '@dxos/keys';
 import config from '../dx.config';
 
 export const REGISTRY_ID = Paths.pinnedWorkspaceId('dxos:plugin-registry');
-export const REGISTRY_KEY = 'plugin-registry';
 
-// TODO(wittjosiah): Should this be a special separator or use the standard path separator?
-const CATEGORY_SEPARATOR = '>';
-
-/** Build a registry category node ID. */
-export const registryCategoryId = (category: string): string => `${REGISTRY_KEY}${CATEGORY_SEPARATOR}${category}`;
+/**
+ * Registry category node id — the bare category name (e.g. `bundled`). The single source shared by the
+ * graph builder, the category surface filters, and {@link getCategoryPredicate} so they agree on the id;
+ * it doubles as the URL segment (`category/<name>`).
+ */
+export const registryCategoryId = (category: string): string => category;
 
 /** Qualified graph path to a specific plugin node. */
 export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}`;

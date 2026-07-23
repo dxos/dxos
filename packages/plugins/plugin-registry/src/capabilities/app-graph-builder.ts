@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
-import { REGISTRY_ID, REGISTRY_KEY, meta, registryCategoryId } from '#meta';
+import { REGISTRY_ID, meta, registryCategoryId } from '#meta';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
 import { LOAD_PLUGIN_DIALOG } from '../containers';
@@ -63,6 +63,28 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'registry',
         match: NodeMatcher.whenRoot,
+        // REGISTRY_ID is a pinned workspace (the URL's workspace anchor), so it carries no key of its
+        // own; its category and plugin children are the addressable planks (see `categories`/`plugins`).
+        connector: () =>
+          Effect.succeed([
+            Node.make({
+              id: REGISTRY_ID,
+              type: meta.profile.key,
+              properties: {
+                label: ['plugin-registry.label', { ns: meta.profile.key }],
+                icon: 'ph--squares-four--regular',
+                disposition: 'pin-end',
+                position: Position.first,
+                testId: 'treeView.pluginRegistry',
+              },
+            }),
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'categories',
+        // Category panels are direct children of the registry workspace (`root/<REGISTRY_ID>/<categoryId>`).
+        url: { key: 'category', kind: 'item', path: [] },
+        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);
           const plugins = get(manager.plugins);
@@ -77,82 +99,64 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             Node.make({
-              id: REGISTRY_ID,
-              type: meta.profile.key,
+              id: registryCategoryId('bundled'),
+              type: 'category',
+              data: registryCategoryId('bundled'),
               properties: {
-                label: ['plugin-registry.label', { ns: meta.profile.key }],
+                label: ['bundled-plugins.label', { ns: meta.profile.key }],
                 icon: 'ph--squares-four--regular',
-                disposition: 'pin-end',
-                position: Position.first,
-                testId: 'treeView.pluginRegistry',
+                testId: 'pluginRegistry.bundled',
+                count: categoryCount(registryCategoryId('bundled')),
               },
-              nodes: [
-                Node.make({
-                  id: registryCategoryId('bundled'),
-                  type: 'category',
-                  data: registryCategoryId('bundled'),
-                  properties: {
-                    label: ['bundled-plugins.label', { ns: meta.profile.key }],
-                    icon: 'ph--squares-four--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.bundled',
-                    count: categoryCount(registryCategoryId('bundled')),
-                  },
-                }),
-                Node.make({
-                  id: registryCategoryId('installed'),
-                  type: 'category',
-                  data: registryCategoryId('installed'),
-                  properties: {
-                    label: ['installed-plugins.label', { ns: meta.profile.key }],
-                    icon: 'ph--check--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.installed',
-                    count: categoryCount(registryCategoryId('installed')),
-                  },
-                }),
-                Node.make({
-                  id: registryCategoryId('recommended'),
-                  type: 'category',
-                  data: registryCategoryId('recommended'),
-                  properties: {
-                    label: ['recommended-plugins.label', { ns: meta.profile.key }],
-                    icon: 'ph--star--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.recommended',
-                    count: categoryCount(registryCategoryId('recommended')),
-                  },
-                }),
-                Node.make({
-                  id: registryCategoryId('labs'),
-                  type: 'category',
-                  data: registryCategoryId('labs'),
-                  properties: {
-                    label: ['labs-plugins.label', { ns: meta.profile.key }],
-                    icon: 'ph--flask--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.labs',
-                    count: categoryCount(registryCategoryId('labs')),
-                  },
-                }),
-                ...(registryCount > 0
-                  ? [
-                      Node.make({
-                        id: registryCategoryId('registry'),
-                        type: 'category',
-                        data: registryCategoryId('registry'),
-                        properties: {
-                          label: ['registry-plugins.label', { ns: meta.profile.key }],
-                          icon: 'ph--users-three--regular',
-                          key: REGISTRY_KEY,
-                          testId: 'pluginRegistry.registry',
-                          count: registryCount,
-                        },
-                      }),
-                    ]
-                  : []),
-              ],
             }),
+            Node.make({
+              id: registryCategoryId('installed'),
+              type: 'category',
+              data: registryCategoryId('installed'),
+              properties: {
+                label: ['installed-plugins.label', { ns: meta.profile.key }],
+                icon: 'ph--check--regular',
+                testId: 'pluginRegistry.installed',
+                count: categoryCount(registryCategoryId('installed')),
+              },
+            }),
+            Node.make({
+              id: registryCategoryId('recommended'),
+              type: 'category',
+              data: registryCategoryId('recommended'),
+              properties: {
+                label: ['recommended-plugins.label', { ns: meta.profile.key }],
+                icon: 'ph--star--regular',
+                testId: 'pluginRegistry.recommended',
+                count: categoryCount(registryCategoryId('recommended')),
+              },
+            }),
+            Node.make({
+              id: registryCategoryId('labs'),
+              type: 'category',
+              data: registryCategoryId('labs'),
+              properties: {
+                label: ['labs-plugins.label', { ns: meta.profile.key }],
+                icon: 'ph--flask--regular',
+                testId: 'pluginRegistry.labs',
+                count: categoryCount(registryCategoryId('labs')),
+              },
+            }),
+            ...(registryCount > 0
+              ? [
+                  Node.make({
+                    id: registryCategoryId('registry'),
+                    type: 'category',
+                    data: registryCategoryId('registry'),
+                    properties: {
+                      label: ['registry-plugins.label', { ns: meta.profile.key }],
+                      icon: 'ph--users-three--regular',
+                      testId: 'pluginRegistry.registry',
+                      count: registryCount,
+                    },
+                  }),
+                ]
+              : []),
           ]);
         },
       }),

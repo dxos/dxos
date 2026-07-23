@@ -76,9 +76,12 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     (targetId: string) => {
       void invokePromise(LayoutOperation.Open, {
         subject: [getPluginPath(targetId)],
+        // Open beside this plugin's plank (a card navigation), never replacing it.
+        pivotId: getPluginPath(pluginId),
+        disposition: 'add',
       });
     },
-    [invokePromise],
+    [invokePromise, pluginId],
   );
 
   const actions = usePluginActions({

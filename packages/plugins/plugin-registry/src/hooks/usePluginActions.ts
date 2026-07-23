@@ -12,7 +12,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 import { useNode } from '@dxos/plugin-graph';
 
-import { getPluginSpecPath } from '#meta';
+import { getPluginPath, getPluginSpecPath } from '#meta';
 
 import { useDisableConfirmation } from './useDisableConfirmation';
 
@@ -74,8 +74,13 @@ export const usePluginActions = ({
   const specPath = getPluginSpecPath(pluginId);
   const hasSpecNode = !!useNode(graph, specPath);
   const handleOpenSpec = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, { subject: [specPath] });
-  }, [invokePromise, specPath]);
+    // Open the spec beside this plugin's plank (a card navigation), never replacing it.
+    void invokePromise(LayoutOperation.Open, {
+      subject: [specPath],
+      pivotId: getPluginPath(pluginId),
+      disposition: 'add',
+    });
+  }, [invokePromise, specPath, pluginId]);
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {

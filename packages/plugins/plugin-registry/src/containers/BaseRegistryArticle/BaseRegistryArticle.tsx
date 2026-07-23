@@ -114,8 +114,10 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       (pluginId: string) =>
         invokePromise(LayoutOperation.Open, {
           subject: [getPluginPath(pluginId)],
-          pivotId: id,
-          positioning: 'end',
+          // Open beside this category panel's plank (`id` is the category id; getPluginPath qualifies it
+          // to the registry-workspace path that the deck stores), never replacing it.
+          pivotId: getPluginPath(id),
+          disposition: 'add',
         }),
       [invokePromise, id],
     );
