@@ -810,9 +810,9 @@ export const EditingTyping: Story = {
     const suggestionBranches = (getDoc().history?.branches ?? []).filter(
       (branch) => branch.status === 'active' && branch.kind === 'suggestion',
     );
-    expect(suggestionBranches).toHaveLength(0);
+    await expect(suggestionBranches).toHaveLength(0);
     // And nothing renders as a tracked change or overlay in plain editing.
-    expect(canvasElement.querySelectorAll('.cm-track-insert')).toHaveLength(0);
+    await expect(canvasElement.querySelectorAll('.cm-track-insert')).toHaveLength(0);
   },
 };
 
