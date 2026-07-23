@@ -1,20 +1,28 @@
 # AI Testing Strategy — Tasks
 
-_Resume: **PR #12307 is marked ready for review** (no longer draft), CI green
-(build/check/test/storybook/workerd all pass). All 6 G1 scenarios are ported to scored evals with
-real quality signal beyond existence checks (DB-effect assertions + an LLM judge on
-`crm-mailbox`). `@dxos/assistant-e2e` is un-merged back out of `@dxos/assistant-evals` — kept as
-its own deprecated package (holding `harness.ts` + the 3 scenarios not yet portable to an eval:
+_Resume: **PR #12307 MERGED** (`addbdf5f`, 2026-07-23). All 6 G1 scenarios are ported to scored
+evals with real quality signal beyond existence checks (DB-effect assertions + tool-invocation
+checks + two native LLM-judge integrations — planning's haiku-quality check, crm-mailbox's
+data-accuracy check). `@dxos/assistant-e2e` is un-merged back out of `@dxos/assistant-evals` — kept
+as its own deprecated package (holding `harness.ts` + the 3 scenarios not yet portable to an eval:
 `inbox-enable`, `local-ai`, `sandbox`). Repo-wide references updated to match:
 `.changeset/config.json`, `tsconfig.all.json`, `RELEASE-SPEC.md` (back-edge row no longer mentions
 evals — those are out-of-band), the `agent-eval-tests` and `regenerate-memoized-llm` skills.
-`TESTING.md` rewritten to describe only the current state (no merge/un-merge narrative — that
-lives here instead). Per-eval timeouts replaced the flat 360s `vitest.config.ts` `testTimeout`
-(`createEvalRunner`'s new `timeout` option, default 60s / 150s for crm-mailbox+planning; confirmed
-via evalite's source + its v1 beta + [issue #68](https://github.com/mattpocock/evalite/issues/68)
-that evalite has no per-eval timeout of its own — the global `testTimeout`, now 180s, is only the
-outer safety net). Pushed to `claude/ai-testing-strategy-9ctzjt` through commit `c62073d0cf`.
-NEXT: await review on PR #12307._
+`TESTING.md` rewritten to describe only the current state. Per-eval timeouts replaced the flat 360s
+`vitest.config.ts` `testTimeout` (`createEvalRunner`'s new `timeout` option, default 60s / 150s for
+crm-mailbox+planning; confirmed via evalite's source + its v1 beta +
+[issue #68](https://github.com/mattpocock/evalite/issues/68) that evalite has no per-eval timeout of
+its own — the global `testTimeout`, now 180s, is only the outer safety net). A CodeRabbit review
+round after marking ready found 11 actionable items, all fixed and live-verified: `expect:'failure'`
+no longer conflates infra/setup failures with the agent's own instructed failure (new
+`AgentRunFailure` tag), `EvalTimeoutError` converted to `Data.TaggedError`, the 300ms fixed sleep in
+`completedBlocks()` replaced with a real `FeedTraceSink.flush()`, two new scorers added
+(`crm-mailbox`'s `summary-document-linked` via the `ProfileOf` relation, `database`'s
+`database-queried` via `toolInvocations()`), plus doc-accuracy fixes across
+`TESTING.md`/`assistant-e2e/README.md`/`TASKS.md`/`registry.yml`. CI green end to end (build, check,
+test, storybook, workerd, CodeRabbit), merged via the merge queue. NEXT: G2→C mocked unit
+conversions (scheduled-run/model-pinning work explicitly deferred per direct instruction), then E/F
+tiers._
 
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
@@ -28,7 +36,7 @@ deleting it, remove all committed conversation fixtures, switch the gating mecha
 D-tier tests + `operationServiceLayerNoop`; MERGED);
 [#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 — DB-effect/tool-invocation/LLM-judge
 assertion helpers + all 6 G1 scenarios ported to `@dxos/assistant-evals`; `@dxos/assistant-e2e`
-kept as its own deprecated package rather than merged in; ready for review).
+kept as its own deprecated package rather than merged in; MERGED).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
