@@ -3,7 +3,6 @@
 //
 
 import { Paths } from '@dxos/app-toolkit';
-import { linkedSegment } from '@dxos/react-ui-attention/types';
 
 import { Calendar } from '#types';
 
@@ -48,12 +47,9 @@ export const getSubscriptionsId = (): string => Segments.subscriptions;
 export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxPath(spaceId, mailboxId)}/${Segments.drafts}`;
 
-/**
- * Appends a linked-segment child ID to a parent path for feed-object navigation.
- * The `~` prefix signals attention propagation to the parent node.
- */
-export const getFeedObjectPath = (parentPath: string, childId: string): string =>
-  `${parentPath}/${linkedSegment(childId)}`;
+/** Appends a feed-object child id to a parent path as a plain child segment (message/event planks are
+ * ordinary hidden children of their mailbox/calendar, not linked companions). */
+export const getFeedObjectPath = (parentPath: string, childId: string): string => `${parentPath}/${childId}`;
 
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>

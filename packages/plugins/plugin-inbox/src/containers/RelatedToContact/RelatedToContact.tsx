@@ -17,6 +17,8 @@ import { Event, Message, type Person } from '@dxos/types';
 import { RelatedEvents, RelatedMessages } from '#components';
 import { Calendar, Mailbox } from '#types';
 
+import { getCalendarEventPath, getMailboxMessagePath } from '../../paths';
+
 export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>;
 
 export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
@@ -74,33 +76,49 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
   // Open the message directly as its own (standalone) plank, not the mailbox with the message selected.
   const handleMessageClick = useCallback(
     async (message: Message.Message) => {
-      const messagePath = Paths.getObjectPathFromObject(message);
+      if (!db || !mailbox) {
+        return;
+      }
+      // A message is a feed object under its mailbox; address it via the `message` key, not the generic
+      // database path (which does not resolve for feed objects).
+      const messagePath = getMailboxMessagePath(db.spaceId, mailbox.id, message.id);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      // A card always opens beside the plank it lives in, never replacing it.
+      // A card always opens beside the plank it lives in, never replacing it. `immediate` skips the
+      // existence check: the message is a feed object (absent from `space.db`, so the loader can't
+      // confirm it), but the card already holds it — expanding the mailbox chain materializes its node.
       await invokePromise(LayoutOperation.Open, {
         subject: [messagePath],
         pivotId: getPivotId(),
         disposition: 'add',
+        navigation: 'immediate',
         workspace,
       });
     },
-    [invokePromise, workspace, getPivotId],
+    [invokePromise, workspace, getPivotId, db, mailbox],
   );
 
   // Open the event directly as its own (standalone) plank, not the calendar with the event selected.
   const handleEventClick = useCallback(
     async (event: Event.Event) => {
-      const eventPath = Paths.getObjectPathFromObject(event);
+      if (!db || !calendar) {
+        return;
+      }
+      // An event is a feed object under its calendar; address it via the `event` key, not the generic
+      // database path (which does not resolve for feed objects).
+      const eventPath = getCalendarEventPath(db.spaceId, calendar.id, event.id);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      // A card always opens beside the plank it lives in, never replacing it.
+      // A card always opens beside the plank it lives in, never replacing it. `immediate` skips the
+      // existence check: the event is a feed object (absent from `space.db`, so the loader can't confirm
+      // it), but the card already holds it — expanding the calendar chain materializes its node.
       await invokePromise(LayoutOperation.Open, {
         subject: [eventPath],
         pivotId: getPivotId(),
         disposition: 'add',
+        navigation: 'immediate',
         workspace,
       });
     },
-    [invokePromise, workspace, getPivotId],
+    [invokePromise, workspace, getPivotId, db, calendar],
   );
 
   return (
