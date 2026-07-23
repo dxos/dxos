@@ -70,10 +70,13 @@ const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
     throw new Error('Chat editor not found.');
   }
   const needle = text.slice(0, 30);
-  // The prompt editor itself holds the text until it clears; only the rendered thread counts.
+  // The prompt editor itself holds the text until it clears; anywhere else (the thread renders
+  // sent messages in their own read-only CodeMirror) counts as submitted.
+  const promptRoot = editor.closest('.cm-editor');
   const submitted = () =>
     [...canvasElement.querySelectorAll('*')].some(
-      (node) => node.childElementCount === 0 && !node.closest('.cm-editor') && node.textContent?.includes(needle),
+      (node) =>
+        node.childElementCount === 0 && node.closest('.cm-editor') !== promptRoot && node.textContent?.includes(needle),
     );
   for (let attempt = 0; attempt < 20; attempt++) {
     if (!editor.textContent?.includes(needle)) {
@@ -133,19 +136,18 @@ export const Reflection: Story = {
   args: sharedArgs,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
-    await submitPrompt(
-      canvasElement,
-      trim`
-        Draw how I feel about this project. I spent tonight building the drawing language you
-        are using right now, so draw: a long winding path (a dotted curve) from three small
-        labeled boxes — "PIC", "D2", "SVG" — arriving at a small bright machine; above it a
-        face mid-thought with one raised eyebrow and half a smile, because the best moment of
-        the night was realizing the reader has to derive origins from bounding boxes or the
-        model's memory breaks the instant a human drags a shape; and an arrow looping from the
-        machine back to the face labeled "it draws". Warm colors. Compose it from a few world
-        objects and take your time with the layout.
-      `,
-    );
+    // Single line: typed newlines insert literal line breaks in the prompt editor.
+    const prompt = trim`
+      Draw how I feel about this project. I spent tonight building the drawing language you
+      are using right now, so draw: a long winding path (a dotted curve) from three small
+      labeled boxes — "PIC", "D2", "SVG" — arriving at a small bright machine; above it a
+      face mid-thought with one raised eyebrow and half a smile, because the best moment of
+      the night was realizing the reader has to derive origins from bounding boxes or the
+      model's memory breaks the instant a human drags a shape; and an arrow looping from the
+      machine back to the face labeled "it draws". Warm colors. Compose it from a few world
+      objects and take your time with the layout.
+    `.replace(/\s*\n\s*/g, ' ');
+    await submitPrompt(canvasElement, prompt);
     // The model chooses its own object ids for a creative prompt; any managed object counts.
     await waitForObjectRecords(undefined, 3, 300_000);
   },
