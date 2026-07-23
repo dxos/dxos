@@ -7,7 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type Database, Filter, Obj, type Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
@@ -131,7 +131,13 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
 
     const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
       async ({ text }) => {
-        const query = (text ?? '').replace(/^@/, '').toLowerCase();
+        // With `activateOnTyping` (no `@` trigger) an empty query would otherwise match every object
+        // and anchor the popover at the viewport origin (no range to position against). Show nothing
+        // until the user types. An explicit `@` trigger still browses (its `text` is '@', not empty).
+        if (!text) {
+          return [];
+        }
+        const query = text.replace(/^@/, '').toLowerCase();
         const matchesQuery = (object: Obj.Unknown) =>
           !query ||
           getObjectLabel(object).toLowerCase().includes(query) ||
@@ -199,7 +205,17 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
     const extensions = useMemo<Extension[]>(
       () => [
         createBasicExtensions({ readOnly: readonly, lineWrapping: false }),
-        createThemeExtensions({ themeMode, slots: { scroller: { className: 'scrollbar-none' } } }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            editor: {
+              className: 'w-full',
+            },
+            scroller: {
+              className: 'scrollbar-none',
+            },
+          },
+        }),
         refEditor({ mode, match, getRef: (id) => refsRef.current.get(id) }),
         Prec.highest(
           keymap.of([
@@ -225,6 +241,26 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
                 return true;
               },
             },
+            {
+              key: 'Space',
+              // In email mode, a space after a bare address commits it (a tag only forms once
+              // committed). A partial `Name <…` segment still needs spaces, so only commit — and
+              // consume the space — when the whole in-progress segment is an address.
+              run: (view) => {
+                if (mode !== 'email') {
+                  return false;
+                }
+                const { head } = view.state.selection.main;
+                const line = view.state.doc.lineAt(head);
+                const before = line.text.slice(0, head - line.from);
+                const segment = before.slice(before.lastIndexOf(',') + 1).trim();
+                if ((match ?? EMAIL_REGEX).test(segment)) {
+                  insertAtCursor(view, head, ', ');
+                  return true;
+                }
+                return false;
+              },
+            },
           ]),
         ),
       ],
@@ -245,8 +281,7 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
         ref={composedRef}
       >
         <Editor.View
-          // TOOD(burdon): Use same style as react-ui Input.
-          classNames='border border-input-separator rounded-xs px-2'
+          classNames='flex items-center dx-input px-2 h-[2rem]'
           {...props}
           initialValue={value}
           selectionEnd

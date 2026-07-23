@@ -25,7 +25,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
@@ -155,7 +155,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
+                id: Attention.linkedSegment(ASSISTANT_COMPANION_VARIANT),
                 label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
@@ -188,7 +188,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: linkedSegment('trace'),
+              id: Attention.linkedSegment('trace'),
               label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
               data: 'trace',

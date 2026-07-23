@@ -5,8 +5,6 @@ tasks:
     deps:
       - target: build
         optional: true
-      - target: compile
-        optional: true
     inputs:
       - '@group(production)'
     outputs:

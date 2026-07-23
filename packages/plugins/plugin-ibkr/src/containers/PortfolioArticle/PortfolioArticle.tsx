@@ -8,13 +8,13 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
 import { useActionRunner } from '@dxos/plugin-graph';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -136,7 +136,7 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
       void showItem({
         contextId: id,
         selectionId: reportId,
-        companion: linkedSegment('report'),
+        companion: Attention.linkedSegment('report'),
         path: Paths.getObjectPathFromObject(subject),
       });
     },

@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
-import { EditorViewMode } from '@dxos/ui-editor/types';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -98,18 +97,7 @@ export const ScrollToAnchor = Operation.make({
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the markdown editor.' }),
     cursor: Schema.String.annotations({ description: 'Cursor position to scroll to.' }),
-    ref: Schema.optional(Schema.String.annotations({ description: 'Reference ID (e.g. thread ID).' })),
-  }),
-  output: Schema.Void,
-});
-
-// TODO(wittjosiah): This appears to be unused.
-export const SetViewMode = Operation.make({
-  meta: { key: makeKey('setViewMode'), name: 'Set View Mode', icon: 'ph--layout--regular' },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    id: Schema.String,
-    viewMode: EditorViewMode,
+    id: Schema.optional(Schema.String.annotations({ description: 'Reference ID (e.g. thread ID).' })),
   }),
   output: Schema.Void,
 });
@@ -138,7 +126,7 @@ export const CreateBranch = Operation.make({
     name: 'Create Branch',
     description: trim`
       Creates a draft branch of the document. Edit the branch content with the update operation
-      using the returned branch document id, then merge it back for review.
+      by passing the returned branch id as branchId, then merge it back for review.
     `,
     icon: 'ph--git-branch--regular',
   },
@@ -148,6 +136,35 @@ export const CreateBranch = Operation.make({
   }),
   output: Schema.Struct({
     branchId: Schema.String.annotations({ description: 'The id of the created branch.' }),
+    contentId: Schema.String.annotations({ description: 'The DXN of the branch Text object.' }),
+  }),
+  services: [Database.Service],
+});
+
+export const SuggestEdit = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.markdown.suggestEdit'),
+    name: 'Suggest Edit',
+    description: trim`
+      Find-or-create the caller's suggestion branch of the document (one per author, keyed by creator)
+      and return its id. Edit it with the update operation to accrue suggested changes for review;
+      unlike a named draft branch, a suggestion branch is space-visible and labelled by its author.
+    `,
+    icon: 'ph--pencil-simple--regular',
+  },
+  input: Schema.Struct({
+    doc: Ref.Ref(Markdown.Document).annotations({ description: 'The document to suggest edits on.' }),
+    // Optional: the runtime supplies the calling agent's identity DID automatically. An agent must
+    // NOT set this — leave it undefined so the suggestion is attributed to the agent itself.
+    creator: Schema.optional(
+      Schema.String.annotations({
+        description:
+          'Do not set. The author identity DID keying the suggestion branch; filled from the calling agent identity.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    branchId: Schema.String.annotations({ description: 'The id of the suggestion branch.' }),
     contentId: Schema.String.annotations({ description: 'The DXN of the branch Text object.' }),
   }),
   services: [Database.Service],
@@ -210,6 +227,12 @@ export const Update = Operation.make({
       description:
         'The edits to apply to the document. Each edit finds oldString and replaces it with newString; omit oldString to append newString to the end.',
     }),
+    branchId: Schema.optional(
+      Schema.String.annotations({
+        description:
+          'Apply the edits to this draft branch (the id returned by createBranch) instead of the live document.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     newContent: Schema.String,

@@ -9,7 +9,7 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 
@@ -66,8 +66,6 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
           <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
-      {/* Dialog.Body is the column propagator; without it the SearchList input/viewport are direct
-          children of Dialog.Content's Column grid and land in the gutter (misplaced searchbox). */}
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />

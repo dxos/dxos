@@ -22,6 +22,8 @@ import { Editor, type EditorViewProps } from '../components';
 
 random.seed(123);
 
+// `blocks` composes the gutter drag grip (`blockDrag`), the whole-block selection + clipboard
+// (`blockSelection`), and the border/background behind selected blocks (`blockSelectionHighlight`).
 type StoryArgs = Pick<EditorViewProps, 'value'>;
 
 const DefaultStory = (props: StoryArgs) => {
@@ -58,17 +60,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const content = Array.from({ length: 30 }, (_, index) => {
+  const roll = random.number.int(10);
+  if (index === 0 || roll < 2) {
+    return `# Header ${index + 1}`;
+  }
+
+  if (roll > 8) {
+    return Array.from(
+      {
+        length: random.number.int({ min: 2, max: 8 }),
+      },
+      (_, itemIndex) => `- Item ${itemIndex + 1}`,
+    ).join('\n');
+  }
+
+  return random.lorem.paragraph();
+}).join('\n\n');
+
 export const Default: Story = {
-  args: {
-    value: Array.from({ length: 30 }, (_, i) => {
-      const n = random.number.int(10);
-      if (i == 0 || n < 2) {
-        return `# Header ${i + 1}`;
-      }
-      if (n > 8) {
-        return Array.from({ length: random.number.int({ min: 2, max: 8 }) }, (_, i) => `- Item ${i + 1}`).join('\n');
-      }
-      return random.lorem.paragraph();
-    }).join('\n\n'),
-  },
+  args: { value: content },
 };

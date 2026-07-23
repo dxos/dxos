@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppNode } from '@dxos/app-toolkit';
-import { Database, type Key, type Obj, type Ref } from '@dxos/echo';
+import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
@@ -84,6 +84,7 @@ export const connectorAuthActions = ({
       // The graph action label schema has no interpolation slots (unlike `t()`), so use a plain string.
       label: `Connect ${connector.label ?? connector.id}`,
       icon: CONNECT_ICON,
+      testId: `connectorPlugin.connect.${connector.id}`,
       data: () =>
         Effect.gen(function* () {
           const coordinator = yield* Capability.get(ConnectorCoordinator);
@@ -101,6 +102,11 @@ export const connectorAuthActions = ({
             return;
           }
           const target = yield* Database.load(existingTarget);
+          const accessToken = yield* Database.load(connection.accessToken);
+          const name = accessToken.account;
+          if (name) {
+            Obj.update(target, (target) => Obj.setLabel(target, name));
+          }
           const cursor = yield* Database.add(
             Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }),
           );
@@ -120,6 +126,7 @@ export const connectorAuthActions = ({
       icon: CONNECT_ICON,
       // Show the "Connect" label next to the icon rather than icon-only.
       iconOnly: false,
+      testId: 'connectorPlugin.connect',
       actions: [
         ...connections.map(reuseAction),
         ...(connections.length > 0 && offered.length > 0

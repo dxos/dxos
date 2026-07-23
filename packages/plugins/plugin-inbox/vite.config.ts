@@ -20,10 +20,15 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'plugin.workerd': 'src/plugin.workerd.ts',
-    'testing': 'src/testing.ts',
+    'testing': 'src/testing/index.ts',
+    'testing/node': 'src/testing/node.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  // Many stories here use `withClientProvider` (ECHO/Automerge-backed); per-file isolation
+  // re-instantiates that WASM module graph for every story file and exhausts the single headless
+  // chromium's WASM memory partway through the suite (`RangeError: ... Out of memory: Cannot
+  // allocate Wasm memory for new instance`). Share the module graph across files instead.
+  test: { node: true, storybook: { isolate: false } },
 });

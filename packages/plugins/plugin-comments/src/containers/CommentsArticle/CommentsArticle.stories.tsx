@@ -12,9 +12,11 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Text as EchoText, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
+import { useQuery } from '@dxos/echo-react';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -23,13 +25,15 @@ import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-mar
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
+import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
 import { random } from '@dxos/random';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
+import { Branch } from '@dxos/versioning';
 
 import { CommentsPlugin } from '../../CommentsPlugin';
 import { textOf } from '../../should-trigger-agent';
@@ -59,6 +63,28 @@ const SAMPLE_CONTENT = [
 
 // Phrases in LARGE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
+
+// Two story agents, each with a fixed synthetic DID so their authored suggestions are deterministic
+// (no LLM). Each proposes a different revision of the document; edits in distinct paragraphs diff as
+// separate reviewable cards. The companion labels each by its DID until agent-author resolution
+// lands (see the document-revisions tasks) but already tints each card's avatar with the author's
+// hue — the point of the variant is multiple agent-authored suggestions, colour-coded per author.
+const KAI_SUGGESTION = SAMPLE_CONTENT.replace(
+  'This document has comment threads attached to it.',
+  'This document has comment threads and inline suggestions attached to it.',
+).replace(
+  'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
+  'The companion renders each thread and suggestion on a shared virtual stack, mirroring the chat experience while keeping the editor in sync.',
+);
+const NOVA_SUGGESTION = SAMPLE_CONTENT.replace(
+  'Select text in the editor to add a new comment, or view existing threads in the companion.',
+  'Select text in the editor to add a comment, or open the companion to review threads and suggestions.',
+);
+/** Exported for reuse by `SuggestionSources.stories.tsx` (two deterministic synthetic-DID authors). */
+export const STORY_AGENTS = [
+  { did: 'did:agent:kai', name: STORY_AGENT_NAME, content: KAI_SUGGESTION },
+  { did: 'did:agent:nova', name: 'Nova', content: NOVA_SUGGESTION },
+];
 
 /**
  * Seed anchored comment threads over known phrases so the editor renders the
@@ -96,6 +122,25 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
         anchor,
       }),
     );
+  }
+};
+
+/**
+ * Seed suggestions authored by agents — deterministic, no LLM. For each agent, opens its per-author
+ * `kind:'suggestion'` branch (via {@link Branch.suggestion}) and edits the content to that agent's
+ * proposed revision, so the companion overlays them against the base as agent-authored suggestion
+ * cards (multiple authors, each colour-coded by its own hue).
+ *
+ * Exported for reuse by `SuggestionSources.stories.tsx`.
+ */
+export const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.Text) => {
+  for (const agent of STORY_AGENTS) {
+    const branch = await Branch.suggestion(doc, parent, agent.did);
+    const binding = await Branch.bind(doc, branch);
+    Obj.update(binding.object, () => {
+      EchoText.update(binding.object, 'content', agent.content);
+    });
+    binding.dispose();
   }
 };
 
@@ -208,6 +253,8 @@ type StoryArgs = {
   agentMode?: Markdown.Settings['commentAgentMode'];
   /** Seed three anchored comment threads over known phrases in the document. */
   seedComments?: boolean;
+  /** Seed a suggestion branch authored by the story agent (deterministic; no LLM). */
+  seedAgentSuggestions?: boolean;
 };
 
 const DefaultStory = ({ agentMode }: StoryArgs) => {
@@ -244,6 +291,14 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
     }),
     [doc, attendableId],
   );
+  const historyData = useMemo(
+    () => ({
+      subject: 'history',
+      companionTo: doc,
+      attendableId: attendableId ?? 'story',
+    }),
+    [doc, attendableId],
+  );
 
   if (!doc) {
     return <Loading data={{ doc: !!doc }} />;
@@ -252,7 +307,10 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   return (
     <div className='dx-container grid grid-cols-[3fr_2fr]' {...attentionAttrs}>
       <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-      <Surface.Surface type={AppSurface.Article} data={companionData} limit={1} />
+      <div className='grid grid-rows-2 min-bs-0'>
+        <Surface.Surface type={AppSurface.Article} data={companionData} limit={1} />
+        <Surface.Surface type={AppSurface.Article} data={historyData} limit={1} />
+      </div>
     </div>
   );
 };
@@ -270,7 +328,7 @@ const meta = {
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
               const doc = Markdown.make({ name: 'Sample', content: SAMPLE_CONTENT });
               personalSpace.db.add(doc);
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
@@ -280,9 +338,17 @@ const meta = {
                 seedComments(personalSpace, doc, text);
                 yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
               }
+
+              if (args.seedAgentSuggestions) {
+                const text = yield* Effect.promise(() => doc.content.load());
+                invariant(text, 'document content not loaded');
+                yield* Effect.promise(() => seedAgentSuggestions(doc, text));
+                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              }
             }),
         }),
         SpacePlugin({}),
+        VersioningPlugin(),
         MarkdownPlugin(),
         StoryGraphPlugin(),
         StoryStubAgentPlugin(),
@@ -301,11 +367,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Baseline:
+ * - Document article on the left, the comments companion on the right (history companion below it).
+ * - No seeded comments or suggestions; empty-state review surface.
+ */
 export const Default: Story = {};
 
 /**
- * Thread opted in to the AI agent in `mention` mode.
- * Type `@Kai …` in the comment input to trigger the stub runner; plain messages are ignored.
+ * AI comment agent in `mention` mode:
+ * - The thread is opted into the agent.
+ * - Type `@Kai …` in the comment input to trigger the stub runner.
+ * - Plain (non-mention) messages are ignored.
  */
 export const WithMentionAgent: Story = {
   args: {
@@ -314,8 +387,10 @@ export const WithMentionAgent: Story = {
 };
 
 /**
- * Thread opted in to the AI agent in `auto` mode.
- * Each user message triggers the stub runner, which appends a canned echo reply.
+ * AI comment agent in `auto` mode:
+ * - The thread is opted into the agent.
+ * - Every user message triggers the stub runner.
+ * - The runner appends a canned echo reply.
  */
 export const WithAutoAgent: Story = {
   args: {
@@ -324,12 +399,26 @@ export const WithAutoAgent: Story = {
 };
 
 /**
- * A larger, multi-paragraph document seeded with three existing comment threads
- * anchored to ranges in the text — exercises snippet rendering and the
- * companion ↔ editor selection sync.
+ * Existing comment threads:
+ * - A larger, multi-paragraph document seeded with three anchored comment threads.
+ * - Exercises snippet rendering in the companion.
+ * - Exercises the companion ↔ editor selection sync.
  */
 export const WithComments: Story = {
   args: {
     seedComments: true,
+  },
+};
+
+/**
+ * Integrated ambient review demo (two agent authors, deterministic — no LLM):
+ * - Each of "Kai" and "Nova" has a per-author `kind:'suggestion'` branch proposing reworded sentences.
+ * - Editor (main): both authors' changes overlay inline, colour-coded per author.
+ * - Right column: comments companion (top) + history companion (below).
+ * - Companion: one accept/reject change-block card per grouped change, avatar tinted by author hue.
+ */
+export const WithAgentSuggestions: Story = {
+  args: {
+    seedAgentSuggestions: true,
   },
 };

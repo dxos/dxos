@@ -9,10 +9,10 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
@@ -65,7 +65,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       void showItem({
         contextId: id,
         selectionId: post.id,
-        companion: linkedSegment('post'),
+        companion: Attention.linkedSegment('post'),
         path: Paths.getObjectPathFromObject(subject),
       });
     },
@@ -76,7 +76,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   useEffect(() => {
     if (noPosts) {
       void invoker.invokePromise(LayoutOperation.UpdateCompanion, {
-        subject: linkedSegment('settings'),
+        subject: Attention.linkedSegment('settings'),
       });
     }
   }, [noPosts, invoker]);

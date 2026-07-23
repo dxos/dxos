@@ -3,20 +3,21 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Graph } from '@dxos/plugin-graph';
-import { useQuery } from '@dxos/react-client/echo';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
-import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
+import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
 import { getCalendarEventPath, getEventNodeId } from '../../paths';
 
@@ -41,7 +42,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   // Starring uses the calendar's TagIndex (events are feed objects). Subscribe to the index via
   // `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
   const eventCalendar = calendar && Calendar.instanceOf(calendar) ? calendar : undefined;
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = eventCalendar?.tags?.target;
   const starredAtom = useMemo(
@@ -51,7 +52,9 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (eventCalendar && db) {
-      void Starred.toggleStarred(eventCalendar, event, db);
+      void Effect.runFork(
+        SystemTags.toggleTag(eventCalendar, event, 'starred').pipe(Effect.provide(Database.layer(db))),
+      );
     }
   }, [eventCalendar, event, db]);
 
@@ -72,7 +75,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   );
 
   // TODO(wittjosiah): This is very convoluted, find a simpler way to make this work.
-  const eventSegment = linkedSegment(event.id);
+  const eventSegment = Attention.linkedSegment(event.id);
   const isEventNode = !!attendableId?.endsWith(`/${eventSegment}`);
   const nodeId = isEventNode ? attendableId : attendableId ? getEventNodeId(attendableId, eventSegment) : undefined;
 

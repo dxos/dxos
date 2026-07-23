@@ -58,8 +58,8 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  'py-0 w-full text-base-fg rounded-xs placeholder-placeholder',
-  textInputSurfaceFocus,
+  'py-0 w-full text-base-fg placeholder-placeholder',
+  'dx-input',
   densityDimensions(props.density),
   props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
@@ -88,6 +88,22 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
         );
 
 const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, ...etc);
+
+// Container that carries the input surface/border/focus when the field has adornments; the inner
+// `<input>` renders "bare" (subdued) so the box wraps the whole row (start adornment · field · end).
+const container: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  props.variant === 'subdued' || props.variant === 'static'
+    ? mx('flex items-center w-full', props.disabled && staticDisabled, ...etc)
+    : mx(
+        'flex items-center w-full dx-input',
+        !props.disabled && 'focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-focus-ring-subtle',
+        valence(props.validationValence),
+        props.disabled ? staticDisabled : textInputSurfaceHover,
+        ...etc,
+      );
+
+const adornment: ComponentFunction<Partial<{ side: 'start' | 'end' }>> = (props, ...etc) =>
+  mx('shrink-0 flex items-center gap-1 text-description', props.side === 'start' ? 'ps-2' : 'pe-2', ...etc);
 
 const checkbox: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
@@ -121,7 +137,7 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
         : props.density === 'xs'
           ? 'size-6 rounded-xs'
           : 'size-10 pointer-fine:size-8 rounded-xs',
-    'bg-input-surface text-base-fg transition-colors border border-separator',
+    'bg-input-surface text-base-fg transition-colors border border-input-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',
     valence(props.validationValence),
@@ -154,6 +170,8 @@ const block: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 
 export const inputTheme = {
   input,
+  container,
+  adornment,
   textArea,
   pin,
   segment,

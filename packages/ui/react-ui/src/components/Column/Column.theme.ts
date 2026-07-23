@@ -45,8 +45,8 @@ const block: ComponentFunction<ColumnBlockStyleProps> = ({ end, compact, square 
   mx(
     'dx-gutter grid place-items-center [&>img]:max-w-[1.5rem]',
     end ? 'col-start-3' : 'col-start-1',
-    square ? 'aspect-square' : 'w-[var(--dx-rail-item)]',
-    compact ? '' : 'h-[var(--dx-rail-item)]',
+    square && 'aspect-square',
+    !compact && 'h-[var(--dx-rail-item)]',
     ...etc,
   );
 

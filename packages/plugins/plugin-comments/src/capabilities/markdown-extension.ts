@@ -8,11 +8,12 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { CommentCapabilities, CommentOperation } from '#types';
 
+import { SuggestionSourcesProvider } from '../components';
 import { threads } from '../extensions';
 
 export default Capability.makeModule(
@@ -20,12 +21,24 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc }) => {
+    // Bridge the ambient suggestion overlay: markdown consumes this slot to enumerate every author's
+    // active suggestion branches without importing plugin-comments (which depends on it).
+    const suggestionSources = Capability.contributes(
+      MarkdownCapabilities.SuggestionSourcesProvider,
+      SuggestionSourcesProvider,
+    );
+
+    const extensions = Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+      ({ document: doc, reviewBranch, branchText, suggestionBranch, showComments }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
-        return threads({ registry, stateAtom }, doc, invokePromise);
+        return threads({ registry, stateAtom }, doc, invokePromise, {
+          reviewBranch,
+          branchText,
+          suggestionBranch,
+          showComments,
+        });
       },
       ({ document: doc }) => {
         if (!doc) {
@@ -60,7 +73,7 @@ export default Capability.makeModule(
                 // the companion highlights and scrolls to it, then open the companion.
                 void invokePromise(CommentOperation.Select, { current: effect.value });
                 void invokePromise(LayoutOperation.UpdateCompanion, {
-                  subject: linkedSegment('comments'),
+                  subject: Attention.linkedSegment('comments'),
                 });
               }
             });
@@ -68,6 +81,8 @@ export default Capability.makeModule(
         });
       },
     ]);
+
+    return [extensions, suggestionSources];
   }),
 );
 

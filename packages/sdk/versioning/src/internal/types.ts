@@ -18,6 +18,12 @@ export const Version = Schema.mutable(
     name: Schema.String,
     target: Ref.Ref(Text.Text),
     heads: Schema.mutable(Schema.Array(Schema.String)),
+    /**
+     * Core-branch registry key when the checkpoint was taken on a branch (the branch's heads live in
+     * the branch document, not the root's, so viewing must resolve the branch). Absent = the base
+     * document. Matches {@link Branch.key}.
+     */
+    branch: Schema.optional(Schema.String),
     createdAt: Schema.String,
     creator: Schema.optional(Schema.String),
     message: Schema.optional(Schema.String),
@@ -29,19 +35,29 @@ export const BranchStatus = Schema.Literal('active', 'merged', 'archived');
 export type BranchStatus = Schema.Schema.Type<typeof BranchStatus>;
 
 /**
- * A draft Text forked from a parent Text at a specific revision (anchor heads).
- * The branch tree is formed by `parent` references; the root is Document.content.
+ * A draft branch of a parent Text forked at a specific revision (anchor heads).
+ *
+ * The record is product metadata only (label, status, provenance). For core branches (`key` set)
+ * the branch content is an ECHO-core branch of the parent object itself — same object id, shared
+ * automerge history, CRDT merge-back — owned by the space-root branch registry, which `key` indexes.
+ * Legacy content-copy branches (pre core-branching) carry a separate forked Text in `content` and
+ * merge textually; they remain readable/mergeable until migrated (convergence plan stage 4).
  */
 export const Branch = Schema.mutable(
   Schema.Struct({
     id: Schema.String,
     name: Schema.String,
-    content: Ref.Ref(Text.Text),
+    /** Core-branch registry name (the space-root registry key on the parent object). */
+    key: Schema.optional(Schema.String),
+    /** Legacy content-copy branches only: the forked Text. Core branches have no separate Text. */
+    content: Schema.optional(Ref.Ref(Text.Text)),
     parent: Ref.Ref(Text.Text),
     anchor: Schema.mutable(Schema.Array(Schema.String)),
     status: BranchStatus,
     createdAt: Schema.String,
     creator: Schema.optional(Schema.String),
+    /** Branch intent: one `suggestion` per author (review model) vs an explicit `draft` fork. Absent ⇒ draft. */
+    kind: Schema.optional(Schema.Literal('suggestion', 'draft')),
     mergedAt: Schema.optional(Schema.String),
   }),
 );
@@ -56,7 +72,7 @@ export const History = Schema.mutable(
 export interface History extends Schema.Schema.Type<typeof History> {}
 
 export type MakeVersionProps = Pick<Version, 'target' | 'heads' | 'name'> &
-  Partial<Pick<Version, 'creator' | 'message'>>;
+  Partial<Pick<Version, 'branch' | 'creator' | 'message'>>;
 
 /** Constructs a Version checkpoint record with a generated id and creation timestamp. */
 export const makeVersion = (props: MakeVersionProps): Version => ({
@@ -65,7 +81,8 @@ export const makeVersion = (props: MakeVersionProps): Version => ({
   ...props,
 });
 
-export type MakeBranchProps = Pick<Branch, 'content' | 'parent' | 'anchor' | 'name'> & Partial<Pick<Branch, 'creator'>>;
+export type MakeBranchProps = Pick<Branch, 'parent' | 'anchor' | 'name'> &
+  Partial<Pick<Branch, 'key' | 'content' | 'creator' | 'kind'>>;
 
 /** Constructs an active Branch record with a generated id and creation timestamp. */
 export const makeBranch = (props: MakeBranchProps): Branch => ({

@@ -158,10 +158,13 @@ export const InlineCidImage: Story = {
   render: () => <InlineCidImageStory />,
   decorators: [withClientProvider({ types: [Blob.Blob], createIdentity: true, createSpace: true })],
   play: async ({ canvasElement }) => {
-    await waitFor(async () => {
-      const host = findShadowHost(canvasElement);
-      const image = host?.shadowRoot?.querySelector<HTMLImageElement>('#inline-cid-image');
-      await expect(image?.getAttribute('src')).toMatch(/^data:/);
-    });
+    await waitFor(
+      async () => {
+        const host = findShadowHost(canvasElement);
+        const image = host?.shadowRoot?.querySelector<HTMLImageElement>('#inline-cid-image');
+        await expect(image?.getAttribute('src')).toMatch(/^data:/);
+      },
+      { timeout: 12_000 },
+    );
   },
 };

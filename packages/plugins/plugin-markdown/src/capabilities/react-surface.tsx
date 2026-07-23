@@ -6,23 +6,16 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  Surface,
-  useAtomCapability,
-  useAtomCapabilityState,
-  useCapabilities,
-  useCapability,
-  useSettingsState,
-} from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useCapabilities, useCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Position } from '@dxos/util';
 
 import {
-  DocumentHistory,
   EditableMarkdownCard,
   MarkdownArticle,
   type MarkdownArticleProps,
@@ -32,6 +25,8 @@ import {
 } from '#containers';
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
+
+import { editorViewModeAspect } from './editor-view-state';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -78,14 +73,6 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'companion.documentHistory',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'history'),
-          AppSurface.companion(AppSurface.Article, Markdown.Document),
-        ),
-        component: ({ data, role, ref }) => <DocumentHistory role={role} subject={data.companionTo} ref={ref} />,
-      }),
-      Surface.create({
         id: 'surface.objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Markdown.Document),
         component: ({ data, role }) => <MarkdownProperties role={role} subject={data.subject} />,
@@ -130,15 +117,18 @@ const Container = forwardRef<
 >(({ id, attendableId, subject, role }, forwardedRef) => {
   const viewState = useCapability(AttentionCapabilities.ViewState);
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
-  const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
   const editorState = useCapability(MarkdownCapabilities.EditorState);
   const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
   const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
-  const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
+  // Per-document view mode is durable UI state (ViewState, keyed by document id); it overrides the
+  // `defaultViewMode` setting when the user has picked a mode for this document.
+  const perDocumentViewMode = useViewState(editorViewModeAspect, id);
+  const { set: setViewMode } = useViewStateActions(editorViewModeAspect, id);
+  const viewMode: EditorViewMode = perDocumentViewMode ?? settings?.defaultViewMode ?? 'source';
   const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
-    (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
-    [id, setState],
+    (mode) => setViewMode(mode),
+    [setViewMode],
   );
 
   return (

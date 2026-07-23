@@ -14,18 +14,6 @@ import { meta } from '#meta';
 
 import { InboxOperation } from '../types';
 
-const dispatch = (bindingRef: Ref.Ref<Cursor.Cursor>, db: Database.Database) =>
-  Effect.gen(function* () {
-    const { ContactsFunctions } = yield* Effect.promise(() => import('./contacts/google'));
-    yield* Operation.invoke(
-      ContactsFunctions.Sync,
-      {
-        binding: bindingRef,
-      },
-      { spaceId: db.spaceId },
-    );
-  });
-
 const handler: Operation.WithHandler<typeof InboxOperation.SyncContacts> = InboxOperation.SyncContacts.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -59,5 +47,17 @@ const handler: Operation.WithHandler<typeof InboxOperation.SyncContacts> = Inbox
     }),
   ),
 );
+
+const dispatch = (bindingRef: Ref.Ref<Cursor.Cursor>, db: Database.Database) =>
+  Effect.gen(function* () {
+    const { ContactsFunctions } = yield* Effect.promise(() => import('./contacts/google'));
+    yield* Operation.invoke(
+      ContactsFunctions.Sync,
+      {
+        binding: bindingRef,
+      },
+      { spaceId: db.spaceId },
+    );
+  });
 
 export default handler;

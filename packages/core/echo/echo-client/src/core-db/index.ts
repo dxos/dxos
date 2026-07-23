@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export { type BranchStore } from './branching';
 export * from './entity-manager';
 export * from './object-core';
 

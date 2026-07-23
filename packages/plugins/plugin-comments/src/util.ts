@@ -5,13 +5,24 @@
 import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
-import { type PublicKey } from '@dxos/react-client';
-import { type Identity } from '@dxos/react-client/halo';
-import { type Selection } from '@dxos/react-ui-attention';
+import { type PublicKey } from '@dxos/keys';
+import { Selection } from '@dxos/react-ui-attention';
 import { type MessageMetadata } from '@dxos/react-ui-thread';
 import { hexToFallback, toFallback } from '@dxos/util';
 
 export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageMetadata;
+
+/**
+ * Minimal author shape for message metadata. Satisfied by both the `@dxos/halo`
+ * `Identity.Info` and `Space.Member` (hex `identityKey`, flat `displayName`/`data`).
+ */
+export type MessageAuthor = {
+  did?: string;
+  identityKey?: string;
+  displayName?: string;
+  // Arbitrary profile metadata (matches the `@dxos/halo` `Schema.Any`-valued `data`).
+  data?: { readonly [key: string]: any };
+};
 
 /**
  * Stable hash for an arbitrary string — used as the avatar-fallback seed for
@@ -29,6 +40,7 @@ const hashString = (str: string): number => {
   for (let index = 0; index < str.length; index++) {
     hash = (hash * 31 + str.charCodeAt(index)) | 0;
   }
+
   return hash >>> 0;
 };
 
@@ -36,8 +48,8 @@ const hashString = (str: string): number => {
  * Resolve presentational metadata (author name, avatar) for a message.
  */
 export const getMessageMetadata = (
-  id: string,
-  identity?: Identity,
+  id: string | undefined,
+  identity?: MessageAuthor,
   /**
    * Externally-sourced sender info (Slack/Discord/etc). Used only when no
    * matching DXOS `identity` is available — provides `name`/`email` for the
@@ -46,19 +58,19 @@ export const getMessageMetadata = (
   fallbackSender?: { name?: string; email?: string },
 ): MessageMetadata => {
   const fallback = identity?.identityKey
-    ? hexToFallback(identity.identityKey.toHex())
+    ? hexToFallback(identity.identityKey)
     : toFallback(hashString(fallbackSender?.name ?? fallbackSender?.email ?? '0'));
   return {
     id,
     authorId: identity?.did,
     authorName:
-      identity?.profile?.displayName ??
-      (identity?.identityKey ? generateName(identity.identityKey.toHex()) : undefined) ??
+      identity?.displayName ??
+      (identity?.identityKey ? generateName(identity.identityKey) : undefined) ??
       fallbackSender?.name ??
       fallbackSender?.email,
     authorAvatarProps: {
-      hue: identity?.profile?.data?.hue ?? fallback.hue,
-      emoji: identity?.profile?.data?.emoji ?? fallback.emoji,
+      hue: identity?.data?.hue ?? fallback.hue,
+      emoji: identity?.data?.emoji ?? fallback.emoji,
     },
   };
 };
@@ -66,7 +78,7 @@ export const getMessageMetadata = (
 /**
  * Derive the anchor string for a selection.
  */
-export const getAnchor = Match.type<Selection | undefined>().pipe(
+export const getAnchor = Match.type<Selection.Selection | undefined>().pipe(
   Match.when({ mode: 'single' }, (selection) => selection.id),
   Match.when({ mode: 'multi' }, (selection) => (selection.ids.length > 0 ? selection.ids.join(',') : undefined)),
   Match.when({ mode: 'range' }, (selection) =>

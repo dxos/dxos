@@ -3,16 +3,17 @@
 //
 
 import { addHours, isSameDay, startOfHour } from 'date-fns';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
   Menu,
@@ -27,7 +28,7 @@ import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
-import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
+import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
 import { getCalendarEventPath, getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar } from './InitializeCalendar';
@@ -70,14 +71,14 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   // Starred events get a rose marker. The TagIndex mutates in place, which `useQuery` doesn't observe,
   // so subscribe to it directly and re-derive the set on change (drives both grid markers and tile stars).
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = calendar.tags?.target;
   const [, bumpTags] = useReducer((tick: number) => tick + 1, 0);
   useEffect(() => {
     return tagIndex ? Obj.subscribe(tagIndex, bumpTags) : undefined;
   }, [tagIndex]);
-  const starredIds = Starred.getStarredIds(calendar, starredUri);
+  const starredIds = SystemTags.getTaggedIds(calendar, starredUri);
   const dates = useMemo<DateMarker[]>(
     () =>
       events.map((event) => ({
@@ -121,7 +122,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
       void showItem({
         contextId: id,
         selectionId: eventId,
-        companion: linkedSegment('event'),
+        companion: Attention.linkedSegment('event'),
         path: db ? getCalendarEventPath(db.spaceId, calendar.id, eventId) : undefined,
       });
     },
@@ -146,7 +147,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         case 'star': {
           const event = events.find((entry) => entry.id === action.eventId);
           if (event && db && Calendar.instanceOf(calendar)) {
-            void Starred.toggleStarred(calendar, event, db);
+            void Effect.runFork(
+              SystemTags.toggleTag(calendar, event, 'starred').pipe(Effect.provide(Database.layer(db))),
+            );
           }
           break;
         }

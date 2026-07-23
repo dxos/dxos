@@ -47,7 +47,13 @@ import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  EdgeSignalManager,
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  type SignalManager,
+  SignalManagerService,
+} from '@dxos/messaging';
 import {
   SwarmNetworkManager,
   SwarmNetworkManagerService,
@@ -58,6 +64,18 @@ import {
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { Invitation, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  ContactsService,
+  DataService,
+  DevicesService,
+  EdgeAgentService,
+  FeedService,
+  IdentityService,
+  InvitationsService,
+  NetworkService,
+  QueryService,
+  SpacesService,
+} from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
@@ -102,20 +120,7 @@ import {
   SigningContextProviderService,
 } from '../spaces';
 import { SystemServiceImpl } from '../system';
-import {
-  type ClientServicesRpcContext,
-  ClientServicesRpcLayer,
-  ContactsServiceRpc,
-  DataServiceRpc,
-  DevicesServiceRpc,
-  EdgeAgentServiceRpc,
-  FeedServiceRpc,
-  IdentityServiceRpc,
-  InvitationsServiceRpc,
-  NetworkServiceRpc,
-  QueryServiceRpc,
-  SpacesServiceRpc,
-} from './client-services-layer';
+import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer';
 import {
   type CrossDeviceSpaceSynchronizer,
   CrossDeviceSpaceSynchronizerService,
@@ -434,9 +439,11 @@ export class ClientServicesHost {
         this.#config?.get('runtime.services.iceProviders') &&
           createIceProvider(this.#config!.get('runtime.services.iceProviders')!),
       ),
+      // Edge is the only real signaling transport; without it fall back to an isolated in-memory
+      // manager (no cross-process signaling). The former KUBE `WebsocketSignalManager` is removed.
       signalManager = this.#edgeConnection && this.#config?.get('runtime.client.edgeFeatures')?.signaling
         ? new EdgeSignalManager({ edgeConnection: this.#edgeConnection })
-        : new WebsocketSignalManager(this.#config?.get('runtime.services.signaling') ?? []),
+        : new MemorySignalManager(new MemorySignalManagerContext()),
     } = options;
     this.#signalManager = signalManager;
 
@@ -520,16 +527,16 @@ export class ClientServicesHost {
         echoEdgeReplicator: Effect.serviceOption(EdgeAutomergeReplicatorService),
         feedSyncer: Effect.serviceOption(FeedSyncerService),
         // Handlers.
-        identityService: IdentityServiceRpc,
-        contactsService: ContactsServiceRpc,
-        invitationsService: InvitationsServiceRpc,
-        devicesService: DevicesServiceRpc,
-        spacesService: SpacesServiceRpc,
-        networkService: NetworkServiceRpc,
-        edgeAgentService: EdgeAgentServiceRpc,
-        dataService: DataServiceRpc,
-        queryService: QueryServiceRpc,
-        feedService: FeedServiceRpc,
+        identityService: IdentityService.Tag,
+        contactsService: ContactsService.Tag,
+        invitationsService: InvitationsService.Tag,
+        devicesService: DevicesService.Tag,
+        spacesService: SpacesService.Tag,
+        networkService: NetworkService.Tag,
+        edgeAgentService: EdgeAgentService.Tag,
+        dataService: DataService.Tag,
+        queryService: QueryService.Tag,
+        feedService: FeedService.Tag,
       }),
     );
 
@@ -580,10 +587,9 @@ export class ClientServicesHost {
       },
     });
 
-    const identityService = resolved.identityService;
     this.#handlers = {
       SystemService: this.#systemService,
-      IdentityService: identityService,
+      IdentityService: resolved.identityService,
       ContactsService: resolved.contactsService,
       InvitationsService: resolved.invitationsService,
       DevicesService: resolved.devicesService,
@@ -605,11 +611,9 @@ export class ClientServicesHost {
     };
 
     // Run the open lifecycle stages (formerly ServiceContext._open).
+    // The identity service impl's open/close lifecycle is owned by its layer scope in
+    // {@link ClientServicesRpcLayer} and runs when the stack runtime is disposed.
     await this._openStack(ctx);
-
-    log('service-host: opening identity service...');
-    await identityService.open();
-    log('service-host: identity service opened');
 
     const devtoolsProxy = this.#config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {

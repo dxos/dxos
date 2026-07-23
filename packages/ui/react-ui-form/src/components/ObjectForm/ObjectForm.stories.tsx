@@ -7,9 +7,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { Filter, Obj, Ref, Tag } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
-import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

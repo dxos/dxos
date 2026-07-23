@@ -15,9 +15,14 @@ to [[composer-plugins]] (which owns plugin _structure_: capabilities, surfaces, 
 and [[composite-components]] (which owns _authoring_ new `@dxos/react-ui` primitives). When you're
 laying out a container, picking a color class, wiring a toolbar, or writing a story, the rules live here.
 
-**Golden rule:** the design system already has a primitive, a token, or a layout for what you need.
+**Golden rule:** If the design system already has a primitive, a token, or a layout for what you need you must use it.
 Reaching for a raw `<div>` with custom classes, a native `<input>`, or a guessed color token is almost
 always a sign you missed an existing piece. Find it (grep an existing themed component) before inventing.
+
+Low-level components (plugin/_/src/components, react-ui-_). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit` capabilitiess.
+Instead aspects that may be derived from capabilites must be passed as properties.
+Each component lives in its own subdirectory with an `index.ts` barrel.
+Use named exports; no default exports.
 
 ## Package family
 
@@ -204,6 +209,37 @@ The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `
 read fields not surfaced on `Snapshot<T>`). For _collections_ of objects use the reactive `useQuery`
 rather than holding a plain array. (Pure presentational components that just receive scalar props don't
 need any of this — keep `useObject` at the container boundary where the ECHO object enters.)
+
+## State management
+
+Two state stores — don't conflate them (full detail:
+`packages/ui/react-ui-attention/AUDIT.md`):
+
+- **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
+  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
+- **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
+  view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
+  `define({ key, backend, schema, defaultValue })`; the `backend` sets durability —
+  `'local'` persists across reloads (best-effort; degrades to memory when storage is blocked),
+  `'memory'` is session-only. Read/write via `useViewState` / `useViewStateActions` (React), or
+  `Capability.get(AttentionCapabilities.ViewState)` (operations / graph-builders). Idiom
+  `org.dxos.react-ui-attention.viewState`.
+
+The tell: _configure-once-and-forget_ → Settings; _tracks-what-you're-currently-doing_ → ViewState.
+Keep at most **one Settings object and one ViewState object per aspect** per plugin — widen an
+existing schema, don't add a parallel store.
+
+Passing state into low-level components (which must not resolve capabilities): prefer a **writable
+atom** over a `value` + `onChange` pair — simpler, and it needs no provider ancestor, so the component
+stays generic. **Caveat:** a ViewState `local` atom does _not_ self-persist on a direct set —
+persistence lives in `manager.set`. To hand ViewState down as one atom (e.g. combined with a settings
+field), use a writable derived atom whose write calls `manager.set` (see `MessageArticle`'s
+`optionsAtom`).
+
+Consider factoring each state concern into a small **file-local hook** (e.g., `useMessageExpansion`,
+`useThreadViewActions`) so the container body reads as a sequence
+of named concerns instead of an inline wall.
 
 ## Forms
 

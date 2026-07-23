@@ -92,9 +92,13 @@
       "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
+      "source": {
+        "node": "./src/testing/node.ts",
+        "default": "./src/testing/index.ts"
+      },
+      "types": "./dist/types/src/testing/index.d.ts",
+      "node": "./dist/lib/testing/node.mjs",
+      "default": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -164,10 +168,12 @@
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-calendar": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
@@ -196,8 +202,8 @@
     "@dxos/edge-compute": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/opentelemetry": "catalog:",

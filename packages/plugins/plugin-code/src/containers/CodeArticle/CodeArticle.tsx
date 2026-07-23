@@ -8,11 +8,12 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 're
 
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useObject } from '@dxos/echo-react';
+import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { getSpace, useObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
@@ -74,8 +75,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
     // The handlers run with `Database.Service` in scope, so the invoker must be
     // given the project's space id — that's how the process manager resolves
     // the right database into the Effect environment.
-    const space = getSpace(project);
-    const spaceId = space?.id;
+    const db = Obj.getDatabase(project);
+    const spaceId = db?.spaceId;
 
     const handleBuild = useCallback(async () => {
       if (!spaceId) {

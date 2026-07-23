@@ -4,8 +4,8 @@
 
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Identity } from '@dxos/halo';
 import { PublicKey } from '@dxos/keys';
-import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, setRef } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
@@ -14,7 +14,7 @@ import { keyToFallback } from '@dxos/util';
 import { type Assistant } from '../../types';
 import { type ChatEvent } from '../Chat';
 import { componentRegistry, createBlockRenderer } from './registry';
-import { MessageSyncer } from './sync';
+import { type MessageRange, MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
@@ -25,11 +25,13 @@ const defaultOptions: MarkdownStreamProps['options'] = {
 
 export type ChatThreadProps = ThemedClassName<
   {
-    identity?: Identity;
+    identity?: Identity.Info;
     messages?: Message.Message[];
     error?: Error;
     viewType?: Assistant.ChatView;
     onEvent?: (event: ChatEvent) => void;
+    /** Publishes the syncer's per-message document offset ranges after each update. */
+    onRanges?: (ranges: MessageRange[]) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
 
@@ -46,6 +48,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       extensions,
       viewType,
       onEvent,
+      onRanges,
     },
     forwardedRef,
   ) => {
@@ -59,7 +62,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     );
 
     const userHue = useMemo(
-      () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
+      () =>
+        identity?.data?.hue ||
+        keyToFallback(identity?.identityKey ? PublicKey.fromHex(identity.identityKey) : PublicKey.random()).hue,
       [identity],
     );
 
@@ -88,7 +93,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
-    }, [controller, syncer, messages]);
+      // Ranges are valid synchronously after `update` (offsets are computed during the walk).
+      onRanges?.(syncer.getRanges());
+    }, [controller, syncer, messages, onRanges]);
 
     // Event adapter.
     const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(

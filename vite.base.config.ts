@@ -69,6 +69,12 @@ const BROWSER_LOG_FILTER = process.env.DX_TEST_LOG_FILTER ?? process.env.LOG_FIL
 const TIKTOKEN_STUB = new URL('./vitest/tiktoken-stub.mjs', import.meta.url).pathname;
 const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
 
+// Default Workers runtime compatibility for the opt-in `workerd` vitest project. `nodejs_compat`
+// exposes the Node.js built-ins (`node:crypto`, `node:buffer`, …) that @dxos packages resolve to,
+// mirroring what production DXOS functions run against on Cloudflare. Overridable per package.
+const WORKERD_COMPATIBILITY_DATE = '2024-11-01';
+const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
+
 // ---------------------------------------------------------------------------
 // Library build plugins
 // ---------------------------------------------------------------------------
@@ -295,6 +301,17 @@ export type ConfigOptions = {
   node?: boolean | NodeOptions;
   browser?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] });
   storybook?: boolean | StorybookOptions;
+  workerd?: boolean | WorkerdOptions;
+};
+
+export type WorkerdOptions = {
+  /** Workers runtime compatibility date. Defaults to a fixed recent date. */
+  compatibilityDate?: string;
+  /** Workers runtime compatibility flags. Defaults to `['nodejs_compat']`. */
+  compatibilityFlags?: string[];
+  setupFiles?: string[];
+  timeout?: number;
+  plugins?: Plugin[];
 };
 
 export type StorybookOptions = {
@@ -327,24 +344,30 @@ export type BrowserOptions = {
 };
 
 export const createConfig = (options: ConfigOptions): ViteUserConfig => {
-  const { dirname, node, browser, storybook } = options;
+  const { dirname, node, browser, storybook, workerd } = options;
 
   const nodeProject = node ? createNodeProject(typeof node === 'boolean' ? undefined : node) : undefined;
   const storybookProject = storybook
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((browser) => createBrowserProject(browser));
+  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     test: {
       ...resolveReporterConfig(dirname),
       tags: TEST_TAGS,
-      projects: [nodeProject, storybookProject, ...browserProjects].filter(
+      projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
     },
   };
 };
+
+// `VITEST` is set in watch mode too and `VITEST_MODE` is worker-only, so read the run subcommand
+// (first positional token, not any `run`-named filter) from argv to detect single-pass mode.
+const VITEST_SUBCOMMAND = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
+const IS_VITEST_RUN = process.env.VITEST === 'true' && (VITEST_SUBCOMMAND === 'run' || process.argv.includes('--run'));
 
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
@@ -369,6 +392,9 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
+    // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it in run
+    // mode only (watch needs it). The story builder's watcher is disabled the same way in `main.ts`.
+    ...(IS_VITEST_RUN ? { server: { watch: null } } : {}),
     resolve: {
       alias: { ...TIKTOKEN_ALIAS },
     },
@@ -461,6 +487,8 @@ const createBrowserProject = ({
         '!**/src/**/__snapshots__/**',
         '!**/src/**/*.node.test.{ts,tsx}',
         '!**/test/**/*.node.test.{ts,tsx}',
+        '!**/src/**/*.workerd.test.{ts,tsx}',
+        '!**/test/**/*.workerd.test.{ts,tsx}',
       ],
 
       testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
@@ -477,6 +505,42 @@ const createBrowserProject = ({
       },
 
       setupFiles: [VITEST_BROWSER_LOG_SETUP],
+    },
+  });
+
+// Runs tests inside the Cloudflare Workers runtime (`workerd`) via
+// `@cloudflare/vitest-pool-workers`. Opt-in (like `browser`/`storybook`) — only
+// `*.workerd.test.{ts,tsx}` files run here, so packages can exercise the same source
+// against the runtime their production Cloudflare functions use. The node/browser
+// projects exclude these files so a suite runs in exactly one runtime.
+const createWorkerdProject = ({
+  compatibilityDate = WORKERD_COMPATIBILITY_DATE,
+  compatibilityFlags = WORKERD_COMPATIBILITY_FLAGS,
+  setupFiles = [],
+  timeout,
+  plugins = [],
+}: WorkerdOptions = {}) =>
+  defineProject({
+    plugins: [
+      ...plugins,
+      // Resolve `@dxos/*` to their `source` export (src/*.ts) so tests exercise source
+      // instead of stale `dist/` build artifacts (mirrors the node/browser projects).
+      PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      // Log-meta injection only — no file sink (workerd has no filesystem).
+      DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
+      // Configures the vitest pool to execute tests in workerd. `@cloudflare/vitest-pool-workers`
+      // is ESM-only; a static import would make vite's (CJS) config bundler `require()` it and
+      // fail for every `vite build`. A dynamic import stays an `import()` the bundler preserves,
+      // and vite awaits promise-valued entries in the plugins array.
+      import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
+        cloudflareTest({ miniflare: { compatibilityDate, compatibilityFlags } }),
+      ),
+    ],
+    test: {
+      name: 'workerd',
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 5000),
+      include: ['**/src/**/*.workerd.test.{ts,tsx}', '**/test/**/*.workerd.test.{ts,tsx}'],
+      setupFiles,
     },
   });
 
@@ -511,6 +575,8 @@ const createNodeProject = ({
         '!**/src/**/__snapshots__/**',
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
+        '!**/src/**/*.workerd.test.{ts,tsx}',
+        '!**/test/**/*.workerd.test.{ts,tsx}',
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
       setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname, VITEST_LOG_SETUP],
@@ -549,6 +615,8 @@ const resolveProjectType = (): string | undefined => {
     return 'node';
   } else if (projectArg === 'storybook') {
     return 'storybook';
+  } else if (projectArg === 'workerd') {
+    return 'workerd';
   }
   return undefined;
 };
@@ -561,6 +629,8 @@ const moonTaskForProjectType = (projectType: string | undefined): string => {
       return 'test-browser';
     case 'storybook':
       return 'test-storybook';
+    case 'workerd':
+      return 'test-workerd';
     default:
       return 'test';
   }
@@ -611,7 +681,9 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const moonRerunReporter = createMoonRerunReporter({ moonProject: packageDirName, projectType });
   const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
   const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
-  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
+  // The v8 coverage provider imports `node:inspector/promises`, which the workerd runtime does not
+  // provide — coverage is unsupported for the workers pool, so never enable it for the workerd project.
+  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE) && projectType !== 'workerd';
 
   if (xmlReport) {
     return {
@@ -687,6 +759,7 @@ export type TestOptions = {
   node?: boolean | NodeOptions;
   browser?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] });
   storybook?: boolean | StorybookOptions;
+  workerd?: boolean | WorkerdOptions;
 };
 
 export interface DxConfigOptions {
@@ -721,7 +794,7 @@ const buildTestConfig = (
   options: TestOptions,
   outerJsx?: 'react' | 'solid',
 ): ViteUserConfig['test'] => {
-  const { node, browser, storybook } = options;
+  const { node, browser, storybook, workerd } = options;
   // Outer `defineConfig({ jsx })` propagates into the node test project so a Solid
   // package's tests get the Solid client transform without each per-package
   // vite.config.ts having to wire `test.node.jsx` itself.
@@ -732,16 +805,14 @@ const buildTestConfig = (
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject({ jsx: outerJsx, ...b }));
+  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     ...resolveReporterConfig(dirname),
     tags: TEST_TAGS,
-    // Suppress flaky vitest worker teardown unhandled rejections (e.g.
-    // `EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was pending` from
-    // node tests, WebSocket birpc errors from the storybook runner) — these surface as
-    // non-zero exits with no actual test failures and turn the entire job red.
-    dangerouslyIgnoreUnhandledErrors: true,
-    projects: [nodeProject, storybookProject, ...browserProjects].filter(
+    // Never set `dangerouslyIgnoreUnhandledErrors`: suppressing unhandled rejections hides real
+    // teardown failures — surface and fix them at the source. See the `code-style` skill.
+    projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
       (project): project is UserWorkspaceConfig => project !== undefined,
     ),
   };

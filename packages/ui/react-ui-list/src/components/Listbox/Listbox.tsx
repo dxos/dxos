@@ -51,6 +51,7 @@ import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
   type ForwardedRef,
+  type KeyboardEvent,
   type MouseEvent,
   type PropsWithChildren,
   forwardRef,
@@ -241,7 +242,7 @@ type ItemProps = PropsWithChildren<{
   id: string;
   /** Disable the row — focusable but doesn't update selection, dimmed. */
   disabled?: boolean;
-  /** Optional click handler in addition to selection. */
+  /** Optional click handler in addition to selection; also fired by Enter/Space when interactive. */
   onClick?: (event: MouseEvent<HTMLLIElement>) => void;
   /** Optional focus handler in addition to selection-follows-focus. */
   onFocus?: (event: FocusEvent<HTMLLIElement>) => void;
@@ -289,6 +290,22 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
     [selectable, binding, onFocus],
   );
 
+  // Options aren't natively-interactive elements (unlike `<button>`), so the browser won't fire
+  // Enter/Space clicks on their own — wire that up for every interactive row (selectable or not),
+  // matching `<button>`'s native activation keys per WAI-ARIA APG listbox guidance. Dispatches a
+  // real click (rather than calling `handleClick` directly) so `onClick` keeps its native
+  // `MouseEvent` type — matches the same `.click()` pattern `MessageStack`'s row navigation uses.
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLLIElement>) => {
+      if (!interactive || disabled || (event.key !== 'Enter' && event.key !== ' ')) {
+        return;
+      }
+      event.preventDefault();
+      event.currentTarget.click();
+    },
+    [interactive, disabled],
+  );
+
   const composed = composableProps<HTMLLIElement>(rest, {
     classNames: styles.listboxItem({
       class: [!interactive && 'cursor-default', disabled && 'opacity-50 cursor-not-allowed'],
@@ -297,17 +314,20 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
 
   // Per WAI-ARIA APG listbox guidance, disabled options remain keyboard-navigable for SR
   // announcement; the selection model is not updated for disabled rows (the aspect's binding
-  // enforces that internally). Non-selectable rows are `role=listitem` with no `aria-selected`.
+  // enforces that internally). Non-selectable rows are `role=listitem` with no `aria-selected`;
+  // a plain row with an `onClick` (no selection model) is still keyboard-focusable so Enter/Space
+  // can activate it, matching `<button>`'s native behaviour.
   return (
     <ListItemProviderHost id={id} selected={selected}>
       <ListItem
         {...composed}
         role={selectable ? 'option' : 'listitem'}
-        tabIndex={selectable ? 0 : -1}
+        tabIndex={interactive ? 0 : -1}
         aria-selected={selectable ? selected : undefined}
         aria-disabled={disabled || undefined}
         onClick={handleClick}
         onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
         onMouseDown={onMouseDown}
         ref={forwardedRef}
       >

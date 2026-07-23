@@ -1,0 +1,70 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type PropsWithChildren, useState } from 'react';
+
+import { Button, Input, Popover } from '@dxos/react-ui';
+
+export type NamePopoverProps = PropsWithChildren<{
+  open: boolean;
+  placeholder: string;
+  /** Translated label for the submit button (e.g. "Create"). */
+  submitLabel: string;
+  onSubmit: (name: string) => void;
+  onCancel: () => void;
+}>;
+
+/**
+ * Name-entry popover anchored to its trigger (mirrors the object rename popover UX).
+ * Enter or the submit button commits — an empty name is allowed; Escape or dismissal cancels.
+ */
+export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit, onCancel }: NamePopoverProps) => {
+  const [value, setValue] = useState('');
+
+  const submit = () => {
+    onSubmit(value);
+    setValue('');
+  };
+
+  const cancel = () => {
+    onCancel();
+    setValue('');
+  };
+
+  return (
+    <Popover.Root open={open} onOpenChange={(next) => !next && cancel()}>
+      <Popover.Trigger asChild>{children}</Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content>
+          <div className='flex items-center gap-1 p-2'>
+            <Input.Root>
+              <Input.Label srOnly>{placeholder}</Input.Label>
+              <Input.TextInput
+                autoFocus
+                placeholder={placeholder}
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    submit();
+                  } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    cancel();
+                  }
+                }}
+              />
+            </Input.Root>
+            <Button variant='primary' onClick={submit}>
+              {submitLabel}
+            </Button>
+          </div>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+};
+
+NamePopover.displayName = 'NamePopover';

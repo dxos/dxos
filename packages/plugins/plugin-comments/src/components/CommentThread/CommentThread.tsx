@@ -6,30 +6,18 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { getSpace, useMembers } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
-import { Message as MessageComponent, Thread, type ThreadComponents } from '@dxos/react-ui-thread';
+import {
+  Message as MessageComponent,
+  type MessageMetadata,
+  Thread,
+  type ThreadComponents,
+  ThreadStatusProps,
+} from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
-import { useStatus } from '#hooks';
 import { meta } from '#meta';
-
-import { getMessageMetadata } from '../../util';
-
-export type CommentThreadProps = {
-  anchor: AnchoredTo.AnchoredTo;
-  /** Injected renderers (e.g. the Surface-backed object tile) supplied by the container. */
-  components: ThreadComponents;
-  current?: boolean;
-  onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
-  onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
-  onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
-};
 
 // TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
 // relation changes. The try/catch should not be necessary — Relation.getSource should
@@ -42,47 +30,55 @@ const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.So
   }
 };
 
+export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
+  anchor: AnchoredTo.AnchoredTo;
+  /** Injected renderers (e.g. the Surface-backed object tile) supplied by the container. */
+  components: ThreadComponents;
+  /** The local author's metadata for the reply composer. */
+  authorMetadata: MessageMetadata;
+  /** The local identity DID (decides message editability). */
+  identityDid?: string;
+  current?: boolean;
+  /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
+  getMetadata: (message: Message.Message) => MessageMetadata;
+  onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
+  onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  /** Apply the change this (branch-review) thread is anchored to and resolve it; shown while diffing. */
+  onAcceptChange?: (anchor: AnchoredTo.AnchoredTo) => void;
+};
+
 /**
  * A single anchored comment thread, rendered on the `@dxos/react-ui-thread`
  * primitives (`Thread.*` / `Message.Tile`).
  */
 export const CommentThread = ({
+  activity,
   anchor,
   components,
+  authorMetadata,
+  identityDid,
   current,
+  getMetadata,
   onAttend,
   onComment,
   onResolve,
   onMessageDelete,
   onThreadDelete,
   onAcceptProposal,
+  onAcceptChange,
 }: CommentThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const identity = useIdentity();
-  const space = getSpace(anchor);
-  const members = useMembers(space?.key);
   const detached = !anchor.anchor;
   const source = useRelationSource(anchor);
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
   const threadUri = thread ? Obj.getURI(thread) : undefined;
+  const [status] = useObject(thread, 'status');
   const [messages] = useObject(thread, 'messages');
-  const activity = useStatus(space, threadUri);
 
-  const getMetadata = useCallback(
-    (message: Message.Message) => {
-      const senderIdentity = members.find(
-        (member) =>
-          (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
-          (message.sender.identityKey && member.identity.identityKey.toHex() === message.sender.identityKey),
-      );
-      return getMessageMetadata(Obj.getURI(message), senderIdentity?.identity, message.sender);
-    },
-    [members],
-  );
-  const textboxMetadata = useMemo(
-    () => getMessageMetadata(threadUri ?? '', identity ?? undefined),
-    [threadUri, identity],
-  );
   const loadedMessages = useMemo(
     () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
     [messages],
@@ -95,6 +91,7 @@ export const CommentThread = ({
     [onMessageDelete, anchor],
   );
   const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
+  const handleAcceptChange = useCallback(() => onAcceptChange?.(anchor), [onAcceptChange, anchor]);
   const handleAcceptProposal = useCallback(
     (messageId: string) => onAcceptProposal?.(anchor, messageId),
     [onAcceptProposal, anchor],
@@ -118,15 +115,26 @@ export const CommentThread = ({
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>
-      {thread.status === 'staged' && <Tag hue='neutral'>{t('draft.button')}</Tag>}
-      {onResolve && !(thread.status === 'staged') && (
+      {status === 'staged' && <Tag hue='neutral'>{t('draft.button')}</Tag>}
+      {onAcceptChange && !detached && status !== 'resolved' && (
+        <IconButton
+          data-testid='thread.accept-change'
+          variant='ghost'
+          icon='ph--check-circle--regular'
+          iconOnly
+          label={t('accept-change.label')}
+          classNames={['p-1! transition-opacity', hoverableControlItem]}
+          onClick={handleAcceptChange}
+        />
+      )}
+      {onResolve && !(status === 'staged') && (
         <IconButton
           data-testid='thread.resolve'
           variant='ghost'
-          icon={thread.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
+          icon={status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
           iconOnly
           label={t('resolve-thread.label')}
-          classNames={['p-1! transition-opacity', thread.status !== 'resolved' && hoverableControlItem]}
+          classNames={['p-1! transition-opacity', status !== 'resolved' && hoverableControlItem]}
           onClick={handleResolve}
         />
       )}
@@ -154,10 +162,10 @@ export const CommentThread = ({
 
   return (
     <Thread.Root
-      getMetadata={getMetadata}
-      components={components}
-      identityDid={identity?.did}
       editable
+      components={components}
+      identityDid={identityDid}
+      getMetadata={getMetadata}
       onMessageDelete={onMessageDelete ? handleMessageDelete : undefined}
       onAcceptProposal={onAcceptProposal ? handleAcceptProposal : undefined}
     >
@@ -185,9 +193,9 @@ export const CommentThread = ({
           focus, so multiple active threads no longer fight for focus.
         */}
         <Thread.Textbox
-          {...textboxMetadata}
+          {...authorMetadata}
           placeholder={t('message.placeholder')}
-          autoFocus={thread.status === 'staged'}
+          autoFocus={status === 'staged'}
           onSend={handleComment}
         />
 

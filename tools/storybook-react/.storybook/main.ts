@@ -20,6 +20,11 @@ const __dirname = dirname(__filename);
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
+// Single-pass `vitest run` (not `vitest watch`); `VITEST` is set in both and `VITEST_MODE` is
+// worker-only, so read the run subcommand (first positional token, not any `run`-named filter).
+const vitestSubcommand = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
+const isVitestRun = isTrue(process.env.VITEST) && (vitestSubcommand === 'run' || process.argv.includes('--run'));
+
 // Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
 // transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
@@ -219,16 +224,27 @@ export const createConfig = ({
       {
         publicDir: staticDir,
         resolve: {
-          alias: {
-            'node-fetch': 'isomorphic-fetch',
-            'tiktoken/lite': resolve(__dirname, './stub.mjs'),
-            'node:util': '@dxos/node-std/util',
-            'util': '@dxos/node-std/util',
-            'node:crypto': '@dxos/node-std/crypto',
-            'crypto': '@dxos/node-std/crypto',
+          // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
+          // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
+          // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
+          // native node: polyfill layer handle subpaths like `node:util/types`.
+          alias: [
+            { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
+            { find: /^node:util$/, replacement: '@dxos/node-std/util' },
+            { find: /^util$/, replacement: '@dxos/node-std/util' },
+            { find: /^node:path$/, replacement: '@dxos/node-std/path' },
+            { find: /^path$/, replacement: '@dxos/node-std/path' },
+            { find: /^node:crypto$/, replacement: '@dxos/node-std/crypto' },
+            { find: /^crypto$/, replacement: '@dxos/node-std/crypto' },
+            { find: /^node:stream$/, replacement: '@dxos/node-std/stream' },
+            { find: /^stream$/, replacement: '@dxos/node-std/stream' },
+            { find: /^tiktoken\/lite$/, replacement: resolve(__dirname, './stub.mjs') },
             // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
-            '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
-          },
+            {
+              find: /^@dxos\/client\/opfs-worker$/,
+              replacement: resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
+            },
+          ],
         },
         // `build.target` only lowers syntax for `storybook build`; the e2e tests run against
         // `storybook dev`, which otherwise serves source syntax untransformed straight to the
@@ -255,6 +271,9 @@ export const createConfig = ({
             // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
             overlay: false,
           },
+          // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it
+          // in run mode only, so interactive `storybook dev` (local + e2e) and `vitest watch` keep HMR.
+          ...(isVitestRun ? { watch: null } : {}),
         },
         optimizeDeps: {
           // WASM modules.
@@ -367,27 +386,26 @@ export const createConfig = ({
             },
           },
 
-          !isFastBundle &&
-            importSource({
-              // Include `#*` so Node subpath imports (e.g. `#translations`, `#meta`)
-              // resolve to the `source` condition (`./src/...`) instead of falling
-              // through to `default` (`./dist/lib/neutral/...`). Without this, a
-              // package's own `test-storybook` task fails when its `compile` task
-              // hasn't been triggered as an upstream dep — manifests as
-              // `[vite] Failed to resolve import "#translations"`.
-              include: ['@dxos/**', '#*'],
-              exclude: [
-                '@dxos/random-access-storage',
-                '@dxos/lock-file',
-                '@dxos/network-manager',
-                '@dxos/teleport',
-                '@dxos/config',
-                '@dxos/client-services',
-                '@dxos/observability',
-                // TODO(dmaretskyi): Decorators break in lit.
-                '@dxos/lit-*',
-              ],
-            }),
+          importSource({
+            // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,
+            // `#meta`) to the `source` condition (`./src/...`); otherwise they fall through
+            // to `default` (`./dist/lib/neutral/...`) and fail when a package's `compile` has
+            // not run. Fast mode (`DX_FASTBUNDLE`) still needs this — it only wants to skip
+            // forcing `@dxos/**` to source (so those resolve from dist and get pre-bundled),
+            // NOT the `#*` resolution, which every plugin relies on.
+            include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
+            exclude: [
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '@dxos/lit-*',
+            ],
+          }),
 
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),

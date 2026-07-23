@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentCapabilities } from '../types';
@@ -17,7 +17,7 @@ import { CommentOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
+    Effect.fnUntraced(function* ({ name, anchor: _anchor, subject, branch }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(CommentCapabilities.State);
       const subjectId = Obj.getURI(subject);
@@ -40,6 +40,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
         [Relation.Source]: thread,
         [Relation.Target]: subject,
         anchor: _anchor,
+        branch,
       });
 
       const state = registry.get(stateAtom);
@@ -54,7 +55,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
 
       yield* Operation.invoke(CommentOperation.Select, { current: Obj.getURI(thread) });
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
-        subject: linkedSegment('comments'),
+        subject: Attention.linkedSegment('comments'),
       });
     }),
   ),

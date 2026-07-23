@@ -4,7 +4,7 @@ tags:
   - ts-compile
   - pack
 tasks:
-  compile:
+  build:
     deps:
       - prebuild
     inputs:
@@ -21,6 +21,6 @@ tasks:
     command: pnpm run --silent test
     deps:
       - prebuild
-      - ^:compile
+      - ^:build
     inputs:
       - '@group(sources)'

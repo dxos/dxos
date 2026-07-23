@@ -29,6 +29,7 @@ export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
       if (tr.selection) {
         return [];
       } // Drop any selection changes.
+
       return tr;
     }),
     EditorView.theme({

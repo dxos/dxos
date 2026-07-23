@@ -8,10 +8,10 @@ tasks:
     # specific tags (e.g. `flaky`).
     command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}"'
     deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - vite-plugin-import-source:compile
-      - ^:compile
+      - esbuild-plugins:build
+      - node-std:build
+      - vite-plugin-import-source:build
+      - ^:build
     inputs:
       - '@group(sources)'
       - /vitest.base.config.ts
@@ -40,10 +40,10 @@ tasks:
   test-watch:
     command: pnpm exec dx-killorphans vitest
     deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - vite-plugin-import-source:compile
-      - ^:compile
+      - esbuild-plugins:build
+      - node-std:build
+      - vite-plugin-import-source:build
+      - ^:build
     preset: server
 
 inheritedBy:

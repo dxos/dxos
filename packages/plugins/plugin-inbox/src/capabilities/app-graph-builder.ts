@@ -10,41 +10,33 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Feed, Filter, Key, Obj, Order, Query, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
-import { Topic } from '@dxos/pipeline-email';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import { Attention, Selection } from '@dxos/react-ui-attention';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Calendar, InboxOperation, Mailbox } from '#types';
+import { Calendar, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import {
-  MAILBOX_DRAFTS_NODE_DATA,
-  MAILBOX_DRAFTS_TYPE,
-  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
-  MAILBOX_SUBSCRIPTIONS_TYPE,
-  MAILBOX_TOPICS_NODE_DATA,
-  MAILBOX_TOPICS_TYPE,
-  MAILBOXES_SECTION_TYPE,
-} from '../constants';
+import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
 import { createSyncProgressKey } from '../operations/mail/mail-sync';
 import {
+  getAllMailId,
   getCalendarsPath,
   getDraftsId,
   getMailboxesPath,
   getMailboxesSectionId,
+  getSentId,
   getSubscriptionsId,
-  getTopicsId,
 } from '../paths';
-import { syncTarget } from '../util';
+import { dedupeSupersededDrafts, syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -83,12 +75,12 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
     match: () => Option.none(),
     resolver: (qualifiedId, get) =>
       Effect.gen(function* () {
-        if (!isLinkedSegment(qualifiedId)) {
+        if (!Attention.isLinkedSegment(qualifiedId)) {
           return null;
         }
 
         const segments = qualifiedId.split('/');
-        const childId = getLinkedVariant(qualifiedId);
+        const childId = Attention.getLinkedVariant(qualifiedId);
         const spaceId = Paths.getSpaceIdFromPath(qualifiedId);
         const segmentName = config.parentSegmentName ?? Type.getTypename(config.parentType);
         const segmentIdx = segments.indexOf(segmentName);
@@ -144,10 +136,10 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-    // Derive a single-mode selected id per context from the ViewStateManager selection slice.
+    // Derive a single-mode selected id per context from the ViewState.Manager selection slice.
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(selectionAspect, nodeId));
+        const selection = get(viewState.atom(Selection.aspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );
@@ -198,35 +190,53 @@ export default Capability.makeModule(
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
-                  // New-message badge stubbed pending a real read/unread signal (see Mailbox.ts).
+                  // Placeholder for a future "intelligent inbox"; resolved by the canonical `systemTag`,
+                  // not this label string (see `MailboxArticle`'s `systemTag` prop).
+                  filter: '#inbox',
+                  systemTag: 'inbox' satisfies SystemTags.SystemTagId,
                 },
                 nodes: [
+                  // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
+                  // static with no rename/delete actions.
+                  Node.make({
+                    id: getAllMailId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['all-mail.label', { ns: meta.profile.key }],
+                      icon: 'ph--tray--regular',
+                      iconHue: 'rose',
+                      filter: '',
+                    },
+                  }),
+                  Node.make({
+                    id: getSentId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['sent.label', { ns: meta.profile.key }],
+                      icon: 'ph--paper-plane-tilt--regular',
+                      iconHue: 'rose',
+                      filter: '#sent',
+                      systemTag: 'sent' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
                   Node.make({
                     id: getDraftsId(),
-                    type: MAILBOX_DRAFTS_TYPE,
-                    data: MAILBOX_DRAFTS_NODE_DATA,
+                    type: FILTER_TYPE,
+                    data: mailbox,
                     properties: {
                       label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
                       iconHue: 'rose',
-                      mailbox,
-                    },
-                  }),
-                  Node.make({
-                    id: getTopicsId(),
-                    type: MAILBOX_TOPICS_TYPE,
-                    data: MAILBOX_TOPICS_NODE_DATA,
-                    properties: {
-                      label: ['topics.label', { ns: meta.profile.key }],
-                      icon: 'ph--stack--regular',
-                      iconHue: 'rose',
-                      mailbox,
+                      filter: '',
+                      systemTag: 'draft' satisfies SystemTags.SystemTagId,
                     },
                   }),
                   Node.make({
                     id: getSubscriptionsId(),
                     type: MAILBOX_SUBSCRIPTIONS_TYPE,
-                    data: MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+                    data: mailbox,
                     properties: {
                       label: ['subscriptions.label', { ns: meta.profile.key }],
                       icon: 'ph--envelope-simple--regular',
@@ -288,32 +298,16 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'mailboxDrafts',
-        match: NodeMatcher.whenNodeType(MAILBOX_DRAFTS_TYPE),
-        connector: (node, get) => {
-          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
-          if (!mailbox || !db) {
-            return Effect.succeed([]);
-          }
-
-          const mailboxUri = Obj.getURI(mailbox);
-          const messageId = get(selectedId(node.id));
-          const message = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
-          const draft = message && DraftMessage.belongsTo(message, mailboxUri) ? message : undefined;
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: linkedSegment('message'),
-              label: ['message.label', { ns: meta.profile.key }],
-              icon: 'ph--envelope-open--regular',
-              data: draft ?? 'message',
-            }),
-          ]);
-        },
-        actions: (node) => {
-          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
-          if (!mailbox || !db) {
+        id: 'mailboxDraftsActions',
+        // Companion comes from `mailboxMessage` below; this only contributes "create draft", scoped to
+        // the Drafts view.
+        match: (node) =>
+          node.properties.systemTag === 'draft' && Mailbox.instanceOf(node.data)
+            ? Option.some(node.data)
+            : Option.none(),
+        actions: (mailbox) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
             return Effect.succeed([]);
           }
 
@@ -343,13 +337,14 @@ export default Capability.makeModule(
           }
 
           const messageId = get(selectedId(nodeId));
-          const message = get(
-            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
-          )[0];
-          // The selected message's whole conversation, assigned to the companion so the article renders
-          // it directly. One combined-scope query (db-root drafts + this mailbox's feed) assembles it
-          // via a single reactive subscription, oldest-first, correlated by `threadId`. Two same-shape
-          // subscriptions here deadlock the connector's recompute, so keep it to one query.
+          const idFilter = messageId ? Filter.id(messageId) : Filter.nothing();
+          const fromFeed = get(db.query(Query.select(idFilter).from(feed)).atom)[0];
+          // Drafts live in the space db, not the feed; fall back to a db lookup (mirrors `calendarEvent`).
+          const fromDb = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
+          const message = fromFeed ?? fromDb;
+
+          // Whole conversation for the companion, one combined-scope query (space + this mailbox's feed)
+          // correlated by threadId — two same-shape subscriptions here deadlock the connector's recompute.
           const conversation = !message
             ? []
             : get(
@@ -360,56 +355,17 @@ export default Capability.makeModule(
                 ).atom,
               );
 
-          // Synced messages (no `properties.mailbox`) always pass; drafts pass only when scoped to this
-          // mailbox and not yet superseded by their sent copy in the feed (matched on the provider id
-          // set at send time). Deleting the superseded draft is deferred to sync (`reconcileDrafts`).
-          const mailboxUri = Obj.getURI(mailbox);
-          const syncedIds = new Set(
-            conversation
-              .filter((item) => !DraftMessage.instanceOf(item))
-              .flatMap((item) => Obj.getMeta(item).keys.map((key) => key.id)),
-          );
-          const thread = conversation.filter((item) => {
-            if (!DraftMessage.instanceOf(item)) {
-              return true;
-            }
-            if (!DraftMessage.belongsTo(item, mailboxUri)) {
-              return false;
-            }
-            return !(item.properties?.sentMessageId && syncedIds.has(item.properties.sentMessageId));
-          });
+          // Synced messages always pass; drafts pass only when scoped to this mailbox and not yet
+          // superseded by their sent copy in the feed. Deleting the superseded draft is deferred to
+          // sync (`reconcileDrafts`).
+          const thread = dedupeSupersededDrafts(conversation, Obj.getURI(mailbox));
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('message'),
+              id: Attention.linkedSegment('message'),
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
               data: thread.length > 0 ? thread : 'message',
-            }),
-          ]);
-        },
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'mailboxTopics',
-        match: NodeMatcher.whenNodeType(MAILBOX_TOPICS_TYPE),
-        connector: (node, get) => {
-          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
-          if (!mailbox || !db) {
-            return Effect.succeed([]);
-          }
-
-          // The selected topic (Topics list → detail) becomes the companion's subject so `TopicArticle`
-          // renders it. Topics live in the space db (not a feed), so a plain id lookup resolves them.
-          const topicId = get(selectedId(node.id));
-          const topic = topicId ? get(db.query(Query.select(Filter.id(topicId))).atom)[0] : undefined;
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: linkedSegment('topic'),
-              label: ['topic.label', { ns: meta.profile.key }],
-              icon: 'ph--stack--regular',
-              data: Obj.instanceOf(Topic, topic) ? topic : 'topic',
             }),
           ]);
         },
@@ -487,7 +443,7 @@ export default Capability.makeModule(
           const event = fromFeed ?? fromDb;
           const nodes = [
             AppNode.makeCompanion({
-              id: linkedSegment('event'),
+              id: Attention.linkedSegment('event'),
               label: ['event.label', { ns: meta.profile.key }],
               icon: 'ph--calendar-dot--regular',
               data: event ?? 'event',
@@ -499,7 +455,7 @@ export default Capability.makeModule(
             // regardless of whether the event has been navigated to.
             nodes.push(
               Node.make({
-                id: linkedSegment(event.id),
+                id: Attention.linkedSegment(event.id),
                 type: Type.getTypename(Event.Event),
                 data: event,
                 properties: {
@@ -588,11 +544,8 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'syncMailbox',
-        // Filter nodes store the parent mailbox as node.data; exclude them so sync only appears on the mailbox itself.
-        match: (node) =>
-          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
-            ? Option.some(node.data)
-            : Option.none(),
+        // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           if (!db) {
@@ -636,50 +589,11 @@ export default Capability.makeModule(
                   // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  testId: 'inbox.mailbox.sync',
                 },
               },
             ];
           });
-        },
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'analyzeTopicsMailbox',
-        // Filter nodes store the parent mailbox as node.data; exclude them so the action only appears
-        // on the mailbox itself (peer of the `sync` action).
-        match: (node) =>
-          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
-            ? Option.some(node.data)
-            : Option.none(),
-        actions: (mailbox) => {
-          const db = Obj.getDatabase(mailbox);
-          if (!db) {
-            return Effect.succeed([]);
-          }
-          // Tags the mailbox's messages and clusters its threads into Topic objects. Available whenever
-          // the mailbox has a db (no connection required — it runs over already-synced messages).
-          return Effect.succeed([
-            {
-              id: 'analyze-topics',
-              data: () =>
-                Operation.invoke(
-                  InboxOperation.AnalyzeTopics,
-                  { mailbox: Ref.make(mailbox) },
-                  {
-                    spaceId: db.spaceId,
-                    notify: {
-                      success: ['analyze-topics-success.title', { ns: meta.profile.key }],
-                      error: ['analyze-topics-error.title', { ns: meta.profile.key }],
-                    },
-                  },
-                ),
-              properties: {
-                label: ['analyze-topics.label', { ns: meta.profile.key }],
-                icon: 'ph--stack--regular',
-                disposition: 'list-item',
-              },
-            },
-          ]);
         },
       }),
 

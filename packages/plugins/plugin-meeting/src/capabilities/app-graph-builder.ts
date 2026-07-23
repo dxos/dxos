@@ -16,7 +16,7 @@ import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Channel, Event } from '@dxos/types';
 import { Position } from '@dxos/util';
 
@@ -145,7 +145,7 @@ export default Capability.makeModule(
                   if (!transcriptionEnabled) {
                     log.warn('transcription disabled');
                   } else {
-                    const companion = linkedSegment('transcript');
+                    const companion = Attention.linkedSegment('transcript');
                     yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion });
                   }
                 }),

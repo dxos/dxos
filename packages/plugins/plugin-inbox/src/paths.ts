@@ -3,7 +3,7 @@
 //
 
 import { Paths } from '@dxos/app-toolkit';
-import { linkedSegment } from '@dxos/react-ui-attention/types';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { Calendar } from '#types';
 
@@ -15,8 +15,9 @@ const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Pat
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
   mailboxes: 'mailboxes',
+  allMail: 'all-mail',
+  sent: 'sent',
   drafts: 'drafts',
-  topics: 'topics',
   subscriptions: 'subscriptions',
 } as const;
 
@@ -31,11 +32,14 @@ export const getMailboxesPath = (spaceId: string): string =>
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxesPath(spaceId)}/${mailboxId}`;
 
+/** Canonical segment ID for the "All Mail" (unfiltered) child node. */
+export const getAllMailId = (): string => Segments.allMail;
+
+/** Canonical segment ID for the "Sent" child node. */
+export const getSentId = (): string => Segments.sent;
+
 /** Canonical segment ID for the drafts child node. */
 export const getDraftsId = (): string => Segments.drafts;
-
-/** Canonical segment ID for the topics child node. */
-export const getTopicsId = (): string => Segments.topics;
 
 /** Canonical segment ID for the subscriptions child node. */
 export const getSubscriptionsId = (): string => Segments.subscriptions;
@@ -49,7 +53,7 @@ export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string
  * The `~` prefix signals attention propagation to the parent node.
  */
 export const getFeedObjectPath = (parentPath: string, childId: string): string =>
-  `${parentPath}/${linkedSegment(childId)}`;
+  `${parentPath}/${Attention.linkedSegment(childId)}`;
 
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>
