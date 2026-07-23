@@ -5,12 +5,15 @@ Author: Claude (session with Rich), 2026-07-23.
 
 Verification note: unit + operation-level integration tests pass
 (`src/model/scene.test.ts`, `src/operations/operations.test.ts` — the latter runs
-the create → edit → read loop through the real Database layer). The live-AI
-storybook renders (chat + tldraw canvas, skill and sketch bound to context), but
-the end-to-end model round-trip could not be exercised from this environment: the
-pre-existing `Chat → Default` story exhibits the same symptom (submitted prompts
-never reach the thread; zero invocation events), so the blocker predates this
-change — run `Sketch → DrawAndUpdateTest` manually once the remote stack works.
+the create → edit → read loop through the real Database layer). **The live loop
+is verified end-to-end** (2026-07-23 05:47–05:51 UTC, remote EDGE +
+claude-opus-4-8): "Draw a smiley face (id face)" produced a yellow head, eyes,
+and smile via `edit-sketch`; the follow-up "Add a hat, do not redraw the face"
+composed a top hat above the _untouched_ face — the mental-model behavior the
+DSL was designed for. Earlier "blocked" observations were a driver artifact:
+prompts submitted before plugin activation completed (or while a response was
+streaming) are silently dropped; `submitPrompt` in the story now retries until
+the message appears in the thread.
 
 A backend-neutral mini-DSL that lets an agent create, edit, and delete diagrams
 in `plugin-sketch`. The agent thinks in terms of _world objects_ ("face",

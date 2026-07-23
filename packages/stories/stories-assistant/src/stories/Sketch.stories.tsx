@@ -57,17 +57,39 @@ const sharedArgs = {
   skills: [AssistantSkill.key, SketchSkill.key],
 };
 
-/** Submit a prompt through the chat's CodeMirror editor. */
+/**
+ * Submit a prompt through the chat's CodeMirror editor. Submission is dropped silently while the
+ * runtime is still activating or a previous response is streaming, so retry until the message
+ * actually shows up in the thread (the editor clearing is NOT proof of submission).
+ */
 const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
   const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 60_000 });
   const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
   if (!editor) {
     throw new Error('Chat editor not found.');
   }
-  await userEvent.click(editor);
-  await userEvent.type(editor, text);
-  await userEvent.keyboard('{Enter}');
+  const needle = text.slice(0, 30);
+  // The prompt editor itself holds the text until it clears; only the rendered thread counts.
+  const submitted = () =>
+    [...canvasElement.querySelectorAll('*')].some(
+      (node) => node.childElementCount === 0 && !node.closest('.cm-editor') && node.textContent?.includes(needle),
+    );
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (!editor.textContent?.includes(needle)) {
+      await userEvent.click(editor);
+      await userEvent.type(editor, text);
+    }
+    await userEvent.keyboard('{Enter}');
+    const deadline = Date.now() + 10_000;
+    while (Date.now() < deadline) {
+      if (submitted()) {
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+  throw new Error('Prompt did not reach the thread.');
 };
 
 /** Count canvas shape records belonging to a world object (`meta.object`), or all managed shapes. */
