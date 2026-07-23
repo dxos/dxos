@@ -28,6 +28,7 @@ positioned model → renderer**.
 | PIC (Kernighan '82) / Pikchr | Named objects addressed after creation; object-relative placement. |
 | SVG | The neutral scene model: primitives + `<g translate/scale>` groups with ids. Our object/element split is a one-level SVG group tree. |
 | D2 (d2lang.com) | One grammar; dialects triggered in-language (`shape: sequence_diagram`, `sql_table`, `class`); layout engines pluggable and decoupled. |
+| D2 Oracle (d2lang.com/tour/api) | Programmatic edit API over the graph: Create / Set / Delete / Rename / Move addressed by **key id**, built for incremental bidirectional IDE edits without recompiling the source. Directly validates our id-addressed edit-command layer; motivated adding `move-object` (Rename deferred). |
 | Mermaid | First token selects a dialect grammar; each dialect owns parser + layout over a shared rendering core. |
 | Kroki | Registry of independent diagram DSLs behind one uniform interface. |
 | Excalidraw `ElementSkeleton` | Flat JSON element list purpose-built for programmatic generation; arrows bind via `start/end: {id}`. |
@@ -125,6 +126,7 @@ meta: { object: 'face', element: 'left-eye', scale: 1, dialect: 'scene' }
 | `upsert-elements` | Add or replace specific elements of an existing object by id. |
 | `remove-elements` | Delete elements by id. |
 | `remove-object` | Delete the object and all its records. |
+| `move-object` | Translate an object to a new origin (records shifted by the delta; elements untouched). D2-Oracle-style Move. |
 
 `SketchOperation.Read` — returns the derived `Scene` (+ `unmanaged` count).
 This is what lets the LLM "remember" the drawing across turns without ever
@@ -192,7 +194,8 @@ Both new operations require `Database.Service` and take a `Ref(Sketch.Sketch)`
 
 - Excalidraw backend compiler.
 - `mermaid` / `d2` / `sequence` / `uml-class` dialects (auto-layout).
-- `transform-object` command (move/scale without resending elements).
+- `rename-object` command (D2 Oracle Rename: rewrite record ids + meta + bindings).
+- Object re-`scale` without resending elements (`move-object` covers translation only).
 - tldraw `group` shapes for world objects (native drag-as-unit).
 - Rotation on objects and elements (elements accept `rotation` where the
   backend supports it; object-level rotation deferred).
@@ -207,3 +210,17 @@ Both new operations require `Database.Service` and take a `Ref(Sketch.Sketch)`
 6. Verify (build/lint/test/format, storybook smoke), then update
    `plugin-sketch/PLUGIN.mdl` to record what was built. PLUGIN.mdl is a record
    of the built system, not a working document.
+
+### Project log
+
+Token counts summed from this session's transcript
+(`~/.claude/projects/…sketch-diagram-dsl-abe69c/*.jsonl`); cache figures are
+prompt-cache traffic, not billed like fresh input.
+
+| | |
+|---|---|
+| Start | 2026-07-23 04:48 UTC |
+| End | in progress (updated at completion) |
+| Output tokens | ~200k (snapshot 05:11 UTC) |
+| Fresh input tokens | ~1k (+1.16M cache-write) |
+| Cache-read tokens | ~18.2M |

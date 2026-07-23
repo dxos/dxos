@@ -33,6 +33,11 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "default": "./dist/lib/hooks.mjs"
     },
+    "#model": {
+      "source": "./src/model/index.ts",
+      "types": "./dist/types/src/model/index.d.ts",
+      "default": "./dist/lib/model.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -47,6 +52,11 @@
       "source": "./src/SketchPlugin.tsx",
       "types": "./dist/types/src/SketchPlugin.d.ts",
       "default": "./dist/lib/SketchPlugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": {
