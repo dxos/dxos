@@ -69,8 +69,12 @@ const useNode = (data: Obj.Any, icon: string): Node.Node =>
     [data, icon],
   );
 
-// Two planks side by side; focus either to move attention (sigil/title take the accent color).
-const DefaultStory = () => {
+type StoryArgs = {
+  /** Render the leaf plank's toolbar as an ancestor breadcrumb trail (narrowed to demonstrate scrolling). */
+  breadcrumbs?: boolean;
+};
+
+const Story = ({ breadcrumbs }: StoryArgs) => {
   const [organization, person] = useMemo(
     () => [Organization.make({ name: random.company.name() }), Person.make({ fullName: random.person.fullName() })],
     [],
@@ -78,6 +82,34 @@ const DefaultStory = () => {
   const organizationNode = useNode(organization, 'ph--building-office--regular');
   const personNode = useNode(person, 'ph--user--regular');
 
+  // Synthetic ancestor chain (structural nodes carry no data); the ECHO object is the leaf.
+  const trail = useMemo<Node.Node[]>(
+    () => [
+      { id: 'root/registry', type: 'test', data: null, properties: { label: 'Plugins', icon: 'ph--squares-four--regular' } },
+      { id: 'root/registry/companies', type: 'test', data: null, properties: { label: 'Companies', icon: 'ph--buildings--regular' } },
+      { id: 'root/registry/companies/west-coast', type: 'test', data: null, properties: { label: 'West Coast Region', icon: 'ph--map-pin--regular' } },
+      organizationNode,
+    ],
+    [organizationNode],
+  );
+
+  // Narrow plank so the trail overflows and the toolbar scrolls horizontally.
+  if (breadcrumbs) {
+    return (
+      <div className='flex h-full gap-3 p-3 bg-deck-surface'>
+        <div className='flex h-full shrink-0' style={{ inlineSize: 320 }}>
+          <Plank
+            node={organizationNode}
+            breadcrumbs={trail}
+            onNavigate={(id) => console.log('navigate', id)}
+            classNames={mx(PLANK_CLASSNAMES, 'grow')}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Two planks side by side; focus either to move attention (sigil/title take the accent color).
   return (
     <div className='flex h-full gap-3 p-3 bg-deck-surface'>
       <Plank node={organizationNode} classNames={PLANK_CLASSNAMES} />
@@ -86,43 +118,9 @@ const DefaultStory = () => {
   );
 };
 
-// A plank whose toolbar renders an ancestor breadcrumb trail; click a crumb to navigate.
-const BreadcrumbsStory = () => {
-  const [organization] = useMemo(() => [Organization.make({ name: random.company.name() })], []);
-  const organizationNode = useNode(organization, 'ph--building-office--regular');
-  const breadcrumbs = useMemo<Node.Node[]>(
-    () => [
-      {
-        id: 'root/registry',
-        type: 'test',
-        data: null,
-        properties: { label: 'Plugins', icon: 'ph--squares-four--regular' },
-      },
-      {
-        id: 'root/registry/companies',
-        type: 'test',
-        data: null,
-        properties: { label: 'Companies', icon: 'ph--buildings--regular' },
-      },
-      organizationNode,
-    ],
-    [organizationNode],
-  );
-
-  return (
-    <div className='flex h-full gap-3 p-3 bg-deck-surface'>
-      <Plank
-        node={organizationNode}
-        breadcrumbs={breadcrumbs}
-        onNavigate={(id) => console.log('navigate', id)}
-        classNames={mx(PLANK_CLASSNAMES, 'is-[40rem]')}
-      />
-    </div>
-  );
-};
-
-const meta: Meta = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-deck/components/Plank',
+  render: (args) => <Story {...args} />,
   decorators: [
     withPluginManager({ plugins: [...corePlugins(), TestPlugin()], capabilities: [TestExtension] }),
     withAttention(),
@@ -134,8 +132,12 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type StoryObject = StoryObj<StoryArgs>;
 
-export const Default: Story = { render: () => <DefaultStory /> };
+export const Default: StoryObject = {
+  args: { breadcrumbs: false },
+};
 
-export const Breadcrumbs: Story = { render: () => <BreadcrumbsStory /> };
+export const Breadcrumbs: StoryObject = {
+  args: { breadcrumbs: true },
+};

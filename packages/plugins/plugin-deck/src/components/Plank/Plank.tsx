@@ -74,14 +74,14 @@ const PlankBreadcrumbs = ({ nodes, attendableId, related, onNavigate }: PlankBre
   const label = (node: Node.Node) => toLocalizedString(node.properties?.label ?? '', t);
   const current = nodes[nodes.length - 1];
   return (
-    <Breadcrumb.Root aria-label={label(current)} classNames='min-w-0 grow overflow-hidden'>
-      <Breadcrumb.List classNames='flex items-center gap-1 min-w-0 grow'>
+    <Breadcrumb.Root aria-label={label(current)} classNames='ps-2'>
+      <Breadcrumb.List classNames='flex items-center gap-1'>
         {nodes.slice(0, -1).map((node) => (
           <Fragment key={node.id}>
-            <Breadcrumb.ListItem classNames='min-w-0'>
+            <Breadcrumb.ListItem asChild>
               <button
                 type='button'
-                className='truncate text-description hover:text-base-fg'
+                className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
                 onClick={() => onNavigate?.(node.id)}
               >
                 {label(node)}
@@ -90,8 +90,8 @@ const PlankBreadcrumbs = ({ nodes, attendableId, related, onNavigate }: PlankBre
             <Breadcrumb.Separator />
           </Fragment>
         ))}
-        <Breadcrumb.ListItem classNames='min-w-0'>
-          <Pane.Title attendableId={attendableId} related={related}>
+        <Breadcrumb.ListItem>
+          <Pane.Title attendableId={attendableId} related={related} classNames='w-auto grow-0'>
             {label(current)}
           </Pane.Title>
         </Breadcrumb.ListItem>
