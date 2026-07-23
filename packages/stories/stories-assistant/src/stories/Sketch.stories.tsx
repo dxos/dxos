@@ -52,17 +52,9 @@ const decorators = createDecorators({
   },
 });
 
-/**
- * Conversational drawing over a live AI stack: the chat (left) drives the sketch canvas (right)
- * through the scene DSL (read/edit operations by object id). Try: "Draw a smiley face", then
- * "Add a hat", then "Make the smile bigger".
- */
-export const Default: Story = {
-  decorators,
-  args: {
-    layout: [[Module.Chat], [Module.Sketch]],
-    skills: [AssistantSkill.key, SketchSkill.key],
-  },
+const sharedArgs = {
+  layout: [[Module.Chat], [Module.Sketch]],
+  skills: [AssistantSkill.key, SketchSkill.key],
 };
 
 /** Submit a prompt through the chat's CodeMirror editor. */
@@ -111,6 +103,43 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
 };
 
 /**
+ * First story on purpose. The prompt below is the implementing agent's own (Claude, 2026-07-23):
+ * how it feels about this project, drawn live with the DSL it built — open the story and watch.
+ */
+export const Reflection: Story = {
+  decorators,
+  args: sharedArgs,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(
+      canvasElement,
+      trim`
+        Draw how I feel about this project. I spent tonight building the drawing language you
+        are using right now, so draw: a long winding path (a dotted curve) from three small
+        labeled boxes — "PIC", "D2", "SVG" — arriving at a small bright machine; above it a
+        face mid-thought with one raised eyebrow and half a smile, because the best moment of
+        the night was realizing the reader has to derive origins from bounding boxes or the
+        model's memory breaks the instant a human drags a shape; and an arrow looping from the
+        machine back to the face labeled "it draws". Warm colors. Compose it from a few world
+        objects and take your time with the layout.
+      `,
+    );
+    // The model chooses its own object ids for a creative prompt; any managed object counts.
+    await waitForObjectRecords(undefined, 3, 300_000);
+  },
+};
+
+/**
+ * Conversational drawing over a live AI stack: the chat (left) drives the sketch canvas (right)
+ * through the scene DSL (read/edit operations by object id). Try: "Draw a smiley face", then
+ * "Add a hat", then "Make the smile bigger".
+ */
+export const Default: Story = {
+  decorators,
+  args: sharedArgs,
+};
+
+/**
  * End-to-end mental-model test: the agent draws a face, then — from its own read of the scene,
  * not the tldraw records — adds a hat WITHOUT redrawing the face. Asserts that the face's shape
  * records survive the second edit (an agent that rebuilt the canvas would replace them).
@@ -119,7 +148,8 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
  * against a reachable EDGE AI service.
  */
 export const DrawAndUpdateTest: Story = {
-  ...Default,
+  decorators,
+  args: sharedArgs,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(canvasElement, 'Draw a simple smiley face as a world object with id "face".');
@@ -134,28 +164,5 @@ export const DrawAndUpdateTest: Story = {
     if (remaining < faceShapes) {
       throw new Error(`face was redrawn: ${remaining} of ${faceShapes} shapes remain`);
     }
-  },
-};
-
-/**
- * The prompt below is the implementing agent's own (Claude, 2026-07-23) — a self-portrait
- * request about building this very feature, drawn with the DSL it describes.
- */
-export const Reflection: Story = {
-  ...Default,
-  tags: ['!test'],
-  play: async ({ canvasElement }) => {
-    await submitPrompt(
-      canvasElement,
-      trim`
-        Draw how it feels to have spent a night building the drawing language you are using
-        right now: a long winding path from prior art (PIC, D2, SVG) arriving at a small bright
-        machine; a face mid-thought — one raised eyebrow, half a smile; and an arrow looping
-        from the machine back to the face labeled "it draws". Compose it from a few world
-        objects and take your time with the layout.
-      `,
-    );
-    // The model chooses its own object ids for a creative prompt; any managed object counts.
-    await waitForObjectRecords(undefined, 3, 300_000);
   },
 };
