@@ -30,15 +30,6 @@ const PluginImportSource = ({
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
 
-  // Each `addWatchFile` below registers a per-file libuv `fs_event` watcher that Vite never
-  // releases on close. Under Vitest the Storybook builder runs in-process where neither
-  // `server.watch` nor an argv run-mode check is reliably set, so those watchers leak and hang
-  // single-pass `vitest run` teardown (the main process never exits). Vitest manages its own file
-  // watching, so skip registration entirely when running under it — `VITEST` is exported to the
-  // whole process tree (workers and child loaders included); interactive `storybook dev` / `vite
-  // dev` have `VITEST` unset and keep HMR.
-  const isVitest = process.env.VITEST === 'true';
-
   // `nocomment: true` keeps Minimatch from treating leading `#` (used for Node
   // subpath imports like `#diagnostics-broadcast`) as a comment pattern that
   // matches nothing.
@@ -105,15 +96,11 @@ const PluginImportSource = ({
             return null;
           }
 
-          // See `isVitest` above: skip watch registration under Vitest to avoid leaking `fs_event`
-          // handles that hang teardown.
-          if (!isVitest) {
-            if (resolved.packageJsonPath) {
-              this.addWatchFile(resolved.packageJsonPath);
-            }
-
-            this.addWatchFile(resolved.path);
+          if (resolved.packageJsonPath) {
+            this.addWatchFile(resolved.packageJsonPath);
           }
+
+          this.addWatchFile(resolved.path);
           verbose && console.log(`[plugin-import-source] ${source} -> ${resolved.path}`);
           return resolved.path;
         } catch (error) {

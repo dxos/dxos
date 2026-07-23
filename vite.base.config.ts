@@ -365,11 +365,6 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   };
 };
 
-// `VITEST` is set in watch mode too and `VITEST_MODE` is worker-only, so read the run subcommand
-// (first positional token, not any `run`-named filter) from argv to detect single-pass mode.
-const VITEST_SUBCOMMAND = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
-const IS_VITEST_RUN = process.env.VITEST === 'true' && (VITEST_SUBCOMMAND === 'run' || process.argv.includes('--run'));
-
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
@@ -393,9 +388,11 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
-    // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it in run
-    // mode only (watch needs it). The story builder's watcher is disabled the same way in `main.ts`.
-    ...(IS_VITEST_RUN ? { server: { watch: null } } : {}),
+    // Vite watches every served module, leaking per-file `fs_event` handles that hang single-pass
+    // teardown; disable the watcher whenever running under Vitest. `VITEST` is exported to the whole
+    // process tree (unlike the run subcommand in argv), so it matches in every worker/loader; the
+    // story builder's watcher is disabled the same way in `main.ts`.
+    ...(process.env.VITEST === 'true' ? { server: { watch: null } } : {}),
     resolve: {
       alias: { ...TIKTOKEN_ALIAS },
     },
