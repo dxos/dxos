@@ -10,6 +10,8 @@ import { type LayoutResult, layout } from './layout';
 const HEIGHT_EPSILON = 0.5;
 
 export type MasonryLayout = LayoutResult & {
+  /** True once every tile has reported a height, so positions are final (not the all-zero stack). */
+  measured: boolean;
   /** Stable ref callback for the tile wrapper of `id` (measures + registers it). */
   getTileRef: (id: string) => (element: HTMLElement | null) => void;
   /** Live map of currently-mounted tile wrappers by id (for FLIP positioning). */
@@ -118,7 +120,10 @@ export const useMasonryLayout = ({
     }
 
     const tileHeights = ids.map((id) => heights.current.get(id) ?? 0);
-    return layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx });
+    // Positions are final only once every tile has contributed a height; before that the
+    // unmeasured tiles all stack at the top, so consumers hide the grid until this is true.
+    const measured = ids.every((id) => heights.current.has(id));
+    return { ...layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx }), measured };
     // `version` re-runs layout when a measured height changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids, columnCount, containerWidth, gapPx, maxColumnWidthPx, version]);

@@ -11,8 +11,10 @@ import React, {
   type MouseEvent,
   type PropsWithChildren,
   type Ref,
+  useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -174,7 +176,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
     const gapPx = gap * remInPx;
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
-    const { rects, columnWidth, height, getTileRef, nodes } = useMasonryLayout({
+    const { rects, columnWidth, height, getTileRef, nodes, measured } = useMasonryLayout({
       ids,
       columnCount,
       containerWidth: contentWidth,
@@ -182,6 +184,15 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       maxColumnWidthPx: maxColumnWidth * remInPx,
     });
     useFlip({ nodes, ids, rects, columnCount, containerWidth: contentWidth, enabled: animate });
+
+    // Hide the grid until the first layout is measured so the initial all-heights-zero stack
+    // (every tile bunched at the top) never flashes; latch on so later edits never re-hide it.
+    const [revealed, setRevealed] = useState(false);
+    useEffect(() => {
+      if (measured) {
+        setRevealed(true);
+      }
+    }, [measured]);
 
     // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
     // arrows move focus through the items as flat next/previous-focusable, giving
@@ -203,7 +214,12 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
           <div
             {...composableProps(props, {
               classNames: 'relative',
-              style: { width: `${contentWidth}px`, height: `${height}px` },
+              style: {
+                width: `${contentWidth}px`,
+                height: `${height}px`,
+                opacity: revealed ? 1 : 0,
+                transition: animate ? 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' : undefined,
+              },
             })}
             {...arrowNavigationAttrs}
             role='list'
