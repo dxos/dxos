@@ -3,8 +3,9 @@ name: dxos-code-style
 description: >-
   DXOS TypeScript authoring conventions. Use when writing or refactoring code —
   namespace-export packages, internal module imports, class member ordering,
-  options-bag types, function overloads, the no-cast rule, the comment rule
-  (say why, once), and test structure.
+  options-bag types, function overloads, the no-cast rule, the
+  no-suppressing-unhandled-errors rule, the comment rule (say why, once), and
+  test structure.
 ---
 
 # DXOS Code Style
@@ -33,6 +34,24 @@ Do NOT cast to silence a build error; fix the type where it originates.
 - Casts accumulate fastest during large codemods — treat each as a deliberate
   decision, never an autopilot stopgap.
 - Use @dxos/util `trim` to create multi-line strings (e.g., prompts).
+
+## Unhandled errors — surface, don't suppress
+
+Unhandled errors and rejections are findings; surface them and fix the root
+cause. Do NOT silence them to make a suite go green.
+
+- **Never set `dangerouslyIgnoreUnhandledErrors: true`** in any vitest config
+  (shared `vite.base.config.ts` or a per-package config). It lets a run exit 0
+  despite unhandled rejections, hiding real failures — including the teardown
+  races it is usually reached for. It has slipped in before; keep it out.
+- A flaky teardown rejection (e.g. vitest worker rpc closing while a console log
+  is pending, browser/birpc close races) is a bug to fix at its source — close
+  the resource, await the pending work, or disable what leaks — not to blanket-
+  ignore. If a specific, understood signature must be tolerated, filter exactly
+  it via `onUnhandledError` (returning `false` only for that case) so every other
+  unhandled error stays fatal; never widen that to all errors.
+- Same rule for a swallowed `unhandledRejection` handler, an empty `.catch()` on
+  real work, and a blanket try/catch that drops the error — handle or rethrow.
 
 ## Comments — say why, once
 

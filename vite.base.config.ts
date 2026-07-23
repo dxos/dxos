@@ -357,17 +357,17 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
     test: {
       ...resolveReporterConfig(dirname),
       tags: TEST_TAGS,
-      // Closing a storybook project's chromium instance (ECHO/WASM-SQLite teardown, many
-      // mounted components) occasionally exceeds vitest's 10s default, logging "close timed
-      // out" and force-exiting — CI sees this as a failed task despite every test passing.
-      // Give it more real time before giving up.
-      teardownTimeout: 30_000,
       projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
     },
   };
 };
+
+// `VITEST` is set in watch mode too and `VITEST_MODE` is worker-only, so read the run subcommand
+// (first positional token, not any `run`-named filter) from argv to detect single-pass mode.
+const VITEST_SUBCOMMAND = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
+const IS_VITEST_RUN = process.env.VITEST === 'true' && (VITEST_SUBCOMMAND === 'run' || process.argv.includes('--run'));
 
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
@@ -392,6 +392,9 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
+    // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it in run
+    // mode only (watch needs it). The story builder's watcher is disabled the same way in `main.ts`.
+    ...(IS_VITEST_RUN ? { server: { watch: null } } : {}),
     resolve: {
       alias: { ...TIKTOKEN_ALIAS },
     },
@@ -807,16 +810,8 @@ const buildTestConfig = (
   return {
     ...resolveReporterConfig(dirname),
     tags: TEST_TAGS,
-    // Suppress flaky vitest worker teardown unhandled rejections (e.g.
-    // `EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was pending` from
-    // node tests, WebSocket birpc errors from the storybook runner) — these surface as
-    // non-zero exits with no actual test failures and turn the entire job red.
-    dangerouslyIgnoreUnhandledErrors: true,
-    // Closing a storybook project's chromium instance (ECHO/WASM-SQLite teardown, many
-    // mounted components) occasionally exceeds vitest's 10s default, logging "close timed
-    // out" and force-exiting — CI sees this as a failed task despite every test passing.
-    // Give it more real time before giving up.
-    teardownTimeout: 30_000,
+    // Never set `dangerouslyIgnoreUnhandledErrors`: suppressing unhandled rejections hides real
+    // teardown failures — surface and fix them at the source. See the `code-style` skill.
     projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
       (project): project is UserWorkspaceConfig => project !== undefined,
     ),
