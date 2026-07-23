@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -52,7 +52,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('automation'),
+              id: Attention.linkedSegment('automation'),
               label: ['automation-companion.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               data: 'automation',

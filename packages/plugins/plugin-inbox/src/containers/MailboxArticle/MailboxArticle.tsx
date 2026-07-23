@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, Panel } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
   Menu,
@@ -234,7 +234,7 @@ export const MailboxArticle = ({
         return;
       }
       // Open the message companion; `MessageArticle` renders the selected message's whole conversation.
-      void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('message') });
+      void showItem({ contextId: id, selectionId: message.id, companion: Attention.linkedSegment('message') });
     },
     [db, id, messages, showItem],
   );
@@ -252,7 +252,7 @@ export const MailboxArticle = ({
           const message = messages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
-          void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('message') });
+          void showItem({ contextId: id, selectionId: message.id, companion: Attention.linkedSegment('message') });
           break;
         }
 
@@ -287,7 +287,7 @@ export const MailboxArticle = ({
               .then((result) => {
                 const topicId = result?.data?.topicId;
                 if (topicId) {
-                  void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
+                  void showItem({ contextId: id, selectionId: topicId, companion: Attention.linkedSegment('topic') });
                 }
               })
               // Surface the failure instead of silently swallowing it (AI timeout / DB error).

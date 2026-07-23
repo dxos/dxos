@@ -2,35 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Atom } from '@effect-atom/atom-react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
-import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
+import { Attention, useManager } from '@dxos/react-ui-attention';
 import { DraftMessage, type Message as MessageType } from '@dxos/types';
 
 import {
   ConversationStack,
   type MessageHeaderProps,
   type MessageOptions,
-  type ViewMode,
   buildExtractActions,
   keyOf,
+  messageViewModeAspect,
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, type Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { orderThreadItems } from '../../util';
 
-/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
-const DEFAULT_VIEW_MODE: ViewMode = 'html';
-
-/** Used when the inbox Settings capability isn't installed, so image-loading state is still readable. */
+/** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
 const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
 
 /**
@@ -63,44 +60,45 @@ export const MessageArticle = ({
   mailbox: mailboxProp,
   testId,
 }: MessageArticleProps) => {
-  const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
+  const toolbarAttendableId =
+    attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
   // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).
   const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
 
+  // Contact extraction targets the conversation's space; any message resolves the same db.
+  const db = Obj.getDatabase(messages[0]);
+
   // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
   // bottom (the connector delivers everything in chronological order).
   const orderedMessages = useMemo(() => orderThreadItems(messages), [messages]);
-
   const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
 
-  // The most recent non-draft message is the one worth reading first; expand it by default and leave
-  // the rest collapsed. Drafts always render their composer, so they are irrelevant to the anchor.
-  const mostRecentId = useMemo(() => {
-    const recent = [...messages].reverse().find((message) => !DraftMessage.instanceOf(message));
-    return recent ? keyOf(recent) : undefined;
-  }, [messages]);
+  // Expanded state.
+  const { expanded, onExpandedChange, onCollapseAll, onExpandAll } = useMessageExpansion({ messages, messageIds });
 
-  // Expanded state is owned here so the thread toolbar's collapse-all/expand-all can fold or unfold
-  // every message. Default: only the most recent message is expanded.
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(mostRecentId ? [mostRecentId] : []));
-  const handleExpandedChange = useCallback((id: string, isExpanded: boolean) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (isExpanded) {
-        next.add(id);
-      } else {
-        next.delete(id);
-      }
-      return next;
-    });
-  }, []);
-  const handleCollapseAll = useCallback(() => setExpanded(new Set()), []);
-  const handleExpandAll = useCallback(() => setExpanded(new Set(messageIds)), [messageIds]);
-
-  // Contact extraction targets the conversation's space; any message resolves the same db.
-  const db = Obj.getDatabase(messages[0]);
+  // Settings + view state.
+  const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
+  const viewState = useManager();
+  const viewModeAtom = useMemo(
+    () => viewState.atom(messageViewModeAspect, toolbarAttendableId ?? 'default'),
+    [viewState, toolbarAttendableId],
+  );
+  const optionsAtom = useMemo(
+    () =>
+      Atom.writable<MessageOptions, MessageOptions>(
+        (get) => ({
+          loadRemoteImages: get(settingsAtom).loadRemoteImages ?? false,
+          viewMode: get(viewModeAtom),
+        }),
+        (ctx, next) => {
+          ctx.set(settingsAtom, { ...ctx.get(settingsAtom), loadRemoteImages: next.loadRemoteImages });
+          viewState.set(messageViewModeAspect, toolbarAttendableId ?? 'default', next.viewMode);
+        },
+      ),
+    [settingsAtom, viewModeAtom, viewState, toolbarAttendableId],
+  );
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only
   // `ConversationStack` — components must not call capability hooks (they throw without a PluginManager).
@@ -112,21 +110,6 @@ export const MessageArticle = ({
     (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
     [extractors, invoker],
   );
-
-  // View options shared across the thread (render mode + image loading). `viewMode` is ephemeral;
-  // `loadRemoteImages` is seeded from and mirrored back to the persisted inbox setting.
-  const settingsAtom = useCapabilities(InboxCapabilities.Settings)[0] ?? FALLBACK_SETTINGS_ATOM;
-  const persistedImages = useAtomValue(settingsAtom).loadRemoteImages ?? false;
-  const setSettings = useAtomSet(settingsAtom);
-  const optionsAtom = useMemo(
-    // Seed once from the persisted setting; subsequent edits flow back via the effect below.
-    () => Atom.make<MessageOptions>({ viewMode: DEFAULT_VIEW_MODE, loadRemoteImages: persistedImages }),
-    [],
-  );
-  const loadRemoteImages = useAtomValue(optionsAtom).loadRemoteImages ?? false;
-  useEffect(() => {
-    setSettings((prev) => ({ ...prev, loadRemoteImages: loadRemoteImages }));
-  }, [loadRemoteImages, setSettings]);
 
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
@@ -194,16 +177,16 @@ export const MessageArticle = ({
       companion={!!companionTo}
       options={optionsAtom}
       expanded={expanded}
-      onExpandedChange={handleExpandedChange}
-      onCollapseAll={handleCollapseAll}
-      onExpandAll={handleExpandAll}
+      graph={graph}
+      runtime={runtime}
+      getExtractActions={getExtractActions}
+      onExpandedChange={onExpandedChange}
+      onCollapseAll={onCollapseAll}
+      onExpandAll={onExpandAll}
       onContactCreate={handleContactCreate}
       onAiReply={mailbox ? handleAiReply : undefined}
       onDelete={mailbox ? handleDelete : undefined}
       onOpen={mailbox ? handleOpen : undefined}
-      graph={graph}
-      getExtractActions={getExtractActions}
-      runtime={runtime}
     >
       <Panel.Root role={role} data-testid={testId}>
         <Panel.Toolbar asChild>
@@ -218,3 +201,33 @@ export const MessageArticle = ({
 };
 
 MessageArticle.displayName = 'MessageArticle';
+
+type UseMessageExpansionProps = {
+  messages: MessageType.Message[];
+  messageIds: readonly string[];
+};
+
+// Expanded state lives here so the thread toolbar's collapse-all/expand-all can fold or unfold every message.
+const useMessageExpansion = ({ messages, messageIds }: UseMessageExpansionProps) => {
+  const mostRecentId = useMemo(() => {
+    const recent = [...messages].reverse().find((message) => !DraftMessage.instanceOf(message));
+    return recent ? keyOf(recent) : undefined;
+  }, [messages]);
+
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(mostRecentId ? [mostRecentId] : []));
+  const onExpandedChange = useCallback((id: string, isExpanded: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (isExpanded) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+  const onCollapseAll = useCallback(() => setExpanded(new Set()), []);
+  const onExpandAll = useCallback(() => setExpanded(new Set(messageIds)), [messageIds]);
+
+  return { expanded, onExpandedChange, onCollapseAll, onExpandAll };
+};

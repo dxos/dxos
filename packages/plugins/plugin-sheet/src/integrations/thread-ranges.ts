@@ -11,7 +11,7 @@ import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { CommentOperation } from '@dxos/plugin-comments/types';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { useSheetContext } from '#components';
@@ -60,7 +60,7 @@ export const useSelectThreadOnCellFocus = () => {
         void (async () => {
           await invokePromise(CommentOperation.Select, { current: Relation.getURI(closestThread) });
           await invokePromise(LayoutOperation.UpdateCompanion, {
-            subject: linkedSegment('comments'),
+            subject: Attention.linkedSegment('comments'),
           });
         })();
       }

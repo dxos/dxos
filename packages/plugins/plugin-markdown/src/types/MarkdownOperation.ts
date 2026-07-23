@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
-import { EditorViewMode } from '@dxos/ui-editor/types';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -99,17 +98,6 @@ export const ScrollToAnchor = Operation.make({
     subject: Schema.String.annotations({ description: 'Attendable ID of the markdown editor.' }),
     cursor: Schema.String.annotations({ description: 'Cursor position to scroll to.' }),
     id: Schema.optional(Schema.String.annotations({ description: 'Reference ID (e.g. thread ID).' })),
-  }),
-  output: Schema.Void,
-});
-
-// TODO(wittjosiah): This appears to be unused.
-export const SetViewMode = Operation.make({
-  meta: { key: makeKey('setViewMode'), name: 'Set View Mode', icon: 'ph--layout--regular' },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    id: Schema.String,
-    viewMode: EditorViewMode,
   }),
   output: Schema.Void,
 });

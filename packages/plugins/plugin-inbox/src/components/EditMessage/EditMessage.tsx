@@ -204,7 +204,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
     const showHeader = title != null || !!onDelete;
 
-    const labelStyles = 'shrink-0 ps-1 pe-2 text-description';
+    const labelStyles = 'shrink-0 ps-2 pe-2 text-description text-sm';
 
     return (
       <ScrollArea.Root className='dx-container'>

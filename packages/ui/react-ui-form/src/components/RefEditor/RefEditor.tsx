@@ -205,7 +205,17 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
     const extensions = useMemo<Extension[]>(
       () => [
         createBasicExtensions({ readOnly: readonly, lineWrapping: false }),
-        createThemeExtensions({ themeMode, slots: { scroller: { className: 'scrollbar-none' } } }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            editor: {
+              className: 'w-full',
+            },
+            scroller: {
+              className: 'scrollbar-none',
+            },
+          },
+        }),
         refEditor({ mode, match, getRef: (id) => refsRef.current.get(id) }),
         Prec.highest(
           keymap.of([

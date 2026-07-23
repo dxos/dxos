@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -175,7 +175,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('comments'),
+              id: Attention.linkedSegment('comments'),
               label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: contentDoc,

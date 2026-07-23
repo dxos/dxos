@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
-import { type Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention';
 import { type MessageMetadata } from '@dxos/react-ui-thread';
 import { hexToFallback, toFallback } from '@dxos/util';
 
@@ -78,7 +78,7 @@ export const getMessageMetadata = (
 /**
  * Derive the anchor string for a selection.
  */
-export const getAnchor = Match.type<Selection | undefined>().pipe(
+export const getAnchor = Match.type<Selection.Selection | undefined>().pipe(
   Match.when({ mode: 'single' }, (selection) => selection.id),
   Match.when({ mode: 'multi' }, (selection) => (selection.ids.length > 0 ? selection.ids.join(',') : undefined)),
   Match.when({ mode: 'range' }, (selection) =>

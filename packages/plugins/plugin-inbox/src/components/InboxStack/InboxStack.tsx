@@ -218,8 +218,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
           selectedIds={effectiveSelectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root padding centered thin>
-            <ScrollArea.Viewport ref={setViewport}>
+          <ScrollArea.Root padding centered>
+            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
                 items={tileItems}

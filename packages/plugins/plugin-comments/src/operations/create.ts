@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentCapabilities } from '../types';
@@ -55,7 +55,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
 
       yield* Operation.invoke(CommentOperation.Select, { current: Obj.getURI(thread) });
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
-        subject: linkedSegment('comments'),
+        subject: Attention.linkedSegment('comments'),
       });
     }),
   ),

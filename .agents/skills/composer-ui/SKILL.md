@@ -210,6 +210,37 @@ read fields not surfaced on `Snapshot<T>`). For _collections_ of objects use the
 rather than holding a plain array. (Pure presentational components that just receive scalar props don't
 need any of this — keep `useObject` at the container boundary where the ECHO object enters.)
 
+## State management
+
+Two state stores — don't conflate them (full detail:
+`packages/ui/react-ui-attention/AUDIT.md`):
+
+- **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
+  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
+- **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
+  view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
+  `define({ key, backend, schema, defaultValue })`; the `backend` sets durability —
+  `'local'` persists across reloads (best-effort; degrades to memory when storage is blocked),
+  `'memory'` is session-only. Read/write via `useViewState` / `useViewStateActions` (React), or
+  `Capability.get(AttentionCapabilities.ViewState)` (operations / graph-builders). Idiom
+  `org.dxos.react-ui-attention.viewState`.
+
+The tell: _configure-once-and-forget_ → Settings; _tracks-what-you're-currently-doing_ → ViewState.
+Keep at most **one Settings object and one ViewState object per aspect** per plugin — widen an
+existing schema, don't add a parallel store.
+
+Passing state into low-level components (which must not resolve capabilities): prefer a **writable
+atom** over a `value` + `onChange` pair — simpler, and it needs no provider ancestor, so the component
+stays generic. **Caveat:** a ViewState `local` atom does _not_ self-persist on a direct set —
+persistence lives in `manager.set`. To hand ViewState down as one atom (e.g. combined with a settings
+field), use a writable derived atom whose write calls `manager.set` (see `MessageArticle`'s
+`optionsAtom`).
+
+Consider factoring each state concern into a small **file-local hook** (e.g., `useMessageExpansion`,
+`useThreadViewActions`) so the container body reads as a sequence
+of named concerns instead of an inline wall.
+
 ## Forms
 
 Never hand-roll native `<input>` / `<textarea>` / `<select>` in a plugin — they don't inherit the theme

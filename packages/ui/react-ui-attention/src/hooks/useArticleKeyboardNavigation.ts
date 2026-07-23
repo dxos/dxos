@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 
 import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
 
-import { useAttention } from './components';
+import { useAttention } from '../components';
 
 /**
  * Compute the id to select after pressing 'j' (delta = 1) or 'k' (delta = -1).
