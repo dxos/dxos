@@ -51,6 +51,7 @@ export default Capability.makeModule(
           showComments,
         });
       },
+      // TODO(burdon): Factor out?
       ({ document: doc }) => {
         if (!doc) {
           return [];

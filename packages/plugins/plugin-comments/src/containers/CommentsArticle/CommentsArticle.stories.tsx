@@ -359,3 +359,16 @@ export const WithAgentSuggestions: Story = {
     seedAgentSuggestions: true,
   },
 };
+
+/**
+ * Comments AND suggestions over the same document — the app condition for the comment-click bug.
+ * Use it to check whether clicking a comment is still detected (watch for the `comment selected` log)
+ * when the suggestion overlay is layered over the text; if detection works in `WithComments` but not
+ * here, the suggestion overlay is intercepting the click.
+ */
+export const WithCommentsAndSuggestions: Story = {
+  args: {
+    seedComments: true,
+    seedAgentSuggestions: true,
+  },
+};

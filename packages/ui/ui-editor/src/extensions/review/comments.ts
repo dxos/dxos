@@ -383,7 +383,6 @@ const handleCommentClick = EditorView.domEventHandlers({
   click: (event, view) => {
     let target = event.target as HTMLElement;
     const editorRoot = view.dom;
-    console.log(editorRoot, target);
 
     // Traverse up the DOM tree looking for an element with data-comment-id
     // Stop if we reach the editor root or find the comment id.
@@ -395,7 +394,6 @@ const handleCommentClick = EditorView.domEventHandlers({
     if (target && target !== editorRoot) {
       const commentId = target.getAttribute('data-comment-id');
       if (commentId) {
-        console.log(111);
         view.dispatch({ effects: commentClickedEffect.of(commentId) });
         return true;
       }

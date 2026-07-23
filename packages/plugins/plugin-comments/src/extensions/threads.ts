@@ -79,6 +79,7 @@ export const threads = (
   const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
 
+  // TODO(burdon): Externalize ECHO?
   // Get current anchors by combining query results with store drafts, scoped to the review branch so
   // inline marks show only the comments for the branch currently in view (undefined tag = main).
   const getAnchors = () =>
@@ -135,6 +136,10 @@ export const threads = (
             cursor: anchor.anchor,
           })),
       subscribe: (sink) => {
+        // Prime the initial decoration pass: the `comments()` ViewPlugin only calls `getComments` when
+        // the sink fires, and ECHO's `query.subscribe` does not emit for the already-resolved current
+        // value — so without an immediate `sink()` a query that resolved before mount never renders.
+        sink();
         // Subscribe to both query changes and store state changes.
         const unsubQuery = query.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);

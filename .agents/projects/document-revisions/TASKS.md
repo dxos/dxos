@@ -1,6 +1,6 @@
 # Document Revisions & Branches — Tasks
 
-_Resume: PR #12315 OPEN for eval. Morning: run [`TEST-PLAN.md`](TEST-PLAN.md) (storybooks + app script), then DECIDE the §0 open design issue (view-mode↔review-mode coupling: Preview/Read-only map to `viewing` which hides suggestions — the reported "edit disappears" is this; not data loss). Uncommitted: none._
+_Resume: PR #12315 OPEN for eval. Comment-render regression FIXED (see below). Morning: run [`TEST-PLAN.md`](TEST-PLAN.md) (storybooks + app script), then DECIDE the §0 open design issue (view-mode↔review-mode coupling: Preview/Read-only map to `viewing` which hides suggestions — the reported "edit disappears" is this; not data loss). Uncommitted: none._
 
 Design: [`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md).
 Test plan + follow-along script: [`TEST-PLAN.md`](TEST-PLAN.md).
@@ -15,6 +15,18 @@ hiding all suggestions (incl. the user's own in-progress one). The edit stays on
 `viewAspect` mode is in-memory so reload resets to `editing` and it reappears. Options in TEST-PLAN §0
 (decouple render from posture / viewing-shows-suggestions-readonly / keep-as-is). **Not changed overnight
 — user decides.**
+
+## FIXED (2026-07-23) — comments not rendering in the editor ("clicking a comment doesn't work")
+
+User: clicking a comment in the doc did nothing (`CommentsArticle → WithComments`). **Diagnosed via
+storybook DOM/console instrumentation:** the companion listed all threads but the editor rendered ZERO
+`.cm-comment` marks — so there was nothing to click. Root cause: `threads.ts` `subscribe` never primed
+the initial decoration pass. The `comments()` ViewPlugin (ui-editor) only calls `getComments` when the
+sink fires, and ECHO's `query.subscribe` does not emit for the already-resolved current value — so when
+the seed (or a real doc) resolved BEFORE mount, `getComments` was never called and no marks rendered.
+**Fix:** call `sink()` once immediately in `threads.ts` `subscribe` (matches the isolated
+`react-ui-editor/Comments` story's pattern). Verified in-browser: 3 marks / 3 `data-comment-id` / 3
+highlight rects render; `plugin-comments:test` 21✓, `ui-editor:test` 305✓.
 
 ## Tracked follow-ups
 
