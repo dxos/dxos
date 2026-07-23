@@ -9,3 +9,4 @@ export * as AppNodeMatcher from './AppNodeMatcher';
  * going forward. Remove once there are no more consumers. Remaining consumers: Calendar, Chat, Channel.
  */
 export * as TypeSection from './TypeSection';
+export { createWorkspaceAnchorExtension } from './WorkspaceAnchor';

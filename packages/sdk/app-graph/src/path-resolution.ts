@@ -62,8 +62,9 @@ const COMPANION_KEY = 'companion';
 const TAIL_SEPARATOR = '+';
 
 /** Reserved words that can never be registered as a `urlKey`, duplicated from `UrlPath.isReservedKey`
- * (rather than imported) to keep app-graph free of an app-toolkit dependency. */
-const RESERVED_URL_KEYS = new Set(['w', 'reset', 'redirect', 'not-found', COMPANION_KEY]);
+ * (rather than imported) to keep app-graph free of an app-toolkit dependency. The workspace key (`w`) is
+ * NOT reserved — it is a declared `kind: 'anchor'` binding (see the workspace-anchor extension). */
+const RESERVED_URL_KEYS = new Set(['reset', 'redirect', 'not-found', COMPANION_KEY]);
 
 const isReservedUrlKey = (key: string): boolean =>
   RESERVED_URL_KEYS.has(key) || SpaceId.isValid(key) || EntityId.isValid(key);
@@ -83,7 +84,7 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): GraphBuilder.Bu
 
   const keyed: GraphBuilder.BuilderExtension[] = [];
   for (const extension of extensions) {
-    const key = extension.urlKey;
+    const key = extension.url?.key;
     if (!key) {
       continue;
     }
@@ -106,7 +107,7 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): GraphBuilder.Bu
 const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string[]> => {
   const table = new Map<string, string[]>();
   for (const extension of getKeyedExtensions(builder)) {
-    const key = extension.urlKey!;
+    const key = extension.url!.key;
     const existing = table.get(key);
     if (existing) {
       existing.push(extension.id);
@@ -122,7 +123,7 @@ const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string[]
  * structural type here (rather than importing `UrlPath.KeyTableEntry`) because app-graph must not
  * depend on app-toolkit.
  */
-export type UrlKeyTableEntry = { key: string; hasId: boolean };
+export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
 
 /**
  * Build the `urlKey -> { key, hasId }` table consumed by `UrlPath.parse`, straight from the
@@ -134,21 +135,31 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   const table = new Map<string, UrlKeyTableEntry>();
   // The companion key is not registered by any extension; seed it so `UrlPath.parse` tokenizes
   // `companion/<variant>` as an id-bearing pair. Resolution attaches it to the preceding plank.
-  table.set(COMPANION_KEY, { key: COMPANION_KEY, hasId: true });
+  table.set(COMPANION_KEY, { key: COMPANION_KEY, hasId: true, anchor: false });
   for (const extension of getKeyedExtensions(builder)) {
-    const key = extension.urlKey!;
-    const hasId = extension.urlKeyHasId ?? true;
+    const key = extension.url!.key;
+    const kind = extension.url!.kind;
+    // The tokenizer's flat lookup is derived from `kind`: a singleton has no id; an anchor rebases.
+    const hasId = kind !== 'singleton';
+    const anchor = kind === 'anchor';
     const existing = table.get(key);
     if (existing && existing.hasId !== hasId) {
-      // Extensions that share a key must agree on whether it carries an id — the parse table has one
-      // entry per key. A mismatch is a declaration bug; keep the first and warn.
-      log.warn('conflicting urlKeyHasId for shared URL prefix key', { key, extension: extension.id });
+      // Extensions that share a key must agree on their kind — the parse table has one entry per key.
+      // A mismatch is a declaration bug; keep the first and warn.
+      log.warn('conflicting kind for shared URL prefix key', { key, extension: extension.id });
       continue;
     }
-    table.set(key, { key, hasId });
+    table.set(key, { key, hasId, anchor });
   }
   return table;
 };
+
+/**
+ * The single declared workspace-anchor key (`kind: 'anchor'`, conventionally `w`), used by serializers
+ * to emit the leading workspace pair. Returns undefined if no anchor extension is registered.
+ */
+export const getAnchorKey = (builder: GraphBuilder.GraphBuilder): string | undefined =>
+  getKeyedExtensions(builder).find((extension) => extension.url?.kind === 'anchor')?.url?.key;
 
 /**
  * Expand every ancestor prefix of a qualified node id (including the id itself), then flush once.
@@ -163,8 +174,8 @@ const expandAncestors = async (builder: GraphBuilder.GraphBuilder, qualifiedId: 
   await GraphBuilder.flush(builder);
 };
 
-/** An extension registered for a URL key: its static path template and/or dynamic resolver. */
-type KeyedExtension = { id: string; urlPath?: string[]; resolve?: GraphBuilder.PathResolver };
+/** An extension registered for a URL key: its path (static segments or a dynamic resolver). */
+type KeyedExtension = { id: string; path: string[] | GraphBuilder.PathResolver };
 
 /**
  * Materialize a candidate qualified node id and confirm it exists: expand its ancestors, then check
@@ -180,13 +191,13 @@ const materializeCandidate = async (
 
 /**
  * Resolve a single `(key, id)` pair to a qualified node id, anchored at the workspace base. Resolution
- * is fully explicit — no search:
- *   1. A declared static `urlPath` (the preferred, deterministic case): the id is the `+`-joined node
- *      segments *after* `urlPath`, so a fixed-depth nested shape (e.g. `db/<slug>+<id>`) resolves with
+ * is fully explicit — no search. Each keyed extension's `path` is one of:
+ *   1. Static segments (`string[]`, the preferred deterministic case): the id is the `+`-joined node
+ *      segments *after* the path, so a fixed-depth nested shape (e.g. `db/<slug>+<id>`) resolves with
  *      no resolver — split the id back into segments and expand the exact path.
- *   2. A declared dynamic `resolve` Effect (recursive/mutable shapes, i.e. nested collections), whose
- *      candidate is materialized and verified the same way.
- * A key with neither yields `null` (the caller routes that to a not-found page).
+ *   2. A dynamic {@link GraphBuilder.PathResolver} (recursive/mutable shapes, i.e. nested collections),
+ *      whose candidate is materialized and verified the same way.
+ * Static paths are tried before resolvers; an unmatched pair yields `null` (routed to a not-found page).
  */
 const resolveKeyId = async (
   builder: GraphBuilder.GraphBuilder,
@@ -195,13 +206,13 @@ const resolveKeyId = async (
   extensions: ReadonlyArray<KeyedExtension>,
   id: string,
 ): Promise<string | null> => {
-  // 1. Static template: an exact candidate, no search (type sections, database/inbox objects, etc.).
+  // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
   const idSegments = id.split(TAIL_SEPARATOR);
   for (const extension of extensions) {
-    if (extension.urlPath !== undefined) {
+    if (Array.isArray(extension.path)) {
       const resolved = await materializeCandidate(
         builder,
-        [workspaceBaseId, ...extension.urlPath, ...idSegments].join('/'),
+        [workspaceBaseId, ...extension.path, ...idSegments].join('/'),
       );
       if (resolved) {
         return resolved;
@@ -212,9 +223,9 @@ const resolveKeyId = async (
   // 2. Dynamic resolver: the extension computes the candidate id from runtime data (self-contained
   // Effect; a defect degrades to no candidate rather than crashing resolution).
   for (const extension of extensions) {
-    if (extension.resolve) {
+    if (typeof extension.path === 'function') {
       const candidateId = await EffectEx.runPromise(
-        extension.resolve({ id, workspace, workspaceBaseId }).pipe(Effect.catchAllDefect(() => Effect.succeed(null))),
+        extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchAllDefect(() => Effect.succeed(null))),
       );
       if (candidateId) {
         const resolved = await materializeCandidate(builder, candidateId);
@@ -283,12 +294,14 @@ const resolveUrlAsync = async (
 
     const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
     const allExtensions = builder.getExtensions();
-    const extensions: KeyedExtension[] = extensionIdList.map((extensionId) => ({
-      id: extensionId,
-      urlPath: allExtensions[extensionId]?.urlPath,
-      resolve: allExtensions[extensionId]?.resolve,
-    }));
-    // A normal key addresses a node by id; an id-less non-companion key (`urlKeyHasId: false`, e.g.
+    const extensions: KeyedExtension[] = [];
+    for (const extensionId of extensionIdList) {
+      const path = allExtensions[extensionId]?.url?.path;
+      if (path !== undefined) {
+        extensions.push({ id: extensionId, path });
+      }
+    }
+    // A normal key addresses a node by id; an id-less non-companion key (`hasId: false`, e.g.
     // `home`) addresses a fixed node whose terminal segment IS the key — resolve it the same way with
     // the key standing in for the id (`root/<ws>/<...urlPath>/<key>`).
     const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.workspace, extensions, pair.id ?? pair.key);
@@ -341,25 +354,24 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
   if (!extensionId) {
     return Option.none();
   }
-  const extension = builder.getExtensions()[extensionId];
-  const key = extension?.urlKey;
-  if (!key) {
+  const url = builder.getExtensions()[extensionId]?.url;
+  const key = url?.key;
+  if (!url || !key) {
     return Option.none();
   }
 
-  // Id-less fixed node (`urlKeyHasId: false`, e.g. `home`): the key is the terminal segment, no id.
-  if (extension?.urlKeyHasId === false) {
+  // Singleton (id-less, e.g. `home`): the key is the terminal segment, no id.
+  if (url.kind === 'singleton') {
     return Option.some({ key, workspace });
   }
 
   // A resolver-backed key keeps the URL minimal — just the object id — because its ancestry is
-  // reconstructed at resolve time (nested collections, whose objects move). Every other key encodes the
-  // node segments *between* its `urlPath` and the id, `+`-joined, so a fixed-depth shape round-trips
-  // without a resolver (the inverse of `resolveKeyId`'s `id.split(TAIL_SEPARATOR)`).
-  if (extension?.resolve) {
+  // reconstructed at resolve time (nested collections, whose objects move). A static-path key encodes the
+  // node segments *between* its path and the id, `+`-joined, so a fixed-depth shape round-trips without a
+  // resolver (the inverse of `resolveKeyId`'s `id.split(TAIL_SEPARATOR)`).
+  if (typeof url.path === 'function') {
     return Option.some({ key, id: lastSegment, workspace });
   }
-  const urlPath = extension?.urlPath ?? [];
-  const id = segments.slice(2 + urlPath.length).join(TAIL_SEPARATOR);
+  const id = segments.slice(2 + url.path.length).join(TAIL_SEPARATOR);
   return Option.some({ key, id, workspace });
 };

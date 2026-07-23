@@ -48,9 +48,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
     id: 'settingsGeneral',
     // The space's general settings panel — "space settings" — addressed id-less as `settings`; the node
     // segment matches the key (`root/<space>/settings/settings`).
-    urlKey: 'settings',
-    urlKeyHasId: false,
-    urlPath: [SETTINGS_SECTION_ID],
+    url: { key: 'settings', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) =>
       Effect.succeed([
@@ -73,9 +71,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
   const membersExtension = yield* GraphBuilder.createExtension({
     id: 'settingsMembers',
     // Fixed panel at `root/<space>/settings/members` (non-personal spaces only); id-less.
-    urlKey: 'members',
-    urlKeyHasId: false,
-    urlPath: [SETTINGS_SECTION_ID],
+    url: { key: 'members', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) =>
       Effect.succeed(

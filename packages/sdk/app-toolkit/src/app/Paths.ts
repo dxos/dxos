@@ -14,6 +14,13 @@ import { DXN, EID, type URI } from '@dxos/keys';
 import * as UrlPath from './UrlPath';
 
 /**
+ * The URL prefix key for the workspace tier (`/w/<workspace>/…`). The canonical declaration: the
+ * workspace-anchor graph extension declares its `url.key` from this, and serializers fall back to it
+ * when no anchor extension is registered (see `PathResolution.getAnchorKey`).
+ */
+export const WORKSPACE_URL_KEY = 'w';
+
+/**
  * Prefix for pinned (non-space) workspace IDs in the graph.
  */
 const PINNED_WORKSPACE_PREFIX = '!';
@@ -189,7 +196,13 @@ export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Op
  */
 export const getShareableLinkPath = (builder: GraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> =>
   Option.map(PathResolution.representNode(builder, nodeId), (represented) =>
-    UrlPath.format({ workspace: represented.workspace, pairs: [represented] }),
+    UrlPath.format({
+      workspace: represented.workspace,
+      // The declared workspace-anchor key; falls back to the canonical constant when no anchor extension
+      // is registered (e.g. a bare builder in a test).
+      workspaceKey: PathResolution.getAnchorKey(builder) ?? WORKSPACE_URL_KEY,
+      pairs: [represented],
+    }),
   );
 
 /**

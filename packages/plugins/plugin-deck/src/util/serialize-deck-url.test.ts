@@ -19,13 +19,19 @@ const rep = (key: string, id: string, workspace = WORKSPACE_A): PathResolution.R
 
 describe('serializeDeckToUrl', () => {
   test('serializes an empty deck to a workspace-only path', ({ expect }) => {
-    const path = serializeDeckToUrl({ workspace: WORKSPACE_A, active: [], representations: new Map() });
+    const path = serializeDeckToUrl({
+      workspace: WORKSPACE_A,
+      workspaceKey: 'w',
+      active: [],
+      representations: new Map(),
+    });
     expect(path).toBe(`/w/${WORKSPACE_A}`);
   });
 
   test('serializes a single plank', ({ expect }) => {
     const path = serializeDeckToUrl({
       workspace: WORKSPACE_A,
+      workspaceKey: 'w',
       active: ['docA'],
       representations: new Map([['docA', rep('doc', 'A')]]),
     });
@@ -35,6 +41,7 @@ describe('serializeDeckToUrl', () => {
   test('serializes a multi-plank deck in order', ({ expect }) => {
     const path = serializeDeckToUrl({
       workspace: WORKSPACE_A,
+      workspaceKey: 'w',
       active: ['docA', 'sheetB'],
       representations: new Map([
         ['docA', rep('doc', 'A')],
@@ -44,9 +51,10 @@ describe('serializeDeckToUrl', () => {
     expect(path).toBe(`/w/${WORKSPACE_A}/doc/A/sheet/B`);
   });
 
-  test('emits a mid-chain w pair when a plank is from another workspace', ({ expect }) => {
+  test('emits a mid-chain anchor pair when a plank is from another workspace', ({ expect }) => {
     const path = serializeDeckToUrl({
       workspace: WORKSPACE_A,
+      workspaceKey: 'w',
       active: ['docA', 'taskB'],
       representations: new Map([
         ['docA', rep('doc', 'A')],
@@ -59,6 +67,7 @@ describe('serializeDeckToUrl', () => {
   test('appends the attended plank companion pair', ({ expect }) => {
     const path = serializeDeckToUrl({
       workspace: WORKSPACE_A,
+      workspaceKey: 'w',
       active: ['docA', 'sheetB'],
       representations: new Map([
         ['docA', rep('doc', 'A')],
@@ -72,6 +81,7 @@ describe('serializeDeckToUrl', () => {
   test('skips a plank with no representation and warns', ({ expect }) => {
     const path = serializeDeckToUrl({
       workspace: WORKSPACE_A,
+      workspaceKey: 'w',
       active: ['docA', 'not-found'],
       representations: new Map([['docA', rep('doc', 'A')]]),
     });

@@ -25,11 +25,13 @@ export type CompanionRepresentation = {
  */
 export const serializeDeckToUrl = (params: {
   workspace: string;
+  /** The declared workspace-anchor key (conventionally `w`); see `PathResolution.getAnchorKey`. */
+  workspaceKey: string;
   active: readonly string[];
   representations: Representations;
   companion?: CompanionRepresentation;
 }): string => {
-  const { workspace, active, representations, companion } = params;
+  const { workspace, workspaceKey, active, representations, companion } = params;
 
   const pairs: UrlPath.Pair[] = [];
   for (const id of active) {
@@ -45,5 +47,5 @@ export const serializeDeckToUrl = (params: {
     }
   }
 
-  return UrlPath.format({ workspace, pairs });
+  return UrlPath.format({ workspace, workspaceKey, pairs });
 };

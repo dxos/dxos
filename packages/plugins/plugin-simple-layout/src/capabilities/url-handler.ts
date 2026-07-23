@@ -151,7 +151,8 @@ export default Capability.makeModule(
         }
       }
 
-      const path = UrlPath.format({ workspace, pairs });
+      const workspaceKey = PathResolution.getAnchorKey(builder) ?? Paths.WORKSPACE_URL_KEY;
+      const path = UrlPath.format({ workspace, workspaceKey, pairs });
       const newUrl = `${path}${window.location.search}`;
       if (`${window.location.pathname}${window.location.search}` !== newUrl) {
         if (method === 'replace') {

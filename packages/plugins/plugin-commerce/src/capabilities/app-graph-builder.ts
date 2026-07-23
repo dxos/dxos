@@ -25,8 +25,7 @@ export default Capability.makeModule(
         // The `providers` branch (`root/<space>/providers`) and its Provider children are direct
         // descendants of the space base, so no static ancestor segments — the `providers` segment and
         // any provider id are encoded into the pair id (`commerce/providers`, `commerce/providers+<id>`).
-        urlKey: 'commerce',
-        urlPath: [],
+        url: { key: 'commerce', kind: 'item', path: [] },
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const providers = get(space.db.query(Filter.type(Provider.Provider)).atom);

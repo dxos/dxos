@@ -291,7 +291,8 @@ export default Capability.makeModule(
         }
       }
 
-      const path = serializeDeckToUrl({ workspace, active: deck.active, representations, companion });
+      const workspaceKey = PathResolution.getAnchorKey(builder) ?? Paths.WORKSPACE_URL_KEY;
+      const path = serializeDeckToUrl({ workspace, workspaceKey, active: deck.active, representations, companion });
       const newUrl = `${path}${window.location.search}`;
 
       // Update only when the derived URL actually differs from the current one — the deck state atom

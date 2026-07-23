@@ -77,8 +77,7 @@ export const createFilesystemEntryExtensions = (
   return Effect.all([
     GraphBuilder.createExtension({
       id: 'workspaceEntries',
-      urlKey: 'file',
-      resolve,
+      url: { key: 'file', kind: 'item', path: resolve },
       match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -102,8 +101,7 @@ export const createFilesystemEntryExtensions = (
 
     GraphBuilder.createExtension({
       id: 'directoryEntries',
-      urlKey: 'file',
-      resolve,
+      url: { key: 'file', kind: 'item', path: resolve },
       match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);

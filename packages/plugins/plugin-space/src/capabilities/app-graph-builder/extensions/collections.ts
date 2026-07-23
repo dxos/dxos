@@ -100,12 +100,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // nested-collection `objects` connector below so an object is addressed the same way wherever it
     // sits in the collection tree (the key names the *collection subgraph*, not the container's type;
     // the database subgraph addresses the same object under `db`). Its shape is fixed
-    // (`root/<space>/content/collections/<id>`), so it declares a static `urlPath` for deterministic
+    // (`root/<space>/content/collections/<id>`), so it declares a static `path` for deterministic
     // forward resolution; the recursive `objects` connector below resolves dynamically instead.
     GraphBuilder.createExtension({
       id: 'collections',
-      urlKey: 'object',
-      urlPath: [Paths.GroupSegments.content, Paths.Segments.collections],
+      url: { key: 'object', kind: 'item', path: [Paths.GroupSegments.content, Paths.Segments.collections] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -156,36 +155,39 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       id: 'objects',
       // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
       // through a space's collection tree, not just the root collection's direct children. The shape is
-      // data-dependent (the object's collection ancestry), so instead of a static `urlPath` it resolves
+      // data-dependent (the object's collection ancestry), so instead of a static `path` it resolves
       // dynamically: walk incoming `Collection.objects` refs up to the space root collection.
-      urlKey: 'object',
-      resolve: ({ id, workspace }) =>
-        Effect.gen(function* () {
-          if (!SpaceId.isValid(workspace)) {
-            return null;
-          }
-          // Look the Client up lazily (at resolve time) rather than at graph-setup time — it is not yet
-          // available when the AppGraphBuilder activates, and forward resolution only runs much later.
-          const client = capabilities.get(ClientCapabilities.Client);
-          const space = client.spaces.get(workspace);
-          if (!space) {
-            return null;
-          }
-          const rootRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
-            Option.getOrUndefined,
-          );
-          if (!rootRef) {
-            return null;
-          }
-          const rootCollection = yield* Database.load(rootRef).pipe(Effect.orElseSucceed(() => undefined));
-          if (!rootCollection) {
-            return null;
-          }
-          const chain = yield* Effect.promise(() =>
-            walkCollectionChainToRoot({ space, objectId: id, rootId: rootCollection.id }),
-          );
-          return chain ? Paths.getCollectionsPath(workspace, ...chain, id) : null;
-        }),
+      url: {
+        key: 'object',
+        kind: 'item',
+        path: ({ id, workspace }) =>
+          Effect.gen(function* () {
+            if (!SpaceId.isValid(workspace)) {
+              return null;
+            }
+            // Look the Client up lazily (at resolve time) rather than at graph-setup time — it is not yet
+            // available when the AppGraphBuilder activates, and forward resolution only runs much later.
+            const client = capabilities.get(ClientCapabilities.Client);
+            const space = client.spaces.get(workspace);
+            if (!space) {
+              return null;
+            }
+            const rootRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+              Option.getOrUndefined,
+            );
+            if (!rootRef) {
+              return null;
+            }
+            const rootCollection = yield* Database.load(rootRef).pipe(Effect.orElseSucceed(() => undefined));
+            if (!rootCollection) {
+              return null;
+            }
+            const chain = yield* Effect.promise(() =>
+              walkCollectionChainToRoot({ space, objectId: id, rootId: rootCollection.id }),
+            );
+            return chain ? Paths.getCollectionsPath(workspace, ...chain, id) : null;
+          }),
+      },
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);

@@ -9,13 +9,13 @@ import prettierPluginTypescript from 'prettier/plugins/typescript';
 import { type Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { createMenuAction } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
 export type FormatActionProperties = { type: 'format' };
 
-export const createFormat = (script: Script.Script) => {
+export const createFormat = (script: Script.Script): ActionGraphProps => {
   const formatAction = createMenuAction(
     'format',
     async () => {

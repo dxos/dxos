@@ -8,6 +8,8 @@ import { describe, test } from 'vitest';
 import * as UrlPath from './UrlPath';
 
 const table: UrlPath.KeyTable = new Map<string, UrlPath.KeyTableEntry>([
+  // The workspace tier is a declared anchor key (see the workspace-anchor extension), not a hard-coded token.
+  ['w', { key: 'w', hasId: true, anchor: true }],
   ['doc', { key: 'doc', hasId: true }],
   ['sheet', { key: 'sheet', hasId: true }],
   ['task', { key: 'task', hasId: true }],
@@ -22,13 +24,14 @@ describe('UrlPath', () => {
     test('workspace-only path', ({ expect }) => {
       const parsed = UrlPath.parse(`/w/${WORKSPACE_A}`, table);
       expect(Option.isSome(parsed)).toBe(true);
-      expect(Option.getOrThrow(parsed)).toEqual({ workspace: WORKSPACE_A, pairs: [] });
+      expect(Option.getOrThrow(parsed)).toEqual({ workspace: WORKSPACE_A, workspaceKey: 'w', pairs: [] });
     });
 
     test('tokenizes a single pair', ({ expect }) => {
       const parsed = UrlPath.parse(`/w/${WORKSPACE_A}/doc/01JGDOC`, table);
       expect(Option.getOrThrow(parsed)).toEqual({
         workspace: WORKSPACE_A,
+        workspaceKey: 'w',
         pairs: [{ key: 'doc', id: '01JGDOC', workspace: WORKSPACE_A }],
       });
     });
@@ -37,6 +40,7 @@ describe('UrlPath', () => {
       const parsed = UrlPath.parse(`/w/${WORKSPACE_A}/doc/A/sheet/B`, table);
       expect(Option.getOrThrow(parsed)).toEqual({
         workspace: WORKSPACE_A,
+        workspaceKey: 'w',
         pairs: [
           { key: 'doc', id: 'A', workspace: WORKSPACE_A },
           { key: 'sheet', id: 'B', workspace: WORKSPACE_A },
@@ -48,6 +52,7 @@ describe('UrlPath', () => {
       const parsed = UrlPath.parse(`/w/${WORKSPACE_A}/doc/A/comments`, table);
       expect(Option.getOrThrow(parsed)).toEqual({
         workspace: WORKSPACE_A,
+        workspaceKey: 'w',
         pairs: [
           { key: 'doc', id: 'A', workspace: WORKSPACE_A },
           { key: 'comments', workspace: WORKSPACE_A },
@@ -55,10 +60,11 @@ describe('UrlPath', () => {
       });
     });
 
-    test('mid-chain w pair rebases subsequent ids', ({ expect }) => {
+    test('mid-chain anchor pair rebases subsequent ids', ({ expect }) => {
       const parsed = UrlPath.parse(`/w/${WORKSPACE_A}/doc/A/w/${WORKSPACE_B}/task/B`, table);
       expect(Option.getOrThrow(parsed)).toEqual({
         workspace: WORKSPACE_A,
+        workspaceKey: 'w',
         pairs: [
           { key: 'doc', id: 'A', workspace: WORKSPACE_A },
           { key: 'task', id: 'B', workspace: WORKSPACE_B },
@@ -70,7 +76,21 @@ describe('UrlPath', () => {
       const parsed = UrlPath.parse('/w/!dxos:settings/doc/A', table);
       expect(Option.getOrThrow(parsed)).toEqual({
         workspace: '!dxos:settings',
+        workspaceKey: 'w',
         pairs: [{ key: 'doc', id: 'A', workspace: '!dxos:settings' }],
+      });
+    });
+
+    test('a custom anchor key drives the leading pair', ({ expect }) => {
+      const customTable: UrlPath.KeyTable = new Map<string, UrlPath.KeyTableEntry>([
+        ['ws', { key: 'ws', hasId: true, anchor: true }],
+        ['doc', { key: 'doc', hasId: true }],
+      ]);
+      const parsed = UrlPath.parse(`/ws/${WORKSPACE_A}/doc/A`, customTable);
+      expect(Option.getOrThrow(parsed)).toEqual({
+        workspace: WORKSPACE_A,
+        workspaceKey: 'ws',
+        pairs: [{ key: 'doc', id: 'A', workspace: WORKSPACE_A }],
       });
     });
 
@@ -84,17 +104,18 @@ describe('UrlPath', () => {
       expect(Option.isNone(parsed)).toBe(true);
     });
 
-    test('dangling w with no following workspace resolves to none', ({ expect }) => {
+    test('dangling anchor with no following workspace resolves to none', ({ expect }) => {
       const parsed = UrlPath.parse(`/w/${WORKSPACE_A}/doc/A/w`, table);
       expect(Option.isNone(parsed)).toBe(true);
     });
 
-    test('missing leading w resolves to none', ({ expect }) => {
-      const parsed = UrlPath.parse(`/${WORKSPACE_A}/doc/A`, table);
+    test('a leading key that is not a registered anchor resolves to none', ({ expect }) => {
+      // `doc` is a registered key but not an anchor, so it cannot open the chain.
+      const parsed = UrlPath.parse(`/doc/${WORKSPACE_A}/A`, table);
       expect(Option.isNone(parsed)).toBe(true);
     });
 
-    test('missing workspace after leading w resolves to none', ({ expect }) => {
+    test('missing workspace after leading anchor resolves to none', ({ expect }) => {
       const parsed = UrlPath.parse('/w', table);
       expect(Option.isNone(parsed)).toBe(true);
     });
@@ -102,13 +123,14 @@ describe('UrlPath', () => {
 
   describe('format', () => {
     test('emits workspace-only path', ({ expect }) => {
-      expect(UrlPath.format({ workspace: WORKSPACE_A, pairs: [] })).toBe(`/w/${WORKSPACE_A}`);
+      expect(UrlPath.format({ workspace: WORKSPACE_A, workspaceKey: 'w', pairs: [] })).toBe(`/w/${WORKSPACE_A}`);
     });
 
     test('emits a single pair', ({ expect }) => {
       expect(
         UrlPath.format({
           workspace: WORKSPACE_A,
+          workspaceKey: 'w',
           pairs: [{ key: 'doc', id: 'A', workspace: WORKSPACE_A }],
         }),
       ).toBe(`/w/${WORKSPACE_A}/doc/A`);
@@ -118,6 +140,7 @@ describe('UrlPath', () => {
       expect(
         UrlPath.format({
           workspace: WORKSPACE_A,
+          workspaceKey: 'w',
           pairs: [
             { key: 'doc', id: 'A', workspace: WORKSPACE_A },
             { key: 'comments', workspace: WORKSPACE_A },
@@ -126,10 +149,11 @@ describe('UrlPath', () => {
       ).toBe(`/w/${WORKSPACE_A}/doc/A/comments`);
     });
 
-    test('inserts a w pair on workspace change', ({ expect }) => {
+    test('inserts an anchor pair on workspace change', ({ expect }) => {
       expect(
         UrlPath.format({
           workspace: WORKSPACE_A,
+          workspaceKey: 'w',
           pairs: [
             { key: 'doc', id: 'A', workspace: WORKSPACE_A },
             { key: 'task', id: 'B', workspace: WORKSPACE_B },
@@ -141,10 +165,11 @@ describe('UrlPath', () => {
 
   describe('round-trip', () => {
     const cases: UrlPath.ParsedUrl[] = [
-      { workspace: WORKSPACE_A, pairs: [] },
-      { workspace: WORKSPACE_A, pairs: [{ key: 'doc', id: 'A', workspace: WORKSPACE_A }] },
+      { workspace: WORKSPACE_A, workspaceKey: 'w', pairs: [] },
+      { workspace: WORKSPACE_A, workspaceKey: 'w', pairs: [{ key: 'doc', id: 'A', workspace: WORKSPACE_A }] },
       {
         workspace: WORKSPACE_A,
+        workspaceKey: 'w',
         pairs: [
           { key: 'doc', id: 'A', workspace: WORKSPACE_A },
           { key: 'sheet', id: 'B', workspace: WORKSPACE_A },
@@ -152,6 +177,7 @@ describe('UrlPath', () => {
       },
       {
         workspace: WORKSPACE_A,
+        workspaceKey: 'w',
         pairs: [
           { key: 'doc', id: 'A', workspace: WORKSPACE_A },
           { key: 'comments', workspace: WORKSPACE_A },
@@ -159,12 +185,13 @@ describe('UrlPath', () => {
       },
       {
         workspace: WORKSPACE_A,
+        workspaceKey: 'w',
         pairs: [
           { key: 'doc', id: 'A', workspace: WORKSPACE_A },
           { key: 'task', id: 'B', workspace: WORKSPACE_B },
         ],
       },
-      { workspace: '!dxos:settings', pairs: [{ key: 'doc', id: 'A', workspace: '!dxos:settings' }] },
+      { workspace: '!dxos:settings', workspaceKey: 'w', pairs: [{ key: 'doc', id: 'A', workspace: '!dxos:settings' }] },
     ];
 
     for (const parsedUrl of cases) {
@@ -177,8 +204,8 @@ describe('UrlPath', () => {
   });
 
   describe('isReservedKey', () => {
-    test('reserves w', ({ expect }) => {
-      expect(UrlPath.isReservedKey('w')).toBe(true);
+    test('does not reserve w (it is a declared anchor key)', ({ expect }) => {
+      expect(UrlPath.isReservedKey('w')).toBe(false);
     });
 
     test('reserves reset, redirect, not-found', ({ expect }) => {

@@ -16,6 +16,8 @@ import { Key } from '@dxos/echo';
 export type KeyTableEntry = {
   key: string;
   hasId: boolean;
+  /** Whether this key rebases the workspace (the anchor tier, `w`) — see `parse`. */
+  anchor?: boolean;
 };
 
 /**
@@ -42,6 +44,8 @@ export type Pair = {
  */
 export type ParsedUrl = {
   workspace: string;
+  /** The anchor key that introduced the leading workspace (conventionally `w`); used to round-trip via {@link format}. */
+  workspaceKey: string;
   pairs: Pair[];
 };
 
@@ -51,7 +55,8 @@ export type ParsedUrl = {
  */
 export const COMPANION_KEY = 'companion';
 
-const RESERVED_KEYS = new Set(['w', 'reset', 'redirect', 'not-found', COMPANION_KEY]);
+// The workspace key (`w`) is NOT reserved — it is a declared `kind: 'anchor'` binding.
+const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found', COMPANION_KEY]);
 
 /**
  * Whether a segment is reserved and therefore cannot be registered as a prefix key: the `w`
@@ -65,18 +70,21 @@ export const isReservedKey = (key: string): boolean =>
  * Parse a browser pathname into a workspace plus an ordered chain of pairs, against a
  * caller-supplied key table.
  *
- * Grammar: `/w/<workspace>( /<pair> )*` where `pair` is either `w/<workspace>` (rebases the base
- * for subsequent ids) or `<prefix>[/<id>]` (a registered key, consuming an id iff `hasId`).
+ * Grammar: `/<anchor>/<workspace>( /<pair> )*` where the leading pair must be an anchor key (a key with
+ * `anchor: true` in the table, conventionally `w`), and `pair` is either another anchor pair
+ * `<anchor>/<workspace>` (rebases the base for subsequent ids) or `<prefix>[/<id>]` (a registered key,
+ * consuming an id iff `hasId`).
  *
- * Returns `Option.none()` for anything that doesn't fit the grammar: a missing/malformed leading
- * `w` pair, an unregistered key, a `hasId` key missing its id, or a dangling `w` with no following
- * workspace segment. Callers route a `none` to a not-found page.
+ * Returns `Option.none()` for anything that doesn't fit the grammar: a leading key that is not a
+ * registered anchor, an unregistered key, a `hasId` key missing its id, or a dangling anchor with no
+ * following workspace segment. Callers route a `none` to a not-found page.
  */
 export const parse = (pathname: string, table: KeyTable): Option.Option<ParsedUrl> => {
   const trimmed = decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
   const segments = trimmed.length > 0 ? trimmed.split('/') : [];
 
-  if (segments[0] !== 'w' || !segments[1]) {
+  const workspaceKey = segments[0];
+  if (!workspaceKey || !table.get(workspaceKey)?.anchor || !segments[1]) {
     return Option.none();
   }
 
@@ -87,10 +95,11 @@ export const parse = (pathname: string, table: KeyTable): Option.Option<ParsedUr
 
   while (index < segments.length) {
     const key = segments[index];
-    if (key === 'w') {
+    const entry = table.get(key);
+    if (entry?.anchor) {
       const nextWorkspace = segments[index + 1];
       if (!nextWorkspace) {
-        // Dangling `w` with nothing to rebase onto.
+        // Dangling anchor with nothing to rebase onto.
         return Option.none();
       }
       base = nextWorkspace;
@@ -98,7 +107,6 @@ export const parse = (pathname: string, table: KeyTable): Option.Option<ParsedUr
       continue;
     }
 
-    const entry = table.get(key);
     if (!entry) {
       // Unregistered key: the whole path is unparseable.
       return Option.none();
@@ -118,21 +126,21 @@ export const parse = (pathname: string, table: KeyTable): Option.Option<ParsedUr
     }
   }
 
-  return Option.some({ workspace, pairs });
+  return Option.some({ workspace, workspaceKey, pairs });
 };
 
 /**
- * Format a parsed URL back into a pathname, inserting a `w` pair whenever a pair's workspace
- * differs from the current base. `parse(format(x), table)` round-trips for any `x` produced by
+ * Format a parsed URL back into a pathname, inserting an anchor pair (`workspaceKey`) whenever a pair's
+ * workspace differs from the current base. `parse(format(x), table)` round-trips for any `x` produced by
  * `parse` against the same table.
  */
 export const format = (parsed: ParsedUrl): string => {
-  const segments: string[] = ['w', parsed.workspace];
+  const segments: string[] = [parsed.workspaceKey, parsed.workspace];
   let base = parsed.workspace;
 
   for (const pair of parsed.pairs) {
     if (pair.workspace !== base) {
-      segments.push('w', pair.workspace);
+      segments.push(parsed.workspaceKey, pair.workspace);
       base = pair.workspace;
     }
     segments.push(pair.key);

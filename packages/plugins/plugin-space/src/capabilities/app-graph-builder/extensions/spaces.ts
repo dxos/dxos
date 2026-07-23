@@ -48,11 +48,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     GraphBuilder.createExtension({
       id: 'spaceHome',
       position: Position.first,
-      urlKey: 'home',
       // Home is a fixed singleton per space (no variable id), so its URL pair never consumes an id; it
       // resolves to `root/<space>/home` (the key is the terminal segment) — no ancestor segments.
-      urlKeyHasId: false,
-      urlPath: [],
+      url: { key: 'home', kind: 'singleton', path: [] },
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([

@@ -150,10 +150,9 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
       id: 'schemaChildren',
-      urlKey: 'view',
       // View objects sit at `…/system/database/<typeSlug>/<id>`; the type slug is data-dependent but of
       // fixed depth, so it is encoded into the pair id (`view/<slug>+<id>`) rather than searched.
-      urlPath: [Paths.GroupSegments.system, Paths.Segments.database],
+      url: { key: 'view', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         // Scoped to the Database section's own type nodes (both static and database schemas — see
@@ -196,11 +195,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // The `db` key names the database subgraph — the generic key that guarantees every ECHO object a
     // URL (see the design's "Unmapped nodes"); `object` addresses the same object via the collection
     // subgraph. The type-slug segment is data-dependent but fixed-depth, so it is encoded into the pair
-    // id (`db/<slug>+<id>`) via the shared `urlPath` rather than searched.
+    // id (`db/<slug>+<id>`) via the shared `path` rather than searched.
     GraphBuilder.createExtension({
       id: 'databaseObjects',
-      urlKey: 'db',
-      urlPath: [Paths.GroupSegments.system, Paths.Segments.database],
+      url: { key: 'db', kind: 'item', path: [Paths.GroupSegments.system, Paths.Segments.database] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)

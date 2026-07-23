@@ -39,9 +39,7 @@ export default Capability.makeModule(
         id: 'spaceSettingsAutomation',
         // Fixed automation panel at `root/<space>/settings/routines`; id-less (`routine` is already the
         // TypeSection key above, so the panel uses the plural `routines`).
-        urlKey: 'routines',
-        urlKeyHasId: false,
-        urlPath: [SETTINGS_SECTION_ID],
+        url: { key: 'routines', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
         match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
         connector: () => {
           return Effect.succeed([

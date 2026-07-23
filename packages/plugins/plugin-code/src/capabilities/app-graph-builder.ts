@@ -47,8 +47,7 @@ export default Capability.makeModule(
         id: 'pluginSpec',
         // The spec hangs off a registry plugin entry (`root/<REGISTRY_ID>/<pluginKey>/spec`); the
         // pluginKey is data-dependent but fixed-depth, so it is `+`-encoded into the pair id.
-        urlKey: 'spec',
-        urlPath: [],
+        url: { key: 'spec', kind: 'item', path: [] },
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;
@@ -106,8 +105,7 @@ export default Capability.makeModule(
         id: 'codeProjectListing',
         // CodeProjects are branch planks at `root/<space>/<codeProjects>/<projectId>`; their Spec and
         // Build sub-nodes nest one level deeper (the project id is `+`-encoded into the pair id).
-        urlKey: 'code',
-        urlPath: [getCodeProjectsSectionId()],
+        url: { key: 'code', kind: 'item', path: [getCodeProjectsSectionId()] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();

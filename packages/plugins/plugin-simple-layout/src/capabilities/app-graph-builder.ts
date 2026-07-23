@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, createWorkspaceAnchorExtension } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 export default Capability.makeModule(
@@ -16,6 +16,10 @@ export default Capability.makeModule(
       connector: () => Effect.succeed([AppNode.makeNotFound()]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, [
+      ...extensions,
+      // Register the workspace tier (`/w/<workspace>`) as a declared anchor key for the URL grammar.
+      ...createWorkspaceAnchorExtension(),
+    ]);
   }),
 );

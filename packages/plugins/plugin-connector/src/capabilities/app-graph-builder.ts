@@ -118,9 +118,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'connectionsSection',
         // Fixed node under the space settings section (`root/<space>/settings/connections`); id-less.
-        urlKey: 'connections',
-        urlKeyHasId: false,
-        urlPath: [SETTINGS_SECTION_ID],
+        url: { key: 'connections', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
         match: AppNodeMatcher.whenSpaceSettings,
         connector: (space) =>
           Effect.succeed([
@@ -216,8 +214,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'connectionListing',
         // Connections live at `root/<space>/settings/connections/<connectionId>`.
-        urlKey: 'connection',
-        urlPath: [SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID],
+        url: { key: 'connection', kind: 'item', path: [SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CONNECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

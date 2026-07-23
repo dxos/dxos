@@ -366,3 +366,50 @@ Two workstreams. Workstream A (URL mapping & resolution) and Workstream B (singl
 | `/reset`, invitation params, `composer://` | Unaffected                                                                              |
 | Mobile (simple-layout)                     | Unaffected                                                                              |
 | Presenter flow                             | Intact                                                                                  |
+
+---
+
+## Addendum (2026-07-22): nested `url` binding + workspace anchor
+
+The per-extension URL contract was refactored from four flat fields
+(`urlKey`/`urlKeyHasId`/`urlPath`/`resolve`) into a single nested binding on
+`BuilderExtension` — the binding is optional (not every extension is
+addressable), but when present all fields are required:
+
+```ts
+url?: {
+  key: string;
+  kind: 'anchor' | 'item' | 'singleton';   // required
+  path: string[] | PathResolver;           // required: static segments OR a dynamic resolver
+}
+```
+
+The three kinds cover every addressable node; `hasId` is derived
+(`hasId = kind !== 'singleton'`), so invalid combos are unrepresentable:
+
+- `item` — a node addressed by a variable id, relative to the workspace base
+  (may have children — not a graph leaf).
+- `anchor` — the workspace tier (`w`); its pair rebases the base and is consumed.
+- `singleton` — a fixed node addressed by its key, no variable id (`home`,
+  `settings`).
+
+`path` merges the former `path`/`resolve` into one required field, discriminated
+at runtime by `Array.isArray`: `string[]` = static ancestor segments (the common
+case); `PathResolver` = a dynamic resolver (nested collections, native fs). A key
+therefore always declares exactly one resolution mechanism.
+
+The workspace tier (`/w/<workspace>`) is no longer a hard-coded token. It is a
+declared `kind: 'anchor'` binding contributed by
+`createWorkspaceAnchorExtension()` (in `@dxos/app-toolkit`), registered by the
+active layout plugin (deck / simple-layout) so it is workspace-generic (spaces
+and pinned workspaces alike), not tied to `plugin-space`. An anchor pair rebases
+the workspace base for following pairs and is consumed rather than opened as a
+plank — so the resolver is unchanged; only the parser/serializer key off
+`anchor` (from the key table) instead of the literal `w`. `companion` remains
+the one well-known key (matched by the `~<variant>` convention). `w` is no
+longer a reserved word; `reset`/`redirect`/`not-found`/`companion` still are.
+
+New helper `PathResolution.getAnchorKey(builder)` returns the declared anchor
+key; `UrlPath.ParsedUrl`/`format` carry `workspaceKey` so `parse ∘ format`
+round-trips. URL output is byte-identical (`getAnchorKey → 'w'`), so there is no
+migration.

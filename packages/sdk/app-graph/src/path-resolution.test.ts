@@ -58,9 +58,8 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const docs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'docs',
-      urlKey: 'doc',
       // Direct children of the workspace base: an empty static template (`root/<ws>/<id>`).
-      urlPath: [],
+      url: { key: 'doc', kind: 'item', path: [] },
       match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: (workspaceNode) =>
         Effect.succeed(
@@ -89,8 +88,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const sharedKeyDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'sharedKeyDocs',
-      urlKey: 'doc',
-      urlPath: [],
+      url: { key: 'doc', kind: 'item', path: [] },
       match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () => Effect.succeed([{ id: 'sharedDoc', type: OTHER_DOC_TYPE }]),
     }),
@@ -110,8 +108,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const sectionedDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'sectionedDocs',
-      urlKey: 'sectioned',
-      urlPath: [GROUP_ID],
+      url: { key: 'sectioned', kind: 'item', path: [GROUP_ID] },
       match: NodeMatcher.whenNodeType(GROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'secDocA', type: SECTIONED_TYPE }]),
     }),
@@ -123,8 +120,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const inlineDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'inlineDocs',
-      urlKey: 'inline',
-      urlPath: [INLINE_SECTION_ID],
+      url: { key: 'inline', kind: 'item', path: [INLINE_SECTION_ID] },
       match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () =>
         Effect.succeed([
@@ -139,8 +135,11 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const dynamicDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'dynamicDocs',
-      urlKey: 'dyn',
-      resolve: ({ id, workspaceBaseId }) => Effect.succeed(`${workspaceBaseId}/${GROUP_ID}/${id}`),
+      url: {
+        key: 'dyn',
+        kind: 'item',
+        path: ({ id, workspaceBaseId }) => Effect.succeed(`${workspaceBaseId}/${GROUP_ID}/${id}`),
+      },
       match: NodeMatcher.whenNodeType(GROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'dynDocA', type: SECTIONED_TYPE }]),
     }),
@@ -160,8 +159,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const nestedDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'nestedDocs',
-      urlKey: 'nested',
-      urlPath: [GROUP_ID],
+      url: { key: 'nested', kind: 'item', path: [GROUP_ID] },
       match: NodeMatcher.whenNodeType(SUBGROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'nestedDocA', type: NESTED_TYPE }]),
     }),
@@ -172,13 +170,17 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const homes = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'homes',
-      urlKey: 'home',
-      urlKeyHasId: false,
-      urlPath: [],
+      url: { key: 'home', kind: 'singleton', path: [] },
       match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () => Effect.succeed([{ id: HOME_SEGMENT, type: HOME_TYPE }]),
     }),
   );
+
+  // A declaration-only workspace anchor: registers the `w` tier for the parser/serializer, produces no nodes.
+  const workspaceAnchor = GraphBuilder.createExtensionRaw({
+    id: 'workspaceAnchor',
+    url: { key: 'w', kind: 'anchor', path: [] },
+  });
 
   GraphBuilder.addExtension(builder, [
     workspaces,
@@ -192,6 +194,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     subGroup,
     nestedDocs,
     homes,
+    workspaceAnchor,
   ]);
   return builder;
 };
@@ -444,6 +447,21 @@ describe('path-resolution', () => {
       const builder = buildTestBuilder();
       const represented = PathResolution.representNode(builder, Node.RootId);
       expect(Option.isNone(represented)).toBe(true);
+    });
+  });
+
+  describe('workspace anchor', () => {
+    test('buildUrlKeyTable marks the anchor key and keeps leaf keys', ({ expect }) => {
+      const builder = buildTestBuilder();
+      const table = PathResolution.buildUrlKeyTable(builder);
+      expect(table.get('w')).toEqual({ key: 'w', hasId: true, anchor: true });
+      expect(table.get('doc')).toEqual({ key: 'doc', hasId: true, anchor: false });
+      expect(table.get('home')).toEqual({ key: 'home', hasId: false, anchor: false });
+    });
+
+    test('getAnchorKey returns the declared anchor key', ({ expect }) => {
+      const builder = buildTestBuilder();
+      expect(PathResolution.getAnchorKey(builder)).toBe('w');
     });
   });
 });

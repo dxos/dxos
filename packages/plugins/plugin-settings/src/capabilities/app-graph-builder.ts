@@ -62,10 +62,9 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'plugins',
-        urlKey: 'plugin',
         // Plugin category nodes are direct children of the settings workspace base
         // (`root/<SETTINGS_ID>/settings:<key>`), so no ancestor segments.
-        urlPath: [],
+        url: { key: 'plugin', kind: 'item', path: [] },
         match: NodeMatcher.whenId(Paths.getSpacePath(SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);

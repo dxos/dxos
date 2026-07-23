@@ -48,8 +48,7 @@ export default Capability.makeModule(
         id: 'crmTypes',
         // Type-collection nodes are planks at `root/<space>/crm/<typeSlug>`; address them under the `crm`
         // key with the type slug as the id (`crm/<typeSlug>`).
-        urlKey: 'crm',
-        urlPath: [Paths.GroupSegments.crm],
+        url: { key: 'crm', kind: 'item', path: [Paths.GroupSegments.crm] },
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.crm),
         connector: (space, get) => {
           // Index the registry once per rebuild so each type resolves its registered schema in O(1).

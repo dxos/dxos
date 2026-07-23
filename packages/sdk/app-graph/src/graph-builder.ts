@@ -53,34 +53,46 @@ export type BuilderExtension = Readonly<{
   position?: Position.Position;
   relation?: Node.RelationInput;
   /**
-   * Registered URL prefix key for nodes this extension's connector produces. Defaults to the
-   * plugin id at the plugin-graph layer when omitted. Global and unique; see
+   * URL binding for the nodes this extension's connector produces: the registered prefix key plus how
+   * it resolves. Omitted when the extension's nodes are not URL-addressable. See {@link UrlBinding} and
    * `path-resolution.ts` for how the key table is derived and used.
    */
-  urlKey?: string;
-  /**
-   * Whether a `urlKey` pair consumes a following id segment. `true` (the default) for a
-   * plank-opening key (e.g. `doc`, addressing a real object id); `false` for a companion key (e.g.
-   * `comments`) or a fixed singleton node (e.g. `home`), neither of which has a variable id to
-   * encode. Read by `path-resolution.ts`'s key-table derivation, consumed by `UrlPath.parse`.
-   */
-  urlKeyHasId?: boolean;
-  /**
-   * Fixed ancestor node-id segments between the workspace base and this connector's leaf nodes, when
-   * the shape is static (independent of runtime data). Enables deterministic forward URL resolution —
-   * the node id is `${Node.RootId}/<workspace>/<...urlPath>/<id>` — so `path-resolution.ts` can expand
-   * that exact path. Every keyed extension declares either a `urlPath` (preferred) or a {@link resolve}
-   * for data-dependent shapes (e.g. nested collections at arbitrary depth); a key with neither is not
-   * forward-resolvable.
-   */
-  urlPath?: string[];
-  /**
-   * Dynamic forward URL resolver, for keys whose node-id shape is data-dependent and so cannot declare
-   * a static {@link urlPath} (the only case today is nested collections). See {@link PathResolver}.
-   */
-  resolve?: PathResolver;
+  url?: UrlBinding;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 }>;
+
+/**
+ * How an extension's nodes map to (and from) the URL pair chain. Grouped so the whole URL contract for
+ * an extension lives in one place.
+ */
+export type UrlBinding = {
+  /**
+   * Registered URL prefix key for nodes this extension's connector produces. Global and unique among
+   * extensions (a key may be shared by extensions that together address one subtree, e.g. collections).
+   */
+  key: string;
+  /**
+   * Resolution tier:
+   * - `'item'` — a node addressed by a variable id, relative to the workspace base (may have children).
+   * - `'anchor'` — the workspace tier (`w`): its pair sets the base following pairs resolve against and
+   *   is consumed (a rebase) rather than opened as a plank.
+   * - `'singleton'` — a fixed node addressed by its key, with no variable id (e.g. `home`, `settings`);
+   *   its terminal node-id segment IS the key.
+   * Read by `path-resolution.ts` (which derives the parse table's `hasId`/`anchor` from it) and consumed
+   * by `UrlPath.parse`.
+   */
+  kind: 'anchor' | 'item' | 'singleton';
+  /**
+   * The path to this key's nodes, in one of two forms:
+   * - `string[]` — fixed ancestor node-id segments between the workspace base and the node (the common,
+   *   deterministic case): the node is `${Node.RootId}/<workspace>/<...segments>/<id>`, so
+   *   `path-resolution.ts` can expand that exact path. Fixed-depth dynamic tails beyond the segments are
+   *   `+`-encoded into the id.
+   * - {@link PathResolver} — a dynamic resolver, for data-dependent shapes (e.g. nested collections at
+   *   arbitrary depth) that cannot declare static segments.
+   */
+  path: string[] | PathResolver;
+};
 
 /** Params passed to a {@link PathResolver} for a single `(key, id)` URL pair. */
 export type PathResolveParams = {
@@ -94,7 +106,7 @@ export type PathResolveParams = {
 
 /**
  * Dynamic forward URL resolver for an extension whose node-id shape is data-dependent and so cannot
- * declare a static {@link BuilderExtension.urlPath}. Returns the candidate qualified node id —
+ * declare a static {@link UrlBinding.path}. Returns the candidate qualified node id —
  * `path-resolution.ts` then materializes its ancestors and verifies it — or `null` if the id can't be
  * located. Must be self-contained (the declaring plugin closes over any services it needs), so
  * `@dxos/app-graph` stays free of service dependencies.
@@ -572,8 +584,7 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
  * @param params.id The unique id of the extension.
  * @param params.relation The relation the graph is being expanded from the existing node.
  * @param params.position Affects the order the extensions are processed in.
- * @param params.urlKey Registered URL prefix key for nodes this extension's connector produces.
- * @param params.urlKeyHasId Whether `urlKey` consumes a following id segment (default `true`).
+ * @param params.url URL binding for the nodes this extension produces (key + resolution); see {@link UrlBinding}.
  * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
  * @param params.actions A function to add actions to the graph based on a connection to an existing node.
  * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
@@ -582,10 +593,7 @@ export type CreateExtensionRawOptions = {
   id: string;
   relation?: Node.RelationInput;
   position?: Position.Position;
-  urlKey?: string;
-  urlKeyHasId?: boolean;
-  urlPath?: string[];
-  resolve?: PathResolver;
+  url?: UrlBinding;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
   actionGroups?: ActionGroupsExtension;
@@ -613,8 +621,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     id,
     position,
     relation = 'child',
-    urlKey,
-    urlKeyHasId,
+    url,
     connector: _connector,
     actions: _actions,
     actionGroups: _actionGroups,
@@ -649,16 +656,13 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
       _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
     );
 
-  return [
+  const extensions = [
     connector
       ? ({
           id: getId('connector'),
           position,
           relation: normalizedRelation,
-          urlKey,
-          urlKeyHasId,
-          urlPath: extension.urlPath,
-          resolve: extension.resolve,
+          url,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -710,6 +714,15 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
         } satisfies BuilderExtension)
       : undefined,
   ].filter(isNonNullable);
+
+  // A declaration-only extension: a `url` binding with no connector/actions (e.g. the workspace anchor,
+  // which registers a key for the parser/serializer but produces no nodes of its own). Emit it so the
+  // key table sees the binding; it has no connector so it never runs.
+  if (extensions.length === 0 && url) {
+    return [{ id, position, relation: normalizedRelation, url } satisfies BuilderExtension];
+  }
+
+  return extensions;
 };
 
 /**
@@ -734,14 +747,8 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
-  /** Registered URL prefix key for nodes this extension's connector produces. */
-  urlKey?: string;
-  /** Whether `urlKey` consumes a following id segment (default `true`); see {@link BuilderExtension.urlKeyHasId}. */
-  urlKeyHasId?: boolean;
-  /** Fixed ancestor node-id segments for deterministic forward URL resolution; see {@link BuilderExtension.urlPath}. */
-  urlPath?: string[];
-  /** Dynamic forward URL resolver for data-dependent shapes; see {@link BuilderExtension.resolve}. */
-  resolve?: PathResolver;
+  /** URL binding for the nodes this extension produces (key + resolution); see {@link UrlBinding}. */
+  url?: UrlBinding;
 };
 
 /**
@@ -774,8 +781,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   options: CreateExtensionOptions<TMatched, R>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
-    const { id, match, actions, actionGroups, connector, relation, position, urlKey, urlKeyHasId, urlPath, resolve } =
-      options;
+    const { id, match, actions, actionGroups, connector, relation, position, url } = options;
 
     const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
@@ -820,10 +826,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
       id,
       relation,
       position,
-      urlKey,
-      urlKeyHasId,
-      urlPath,
-      resolve,
+      url,
       connector: connectorExtension,
       actions: actionsExtension,
       actionGroups: actionGroupsExtension,
