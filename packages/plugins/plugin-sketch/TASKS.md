@@ -1,6 +1,6 @@
 # plugin-sketch — Tasks
 
-_Resume: PR #12324 open — watch Check to green and respond to review. Uncommitted: none. Last: changeset added, origin/main merged, plugin-stack import fixed._
+_Resume: PR #12324 — Check GREEN, preview https://pr-12324-composer-main.dxos.workers.dev; respond to review comments (only bot stubs so far), then land (land skill). Uncommitted: none. Last: PR opened + CI green._
 
 ## Phase 1: Scene DSL (agent draws/edits diagrams)
 
