@@ -48,7 +48,7 @@ catalog:
   '@ch-ui/icons': ^1.0.1
   '@ch-ui/tailwind-tokens': 2.8.1
   '@ch-ui/tokens': 3.0.1
-  '@changesets/changelog-github': ^0.7.0
+  '@changesets/changelog-git': ^0.2.1
   '@changesets/cli': ^2.31.0
   '@cloudflare/ai-chat': ^0.0.6
   '@cloudflare/vitest-pool-workers': ^0.18.6
