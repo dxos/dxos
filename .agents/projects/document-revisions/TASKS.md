@@ -332,7 +332,7 @@ one combined PR on this branch (user decision). B6 scope = safe hoist + cache on
       (build+lint green; story play tests pending user eval).**
   - [x] `react-ui-editor` `addViewMode(state, onViewModeChange, items?)` — optional `items` (default
         the 3 built-ins via `defaultViewModeItems`); item `ViewModeItem { id, icon, label?, checked?,
-        onSelect? }`. Threaded `viewModes?` through `EditorToolbarFeatureFlags` → `createMarkdownActions`
+onSelect? }`. Threaded `viewModes?` through `EditorToolbarFeatureFlags` → `createMarkdownActions`
         → `addViewMode` (+ memo dep). Exported `ViewModeItem`/`defaultViewModeItems` at the package root
         (components barrel). Backward-compatible (other editors keep the 3 built-ins). `Label` exported
         from `@dxos/ui-types`.
@@ -342,7 +342,7 @@ one combined PR on this branch (user decision). B6 scope = safe hoist + cache on
         readonly|preview→viewing on select, contributed entries `setMode(reviewMode)`; contributed only
         on the ambient path.
   - [x] plugin-comments contributes `{ id:'suggesting', icon:'ph--pencil-simple--regular',
-        label:'view-mode.suggesting.label', reviewMode:'suggesting', order:3 }` — no plugin-comments ⇒
+label:'view-mode.suggesting.label', reviewMode:'suggesting', order:3 }` — no plugin-comments ⇒
         no Suggesting entry.
   - [x] Removed the toolbar `versions` branch-selector group + the separate `review-mode` group +
         `handleSuggest` (History companion covers branch switch / return-to-main / create / merge /
