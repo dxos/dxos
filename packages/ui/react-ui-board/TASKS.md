@@ -10,9 +10,12 @@
     any, otherwise holds the current viewport centre fixed. (Selection state now
     exists — added with the single/multi-select feature.)
 
-- [ ] **`Board.Map` renders empty**
-  - The overview map shows no tiles in use. Storybook render had 5 tile children
-    with `bg-accentSurface`, so likely the tile fill is invisible (contrast/token)
-    and/or it's empty in `plugin-board` (the map isn't wired there yet).
-  - Investigate the tile color token and add the map to `plugin-board`; consider
-    showing the current viewport rectangle too.
+- [x] **`Board.Map` overview** — done.
+  - Tiles render with `bg-separator` (visible); the viewport rectangle is drawn
+    from live board/viewport geometry. Wired into `plugin-board`'s `BoardArticle`
+    as a corner overlay.
+
+- [ ] **Margin button to add a row/column**
+  - Add a control (edge affordance / toolbar button) to grow the board by a
+    row or column, extending the grid extent (relates to the `margin` prop and
+    `bounds`).
