@@ -1,5 +1,21 @@
 # AI Testing Strategy — Tasks
 
+_Resume: **PR #12307 is marked ready for review** (no longer draft), CI green
+(build/check/test/storybook/workerd all pass). All 6 G1 scenarios are ported to scored evals with
+real quality signal beyond existence checks (DB-effect assertions + an LLM judge on
+`crm-mailbox`). `@dxos/assistant-e2e` is un-merged back out of `@dxos/assistant-evals` — kept as
+its own deprecated package (holding `harness.ts` + the 3 scenarios not yet portable to an eval:
+`inbox-enable`, `local-ai`, `sandbox`). Repo-wide references updated to match:
+`.changeset/config.json`, `tsconfig.all.json`, `RELEASE-SPEC.md` (back-edge row no longer mentions
+evals — those are out-of-band), the `agent-eval-tests` and `regenerate-memoized-llm` skills.
+`TESTING.md` rewritten to describe only the current state (no merge/un-merge narrative — that
+lives here instead). Per-eval timeouts replaced the flat 360s `vitest.config.ts` `testTimeout`
+(`createEvalRunner`'s new `timeout` option, default 60s / 150s for crm-mailbox+planning; confirmed
+via evalite's source + its v1 beta + [issue #68](https://github.com/mattpocock/evalite/issues/68)
+that evalite has no per-eval timeout of its own — the global `testTimeout`, now 180s, is only the
+outer safety net). Pushed to `claude/ai-testing-strategy-9ctzjt` through commit `c62073d0cf`.
+NEXT: await review on PR #12307._
+
 Design: [`packages/core/compute/ai/TESTING.md`](../../../packages/core/compute/ai/TESTING.md).
 PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 [#12291](https://github.com/dxos/dxos/pull/12291) (Phase 1 steps 1-3 — de-gate G2/G3 + scripted
@@ -9,7 +25,10 @@ PRs: [#12287](https://github.com/dxos/dxos/pull/12287) (design doc, MERGED);
 deleting it, remove all committed conversation fixtures, switch the gating mechanism to native
 `describe.skipIf`/`it.effect.skipIf`/`test.skipIf`; MERGED);
 [#12305](https://github.com/dxos/dxos/pull/12305) (leaner package-level `AiRequest.test.ts`
-D-tier tests + `operationServiceLayerNoop`; MERGED).
+D-tier tests + `operationServiceLayerNoop`; MERGED);
+[#12307](https://github.com/dxos/dxos/pull/12307) (Phase 2 — DB-effect/tool-invocation/LLM-judge
+assertion helpers + all 6 G1 scenarios ported to `@dxos/assistant-evals`; `@dxos/assistant-e2e`
+kept as its own deprecated package rather than merged in; ready for review).
 
 Goal: replace the memoized-LLM e2e strategy with a tier per conversation dimension —
 deterministic unit tiers (C/D/E/F/G) gating CI, graded model-pinned evals (A/B/H via
@@ -18,10 +37,12 @@ as primary coverage.
 
 ## Consumer groups (see TESTING.md "Consumer inventory")
 
-- **G1** — pure agent e2e (`@dxos/assistant-e2e`): database, crm-mailbox, web-search, planning,
-  markdown, smoke. Leaf package, redundant C/D signal, ~7.5 MB fixtures. **Revised: keep, gate
-  behind `runMemoizedTests()` like G2/G3 (see Phase 1 below) — not deleted.** These stay available
-  as opt-in live/eval-style tests and as design inspiration for later tiers.
+- **G1** — pure agent e2e, `@dxos/assistant-e2e` (deprecated): database, crm-mailbox, web-search,
+  planning, markdown, smoke. All 6 now have a scored eval in `@dxos/assistant-evals` covering the
+  same ground with strictly stronger (deterministic DB/tool-invocation, not self-reported) grading;
+  the corresponding gated `src/testing/*.test.ts` files were deleted. `assistant-e2e` retains
+  `harness.ts` plus 3 scenarios not yet portable to an eval (`inbox-enable`, `local-ai`, `sandbox`)
+  — once those are ported or dropped, the package can be removed entirely.
 - **G2** — per-operation / skill: plugin-markdown create/update, plugin-magazine, plugin-assistant,
   assistant-toolkit run-instructions + database/memory/planning/agent skills, AiSummarizer.
   **Convert to mocked C unit tests before deleting.**
@@ -128,10 +149,129 @@ as primary coverage.
 
 ## Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-- [ ] Scorers: tool-match, schema-validity, DB-effect, LLM-judge; datasets for comprehension /
-      tool-selection (former G1 scenarios).
-- [ ] Pin model versions; pass-rate thresholds; scheduled (nightly/on-demand) run distinct from PR CI.
-- [ ] Port highest-value former-G1 scenarios as H integration cases (real model, real ops), non-gating.
+- [x] **PR #12307 (draft):** first DB-effect scorer + first ported G1 scenario:
+      `assistant-evals/src/assertions.ts` (`objectExists(type, predicate)` — dimension-G
+      deterministic assertion helper, queries the DB directly rather than trusting the agent's
+      `completedCriteria` self-report) and `assistant-evals/src/evals/database.eval.ts` (ported
+      from the gated `Database > create and query` scenario). `runner.ts`'s `createEvalRunner`
+      gained an optional `dbQuery` hook (overloaded: omit it and the task returns the bare agent
+      output unchanged, as before; pass it and the task returns `{ agentOutput, dbQuery }` so a
+      scorer can grade the DB effect). Manual-run only for now (`DX_ANTHROPIC_API_KEY` +
+      `moon run assistant-evals:evals`) — no CI/schedule yet.
+      **Also merged `@dxos/assistant-e2e` into `@dxos/assistant-evals`** (composition-scoped
+      package layout — see TESTING.md "Where evals live"): moved `harness.ts` +
+      `src/testing/*.test.ts` (the 9 gated e2e files) into `assistant-evals`, deleted the
+      `assistant-e2e` package, split the vitest config (`vitest.config.ts` stays flat for
+      evalite's hardcoded `.eval.ts` discovery; `vitest.e2e.config.ts` — the former
+      `assistant-e2e` config — used explicitly by a hand-written `moon.yml` `:test` task for the
+      gated e2e suite), updated `.changeset/config.json`, `tsconfig.all.json`, the
+      `agent-e2e-tests`/`regenerate-memoized-llm` skills, and `RELEASE-SPEC.md`'s package table.
+      **This merge was later reversed** (see the Resume note at the top): `@dxos/assistant-e2e` is
+      its own deprecated package again, so the file moves / vitest-config split / moon task
+      described here no longer reflect the current layout — only the bugs found and the eval
+      itself (below) still apply.
+      Verified: `moon run assistant-evals:build assistant-evals:lint assistant-evals:test --force`
+      green (9 gated e2e files, all correctly skipped without `DX_RUN_LLM_TESTS=1`);
+      `evalite run src/evals` and `evalite run src/evals/database.eval.ts` correctly discover
+      files. **Two blocking bugs found and fixed, first live scored result obtained:**
+      (1) the evalite registry-sync race (see Follow-ups); (2) `createEvalRunner` defaulted
+      `skills` to `[]` instead of `getDefaultSkills()` (harness.ts's `agentTest()` convention),
+      so the agent had no database tools and failed with "No tools available to complete the
+      task" — fixed by extracting `getDefaultSkills` into a shared `src/skills.ts`. With a real
+      `DX_ANTHROPIC_API_KEY` (pulled from the CI Vault via 1Password's `op run`),
+      `database.eval.ts` now scores **100%**. PR #12307 is functionally verified end-to-end,
+      still draft pending a final ready-for-review pass.
+- [x] **Ported the remaining 5 G1 scenarios, easiest → hardest, each verified live and committed
+      individually:**
+  - [x] `smoke.eval.ts` — trivial (no DB, no skills); needed one new `createEvalRunner` option,
+        `expect: 'failure'` (`Effect.runPromiseExit` instead of `runAndForwardErrors`, resolving
+        `{ failed: boolean }` so a scorer can grade an intentional failure as a pass — previously
+        any failure just threw out of the eval task before a scorer ran). Also hit an evalite
+        storage bug: with no output requested, `completeJob` resolves `agentOutput` to `undefined`,
+        and evalite's SQLite storage rejects storing an undefined/null task result — coerced to
+        `{}` in the eval file rather than widening runner.ts's general contract. Both scored 100%.
+  - [x] `markdown.eval.ts` — pure DB-state (doc exists; exact final content after an Update-op
+        append), same `dbQuery`/`objectExists` pattern as `database.eval.ts`. Added `findObject`
+        (same query, returns the match instead of a boolean) to `assertions.ts` to load the found
+        doc's `content` ref. "draft a document"'s free-form title/content narrows the check to "a
+        doc exists" — the process criteria (which skill/tool was used) aren't checkable without
+        tool-invocation tracking. Both scored 100%.
+  - [x] `crm-mailbox.eval.ts` — all 4 criteria are DB/relation state (Person, Organization, Employer
+        relation + role field); `Employer.Employer` was already in `runner.ts`'s default
+        `ClientPlugin` types, so no new plumbing needed — `Relation.getSource`/`getTarget` resolve
+        the relation's endpoints directly. Incidentally fixed an unrelated timeout: evalite defaults
+        to a 30s per-eval timeout unless vitest config overrides it
+        (`config.test.testTimeout ??= 30_000` in evalite's `run-evalite.js`); this scenario's
+        multi-tool research (web search + CRM tools + image attach) routinely exceeds that — raised
+        `vitest.config.ts`'s `testTimeout` to `360_000` (benefits every eval in the file). Scored
+        100% in ~95s.
+  - [x] `web-search.eval.ts` — the first tool-match scorer (Phase 2 item below). Built the
+        tool-invocation tracking flagged as a follow-up when this project resumed:
+        `assertions.ts` gains `completedBlocks()` (reads every `CompleteBlock` event off the
+        space's trace feed — durable, already produced by `RunInstructions` via `RoutinePlugin`'s
+        `FeedTraceSinkSpec` with zero wiring changes) and `toolInvocations()` (pairs
+        `toolCall`/`toolResult` blocks by `toolCallId`). Required adding `@dxos/compute-runtime` as
+        a workspace dependency (for `FeedTraceSink`). "Capital of France returned" grades a plain
+        string match on the assistant's chat text (no LLM judge needed); "only web-search used"
+        grades that exactly one non-`completeJob` tool fired. First attempt matched the literal
+        string `'web_search'` and scored 50% — the actual recorded tool name is `'AnthropicWebSearch'`
+        (the toolkit name, not the provider name), found by inspecting
+        `node_modules/.evalite/cache.sqlite`'s `results` table directly. Fixed to a normalized
+        substring match; scored 100%.
+  - [x] `planning.eval.ts` — hardest: required new `sessionChat` support in `createEvalRunner`
+        (planning's `update-tasks` operation hard-requires a bound `Chat` via
+        `Chat.getFromContext`; the plan lives at `Chat.plan`) mirroring `harness.ts`'s
+        `agentTest({ sessionChat: true })`. Enriched `ToolInvocation` with `operationKey` (the
+        stable `dxn:org.dxos.function.*` key backing an Operation-invoked call, vs. `name`, a
+        display name that varies — per web-search's surprise). Graded: exactly 3 tasks exist and
+        all done (`findObject(Plan.Plan, ...)`), `update-tasks` was actually invoked (≥3 times,
+        matched on `operationKey`), the plan was never written via a raw `objectCreate`/
+        `objectUpdate` call (the "did not manipulate objects directly" criterion). First attempt
+        scored 80% — matched the bare operation key; the actual key has a `dxn:` prefix, found the
+        same cache.sqlite-inspection way as web-search's mismatch. Originally narrowed "3-line
+        haiku per topic" to "topic mentioned in the response" pending an LLM judge — **now uses a
+        real judge, see below.** Scored 100%.
+- [x] **Native LLM-judge scorer, `src/judge.ts`:** `judge(rubric, content)` using `@dxos/ai`'s own
+      `LanguageModel.generateObject` (Anthropic, schema-typed `{ pass, reasoning }` verdict) —
+      deliberately not autoevals' built-in classifiers (Factuality/ClosedQA/Battle/etc. are
+      hardcoded to an OpenAI-shaped client; using them here would need a separate OpenAI key or
+      Braintrust's proxy, neither wired up in this repo). Uses `claude-haiku-4-5` (grading is
+      classification, not generation — a fast/cheap model is enough). Wired into two consumers:
+      `planning.eval.ts`'s haiku-quality check (replacing the keyword-heuristic proxy) and
+      `crm-mailbox.eval.ts`'s `crm-data-accurate` scorer (grades whether the created Person/
+      Organization/Employer-role records are accurate against the source email, not just present).
+      Each carries a same-file negative case (not a separate meta-test file, and not converting
+      other evals to use the judge — deliberately scoped to these two examples per direct guidance)
+      demonstrating the judge correctly _fails_ hand-crafted bad data against the same rubric — a
+      judge that only ever passes is worthless as a scorer. Verified live: both real scenarios
+      scored 100% at least once, both negative cases correctly fail with substantive reasoning.
+      **Investigated but rejected in the same session:** collapsing the two vitest configs
+      (`vitest.config.ts` for evalite, `vitest.e2e.config.ts` for gated tests) into one
+      `projects`-based file — confirmed by direct experiment (renaming the file, adding a
+      `projects` array) that vitest's `projects` don't inherit root-level `plugins`/`testTimeout`,
+      so this would silently reopen the registry-sync race. Keeping the two-file split.
+- [ ] More scorers: schema-validity; datasets for comprehension / tool-selection.
+- [ ] Pin model versions; pass-rate thresholds; scheduled (nightly/on-demand) run distinct from PR
+      CI — **explicitly deferred for now, per direct instruction.**
+- [ ] **Stop naming the exact skill(s) to enable in eval prompts — write realistic user prompts and
+      let the agent self-discover, for every eval, not just the two already switched.** An
+      experiment this session (uncommitted edits, live-run, then reverted/kept per direct review)
+      removed the "Enable the X skill using the skill manager" instruction from all 4 evals that
+      had one, to see whether the agent could still find and enable the right skill on its own:
+  - `planning.eval.ts` and `markdown.eval.ts` scored **100%** with no explicit skill mention — kept
+    permanently.
+  - `crm-mailbox.eval.ts` (75%) and `web-search.eval.ts` (50%) were **reverted** — not because the
+    agent failed to self-discover (in both cases it correctly found and enabled every skill it
+    needed, unprompted), but because the point losses were **scorer artifacts** unrelated to
+    discovery: `crm-mailbox`'s `employerRoleCorrect` does an exact string match on `role ===
+'Founding Engineer'`, and the agent wrote `'Founding Engineer & Product Manager'` (more
+    complete, not wrong); `web-search`'s `onlyWebSearchUsed` assumes zero discovery overhead, but
+    self-discovery costs real extra tool calls (list/enable-skills) the check never accounted
+    for. **Before re-attempting these two:** loosen `employerRoleCorrect` to a substring/contains
+    check instead of exact equality, and change `onlyWebSearchUsed` to allow skill-management
+    tool calls (`enable-skills`, `query-skills`, etc.) alongside `web-search`, only failing if a
+    _different task_ tool was used. Once those scorers are fixed, drop the explicit skill
+    mentions from both prompts the same way and re-verify live.
 
 ## Phase 3 — finish migration & reduce machinery
 
@@ -142,6 +282,28 @@ as primary coverage.
 
 ## Follow-ups (out of band)
 
+- [x] **Blocking evals — FIXED:** root-caused the evalite-specific `plugin-routine` registry-sync
+      race (`registry-sync.ts:74`, `handler.meta` read before population). Reproduced
+      deterministically on a fresh worktree/machine (not sandbox-specific), then bisected the cause
+      by toggling config: `assistant-evals/vitest.config.ts` (evalite's hardcoded, flat config) calls
+      `PluginImportSource()` with the **default** `include: ['@dxos/**']`, which does not match
+      Node subpath imports (`#capabilities`, `#meta`, `#operations`, `#types`, …) — confirmed via
+      `IMPORT_SOURCE_DEBUG=1` (`#capabilities -> excluded`, etc.). Those resolve through the plain
+      `package.json` "imports" map instead, landing on the compiled `dist/` bundle rather than
+      `src/`. `vitest.e2e.config.ts`'s `createNodeProject` (in `vite.base.config.ts`) already passes
+      `include: ['@dxos/**', '#*']` — the two configs silently diverged. Plugin-routine's
+      `#capabilities` entry bundles five independently-lazy capability modules
+      (`app-graph-builder`, `operation-handler`, `registry-sync`, `templates`,
+      `trigger-runtime-controller`) into one file via esbuild; under `dist/`, they evaluate eagerly
+      together instead of via source's separate `Capability.lazy(() => import(...))` boundaries,
+      reordering operation-handler registration relative to registry-sync's atom subscriber and
+      producing the `handler.meta` undefined race. **Fix:** added `'#*'` to `vitest.config.ts`'s
+      `PluginImportSource` include list, matching `createNodeProject`. Verified by toggling the
+      config back and forth — crash reappears without the fix, gone with it, on both
+      `database.eval.ts` and `basic.eval.ts`; each now progresses past registration to a real
+      `POST https://api.anthropic.com/v1/messages` call, failing only on 401 (no
+      `DX_ANTHROPIC_API_KEY` in this sandbox) instead of crashing pre-model-call. `assistant-evals`
+      build/lint/test green; `oxfmt --check` clean.
 - [ ] Delete the orphaned `.agent/` (singular) directory. Unreferenced by any code, config, or
       tooling (Cursor/VS Code use `.cursor/` → `.agents/` plural); origin PR #10381 example
       workflow/function fixtures, only kept current by mechanical repo-wide refactors. Verify no

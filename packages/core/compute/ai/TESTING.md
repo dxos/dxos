@@ -50,7 +50,8 @@ Two mechanisms, both centered on `MemoizedLanguageModel`:
 2. **Replay under CI.** The same layer matches the live prompt against the snapshot (exact
    structural equality after timestamp/date normalization and opt-in dynamic-id canonicalization)
    and returns the stored response. On a miss it fails hard. The agent e2e harness
-   (`@dxos/assistant-e2e`) wraps a prompt as a test and checks structured `completedCriteria`.
+   (`@dxos/assistant-e2e`, deprecated — see "Consumer inventory" below) wraps a prompt as a test and
+   checks structured `completedCriteria`.
 
 ### What replay actually exercises
 
@@ -126,18 +127,33 @@ deterministic code through a frozen LLM recording.
 
 ### Non-deterministic tiers (graded, model-pinned, out-of-band, non-gating)
 
-- **A + B + H — `@dxos/assistant-evals`.** The package already exists (`evalite` + `autoevals`,
-  model-variant matrix, `createEvalRunner`). Grow it into the home for comprehension, tool
-  selection/arg synthesis, and thin end-to-end composition:
-  - **Scorers:** tool-match (did it call the expected tool), schema-validity (are args valid),
-    DB-effect assertions (did the expected objects appear), and LLM-as-judge for open-ended
-    quality. `basic.eval.ts` already carries a TODO for exactly this.
+- **A + B + H — `@dxos/assistant-evals`.** `evalite`-scored evals in `src/evals/*.eval.ts`, run
+  against a real model (`DX_ANTHROPIC_API_KEY`), for comprehension, tool selection/arg synthesis,
+  and thin end-to-end composition:
+  - **Scorers:** deterministic DB-effect and tool-invocation assertions (`src/assertions.ts` —
+    `objectExists`/`findObject` for entity state, `toolInvocations` matched on a tool's stable
+    `operationKey`) grade "did the expected effect happen"; an LLM judge (`src/judge.ts`, a native
+    `@dxos/ai` call, not `autoevals`'s OpenAI-coupled classifiers) grades open-ended quality
+    criteria a deterministic check can't express. Reach for the judge narrowly — only the specific
+    criterion that needs a content judgment — and always pair it with a case that demonstrates it
+    can fail; a judge that only ever passes is worthless as a scorer.
   - **Statistical, not binary:** report pass-rate ≥ threshold over N runs; the LLM variance is
-    graded, not asserted away.
-  - **Model-pinned** and run **on a schedule / on demand**, not on every PR. This relocates LLM
-    cost and variance out of the gating path instead of freezing it.
-  - **H (composition)** lives here too: a _small_ number of true end-to-end scenarios (real model,
-    real operations, real loop) so we retain coverage of the seams that isolated tiers miss.
+    graded, not asserted away. Not wired up yet — see the plan below.
+  - Run **manually / on demand** today (`DX_ANTHROPIC_API_KEY` + `moon run assistant-evals:evals`);
+    evalite is not part of any CI workflow, so this is already out of the gating path. **Target,
+    not yet built:** pin model versions and move to a scheduled (nightly / on-demand) run — see the
+    plan below.
+  - **H (composition)** lives here too: a cross-plugin scenario needs the full
+    `createComposerTestApp` harness wired across multiple plugins (e.g. crm-mailbox spans
+    CRM+Mailbox+Markdown, planning spans the planning skill + task tools). That's a central,
+    cross-cutting concern, so cross-plugin scenarios live in `@dxos/assistant-evals`.
+    Single-plugin/skill scenarios (e.g. `plugin-markdown` create/update, `plugin-magazine`,
+    `AiSummarizer`) belong instead **inside that plugin's own package**, importing
+    `createEvalRunner` / the assertion helpers from `@dxos/assistant-evals` as a library
+    dependency — it is not a dumping ground for every scenario regardless of scope.
+  - The older memoized/live gated-test convention this replaced still exists as a separate,
+    deprecated package, `@dxos/assistant-e2e` — see "Consumer inventory" below for what's left
+    there and why.
 
 ### Why this is better
 
@@ -145,14 +161,14 @@ deterministic code through a frozen LLM recording.
   masquerading as bugs, no multi-MB fixtures, no coupled ID streams.
 - The LLM-dependent behavior we care about (A/B/H) is actually _measured_ over time instead of
   frozen and ignored.
-- The oracle is explicit and trustworthy instead of self-certifying.
+- The scorer is explicit and trustworthy instead of self-certifying.
 
 ## Consumer inventory & blast radius
 
-Removing the memoized tests is not one action — the ~20 consumers have very different value, and
-the analysis below drives the sequencing. Blast-radius facts:
+Removing the memoized tests is not one action — the consumers have very different value, and the
+analysis below drives the sequencing. Blast-radius facts:
 
-- **Nothing imports `@dxos/assistant-e2e`** — it is a leaf test package, so deleting it has zero
+- **Nothing imports `@dxos/assistant-e2e`** — it is a leaf test package, so removing it has zero
   compile/coverage impact anywhere else.
 - The machinery (`MemoizedAiService` / `MemoizedLanguageModel`) is imported only by
   `assistant-e2e/harness.ts` and `ai/src/testing/test-layers.ts` (`TestAiService`). **`TestAiService`
@@ -161,11 +177,18 @@ the analysis below drives the sequencing. Blast-radius facts:
 
 The consumers fall into three groups:
 
-- **G1 — pure agent e2e (`@dxos/assistant-e2e`):** `database`, `crm-mailbox`, `web-search`,
-  `planning`, `markdown`, `smoke`. Highest cost (~7.5 MB of fixtures; `crm-mailbox` alone 5.4 MB),
-  lowest signal, most redundant — the operations and the `AiSession` loop they touch are also
-  exercised by G2/G3. The **only** unique thing G1 covers is that the **full plugin composition**
-  boots (`ClientPlugin` + `AssistantPlugin` + `InboxPlugin` in `harness.ts`).
+- **G1 — pure agent e2e (`@dxos/assistant-e2e`, deprecated):** all 6 original scenarios —
+  `database`, `crm-mailbox`, `web-search`, `planning`, `markdown`, `smoke` — now have scored
+  `evalite` evals in `@dxos/assistant-evals`'s `src/evals/*.eval.ts` instead, using the same
+  `createComposerTestApp` harness, so the full-plugin-composition boot/wiring coverage carries
+  over; their deterministic DB/tool-invocation grading is also strictly stronger than the old
+  self-reported `completedCriteria`. `@dxos/assistant-e2e` retains `harness.ts` plus three
+  scenarios not yet portable to an eval: `inbox-enable` (`describe.skip`, blocked on a real
+  inbox-skill registry bug), `local-ai` (local Ollama model compatibility — `createEvalRunner` has
+  no `inferenceProvider` option yet), `sandbox` (needs a live external `sandbox-service` worker, and
+  `createEvalRunner` has no `randomEntityIds`/`sandbox`/`clientTypes` options yet). Each is marked
+  with a `TODO(wittjosiah): Migrate to an eval` noting what's missing. Once those three are ported
+  or dropped, `@dxos/assistant-e2e` can be removed entirely.
 - **G2 — per-operation / skill (behavioral through the LLM):** `plugin-markdown` create/update,
   `plugin-magazine`, `plugin-assistant`, `assistant-toolkit` `run-instructions` + the `database`/
   `memory`/`planning`/`agent` skills, `AiSummarizer`. Carry **unique operation-level deterministic
@@ -176,9 +199,9 @@ The consumers fall into three groups:
 ### Impact of removing each group
 
 - **A/B/H/G signal:** none lost for any group — already frozen / self-certifying.
-- **G1:** its deterministic C/D signal is almost entirely redundant, so deletion drops no unique
-  coverage. The one genuine loss is the full-plugin **boot/wiring** path, recovered cheaply by a
-  single scripted-model boot-smoke (no fixture). Net: low impact, high relief.
+- **G1:** its deterministic C/D signal is almost entirely redundant with the eval ports, which
+  reuse the same `createComposerTestApp` harness — retiring the gated tests drops no unique
+  coverage, including the full-plugin **boot/wiring** path.
 - **G2/G3:** deleting early **would** open real per-operation / per-loop gaps, because that
   deterministic signal is unique. De-gate them from PR CI now to stop the flakiness, then convert
   before deleting.
@@ -191,63 +214,54 @@ preserved — and it is cheap to recover (D is one scripted test; C is ordinary 
 recover it in the same change that removes the corresponding memoized tests rather than treating it
 as a long migration.**
 
-### Phase 1 — stop the bleeding + recover deterministic coverage (highest ROI, fully in CI)
+### Phase 1 — deterministic tiers (fast, offline, gates every PR)
 
-This phase both removes the worst offender (G1) and de-gates the rest, while standing up the cheap
-deterministic tiers that make it safe.
+G2/G3 memoized replay is already de-gated from PR CI (`runMemoizedTests()`, off by default; opt in
+with `DX_RUN_LLM_TESTS=1` or `ALLOW_LLM_GENERATION=1` to regenerate). A scripted `LanguageModel`
+primitive (`ai/src/testing/ScriptedLanguageModel.ts`) and harness (D) unit tests over it
+(`agent-runtime/.../scripted-loop.test.ts`, `assistant/.../AiRequest.test.ts`) cover the clean-stop
+and tool-call → result → continue (including multi-iteration) branches without a live model;
+tool-error and malformed-output branches are still deferred. Remaining:
 
-1. **De-gate G2/G3 from PR CI immediately** — move the memoized replay tests off the default
-   `:test` path (env flag / separate tag / `describe.skip`). No deletion, reversible; instantly
-   removes the flakiness and slowdown while conversion proceeds.
-2. **Extract a scripted `LanguageModel` primitive** from `MemoizedLanguageModel` — "given this
-   call, return these scripted parts/tool-calls" — decoupled from prompt-matching and file I/O.
-   This is the substrate for D and for the G1 boot-smoke.
-3. **Harness (D) unit tests** on the scripted model: all loop branches listed above.
-4. **Delete G1 (`@dxos/assistant-e2e`) and its fixtures** (~7.5 MB), and replace it with a **single
-   scripted-model boot-smoke** that boots the full plugin composition and asserts a trivial 1-tool
-   task completes — preserving the one unique thing G1 covered (composition/wiring) without any
-   memoized fixture. Safe to do here because nothing imports the package and its C/D signal is
-   redundant with G2/G3.
-5. **Operation (C) unit tests**: begin converting G2 to deterministic mocked unit tests; introduce
-   the golden-args fixture convention. Delete each G2 fixture only once its unit test lands.
-6. **Context-assembly (E) and schema round-trip (F) tests.** E: snapshot the assembled prompt
+1. **Operation (C) unit tests**: convert G2 to deterministic mocked unit tests; introduce a
+   golden-args fixture convention (seed handler tests with tool-call args captured from the eval
+   tier, not idealized ones). Delete each G2 fixture only once its unit test lands.
+2. **Context-assembly (E) and schema round-trip (F) tests.** E: snapshot the assembled prompt
    (system + skill instructions + bound objects + tool descriptions) for representative inputs — a
    pure function of inputs, no model — so skill/instruction wiring regressions surface as a prompt
    diff instead of a buried cache miss. F: assert tool JSON-schema generation and arg/result
    encode↔decode per toolkit, catching the "LLM emits args the handler can't decode" class offline.
-7. **Code-side oracle (G):** shared, deterministic DB-state / tool-invocation assertion helpers,
-   used by the C/D tiers for a reproducible pass/fail and reused as **scorers** over the eval tier
-   (graded across runs, not asserted once). The verdict is always code, never an LLM output — a
-   single helper, deterministic wherever its inputs are.
 
 ### Phase 2 — grow `@dxos/assistant-evals` (A, B, H)
 
-8. Add scorers (tool-match, schema-validity, DB-effect, LLM-judge) and datasets covering the
-   comprehension / tool-selection scenarios previously implicit in the G1 suite.
-9. Pin model versions; define pass-rate thresholds; wire a scheduled (nightly / on-demand) run
-   distinct from PR CI.
-10. Port the highest-value former-G1 scenarios into evals as **H** integration cases (real model,
-    real operations), non-gating.
+DB-effect, tool-invocation, and LLM-judge scorers exist (see "Non-deterministic tiers" above), and
+all 6 cross-plugin scenarios are ported as H integration cases, non-gating. Remaining:
+
+3. **More scorers and datasets:** a schema-validity scorer; broader datasets for comprehension /
+   tool-selection.
+4. **Prefer realistic user prompts over naming which skill to enable.** Several evals still name
+   the skill explicitly because doing so exposed unrelated scorer strictness issues instead of a
+   real comprehension gap — e.g. an exact-match check rejecting a more-complete-but-not-wrong
+   field, or a tool-count check that doesn't budget for legitimate skill-discovery calls. Fix the
+   scorer in each case, then drop the explicit mention and re-verify live.
+5. **Pin model versions; define pass-rate thresholds; wire a scheduled (nightly / on-demand) run**
+   for `@dxos/assistant-evals`, distinct from PR CI.
 
 ### Phase 3 — finish migration & reduce the machinery
 
-11. Convert the remaining **G3** (agent-runtime session) fixtures to scripted-model (D) tests and
-    delete them.
-12. Once no consumer depends on frozen-conversation replay, **reduce the memoization layer to the
-    scripted-model primitive** and drop the prompt-matching / canonicalization / closest-match code
-    and `memoization.test.ts`'s dynamic-value suite. `TestAiService` remains the seam. The
-    _strategy_ of frozen full-conversation replay as primary coverage is what we retire.
+6. Convert G3 (agent-runtime session) fixtures to scripted-model (D) tests, then delete them.
+7. Once no consumer depends on frozen-conversation replay, reduce the memoization layer to the
+   scripted-model primitive and drop the prompt-matching / canonicalization / closest-match code
+   and `memoization.test.ts`'s dynamic-value suite. `TestAiService` remains the seam.
 
 ### Non-goals / risks
 
 - **Behavioral coverage is already ~zero** (A/B frozen, G self-certifying), so removing memoized
-  tests loses no behavioral signal — the earlier "coverage would drop to zero" framing was too
-  conservative. What must not drop is the **deterministic (C/D)** signal, recovered per group in
-  the same change that removes its tests (G1 → boot-smoke + D tests; G2 → C unit tests; G3 → D
-  tests).
-- **G2/G3 must be converted before their fixtures are deleted** — unlike G1, their deterministic
-  signal is unique.
-- **Isolated tiers miss emergent bugs** across seams; the thin H integration eval (step 10) is the
+  tests loses no behavioral signal. What must not drop is the **deterministic (C/D)** signal,
+  recovered per group in the same change that removes its tests (G2 → C unit tests; G3 → D tests).
+- **G2/G3 must be converted before their fixtures are deleted** — their deterministic signal is
+  unique, unlike G1's.
+- **Isolated tiers miss emergent bugs** across seams; the thin H integration evals are the
   mitigation and must not be skipped.
 - Evals still hit real models — cost and variance are relocated and graded, not eliminated; budget
   and schedule them accordingly.
