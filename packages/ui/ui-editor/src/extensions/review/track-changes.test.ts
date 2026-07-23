@@ -51,6 +51,14 @@ describe('trackChanges', () => {
     view.destroy();
   });
 
+  test('a new-paragraph insertion bars only the text line, not the trailing blank line', ({ expect }) => {
+    // The branch inserts a new first paragraph "intro\n\n" before "alpha"; the trailing paragraph break
+    // must not tag the blank line — exactly one bar, on the inserted text line.
+    const view = mount('intro\n\nalpha\nbravo\ncharlie');
+    expect(view.dom.querySelectorAll('.cm-change-bar')).toHaveLength(1);
+    view.destroy();
+  });
+
   test('the phantom restore control re-instates that specific deletion (out of edit order)', ({ expect }) => {
     // The branch removed the middle line "bravo\n" (a phantom). Unlike undo, the restore control targets
     // THIS deletion regardless of later edits: clicking it splices the removed text back and clears it.
