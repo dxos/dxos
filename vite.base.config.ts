@@ -6,6 +6,7 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { execFile } from 'node:child_process';
+import { existsSync, readdirSync, readlinkSync } from 'node:fs';
 import path, { join } from 'node:path';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
@@ -669,6 +670,81 @@ const createMoonRerunReporter = (options: { moonProject: string; projectType?: s
   },
 });
 
+// TEMPORARY teardown-hang diagnostic (remove before final PR). On `onProcessTimeout` (vitest's
+// close-timeout, i.e. the storybook teardown hang) dump the referenced libuv handles and open fds
+// that keep the main process alive, so we can tell a leaked file-watcher (fs_event / inotify) apart
+// from a separate socket/file/timer leak — with concrete paths and endpoints.
+const createHangDiagReporter = (label: string): Reporter => ({
+  onProcessTimeout() {
+    const out: string[] = [`\n===== DXOS-HANG-DIAG START label=${label} pid=${process.pid} =====`];
+    try {
+      const report: any = process.report?.getReport?.();
+      const handles: any[] = report?.libuv ?? [];
+      const counts: Record<string, number> = {};
+      const active: any[] = [];
+      for (const handle of handles) {
+        counts[handle.type] = (counts[handle.type] ?? 0) + 1;
+        if (handle.is_active && handle.is_referenced) {
+          active.push(handle);
+        }
+      }
+      out.push(`[libuv] type counts: ${JSON.stringify(counts)}`);
+      out.push(`[libuv] active+referenced (${active.length}) — these keep the loop alive:`);
+      for (const handle of active) {
+        out.push(
+          `  - ${JSON.stringify({
+            type: handle.type,
+            fd: handle.fd,
+            filename: handle.filename,
+            localEndpoint: handle.localEndpoint,
+            remoteEndpoint: handle.remoteEndpoint,
+            firesInMsFromNow: handle.firesInMsFromNow,
+            address: handle.address,
+          })}`,
+        );
+      }
+    } catch (err) {
+      out.push(`[libuv] error: ${String(err)}`);
+    }
+    try {
+      if (existsSync('/proc/self/fd')) {
+        const fds = readdirSync('/proc/self/fd');
+        const categories: Record<string, number> = {};
+        const filePaths: Record<string, number> = {};
+        for (const fd of fds) {
+          try {
+            const target = readlinkSync(`/proc/self/fd/${fd}`);
+            let kind = 'other';
+            if (target.startsWith('socket:')) {
+              kind = 'socket';
+            } else if (target.startsWith('pipe:')) {
+              kind = 'pipe';
+            } else if (target.startsWith('anon_inode:')) {
+              kind = `anon:${target.slice('anon_inode:'.length)}`;
+            } else if (target.startsWith('/')) {
+              kind = 'file';
+              filePaths[target] = (filePaths[target] ?? 0) + 1;
+            }
+            categories[kind] = (categories[kind] ?? 0) + 1;
+          } catch {}
+        }
+        out.push(`[fd] total=${fds.length} categories=${JSON.stringify(categories)}`);
+        const topPaths = Object.entries(filePaths)
+          .sort((left, right) => right[1] - left[1])
+          .slice(0, 40);
+        out.push(`[fd] open regular files (top ${topPaths.length} paths):`);
+        for (const [filePath, count] of topPaths) {
+          out.push(`  ${count}x ${filePath}`);
+        }
+      }
+    } catch (err) {
+      out.push(`[fd] error: ${String(err)}`);
+    }
+    out.push(`===== DXOS-HANG-DIAG END label=${label} pid=${process.pid} =====\n`);
+    process.stderr.write(out.join('\n') + '\n');
+  },
+});
+
 const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
@@ -688,7 +764,14 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   if (xmlReport) {
     return {
       passWithNoTests: true,
-      reporters: [['junit', { addFileAttribute: true }], 'verbose', moonRerunReporter],
+      // TEMPORARY: `hanging-process` + the DXOS fd/handle dump diagnose the storybook teardown hang.
+      reporters: [
+        ['junit', { addFileAttribute: true }],
+        'verbose',
+        'hanging-process',
+        createHangDiagReporter(packageDirName),
+        moonRerunReporter,
+      ],
       outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,

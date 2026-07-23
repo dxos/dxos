@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+// TEMPORARY: cache-buster to force this package's test-storybook task to re-run while diagnosing the teardown hang; remove before final PR.
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Filter, Ref, Type, View } from '@dxos/echo';
